@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Licorice&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bilbo&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -23,4 +25,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+
+.ruled-background {
+  background-color: #F3F4F6 !important;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    #d1d5db 31px,
+    #d1d5db 32px
+  ) !important;
 }
