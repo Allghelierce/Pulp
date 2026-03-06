@@ -1,14 +1,18 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
-import Link from "next/link";
+import Link from "next/link"
+import { supabase } from "@/lib/supabase"
 
 
-interface TextBox { id: number; x: number; y: number; w: number; h: number; content: string }
+
+interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string }
 type BoxesMap = { [pageIdx: number]: TextBox[] }
-interface NoteData { id: number; subject: string; pages: string[]; folderId: number | null; boxes: BoxesMap }
+interface NoteData { id: string; subject: string; pages: string[]; folderId: number | null; boxes: BoxesMap }
 interface FolderData { id: number; name: string; open: boolean }
 
-const ACCENT = "#7A5C66"
+
+const ACCENT = "#600b2779"
+
 
 function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => void }) {
   const [hover, setHover] = useState({ r: 0, c: 0 })
@@ -34,28 +38,75 @@ function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => v
   )
 }
 
+
 export default function NoteApp() {
-  const [notes, setNotes] = useState<NoteData[]>([{ id: 1, subject: "My Creative Notes", pages: [""], folderId: null, boxes: {} }])
+  const [notes, setNotes] = useState<NoteData[]>([{ id: "00000000-0000-0000-0000-000000000001", subject: "Test", pages: [""], folderId: null, boxes: {} }])
   const [folders, setFolders] = useState<FolderData[]>([{ id: 1, name: "General", open: true }])
-  const [activeTabId, setActiveTabId] = useState(1)
+  const [activeTabId, setActiveTabId] = useState<string>("00000000-0000-0000-0000-000000000001")
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
   const [zoom, setZoom] = useState("0.9")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [gridView, setGridView] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [showTableMenu, setShowTableMenu] = useState(false)
-  const [draggedNoteId, setDraggedNoteId] = useState<number | null>(null)
+  const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [boxMode, setBoxMode] = useState(false)
-  const [selectedBoxId, setSelectedBoxId] = useState<number | null>(null)
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null)
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null)
   const [draftBox, setDraftBox] = useState<TextBox | null>(null)
-  const [draggingBox, setDraggingBox] = useState<{ id: number; offsetX: number; offsetY: number } | null>(null)
+  const [draggingBox, setDraggingBox] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null)
   const [customSize, setCustomSize] = useState("16")
+
 
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
   const savedRange = useRef<Range | null>(null)
   const activeNote = notes.find(n => n.id === activeTabId) ?? notes[0]
+  const [user, setUser] = useState<any>(null)
+
+
+  useEffect(() => {
+    // 1. Check if someone is already logged in
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+
+    // 2. Listen for changes (using 'any' to stop the red lines)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session: any) => {
+      setUser(session?.user ?? null)
+    })
+
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+
+  useEffect(() => {
+    const saveToCloud = async () => {
+      if (!activeNote || !user) return // Don't save if no one is logged in!
+
+
+      const { error } = await supabase
+        .from('notes')
+        .upsert({
+          id: activeNote.id,
+          subject: activeNote.subject,
+          pages: activeNote.pages,
+          boxes: activeNote.boxes,
+          user_id: user.id // Uses the ID from the ✅ checkmark
+        })
+
+
+      if (error) console.error("Save failed:", error.message)
+      else console.log("Autosaved to cloud!")
+    }
+
+
+    const timer = setTimeout(saveToCloud, 2000)
+    return () => clearTimeout(timer)
+  }, [activeNote, user]) // Critical: user must be here!
+
 
   useEffect(() => {
     if (!gridView && editorRef.current && editorRef.current.innerHTML !== activeNote.pages[currentPageIdx]) {
@@ -63,16 +114,19 @@ export default function NoteApp() {
     }
   }, [activeTabId, currentPageIdx, gridView])
 
+
   const saveSelection = () => {
     const sel = window.getSelection()
     if (sel && sel.rangeCount > 0) savedRange.current = sel.getRangeAt(0).cloneRange()
   }
+
 
   const restoreSelection = () => {
     editorRef.current?.focus()
     const sel = window.getSelection()
     if (sel && savedRange.current) { sel.removeAllRanges(); sel.addRange(savedRange.current) }
   }
+
 
   const execCmd = (cmd: string, value?: string) => {
     restoreSelection()
@@ -81,12 +135,14 @@ export default function NoteApp() {
     editorRef.current?.focus()
   }
 
+
   const insertHTML = (html: string) => {
     restoreSelection()
     document.execCommand("insertHTML", false, html)
     saveSelection()
     editorRef.current?.focus()
   }
+
 
   const applyFontSize = (sizePx: string) => {
     if (!sizePx || isNaN(Number(sizePx))) return
@@ -101,6 +157,7 @@ export default function NoteApp() {
     })
     editorRef.current?.focus()
   }
+
 
   const handleEditorKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== " ") return
@@ -122,6 +179,7 @@ export default function NoteApp() {
     else if (/^\d+\.$/.test(before)) tryConvert("insertOrderedList")
   }
 
+
   const insertTable = (rows: number, cols: number) => {
     let html = `<table style="border-collapse:collapse;width:100%;margin:16px 0">`
     for (let r = 0; r < rows; r++) {
@@ -138,6 +196,7 @@ export default function NoteApp() {
     insertHTML(html)
   }
 
+
   const insertColumns = (num: number) => {
     let html = `<div style="display:grid;grid-template-columns:repeat(${num},1fr);gap:16px;margin:16px 0">`
     for (let i = 0; i < num; i++) html += `<div style="border:1px dashed #e4e4e7;padding:12px;min-height:80px;">Column ${i + 1} content…</div>`
@@ -145,74 +204,79 @@ export default function NoteApp() {
     insertHTML(html)
   }
 
+
   const getPaperXY = (e: React.MouseEvent): { x: number; y: number } => {
     const r = paperRef.current!.getBoundingClientRect()
     const s = parseFloat(zoom)
     return { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s }
   }
 
+
   const onPaperMouseDown = (e: React.MouseEvent) => {
     if (!boxMode) return
     e.preventDefault()
     const { x, y } = getPaperXY(e)
     setDrawStart({ x, y })
-    setDraftBox({ id: 0, x, y, w: 0, h: 0, content: "" })
+    setDraftBox({ id: crypto.randomUUID(), x, y, w: 0, h: 0, content: "" })
     setSelectedBoxId(null)
   }
 
-  const onPaperMouseMove = (e: React.MouseEvent) => {
-    if (draggingBox) {
-      const { x, y } = getPaperXY(e)
-      const updatedBoxes = { ...activeNote.boxes }
-      updatedBoxes[currentPageIdx] = updatedBoxes[currentPageIdx].map(b => b.id === draggingBox.id ? { ...b, x: x - draggingBox.offsetX, y: y - draggingBox.offsetY } : b)
-      setNotes(notes.map(n => n.id === activeTabId ? { ...n, boxes: updatedBoxes } : n))
+
+  const onPaperMouseMove=(e:React.MouseEvent)=>{
+    if(draggingBox){
+      const {x,y}=getPaperXY(e)
+      const b={...activeNote.boxes}
+      b[currentPageIdx]=b[currentPageIdx].map(bb=>bb.id===draggingBox.id?{...bb,x:x-draggingBox.offsetX,y:y-draggingBox.offsetY}:bb)
+      setNotes(notes.map(n=>n.id===activeTabId?{...n,boxes:b}:n))
       return
     }
-    if (!boxMode || !drawStart) return
-    const { x, y } = getPaperXY(e)
-    setDraftBox({ id: 0, content: "", x: Math.min(x, drawStart.x), y: Math.min(y, drawStart.y), w: Math.abs(x - drawStart.x), h: Math.abs(y - drawStart.y) })
+    if(!boxMode||!drawStart)return
+    const {x,y}=getPaperXY(e)
+    setDraftBox({id:draftBox?.id??crypto.randomUUID(), x:drawStart.x, y:drawStart.y, w:x-drawStart.x, h:y-drawStart.y, content:""})
   }
 
-  const onPaperMouseUp = () => {
-    if (draggingBox) setDraggingBox(null)
-    if (!boxMode || !draftBox) return
-    if (draftBox.w > 15 && draftBox.h > 15) {
-      const committed = { ...draftBox, id: Date.now() }
-      const updatedBoxes = { ...activeNote.boxes }
-      if (!updatedBoxes[currentPageIdx]) updatedBoxes[currentPageIdx] = []
-      updatedBoxes[currentPageIdx] = [...updatedBoxes[currentPageIdx], committed]
-      setNotes(notes.map(n => n.id === activeTabId ? { ...n, boxes: updatedBoxes } : n))
+
+  const onPaperMouseUp=()=>{
+    if(draggingBox)setDraggingBox(null)
+    if(!boxMode||!draftBox)return
+    if(Math.abs(draftBox.w)>15&&Math.abs(draftBox.h)>15){
+      const committed={...draftBox,id:crypto.randomUUID()}
+      const b={...activeNote.boxes}
+      if(!b[currentPageIdx])b[currentPageIdx]=[]
+      b[currentPageIdx]=[...b[currentPageIdx],committed]
+      setNotes(notes.map(n=>n.id===activeTabId?{...n,boxes:b}:n))
       setSelectedBoxId(null)
     }
     setDrawStart(null)
     setDraftBox(null)
   }
 
-  const onBoxMouseDown = (e: React.MouseEvent, box: TextBox) => {
-    if (!boxMode) {
-      e.stopPropagation()
-      const { x, y } = getPaperXY(e)
-      setDraggingBox({ id: box.id, offsetX: x - box.x, offsetY: y - box.y })
-    } else {
-      e.stopPropagation()
-      setSelectedBoxId(box.id)
-    }
-  }
 
-  const deleteBox = (boxId: number) => {
+  const deleteBox = (boxId: string) => {
     const updatedBoxes = { ...activeNote.boxes }
     updatedBoxes[currentPageIdx] = updatedBoxes[currentPageIdx].filter(b => b.id !== boxId)
     setNotes(notes.map(n => n.id === activeTabId ? { ...n, boxes: updatedBoxes } : n))
     setSelectedBoxId(null)
   }
 
-  const updateBoxContent = (boxId: number, text: string) => {
+
+  const updateBoxContent = (boxId: string, text: string) => {
     const updatedBoxes = { ...activeNote.boxes }
     updatedBoxes[currentPageIdx] = updatedBoxes[currentPageIdx].map(b => b.id === boxId ? { ...b, content: text } : b)
     setNotes(notes.map(n => n.id === activeTabId ? { ...n, boxes: updatedBoxes } : n))
   }
 
-  const handleDropNote = (e: React.DragEvent, targetFolderId: number | null, targetNoteId?: number) => {
+
+  const onBoxMouseDown = (e: React.MouseEvent<HTMLDivElement>, box: TextBox) => {
+    if (!boxMode) return
+    e.stopPropagation()
+    const { x, y } = getPaperXY(e)
+    setDraggingBox({ id: box.id, offsetX: x - box.x, offsetY: y - box.y })
+    setSelectedBoxId(box.id)
+  }
+
+
+  const handleDropNote = (e: React.DragEvent, targetFolderId: number | null, targetNoteId?: string) => {
     e.preventDefault()
     e.stopPropagation()
     if (!draggedNoteId || draggedNoteId === targetNoteId) return
@@ -231,19 +295,22 @@ export default function NoteApp() {
     setDraggedNoteId(null)
   }
 
+
   const addNote = (folderId: number | null = null) => {
     const name = prompt("Name your new note:", "New Note")
     if (!name) return
-    const id = Date.now()
+    const id = crypto.randomUUID() // ✅ Produces a valid string (UUID)
     setNotes(prev => [...prev, { id, subject: name, pages: [""], folderId, boxes: {} }])
     setActiveTabId(id)
     setCurrentPageIdx(0)
   }
 
-  const renameNote = (id: number, currentName: string) => {
+
+  const renameNote = (id: string, currentName: string) => {
     const newName = prompt("Rename note:", currentName)
     if (newName) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName } : n))
   }
+
 
   const addFolder = () => {
     const id = Date.now()
@@ -251,8 +318,10 @@ export default function NoteApp() {
     setRenamingFolder(id)
   }
 
+
   const toggleFolder = (id: number) => setFolders(prev => prev.map(f => f.id === id ? { ...f, open: !f.open } : f))
   const renameFolder = (id: number, name: string) => setFolders(prev => prev.map(f => f.id === id ? { ...f, name } : f))
+
 
   const downloadNote = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${activeNote.subject}</title>
@@ -267,9 +336,11 @@ export default function NoteApp() {
     a.click()
   }
 
+
   const topLevelNotes = notes.filter(n => n.folderId === null)
   const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid)
   const btnBase = "w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-zinc-200"
+
 
   return (
     <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => setShowTableMenu(false)}>
@@ -284,6 +355,7 @@ export default function NoteApp() {
           </div>
           <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
         </div>
+
 
         <div className="flex-1 overflow-y-auto p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, null)}>
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-2">Notebooks</p>
@@ -304,6 +376,7 @@ export default function NoteApp() {
               📄 {n.subject}
             </button>
           ))}
+
 
           {folders.map(f => (
             <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, f.id)}>
@@ -338,6 +411,7 @@ export default function NoteApp() {
           ))}
         </div>
 
+
         <div className="p-3 border-t border-white/5 space-y-1">
           <button onClick={() => addNote(null)} className="w-full text-left text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">+ New Note</button>
           <button onClick={addFolder} className="w-full text-left text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">+ New Folder</button>
@@ -346,17 +420,23 @@ export default function NoteApp() {
             <button className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">
               ⚙️ Settings
             </button>
-            <Link href="/login" className="text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">
-              👤 Account
-            </Link>
+              <Link 
+                href="/login" 
+                className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors hover:bg-zinc-800"
+              >
+                <span>👤</span> 
+                <span>{user ? '✅' : 'Account'}</span>
+              </Link>
           </div>
         </div>
       </div>
-      
+
+
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
           {sidebarOpen ? "‹" : "›"}
         </button>
+
 
         <div className="h-10 bg-zinc-50 border-b border-zinc-200 flex items-center pl-10 pr-4 gap-2 z-30 shrink-0 overflow-x-auto justify-between">
           <div className="flex items-center gap-2">
@@ -368,17 +448,20 @@ export default function NoteApp() {
               <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-sm`}>S</button>
             </div>
 
+
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <input type="color" onMouseDown={saveSelection} onInput={e => execCmd("foreColor", (e.target as HTMLInputElement).value)} className="w-6 h-6 p-0 border-none bg-transparent cursor-pointer rounded" />
               <button onMouseDown={e=>{e.preventDefault();execCmd("hiliteColor","#fef08a")}} className={`${btnBase} bg-yellow-200 text-[10px] font-bold`}>H</button>
               <button onMouseDown={e=>{e.preventDefault();execCmd("hiliteColor","transparent")}} className={`${btnBase} text-xs`}>✕</button>
             </div>
 
+
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <button onMouseDown={e=>{e.preventDefault();execCmd("superscript")}} className={`${btnBase} text-[10px]`}>x²</button>
               <button onMouseDown={e=>{e.preventDefault();execCmd("subscript")}} className={`${btnBase} text-[10px]`}>x₂</button>
-              <button onMouseDown={e=>{e.preventDefault(); restoreSelection(); if(document.queryCommandState("superscript")) document.execCommand("superscript",false); if(document.queryCommandState("subscript")) document.execCommand("subscript",false); saveSelection(); editorRef.current?.focus()}} className={`${btnBase} text-xs`}>✕</button>
+              <button onMouseDown={e=>{e.preventDefault();restoreSelection(); if(document.queryCommandState("superscript")) document.execCommand("superscript",false); if(document.queryCommandState("subscript")) document.execCommand("subscript",false); saveSelection(); editorRef.current?.focus()}} className={`${btnBase} text-xs`}>✕</button>
             </div>
+
 
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList")}} className={`${btnBase} text-base leading-none`}>•≡</button>
@@ -386,10 +469,12 @@ export default function NoteApp() {
               <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${ACCENT}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`}>☑</button>
             </div>
 
+
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`}>⇤</button>
               <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`}>⇥</button>
             </div>
+
 
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${ACCENT};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`}>❝</button>
@@ -401,6 +486,7 @@ export default function NoteApp() {
             </button>
           </div>
 
+
           <div className="flex items-center gap-1.5 shrink-0">
             <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors" style={gridView ? { backgroundColor: ACCENT, color: "white", borderColor: ACCENT } : { borderColor: "#d4d4d8", color: "#52525b" }}>
               ⊞ GRID
@@ -411,6 +497,7 @@ export default function NoteApp() {
           </div>
         </div>
 
+
         <div className="h-12 bg-white border-b border-zinc-200 flex items-center px-8 gap-3 z-20 shadow-sm shrink-0 overflow-x-auto">
           <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
             <option value="Original Surfer">Default</option>
@@ -418,6 +505,7 @@ export default function NoteApp() {
             <option value="Georgia">Serif</option>
             <option value="Arial">Sans</option>
           </select>
+
 
           <div className="flex items-center gap-1 border-r border-zinc-200 pr-3 shrink-0">
             <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(v){setCustomSize(v);applyFontSize(v)}}} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50">
@@ -427,6 +515,7 @@ export default function NoteApp() {
             <input type="number" min={1} max={400} value={customSize} onChange={e=>setCustomSize(e.target.value)} onMouseDown={saveSelection} onKeyDown={e=>{if(e.key==="Enter")applyFontSize(customSize)}} className="w-14 text-[11px] border border-zinc-200 rounded-full px-2 py-1 outline-none bg-zinc-50 text-center" />
           </div>
 
+
           <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; restoreSelection(); document.execCommand("formatBlock",false,v); editorRef.current?.focus(); e.target.value=""}} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
             <option value="" disabled>Style</option>
             <option value="p">Paragraph</option>
@@ -434,6 +523,7 @@ export default function NoteApp() {
             <option value="h2">Heading 2</option>
             <option value="h3">Heading 3</option>
           </select>
+
 
           <div className="relative shrink-0">
             <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTableMenu(v => !v) }} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 bg-zinc-50 hover:bg-zinc-100 whitespace-nowrap">
@@ -447,16 +537,19 @@ export default function NoteApp() {
             )}
           </div>
 
+
           <select onMouseDown={saveSelection} onChange={(e) => { const val = parseInt(e.target.value); if (val) insertColumns(val); e.target.value = "" }} defaultValue="" className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
             <option value="" disabled>Columns</option>
             <option value="2">2 Columns</option>
             <option value="3">3 Columns</option>
           </select>
 
+
           <select value={zoom} onChange={e=>setZoom(e.target.value)} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
             {["0.5","0.75","0.9","1.0","1.25","1.5"].map(v=><option key={v} value={v}>{Math.round(parseFloat(v)*100)}%</option>)}
           </select>
         </div>
+
 
         {gridView ? (
           <main className="flex-1 overflow-auto p-8 bg-[#EDE8E6]">
@@ -505,6 +598,7 @@ export default function NoteApp() {
                     {/* 2. The Back Wire: Sits slightly "behind" to create the loop wrap effect */}
                     <div className="absolute left-[10px] top-[14px] w-[30px] h-[10px] border-b-[3px] border-[#B8860B] rounded-full opacity-40 blur-[1px]" />
 
+
                     {/* 3. The Main Gold Wire: Extends off the left edge (-24px) into the hole */}
                     <div className="absolute left-0 top-[10px] w-[42px] h-[14px] border-y-[3px] border-r-[3px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" />
                     
@@ -517,6 +611,7 @@ export default function NoteApp() {
                 
                 {/* Margin Line */}
                 <div className="absolute left-20 top-0 bottom-0 w-[1px] bg-red-300/40 z-20 pointer-events-none" />
+
 
                 <div className="pl-24 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
                   <input className="text-4xl font-bold mb-[24px] w-full bg-white outline-none transition-colors pb-2 relative z-20" style={{fontFamily:'"Bilbo", cursive', color:ACCENT, borderBottom:`2px solid ${ACCENT}22`}} value={activeNote.subject} onChange={e=>setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,subject:e.target.value}:n))} />
@@ -534,6 +629,7 @@ export default function NoteApp() {
                     className="w-full min-h-[1000px] outline-none text-xl break-words [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
                   />
                 </div>
+
 
                 {(activeNote.boxes[currentPageIdx] || []).map((box) => (
                   <div 
@@ -561,9 +657,11 @@ export default function NoteApp() {
                   </div>
                 ))}
 
+
                 {draftBox && draftBox.w > 2 && (
                   <div style={{ position:"absolute", left:draftBox.x, top:draftBox.y, width:draftBox.w, height:draftBox.h, border:`2px dashed ${ACCENT}`, background:`${ACCENT}10`, borderRadius:4, pointerEvents:"none", zIndex:60 }} />
                 )}
+
 
                 <div className="flex justify-center items-center gap-10 py-10 relative z-20">
                   <button disabled={currentPageIdx===0} onClick={()=>setCurrentPageIdx(p=>p-1)} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:ACCENT}}>&larr;</button>
