@@ -7,7 +7,13 @@ import { supabase } from "@/lib/supabase"
 
 interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string }
 type BoxesMap = { [pageIdx: number]: TextBox[] }
-interface NoteData { id: string; subject: string; pages: string[]; folderId: number | null; boxes: BoxesMap }
+interface NoteData { 
+  id: string; 
+  subject: string; 
+  pages: string[]; 
+  folderId: number | null; 
+  boxes: BoxesMap 
+}
 interface FolderData { id: number; name: string; open: boolean }
 
 
@@ -38,11 +44,48 @@ function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => v
   )
 }
 
+function ItemMenu({ actions }: { actions: { label: string; onClick: () => void; danger?: boolean }[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative" onClick={e => e.stopPropagation()}>
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/20 text-zinc-400 hover:text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+      >⋮</button>
+      {open && (
+        <div className="absolute right-0 top-6 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-xl z-50 py-1 min-w-[120px]">
+          {actions.map(a => (
+            <button
+              key={a.label}
+              onClick={e => { e.stopPropagation(); a.onClick(); setOpen(false) }}
+              className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-white/10 transition-colors ${a.danger ? "text-red-400" : "text-zinc-300"}`}
+            >{a.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+const START_ID = "00000000-0000-0000-0000-000000000001"
 
 export default function NoteApp() {
-  const [notes, setNotes] = useState<NoteData[]>([{ id: "00000000-0000-0000-0000-000000000001", subject: "Test", pages: [""], folderId: null, boxes: {} }])
+    const [notes, setNotes] = useState<NoteData[]>([
+    { id: START_ID, subject: "My Creative Notes", pages: [""], folderId: null, boxes: {} }
+  ])
+
   const [folders, setFolders] = useState<FolderData[]>([{ id: 1, name: "General", open: true }])
-  const [activeTabId, setActiveTabId] = useState<string>("00000000-0000-0000-0000-000000000001")
+  const [isLoading, setIsLoading] = useState(true) // Add this
+  const [activeTabId, setActiveTabId] = useState<string | null>(null) // Start null
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
   const [zoom, setZoom] = useState("0.9")
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -64,7 +107,6 @@ export default function NoteApp() {
   const activeNote = notes.find(n => n.id === activeTabId) ?? notes[0]
   const [user, setUser] = useState<any>(null)
 
-
   useEffect(() => {
     // 1. Check if someone is already logged in
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -84,6 +126,7 @@ export default function NoteApp() {
 
   useEffect(() => {
     const saveToCloud = async () => {
+      if (isLoading || !activeNote || !user) return
       if (!activeNote || !user) return // Don't save if no one is logged in!
 
 
@@ -94,6 +137,7 @@ export default function NoteApp() {
           subject: activeNote.subject,
           pages: activeNote.pages,
           boxes: activeNote.boxes,
+          folder_id: activeNote.folderId,  // add this
           user_id: user.id // Uses the ID from the ✅ checkmark
         })
 
@@ -113,6 +157,43 @@ export default function NoteApp() {
       editorRef.current.innerHTML = activeNote.pages[currentPageIdx] || ""
     }
   }, [activeTabId, currentPageIdx, gridView])
+
+  useEffect(() => {
+      const fetchNotes = async () => {
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        
+        if (!currentUser) {
+          setIsLoading(false)
+          return
+        }
+
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('user_id', currentUser.id)
+
+        if (!error && data && data.length > 0) {
+          setNotes(data.map(n => ({
+            id: n.id,
+            subject: n.subject,
+            pages: n.pages ?? [""],
+            boxes: n.boxes ?? {},
+            folderId: n.folder_id ?? null,   // ← this is the key fix
+          })))
+          setActiveTabId(data[0].id)
+        } else {
+          // --- REPLACE THE crypto.randomUUID() LINE HERE ---
+          const newId = Math.random().toString(36).substring(2, 15) 
+          
+          const initialNote = { id: newId, subject: "My Creative Notes", pages: [""], folderId: null, boxes: {} }
+          setNotes([initialNote])
+          setActiveTabId(newId)
+        }
+        setIsLoading(false)
+      }
+
+      fetchNotes()
+    }, [user])
 
 
   const saveSelection = () => {
@@ -217,7 +298,7 @@ export default function NoteApp() {
     e.preventDefault()
     const { x, y } = getPaperXY(e)
     setDrawStart({ x, y })
-    setDraftBox({ id: crypto.randomUUID(), x, y, w: 0, h: 0, content: "" })
+    setDraftBox({ id: Math.random().toString(36), x, y, w: 0, h: 0, content: "" })
     setSelectedBoxId(null)
   }
 
@@ -299,7 +380,11 @@ export default function NoteApp() {
   const addNote = (folderId: number | null = null) => {
     const name = prompt("Name your new note:", "New Note")
     if (!name) return
-    const id = crypto.randomUUID() // ✅ Produces a valid string (UUID)
+    
+    // This generates a string that fits the UUID format perfectly
+    const id = Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15);
+    
     setNotes(prev => [...prev, { id, subject: name, pages: [""], folderId, boxes: {} }])
     setActiveTabId(id)
     setCurrentPageIdx(0)
@@ -309,6 +394,19 @@ export default function NoteApp() {
   const renameNote = (id: string, currentName: string) => {
     const newName = prompt("Rename note:", currentName)
     if (newName) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName } : n))
+  }
+
+    const deleteNote = async (id: string) => {
+    if (!confirm("Delete this note?")) return
+    setNotes(prev => prev.filter(n => n.id !== id))
+    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
+    if (user) await supabase.from('notes').delete().eq('id', id)
+  }
+
+  const deleteFolder = (id: number) => {
+    if (!confirm("Delete folder? Notes inside will move to root.")) return
+    setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: null } : n))
+    setFolders(prev => prev.filter(f => f.id !== id))
   }
 
 
@@ -342,6 +440,14 @@ export default function NoteApp() {
   const btnBase = "w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-zinc-200"
 
 
+      if (isLoading) {
+      return (
+        <div className="h-screen bg-[#110d0e] flex items-center justify-center text-white font-sans">
+          <div className="animate-pulse text-xl">Loading Letter Soup...</div>
+        </div>
+      )
+    }
+
   return (
     <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => setShowTableMenu(false)}>
       <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');" }} />
@@ -361,20 +467,24 @@ export default function NoteApp() {
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-2">Notebooks</p>
           
           {topLevelNotes.map(n => (
-            <button key={n.id} 
-              draggable 
+            <div key={n.id}
+              role="button"
+              draggable
               onDragStart={() => setDraggedNoteId(n.id)}
               onDragEnd={() => setDraggedNoteId(null)}
               onDragOver={e => e.preventDefault()}
               onDrop={e => handleDropNote(e, null, n.id)}
               onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
-              onContextMenu={(e) => { e.preventDefault(); renameNote(n.id, n.subject) }}
-              className={`w-full text-left px-3 py-1.5 text-xs rounded-full transition-all ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
+              className={`group w-full text-left px-3 py-1.5 text-xs rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
               style={activeTabId === n.id ? { backgroundColor: ACCENT, color: "white" } : { color: "#a1a1aa" }}
               onMouseEnter={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "#1f1f1f" }}
               onMouseLeave={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}>
-              📄 {n.subject}
-            </button>
+              <span>📄 {n.subject}</span>
+              <ItemMenu actions={[
+                { label: "Rename", onClick: () => renameNote(n.id, n.subject) },
+                { label: "Delete 🗑️", onClick: () => deleteNote(n.id), danger: true },
+              ]} />
+            </div>
           ))}
 
 
@@ -391,18 +501,22 @@ export default function NoteApp() {
               {f.open && (
                 <div className="pl-5 space-y-0.5">
                   {notesInFolder(f.id).map(n => (
-                    <button key={n.id} 
-                      draggable 
+                    <div key={n.id}
+                      role="button"
+                      draggable
                       onDragStart={() => setDraggedNoteId(n.id)}
                       onDragEnd={() => setDraggedNoteId(null)}
                       onDragOver={e => e.preventDefault()}
                       onDrop={e => handleDropNote(e, f.id, n.id)}
                       onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
-                      onContextMenu={(e) => { e.preventDefault(); renameNote(n.id, n.subject) }}
-                      className={`w-full text-left px-3 py-1 text-[11px] rounded-full transition-all ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
+                      className={`group w-full text-left px-3 py-1 text-[11px] rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
                       style={activeTabId === n.id ? { backgroundColor: ACCENT, color: "white" } : { color: "#71717a" }}>
-                      📄 {n.subject}
-                    </button>
+                      <span>📄 {n.subject}</span>
+                      <ItemMenu actions={[
+                        { label: "Rename", onClick: () => renameNote(n.id, n.subject) },
+                        { label: "Delete", onClick: () => deleteNote(n.id), danger: true },
+                      ]} />
+                    </div>
                   ))}
                   <button onClick={() => addNote(f.id)} className="text-[11px] text-zinc-600 hover:text-white px-3 py-0.5 block">+ Note</button>
                 </div>
