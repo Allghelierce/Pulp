@@ -3,8 +3,6 @@ import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
-
-
 interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string }
 type BoxesMap = { [pageIdx: number]: TextBox[] }
 interface NoteData { 
@@ -16,9 +14,33 @@ interface NoteData {
 }
 interface FolderData { id: number; name: string; open: boolean }
 
-
-const ACCENT = "#600b2779"
-
+function SettingsView({ user, onClose, accentColor, setAccentColor }: { user: any, onClose: () => void, accentColor: string, setAccentColor: (color: string) => void }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-zinc-800">
+      <div className="w-full max-w-sm bg-[#F0ECEA] rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+        <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
+          <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">Settings</span>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-800 text-2xl px-2">&times;</button>
+        </div>
+        <div className="p-6 space-y-6">
+          <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-zinc-200">
+            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-lg">{user?.email?.[0].toUpperCase()}</div>
+            <div className="truncate"><p className="text-xs font-bold truncate">{user?.email}</p></div>
+          </div>
+          <div className="space-y-3">
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Theme Color</p>
+            <div className="flex gap-2">
+              {["#600b27", "#1e3a8a", "#166534", "#92400e"].map(c => (
+                <button key={c} onClick={() => setAccentColor(c + "79")} className="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110" style={{ backgroundColor: c, borderColor: accentColor.startsWith(c) ? "#000" : "transparent" }} />
+              ))}
+            </div>
+          </div>
+          <button onClick={() => supabase.auth.signOut().then(() => window.location.reload())} className="w-full py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-100">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => void }) {
   const [hover, setHover] = useState({ r: 0, c: 0 })
@@ -76,14 +98,15 @@ function ItemMenu({ actions }: { actions: { label: string; onClick: () => void; 
 }
 
 
+
 const START_ID = "00000000-0000-0000-0000-000000000001"
 
 export default function NoteApp() {
-    const [notes, setNotes] = useState<NoteData[]>([
-    { id: START_ID, subject: "My Creative Notes", pages: [""], folderId: null, boxes: {} }
-  ])
-
-  const [folders, setFolders] = useState<FolderData[]>([{ id: 1, name: "General", open: true }])
+  const uid = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  const [notes, setNotes] = useState<NoteData[]>([])
+  const [showSettings, setShowSettings] = useState(false)
+  const [accent, setAccent] = useState("#600b2779")
+  const [folders, setFolders] = useState<FolderData[]>([])
   const [isLoading, setIsLoading] = useState(true) // Add this
   const [activeTabId, setActiveTabId] = useState<string | null>(null) // Start null
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
@@ -99,12 +122,62 @@ export default function NoteApp() {
   const [draftBox, setDraftBox] = useState<TextBox | null>(null)
   const [draggingBox, setDraggingBox] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null)
   const [customSize, setCustomSize] = useState("16")
+  // 1. Add these two states near the other useState declarations
+  const [sketchMode, setSketchMode] = useState(false)
+  const [sketchPrompt, setSketchPrompt] = useState("")
+  const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
+  // 2. Refactor generateSketch
+const generateSketch = async (prompt: string, boxId: string) => {
+  if (!prompt.trim() || !activeTabId) return;
+
+  setLoadingBoxId(boxId);
+
+  try {
+    const res = await fetch("/api/sketch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: prompt.trim() }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+
+    if (!data.url) {
+      console.warn("No image URL returned from /api/sketch", data);
+      return;
+    }
+
+    // Update using functional updater → safer with async
+    setNotes(prevNotes =>
+      prevNotes.map(note =>
+        note.id === activeTabId
+          ? {
+              ...note,
+              boxes: {
+                ...note.boxes,
+                [currentPageIdx]: (note.boxes[currentPageIdx] || []).map(box =>
+                  box.id === boxId ? { ...box, content: data.url } : box
+                )
+              }
+            }
+          : note
+      )
+    );
+  } catch (err) {
+    console.error("Sketch generation failed:", err);
+    // Optional: show toast / mark box as failed
+  } finally {
+    setLoadingBoxId(null);
+  }
+};
 
 
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
   const savedRange = useRef<Range | null>(null)
-  const activeNote = notes.find(n => n.id === activeTabId) ?? notes[0]
+  const activeNote = (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData
+
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -153,10 +226,13 @@ export default function NoteApp() {
 
 
   useEffect(() => {
-    if (!gridView && editorRef.current && editorRef.current.innerHTML !== activeNote.pages[currentPageIdx]) {
+    if (!activeNote) return
+    if (!gridView && editorRef.current &&
+        editorRef.current.innerHTML !== activeNote.pages[currentPageIdx]) {
       editorRef.current.innerHTML = activeNote.pages[currentPageIdx] || ""
     }
-  }, [activeTabId, currentPageIdx, gridView])
+  }, [activeTabId, currentPageIdx, gridView, activeNote])
+
 
   useEffect(() => {
       const fetchNotes = async () => {
@@ -182,12 +258,8 @@ export default function NoteApp() {
           })))
           setActiveTabId(data[0].id)
         } else {
-          // --- REPLACE THE crypto.randomUUID() LINE HERE ---
-          const newId = Math.random().toString(36).substring(2, 15) 
-          
-          const initialNote = { id: newId, subject: "My Creative Notes", pages: [""], folderId: null, boxes: {} }
-          setNotes([initialNote])
-          setActiveTabId(newId)
+          setNotes([])
+          setActiveTabId(null)
         }
         setIsLoading(false)
       }
@@ -298,7 +370,7 @@ export default function NoteApp() {
     e.preventDefault()
     const { x, y } = getPaperXY(e)
     setDrawStart({ x, y })
-    setDraftBox({ id: Math.random().toString(36), x, y, w: 0, h: 0, content: "" })
+  setDraftBox({ id: uid(), x, y, w: 0, h: 0, content: "" })
     setSelectedBoxId(null)
   }
 
@@ -313,20 +385,36 @@ export default function NoteApp() {
     }
     if(!boxMode||!drawStart)return
     const {x,y}=getPaperXY(e)
-    setDraftBox({id:draftBox?.id??crypto.randomUUID(), x:drawStart.x, y:drawStart.y, w:x-drawStart.x, h:y-drawStart.y, content:""})
+    setDraftBox({id:draftBox?.id??uid(), x:drawStart.x, y:drawStart.y, w:x-drawStart.x, h:y-drawStart.y, content:""})
   }
 
 
-  const onPaperMouseUp=()=>{
-    if(draggingBox)setDraggingBox(null)
-    if(!boxMode||!draftBox)return
-    if(Math.abs(draftBox.w)>15&&Math.abs(draftBox.h)>15){
-      const committed={...draftBox,id:crypto.randomUUID()}
-      const b={...activeNote.boxes}
-      if(!b[currentPageIdx])b[currentPageIdx]=[]
-      b[currentPageIdx]=[...b[currentPageIdx],committed]
-      setNotes(notes.map(n=>n.id===activeTabId?{...n,boxes:b}:n))
-      setSelectedBoxId(null)
+  // 4. Replace onPaperMouseUp
+
+ const onPaperMouseUp = () => {
+  if (draggingBox) { setDraggingBox(null); return }
+  if (!boxMode || !draftBox) return
+  if (Math.abs(draftBox.w) > 15 && Math.abs(draftBox.h) > 15) {
+    const committed = { ...draftBox, id: uid() }
+    const b = { ...activeNote.boxes }
+    if (!b[currentPageIdx]) b[currentPageIdx] = []
+    b[currentPageIdx] = [...b[currentPageIdx], committed]
+    setNotes(notes.map(n => n.id === activeTabId ? { ...n, boxes: b } : n))
+    setSelectedBoxId(committed.id)
+
+if (sketchMode) {
+  const newBoxId = committed.id;           // fresh id
+  setSelectedBoxId(newBoxId);
+
+    // Give React one render cycle to include the new box in state
+    requestAnimationFrame(() => {
+      generateSketch(sketchPrompt, newBoxId);
+    });
+
+    setSketchMode(false);
+    setBoxMode(false);
+    setSketchPrompt("");   // optional cleanup
+  }
     }
     setDrawStart(null)
     setDraftBox(null)
@@ -349,12 +437,24 @@ export default function NoteApp() {
 
 
   const onBoxMouseDown = (e: React.MouseEvent<HTMLDivElement>, box: TextBox) => {
-    if (!boxMode) return
-    e.stopPropagation()
-    const { x, y } = getPaperXY(e)
-    setDraggingBox({ id: box.id, offsetX: x - box.x, offsetY: y - box.y })
-    setSelectedBoxId(box.id)
-  }
+    // 1. If clicking delete button, exit
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+    
+    // 2. If clicking the RESIZE HANDLE (bottom-right 20px), don't start a drag
+    const rect = e.currentTarget.getBoundingClientRect();
+    const isResizeZone = (e.clientX > rect.right - 20) && (e.clientY > rect.bottom - 20);
+    if (isResizeZone) return;
+
+    e.stopPropagation();
+    setSelectedBoxId(box.id);
+    e.currentTarget.focus();
+
+    // 3. Start drag only if in boxMode OR clicking the container border
+    if (boxMode || e.target === e.currentTarget) {
+      const { x, y } = getPaperXY(e);
+      setDraggingBox({ id: box.id, offsetX: x - box.x, offsetY: y - box.y });
+    }
+  };
 
 
   const handleDropNote = (e: React.DragEvent, targetFolderId: number | null, targetNoteId?: string) => {
@@ -380,15 +480,37 @@ export default function NoteApp() {
   const addNote = (folderId: number | null = null) => {
     const name = prompt("Name your new note:", "New Note")
     if (!name) return
+
+    const id = uid() // ← was broken Math.random() hack
+
     
-    // This generates a string that fits the UUID format perfectly
-    const id = Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
-    
+
     setNotes(prev => [...prev, { id, subject: name, pages: [""], folderId, boxes: {} }])
     setActiveTabId(id)
     setCurrentPageIdx(0)
   }
+
+  const clearPage = () => {
+  if (!confirm("Clear everything on this page? This cannot be undone.")) return;
+
+  // 1. Clear the Main Text Editor
+  if (editorRef.current) editorRef.current.innerHTML = "";
+
+  // 2. Clear the Boxes and the Text Content in State
+  setNotes(prev => prev.map(n => {
+    if (n.id !== activeTabId) return n;
+    
+    // Clear the specific page string
+    const newPages = [...n.pages];
+    newPages[currentPageIdx] = "";
+
+    // Clear the boxes for this specific page
+    const newBoxes = { ...n.boxes };
+    newBoxes[currentPageIdx] = [];
+
+    return { ...n, pages: newPages, boxes: newBoxes };
+  }));
+};
 
 
   const renameNote = (id: string, currentName: string) => {
@@ -424,8 +546,8 @@ export default function NoteApp() {
   const downloadNote = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${activeNote.subject}</title>
     <style>body{font-family:Georgia,serif;max-width:720px;margin:0 auto;padding:48px;color:#1a1a1a}
-    h1{color:${ACCENT};margin-bottom:32px}hr{border:none;border-top:1px solid #ddd;margin:32px 0}
-    h3{color:${ACCENT}88;font-size:12px;text-transform:uppercase;letter-spacing:.1em}</style>
+    h1{color:${accent};margin-bottom:32px}hr{border:none;border-top:1px solid #ddd;margin:32px 0}
+    h3{color:${accent}88;font-size:12px;text-transform:uppercase;letter-spacing:.1em}</style>
     </head><body><h1>${activeNote.subject}</h1>
     ${activeNote.pages.map((p, i) => `<section><h3>Page ${i + 1}</h3><div>${p || "<em style='color:#bbb'>Empty page</em>"}</div></section>`).join("<hr/>")}</body></html>`
     const a = document.createElement("a")
@@ -450,11 +572,12 @@ export default function NoteApp() {
 
   return (
     <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => setShowTableMenu(false)}>
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} />}
       <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');" }} />
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3 mb-5 cursor-default">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ background: `linear-gradient(135deg,${ACCENT}88,${ACCENT})` }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ background: `linear-gradient(135deg,${accent}88,${accent})` }}>
               <svg width="18" height="18" viewBox="0 0 28 28" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><path d="M4 22C4 22 10 6 24 6"/><path d="M18 13C24 13 24 23 18 23"/></svg>
             </div>
             <h1 className="text-2xl font-bold text-white" style={{ fontFamily: '"Licorice", cursive' }}> Letter Soup </h1>
@@ -463,9 +586,10 @@ export default function NoteApp() {
         </div>
 
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, null)}>
-          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-2">Notebooks</p>
-          
+    <div className="flex-1 overflow-y-auto overflow-x-visible p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, null)}>
+        <>
+          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-2">Binder</p>
+
           {topLevelNotes.map(n => (
             <div key={n.id}
               role="button"
@@ -476,7 +600,7 @@ export default function NoteApp() {
               onDrop={e => handleDropNote(e, null, n.id)}
               onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
               className={`group w-full text-left px-3 py-1.5 text-xs rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
-              style={activeTabId === n.id ? { backgroundColor: ACCENT, color: "white" } : { color: "#a1a1aa" }}
+              style={activeTabId === n.id ? { backgroundColor: accent, color: "white" } : { color: "#a1a1aa" }}
               onMouseEnter={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "#1f1f1f" }}
               onMouseLeave={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}>
               <span>📄 {n.subject}</span>
@@ -487,7 +611,6 @@ export default function NoteApp() {
             </div>
           ))}
 
-
           {folders.map(f => (
             <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, f.id)}>
               <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-zinc-900/60 group" onClick={() => toggleFolder(f.id)}>
@@ -495,8 +618,12 @@ export default function NoteApp() {
                 {renamingFolder === f.id ? (
                   <input autoFocus className="flex-1 bg-white/10 text-white text-xs rounded px-1.5 outline-none min-w-0" defaultValue={f.name} onBlur={e => { renameFolder(f.id, e.target.value); setRenamingFolder(null) }} onKeyDown={e => { if (e.key === "Enter") { renameFolder(f.id, (e.target as HTMLInputElement).value); setRenamingFolder(null) } }} onClick={e => e.stopPropagation()} />
                 ) : (
-                  <span className="flex-1 text-xs text-zinc-300 truncate" onDoubleClick={e => { e.stopPropagation(); setRenamingFolder(f.id) }}>📁 {f.name}</span>
+                  <span className="flex-1 text-xs text-zinc-300 truncate">📁 {f.name}</span>
                 )}
+                <ItemMenu actions={[
+                  { label: "Rename", onClick: () => setRenamingFolder(f.id) },
+                  { label: "Delete 🗑️", onClick: () => deleteFolder(f.id), danger: true },
+                ]} />
               </div>
               {f.open && (
                 <div className="pl-5 space-y-0.5">
@@ -510,11 +637,11 @@ export default function NoteApp() {
                       onDrop={e => handleDropNote(e, f.id, n.id)}
                       onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
                       className={`group w-full text-left px-3 py-1 text-[11px] rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
-                      style={activeTabId === n.id ? { backgroundColor: ACCENT, color: "white" } : { color: "#71717a" }}>
+                      style={activeTabId === n.id ? { backgroundColor: accent, color: "white" } : { color: "#71717a" }}>
                       <span>📄 {n.subject}</span>
                       <ItemMenu actions={[
                         { label: "Rename", onClick: () => renameNote(n.id, n.subject) },
-                        { label: "Delete", onClick: () => deleteNote(n.id), danger: true },
+                        { label: "Delete 🗑️", onClick: () => deleteNote(n.id), danger: true },
                       ]} />
                     </div>
                   ))}
@@ -523,7 +650,8 @@ export default function NoteApp() {
               )}
             </div>
           ))}
-        </div>
+        </>
+    </div>
 
 
         <div className="p-3 border-t border-white/5 space-y-1">
@@ -531,7 +659,7 @@ export default function NoteApp() {
           <button onClick={addFolder} className="w-full text-left text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">+ New Folder</button>
           
           <div className="flex items-center justify-between mt-4">
-            <button className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">
+            <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">
               ⚙️ Settings
             </button>
               <Link 
@@ -551,7 +679,7 @@ export default function NoteApp() {
           {sidebarOpen ? "‹" : "›"}
         </button>
 
-
+      {notes.length > 0 && <>
         <div className="h-10 bg-zinc-50 border-b border-zinc-200 flex items-center pl-10 pr-4 gap-2 z-30 shrink-0 overflow-x-auto justify-between">
           <div className="flex items-center gap-2">
             
@@ -580,7 +708,7 @@ export default function NoteApp() {
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
               <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList")}} className={`${btnBase} text-base leading-none`}>•≡</button>
               <button onMouseDown={e=>{e.preventDefault();execCmd("insertOrderedList")}} className={`${btnBase} text-[10px]`}>1≡</button>
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${ACCENT}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`}>☑</button>
+              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`}>☑</button>
             </div>
 
 
@@ -591,26 +719,47 @@ export default function NoteApp() {
 
 
             <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${ACCENT};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`}>❝</button>
+              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`}>❝</button>
               <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold`}>—</button>
             </div>
-            
-            <button onMouseDown={e=>{e.preventDefault();setBoxMode(v=>!v);setSelectedBoxId(null)}} className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors shrink-0" style={boxMode ? { backgroundColor: ACCENT, color: "white", borderColor: ACCENT } : { borderColor: "#d4d4d8", color: "#52525b" }}>
-              ⬜ BOX
+
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault()
+                const selection = window.getSelection()?.toString()
+                if (!selection) return alert("Highlight text first, then draw a box")
+                setSketchPrompt(selection)
+                setSketchMode(true)
+                setBoxMode(true)
+              }}
+              className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors shrink-0"
+              style={sketchMode ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#d4d4d8", color: accent }}
+            >
+              {sketchMode ? "✏️ Draw Box…" : "🎨 SKETCH"}
             </button>
-          </div>
+          </div> {/* This closes the left-side tool group */}
 
-
+          {/* This starts the right-side tool group (Grid/Save) */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors" style={gridView ? { backgroundColor: ACCENT, color: "white", borderColor: ACCENT } : { borderColor: "#d4d4d8", color: "#52525b" }}>
+            <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#d4d4d8", color: "#52525b" }}>
               ⊞ GRID
             </button>
-            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-bold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: ACCENT }}>
+            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-bold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: accent }}>
               ↓ SAVE
             </button>
           </div>
-        </div>
+        </div> {/* This closes the h-10 toolbar */}
 
+          {/* Trash / Clear Page Button */}
+        <button 
+          onMouseDown={(e) => { e.preventDefault(); clearPage(); }} 
+          className="h-7 w-7 rounded flex items-center justify-center border border-red-200 hover:bg-red-50 text-red-500 transition-colors shrink-0 mr-2"
+          title="Clear Page"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
 
         <div className="h-12 bg-white border-b border-zinc-200 flex items-center px-8 gap-3 z-20 shadow-sm shrink-0 overflow-x-auto">
           <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
@@ -663,18 +812,36 @@ export default function NoteApp() {
             {["0.5","0.75","0.9","1.0","1.25","1.5"].map(v=><option key={v} value={v}>{Math.round(parseFloat(v)*100)}%</option>)}
           </select>
         </div>
+      </>} 
 
-
-        {gridView ? (
+          {notes.length === 0 ? (
+            <main className="flex-1 flex items-center justify-center bg-[#EDE8E6]">
+              <div className="text-center">
+                <p
+                  className="text-5xl font-bold mb-6"
+                  style={{ fontFamily: '"Licorice", cursive', color: accent }}
+                >
+                  Ready?
+                </p>
+                <button
+                  onClick={() => addNote(null)}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white mx-auto transition-all hover:scale-110"
+                  style={{ backgroundColor: accent }}
+                >
+                  +
+                </button>
+              </div>
+            </main>
+          ) : gridView ? (
           <main className="flex-1 overflow-auto p-8 bg-[#EDE8E6]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xs font-bold uppercase tracking-widest" style={{color:ACCENT}}>{activeNote.subject} — All Pages</h2>
+              <h2 className="text-xs font-bold uppercase tracking-widest" style={{color:accent}}>{activeNote.subject} — All Pages</h2>
               <button onClick={()=>setGridView(false)} className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">← Back</button>
             </div>
             <div className="grid grid-cols-3 gap-5">
               {activeNote.pages.map((page,idx)=>(
-                <div key={idx} onClick={()=>{setGridView(false);setCurrentPageIdx(idx)}} className="bg-white shadow-md overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all border-t-[5px]" style={{borderTopColor:ACCENT}}>
-                  <div className="px-4 py-2 border-b border-zinc-100"><p className="text-[9px] font-bold uppercase tracking-widest" style={{color:ACCENT}}>Page {idx+1}</p></div>
+                <div key={idx} onClick={()=>{setGridView(false);setCurrentPageIdx(idx)}} className="bg-white shadow-md overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all border-t-[5px]" style={{borderTopColor:accent}}>
+                  <div className="px-4 py-2 border-b border-zinc-100"><p className="text-[9px] font-bold uppercase tracking-widest" style={{color:accent}}>Page {idx+1}</p></div>
                   <div className="p-4 h-44 overflow-hidden text-[9px] text-zinc-500 leading-relaxed pointer-events-none [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6" dangerouslySetInnerHTML={{__html: page||"<em style='color:#ccc'>Empty</em>"}} />
                 </div>
               ))}
@@ -685,10 +852,10 @@ export default function NoteApp() {
           </main>
         ) : (
           <main className="flex-1 overflow-auto p-8 flex justify-center bg-[#EDE8E6]">
-            <div style={{transform:`scale(${zoom})`,transformOrigin:"top center"}} className="w-full max-w-4xl shrink-0">
+            <div style={{transform:`scale(${zoom})`,transformOrigin:"top center"}} className="w-full max-w-5xl shrink-0">
               <div
                 ref={paperRef}
-                className="bg-white shadow-2xl overflow-hidden relative"
+                className="bg-white shadow-2xl relative"
                 style={{
                   minHeight:"1300px",
                   cursor: boxMode ? "crosshair" : "default",
@@ -701,34 +868,35 @@ export default function NoteApp() {
                 onMouseLeave={onPaperMouseUp}
               >
                 
-              {/* ── 3D DOUBLE-LOOP SPIRAL BINDING ── */}
+{/* ── REALISTIC BRONZE SPIRAL BINDING ── */}
               <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
                 {Array.from({ length: 40 }).map((_, i) => (
                   <div key={i} className="relative w-full h-[32px]">
                     
-                    {/* 1. The Punched Hole: Uses an inner shadow to look like it's cut into the paper */}
-                    <div className="absolute left-[34px] top-2 w-4 h-4 rounded-full bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+                    {/* 1. The Punched Hole: Styled to look like a physical cutout */}
+                    <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
                     
-                    {/* 2. The Back Wire: Sits slightly "behind" to create the loop wrap effect */}
-                    <div className="absolute left-[10px] top-[14px] w-[30px] h-[10px] border-b-[3px] border-[#B8860B] rounded-full opacity-40 blur-[1px]" />
+                    {/* 2. The Back Wire: Creates the illusion of the ring wrapping behind the paper */}
+                    <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
 
-
-                    {/* 3. The Main Gold Wire: Extends off the left edge (-24px) into the hole */}
-                    <div className="absolute left-0 top-[10px] w-[42px] h-[14px] border-y-[3px] border-r-[3px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" />
+                    {/* 3. The Main Bronze Wire: The visible outer C-shape */}
+                    <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" 
+                         style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
                     
-                    {/* 4. Metallic Highlight: A thinner, lighter line on top of the gold for a "shiny" look */}
-                    <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1px] border-[#FFF3A3] rounded-r-full z-20 opacity-60" />
+                    {/* 4. Metallic Highlight: Provides the reflective sheen seen in the photo */}
+                    <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
                     
+                    {/* 5. Shadow on Paper: Soft shadow cast by the ring onto the page */}
+                    <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
                   </div>
                 ))}
               </div>
-                
+                              
                 {/* Margin Line */}
                 <div className="absolute left-20 top-0 bottom-0 w-[1px] bg-red-300/40 z-20 pointer-events-none" />
 
 
                 <div className="pl-24 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
-                  <input className="text-4xl font-bold mb-[24px] w-full bg-white outline-none transition-colors pb-2 relative z-20" style={{fontFamily:'"Bilbo", cursive', color:ACCENT, borderBottom:`2px solid ${ACCENT}22`}} value={activeNote.subject} onChange={e=>setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,subject:e.target.value}:n))} />
                   <div
                     ref={editorRef}
                     contentEditable
@@ -739,48 +907,97 @@ export default function NoteApp() {
                     onFocus={saveSelection}
                     onSelect={saveSelection}
                     onInput={()=>{saveSelection(); const content = editorRef.current?.innerHTML||""; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:n.pages.map((p,i)=>i===currentPageIdx?content:p)}:n))}}
-                    style={{fontFamily:'"Original Surfer", cursive', pointerEvents: boxMode?"none":"auto", lineHeight: "32px"}}
+                    style={{fontFamily:'"Playfair Display", serif', pointerEvents: boxMode?"none":"auto", lineHeight: "32px"}}
                     className="w-full min-h-[1000px] outline-none text-xl break-words [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
                   />
                 </div>
 
 
-                {(activeNote.boxes[currentPageIdx] || []).map((box) => (
-                  <div 
-                    key={box.id}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Delete' || e.key === 'Backspace') deleteBox(box.id);
-                    }}
-                    onMouseDown={(e) => onBoxMouseDown(e, box)}
-                    className={`absolute p-2 transition-colors outline-none z-50 group bg-white/90 ${selectedBoxId === box.id ? 'border-2' : 'border border-dashed hover:border-zinc-500'}`}
-                    style={{ 
-                      left: box.x, top: box.y, width: box.w, height: box.h,
-                      borderColor: selectedBoxId === box.id ? ACCENT : "#a1a1aa",
-                      cursor: boxMode || draggingBox?.id === box.id ? "grab" : "text"
-                    }}
-                  >
-                    {selectedBoxId === box.id && boxMode && <div className="absolute -top-6 right-0 text-[9px] text-white bg-red-500 px-1 rounded">Press Del</div>}
-                    <textarea
-                      onKeyDown={e => e.stopPropagation()}
-                      className="w-full h-full bg-transparent outline-none resize-none text-lg leading-tight"
-                      style={{ fontFamily: '"Original Surfer", cursive', pointerEvents: boxMode || draggingBox?.id === box.id ? "none" : "auto" }}
-                      value={box.content}
-                      onChange={(e) => updateBoxContent(box.id, e.target.value)}
-                    />
-                  </div>
-                ))}
+{(activeNote.boxes[currentPageIdx] || []).map((box) => (
+  <div 
+    key={box.id}
+    tabIndex={0} 
+    onKeyDown={(e) => {
+      if (e.target instanceof HTMLTextAreaElement) return; 
+      if (e.key === 'Backspace' || e.key === 'Delete') deleteBox(box.id);
+    }}
+    onMouseDown={(e) => onBoxMouseDown(e, box)}
+    className={`absolute p-2 transition-shadow outline-none z-50 group bg-white/90 shadow-sm ${selectedBoxId === box.id ? 'ring-2 ring-offset-2' : 'border border-dashed hover:border-zinc-500'}`}
+    style={{ 
+      left: box.x, top: box.y, width: box.w, height: box.h,
+      boxShadow: selectedBoxId === box.id ? `0 0 0 2px white, 0 0 0 4px ${accent}` : 'none',
+      borderColor: selectedBoxId === box.id ? accent : "#a1a1aa",
+      cursor: boxMode || draggingBox?.id === box.id ? "grab" : "default",
+      resize: selectedBoxId === box.id ? 'both' : 'none',
+      overflow: 'hidden'
+    }}
+onMouseUp={(e) => {
+  if (!paperRef.current) return;
+  
+  const rect = e.currentTarget.getBoundingClientRect();
+  const paperRect = paperRef.current.getBoundingClientRect();
+  const s = parseFloat(zoom);
+
+  // Convert screen pixels back to internal paper coordinates
+  const newX = (rect.left - paperRect.left) / s;
+  const newY = (rect.top - paperRect.top) / s;
+  const newW = rect.width / s;
+  const newH = rect.height / s;
+
+  // Only update if change is > 1px to avoid jitter
+  if (Math.abs(box.w - newW) > 1 || Math.abs(box.h - newH) > 1 || 
+      Math.abs(box.x - newX) > 1 || Math.abs(box.y - newY) > 1) {
+    
+    setNotes(prev => prev.map(n => {
+      if (n.id !== activeTabId) return n;
+      const bMap = { ...n.boxes };
+      bMap[currentPageIdx] = bMap[currentPageIdx].map(b => 
+        b.id === box.id ? { ...b, x: newX, y: newY, w: newW, h: newH } : b
+      );
+      return { ...n, boxes: bMap };
+    }));
+  }
+}}
+  >
+    {selectedBoxId === box.id && (
+      <button 
+        onMouseDown={(e) => { e.stopPropagation(); deleteBox(box.id); }}
+        className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs shadow-lg hover:bg-red-600 z-[60]"
+      >✕</button>
+    )}
+
+    {loadingBoxId === box.id ? (
+      <div className="w-full h-full flex items-center justify-center text-zinc-400 text-xs animate-pulse font-mono">GENERATING...</div>
+    ) : box.content.includes("http") || box.content.startsWith("data:image") ? (
+      <div className="w-full h-full pointer-events-none flex items-center justify-center p-1">
+        <img 
+          src={box.content} 
+          className="w-full h-full object-contain filter grayscale mix-blend-multiply opacity-90" 
+          alt="sketch"
+        />
+      </div>
+    ) : (
+      <textarea
+        onKeyDown={e => e.stopPropagation()}
+        className="w-full h-full bg-transparent outline-none resize-none text-lg leading-tight overflow-hidden"
+        style={{ fontFamily: '"Original Surfer", cursive', pointerEvents: boxMode ? "none" : "auto" }}
+        value={box.content}
+        onChange={(e) => updateBoxContent(box.id, e.target.value)}
+      />
+    )}
+  </div>
+))}
 
 
                 {draftBox && draftBox.w > 2 && (
-                  <div style={{ position:"absolute", left:draftBox.x, top:draftBox.y, width:draftBox.w, height:draftBox.h, border:`2px dashed ${ACCENT}`, background:`${ACCENT}10`, borderRadius:4, pointerEvents:"none", zIndex:60 }} />
+                  <div style={{ position:"absolute", left:draftBox.x, top:draftBox.y, width:draftBox.w, height:draftBox.h, border:`2px dashed ${accent}`, background:`${accent}10`, borderRadius:4, pointerEvents:"none", zIndex:60 }} />
                 )}
 
 
                 <div className="flex justify-center items-center gap-10 py-10 relative z-20">
-                  <button disabled={currentPageIdx===0} onClick={()=>setCurrentPageIdx(p=>p-1)} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:ACCENT}}>&larr;</button>
+                  <button disabled={currentPageIdx===0} onClick={()=>setCurrentPageIdx(p=>p-1)} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:accent}}>&larr;</button>
                   <span className="px-4 py-1 bg-zinc-50 rounded-full text-[10px] font-bold text-zinc-400">PAGE {currentPageIdx+1} / {activeNote.pages.length}</span>
-                  <button onClick={()=>{ if(currentPageIdx<activeNote.pages.length-1) setCurrentPageIdx(p=>p+1); else { const np=[...activeNote.pages,""]; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:np}:n)); setCurrentPageIdx(activeNote.pages.length); } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:ACCENT}}>&rarr;</button>
+                  <button onClick={()=>{ if(currentPageIdx<activeNote.pages.length-1) setCurrentPageIdx(p=>p+1); else { const np=[...activeNote.pages,""]; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:np}:n)); setCurrentPageIdx(activeNote.pages.length); } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:accent}}>&rarr;</button>
                 </div>
               </div>
             </div>

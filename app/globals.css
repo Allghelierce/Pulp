@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Licorice&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bilbo&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -36,4 +37,10 @@ body {
     #d1d5db 31px,
     #d1d5db 32px
   ) !important;
+}
+
+/* This forces the resize handle to be the only way to resize */
+.resize-handle-only {
+  resize: both;
+  overflow: hidden;
 }

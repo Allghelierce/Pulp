@@ -7,6 +7,7 @@ const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
 const indie = Indie_Flower({ weight: "400", subsets: ["latin"], variable: "--font-marker" });
 const mono = Roboto_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
