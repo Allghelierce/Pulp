@@ -1,6 +1,5 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
 interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string }
@@ -14,28 +13,294 @@ interface NoteData {
 }
 interface FolderData { id: number; name: string; open: boolean }
 
-function SettingsView({ user, onClose, accentColor, setAccentColor }: { user: any, onClose: () => void, accentColor: string, setAccentColor: (color: string) => void }) {
+// ── Settings primitives ────────────────────────────────────────────────────
+
+function SettingToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-zinc-800">
-      <div className="w-full max-w-sm bg-[#F0ECEA] rounded-2xl shadow-2xl overflow-hidden border border-white/20">
-        <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
-          <span className="text-sm font-bold uppercase tracking-widest text-zinc-400">Settings</span>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-800 text-2xl px-2">&times;</button>
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative w-11 h-6 rounded-full transition-all duration-200 shrink-0 ${checked ? "bg-zinc-800" : "bg-zinc-200"}`}
+    >
+      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+    </button>
+  )
+}
+
+function SettingRow({ title, description, control }: { title: string; description?: string; control: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-8 py-3.5 border-b border-zinc-100 last:border-0">
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium text-zinc-800">{title}</p>
+        {description && <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">{description}</p>}
+      </div>
+      <div className="shrink-0">{control}</div>
+    </div>
+  )
+}
+
+function SettingSection({ title, children }: { title?: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-5">
+      {title && <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2">{title}</p>}
+      <div className="bg-white rounded-xl border border-zinc-100 overflow-hidden px-4">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Settings tabs config (add new tabs here) ───────────────────────────────
+
+const SETTINGS_TABS = [
+  { id: "general",         label: "General",        group: "App"       },
+  { id: "appearance",      label: "Appearance",     group: "App"       },
+  { id: "editor",          label: "Editor",         group: "App"       },
+  { id: "personalization", label: "Personalization",group: "Customize" },
+] as const
+type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
+
+const ACCENT_COLORS = [
+  { hex: "#600b27", name: "Crimson"  },
+  { hex: "#1e3a8a", name: "Cobalt"   },
+  { hex: "#166534", name: "Forest"   },
+  { hex: "#92400e", name: "Amber"    },
+  { hex: "#4c1d95", name: "Violet"   },
+  { hex: "#0f4c5c", name: "Teal"     },
+  { hex: "#881337", name: "Rose"     },
+  { hex: "#374151", name: "Slate"    },
+]
+
+// ── Main settings modal ────────────────────────────────────────────────────
+
+function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme }: {
+  user: any
+  onClose: () => void
+  accentColor: string
+  setAccentColor: (color: string) => void
+  theme: "light" | "dark"
+  setTheme: (t: "light" | "dark") => void
+}) {
+  const [activeTab, setActiveTab]         = useState<SettingsTabId>("general")
+  const [searchQuery, setSearchQuery]     = useState("")
+  const [autoSave, setAutoSave]           = useState(true)
+  const [reduceMotion, setReduceMotion]   = useState(false)
+  const [sidebarOnStart, setSidebarOnStart] = useState(true)
+  const [showBinding, setShowBinding]     = useState(true)
+  const [spellCheck, setSpellCheck]       = useState(true)
+  const [editorFont, setEditorFont]       = useState("Playfair Display")
+  const [lineSpacing, setLineSpacing]     = useState("normal")
+  const [paperStyle, setPaperStyle]       = useState<"lined" | "dotgrid" | "plain">("lined")
+
+  const visibleGroups = searchQuery
+    ? [{ name: "Results", tabs: SETTINGS_TABS.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase())) }]
+    : Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
+        name: g,
+        tabs: SETTINGS_TABS.filter(t => t.group === g),
+      }))
+
+  const SegmentedControl = ({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) => (
+    <div className="flex rounded-lg overflow-hidden border border-zinc-200 text-[11px] font-semibold">
+      {options.map(([val, label]) => (
+        <button
+          key={val}
+          onClick={() => onChange(val)}
+          className={`px-3 py-1.5 transition-all ${value === val ? "bg-zinc-800 text-white" : "bg-white text-zinc-500 hover:bg-zinc-50"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-4xl bg-[#F7F4F3] rounded-2xl shadow-2xl border border-zinc-200/80 flex overflow-hidden" style={{ height: 640 }}>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-3.5 right-3.5 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-zinc-200/80 hover:bg-zinc-300 text-zinc-500 hover:text-zinc-800 text-sm transition-colors"
+        >&times;</button>
+
+        {/* ── Sidebar ── */}
+        <div className="w-52 bg-[#EDE9E7] border-r border-zinc-200/70 flex flex-col shrink-0">
+          <div className="px-4 pt-5 pb-3 border-b border-zinc-200/70">
+            <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-3">Settings</p>
+            <input
+              placeholder="Filter…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-white/80 border border-zinc-200 rounded-lg px-3 py-1.5 text-[11px] outline-none focus:border-zinc-400 transition-colors"
+            />
+          </div>
+          <nav className="flex-1 overflow-y-auto p-2 space-y-3">
+            {visibleGroups.map(group => (
+              <div key={group.name}>
+                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-2 mb-1">{group.name}</p>
+                {group.tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                      activeTab === tab.id
+                        ? "bg-white text-zinc-900 shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <div className="px-4 py-3 border-t border-zinc-200/70">
+            <p className="text-[9px] text-zinc-400">Letter Soup · v1.0.0</p>
+          </div>
         </div>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-zinc-200">
-            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-lg">{user?.email?.[0].toUpperCase()}</div>
-            <div className="truncate"><p className="text-xs font-bold truncate">{user?.email}</p></div>
+
+        {/* ── Content ── */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-8 py-4 border-b border-zinc-200/70 shrink-0">
+            <h2 className="text-[15px] font-semibold text-zinc-800">
+              {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
+            </h2>
           </div>
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Theme Color</p>
-            <div className="flex gap-2">
-              {["#600b27", "#1e3a8a", "#166534", "#92400e"].map(c => (
-                <button key={c} onClick={() => setAccentColor(c + "79")} className="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110" style={{ backgroundColor: c, borderColor: accentColor.startsWith(c) ? "#000" : "transparent" }} />
-              ))}
-            </div>
+
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+
+            {/* ── General ── */}
+            {activeTab === "general" && (<>
+              <SettingSection title="Account">
+                <div className="flex items-center gap-3 py-4 border-b border-zinc-100">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ background: `linear-gradient(135deg,${accentColor}cc,${accentColor})` }}>
+                    {user?.email?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-zinc-800 truncate">{user?.email ?? "Not signed in"}</p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5">Free Plan</p>
+                  </div>
+                </div>
+                <SettingRow
+                  title="Sign out"
+                  description="You'll need to sign back in to access your notes"
+                  control={
+                    <button
+                      onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
+                      className="text-[11px] font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  }
+                />
+              </SettingSection>
+
+              <SettingSection title="About">
+                <SettingRow title="Version" control={<span className="text-[11px] font-mono text-zinc-400">1.0.0</span>} />
+                <SettingRow title="Build" control={<span className="text-[11px] font-mono text-zinc-400">2026.03</span>} />
+                <SettingRow
+                  title="Check for updates"
+                  control={
+                    <button className="text-[11px] font-semibold text-zinc-600 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-400 px-3 py-1.5 rounded-lg transition-colors">
+                      Check
+                    </button>
+                  }
+                />
+              </SettingSection>
+            </>)}
+
+            {/* ── Appearance ── */}
+            {activeTab === "appearance" && (<>
+              <SettingSection title="Theme">
+                <SettingRow
+                  title="Color scheme"
+                  description="Choose how Letter Soup looks to you"
+                  control={<SegmentedControl options={[["light","Light"],["dark","Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} />}
+                />
+                <SettingRow
+                  title="Reduce motion"
+                  description="Minimize animations and transitions across the app"
+                  control={<SettingToggle checked={reduceMotion} onChange={setReduceMotion} />}
+                />
+              </SettingSection>
+              <SettingSection title="Layout">
+                <SettingRow
+                  title="Show sidebar on launch"
+                  description="Keep the notes panel open when you start the app"
+                  control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} />}
+                />
+              </SettingSection>
+            </>)}
+
+            {/* ── Editor ── */}
+            {activeTab === "editor" && (<>
+              <SettingSection title="Writing">
+                <SettingRow
+                  title="Auto-save"
+                  description="Sync changes to the cloud every 2 seconds"
+                  control={<SettingToggle checked={autoSave} onChange={setAutoSave} />}
+                />
+                <SettingRow
+                  title="Spell check"
+                  description="Underline possible misspellings while typing"
+                  control={<SettingToggle checked={spellCheck} onChange={setSpellCheck} />}
+                />
+                <SettingRow
+                  title="Default font"
+                  control={
+                    <select
+                      value={editorFont}
+                      onChange={e => setEditorFont(e.target.value)}
+                      className="text-[11px] border border-zinc-200 rounded-lg px-2.5 py-1.5 outline-none bg-white focus:border-zinc-400 transition-colors"
+                    >
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="Original Surfer">Original Surfer</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Arial">Arial</option>
+                    </select>
+                  }
+                />
+                <SettingRow
+                  title="Line spacing"
+                  control={<SegmentedControl options={[["compact","Compact"],["normal","Normal"],["relaxed","Relaxed"]]} value={lineSpacing} onChange={setLineSpacing} />}
+                />
+              </SettingSection>
+              <SettingSection title="Paper">
+                <SettingRow
+                  title="Page style"
+                  description="Background ruling on your note pages"
+                  control={<SegmentedControl options={[["lined","Lined"],["dotgrid","Dot Grid"],["plain","Plain"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
+                />
+                <SettingRow
+                  title="Show spiral binding"
+                  description="Display the decorative binding on the left edge"
+                  control={<SettingToggle checked={showBinding} onChange={setShowBinding} />}
+                />
+              </SettingSection>
+            </>)}
+
+            {/* ── Personalization ── */}
+            {activeTab === "personalization" && (<>
+              <SettingSection title="Accent Color">
+                <div className="py-4 flex flex-wrap gap-4">
+                  {ACCENT_COLORS.map(({ hex, name }) => (
+                    <button
+                      key={hex}
+                      onClick={() => setAccentColor(hex + "79")}
+                      title={name}
+                      className="group flex flex-col items-center gap-1.5"
+                    >
+                      <div
+                        className="w-9 h-9 rounded-full border-[3px] transition-transform hover:scale-110 shadow-sm"
+                        style={{ backgroundColor: hex, borderColor: accentColor.startsWith(hex) ? "#1a1a1a" : "transparent" }}
+                      />
+                      <span className="text-[9px] text-zinc-400 group-hover:text-zinc-600 transition-colors">{name}</span>
+                    </button>
+                  ))}
+                </div>
+              </SettingSection>
+            </>)}
+
           </div>
-          <button onClick={() => supabase.auth.signOut().then(() => window.location.reload())} className="w-full py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-100">Sign Out</button>
         </div>
       </div>
     </div>
@@ -44,24 +309,62 @@ function SettingsView({ user, onClose, accentColor, setAccentColor }: { user: an
 
 function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => void }) {
   const [hover, setHover] = useState({ r: 0, c: 0 })
-  const MAX = 6
+  const MAX = 8
   return (
     <div>
-      {Array.from({ length: MAX }, (_, r) => (
-        <div key={r} className="flex gap-1 mb-1">
-          {Array.from({ length: MAX }, (_, c) => (
-            <div
-              key={c}
-              onMouseEnter={() => setHover({ r: r + 1, c: c + 1 })}
-              onMouseDown={(e) => { e.preventDefault(); onSelect(r + 1, c + 1) }}
-              className={`w-5 h-5 border rounded cursor-pointer transition-colors ${
-                r < hover.r && c < hover.c ? "bg-[#7A5C66]/30 border-[#7A5C66]" : "bg-zinc-100 border-zinc-300"
-              }`}
-            />
-          ))}
-        </div>
-      ))}
-      <p className="text-[10px] text-zinc-500 text-center mt-1">{hover.r} × {hover.c}</p>
+      <p className="text-[11px] font-medium text-zinc-500 mb-2.5 text-center">
+        {hover.r > 0 && hover.c > 0 ? `${hover.c} × ${hover.r} table` : "Insert table"}
+      </p>
+      <div onMouseLeave={() => setHover({ r: 0, c: 0 })}>
+        {Array.from({ length: MAX }, (_, r) => (
+          <div key={r} className="flex gap-[3px] mb-[3px]">
+            {Array.from({ length: MAX }, (_, c) => (
+              <div
+                key={c}
+                onMouseEnter={() => setHover({ r: r + 1, c: c + 1 })}
+                onMouseDown={(e) => { e.preventDefault(); onSelect(r + 1, c + 1) }}
+                className={`w-[17px] h-[17px] border rounded-[2px] cursor-pointer transition-colors ${
+                  r < hover.r && c < hover.c
+                    ? "bg-blue-100 border-blue-400"
+                    : "bg-zinc-50 border-zinc-300 hover:bg-zinc-100"
+                }`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ColumnPicker({ onSelect }: { onSelect: (n: number) => void }) {
+  const [hovered, setHovered] = useState(0)
+  return (
+    <div>
+      <p className="text-[11px] font-medium text-zinc-500 mb-2.5 text-center">Insert columns</p>
+      <div className="flex gap-2">
+        {[1, 2, 3].map(n => (
+          <button
+            key={n}
+            onMouseEnter={() => setHovered(n)}
+            onMouseLeave={() => setHovered(0)}
+            onMouseDown={e => { e.preventDefault(); onSelect(n) }}
+            className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-lg transition-colors ${hovered === n ? "bg-blue-50" : "hover:bg-zinc-50"}`}
+          >
+            <div className="flex gap-[3px] h-9 w-11">
+              {Array.from({ length: n }, (_, i) => (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-[2px] border transition-colors ${hovered === n ? "border-blue-400 bg-blue-100" : "border-zinc-300 bg-zinc-100"}`}
+                />
+              ))}
+            </div>
+            <span className={`text-[10px] font-medium transition-colors ${hovered === n ? "text-blue-600" : "text-zinc-400"}`}>
+              {n === 1 ? "One" : n === 2 ? "Two" : "Three"}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -106,6 +409,7 @@ export default function NoteApp() {
   const [notes, setNotes] = useState<NoteData[]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [accent, setAccent] = useState("#600b2779")
+  const [theme, setTheme] = useState<"light" | "dark">("light")
   const [folders, setFolders] = useState<FolderData[]>([])
   const [isLoading, setIsLoading] = useState(true) // Add this
   const [activeTabId, setActiveTabId] = useState<string | null>(null) // Start null
@@ -115,6 +419,7 @@ export default function NoteApp() {
   const [gridView, setGridView] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [showTableMenu, setShowTableMenu] = useState(false)
+  const [showColumnMenu, setShowColumnMenu] = useState(false)
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [boxMode, setBoxMode] = useState(false)
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null)
@@ -300,23 +605,137 @@ const generateSketch = async (prompt: string, boxId: string) => {
   const applyFontSize = (sizePx: string) => {
     if (!sizePx || isNaN(Number(sizePx))) return
     restoreSelection()
-    document.execCommand("fontSize", false, "7")
-    editorRef.current?.querySelectorAll('font[size="7"]').forEach(el => {
-      const span = document.createElement("span")
-      span.style.fontSize = sizePx + "px"
-      el.parentNode?.insertBefore(span, el)
-      while (el.firstChild) span.appendChild(el.firstChild)
-      el.parentNode?.removeChild(el)
+
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0) { editorRef.current?.focus(); return }
+
+    const range = sel.getRangeAt(0)
+    if (range.collapsed) { editorRef.current?.focus(); return }
+
+    // Extract selected content, wrap in a new span, strip nested font-size overrides,
+    // then re-insert and re-select — same pattern as Google Docs
+    const span = document.createElement("span")
+    span.style.fontSize = sizePx + "px"
+    const fragment = range.extractContents()
+    // Strip any existing font-size styles from moved nodes so the outer span wins
+    const tmp = document.createElement("div")
+    tmp.appendChild(fragment)
+    tmp.querySelectorAll<HTMLElement>("[style]").forEach(el => el.style.removeProperty("font-size"))
+    // Also unwrap any empty font-size-only spans left behind
+    tmp.querySelectorAll<HTMLElement>("span").forEach(el => {
+      if (!el.getAttribute("style") && el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE) {
+        el.replaceWith(el.firstChild)
+      }
     })
+    while (tmp.firstChild) span.appendChild(tmp.firstChild)
+
+    range.insertNode(span)
+
+    // Re-select the span contents so the selection stays visible (like Google Docs)
+    const newRange = document.createRange()
+    newRange.selectNodeContents(span)
+    sel.removeAllRanges()
+    sel.addRange(newRange)
+    savedRange.current = newRange.cloneRange()
+
+    editorRef.current?.focus()
+  }
+
+
+  const applyBlockStyle = (tag: string) => {
+    restoreSelection()
+
+    const sel = window.getSelection()
+    if (!sel || !sel.rangeCount) { editorRef.current?.focus(); return }
+
+    // Find the nearest block-level ancestor of the cursor
+    const BLOCK_TAGS = new Set(["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "PRE", "LI"])
+    let block: HTMLElement | null = null
+    let node: Node | null = sel.getRangeAt(0).commonAncestorContainer
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
+    while (node && node !== editorRef.current) {
+      if (BLOCK_TAGS.has((node as HTMLElement).tagName)) { block = node as HTMLElement; break }
+      node = node.parentNode
+    }
+
+    if (!block) { editorRef.current?.focus(); return }
+
+    // Replace the block element with the new tag in-place
+    const newEl = document.createElement(tag)
+    newEl.innerHTML = block.innerHTML
+    // Strip any old heading-related inline styles from children
+    newEl.querySelectorAll<HTMLElement>("[style]").forEach(el => {
+      el.style.removeProperty("font-size")
+      el.style.removeProperty("font-weight")
+    })
+    // Apply block-level visual styles (needed because Tailwind resets heading defaults)
+    const styles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
+      h1: { fontSize: "2em",    fontWeight: "700", margin: "0.4em 0" },
+      h2: { fontSize: "1.5em",  fontWeight: "700", margin: "0.4em 0" },
+      h3: { fontSize: "1.17em", fontWeight: "700", margin: "0.4em 0" },
+      p:  { fontSize: "",       fontWeight: "",    margin: "" },
+    }
+    if (styles[tag]) {
+      const s = styles[tag]
+      newEl.style.fontSize   = s.fontSize
+      newEl.style.fontWeight = s.fontWeight
+      newEl.style.margin     = s.margin
+    }
+
+    block.parentNode?.replaceChild(newEl, block)
+
+    // Re-select the full content of the new element (keeps text highlighted like Google Docs)
+    const newRange = document.createRange()
+    newRange.selectNodeContents(newEl)
+    sel.removeAllRanges()
+    sel.addRange(newRange)
+    savedRange.current = newRange.cloneRange()
+
     editorRef.current?.focus()
   }
 
 
   const handleEditorKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key !== " ") return
     const sel = window.getSelection()
     if (!sel || !sel.rangeCount) return
     const range = sel.getRangeAt(0)
+
+    // Find if cursor is inside a blockquote
+    let blockquote: HTMLElement | null = null
+    let n: Node | null = range.startContainer
+    while (n && n !== editorRef.current) {
+      if ((n as HTMLElement).tagName === "BLOCKQUOTE") { blockquote = n as HTMLElement; break }
+      n = n.parentNode
+    }
+
+    if (blockquote) {
+      if (e.key === "Enter") {
+        // Stay inside the quote box on Enter instead of breaking out
+        e.preventDefault()
+        document.execCommand("insertHTML", false, "<br>")
+        return
+      }
+      if (e.key === "Backspace" || e.key === "Delete") {
+        // If blockquote is effectively empty, remove it cleanly to avoid
+        // the browser merging it and leaving residual background-color on text
+        const text = (blockquote.textContent ?? "").replace(/\u00a0/g, "").trim()
+        if (text === "") {
+          e.preventDefault()
+          const afterNode = blockquote.nextSibling
+          blockquote.remove()
+          const newRange = document.createRange()
+          if (afterNode) { newRange.setStart(afterNode, 0) }
+          else if (editorRef.current) { newRange.setStart(editorRef.current, editorRef.current.childNodes.length) }
+          newRange.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(newRange)
+          return
+        }
+      }
+    }
+
+    // Space → list autocomplete
+    if (e.key !== " ") return
     const node = range.startContainer
     if (node.nodeType !== Node.TEXT_NODE) return
     const before = (node.textContent ?? "").slice(0, range.startOffset)
@@ -571,8 +990,8 @@ if (sketchMode) {
     }
 
   return (
-    <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => setShowTableMenu(false)}>
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} />}
+    <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} />}
       <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');" }} />
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
         <div className="p-4 border-b border-white/5 shrink-0">
@@ -654,22 +1073,15 @@ if (sketchMode) {
     </div>
 
 
-        <div className="p-3 border-t border-white/5 space-y-1">
-          <button onClick={() => addNote(null)} className="w-full text-left text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">+ New Note</button>
-          <button onClick={addFolder} className="w-full text-left text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">+ New Folder</button>
-          
-          <div className="flex items-center justify-between mt-4">
-            <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors">
-              ⚙️ Settings
-            </button>
-              <Link 
-                href="/login" 
-                className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors hover:bg-zinc-800"
-              >
-                <span>👤</span> 
-                <span>{user ? '✅' : 'Account'}</span>
-              </Link>
-          </div>
+        <div className="border-t border-white/5 px-3 pt-2 pb-1 flex gap-1 shrink-0">
+          <button onClick={() => addNote(null)} className="flex-1 text-center text-[11px] text-zinc-500 hover:text-white hover:bg-zinc-800 py-1.5 rounded transition-colors">+ Note</button>
+          <button onClick={addFolder} className="flex-1 text-center text-[11px] text-zinc-500 hover:text-white hover:bg-zinc-800 py-1.5 rounded transition-colors">+ Folder</button>
+        </div>
+        <div className="border-t border-white/5 px-3 py-2 shrink-0">
+          <button onClick={() => setShowSettings(true)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
+            <span className="text-[13px] shrink-0">⚙️</span>
+            <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
+          </button>
         </div>
       </div>
 
@@ -680,139 +1092,168 @@ if (sketchMode) {
         </button>
 
       {notes.length > 0 && <>
-        <div className="h-10 bg-zinc-50 border-b border-zinc-200 flex items-center pl-10 pr-4 gap-2 z-30 shrink-0 overflow-x-auto justify-between">
-          <div className="flex items-center gap-2">
-            
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-sm`}>B</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic text-sm`}>I</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-sm`}>U</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-sm`}>S</button>
+        {/* ── Formatting toolbar ── */}
+        <div className="h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-0.5">
+
+            {/* Text style */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-sm`} title="Bold">B</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic text-sm`} title="Italic">I</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-sm`} title="Underline">U</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-[13px]`} title="Strikethrough">S</button>
             </div>
 
-
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <input type="color" onMouseDown={saveSelection} onInput={e => execCmd("foreColor", (e.target as HTMLInputElement).value)} className="w-6 h-6 p-0 border-none bg-transparent cursor-pointer rounded" />
-              <button onMouseDown={e=>{e.preventDefault();execCmd("hiliteColor","#fef08a")}} className={`${btnBase} bg-yellow-200 text-[10px] font-bold`}>H</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("hiliteColor","transparent")}} className={`${btnBase} text-xs`}>✕</button>
+            {/* Color */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <div className="relative" title="Text color">
+                <input type="color" onMouseDown={saveSelection} onInput={e => execCmd("foreColor", (e.target as HTMLInputElement).value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                <div className={`${btnBase} text-[11px] font-bold pointer-events-none`}>A</div>
+              </div>
+              <button
+                onMouseDown={e=>{
+                  e.preventDefault()
+                  // Don't restoreSelection — on mousedown the editor selection is still active.
+                  // Check the actual DOM node's inline backgroundColor (reliable; queryCommandValue is not).
+                  const sel = window.getSelection()
+                  let highlighted = false
+                  if (sel && sel.rangeCount > 0) {
+                    const node = sel.getRangeAt(0).startContainer
+                    const el: HTMLElement | null = node.nodeType === 3
+                      ? (node as Text).parentElement
+                      : node as HTMLElement
+                    const bg = el?.style?.backgroundColor ?? ""
+                    highlighted = bg !== "" && bg !== "transparent"
+                  }
+                  document.execCommand("hiliteColor", false, highlighted ? "transparent" : "#fef08a")
+                  saveSelection()
+                  editorRef.current?.focus()
+                }}
+                className={`${btnBase} text-[10px] font-bold`}
+                style={{ backgroundColor: "#fef08a" }}
+                title="Highlight (click again to remove)"
+              >H</button>
             </div>
 
-
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("superscript")}} className={`${btnBase} text-[10px]`}>x²</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("subscript")}} className={`${btnBase} text-[10px]`}>x₂</button>
-              <button onMouseDown={e=>{e.preventDefault();restoreSelection(); if(document.queryCommandState("superscript")) document.execCommand("superscript",false); if(document.queryCommandState("subscript")) document.execCommand("subscript",false); saveSelection(); editorRef.current?.focus()}} className={`${btnBase} text-xs`}>✕</button>
+            {/* Super/sub */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <button onMouseDown={e=>{e.preventDefault();execCmd("superscript")}} className={`${btnBase} text-[10px]`} title="Superscript (click again to remove)">x²</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("subscript")}} className={`${btnBase} text-[10px]`} title="Subscript (click again to remove)">x₂</button>
             </div>
 
-
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList")}} className={`${btnBase} text-base leading-none`}>•≡</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("insertOrderedList")}} className={`${btnBase} text-[10px]`}>1≡</button>
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`}>☑</button>
+            {/* Lists */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList")}} className={`${btnBase} text-base leading-none`} title="Bullet list">•≡</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("insertOrderedList")}} className={`${btnBase} text-[10px]`} title="Numbered list">1≡</button>
+              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`} title="Checklist">☑</button>
             </div>
 
-
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`}>⇤</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`}>⇥</button>
+            {/* Indent */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`} title="Outdent">⇤</button>
+              <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`} title="Indent">⇥</button>
             </div>
 
-
-            <div className="flex items-center gap-0.5 border-r border-zinc-200 pr-2 shrink-0">
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`}>❝</button>
-              <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold`}>—</button>
+            {/* Blocks */}
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
+              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`} title="Blockquote">❝</button>
+              <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
             </div>
 
+            {/* Sketch */}
             <button
               onMouseDown={(e) => {
                 e.preventDefault()
                 const selection = window.getSelection()?.toString()
                 if (!selection) return alert("Highlight text first, then draw a box")
-                setSketchPrompt(selection)
-                setSketchMode(true)
-                setBoxMode(true)
+                setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
               }}
-              className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors shrink-0"
-              style={sketchMode ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#d4d4d8", color: accent }}
+              className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors shrink-0"
+              style={sketchMode ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: accent }}
+              title="AI Sketch"
             >
-              {sketchMode ? "✏️ Draw Box…" : "🎨 SKETCH"}
-            </button>
-          </div> {/* This closes the left-side tool group */}
-
-          {/* This starts the right-side tool group (Grid/Save) */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-bold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#d4d4d8", color: "#52525b" }}>
-              ⊞ GRID
-            </button>
-            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-bold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: accent }}>
-              ↓ SAVE
+              {sketchMode ? "Draw Box…" : "Sketch"}
             </button>
           </div>
-        </div> {/* This closes the h-10 toolbar */}
 
-          {/* Trash / Clear Page Button */}
-        <button 
-          onMouseDown={(e) => { e.preventDefault(); clearPage(); }} 
-          className="h-7 w-7 rounded flex items-center justify-center border border-red-200 hover:bg-red-50 text-red-500 transition-colors shrink-0 mr-2"
-          title="Clear Page"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
-          </svg>
-        </button>
-
-        <div className="h-12 bg-white border-b border-zinc-200 flex items-center px-8 gap-3 z-20 shadow-sm shrink-0 overflow-x-auto">
-          <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
-            <option value="Original Surfer">Default</option>
-            <option value="Fredoka">Bubbly</option>
-            <option value="Georgia">Serif</option>
-            <option value="Arial">Sans</option>
-          </select>
-
-
-          <div className="flex items-center gap-1 border-r border-zinc-200 pr-3 shrink-0">
-            <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(v){setCustomSize(v);applyFontSize(v)}}} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50">
-              <option value="" disabled>Size</option>
-              {[8,10,11,12,14,16,18,20,24,28,32,36,48,64,72].map(s=><option key={s} value={String(s)}>{s}px</option>)}
-            </select>
-            <input type="number" min={1} max={400} value={customSize} onChange={e=>setCustomSize(e.target.value)} onMouseDown={saveSelection} onKeyDown={e=>{if(e.key==="Enter")applyFontSize(customSize)}} className="w-14 text-[11px] border border-zinc-200 rounded-full px-2 py-1 outline-none bg-zinc-50 text-center" />
+          {/* Right: Grid + Save */}
+          <div className="flex items-center gap-1.5 shrink-0 pl-2">
+            <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: "#52525b" }} title="Page grid">Grid</button>
+            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: accent }} title="Download note">Save</button>
           </div>
-
-
-          <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; restoreSelection(); document.execCommand("formatBlock",false,v); editorRef.current?.focus(); e.target.value=""}} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
-            <option value="" disabled>Style</option>
-            <option value="p">Paragraph</option>
-            <option value="h1">Heading 1</option>
-            <option value="h2">Heading 2</option>
-            <option value="h3">Heading 3</option>
-          </select>
-
-
-          <div className="relative shrink-0">
-            <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTableMenu(v => !v) }} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 bg-zinc-50 hover:bg-zinc-100 whitespace-nowrap">
-              ⊞ Table
-            </button>
-            {showTableMenu && (
-              <div className="absolute top-9 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl p-3 z-50" onClick={e => e.stopPropagation()}>
-                <p className="text-[10px] text-zinc-400 mb-2 text-center">Click to insert</p>
-                <TablePicker onSelect={insertTable} />
-              </div>
-            )}
-          </div>
-
-
-          <select onMouseDown={saveSelection} onChange={(e) => { const val = parseInt(e.target.value); if (val) insertColumns(val); e.target.value = "" }} defaultValue="" className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
-            <option value="" disabled>Columns</option>
-            <option value="2">2 Columns</option>
-            <option value="3">3 Columns</option>
-          </select>
-
-
-          <select value={zoom} onChange={e=>setZoom(e.target.value)} className="text-[11px] border border-zinc-200 rounded-full px-3 py-1 outline-none bg-zinc-50 shrink-0">
-            {["0.5","0.75","0.9","1.0","1.25","1.5"].map(v=><option key={v} value={v}>{Math.round(parseFloat(v)*100)}%</option>)}
-          </select>
         </div>
-      </>} 
+
+        {/* ── Document toolbar ── */}
+        <div className="h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between">
+          <div className="flex items-center gap-2">
+            <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
+              <option value="Original Surfer">Default</option>
+              <option value="Fredoka">Bubbly</option>
+              <option value="Georgia">Serif</option>
+              <option value="Arial">Sans</option>
+            </select>
+
+            <div className="flex items-center gap-1 border-r border-zinc-200 pr-2 shrink-0">
+              <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(v){setCustomSize(v);applyFontSize(v);e.target.value=""}}} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white text-zinc-600">
+                <option value="" disabled>Size</option>
+                {[8,10,11,12,14,16,18,20,24,28,32,36,48,64,72].map(s=><option key={s} value={String(s)}>{s}px</option>)}
+              </select>
+              <input type="number" min={1} max={400} value={customSize} onChange={e=>setCustomSize(e.target.value)} onMouseDown={saveSelection} onKeyDown={e=>{if(e.key==="Enter")applyFontSize(customSize)}} className="w-12 text-[11px] border border-zinc-200 rounded px-1.5 py-1 outline-none bg-white text-center text-zinc-600" />
+            </div>
+
+            <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; applyBlockStyle(v); e.target.value=""}} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
+              <option value="" disabled>Style</option>
+              <option value="p">Paragraph</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
+
+            <div className="w-px h-5 bg-zinc-200 shrink-0" />
+
+            {/* Table picker */}
+            <div className="relative shrink-0">
+              <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTableMenu(v => !v); setShowColumnMenu(false) }} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
+                Table
+              </button>
+              {showTableMenu && (
+                <div className="absolute top-8 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl p-3 z-50" onClick={e => e.stopPropagation()}>
+                  <TablePicker onSelect={(rows, cols) => { insertTable(rows, cols); setShowTableMenu(false) }} />
+                </div>
+              )}
+            </div>
+
+            {/* Column picker */}
+            <div className="relative shrink-0">
+              <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowColumnMenu(v => !v); setShowTableMenu(false) }} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
+                Columns
+              </button>
+              {showColumnMenu && (
+                <div className="absolute top-8 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl p-3 z-50" onClick={e => e.stopPropagation()}>
+                  <ColumnPicker onSelect={n => { insertColumns(n); setShowColumnMenu(false) }} />
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-5 bg-zinc-200 shrink-0" />
+
+            <select value={zoom} onChange={e=>setZoom(e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
+              {["0.5","0.75","0.9","1.0","1.25","1.5"].map(v=><option key={v} value={v}>{Math.round(parseFloat(v)*100)}%</option>)}
+            </select>
+          </div>
+
+          {/* Trash (right-aligned) */}
+          <button
+            onMouseDown={(e) => { e.preventDefault(); clearPage() }}
+            className="h-7 w-7 flex items-center justify-center rounded border border-zinc-200 hover:border-red-200 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
+            title="Clear page"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </>}
 
           {notes.length === 0 ? (
             <main className="flex-1 flex items-center justify-center bg-[#EDE8E6]">
@@ -893,10 +1334,10 @@ if (sketchMode) {
               </div>
                               
                 {/* Margin Line */}
-                <div className="absolute left-20 top-0 bottom-0 w-[1px] bg-red-300/40 z-20 pointer-events-none" />
+                <div className="absolute left-28 top-0 bottom-0 w-[1px] bg-red-300/60 z-20 pointer-events-none" />
 
 
-                <div className="pl-24 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
+                <div className="pl-36 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
                   <div
                     ref={editorRef}
                     contentEditable
