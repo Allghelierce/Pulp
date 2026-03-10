@@ -130,24 +130,28 @@ const ACCENT_COLORS = [
 
 // ── Main settings modal ────────────────────────────────────────────────────
 
-function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme }: {
+function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
+  autoSave, setAutoSave, spellCheck, setSpellCheck, editorFont, setEditorFont,
+  lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
+  reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart,
+}: {
   user: any
   onClose: () => void
   accentColor: string
   setAccentColor: (color: string) => void
   theme: "light" | "dark"
   setTheme: (t: "light" | "dark") => void
+  autoSave: boolean; setAutoSave: (v: boolean) => void
+  spellCheck: boolean; setSpellCheck: (v: boolean) => void
+  editorFont: string; setEditorFont: (v: string) => void
+  lineSpacing: "compact"|"normal"|"relaxed"; setLineSpacing: (v: "compact"|"normal"|"relaxed") => void
+  paperStyle: "lined"|"dotgrid"|"plain"; setPaperStyle: (v: "lined"|"dotgrid"|"plain") => void
+  showBinding: boolean; setShowBinding: (v: boolean) => void
+  reduceMotion: boolean; setReduceMotion: (v: boolean) => void
+  sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
 }) {
   const [activeTab, setActiveTab]         = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery]     = useState("")
-  const [autoSave, setAutoSave]           = useState(true)
-  const [reduceMotion, setReduceMotion]   = useState(false)
-  const [sidebarOnStart, setSidebarOnStart] = useState(true)
-  const [showBinding, setShowBinding]     = useState(true)
-  const [spellCheck, setSpellCheck]       = useState(true)
-  const [editorFont, setEditorFont]       = useState("Playfair Display")
-  const [lineSpacing, setLineSpacing]     = useState("normal")
-  const [paperStyle, setPaperStyle]       = useState<"lined" | "dotgrid" | "plain">("lined")
 
   const visibleGroups = searchQuery
     ? [{ name: "Results", tabs: SETTINGS_TABS.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase())) }]
@@ -179,6 +183,11 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
           onClick={onClose}
           className="absolute top-3.5 right-3.5 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-zinc-200/80 hover:bg-zinc-300 text-zinc-500 hover:text-zinc-800 text-sm transition-colors"
         >&times;</button>
+        <button
+          onClick={onClose}
+          className="absolute bottom-4 right-6 z-20 px-5 py-2 rounded-lg text-[13px] font-semibold text-white transition-opacity hover:opacity-85"
+          style={{ backgroundColor: accentColor }}
+        >Save & Close</button>
 
         {/* ── Sidebar ── */}
         <div className="w-52 bg-[#EDE9E7] border-r border-zinc-200/70 flex flex-col shrink-0">
@@ -319,7 +328,7 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                 />
                 <SettingRow
                   title="Line spacing"
-                  control={<SegmentedControl options={[["compact","Compact"],["normal","Normal"],["relaxed","Relaxed"]]} value={lineSpacing} onChange={setLineSpacing} />}
+                  control={<SegmentedControl options={[["compact","Compact"],["normal","Normal"],["relaxed","Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact"|"normal"|"relaxed")} />}
                 />
               </SettingSection>
               <SettingSection title="Paper">
@@ -343,7 +352,7 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                   {ACCENT_COLORS.map(({ hex, name }) => (
                     <button
                       key={hex}
-                      onClick={() => setAccentColor(hex + "79")}
+                      onClick={() => setAccentColor(hex)}
                       title={name}
                       className="group flex flex-col items-center gap-1.5"
                     >
@@ -499,6 +508,14 @@ export default function NoteApp() {
     setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm })
   const openAlert   = (title: string, message?: string) =>
     setDialog({ type: "alert", title, message })
+  const [autoSave, setAutoSave] = useState(true)
+  const [spellCheck, setSpellCheck] = useState(true)
+  const [editorFont, setEditorFont] = useState("Original Surfer")
+  const [lineSpacing, setLineSpacing] = useState<"compact"|"normal"|"relaxed">("normal")
+  const [paperStyle, setPaperStyle] = useState<"lined"|"dotgrid"|"plain">("lined")
+  const [showBinding, setShowBinding] = useState(true)
+  const [reduceMotion, setReduceMotion] = useState(false)
+  const [sidebarOnStart, setSidebarOnStart] = useState(true)
   // 1. Add these two states near the other useState declarations
   const [sketchMode, setSketchMode] = useState(false)
   const [sketchPrompt, setSketchPrompt] = useState("")
@@ -576,7 +593,7 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
   useEffect(() => {
     const saveToCloud = async () => {
-      if (isLoading || !activeNote || !user) return
+      if (!autoSave || isLoading || !activeNote || !user) return
       if (!activeNote || !user) return // Don't save if no one is logged in!
 
 
@@ -933,10 +950,56 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
   const insertColumns = (num: number) => {
-    let html = `<div style="display:grid;grid-template-columns:repeat(${num},1fr);gap:16px;margin:16px 0">`
-    for (let i = 0; i < num; i++) html += `<div style="border:1px dashed #e4e4e7;padding:12px;min-height:80px;">Column ${i + 1} content…</div>`
-    html += `</div><br/>`
-    insertHTML(html)
+    setShowColumnMenu(false)
+    const editor = editorRef.current
+    if (!editor) return
+
+    const grid = document.createElement("div")
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${num},1fr);gap:16px;margin:16px 0`
+    for (let i = 0; i < num; i++) {
+      const col = document.createElement("div")
+      col.style.cssText = "border:1px dashed #e4e4e7;padding:12px;min-height:80px;"
+      col.appendChild(document.createElement("br"))
+      grid.appendChild(col)
+    }
+    const spacer = document.createElement("p")
+    spacer.appendChild(document.createElement("br"))
+
+    editor.focus()
+    let range: Range | null = null
+    if (savedRange.current) {
+      try {
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(savedRange.current)
+        range = savedRange.current.cloneRange()
+        range.collapse(true)
+      } catch { range = null }
+    }
+    if (!range) {
+      range = document.createRange()
+      range.selectNodeContents(editor)
+      range.collapse(false)
+    }
+
+    const frag = document.createDocumentFragment()
+    frag.appendChild(grid)
+    frag.appendChild(spacer)
+    range.deleteContents()
+    range.insertNode(frag)
+
+    // Place cursor in first column
+    const firstCol = grid.firstElementChild as HTMLElement | null
+    if (firstCol) {
+      const cur = document.createRange()
+      cur.setStart(firstCol, 0)
+      cur.collapse(true)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(cur)
+      savedRange.current = cur.cloneRange()
+    }
+    editor.focus()
   }
 
 
@@ -1142,10 +1205,11 @@ if (sketchMode) {
     }
 
   return (
-    <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A" }} onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} />}
-      <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');" }} />
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} />}
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}` }} />
+      {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: #2C2C2E !important; border-color: #38383A !important; } .ls-toolbar button { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar select, .ls-toolbar input { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200 { border-color: #48484A !important; }` }} />}
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3 mb-5 cursor-default">
@@ -1246,7 +1310,7 @@ if (sketchMode) {
 
       {notes.length > 0 && <>
         {/* ── Formatting toolbar ── */}
-        <div className="h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="ls-toolbar h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-0.5">
 
             {/* Text style */}
@@ -1337,7 +1401,7 @@ if (sketchMode) {
         </div>
 
         {/* ── Document toolbar ── */}
-        <div className="h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between">
+        <div className="ls-toolbar h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between">
           <div className="flex items-center gap-2">
             <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
               <option value="Original Surfer">Default</option>
@@ -1427,7 +1491,7 @@ if (sketchMode) {
               </div>
             </main>
           ) : gridView ? (
-          <main className="flex-1 overflow-auto p-8 bg-[#EDE8E6]">
+          <main className="flex-1 overflow-auto p-8" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xs font-bold uppercase tracking-widest" style={{color:accent}}>{activeNote.subject} — All Pages</h2>
               <button onClick={()=>setGridView(false)} className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">← Back</button>
@@ -1445,17 +1509,29 @@ if (sketchMode) {
             </div>
           </main>
         ) : (
-          <main className="flex-1 overflow-auto p-8 flex justify-center bg-[#EDE8E6]">
+          <main className="flex-1 overflow-auto p-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
             <div style={{transform:`scale(${zoom})`,transformOrigin:"top center"}} className="w-full max-w-5xl shrink-0">
               <div
                 ref={paperRef}
-                className="bg-white shadow-2xl relative"
-                style={{
-                  minHeight:"1300px",
-                  cursor: boxMode ? "crosshair" : "default",
-                  backgroundImage: `linear-gradient(transparent 31px, #e4e4e7 32px)`,
-                  backgroundSize: `100% 32px`
-                }}
+                className="shadow-2xl relative"
+                style={(() => {
+                  const lhMap = { compact: 24, normal: 32, relaxed: 40 }
+                  const lh = lhMap[lineSpacing] ?? 32
+                  const lineColor = theme === "dark" ? "#3a3a3a" : "#e4e4e7"
+                  const bgImage = paperStyle === "plain" ? "none"
+                    : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
+                    : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
+                  const bgSize = paperStyle === "plain" ? "auto"
+                    : paperStyle === "dotgrid" ? "24px 24px"
+                    : `100% ${lh}px`
+                  return {
+                    minHeight: "1300px",
+                    cursor: boxMode ? "crosshair" : "default",
+                    backgroundColor: theme === "dark" ? "#2C2C2E" : "#ffffff",
+                    backgroundImage: bgImage,
+                    backgroundSize: bgSize,
+                  }
+                })()}
                 onMouseDown={onPaperMouseDown}
                 onMouseMove={onPaperMouseMove}
                 onMouseUp={onPaperMouseUp}
@@ -1463,31 +1539,31 @@ if (sketchMode) {
               >
                 
 {/* ── REALISTIC BRONZE SPIRAL BINDING ── */}
-              <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
+              {showBinding && <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
                 {Array.from({ length: 40 }).map((_, i) => (
                   <div key={i} className="relative w-full h-[32px]">
-                    
+
                     {/* 1. The Punched Hole: Styled to look like a physical cutout */}
                     <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
-                    
+
                     {/* 2. The Back Wire: Creates the illusion of the ring wrapping behind the paper */}
                     <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
 
                     {/* 3. The Main Bronze Wire: The visible outer C-shape */}
-                    <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" 
+                    <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10"
                          style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
-                    
+
                     {/* 4. Metallic Highlight: Provides the reflective sheen seen in the photo */}
                     <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
-                    
+
                     {/* 5. Shadow on Paper: Soft shadow cast by the ring onto the page */}
                     <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
                   </div>
                 ))}
-              </div>
+              </div>}
                               
                 {/* Margin Line */}
-                <div className="absolute left-28 top-0 bottom-0 w-[1px] bg-red-300/60 z-20 pointer-events-none" />
+                <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
 
 
                 <div className="pl-36 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
@@ -1495,13 +1571,14 @@ if (sketchMode) {
                     ref={editorRef}
                     contentEditable
                     suppressContentEditableWarning
+                    spellCheck={spellCheck}
                     onKeyDown={handleEditorKeyDown}
                     onKeyUp={saveSelection}
                     onMouseUp={saveSelection}
                     onFocus={saveSelection}
                     onSelect={saveSelection}
                     onInput={()=>{saveSelection(); const content = editorRef.current?.innerHTML||""; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:n.pages.map((p,i)=>i===currentPageIdx?content:p)}:n))}}
-                    style={{fontFamily:'"Playfair Display", serif', pointerEvents: boxMode?"none":"auto", lineHeight: "32px"}}
+                    style={{fontFamily:`"${editorFont}", serif`, pointerEvents: boxMode?"none":"auto", lineHeight: lineSpacing === "compact" ? "24px" : lineSpacing === "relaxed" ? "40px" : "32px", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A"}}
                     className="w-full min-h-[1000px] outline-none text-xl break-words [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
                   />
                 </div>
@@ -1516,9 +1593,10 @@ if (sketchMode) {
       if (e.key === 'Backspace' || e.key === 'Delete') deleteBox(box.id);
     }}
     onMouseDown={(e) => onBoxMouseDown(e, box)}
-    className={`absolute p-2 transition-shadow outline-none z-50 group bg-white/90 shadow-sm ${selectedBoxId === box.id ? 'ring-2 ring-offset-2' : 'border border-dashed hover:border-zinc-500'}`}
-    style={{ 
+    className={`absolute p-2 transition-shadow outline-none z-50 group shadow-sm ${selectedBoxId === box.id ? 'ring-2 ring-offset-2' : 'border border-dashed hover:border-zinc-500'}`}
+    style={{
       left: box.x, top: box.y, width: box.w, height: box.h,
+      backgroundColor: theme === "dark" ? "rgba(44,44,46,0.95)" : "rgba(255,255,255,0.92)",
       boxShadow: selectedBoxId === box.id ? `0 0 0 2px white, 0 0 0 4px ${accent}` : 'none',
       borderColor: selectedBoxId === box.id ? accent : "#a1a1aa",
       cursor: boxMode || draggingBox?.id === box.id ? "grab" : "default",
