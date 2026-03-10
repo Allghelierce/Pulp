@@ -13,6 +13,64 @@ interface NoteData {
 }
 interface FolderData { id: number; name: string; open: boolean }
 
+// ── App dialog (replaces native prompt / confirm / alert) ──────────────────
+
+type DialogConfig =
+  | { type: "prompt";  title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; onConfirm: (val: string) => void }
+  | { type: "confirm"; title: string; message?: string; confirmLabel?: string; danger?: boolean; onConfirm: () => void }
+  | { type: "alert";   title: string; message?: string }
+
+function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
+  const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
+
+  const confirm = () => {
+    if (config.type === "prompt") config.onConfirm(val)
+    else if (config.type === "confirm") config.onConfirm()
+    onClose()
+  }
+
+  const btnColor = config.type === "confirm" && config.danger ? "#dc2626" : accent
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-[300] flex items-center justify-center p-4" onMouseDown={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+        onMouseDown={e => e.stopPropagation()}
+        onKeyDown={e => { if (e.key === "Enter" && config.type !== "alert") confirm(); if (e.key === "Escape") onClose() }}
+      >
+        <p className="text-[15px] font-semibold text-zinc-800 leading-snug">{config.title}</p>
+        {(config.type === "confirm" || config.type === "alert") && config.message && (
+          <p className="text-[13px] text-zinc-500 mt-1.5 leading-relaxed">{config.message}</p>
+        )}
+        {config.type === "prompt" && (
+          <input
+            autoFocus
+            value={val}
+            onChange={e => setVal(e.target.value)}
+            placeholder={config.placeholder ?? ""}
+            className="mt-4 w-full border border-zinc-200 rounded-lg px-3 py-2 text-[13px] outline-none bg-zinc-50 focus:border-zinc-400"
+          />
+        )}
+        <div className="flex gap-2 mt-5 justify-end">
+          {config.type !== "alert" && (
+            <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-medium bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors">
+              Cancel
+            </button>
+          )}
+          <button
+            onClick={confirm}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium text-white transition-opacity hover:opacity-85"
+            style={{ backgroundColor: btnColor }}
+          >
+            {config.type === "prompt"  ? (config.confirmLabel ?? "Create") :
+             config.type === "confirm" ? (config.confirmLabel ?? "Confirm") : "OK"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Settings primitives ────────────────────────────────────────────────────
 
 function SettingToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -307,29 +365,31 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
   )
 }
 
-function TablePicker({ onSelect }: { onSelect: (rows: number, cols: number) => void }) {
+function TablePicker({ onSelect, accent }: { onSelect: (rows: number, cols: number) => void; accent: string }) {
   const [hover, setHover] = useState({ r: 0, c: 0 })
   const MAX = 8
   return (
-    <div>
-      <p className="text-[11px] font-medium text-zinc-500 mb-2.5 text-center">
-        {hover.r > 0 && hover.c > 0 ? `${hover.c} × ${hover.r} table` : "Insert table"}
+    <div className="select-none">
+      <p className="text-[11px] font-semibold text-zinc-500 mb-2.5 text-center tracking-wide">
+        {hover.r > 0 && hover.c > 0 ? `${hover.c} × ${hover.r}` : "Insert Table"}
       </p>
       <div onMouseLeave={() => setHover({ r: 0, c: 0 })}>
         {Array.from({ length: MAX }, (_, r) => (
           <div key={r} className="flex gap-[3px] mb-[3px]">
-            {Array.from({ length: MAX }, (_, c) => (
-              <div
-                key={c}
-                onMouseEnter={() => setHover({ r: r + 1, c: c + 1 })}
-                onMouseDown={(e) => { e.preventDefault(); onSelect(r + 1, c + 1) }}
-                className={`w-[17px] h-[17px] border rounded-[2px] cursor-pointer transition-colors ${
-                  r < hover.r && c < hover.c
-                    ? "bg-blue-100 border-blue-400"
-                    : "bg-zinc-50 border-zinc-300 hover:bg-zinc-100"
-                }`}
-              />
-            ))}
+            {Array.from({ length: MAX }, (_, c) => {
+              const active = r < hover.r && c < hover.c
+              return (
+                <div
+                  key={c}
+                  onMouseEnter={() => setHover({ r: r + 1, c: c + 1 })}
+                  onMouseDown={(e) => { e.preventDefault(); onSelect(r + 1, c + 1) }}
+                  className="w-[18px] h-[18px] border rounded-[2px] cursor-pointer transition-all"
+                  style={active
+                    ? { backgroundColor: accent + "22", borderColor: accent }
+                    : { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8" }}
+                />
+              )
+            })}
           </div>
         ))}
       </div>
@@ -420,6 +480,10 @@ export default function NoteApp() {
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [showTableMenu, setShowTableMenu] = useState(false)
   const [showColumnMenu, setShowColumnMenu] = useState(false)
+  const tableButtonRef = useRef<HTMLButtonElement>(null)
+  const colButtonRef = useRef<HTMLButtonElement>(null)
+  const [tableMenuPos, setTableMenuPos] = useState({ top: 0, left: 0 })
+  const [colMenuPos, setColMenuPos] = useState({ top: 0, left: 0 })
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [boxMode, setBoxMode] = useState(false)
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null)
@@ -427,6 +491,14 @@ export default function NoteApp() {
   const [draftBox, setDraftBox] = useState<TextBox | null>(null)
   const [draggingBox, setDraggingBox] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null)
   const [customSize, setCustomSize] = useState("16")
+  const [dialog, setDialog] = useState<DialogConfig | null>(null)
+
+  const openPrompt  = (title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) =>
+    setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm })
+  const openConfirm = (title: string, message: string, confirmLabel: string, danger: boolean, onConfirm: () => void) =>
+    setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm })
+  const openAlert   = (title: string, message?: string) =>
+    setDialog({ type: "alert", title, message })
   // 1. Add these two states near the other useState declarations
   const [sketchMode, setSketchMode] = useState(false)
   const [sketchPrompt, setSketchPrompt] = useState("")
@@ -734,6 +806,52 @@ const generateSketch = async (prompt: string, boxId: string) => {
       }
     }
 
+    // Tab → navigate between table cells
+    if (e.key === "Tab") {
+      let cell: HTMLElement | null = null
+      let cn: Node | null = range.startContainer
+      while (cn && cn !== editorRef.current) {
+        const tag = (cn as HTMLElement).tagName
+        if (tag === "TD" || tag === "TH") { cell = cn as HTMLElement; break }
+        cn = cn.parentNode
+      }
+      if (cell) {
+        e.preventDefault()
+        const table = cell.closest("table")!
+        const cells = Array.from(table.querySelectorAll<HTMLElement>("td, th"))
+        const idx = cells.indexOf(cell)
+        if (e.shiftKey) {
+          // Move to previous cell
+          if (idx > 0) {
+            const prev = cells[idx - 1]
+            const r = document.createRange(); r.selectNodeContents(prev); r.collapse(false)
+            sel.removeAllRanges(); sel.addRange(r)
+          }
+        } else if (idx < cells.length - 1) {
+          // Move to next cell
+          const next = cells[idx + 1]
+          const r = document.createRange(); r.selectNodeContents(next); r.collapse(false)
+          sel.removeAllRanges(); sel.addRange(r)
+        } else {
+          // Last cell → append a new row
+          const numCols = (cell.closest("tr")?.querySelectorAll("td, th").length) ?? 1
+          const tbody = table.querySelector("tbody") ?? table
+          const newRow = document.createElement("tr")
+          for (let i = 0; i < numCols; i++) {
+            const td = document.createElement("td")
+            td.style.cssText = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
+            td.innerHTML = "<br>"
+            newRow.appendChild(td)
+          }
+          tbody.appendChild(newRow)
+          const firstCell = newRow.querySelector("td")!
+          const r = document.createRange(); r.selectNodeContents(firstCell); r.collapse(true)
+          sel.removeAllRanges(); sel.addRange(r)
+        }
+        return
+      }
+    }
+
     // Space → list autocomplete
     if (e.key !== " ") return
     const node = range.startContainer
@@ -753,19 +871,64 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
   const insertTable = (rows: number, cols: number) => {
-    let html = `<table style="border-collapse:collapse;width:100%;margin:16px 0">`
-    for (let r = 0; r < rows; r++) {
-      html += `<tr>`
-      for (let c = 0; c < cols; c++) {
-        const tag = r === 0 ? "th" : "td"
-        const style = `border:1px solid #a1a1aa;padding:8px 12px;text-align:left;${r === 0 ? "background:#f9fafb;font-weight:bold;" : ""}`
-        html += `<${tag} style="${style}">${r === 0 ? `Col ${c + 1}` : ""}</${tag}>`
-      }
-      html += `</tr>`
-    }
-    html += `</table><br/>`
     setShowTableMenu(false)
-    insertHTML(html)
+
+    // Build table DOM directly — more reliable than execCommand("insertHTML")
+    const cellStyle = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
+    const table = document.createElement("table")
+    table.style.cssText = "border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed"
+    const tbody = document.createElement("tbody")
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement("tr")
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement("td")
+        td.style.cssText = cellStyle
+        td.appendChild(document.createElement("br"))
+        tr.appendChild(td)
+      }
+      tbody.appendChild(tr)
+    }
+    table.appendChild(tbody)
+    const spacer = document.createElement("p")
+    spacer.appendChild(document.createElement("br"))
+
+    // Find insertion point: use saved range, or end of editor
+    const editor = editorRef.current
+    if (!editor) return
+    editor.focus()
+
+    let range: Range | null = null
+    if (savedRange.current) {
+      try {
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(savedRange.current)
+        range = savedRange.current.cloneRange()
+        range.collapse(true)
+      } catch { range = null }
+    }
+    if (!range) {
+      range = document.createRange()
+      range.selectNodeContents(editor)
+      range.collapse(false)
+    }
+
+    range.deleteContents()
+    range.insertNode(spacer)
+    range.insertNode(table)
+
+    // Place cursor in first cell
+    const firstCell = table.querySelector("td")
+    if (firstCell) {
+      const cur = document.createRange()
+      cur.setStart(firstCell, 0)
+      cur.collapse(true)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(cur)
+      savedRange.current = cur.cloneRange()
+    }
+    editor.focus()
   }
 
 
@@ -897,57 +1060,46 @@ if (sketchMode) {
 
 
   const addNote = (folderId: number | null = null) => {
-    const name = prompt("Name your new note:", "New Note")
-    if (!name) return
-
-    const id = uid() // ← was broken Math.random() hack
-
-    
-
-    setNotes(prev => [...prev, { id, subject: name, pages: [""], folderId, boxes: {} }])
-    setActiveTabId(id)
-    setCurrentPageIdx(0)
+    openPrompt("Name your note", "New Note", "Note name…", "Create", (name) => {
+      if (!name.trim()) return
+      const id = uid()
+      setNotes(prev => [...prev, { id, subject: name.trim(), pages: [""], folderId, boxes: {} }])
+      setActiveTabId(id)
+      setCurrentPageIdx(0)
+    })
   }
 
   const clearPage = () => {
-  if (!confirm("Clear everything on this page? This cannot be undone.")) return;
-
-  // 1. Clear the Main Text Editor
-  if (editorRef.current) editorRef.current.innerHTML = "";
-
-  // 2. Clear the Boxes and the Text Content in State
-  setNotes(prev => prev.map(n => {
-    if (n.id !== activeTabId) return n;
-    
-    // Clear the specific page string
-    const newPages = [...n.pages];
-    newPages[currentPageIdx] = "";
-
-    // Clear the boxes for this specific page
-    const newBoxes = { ...n.boxes };
-    newBoxes[currentPageIdx] = [];
-
-    return { ...n, pages: newPages, boxes: newBoxes };
-  }));
-};
-
-
-  const renameNote = (id: string, currentName: string) => {
-    const newName = prompt("Rename note:", currentName)
-    if (newName) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName } : n))
+    openConfirm("Clear this page?", "All content on this page will be deleted. This cannot be undone.", "Clear", true, () => {
+      if (editorRef.current) editorRef.current.innerHTML = ""
+      setNotes(prev => prev.map(n => {
+        if (n.id !== activeTabId) return n
+        const newPages = [...n.pages]; newPages[currentPageIdx] = ""
+        const newBoxes = { ...n.boxes }; newBoxes[currentPageIdx] = []
+        return { ...n, pages: newPages, boxes: newBoxes }
+      }))
+    })
   }
 
-    const deleteNote = async (id: string) => {
-    if (!confirm("Delete this note?")) return
-    setNotes(prev => prev.filter(n => n.id !== id))
-    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
-    if (user) await supabase.from('notes').delete().eq('id', id)
+  const renameNote = (id: string, currentName: string) => {
+    openPrompt("Rename note", currentName, "Note name…", "Rename", (newName) => {
+      if (newName.trim()) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName.trim() } : n))
+    })
+  }
+
+  const deleteNote = async (id: string) => {
+    openConfirm("Delete note?", "This cannot be undone.", "Delete", true, async () => {
+      setNotes(prev => prev.filter(n => n.id !== id))
+      if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
+      if (user) await supabase.from('notes').delete().eq('id', id)
+    })
   }
 
   const deleteFolder = (id: number) => {
-    if (!confirm("Delete folder? Notes inside will move to root.")) return
-    setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: null } : n))
-    setFolders(prev => prev.filter(f => f.id !== id))
+    openConfirm("Delete folder?", "Notes inside will be moved to root.", "Delete", true, () => {
+      setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: null } : n))
+      setFolders(prev => prev.filter(f => f.id !== id))
+    })
   }
 
 
@@ -991,6 +1143,7 @@ if (sketchMode) {
 
   return (
     <div className="flex h-screen bg-[#F0ECEA] text-[#1A1A1A] overflow-hidden font-sans" onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+      {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} />}
       <style dangerouslySetInnerHTML={{ __html: "@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');" }} />
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
@@ -1165,7 +1318,7 @@ if (sketchMode) {
               onMouseDown={(e) => {
                 e.preventDefault()
                 const selection = window.getSelection()?.toString()
-                if (!selection) return alert("Highlight text first, then draw a box")
+                if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
                 setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
               }}
               className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors shrink-0"
@@ -1213,23 +1366,23 @@ if (sketchMode) {
 
             {/* Table picker */}
             <div className="relative shrink-0">
-              <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTableMenu(v => !v); setShowColumnMenu(false) }} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
+              <button ref={tableButtonRef} onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); const r = tableButtonRef.current?.getBoundingClientRect(); if (r) setTableMenuPos({ top: r.bottom + 4, left: r.left }); setShowTableMenu(v => !v); setShowColumnMenu(false) }} onClick={e => e.stopPropagation()} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
                 Table
               </button>
               {showTableMenu && (
-                <div className="absolute top-8 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl p-3 z-50" onClick={e => e.stopPropagation()}>
-                  <TablePicker onSelect={(rows, cols) => { insertTable(rows, cols); setShowTableMenu(false) }} />
+                <div style={{ position: "fixed", top: tableMenuPos.top, left: tableMenuPos.left, zIndex: 1000 }} className="bg-white border border-zinc-200 rounded-xl shadow-xl p-3" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                  <TablePicker accent={accent} onSelect={(rows, cols) => { insertTable(rows, cols); setShowTableMenu(false) }} />
                 </div>
               )}
             </div>
 
             {/* Column picker */}
             <div className="relative shrink-0">
-              <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowColumnMenu(v => !v); setShowTableMenu(false) }} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
+              <button ref={colButtonRef} onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); const r = colButtonRef.current?.getBoundingClientRect(); if (r) setColMenuPos({ top: r.bottom + 4, left: r.left }); setShowColumnMenu(v => !v); setShowTableMenu(false) }} onClick={e => e.stopPropagation()} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
                 Columns
               </button>
               {showColumnMenu && (
-                <div className="absolute top-8 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl p-3 z-50" onClick={e => e.stopPropagation()}>
+                <div style={{ position: "fixed", top: colMenuPos.top, left: colMenuPos.left, zIndex: 1000 }} className="bg-white border border-zinc-200 rounded-xl shadow-xl p-3" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                   <ColumnPicker onSelect={n => { insertColumns(n); setShowColumnMenu(false) }} />
                 </div>
               )}
