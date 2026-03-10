@@ -483,9 +483,10 @@ export default function NoteApp() {
   const [isLoading, setIsLoading] = useState(true) // Add this
   const [activeTabId, setActiveTabId] = useState<string | null>(null) // Start null
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
-  const [zoom, setZoom] = useState("0.9")
+  const [zoom, setZoom] = useState("0.85")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [gridView, setGridView] = useState(false)
+  const [carouselIdx, setCarouselIdx] = useState(0)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [showTableMenu, setShowTableMenu] = useState(false)
   const [showColumnMenu, setShowColumnMenu] = useState(false)
@@ -1461,7 +1462,7 @@ if (sketchMode) {
 
           {/* Right: Grid + Save */}
           <div className="flex items-center gap-1.5 shrink-0 pl-2">
-            <button onMouseDown={e=>{e.preventDefault();setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: "#52525b" }} title="Page grid">Grid</button>
+            <button onMouseDown={e=>{e.preventDefault();setCarouselIdx(currentPageIdx);setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: "#52525b" }} title="Page grid">Grid</button>
             <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: accent }} title="Download note">Save</button>
           </div>
         </div>
@@ -1521,7 +1522,7 @@ if (sketchMode) {
             <div className="w-px h-5 bg-zinc-200 shrink-0" />
 
             <select value={zoom} onChange={e=>setZoom(e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
-              {["0.5","0.75","0.9","1.0","1.25","1.5"].map(v=><option key={v} value={v}>{Math.round(parseFloat(v)*100)}%</option>)}
+              {[["0.43","50%"],["0.64","75%"],["0.85","100%"],["1.06","125%"],["1.28","150%"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
             </select>
           </div>
 
@@ -1557,26 +1558,160 @@ if (sketchMode) {
               </div>
             </main>
           ) : gridView ? (
-          <main className="flex-1 overflow-auto p-8" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xs font-bold uppercase tracking-widest" style={{color:accent}}>{activeNote.subject} — All Pages</h2>
-              <button onClick={()=>setGridView(false)} className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">← Back</button>
+          <main className="flex-1 flex flex-col overflow-hidden select-none" style={{ backgroundColor: theme === "dark" ? "#0e0e0e" : "#E8E3E0" }}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-8 pt-5 pb-0 shrink-0">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest" style={{ color: accent }}>{activeNote.subject}</h2>
+              <button onClick={() => setGridView(false)} className="text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors font-medium">← Back to editor</button>
             </div>
-            <div className="grid grid-cols-3 gap-5">
-              {activeNote.pages.map((page,idx)=>(
-                <div key={idx} onClick={()=>{setGridView(false);setCurrentPageIdx(idx)}} className="bg-white shadow-md overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all border-t-[5px]" style={{borderTopColor:accent}}>
-                  <div className="px-4 py-2 border-b border-zinc-100"><p className="text-[9px] font-bold uppercase tracking-widest" style={{color:accent}}>Page {idx+1}</p></div>
-                  <div className="p-4 h-44 overflow-hidden text-[9px] text-zinc-500 leading-relaxed pointer-events-none [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6" dangerouslySetInnerHTML={{__html: page||"<em style='color:#ccc'>Empty</em>"}} />
-                </div>
-              ))}
-              <div onClick={()=>{const np=[...activeNote.pages,""]; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:np}:n)); setGridView(false); setCurrentPageIdx(activeNote.pages.length)}} className="bg-white/40 border-2 border-dashed border-zinc-300 flex items-center justify-center h-[200px] cursor-pointer hover:border-zinc-400 hover:bg-white/60 transition-all">
-                <span className="text-zinc-400 text-sm">+ New Page</span>
+
+            {/* Carousel stage */}
+            <div className="flex-1 flex items-center justify-center" style={{ perspective: "1400px" }}>
+              <div className="relative w-full h-full flex items-center justify-center">
+                {[-1, 0, 1].map(offset => {
+                  const idx = carouselIdx + offset
+                  const isNewCard = idx === activeNote.pages.length && offset === 1
+                  if (idx < 0 || (idx >= activeNote.pages.length && !isNewCard)) return null
+                  const isCenter = offset === 0
+                  const page = activeNote.pages[idx] ?? ""
+
+                  const lhMap: Record<string, number> = { compact: 24, normal: 32, relaxed: 40 }
+                  const lh = lhMap[lineSpacing] ?? 32
+                  const lineColor = theme === "dark" ? "#3a3a3a" : "#e4e4e7"
+                  const bgImage = paperStyle === "plain" ? "none"
+                    : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
+                    : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
+                  const bgSize = paperStyle === "plain" ? "auto"
+                    : paperStyle === "dotgrid" ? `${lh * 0.75}px ${lh * 0.75}px`
+                    : `100% ${lh}px`
+
+                  return (
+                    <div
+                      key={isNewCard ? "new" : idx}
+                      onClick={() => { if (!isCenter) setCarouselIdx(isNewCard ? activeNote.pages.length - 1 : idx) }}
+                      style={{
+                        position: "absolute",
+                        transform: isCenter
+                          ? "translateX(0px) scale(1) rotateY(0deg)"
+                          : offset === -1
+                            ? "translateX(-340px) scale(0.72) rotateY(32deg)"
+                            : "translateX(340px) scale(0.72) rotateY(-32deg)",
+                        zIndex: isCenter ? 20 : 5,
+                        opacity: isCenter ? 1 : 0.55,
+                        transition: "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease",
+                        cursor: isCenter ? "default" : "pointer",
+                        transformStyle: "preserve-3d",
+                        willChange: "transform",
+                      }}
+                    >
+                      {isNewCard ? (
+                        <div
+                          onClick={() => {
+                            const np = [...activeNote.pages, ""]
+                            setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n))
+                            setCarouselIdx(activeNote.pages.length)
+                          }}
+                          style={{ width: 310, height: 438, borderRadius: 8, border: `2px dashed ${accent}55`, background: `${accent}08`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, cursor: "pointer" }}
+                        >
+                          <div style={{ width: 40, height: 40, borderRadius: "50%", backgroundColor: `${accent}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: accent }}>+</div>
+                          <span style={{ color: accent, fontSize: 12, fontWeight: 600 }}>New Page</span>
+                        </div>
+                      ) : (
+                        <div style={{
+                          width: 310, height: 438, borderRadius: 8, overflow: "hidden", position: "relative",
+                          backgroundColor: theme === "dark" ? "#2C2C2E" : "#ffffff",
+                          backgroundImage: bgImage, backgroundSize: bgSize,
+                          boxShadow: isCenter
+                            ? "0 50px 100px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.07)"
+                            : "0 16px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05)",
+                        }}>
+                          {/* Top accent stripe */}
+                          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, backgroundColor: accent, zIndex: 3 }} />
+
+                          {/* Page badge */}
+                          <div style={{ position: "absolute", top: 12, right: 10, zIndex: 4, background: accent, color: "white", fontSize: 8, fontWeight: 800, letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 99 }}>
+                            PAGE {idx + 1}
+                          </div>
+
+                          {/* Margin line */}
+                          <div style={{ position: "absolute", left: 58, top: 0, bottom: 0, width: 1, background: "rgba(252,165,165,0.45)", zIndex: 2, pointerEvents: "none" }} />
+
+                          {/* Full-page content, scaled to fit card */}
+                          <div style={{
+                            position: "absolute", top: 0, left: 0,
+                            width: 827, height: 1170,
+                            transform: "scale(0.3745)", transformOrigin: "top left",
+                            padding: "52px 80px 80px 160px",
+                            fontSize: 20,
+                            lineHeight: lineSpacing === "compact" ? "24px" : lineSpacing === "relaxed" ? "40px" : "32px",
+                            fontFamily: `"${editorFont}", serif`,
+                            color: theme === "dark" ? "#E5E5E7" : "#1A1A1A",
+                            pointerEvents: "none",
+                          }}
+                            dangerouslySetInnerHTML={{ __html: page || `<span style="color:#ccc;font-style:italic;font-size:16px">Empty page</span>` }}
+                          />
+
+                          {/* Open overlay (center card only) */}
+                          {isCenter && (
+                            <div
+                              onClick={() => { setCurrentPageIdx(idx); setGridView(false) }}
+                              className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center pb-5"
+                              style={{ background: "linear-gradient(transparent 55%, rgba(0,0,0,0.18))", cursor: "pointer", zIndex: 10 }}
+                            >
+                              <span className="text-white text-[11px] font-bold px-5 py-2 rounded-full shadow-lg" style={{ backgroundColor: accent }}>Open Page</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
+            </div>
+
+            {/* Nav controls */}
+            <div className="flex items-center justify-center gap-5 pb-8 shrink-0">
+              <button
+                onClick={() => setCarouselIdx(i => Math.max(0, i - 1))}
+                disabled={carouselIdx === 0}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold transition-all disabled:opacity-20 hover:scale-110 active:scale-95"
+                style={{ backgroundColor: accent, color: "white" }}
+              >‹</button>
+
+              <div className="flex gap-1.5 items-center">
+                {activeNote.pages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCarouselIdx(i)}
+                    className="rounded-full transition-all duration-300"
+                    style={{
+                      width: i === carouselIdx ? 22 : 7,
+                      height: 7,
+                      backgroundColor: i === carouselIdx ? accent : `${accent}44`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCarouselIdx(i => Math.min(activeNote.pages.length - 1, i + 1))}
+                disabled={carouselIdx >= activeNote.pages.length - 1}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold transition-all disabled:opacity-20 hover:scale-110 active:scale-95"
+                style={{ backgroundColor: accent, color: "white" }}
+              >›</button>
             </div>
           </main>
         ) : (
-          <main className="flex-1 overflow-auto p-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
+          <main className="flex-1 overflow-auto px-8 pt-16 pb-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
             <div style={{transform:`scale(${zoom})`,transformOrigin:"top center"}} className="w-full max-w-5xl shrink-0">
+              {/* ── 3D open-notebook effect ── */}
+              <div style={{ position: "relative", perspective: "2800px" }}>
+                {/* Page stack layers peeking out behind the main sheet */}
+                <div style={{ position: "absolute", top: 5, left: 0, right: -11, bottom: -7, backgroundColor: theme === "dark" ? "#282828" : "#ede7df", borderRadius: 3, zIndex: 1 }} />
+                <div style={{ position: "absolute", top: 11, left: 0, right: -22, bottom: -15, backgroundColor: theme === "dark" ? "#1f1f1f" : "#e4ddd4", borderRadius: 3, zIndex: 0 }} />
+                <div style={{ position: "absolute", top: 17, left: 0, right: -33, bottom: -23, backgroundColor: theme === "dark" ? "#181818" : "#dbd4c9", borderRadius: 3, zIndex: -1 }} />
+
               <div
                 ref={paperRef}
                 className="shadow-2xl relative"
@@ -1596,6 +1731,9 @@ if (sketchMode) {
                     backgroundColor: theme === "dark" ? "#2C2C2E" : "#ffffff",
                     backgroundImage: bgImage,
                     backgroundSize: bgSize,
+                    zIndex: 2,
+                    transform: "rotateX(1.8deg)",
+                    transformOrigin: "top center",
                   }
                 })()}
                 onMouseDown={onPaperMouseDown}
@@ -1630,6 +1768,8 @@ if (sketchMode) {
                               
                 {/* Margin Line */}
                 <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
+                {/* Spine shadow — binding casting shadow onto page */}
+                <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
 
 
                 <div className="pl-36 pr-12 pt-[32px] pb-14" style={{pointerEvents: boxMode ? "none" : "auto", position: 'relative', zIndex: 10}}>
@@ -1739,6 +1879,9 @@ onMouseUp={(e) => {
                   <button onClick={()=>{ if(currentPageIdx<activeNote.pages.length-1) setCurrentPageIdx(p=>p+1); else { const np=[...activeNote.pages,""]; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:np}:n)); setCurrentPageIdx(activeNote.pages.length); } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:accent}}>&rarr;</button>
                 </div>
               </div>
+              {/* Desk shadow beneath notebook */}
+              <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
+              </div>{/* end 3D notebook wrapper */}
             </div>
           </main>
         )}
