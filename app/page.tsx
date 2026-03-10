@@ -779,13 +779,38 @@ const generateSketch = async (prompt: string, boxId: string) => {
     if (!editor) return
 
     const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
-      h1: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
-      h2: { fontSize: "1.85rem", fontWeight: "700", margin: "0.75rem 0" },
-      h3: { fontSize: "1.5rem",  fontWeight: "700", margin: "0.5rem 0" },
-      p:  { fontSize: "1.25rem", fontWeight: "400", margin: "0" },
+      h1: { fontSize: "3rem",    fontWeight: "800", margin: "1.25rem 0" },
+      h2: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
+      h3: { fontSize: "1.75rem", fontWeight: "700", margin: "0.75rem 0" },
     }
 
     if (!savedRange.current) { editor.focus(); return }
+
+    // "default" strips heading tags and inline styles, resetting to plain text
+    if (tag === "default") {
+      restoreSelection()
+      document.execCommand("formatBlock", false, "p")
+      const sel = window.getSelection()
+      if (sel && sel.rangeCount > 0) {
+        let node: Node | null = sel.getRangeAt(0).commonAncestorContainer
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
+        const block = (node as HTMLElement).closest("p") as HTMLElement | null
+        if (block) {
+          block.style.fontSize = ""; block.style.fontWeight = ""; block.style.margin = ""
+          const newRange = document.createRange()
+          newRange.selectNodeContents(block)
+          sel.removeAllRanges(); sel.addRange(newRange)
+          savedRange.current = newRange.cloneRange()
+        }
+      }
+      const content = editor.innerHTML
+      setNotes(prev => prev.map(n =>
+        n.id === activeTabId
+          ? { ...n, pages: n.pages.map((p, i) => i === currentPageIdx ? content : p) }
+          : n
+      ))
+      return
+    }
 
     // restoreSelection focuses editor and re-adds the saved range
     restoreSelection()
@@ -1461,7 +1486,7 @@ if (sketchMode) {
 
             <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; applyBlockStyle(v); e.target.value=""}} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
               <option value="" disabled>Style</option>
-              <option value="p">Paragraph</option>
+              <option value="default">Default</option>
               <option value="h1">Heading 1</option>
               <option value="h2">Heading 2</option>
               <option value="h3">Heading 3</option>
