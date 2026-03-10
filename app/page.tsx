@@ -675,6 +675,49 @@ const generateSketch = async (prompt: string, boxId: string) => {
   }
 
 
+  const toggleScript = (cmd: "superscript" | "subscript") => {
+    const tag = cmd === "superscript" ? "SUP" : "SUB"
+
+    // window.getSelection() is unreliable during onMouseDown (may already be cleared).
+    // Use savedRange.current — updated on every keyup/mouseup inside the editor.
+    const saved = savedRange.current
+    if (!saved) {
+      restoreSelection()
+      document.execCommand(cmd, false)
+      saveSelection()
+      editorRef.current?.focus()
+      return
+    }
+
+    // Walk up from the saved cursor position to detect an enclosing <sup>/<sub>
+    let scriptEl: HTMLElement | null = null
+    let node: Node | null = saved.commonAncestorContainer
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
+    while (node && node !== editorRef.current) {
+      if ((node as HTMLElement).tagName === tag) { scriptEl = node as HTMLElement; break }
+      node = node.parentNode
+    }
+
+    editorRef.current?.focus()
+    const sel = window.getSelection()
+
+    if (scriptEl) {
+      // Was inside — escape by placing cursor right after the element
+      const newRange = document.createRange()
+      newRange.setStartAfter(scriptEl)
+      newRange.collapse(true)
+      sel?.removeAllRanges()
+      sel?.addRange(newRange)
+      savedRange.current = newRange.cloneRange()
+    } else {
+      // Was outside — restore saved position then apply/remove formatting
+      sel?.removeAllRanges()
+      sel?.addRange(saved)
+      document.execCommand(cmd, false)
+      saveSelection()
+    }
+  }
+
   const execCmd = (cmd: string, value?: string) => {
     restoreSelection()
     document.execCommand(cmd, false, value)
@@ -732,55 +775,53 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
   const applyBlockStyle = (tag: string) => {
+    const editor = editorRef.current
+    if (!editor) return
+
+    const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
+      h1: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
+      h2: { fontSize: "1.85rem", fontWeight: "700", margin: "0.75rem 0" },
+      h3: { fontSize: "1.5rem",  fontWeight: "700", margin: "0.5rem 0" },
+      p:  { fontSize: "1.25rem", fontWeight: "400", margin: "0" },
+    }
+
+    if (!savedRange.current) { editor.focus(); return }
+
+    // restoreSelection focuses editor and re-adds the saved range
     restoreSelection()
 
+    document.execCommand("formatBlock", false, tag)
+
+    // .closest(tag) reliably finds the element formatBlock just created/converted
     const sel = window.getSelection()
-    if (!sel || !sel.rangeCount) { editorRef.current?.focus(); return }
-
-    // Find the nearest block-level ancestor of the cursor
-    const BLOCK_TAGS = new Set(["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "PRE", "LI"])
-    let block: HTMLElement | null = null
-    let node: Node | null = sel.getRangeAt(0).commonAncestorContainer
-    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
-    while (node && node !== editorRef.current) {
-      if (BLOCK_TAGS.has((node as HTMLElement).tagName)) { block = node as HTMLElement; break }
-      node = node.parentNode
+    if (sel && sel.rangeCount > 0) {
+      let node: Node | null = sel.getRangeAt(0).commonAncestorContainer
+      if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
+      const block = (node as HTMLElement).closest(tag) as HTMLElement | null
+      if (block) {
+        const s = headingStyles[tag]
+        if (s) {
+          block.style.fontSize   = s.fontSize
+          block.style.fontWeight = s.fontWeight
+          block.style.margin     = s.margin
+          block.style.display    = "block"
+        }
+        // Keep text highlighted after the change
+        const newRange = document.createRange()
+        newRange.selectNodeContents(block)
+        sel.removeAllRanges()
+        sel.addRange(newRange)
+        savedRange.current = newRange.cloneRange()
+      }
     }
 
-    if (!block) { editorRef.current?.focus(); return }
-
-    // Replace the block element with the new tag in-place
-    const newEl = document.createElement(tag)
-    newEl.innerHTML = block.innerHTML
-    // Strip any old heading-related inline styles from children
-    newEl.querySelectorAll<HTMLElement>("[style]").forEach(el => {
-      el.style.removeProperty("font-size")
-      el.style.removeProperty("font-weight")
-    })
-    // Apply block-level visual styles (needed because Tailwind resets heading defaults)
-    const styles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
-      h1: { fontSize: "2em",    fontWeight: "700", margin: "0.4em 0" },
-      h2: { fontSize: "1.5em",  fontWeight: "700", margin: "0.4em 0" },
-      h3: { fontSize: "1.17em", fontWeight: "700", margin: "0.4em 0" },
-      p:  { fontSize: "",       fontWeight: "",    margin: "" },
-    }
-    if (styles[tag]) {
-      const s = styles[tag]
-      newEl.style.fontSize   = s.fontSize
-      newEl.style.fontWeight = s.fontWeight
-      newEl.style.margin     = s.margin
-    }
-
-    block.parentNode?.replaceChild(newEl, block)
-
-    // Re-select the full content of the new element (keeps text highlighted like Google Docs)
-    const newRange = document.createRange()
-    newRange.selectNodeContents(newEl)
-    sel.removeAllRanges()
-    sel.addRange(newRange)
-    savedRange.current = newRange.cloneRange()
-
-    editorRef.current?.focus()
+    // Sync state so React doesn't overwrite the DOM on next render
+    const content = editor.innerHTML
+    setNotes(prev => prev.map(n =>
+      n.id === activeTabId
+        ? { ...n, pages: n.pages.map((p, i) => i === currentPageIdx ? content : p) }
+        : n
+    ))
   }
 
 
@@ -1354,8 +1395,8 @@ if (sketchMode) {
 
             {/* Super/sub */}
             <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("superscript")}} className={`${btnBase} text-[10px]`} title="Superscript (click again to remove)">x²</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("subscript")}} className={`${btnBase} text-[10px]`} title="Subscript (click again to remove)">x₂</button>
+              <button onMouseDown={e=>{e.preventDefault();toggleScript("superscript")}} className={`${btnBase} text-[10px]`} title="Superscript">x²</button>
+              <button onMouseDown={e=>{e.preventDefault();toggleScript("subscript")}} className={`${btnBase} text-[10px]`} title="Subscript">x₂</button>
             </div>
 
             {/* Lists */}
@@ -1576,6 +1617,7 @@ if (sketchMode) {
                     onKeyUp={saveSelection}
                     onMouseUp={saveSelection}
                     onFocus={saveSelection}
+                    onBlur={saveSelection}
                     onSelect={saveSelection}
                     onInput={()=>{saveSelection(); const content = editorRef.current?.innerHTML||""; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:n.pages.map((p,i)=>i===currentPageIdx?content:p)}:n))}}
                     style={{fontFamily:`"${editorFont}", serif`, pointerEvents: boxMode?"none":"auto", lineHeight: lineSpacing === "compact" ? "24px" : lineSpacing === "relaxed" ? "40px" : "32px", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A"}}
