@@ -319,6 +319,7 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                       onChange={e => setEditorFont(e.target.value)}
                       className="text-[11px] border border-zinc-200 rounded-lg px-2.5 py-1.5 outline-none bg-white focus:border-zinc-400 transition-colors"
                     >
+                      <option value="EB Garamond">EB Garamond</option>
                       <option value="Playfair Display">Playfair Display</option>
                       <option value="Original Surfer">Original Surfer</option>
                       <option value="Georgia">Georgia</option>
@@ -511,7 +512,7 @@ export default function NoteApp() {
     setDialog({ type: "alert", title, message })
   const [autoSave, setAutoSave] = useState(true)
   const [spellCheck, setSpellCheck] = useState(true)
-  const [editorFont, setEditorFont] = useState("Original Surfer")
+  const [editorFont, setEditorFont] = useState("EB Garamond")
   const [lineSpacing, setLineSpacing] = useState<"compact"|"normal"|"relaxed">("normal")
   const [paperStyle, setPaperStyle] = useState<"lined"|"dotgrid"|"plain">("lined")
   const [showBinding, setShowBinding] = useState(true)
@@ -678,22 +679,12 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
   const toggleScript = (cmd: "superscript" | "subscript") => {
     const tag = cmd === "superscript" ? "SUP" : "SUB"
-
-    // window.getSelection() is unreliable during onMouseDown (may already be cleared).
-    // Use savedRange.current — updated on every keyup/mouseup inside the editor.
     const saved = savedRange.current
-    if (!saved) {
-      restoreSelection()
-      document.execCommand(cmd, false)
-      saveSelection()
-      editorRef.current?.focus()
-      return
-    }
 
-    // Walk up from the saved cursor position to detect an enclosing <sup>/<sub>
+    // Walk saved range BEFORE focus changes anything
+    let node: Node | null = saved?.commonAncestorContainer ?? null
+    if (node?.nodeType === Node.TEXT_NODE) node = node.parentNode
     let scriptEl: HTMLElement | null = null
-    let node: Node | null = saved.commonAncestorContainer
-    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
     while (node && node !== editorRef.current) {
       if ((node as HTMLElement).tagName === tag) { scriptEl = node as HTMLElement; break }
       node = node.parentNode
@@ -702,18 +693,27 @@ const generateSketch = async (prompt: string, boxId: string) => {
     editorRef.current?.focus()
     const sel = window.getSelection()
 
-    if (scriptEl) {
-      // Was inside — escape by placing cursor right after the element
-      const newRange = document.createRange()
-      newRange.setStartAfter(scriptEl)
-      newRange.collapse(true)
-      sel?.removeAllRanges()
-      sel?.addRange(newRange)
-      savedRange.current = newRange.cloneRange()
+    if (scriptEl && scriptEl.parentNode) {
+      if (saved && !saved.collapsed) {
+        // Text is selected inside the element — unwrap to remove the formatting
+        const parent = scriptEl.parentNode
+        while (scriptEl.firstChild) parent.insertBefore(scriptEl.firstChild, scriptEl)
+        parent.removeChild(scriptEl)
+        try { sel?.removeAllRanges(); sel?.addRange(saved) } catch { /* stale */ }
+        saveSelection()
+      } else {
+        // Collapsed cursor — just escape: place cursor right after the element
+        // so the already-typed super/subscript text stays intact
+        const newRange = document.createRange()
+        newRange.setStartAfter(scriptEl)
+        newRange.collapse(true)
+        sel?.removeAllRanges()
+        sel?.addRange(newRange)
+        savedRange.current = newRange.cloneRange()
+      }
     } else {
-      // Was outside — restore saved position then apply/remove formatting
-      sel?.removeAllRanges()
-      sel?.addRange(saved)
+      // APPLY
+      if (saved) { sel?.removeAllRanges(); sel?.addRange(saved) }
       document.execCommand(cmd, false)
       saveSelection()
     }
@@ -1275,7 +1275,7 @@ if (sketchMode) {
     <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A" }} onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} />}
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}` }} />
       {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: #2C2C2E !important; border-color: #38383A !important; } .ls-toolbar button { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar select, .ls-toolbar input { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200 { border-color: #48484A !important; }` }} />}
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
         <div className="p-4 border-b border-white/5 shrink-0">
@@ -1291,7 +1291,13 @@ if (sketchMode) {
 
     <div className="flex-1 overflow-y-auto overflow-x-visible p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, null)}>
         <>
-          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-2">Binder</p>
+          <div className="flex items-center justify-between px-2 mb-2">
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Binder</p>
+            <div className="flex gap-1">
+              <button onClick={() => addNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
+              <button onClick={addFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>
+            </div>
+          </div>
 
           {topLevelNotes.map(n => (
             <div key={n.id}
@@ -1357,10 +1363,6 @@ if (sketchMode) {
     </div>
 
 
-        <div className="border-t border-white/5 px-3 pt-2 pb-1 flex gap-1 shrink-0">
-          <button onClick={() => addNote(null)} className="flex-1 text-center text-[11px] text-zinc-500 hover:text-white hover:bg-zinc-800 py-1.5 rounded transition-colors">+ Note</button>
-          <button onClick={addFolder} className="flex-1 text-center text-[11px] text-zinc-500 hover:text-white hover:bg-zinc-800 py-1.5 rounded transition-colors">+ Folder</button>
-        </div>
         <div className="border-t border-white/5 px-3 py-2 shrink-0">
           <button onClick={() => setShowSettings(true)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
             <span className="text-[13px] shrink-0">⚙️</span>
