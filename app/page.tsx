@@ -247,18 +247,33 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                     <p className="text-[10px] text-zinc-400 mt-0.5">Free Plan</p>
                   </div>
                 </div>
-                <SettingRow
-                  title="Sign out"
-                  description="You'll need to sign back in to access your notes"
-                  control={
-                    <button
-                      onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
-                      className="text-[11px] font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      Sign Out
-                    </button>
-                  }
-                />
+                {user ? (
+                  <SettingRow
+                    title="Sign out"
+                    description="You'll need to sign back in to access your notes"
+                    control={
+                      <button
+                        onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
+                        className="text-[11px] font-semibold text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    }
+                  />
+                ) : (
+                  <SettingRow
+                    title="Sign in"
+                    description="Sign in to save and sync your notes to the cloud"
+                    control={
+                      <button
+                        onClick={() => window.location.href = "/login"}
+                        className="text-[11px] font-semibold text-green-600 hover:text-green-800 border border-green-200 hover:border-green-400 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Sign In
+                      </button>
+                    }
+                  />
+                )}
               </SettingSection>
 
               <SettingSection title="About">
@@ -486,8 +501,10 @@ export default function NoteApp() {
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
   const [zoom, setZoom] = useState("0.85")
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
   const [gridView, setGridView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
+  const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [showTableMenu, setShowTableMenu] = useState(false)
   const [showColumnMenu, setShowColumnMenu] = useState(false)
@@ -590,6 +607,17 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
     return () => subscription.unsubscribe()
+  }, [])
+
+
+  useEffect(() => {
+    const check = () => {
+      if (paperRef.current) setBindingCompact(paperRef.current.offsetWidth < 680)
+    }
+    check()
+    const ro = new ResizeObserver(check)
+    if (paperRef.current) ro.observe(paperRef.current)
+    return () => ro.disconnect()
   }, [])
 
 
@@ -1446,26 +1474,12 @@ if (sketchMode) {
               <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
             </div>
 
-            {/* Sketch */}
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault()
-                const selection = window.getSelection()?.toString()
-                if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
-                setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
-              }}
-              className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors shrink-0"
-              style={sketchMode ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: accent }}
-              title="AI Sketch"
-            >
-              {sketchMode ? "Draw Box…" : "Sketch"}
-            </button>
           </div>
 
-          {/* Right: Grid + Save */}
+          {/* Right: Share + Save */}
           <div className="flex items-center gap-1.5 shrink-0 pl-2">
-            <button onMouseDown={e=>{e.preventDefault();setCarouselIdx(currentPageIdx);setGridView(v=>!v)}} className="h-7 px-2.5 rounded text-[10px] font-semibold border transition-colors" style={gridView ? { backgroundColor: accent, color: "white", borderColor: accent } : { borderColor: "#e4e4e7", color: "#52525b" }} title="Page grid">Grid</button>
-            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-80" style={{ backgroundColor: accent }} title="Download note">Save</button>
+            <button onMouseDown={e=>{e.preventDefault();openAlert("Share note","Sharing is coming soon!")}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Share">Share</button>
+            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Download note">Save</button>
           </div>
         </div>
 
@@ -1528,19 +1542,10 @@ if (sketchMode) {
             </select>
           </div>
 
-          {/* Trash (right-aligned) */}
-          <button
-            onMouseDown={(e) => { e.preventDefault(); clearPage() }}
-            className="h-7 w-7 flex items-center justify-center rounded border border-zinc-200 hover:border-red-200 hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors shrink-0"
-            title="Clear page"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-            </svg>
-          </button>
         </div>
       </>}
 
+      <div className="flex-1 flex overflow-hidden relative">
           {notes.length === 0 ? (
             <main className="flex-1 flex items-center justify-center bg-[#EDE8E6]">
               <div className="text-center">
@@ -1744,29 +1749,38 @@ if (sketchMode) {
                 onMouseLeave={onPaperMouseUp}
               >
                 
-{/* ── REALISTIC BRONZE SPIRAL BINDING ── */}
-              {showBinding && <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
-                {Array.from({ length: 40 }).map((_, i) => (
-                  <div key={i} className="relative w-full h-[32px]">
-
-                    {/* 1. The Punched Hole: Styled to look like a physical cutout */}
-                    <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
-
-                    {/* 2. The Back Wire: Creates the illusion of the ring wrapping behind the paper */}
-                    <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
-
-                    {/* 3. The Main Bronze Wire: The visible outer C-shape */}
-                    <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10"
-                         style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
-
-                    {/* 4. Metallic Highlight: Provides the reflective sheen seen in the photo */}
-                    <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
-
-                    {/* 5. Shadow on Paper: Soft shadow cast by the ring onto the page */}
-                    <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
-                  </div>
-                ))}
-              </div>}
+{/* ── BRONZE SPIRAL BINDING — left (normal) or top (compact/notepad) ── */}
+              {showBinding && !bindingCompact && (
+                <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
+                  {Array.from({ length: 40 }).map((_, i) => (
+                    <div key={i} className="relative w-full h-[32px]">
+                      <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+                      <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+                      <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
+                      <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
+                      <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showBinding && bindingCompact && (
+                <div className="absolute top-[-28px] left-0 right-0 h-16 z-30 pointer-events-none flex flex-row pl-[32px]">
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <div key={i} className="relative h-full w-[32px]">
+                      {/* Punched hole */}
+                      <div className="absolute left-2 top-[34px] w-5 h-4 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+                      {/* Back wire */}
+                      <div className="absolute left-[14px] top-[12px] w-[10px] h-[28px] border-r-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+                      {/* Main wire — U-shape opening downward */}
+                      <div className="absolute left-[10px] top-0 w-[15px] h-[42px] border-l-[3.5px] border-r-[3.5px] border-b-[3.5px] border-[#D4AF37] rounded-b-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#D4AF37 #D4AF37 #8B6914 transparent' }} />
+                      {/* Metallic highlight */}
+                      <div className="absolute left-[11px] top-[2px] w-[10px] h-[38px] border-l-[1px] border-r-[1px] border-b-[1.5px] border-[#FFF3A3] rounded-b-full z-20 opacity-50" />
+                      {/* Shadow on paper */}
+                      <div className="absolute left-[18px] top-[38px] w-[2px] h-[10px] bg-black/10 blur-[2px] z-0" />
+                    </div>
+                  ))}
+                </div>
+              )}
                               
                 {/* Margin Line */}
                 <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
@@ -1887,7 +1901,100 @@ onMouseUp={(e) => {
             </div>
           </main>
         )}
+
+      {/* ── Right sidebar (floating overlay) ── */}
+      {notes.length > 0 && (
+        <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
+          {/* Toggle arrow */}
+          <button
+            onClick={() => setRightSidebarOpen(v => !v)}
+            style={{
+              background: theme === "dark" ? "rgba(44,44,46,0.75)" : "rgba(220,220,224,0.75)",
+              border: "none", cursor: "pointer", padding: "6px 3px",
+              borderRadius: "8px 0 0 8px",
+              color: theme === "dark" ? "#A1A1AA" : "#71717a",
+              fontSize: 14, lineHeight: 1,
+              boxShadow: "-2px 0 6px rgba(0,0,0,0.1)",
+            }}
+          >
+            {rightSidebarOpen ? "›" : "‹"}
+          </button>
+
+          {/* Panel */}
+          <div style={{
+            width: rightSidebarOpen ? 44 : 0,
+            overflow: "hidden",
+            transition: "width 0.25s ease",
+          }}>
+            <div style={{
+              width: 44,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+              padding: "12px 0",
+              borderRadius: "0 0 0 12px",
+              background: theme === "dark"
+                ? "linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px) 0 0/10px 10px, linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px) 0 0/10px 10px, rgba(44,44,46,0.88)"
+                : "linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px) 0 0/10px 10px, linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px) 0 0/10px 10px, rgba(228,228,232,0.88)",
+              boxShadow: "-3px 4px 16px rgba(0,0,0,0.15)",
+              backdropFilter: "blur(8px)",
+            }}>
+              {/* Grid */}
+              <button
+                onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
+                title="Page grid"
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                  ...(gridView ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
+                <span style={{ fontSize: 7, fontWeight: 600 }}>Grid</span>
+              </button>
+
+              {/* Sketch */}
+              <button
+                onMouseDown={e => {
+                  e.preventDefault()
+                  const selection = window.getSelection()?.toString()
+                  if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
+                  setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
+                }}
+                title="AI Sketch"
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                  ...(sketchMode ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                <span style={{ fontSize: 7, fontWeight: 600 }}>Sketch</span>
+              </button>
+
+              <div style={{ height: 4 }} />
+
+              {/* Trash */}
+              <button
+                onMouseDown={e => { e.preventDefault(); clearPage() }}
+                title="Clear page"
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+                  backgroundColor: "#FEE2E2", color: "#DC2626",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
+                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+                <span style={{ fontSize: 7, fontWeight: 600 }}>Clear</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
+  </div>
   )
 }
