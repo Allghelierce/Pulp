@@ -145,7 +145,7 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
   spellCheck: boolean; setSpellCheck: (v: boolean) => void
   editorFont: string; setEditorFont: (v: string) => void
   lineSpacing: "compact"|"normal"|"relaxed"; setLineSpacing: (v: "compact"|"normal"|"relaxed") => void
-  paperStyle: "lined"|"dotgrid"|"plain"; setPaperStyle: (v: "lined"|"dotgrid"|"plain") => void
+  paperStyle: "lined"|"dotgrid"|"plain"|"stenopad"; setPaperStyle: (v: "lined"|"dotgrid"|"plain"|"stenopad") => void
   showBinding: boolean; setShowBinding: (v: boolean) => void
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
@@ -311,6 +311,18 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                   control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} />}
                 />
               </SettingSection>
+              <SettingSection title="Paper">
+                <SettingRow
+                  title="Page style"
+                  description="Background ruling on your note pages"
+                  control={<SegmentedControl options={[["lined","Lined"],["dotgrid","Dot Grid"],["plain","Plain"],["stenopad","Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
+                />
+                <SettingRow
+                  title="Show spiral binding"
+                  description="Display the decorative binding on the left edge"
+                  control={<SettingToggle checked={showBinding} onChange={setShowBinding} />}
+                />
+              </SettingSection>
             </>)}
 
             {/* ── Editor ── */}
@@ -345,18 +357,6 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                 <SettingRow
                   title="Line spacing"
                   control={<SegmentedControl options={[["compact","Compact"],["normal","Normal"],["relaxed","Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact"|"normal"|"relaxed")} />}
-                />
-              </SettingSection>
-              <SettingSection title="Paper">
-                <SettingRow
-                  title="Page style"
-                  description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined","Lined"],["dotgrid","Dot Grid"],["plain","Plain"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
-                />
-                <SettingRow
-                  title="Show spiral binding"
-                  description="Display the decorative binding on the left edge"
-                  control={<SettingToggle checked={showBinding} onChange={setShowBinding} />}
                 />
               </SettingSection>
             </>)}
@@ -531,7 +531,7 @@ export default function NoteApp() {
   const [spellCheck, setSpellCheck] = useState(true)
   const [editorFont, setEditorFont] = useState("EB Garamond")
   const [lineSpacing, setLineSpacing] = useState<"compact"|"normal"|"relaxed">("normal")
-  const [paperStyle, setPaperStyle] = useState<"lined"|"dotgrid"|"plain">("lined")
+  const [paperStyle, setPaperStyle] = useState<"lined"|"dotgrid"|"plain"|"stenopad">("lined")
   const [showBinding, setShowBinding] = useState(true)
   const [reduceMotion, setReduceMotion] = useState(false)
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
@@ -1586,11 +1586,14 @@ if (sketchMode) {
                   const lhMap: Record<string, number> = { compact: 24, normal: 32, relaxed: 40 }
                   const lh = lhMap[lineSpacing] ?? 32
                   const lineColor = theme === "dark" ? "#3a3a3a" : "#e4e4e7"
+                  const paperBg = paperStyle === "stenopad" ? "#F5EDB8" : theme === "dark" ? "#2C2C2E" : "#ffffff"
                   const bgImage = paperStyle === "plain" ? "none"
                     : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
+                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #8EBF8A ${lh}px)`
                     : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
                   const bgSize = paperStyle === "plain" ? "auto"
                     : paperStyle === "dotgrid" ? `${lh * 0.75}px ${lh * 0.75}px`
+                    : paperStyle === "stenopad" ? `100% 100%, 100% 100%, 100% ${lh}px`
                     : `100% ${lh}px`
 
                   return (
@@ -1627,7 +1630,7 @@ if (sketchMode) {
                       ) : (
                         <div style={{
                           width: 310, height: 438, borderRadius: 8, overflow: "hidden", position: "relative",
-                          backgroundColor: theme === "dark" ? "#2C2C2E" : "#ffffff",
+                          backgroundColor: paperBg,
                           backgroundImage: bgImage, backgroundSize: bgSize,
                           boxShadow: isCenter
                             ? "0 50px 100px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.07)"
@@ -1726,16 +1729,19 @@ if (sketchMode) {
                   const lhMap = { compact: 24, normal: 32, relaxed: 40 }
                   const lh = lhMap[lineSpacing] ?? 32
                   const lineColor = theme === "dark" ? "#3a3a3a" : "#e4e4e7"
+                  const paperBg = paperStyle === "stenopad" ? "#F5EDB8" : theme === "dark" ? "#2C2C2E" : "#ffffff"
                   const bgImage = paperStyle === "plain" ? "none"
                     : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
+                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #8EBF8A ${lh}px)`
                     : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
                   const bgSize = paperStyle === "plain" ? "auto"
                     : paperStyle === "dotgrid" ? "24px 24px"
+                    : paperStyle === "stenopad" ? `100% 100%, 100% 100%, 100% ${lh}px`
                     : `100% ${lh}px`
                   return {
                     minHeight: "1300px",
                     cursor: boxMode ? "crosshair" : "default",
-                    backgroundColor: theme === "dark" ? "#2C2C2E" : "#ffffff",
+                    backgroundColor: paperBg,
                     backgroundImage: bgImage,
                     backgroundSize: bgSize,
                     zIndex: 2,
