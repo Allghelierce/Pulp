@@ -4,9 +4,10 @@ import { supabase } from "@/lib/supabase"
 import type { TextBox, NoteData, FolderData, DialogConfig } from "@/app/types"
 import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
-import { TablePicker } from "@/app/components/TablePicker"
-import { ColumnPicker } from "@/app/components/ColumnPicker"
-import { ItemMenu } from "@/app/components/ItemMenu"
+import { Sidebar } from "@/app/components/Sidebar"
+import { FormattingToolbar } from "@/app/components/FormattingToolbar"
+import { DocumentToolbar } from "@/app/components/DocumentToolbar"
+import { RightToolbar } from "@/app/components/RightToolbar"
 
 
 
@@ -31,12 +32,6 @@ export default function NoteApp() {
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
-  const [showTableMenu, setShowTableMenu] = useState(false)
-  const [showColumnMenu, setShowColumnMenu] = useState(false)
-  const tableButtonRef = useRef<HTMLButtonElement>(null)
-  const colButtonRef = useRef<HTMLButtonElement>(null)
-  const [tableMenuPos, setTableMenuPos] = useState({ top: 0, left: 0 })
-  const [colMenuPos, setColMenuPos] = useState({ top: 0, left: 0 })
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [boxMode, setBoxMode] = useState(false)
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null)
@@ -509,8 +504,6 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
   const insertTable = (rows: number, cols: number) => {
-    setShowTableMenu(false)
-
     // Build table DOM directly — more reliable than execCommand("insertHTML")
     const cellStyle = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
     const table = document.createElement("table")
@@ -571,7 +564,6 @@ const generateSketch = async (prompt: string, boxId: string) => {
 
 
   const insertColumns = (num: number) => {
-    setShowColumnMenu(false)
     const editor = editorRef.current
     if (!editor) return
 
@@ -812,8 +804,6 @@ if (sketchMode) {
   }
 
 
-  const topLevelNotes = notes.filter(n => n.folderId === null)
-  const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid)
   const btnBase = "w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-zinc-200"
 
 
@@ -826,102 +816,21 @@ if (sketchMode) {
     }
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }} onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}` }} />
       {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: #2C2C2E !important; border-color: #38383A !important; } .ls-toolbar button { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar select, .ls-toolbar input { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200 { border-color: #48484A !important; }` }} />}
-      <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
-        <div className="p-4 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-3 mb-5 cursor-default">
-            <img src="/Gemini_Generated_Image_ctyul6ctyul6ctyu.png" width="36" height="36" style={{ filter: "invert(1)", objectFit: "contain" }} alt="Logo" />
-            <h1 className="text-2xl font-bold text-white" style={{ fontFamily: '"Licorice", cursive' }}> Letter Soup </h1>
-          </div>
-          <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
-        </div>
-
-
-    <div className="flex-1 overflow-y-auto overflow-x-visible p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, null)}>
-        <>
-          <div className="flex items-center justify-between px-2 mb-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Binder</p>
-            <div className="flex gap-1">
-              <button onClick={() => addNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
-              <button onClick={addFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>
-            </div>
-          </div>
-
-          {topLevelNotes.map(n => (
-            <div key={n.id}
-              role="button"
-              draggable
-              onDragStart={() => setDraggedNoteId(n.id)}
-              onDragEnd={() => setDraggedNoteId(null)}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => handleDropNote(e, null, n.id)}
-              onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
-              className={`group w-full text-left px-3 py-1.5 text-xs rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
-              style={activeTabId === n.id ? { backgroundColor: accent, color: "white" } : { color: "#a1a1aa" }}
-              onMouseEnter={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "#1f1f1f" }}
-              onMouseLeave={e => { if (activeTabId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}>
-              <span>📄 {n.subject}</span>
-              <ItemMenu actions={[
-                { label: "Rename", onClick: () => renameNote(n.id, n.subject) },
-                { label: "Delete 🗑️", onClick: () => deleteNote(n.id), danger: true },
-              ]} />
-            </div>
-          ))}
-
-          {folders.map(f => (
-            <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => handleDropNote(e, f.id)}>
-              <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-zinc-900/60 group" onClick={() => toggleFolder(f.id)}>
-                <span className="text-[10px] text-zinc-600">{f.open ? "▾" : "▸"}</span>
-                {renamingFolder === f.id ? (
-                  <input autoFocus className="flex-1 bg-white/10 text-white text-xs rounded px-1.5 outline-none min-w-0" defaultValue={f.name} onBlur={e => { renameFolder(f.id, e.target.value); setRenamingFolder(null) }} onKeyDown={e => { if (e.key === "Enter") { renameFolder(f.id, (e.target as HTMLInputElement).value); setRenamingFolder(null) } }} onClick={e => e.stopPropagation()} />
-                ) : (
-                  <span className="flex-1 text-xs text-zinc-300 truncate">📁 {f.name}</span>
-                )}
-                <ItemMenu actions={[
-                  { label: "Rename", onClick: () => setRenamingFolder(f.id) },
-                  { label: "Delete 🗑️", onClick: () => deleteFolder(f.id), danger: true },
-                ]} />
-              </div>
-              {f.open && (
-                <div className="pl-5 space-y-0.5">
-                  {notesInFolder(f.id).map(n => (
-                    <div key={n.id}
-                      role="button"
-                      draggable
-                      onDragStart={() => setDraggedNoteId(n.id)}
-                      onDragEnd={() => setDraggedNoteId(null)}
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={e => handleDropNote(e, f.id, n.id)}
-                      onClick={() => { setActiveTabId(n.id); setCurrentPageIdx(0) }}
-                      className={`group w-full text-left px-3 py-1 text-[11px] rounded-full transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? 'opacity-50' : ''}`}
-                      style={activeTabId === n.id ? { backgroundColor: accent, color: "white" } : { color: "#71717a" }}>
-                      <span>📄 {n.subject}</span>
-                      <ItemMenu actions={[
-                        { label: "Rename", onClick: () => renameNote(n.id, n.subject) },
-                        { label: "Delete 🗑️", onClick: () => deleteNote(n.id), danger: true },
-                      ]} />
-                    </div>
-                  ))}
-                  <button onClick={() => addNote(f.id)} className="text-[11px] text-zinc-600 hover:text-white px-3 py-0.5 block">+ Note</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </>
-    </div>
-
-
-        <div className="border-t border-white/5 px-3 py-2 shrink-0">
-          <button onClick={() => setShowSettings(true)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
-            <span className="text-[13px] shrink-0">⚙️</span>
-            <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
-          </button>
-        </div>
-      </div>
+      <Sidebar
+        notes={notes} folders={folders} activeTabId={activeTabId} accent={accent}
+        draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen}
+        onAddNote={addNote} onAddFolder={addFolder}
+        onSelectNote={(id) => { setActiveTabId(id); setCurrentPageIdx(0) }}
+        onRenameNote={renameNote} onDeleteNote={deleteNote}
+        onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder}
+        onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId}
+        onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)}
+      />
 
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -930,143 +839,17 @@ if (sketchMode) {
         </button>
 
       {notes.length > 0 && <>
-        {/* ── Formatting toolbar ── */}
-        <div className="ls-toolbar h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-0.5">
-
-            {/* Text style */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-sm`} title="Bold">B</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic text-sm`} title="Italic">I</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-sm`} title="Underline">U</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-[13px]`} title="Strikethrough">S</button>
-            </div>
-
-            {/* Color */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <div className="relative" title="Text color">
-                <input type="color" onMouseDown={saveSelection} onInput={e => execCmd("foreColor", (e.target as HTMLInputElement).value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-                <div className={`${btnBase} text-[11px] font-bold pointer-events-none`}>A</div>
-              </div>
-              <button
-                onMouseDown={e=>{
-                  e.preventDefault()
-                  // Don't restoreSelection — on mousedown the editor selection is still active.
-                  // Check the actual DOM node's inline backgroundColor (reliable; queryCommandValue is not).
-                  const sel = window.getSelection()
-                  let highlighted = false
-                  if (sel && sel.rangeCount > 0) {
-                    const node = sel.getRangeAt(0).startContainer
-                    const el: HTMLElement | null = node.nodeType === 3
-                      ? (node as Text).parentElement
-                      : node as HTMLElement
-                    const bg = el?.style?.backgroundColor ?? ""
-                    highlighted = bg !== "" && bg !== "transparent"
-                  }
-                  document.execCommand("hiliteColor", false, highlighted ? "transparent" : "#fef08a")
-                  saveSelection()
-                  editorRef.current?.focus()
-                }}
-                className={`${btnBase} text-[10px] font-bold`}
-                style={{ backgroundColor: "#fef08a" }}
-                title="Highlight (click again to remove)"
-              >H</button>
-            </div>
-
-            {/* Super/sub */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();toggleScript("superscript")}} className={`${btnBase} text-[10px]`} title="Superscript">x²</button>
-              <button onMouseDown={e=>{e.preventDefault();toggleScript("subscript")}} className={`${btnBase} text-[10px]`} title="Subscript">x₂</button>
-            </div>
-
-            {/* Lists */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("insertUnorderedList")}} className={`${btnBase} text-base leading-none`} title="Bullet list">•≡</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("insertOrderedList")}} className={`${btnBase} text-[10px]`} title="Numbered list">1≡</button>
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`} title="Checklist">☑</button>
-            </div>
-
-            {/* Indent */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`} title="Outdent">⇤</button>
-              <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`} title="Indent">⇥</button>
-            </div>
-
-            {/* Blocks */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-              <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`} title="Blockquote">❝</button>
-              <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
-            </div>
-
-          </div>
-
-          {/* Right: Share + Save */}
-          <div className="flex items-center gap-1.5 shrink-0 pl-2">
-            <button onMouseDown={e=>{e.preventDefault();openAlert("Share note","Sharing is coming soon!")}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Share">Share</button>
-            <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Download note">Save</button>
-          </div>
-        </div>
-
-        {/* ── Document toolbar ── */}
-        <div className="ls-toolbar h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between">
-          <div className="flex items-center gap-2">
-            <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
-              <option value="Original Surfer">Default</option>
-              <option value="Fredoka">Bubbly</option>
-              <option value="Georgia">Serif</option>
-              <option value="Arial">Sans</option>
-            </select>
-
-            <div className="flex items-center gap-1 border-r border-zinc-200 pr-2 shrink-0">
-              <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(v){setCustomSize(v);applyFontSize(v);e.target.value=""}}} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white text-zinc-600">
-                <option value="" disabled>Size</option>
-                {[8,10,11,12,14,16,18,20,24,28,32,36,48,64,72].map(s=><option key={s} value={String(s)}>{s}px</option>)}
-              </select>
-              <input type="number" min={1} max={400} value={customSize} onChange={e=>setCustomSize(e.target.value)} onMouseDown={saveSelection} onKeyDown={e=>{if(e.key==="Enter")applyFontSize(customSize)}} className="w-12 text-[11px] border border-zinc-200 rounded px-1.5 py-1 outline-none bg-white text-center text-zinc-600" />
-            </div>
-
-            <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; applyBlockStyle(v); e.target.value=""}} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
-              <option value="" disabled>Style</option>
-              <option value="default">Default</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="h3">Heading 3</option>
-            </select>
-
-            <div className="w-px h-5 bg-zinc-200 shrink-0" />
-
-            {/* Table picker */}
-            <div className="relative shrink-0">
-              <button ref={tableButtonRef} onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); const r = tableButtonRef.current?.getBoundingClientRect(); if (r) setTableMenuPos({ top: r.bottom + 4, left: r.left }); setShowTableMenu(v => !v); setShowColumnMenu(false) }} onClick={e => e.stopPropagation()} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
-                Table
-              </button>
-              {showTableMenu && (
-                <div style={{ position: "fixed", top: tableMenuPos.top, left: tableMenuPos.left, zIndex: 1000 }} className="bg-white border border-zinc-200 rounded-xl shadow-xl p-3" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                  <TablePicker accent={accent} onSelect={(rows, cols) => { insertTable(rows, cols); setShowTableMenu(false) }} />
-                </div>
-              )}
-            </div>
-
-            {/* Column picker */}
-            <div className="relative shrink-0">
-              <button ref={colButtonRef} onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); const r = colButtonRef.current?.getBoundingClientRect(); if (r) setColMenuPos({ top: r.bottom + 4, left: r.left }); setShowColumnMenu(v => !v); setShowTableMenu(false) }} onClick={e => e.stopPropagation()} className="text-[11px] border border-zinc-200 rounded px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-600 whitespace-nowrap transition-colors">
-                Columns
-              </button>
-              {showColumnMenu && (
-                <div style={{ position: "fixed", top: colMenuPos.top, left: colMenuPos.left, zIndex: 1000 }} className="bg-white border border-zinc-200 rounded-xl shadow-xl p-3" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                  <ColumnPicker onSelect={n => { insertColumns(n); setShowColumnMenu(false) }} />
-                </div>
-              )}
-            </div>
-
-            <div className="w-px h-5 bg-zinc-200 shrink-0" />
-
-            <select value={zoom} onChange={e=>setZoom(e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
-              {[["0.43","50%"],["0.64","75%"],["0.85","100%"],["1.06","125%"],["1.28","150%"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
-            </select>
-          </div>
-
-        </div>
+        <FormattingToolbar
+          accent={accent} btnBase={btnBase} execCmd={execCmd} saveSelection={saveSelection}
+          toggleScript={toggleScript} insertHTML={insertHTML} openAlert={openAlert}
+          downloadNote={downloadNote} editorRef={editorRef}
+        />
+        <DocumentToolbar
+          accent={accent} zoom={zoom} customSize={customSize}
+          saveSelection={saveSelection} execCmd={execCmd} applyFontSize={applyFontSize}
+          applyBlockStyle={applyBlockStyle} setCustomSize={setCustomSize} setZoom={setZoom}
+          insertTable={insertTable} insertColumns={insertColumns}
+        />
       </>}
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -1437,95 +1220,14 @@ onMouseUp={(e) => {
 
       {/* ── Right sidebar (floating overlay) ── */}
       {notes.length > 0 && (
-        <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
-          {/* Toggle arrow */}
-          <button
-            onClick={() => setRightSidebarOpen(v => !v)}
-            style={{
-              background: theme === "dark" ? "rgba(44,44,46,0.80)" : "rgba(215,215,220,0.80)",
-              border: "none", cursor: "pointer", padding: "5px 3px",
-              borderRadius: "6px 0 0 6px",
-              color: theme === "dark" ? "#A1A1AA" : "#71717a",
-              fontSize: 13, lineHeight: 1,
-              boxShadow: "-1px 0 4px rgba(0,0,0,0.08)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            {rightSidebarOpen ? "›" : "‹"}
-          </button>
-
-          {/* Panel */}
-          <div style={{
-            width: rightSidebarOpen ? 44 : 0,
-            overflow: "hidden",
-            transition: "width 0.25s ease",
-          }}>
-            <div style={{
-              width: 44,
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-              padding: "12px 0",
-              borderRadius: "0 8px 8px 0",
-              background: theme === "dark"
-                ? "linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, rgba(38,38,40,0.82)"
-                : "linear-gradient(rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, rgba(225,225,230,0.82)",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)",
-              backdropFilter: "blur(12px)",
-            }}>
-              {/* Grid */}
-              <button
-                onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
-                title="Page grid"
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-                  ...(gridView ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
-                }}
-              >
-                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
-                <span style={{ fontSize: 7, fontWeight: 600 }}>Grid</span>
-              </button>
-
-              {/* Sketch */}
-              <button
-                onMouseDown={e => {
-                  e.preventDefault()
-                  const selection = window.getSelection()?.toString()
-                  if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
-                  setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
-                }}
-                title="AI Sketch"
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-                  ...(sketchMode ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
-                }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                <span style={{ fontSize: 7, fontWeight: 600 }}>Sketch</span>
-              </button>
-
-              <div style={{ height: 4 }} />
-
-              {/* Trash */}
-              <button
-                onMouseDown={e => { e.preventDefault(); clearPage() }}
-                title="Clear page"
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-                  backgroundColor: "#FEE2E2", color: "#DC2626",
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
-                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                  <line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
-                </svg>
-                <span style={{ fontSize: 7, fontWeight: 600 }}>Clear</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <RightToolbar
+          theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode}
+          rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx}
+          setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView}
+          setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode}
+          setBoxMode={setBoxMode} setSketchPrompt={setSketchPrompt}
+          openAlert={openAlert} clearPage={clearPage}
+        />
       )}
       </div>
     </div>
