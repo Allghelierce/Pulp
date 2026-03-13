@@ -1,6 +1,6 @@
 "use client"
 
-const btnBase = "w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-zinc-200"
+const btnBase = "w-7 h-7 rounded-[4px] flex items-center justify-center transition-colors hover:bg-zinc-200"
 
 interface FormattingToolbarProps {
   accent: string
@@ -17,14 +17,14 @@ export function FormattingToolbar({
   accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, downloadNote, editorRef,
 }: FormattingToolbarProps) {
   return (
-    <div className="ls-toolbar h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="ls-toolbar h-14 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="flex items-center gap-0.5">
 
         {/* Text style */}
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-          <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-sm`} title="Bold">B</button>
-          <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic text-sm`} title="Italic">I</button>
-          <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-sm`} title="Underline">U</button>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-[13px]`} title="Bold">B</button>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic font-serif text-[14px]`} title="Italic">I</button>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-[13px]`} title="Underline">U</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-[13px]`} title="Strikethrough">S</button>
         </div>
 
@@ -84,10 +84,11 @@ export function FormattingToolbar({
 
       </div>
 
-      {/* Right: Share + Save */}
-      <div className="flex items-center gap-1.5 shrink-0 pl-2">
-        <button onMouseDown={e=>{e.preventDefault();openAlert("Share note","Sharing is coming soon!")}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Share">Share</button>
-        <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-7 px-3 rounded text-[10px] font-semibold text-white transition-opacity hover:opacity-90" style={{backgroundColor:"#7B9EC9"}} title="Download note">Save</button>
+      {/* Right: Actions */}
+      <div className="flex items-center gap-3 shrink-0 pl-2">
+        <button onMouseDown={e=>{e.preventDefault();openAlert("Full Access","Subscription options coming soon!")}} className="h-7 px-4 rounded-[5px] text-[13px] font-bold tracking-wide text-[#3B4A3E] bg-[#E4E9E0] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#A1B3A5]/60 hover:shadow hover:-translate-y-[0.5px] hover:bg-[#D4DBCF] active:translate-y-[0px] mr-10" style={{ fontFamily: '"EB Garamond", serif' }} title="Upgrade to Full Access">+ Full Access</button>
+        <button onMouseDown={e=>{e.preventDefault();openAlert("Share note","Sharing is coming soon!")}} className="h-8 px-4 rounded-[5px] text-[12px] font-semibold text-white bg-blue-600/90 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow hover:bg-blue-600 hover:-translate-y-[0.5px] active:translate-y-[0px]" title="Share">Share</button>
+        <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-8 px-4 rounded-[5px] text-[12px] font-semibold text-white bg-blue-600/90 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow hover:bg-blue-600 hover:-translate-y-[0.5px] active:translate-y-[0px]" title="Download note">Save</button>
       </div>
     </div>
   )

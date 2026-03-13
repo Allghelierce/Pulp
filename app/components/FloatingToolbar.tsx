@@ -5,13 +5,14 @@ export function FloatingToolbar({ accent }: { accent: string }) {
   const [isVertical, setIsVertical] = useState(false)
   const [isLocked, setIsLocked] = useState(true) // Locked by default as per image (active)
   const [activeTool, setActiveTool] = useState('pen')
-  const [size, setSize] = useState<{ width: number | 'auto', height: number | 'auto' }>({ width: 'auto', height: 'auto' })
+  const [scale, setScale] = useState(0.85)
   
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
   const toolbarRef = useRef<HTMLDivElement>(null)
   const resizing = useRef(false)
+  const resizeInitial = useRef({ x: 0, y: 0, scale: 0.85 })
 
   // Initialize position to bottom center
   useEffect(() => {
@@ -124,15 +125,15 @@ export function FloatingToolbar({ accent }: { accent: string }) {
     e.stopPropagation()
     resizing.current = true
     e.currentTarget.setPointerCapture(e.pointerId)
+    resizeInitial.current = { x: e.clientX, y: e.clientY, scale }
   }
 
   const onResizePointerMove = (e: React.PointerEvent) => {
     if (!resizing.current || !toolbarRef.current) return
-    const rect = toolbarRef.current.getBoundingClientRect()
-    setSize({
-      width: Math.max(80, e.clientX - rect.left + 10),
-      height: Math.max(48, e.clientY - rect.top + 10)
-    })
+    const dx = e.clientX - resizeInitial.current.x
+    const dy = e.clientY - resizeInitial.current.y
+    const deltaScale = (dy - dx) * 0.005
+    setScale(Math.max(0.4, Math.min(2.0, resizeInitial.current.scale + deltaScale)))
   }
 
   const onResizePointerUp = (e: React.PointerEvent) => {
@@ -171,12 +172,12 @@ export function FloatingToolbar({ accent }: { accent: string }) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onLostPointerCapture={() => { dragging.current = false }}
-      className={`ls-toolbar fixed z-[100] flex bg-zinc-50 border border-zinc-200/80 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.05)] p-2 gap-1 select-none touch-none flex-wrap overflow-hidden ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isVertical ? 'flex-col items-center content-start' : 'flex-row items-center content-start'}`}
+      className={`ls-toolbar fixed z-[100] flex bg-zinc-50 border border-zinc-200/80 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.05)] p-2 gap-1 select-none touch-none overflow-hidden ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isVertical ? 'flex-col items-center content-start' : 'flex-row items-center content-start'}`}
       style={{
         left: pos.x,
         top: pos.y,
-        width: size.width,
-        height: size.height,
+        transform: `scale(${scale})`,
+        transformOrigin: "top left",
         transition: dragging.current ? 'none' : 'left 0.15s cubic-bezier(0.2, 0, 0, 1), top 0.15s cubic-bezier(0.2, 0, 0, 1)',
         backgroundImage: `url("data:image/svg+xml,${svgPattern}")`,
         backgroundSize: "40px 69.28px",
@@ -285,11 +286,11 @@ export function FloatingToolbar({ accent }: { accent: string }) {
         onPointerUp={onResizePointerUp}
         onPointerCancel={onResizePointerUp}
         onLostPointerCapture={() => { resizing.current = false }}
-        className="absolute bottom-1 right-1 w-3 h-3 cursor-nwse-resize opacity-20 hover:opacity-100 transition-opacity"
+        className="absolute bottom-1 left-1 w-3 h-3 cursor-nesw-resize opacity-20 hover:opacity-100 transition-opacity"
         style={{ color: accent }}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15l-6 6"/><path d="M21 8l-13 13"/>
+          <path d="M3 15l6 6"/><path d="M3 8l13 13"/>
         </svg>
       </div>
     </div>

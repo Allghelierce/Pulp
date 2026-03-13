@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { uid } from "@/app/lib/uid"
 import type { TextBox, NoteData } from "@/app/types"
 
@@ -9,123 +9,149 @@ interface UseBoxDrawingOptions {
   zoom: string
   setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
   paperRef: React.RefObject<HTMLDivElement | null>
-  boxMode: boolean
   sketchMode: boolean
   sketchPrompt: string
   setSketchMode: (v: boolean) => void
-  setBoxMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
 }
 
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, setNotes, paperRef,
-  boxMode, sketchMode, sketchPrompt, setSketchMode, setBoxMode, setSketchPrompt,
+  sketchMode, sketchPrompt, setSketchMode, setSketchPrompt,
 }: UseBoxDrawingOptions) {
   const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null)
-  const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null)
-  const [draftBox, setDraftBox] = useState<TextBox | null>(null)
-  const [draggingBox, setDraggingBox] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
 
+  // Stable refs so DOM handlers never have stale closures
+  const zoomRef = useRef(zoom)
+  const activeTabIdRef = useRef(activeTabId)
+  const currentPageIdxRef = useRef(currentPageIdx)
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
+  useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
+  useEffect(() => { currentPageIdxRef.current = currentPageIdx }, [currentPageIdx])
+
   const updateBoxes = (fn: (boxes: TextBox[]) => TextBox[]) =>
-    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, boxes: { ...n.boxes, [currentPageIdx]: fn(n.boxes[currentPageIdx] || []) }
+    setNotes(prev => prev.map(n => n.id !== activeTabIdRef.current ? n : {
+      ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: fn(n.boxes[currentPageIdxRef.current] || []) }
     }))
 
-  const getPaperXY = (e: React.MouseEvent) => {
-    const r = paperRef.current!.getBoundingClientRect()
-    const s = parseFloat(zoom)
-    return { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s }
+  // Drag / resize state - mutated directly, no re-renders during move
+  const dragRef = useRef<{ id: string; sx: number; sy: number; ox: number; oy: number } | null>(null)
+  const resizeRef = useRef<{ id: string; handle: string; sx: number; sy: number; ox: number; oy: number; ow: number; oh: number } | null>(null)
+
+  const s = () => parseFloat(zoomRef.current)
+  const el = (id: string) => document.getElementById(`box-${id}`)
+
+  // Stable handler refs - close only over other refs, so always fresh
+  const handleMove = useRef((e: MouseEvent) => {
+    if (dragRef.current) {
+      const { id, sx, sy, ox, oy } = dragRef.current
+      const node = el(id)
+      if (node) { node.style.left = (ox + (e.clientX - sx) / s()) + 'px'; node.style.top = (oy + (e.clientY - sy) / s()) + 'px' }
+    }
+    if (resizeRef.current) {
+      const { id, handle, sx, sy, ox, oy, ow, oh } = resizeRef.current
+      const dx = (e.clientX - sx) / s(), dy = (e.clientY - sy) / s()
+      let x = ox, y = oy, w = ow, h = oh
+      if (handle.includes('e')) w = Math.max(80, ow + dx)
+      if (handle.includes('s')) h = Math.max(40, oh + dy)
+      if (handle.includes('w')) { x = ox + dx; w = Math.max(80, ow - dx) }
+      if (handle.includes('n')) { y = oy + dy; h = Math.max(40, oh - dy) }
+      const node = el(id)
+      if (node) { node.style.left = x + 'px'; node.style.top = y + 'px'; node.style.width = w + 'px'; node.style.height = h + 'px' }
+    }
+  })
+
+  const handleUp = useRef((e: MouseEvent) => {
+    const scale = s()
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+    const commit = (fn: (boxes: TextBox[]) => TextBox[]) =>
+      setNotes(prev => prev.map(n => n.id !== tid ? n : { ...n, boxes: { ...n.boxes, [pidx]: fn(n.boxes[pidx] || []) } }))
+
+    if (dragRef.current) {
+      const { id, sx, sy, ox, oy } = dragRef.current
+      const x = ox + (e.clientX - sx) / scale, y = oy + (e.clientY - sy) / scale
+      commit(bs => bs.map(b => b.id === id ? { ...b, x, y } : b))
+      dragRef.current = null
+    }
+    if (resizeRef.current) {
+      const { id, handle, sx, sy, ox, oy, ow, oh } = resizeRef.current
+      const dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale
+      let x = ox, y = oy, w = ow, h = oh
+      if (handle.includes('e')) w = Math.max(80, ow + dx)
+      if (handle.includes('s')) h = Math.max(40, oh + dy)
+      if (handle.includes('w')) { x = ox + dx; w = Math.max(80, ow - dx) }
+      if (handle.includes('n')) { y = oy + dy; h = Math.max(40, oh - dy) }
+      commit(bs => bs.map(b => b.id === id ? { ...b, x, y, w, h } : b))
+      resizeRef.current = null
+    }
+    document.removeEventListener('mousemove', handleMove.current)
+    document.removeEventListener('mouseup', handleUp.current)
+  })
+
+  const addListeners = () => {
+    document.addEventListener('mousemove', handleMove.current)
+    document.addEventListener('mouseup', handleUp.current)
   }
 
+  const startDrag = (e: React.MouseEvent, box: TextBox) => {
+    e.preventDefault(); e.stopPropagation()
+    setSelectedBoxId(box.id)
+    dragRef.current = { id: box.id, sx: e.clientX, sy: e.clientY, ox: box.x, oy: box.y }
+    addListeners()
+  }
+
+  const startResize = (e: React.MouseEvent, box: TextBox, handle: string) => {
+    e.preventDefault(); e.stopPropagation()
+    resizeRef.current = { id: box.id, handle, sx: e.clientX, sy: e.clientY, ox: box.x, oy: box.y, ow: box.w, oh: box.h }
+    addListeners()
+  }
+
+  const pruneEmpty = () => updateBoxes(bs => bs.filter(b => b.content.trim() !== ''))
+
+  // Click anywhere on paper → create box
+  const onPaperMouseDown = (e: React.MouseEvent) => {
+    if (!paperRef.current) return
+    pruneEmpty()
+    setSelectedBoxId(null)
+    const r = paperRef.current.getBoundingClientRect()
+    const scale = s()
+    const x = (e.clientX - r.left) / scale
+    const y = (e.clientY - r.top) / scale
+    const id = uid()
+    const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 260, h: 80, content: '' }
+    updateBoxes(bs => [...bs, newBox])
+    requestAnimationFrame(() => {
+      document.getElementById(`box-${id}`)?.querySelector<HTMLTextAreaElement>('textarea')?.focus()
+    })
+    if (sketchMode) {
+      const prompt = sketchPrompt
+      requestAnimationFrame(() => generateSketch(prompt, id))
+      setSketchMode(false); setSketchPrompt('')
+    }
+  }
+
+  const deleteBox = (id: string) => { updateBoxes(bs => bs.filter(b => b.id !== id)); setSelectedBoxId(null) }
+  const updateBoxContent = (id: string, text: string) => updateBoxes(bs => bs.map(b => b.id === id ? { ...b, content: text } : b))
+
   const generateSketch = async (prompt: string, boxId: string) => {
-    if (!prompt.trim() || !activeTabId) return
+    if (!prompt.trim() || !activeTabIdRef.current) return
     setLoadingBoxId(boxId)
     try {
-      const res = await fetch("/api/sketch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: prompt.trim() }) })
+      const res = await fetch('/api/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: prompt.trim() }) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      if (!data.url) { console.warn("No image URL returned from /api/sketch", data); return }
-      updateBoxes(boxes => boxes.map(b => b.id === boxId ? { ...b, content: data.url } : b))
+      if (!data.url) { console.warn('No image URL', data); return }
+      updateBoxes(bs => bs.map(b => b.id === boxId ? { ...b, content: data.url } : b))
     } catch (err) {
-      console.error("Sketch generation failed:", err)
+      console.error('Sketch failed:', err)
     } finally {
       setLoadingBoxId(null)
     }
   }
 
-  const onPaperMouseDown = (e: React.MouseEvent) => {
-    if (!boxMode) return
-    e.preventDefault()
-    const { x, y } = getPaperXY(e)
-    setDrawStart({ x, y })
-    setDraftBox({ id: uid(), x, y, w: 0, h: 0, content: "" })
-    setSelectedBoxId(null)
-  }
+  const selectBox = (id: string) => { pruneEmpty(); setSelectedBoxId(id) }
 
-  const onPaperMouseMove = (e: React.MouseEvent) => {
-    if (draggingBox) {
-      const { x, y } = getPaperXY(e)
-      updateBoxes(boxes => boxes.map(b => b.id === draggingBox.id ? { ...b, x: x - draggingBox.offsetX, y: y - draggingBox.offsetY } : b))
-      return
-    }
-    if (!boxMode || !drawStart) return
-    const { x, y } = getPaperXY(e)
-    setDraftBox({ id: draftBox?.id ?? uid(), x: drawStart.x, y: drawStart.y, w: x - drawStart.x, h: y - drawStart.y, content: "" })
-  }
-
-  const onPaperMouseUp = () => {
-    if (draggingBox) { setDraggingBox(null); return }
-    if (!boxMode || !draftBox) return
-    if (Math.abs(draftBox.w) > 15 && Math.abs(draftBox.h) > 15) {
-      const committed = { ...draftBox, id: uid() }
-      updateBoxes(boxes => [...boxes, committed])
-      setSelectedBoxId(committed.id)
-      if (sketchMode) {
-        requestAnimationFrame(() => generateSketch(sketchPrompt, committed.id))
-        setSketchMode(false); setBoxMode(false); setSketchPrompt("")
-      }
-    }
-    setDrawStart(null); setDraftBox(null)
-  }
-
-  const deleteBox = (boxId: string) => {
-    updateBoxes(boxes => boxes.filter(b => b.id !== boxId))
-    setSelectedBoxId(null)
-  }
-
-  const updateBoxContent = (boxId: string, text: string) =>
-    updateBoxes(boxes => boxes.map(b => b.id === boxId ? { ...b, content: text } : b))
-
-  const onBoxMouseDown = (e: React.MouseEvent<HTMLDivElement>, box: TextBox) => {
-    if ((e.target as HTMLElement).tagName === "BUTTON") return
-    const rect = e.currentTarget.getBoundingClientRect()
-    if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) return
-    e.stopPropagation()
-    setSelectedBoxId(box.id)
-    e.currentTarget.focus()
-    if (boxMode || e.target === e.currentTarget) {
-      const { x, y } = getPaperXY(e)
-      setDraggingBox({ id: box.id, offsetX: x - box.x, offsetY: y - box.y })
-    }
-  }
-
-  const makeBoxResizeHandler = (box: TextBox) => (e: React.MouseEvent) => {
-    if (!paperRef.current) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const paperRect = paperRef.current.getBoundingClientRect()
-    const s = parseFloat(zoom)
-    const newX = (rect.left - paperRect.left) / s
-    const newY = (rect.top - paperRect.top) / s
-    const newW = rect.width / s
-    const newH = rect.height / s
-    if (Math.abs(box.w - newW) > 1 || Math.abs(box.h - newH) > 1 || Math.abs(box.x - newX) > 1 || Math.abs(box.y - newY) > 1)
-      updateBoxes(boxes => boxes.map(b => b.id === box.id ? { ...b, x: newX, y: newY, w: newW, h: newH } : b))
-  }
-
-  return {
-    selectedBoxId, setSelectedBoxId, draftBox, draggingBox, loadingBoxId,
-    onPaperMouseDown, onPaperMouseMove, onPaperMouseUp,
-    onBoxMouseDown, makeBoxResizeHandler, deleteBox, updateBoxContent,
-  }
+  return { selectedBoxId, setSelectedBoxId, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent }
 }

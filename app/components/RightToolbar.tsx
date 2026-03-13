@@ -11,7 +11,6 @@ interface RightToolbarProps {
   setGridView: (fn: (v: boolean) => boolean) => void
   setCarouselIdx: (idx: number) => void
   setSketchMode: (v: boolean) => void
-  setBoxMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
   openAlert: (title: string, message?: string) => void
   clearPage: () => void
@@ -20,7 +19,7 @@ interface RightToolbarProps {
 export function RightToolbar({
   theme, accent, gridView, sketchMode, rightSidebarOpen, currentPageIdx,
   setRightSidebarOpen, setGridView, setCarouselIdx,
-  setSketchMode, setBoxMode, setSketchPrompt, openAlert, clearPage,
+  setSketchMode, setSketchPrompt, openAlert, clearPage,
 }: RightToolbarProps) {
   return (
     <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
@@ -77,7 +76,7 @@ export function RightToolbar({
               e.preventDefault()
               const selection = window.getSelection()?.toString()
               if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
-              setSketchPrompt(selection); setSketchMode(true); setBoxMode(true)
+              setSketchPrompt(selection); setSketchMode(true)
             }}
             title="AI Sketch"
             style={{
