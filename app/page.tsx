@@ -12,6 +12,7 @@ import { Sidebar } from "@/app/components/Sidebar"
 import { FormattingToolbar } from "@/app/components/FormattingToolbar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { RightToolbar } from "@/app/components/RightToolbar"
+import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { GridView } from "@/app/components/GridView"
 
 export default function NoteApp() {
@@ -92,11 +93,15 @@ export default function NoteApp() {
   }, [activeNote, user])
 
   // Sync editor DOM with active note/page
+  const lastSyncKey = useRef<string>("")
   useEffect(() => {
     if (!activeNote) return
-    if (!gridView && editorRef.current && editorRef.current.innerHTML !== activeNote.pages[currentPageIdx])
+    const key = `${activeTabId}:${currentPageIdx}:${gridView}`
+    if (!gridView && editorRef.current && lastSyncKey.current !== key) {
       editorRef.current.innerHTML = activeNote.pages[currentPageIdx] || ""
-  }, [activeTabId, currentPageIdx, gridView, activeNote])
+      lastSyncKey.current = key
+    }
+  }, [activeTabId, currentPageIdx, gridView, activeNote?.pages])
 
   // Fetch notes from cloud
   useEffect(() => {
@@ -326,6 +331,9 @@ export default function NoteApp() {
 
         {notes.length > 0 && (
           <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setBoxMode={setBoxMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} />
+        )}
+        {notes.length > 0 && !gridView && (
+          <FloatingToolbar accent={accent} />
         )}
       </div>
     </div>
