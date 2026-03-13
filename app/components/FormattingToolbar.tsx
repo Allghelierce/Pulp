@@ -1,8 +1,9 @@
 "use client"
 
+const btnBase = "w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-zinc-200"
+
 interface FormattingToolbarProps {
   accent: string
-  btnBase: string
   execCmd: (cmd: string, value?: string) => void
   saveSelection: () => void
   toggleScript: (cmd: "superscript" | "subscript") => void
@@ -13,7 +14,7 @@ interface FormattingToolbarProps {
 }
 
 export function FormattingToolbar({
-  accent, btnBase, execCmd, saveSelection, toggleScript, insertHTML, openAlert, downloadNote, editorRef,
+  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, downloadNote, editorRef,
 }: FormattingToolbarProps) {
   return (
     <div className="ls-toolbar h-10 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">

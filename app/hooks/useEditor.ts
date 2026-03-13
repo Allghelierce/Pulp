@@ -1,0 +1,256 @@
+"use client"
+import { useRef } from "react"
+import type { NoteData } from "@/app/types"
+
+interface UseEditorOptions {
+  editorRef: React.RefObject<HTMLDivElement | null>
+  activeTabId: string | null
+  currentPageIdx: number
+  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
+  accent: string
+}
+
+export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent }: UseEditorOptions) {
+  const savedRange = useRef<Range | null>(null)
+
+  const saveSelection = () => {
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount > 0) savedRange.current = sel.getRangeAt(0).cloneRange()
+  }
+
+  const restoreSelection = () => {
+    editorRef.current?.focus()
+    const sel = window.getSelection()
+    if (sel && savedRange.current) { sel.removeAllRanges(); sel.addRange(savedRange.current) }
+  }
+
+  const syncContent = () => {
+    const content = editorRef.current?.innerHTML || ""
+    setNotes(prev => prev.map(n =>
+      n.id === activeTabId ? { ...n, pages: n.pages.map((p, i) => i === currentPageIdx ? content : p) } : n
+    ))
+  }
+
+  const execCmd = (cmd: string, value?: string) => {
+    restoreSelection()
+    document.execCommand(cmd, false, value)
+    saveSelection()
+    editorRef.current?.focus()
+  }
+
+  const insertHTML = (html: string) => {
+    restoreSelection()
+    document.execCommand("insertHTML", false, html)
+    saveSelection()
+    editorRef.current?.focus()
+  }
+
+  const applyFontSize = (sizePx: string) => {
+    if (!sizePx || isNaN(Number(sizePx))) return
+    restoreSelection()
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0) { editorRef.current?.focus(); return }
+    const range = sel.getRangeAt(0)
+    if (range.collapsed) { editorRef.current?.focus(); return }
+    const span = document.createElement("span")
+    span.style.fontSize = sizePx + "px"
+    const fragment = range.extractContents()
+    const tmp = document.createElement("div")
+    tmp.appendChild(fragment)
+    tmp.querySelectorAll<HTMLElement>("[style]").forEach(el => el.style.removeProperty("font-size"))
+    tmp.querySelectorAll<HTMLElement>("span").forEach(el => {
+      if (!el.getAttribute("style") && el.childNodes.length === 1 && el.firstChild?.nodeType === Node.TEXT_NODE)
+        el.replaceWith(el.firstChild)
+    })
+    while (tmp.firstChild) span.appendChild(tmp.firstChild)
+    range.insertNode(span)
+    const nr = document.createRange(); nr.selectNodeContents(span)
+    sel.removeAllRanges(); sel.addRange(nr); savedRange.current = nr.cloneRange()
+    editorRef.current?.focus()
+  }
+
+  const applyBlockStyle = (tag: string) => {
+    const editor = editorRef.current
+    if (!editor || !savedRange.current) { editor?.focus(); return }
+    const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
+      h1: { fontSize: "3rem", fontWeight: "800", margin: "1.25rem 0" },
+      h2: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
+      h3: { fontSize: "1.75rem", fontWeight: "700", margin: "0.75rem 0" },
+    }
+    restoreSelection()
+    document.execCommand("formatBlock", false, tag === "default" ? "p" : tag)
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount > 0) {
+      let node: Node | null = sel.getRangeAt(0).commonAncestorContainer
+      if (node.nodeType === Node.TEXT_NODE) node = node.parentNode
+      const block = (node as HTMLElement).closest(tag === "default" ? "p" : tag) as HTMLElement | null
+      if (block) {
+        if (tag === "default") {
+          block.style.fontSize = ""; block.style.fontWeight = ""; block.style.margin = ""
+        } else {
+          const s = headingStyles[tag]
+          if (s) { block.style.fontSize = s.fontSize; block.style.fontWeight = s.fontWeight; block.style.margin = s.margin; block.style.display = "block" }
+        }
+        const nr = document.createRange(); nr.selectNodeContents(block)
+        sel.removeAllRanges(); sel.addRange(nr); savedRange.current = nr.cloneRange()
+      }
+    }
+    syncContent()
+  }
+
+  const toggleScript = (cmd: "superscript" | "subscript") => {
+    const tag = cmd === "superscript" ? "SUP" : "SUB"
+    const saved = savedRange.current
+    let node: Node | null = saved?.commonAncestorContainer ?? null
+    if (node?.nodeType === Node.TEXT_NODE) node = node.parentNode
+    let scriptEl: HTMLElement | null = null
+    while (node && node !== editorRef.current) {
+      if ((node as HTMLElement).tagName === tag) { scriptEl = node as HTMLElement; break }
+      node = node.parentNode
+    }
+    editorRef.current?.focus()
+    const sel = window.getSelection()
+    if (scriptEl && scriptEl.parentNode) {
+      if (saved && !saved.collapsed) {
+        const parent = scriptEl.parentNode
+        while (scriptEl.firstChild) parent.insertBefore(scriptEl.firstChild, scriptEl)
+        parent.removeChild(scriptEl)
+        try { sel?.removeAllRanges(); sel?.addRange(saved) } catch { /* stale */ }
+        saveSelection()
+      } else {
+        const nr = document.createRange(); nr.setStartAfter(scriptEl); nr.collapse(true)
+        sel?.removeAllRanges(); sel?.addRange(nr); savedRange.current = nr.cloneRange()
+      }
+    } else {
+      if (saved) { sel?.removeAllRanges(); sel?.addRange(saved) }
+      document.execCommand(cmd, false)
+      saveSelection()
+    }
+  }
+
+  const getRangeAtSaved = (): Range => {
+    const editor = editorRef.current!
+    if (savedRange.current) {
+      try {
+        const sel = window.getSelection(); sel?.removeAllRanges(); sel?.addRange(savedRange.current)
+        const r = savedRange.current.cloneRange(); r.collapse(true); return r
+      } catch { /* stale range */ }
+    }
+    const r = document.createRange(); r.selectNodeContents(editor); r.collapse(false); return r
+  }
+
+  const focusFirstCell = (el: Element | null) => {
+    if (!el) return
+    const r = document.createRange(); r.setStart(el, 0); r.collapse(true)
+    window.getSelection()?.removeAllRanges(); window.getSelection()?.addRange(r)
+    savedRange.current = r.cloneRange()
+  }
+
+  const insertTable = (rows: number, cols: number) => {
+    const cellStyle = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
+    const table = document.createElement("table")
+    table.style.cssText = "border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed"
+    const tbody = document.createElement("tbody")
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement("tr")
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement("td"); td.style.cssText = cellStyle; td.appendChild(document.createElement("br")); tr.appendChild(td)
+      }
+      tbody.appendChild(tr)
+    }
+    table.appendChild(tbody)
+    const spacer = document.createElement("p"); spacer.appendChild(document.createElement("br"))
+    editorRef.current?.focus()
+    const range = getRangeAtSaved()
+    range.deleteContents(); range.insertNode(spacer); range.insertNode(table)
+    focusFirstCell(table.querySelector("td"))
+    editorRef.current?.focus()
+  }
+
+  const insertColumns = (num: number) => {
+    const grid = document.createElement("div")
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${num},1fr);gap:16px;margin:16px 0`
+    for (let i = 0; i < num; i++) {
+      const col = document.createElement("div"); col.style.cssText = "border:1px dashed #e4e4e7;padding:12px;min-height:80px;"; col.appendChild(document.createElement("br")); grid.appendChild(col)
+    }
+    const spacer = document.createElement("p"); spacer.appendChild(document.createElement("br"))
+    editorRef.current?.focus()
+    const range = getRangeAtSaved()
+    const frag = document.createDocumentFragment(); frag.appendChild(grid); frag.appendChild(spacer)
+    range.deleteContents(); range.insertNode(frag)
+    focusFirstCell(grid.firstElementChild)
+    editorRef.current?.focus()
+  }
+
+  const handleEditorKeyDown = (e: React.KeyboardEvent) => {
+    const sel = window.getSelection()
+    if (!sel || !sel.rangeCount) return
+    const range = sel.getRangeAt(0)
+
+    // Blockquote handling
+    let blockquote: HTMLElement | null = null
+    let n: Node | null = range.startContainer
+    while (n && n !== editorRef.current) {
+      if ((n as HTMLElement).tagName === "BLOCKQUOTE") { blockquote = n as HTMLElement; break }
+      n = n.parentNode
+    }
+    if (blockquote) {
+      if (e.key === "Enter") { e.preventDefault(); document.execCommand("insertHTML", false, "<br>"); return }
+      if ((e.key === "Backspace" || e.key === "Delete") && !(blockquote.textContent ?? "").replace(/\u00a0/g, "").trim()) {
+        e.preventDefault()
+        const afterNode = blockquote.nextSibling; blockquote.remove()
+        const nr = document.createRange()
+        if (afterNode) nr.setStart(afterNode, 0)
+        else if (editorRef.current) nr.setStart(editorRef.current, editorRef.current.childNodes.length)
+        nr.collapse(true); sel.removeAllRanges(); sel.addRange(nr); return
+      }
+    }
+
+    // Tab → table navigation
+    if (e.key === "Tab") {
+      let cell: HTMLElement | null = null, cn: Node | null = range.startContainer
+      while (cn && cn !== editorRef.current) {
+        const tag = (cn as HTMLElement).tagName
+        if (tag === "TD" || tag === "TH") { cell = cn as HTMLElement; break }
+        cn = cn.parentNode
+      }
+      if (cell) {
+        e.preventDefault()
+        const table = cell.closest("table")!
+        const cells = Array.from(table.querySelectorAll<HTMLElement>("td, th"))
+        const idx = cells.indexOf(cell)
+        if (e.shiftKey && idx > 0) {
+          const r = document.createRange(); r.selectNodeContents(cells[idx - 1]); r.collapse(false); sel.removeAllRanges(); sel.addRange(r)
+        } else if (!e.shiftKey && idx < cells.length - 1) {
+          const r = document.createRange(); r.selectNodeContents(cells[idx + 1]); r.collapse(false); sel.removeAllRanges(); sel.addRange(r)
+        } else if (!e.shiftKey) {
+          const numCols = cell.closest("tr")?.querySelectorAll("td, th").length ?? 1
+          const tbody = table.querySelector("tbody") ?? table
+          const newRow = document.createElement("tr")
+          for (let i = 0; i < numCols; i++) {
+            const td = document.createElement("td"); td.style.cssText = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"; td.innerHTML = "<br>"; newRow.appendChild(td)
+          }
+          tbody.appendChild(newRow)
+          const r = document.createRange(); r.selectNodeContents(newRow.querySelector("td")!); r.collapse(true); sel.removeAllRanges(); sel.addRange(r)
+        }
+        return
+      }
+    }
+
+    // Space → list autocomplete
+    if (e.key !== " ") return
+    const node = range.startContainer
+    if (node.nodeType !== Node.TEXT_NODE) return
+    const before = (node.textContent ?? "").slice(0, range.startOffset)
+    const tryConvert = (cmd: string) => {
+      e.preventDefault()
+      const del = document.createRange(); del.setStart(node, 0); del.setEnd(node, range.startOffset)
+      sel.removeAllRanges(); sel.addRange(del)
+      document.execCommand("delete", false); document.execCommand(cmd, false)
+    }
+    if (before === "*") tryConvert("insertUnorderedList")
+    else if (/^\d+\.$/.test(before)) tryConvert("insertOrderedList")
+  }
+
+  return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent }
+}
