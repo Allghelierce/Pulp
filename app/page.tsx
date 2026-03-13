@@ -133,7 +133,7 @@ const ACCENT_COLORS = [
 function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
   autoSave, setAutoSave, spellCheck, setSpellCheck, editorFont, setEditorFont,
   lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
-  reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart,
+  reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
 }: {
   user: any
   onClose: () => void
@@ -149,6 +149,7 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
   showBinding: boolean; setShowBinding: (v: boolean) => void
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
+  bgEffect: boolean; setBgEffect: (v: boolean) => void
 }) {
   const [activeTab, setActiveTab]         = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery]     = useState("")
@@ -309,6 +310,11 @@ function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTh
                   title="Show sidebar on launch"
                   description="Keep the notes panel open when you start the app"
                   control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} />}
+                />
+                <SettingRow
+                  title="Background texture"
+                  description="Show a subtle noise texture on the app background"
+                  control={<SettingToggle checked={bgEffect} onChange={setBgEffect} />}
                 />
               </SettingSection>
               <SettingSection title="Paper">
@@ -535,6 +541,7 @@ export default function NoteApp() {
   const [showBinding, setShowBinding] = useState(true)
   const [reduceMotion, setReduceMotion] = useState(false)
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
+  const [bgEffect, setBgEffect] = useState(true)
   // 1. Add these two states near the other useState declarations
   const [sketchMode, setSketchMode] = useState(false)
   const [sketchPrompt, setSketchPrompt] = useState("")
@@ -1300,17 +1307,15 @@ if (sketchMode) {
     }
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A" }} onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+    <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#1C1C1E" : "#F0ECEA", color: theme === "dark" ? "#E5E5E7" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }} onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}` }} />
       {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: #2C2C2E !important; border-color: #38383A !important; } .ls-toolbar button { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar select, .ls-toolbar input { background-color: #3A3A3C !important; color: #E5E5E7 !important; border-color: #48484A !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200 { border-color: #48484A !important; }` }} />}
       <div className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-3 mb-5 cursor-default">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ background: `linear-gradient(135deg,${accent}88,${accent})` }}>
-              <svg width="18" height="18" viewBox="0 0 28 28" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><path d="M4 22C4 22 10 6 24 6"/><path d="M18 13C24 13 24 23 18 23"/></svg>
-            </div>
+            <img src="/Gemini_Generated_Image_ctyul6ctyul6ctyu.png" width="36" height="36" style={{ filter: "invert(1)", objectFit: "contain" }} alt="Logo" />
             <h1 className="text-2xl font-bold text-white" style={{ fontFamily: '"Licorice", cursive' }}> Letter Soup </h1>
           </div>
           <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
@@ -1589,7 +1594,7 @@ if (sketchMode) {
                   const paperBg = paperStyle === "stenopad" ? "#F5EDB8" : theme === "dark" ? "#2C2C2E" : "#ffffff"
                   const bgImage = paperStyle === "plain" ? "none"
                     : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
-                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #8EBF8A ${lh}px)`
+                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #3DBECB ${lh}px)`
                     : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
                   const bgSize = paperStyle === "plain" ? "auto"
                     : paperStyle === "dotgrid" ? `${lh * 0.75}px ${lh * 0.75}px`
@@ -1716,26 +1721,27 @@ if (sketchMode) {
           <main className="flex-1 overflow-auto px-8 pt-16 pb-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#141414" : "#EDE8E6" }}>
             <div style={{transform:`scale(${zoom})`,transformOrigin:"top center"}} className="w-full max-w-5xl shrink-0">
               {/* ── 3D open-notebook effect ── */}
-              <div style={{ position: "relative", perspective: "2800px" }}>
-                {/* Page stack layers peeking out behind the main sheet */}
-                <div style={{ position: "absolute", top: 5, left: 0, right: -11, bottom: -7, backgroundColor: theme === "dark" ? "#282828" : "#ede7df", borderRadius: 3, zIndex: 1 }} />
-                <div style={{ position: "absolute", top: 11, left: 0, right: -22, bottom: -15, backgroundColor: theme === "dark" ? "#1f1f1f" : "#e4ddd4", borderRadius: 3, zIndex: 0 }} />
-                <div style={{ position: "absolute", top: 17, left: 0, right: -33, bottom: -23, backgroundColor: theme === "dark" ? "#181818" : "#dbd4c9", borderRadius: 3, zIndex: -1 }} />
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "relative" }}>
+                {/* Page stack layers — right-edge paper thickness illusion */}
+                <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: 0, backgroundColor: theme === "dark" ? "#2a2a2a" : "#f0e9e0", borderRadius: 2, zIndex: 1, boxShadow: "2px 0 6px rgba(0,0,0,0.10)" }} />
+                <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: 0, backgroundColor: theme === "dark" ? "#232323" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 0 6px rgba(0,0,0,0.08)" }} />
+                <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#1c1c1c" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
               <div
                 ref={paperRef}
-                className="shadow-2xl relative"
+                className="relative"
                 style={(() => {
                   const lhMap = { compact: 24, normal: 32, relaxed: 40 }
                   const lh = lhMap[lineSpacing] ?? 32
-                  const lineColor = theme === "dark" ? "#3a3a3a" : "#e4e4e7"
-                  const paperBg = paperStyle === "stenopad" ? "#F5EDB8" : theme === "dark" ? "#2C2C2E" : "#ffffff"
+                  const lineColor = theme === "dark" ? "#3a3a3a" : "#C2D3E8"
+                  const paperBg = paperStyle === "stenopad" ? "#F5EDB8" : theme === "dark" ? "#2C2C2E" : "#FDFCF9"
                   const bgImage = paperStyle === "plain" ? "none"
-                    : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1px, transparent 1px)`
-                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #8EBF8A ${lh}px)`
+                    : paperStyle === "dotgrid" ? `radial-gradient(circle, ${lineColor} 1.5px, transparent 1.5px)`
+                    : paperStyle === "stenopad" ? `linear-gradient(to right, transparent 111px, #C17A7A 111px, #C17A7A 113px, transparent 113px), linear-gradient(to right, transparent 120px, #C17A7A 120px, #C17A7A 122px, transparent 122px), linear-gradient(transparent ${lh - 1}px, #3DBECB ${lh}px)`
                     : `linear-gradient(transparent ${lh - 1}px, ${lineColor} ${lh}px)`
                   const bgSize = paperStyle === "plain" ? "auto"
-                    : paperStyle === "dotgrid" ? "24px 24px"
+                    : paperStyle === "dotgrid" ? "28px 28px"
                     : paperStyle === "stenopad" ? `100% 100%, 100% 100%, 100% ${lh}px`
                     : `100% ${lh}px`
                   return {
@@ -1745,8 +1751,9 @@ if (sketchMode) {
                     backgroundImage: bgImage,
                     backgroundSize: bgSize,
                     zIndex: 2,
-                    transform: "rotateX(1.8deg)",
-                    transformOrigin: "top center",
+                    boxShadow: theme === "dark"
+                      ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"
+                      : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)",
                   }
                 })()}
                 onMouseDown={onPaperMouseDown}
@@ -1757,7 +1764,7 @@ if (sketchMode) {
                 
 {/* ── BRONZE SPIRAL BINDING — left (normal) or top (compact/notepad) ── */}
               {showBinding && !bindingCompact && (
-                <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col pt-[32px]">
+                <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-hidden">
                   {Array.from({ length: 40 }).map((_, i) => (
                     <div key={i} className="relative w-full h-[32px]">
                       <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
@@ -1901,6 +1908,7 @@ onMouseUp={(e) => {
                   <button onClick={()=>{ if(currentPageIdx<activeNote.pages.length-1) setCurrentPageIdx(p=>p+1); else { const np=[...activeNote.pages,""]; setNotes(prev=>prev.map(n=>n.id===activeTabId?{...n,pages:np}:n)); setCurrentPageIdx(activeNote.pages.length); } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{color:accent}}>&rarr;</button>
                 </div>
               </div>
+              </div>{/* end tilt group */}
               {/* Desk shadow beneath notebook */}
               <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
               </div>{/* end 3D notebook wrapper */}
@@ -1910,17 +1918,18 @@ onMouseUp={(e) => {
 
       {/* ── Right sidebar (floating overlay) ── */}
       {notes.length > 0 && (
-        <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
+        <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
           {/* Toggle arrow */}
           <button
             onClick={() => setRightSidebarOpen(v => !v)}
             style={{
-              background: theme === "dark" ? "rgba(44,44,46,0.75)" : "rgba(220,220,224,0.75)",
-              border: "none", cursor: "pointer", padding: "6px 3px",
-              borderRadius: "8px 0 0 8px",
+              background: theme === "dark" ? "rgba(44,44,46,0.80)" : "rgba(215,215,220,0.80)",
+              border: "none", cursor: "pointer", padding: "5px 3px",
+              borderRadius: "6px 0 0 6px",
               color: theme === "dark" ? "#A1A1AA" : "#71717a",
-              fontSize: 14, lineHeight: 1,
-              boxShadow: "-2px 0 6px rgba(0,0,0,0.1)",
+              fontSize: 13, lineHeight: 1,
+              boxShadow: "-1px 0 4px rgba(0,0,0,0.08)",
+              backdropFilter: "blur(8px)",
             }}
           >
             {rightSidebarOpen ? "›" : "‹"}
@@ -1936,12 +1945,12 @@ onMouseUp={(e) => {
               width: 44,
               display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               padding: "12px 0",
-              borderRadius: "0 0 0 12px",
+              borderRadius: "0 8px 8px 0",
               background: theme === "dark"
-                ? "linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px) 0 0/10px 10px, linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px) 0 0/10px 10px, rgba(44,44,46,0.88)"
-                : "linear-gradient(rgba(0,0,0,0.06) 1px,transparent 1px) 0 0/10px 10px, linear-gradient(90deg,rgba(0,0,0,0.06) 1px,transparent 1px) 0 0/10px 10px, rgba(228,228,232,0.88)",
-              boxShadow: "-3px 4px 16px rgba(0,0,0,0.15)",
-              backdropFilter: "blur(8px)",
+                ? "linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, rgba(38,38,40,0.82)"
+                : "linear-gradient(rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, rgba(225,225,230,0.82)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)",
+              backdropFilter: "blur(12px)",
             }}>
               {/* Grid */}
               <button
