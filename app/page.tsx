@@ -275,60 +275,24 @@ export default function NoteApp() {
                         <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-hidden">
                           {Array.from({ length: 40 }).map((_, i) => (
                             <div key={i} className="relative w-full h-[32px]">
-                              <svg width="56" height="32" viewBox="0 0 56 32" className="absolute left-0 top-0 overflow-visible">
-                                <defs>
-                                  <linearGradient id="wire-gold-v" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stopColor="#8B6914" />
-                                    <stop offset="10%" stopColor="#FFF3A3" />
-                                    <stop offset="40%" stopColor="#D4AF37" />
-                                    <stop offset="80%" stopColor="#A67C00" />
-                                    <stop offset="100%" stopColor="#4A3B0A" />
-                                  </linearGradient>
-                                  <filter id="shadow-v" x="-20%" y="-20%" width="150%" height="150%">
-                                    <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodColor="#000" floodOpacity="0.45" />
-                                  </filter>
-                                </defs>
-                                
-                                {/* Hole Punch */}
-                                <rect x="34" y="6" width="8" height="14" rx="2" fill="#111" />
-                                <rect x="34" y="6" width="8" height="14" rx="2" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
-                                <rect x="33.5" y="5.5" width="9" height="15" rx="2.5" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1" opacity="0.6" />
-
-                                {/* Wires */}
-                                <path d="M 38 11 C 6 11, 6 7, 38 7" fill="none" stroke="url(#wire-gold-v)" strokeWidth="2.5" strokeLinecap="round" filter="url(#shadow-v)" />
-                                <path d="M 38 19 C 6 19, 6 15, 38 15" fill="none" stroke="url(#wire-gold-v)" strokeWidth="2.5" strokeLinecap="round" filter="url(#shadow-v)" />
-                              </svg>
+                              <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+                              <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+                              <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
+                              <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
+                              <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
                             </div>
                           ))}
                         </div>
                       )}
                       {showBinding && bindingCompact && (
-                        <div className="absolute top-[-24px] left-0 right-0 h-[56px] z-30 pointer-events-none flex flex-row pl-[32px] overflow-hidden">
+                        <div className="absolute top-[-28px] left-0 right-0 h-16 z-30 pointer-events-none flex flex-row pl-[32px]">
                           {Array.from({ length: 30 }).map((_, i) => (
                             <div key={i} className="relative h-full w-[32px]">
-                              <svg width="32" height="56" viewBox="0 0 32 56" className="absolute left-0 top-0 overflow-visible">
-                                <defs>
-                                  <linearGradient id="wire-gold-h" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stopColor="#8B6914" />
-                                    <stop offset="10%" stopColor="#FFF3A3" />
-                                    <stop offset="40%" stopColor="#D4AF37" />
-                                    <stop offset="80%" stopColor="#A67C00" />
-                                    <stop offset="100%" stopColor="#4A3B0A" />
-                                  </linearGradient>
-                                  <filter id="shadow-h" x="-20%" y="-20%" width="150%" height="150%">
-                                    <feDropShadow dx="2" dy="2" stdDeviation="1.5" floodColor="#000" floodOpacity="0.45" />
-                                  </filter>
-                                </defs>
-
-                                {/* Hole Punch */}
-                                <rect x="6" y="34" width="14" height="8" rx="2" fill="#111" />
-                                <rect x="6" y="34" width="14" height="8" rx="2" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="1" />
-                                <rect x="5.5" y="33.5" width="15" height="9" rx="2.5" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1" opacity="0.6" />
-
-                                {/* Wires */}
-                                <path d="M 11 38 C 11 6, 7 6, 7 38" fill="none" stroke="url(#wire-gold-h)" strokeWidth="2.5" strokeLinecap="round" filter="url(#shadow-h)" />
-                                <path d="M 19 38 C 19 6, 15 6, 15 38" fill="none" stroke="url(#wire-gold-h)" strokeWidth="2.5" strokeLinecap="round" filter="url(#shadow-h)" />
-                              </svg>
+                              <div className="absolute left-2 top-[34px] w-5 h-4 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+                              <div className="absolute left-[14px] top-[12px] w-[10px] h-[28px] border-r-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+                              <div className="absolute left-[10px] top-0 w-[15px] h-[42px] border-l-[3.5px] border-r-[3.5px] border-b-[3.5px] border-[#D4AF37] rounded-b-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#D4AF37 #D4AF37 #8B6914 transparent' }} />
+                              <div className="absolute left-[11px] top-[2px] w-[10px] h-[38px] border-l-[1px] border-r-[1px] border-b-[1.5px] border-[#FFF3A3] rounded-b-full z-20 opacity-50" />
+                              <div className="absolute left-[18px] top-[38px] w-[2px] h-[10px] bg-black/10 blur-[2px] z-0" />
                             </div>
                           ))}
                         </div>
@@ -340,89 +304,53 @@ export default function NoteApp() {
                       <div ref={editorRef} className="w-full min-h-[1000px]" style={{ pointerEvents: "none" }} />
 
                       <style>{`
-                        .note-box { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
-                        .note-box:hover .nb-drag { opacity: 1 !important; }
-                        .note-box textarea { caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent}; color: #1a1a1a !important; }
+                        #editor-paper textarea {
+                          color: #1a1a1a !important;
+                          caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
+                          opacity: 1 !important;
+                        }
                       `}</style>
 
                       {(activeNote.boxes[currentPageIdx] || []).map(box => {
                         const isSelected = boxes.selectedBoxId === box.id
                         const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
-                        const corners = ["nw","ne","sw","se"]
-                        const cornerPos: Record<string, React.CSSProperties> = {
-                          nw: { top: -4, left: -4, cursor: "nw-resize" },
-                          ne: { top: -4, right: -4, cursor: "ne-resize" },
-                          sw: { bottom: -4, left: -4, cursor: "sw-resize" },
-                          se: { bottom: -4, right: -4, cursor: "se-resize" },
-                        }
-                        const edges = ["n","s","w","e"]
-                        const edgePos: Record<string, React.CSSProperties> = {
-                          n: { top: -3, left: "calc(50% - 12px)", width: 24, cursor: "n-resize" },
-                          s: { bottom: -3, left: "calc(50% - 12px)", width: 24, cursor: "s-resize" },
-                          w: { top: "calc(50% - 12px)", left: -3, height: 24, cursor: "w-resize" },
-                          e: { top: "calc(50% - 12px)", right: -3, height: 24, cursor: "e-resize" },
-                        }
+                        const corners: [string, React.CSSProperties][] = [
+                          ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
+                          ["ne", { top: -4, right: -4, cursor: "ne-resize" }],
+                          ["sw", { bottom: -4, left: -4, cursor: "sw-resize" }],
+                          ["se", { bottom: -4, right: -4, cursor: "se-resize" }],
+                        ]
                         return (
                           <div
                             key={box.id}
                             id={`box-${box.id}`}
-                            className="note-box"
-                            onMouseDown={e => { e.stopPropagation(); boxes.selectBox(box.id) }}
+                            onMouseDown={e => boxes.startDrag(e, box)}
                             style={{
                               position: "absolute", left: box.x, top: box.y, width: box.w, height: box.h,
-                              border: isSelected ? `1px solid ${accentSolid}55` : "1px solid transparent",
-                              borderRadius: 2,
-                              backgroundColor: "transparent",
-                              boxShadow: "none",
-                              zIndex: 50, overflow: "visible",
+                              border: isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent",
+                              borderRadius: 2, backgroundColor: "transparent",
+                              zIndex: 50, overflow: "visible", cursor: "grab",
                             }}
                           >
-                            {/* Drag zone — invisible strip, shows grip on hover */}
-                            <div
-                              className="nb-drag"
-                              onMouseDown={e => boxes.startDrag(e, box)}
-                              style={{
-                                position: "absolute", top: 0, left: 0, right: 0, height: 18,
-                                cursor: "grab", zIndex: 10, borderRadius: "2px 2px 0 0",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                opacity: isSelected ? 1 : 0, transition: "opacity 0.12s",
-                              }}
-                            >
-                              <svg width="20" height="6" viewBox="0 0 20 6" fill="none">
-                                {[0,6,12].map(x => <g key={x}><circle cx={x+2} cy={2} r={1.2} fill={`${accentSolid}70`}/><circle cx={x+2} cy={5} r={1.2} fill={`${accentSolid}70`}/></g>)}
-                              </svg>
-                            </div>
-
-                            {/* Corner resize handles */}
-                            {isSelected && corners.map(h => (
+                            {isSelected && corners.map(([h, pos]) => (
                               <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); boxes.startResize(e, box, h) }}
-                                style={{ position: "absolute", width: 8, height: 8, borderRadius: "50%", background: "white", border: `1.5px solid ${accentSolid}`, boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 20, ...cornerPos[h] }} />
+                                style={{ position: "absolute", width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, zIndex: 20, ...pos }} />
                             ))}
-
-                            {/* Edge resize handles */}
-                            {isSelected && edges.map(h => (
-                              <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); boxes.startResize(e, box, h) }}
-                                style={{ position: "absolute", height: ["n","s"].includes(h) ? 6 : 24, width: ["w","e"].includes(h) ? 6 : 24, borderRadius: 3, background: `${accentSolid}40`, zIndex: 20, ...edgePos[h] }} />
-                            ))}
-
-                            {/* Delete — subtle X inside top-right */}
                             {isSelected && (
                               <button onMouseDown={e => { e.stopPropagation(); boxes.deleteBox(box.id) }}
-                                style={{ position: "absolute", top: 2, right: 4, width: 16, height: 16, borderRadius: 4, background: "transparent", border: "none", cursor: "pointer", fontSize: 11, lineHeight: 1, color: `${accentSolid}99`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30, padding: 0 }}
-                              >×</button>
+                                style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
                             )}
-
-                            {/* Content */}
-                            <div style={{ position: "absolute", top: 18, left: 0, right: 0, bottom: 0, padding: "0 8px 6px", overflow: "hidden" }}>
+                            <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
                               {boxes.loadingBoxId === box.id ? (
-                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 11, letterSpacing: "0.12em", fontFamily: "monospace" }}>generating…</div>
+                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
                               ) : box.content.includes("http") || box.content.startsWith("data:image") ? (
                                 <img src={box.content} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "grayscale(1)", mixBlendMode: "multiply", opacity: 0.9 }} alt="sketch" />
                               ) : (
                                 <textarea
                                   onKeyDown={e => e.stopPropagation()}
                                   onMouseDown={e => e.stopPropagation()}
-                                  style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: '"EB Garamond", Georgia, serif', fontSize: 17, lineHeight: 1.6, color: "#1a1a1a", cursor: "text", padding: 0 }}
+                                  onFocus={() => boxes.setSelectedBoxId(box.id)}
+                                  style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, lineHeight: 1.55, color: "#1a1a1a", cursor: "text", padding: 0 }}
                                   value={box.content}
                                   onChange={e => boxes.updateBoxContent(box.id, e.target.value)}
                                 />

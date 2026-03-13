@@ -95,8 +95,11 @@ export function useBoxDrawing({
     document.addEventListener('mouseup', handleUp.current)
   }
 
+  const pruneEmpty = () => updateBoxes(bs => bs.filter(b => b.content.trim() !== ''))
+
   const startDrag = (e: React.MouseEvent, box: TextBox) => {
     e.preventDefault(); e.stopPropagation()
+    pruneEmpty()
     setSelectedBoxId(box.id)
     dragRef.current = { id: box.id, sx: e.clientX, sy: e.clientY, ox: box.x, oy: box.y }
     addListeners()
@@ -107,8 +110,6 @@ export function useBoxDrawing({
     resizeRef.current = { id: box.id, handle, sx: e.clientX, sy: e.clientY, ox: box.x, oy: box.y, ow: box.w, oh: box.h }
     addListeners()
   }
-
-  const pruneEmpty = () => updateBoxes(bs => bs.filter(b => b.content.trim() !== ''))
 
   // Click anywhere on paper → create box
   const onPaperMouseDown = (e: React.MouseEvent) => {
