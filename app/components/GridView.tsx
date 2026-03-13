@@ -35,7 +35,7 @@ export function GridView({ activeNote, activeTabId, carouselIdx, lineSpacing, pa
             if (idx < 0 || (idx >= activeNote.pages.length && !isNewCard)) return null
             const isCenter = offset === 0
             const page = activeNote.pages[idx] ?? ""
-            const { backgroundColor, backgroundImage, backgroundSize } = getPaperBg(lineSpacing, paperStyle, theme, true)
+            const { backgroundColor, backgroundImage, backgroundSize } = getPaperBg(lineSpacing, paperStyle, true)
 
             return (
               <div

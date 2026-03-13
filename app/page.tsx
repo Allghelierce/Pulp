@@ -82,6 +82,39 @@ export default function NoteApp() {
     return () => ro.disconnect()
   }, [])
 
+  // Load settings from cloud
+  useEffect(() => {
+    if (!user) return
+    supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
+      if (!data?.settings) return
+      const s = data.settings
+      if (s.accent)                    setAccent(s.accent)
+      if (s.theme)                     setTheme(s.theme)
+      if (s.autoSave      !== undefined) setAutoSave(s.autoSave)
+      if (s.spellCheck    !== undefined) setSpellCheck(s.spellCheck)
+      if (s.editorFont)                setEditorFont(s.editorFont)
+      if (s.lineSpacing)               setLineSpacing(s.lineSpacing)
+      if (s.paperStyle)                setPaperStyle(s.paperStyle)
+      if (s.showBinding   !== undefined) setShowBinding(s.showBinding)
+      if (s.reduceMotion  !== undefined) setReduceMotion(s.reduceMotion)
+      if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
+      if (s.bgEffect      !== undefined) setBgEffect(s.bgEffect)
+    })
+  }, [user])
+
+  // Save settings to cloud (debounced)
+  useEffect(() => {
+    if (!user) return
+    const timer = setTimeout(async () => {
+      const { error } = await supabase.from("user_settings").upsert({
+        user_id: user.id,
+        settings: { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect }
+      })
+      if (error) console.error("Settings save failed:", error.message, error.code)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, user])
+
   // Cloud autosave
   useEffect(() => {
     if (!autoSave || isLoading || !activeNote || !user) return
@@ -194,7 +227,7 @@ export default function NoteApp() {
     </div>
   )
 
-  const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme)
+  const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle)
   const lh = ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
 
   return (
@@ -235,7 +268,7 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: 0, backgroundColor: theme === "dark" ? "#232323" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 0 6px rgba(0,0,0,0.08)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#1c1c1c" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} className="relative" style={{ minHeight: "1300px", cursor: boxMode ? "crosshair" : "default", backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={boxes.onPaperMouseDown} onMouseMove={boxes.onPaperMouseMove} onMouseUp={boxes.onPaperMouseUp} onMouseLeave={boxes.onPaperMouseUp}>
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", cursor: boxMode ? "crosshair" : "default", backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={boxes.onPaperMouseDown} onMouseMove={boxes.onPaperMouseMove} onMouseUp={boxes.onPaperMouseUp} onMouseLeave={boxes.onPaperMouseUp}>
 
                       {/* Spiral binding */}
                       {showBinding && !bindingCompact && (

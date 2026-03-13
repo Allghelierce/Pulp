@@ -49,7 +49,9 @@ export function FloatingToolbar({ accent }: { accent: string }) {
   const onPointerUp = (e: React.PointerEvent) => {
     if (dragging.current) {
       dragging.current = false
-      e.currentTarget.releasePointerCapture(e.pointerId)
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
     }
   }
 
@@ -58,20 +60,62 @@ export function FloatingToolbar({ accent }: { accent: string }) {
     const rect = toolbarRef.current.getBoundingClientRect()
     const padding = 20
     
-    const distToLeft = pos.x
-    const distToRight = window.innerWidth - (pos.x + rect.width)
-    const distToTop = pos.y
-    const distToBottom = window.innerHeight - (pos.y + rect.height)
-    
-    const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom)
-    
     let newX = pos.x
     let newY = pos.y
-    
-    if (minDist === distToLeft) newX = padding
-    else if (minDist === distToRight) newX = window.innerWidth - rect.width - padding
-    else if (minDist === distToTop) newY = padding
-    else if (minDist === distToBottom) newY = window.innerHeight - rect.height - padding
+
+    if (isVertical) {
+      const candidateX: number[] = []
+      
+      // Left of screen (accounting for sidebar)
+      const sidebar = document.getElementById('app-sidebar')
+      const sidebarRight = sidebar ? sidebar.getBoundingClientRect().right : 0
+      candidateX.push(sidebarRight + padding)
+      
+      // Right of screen
+      candidateX.push(window.innerWidth - rect.width - padding)
+      
+      // Page constraints
+      const paper = document.getElementById('editor-paper')
+      if (paper) {
+        const paperRect = paper.getBoundingClientRect()
+        candidateX.push(paperRect.left - rect.width - padding)
+        candidateX.push(paperRect.right + padding)
+      }
+      
+      // Find closest candidate X
+      let closestX = pos.x
+      let minDiffX = Infinity
+      for (const x of candidateX) {
+        const diffX = Math.abs(pos.x - x)
+        if (diffX < minDiffX) {
+          minDiffX = diffX
+          closestX = x
+        }
+      }
+      newX = closestX
+    } else {
+      // Horizontal mode: snap top or bottom
+      const docToolbar = document.getElementById('document-toolbar')
+      const topSnap = docToolbar ? docToolbar.getBoundingClientRect().bottom + padding : padding
+      const candidateY = [
+        topSnap,
+        window.innerHeight - rect.height - padding
+      ]
+      let closestY = pos.y
+      let minDiffY = Infinity
+      for (const y of candidateY) {
+        const diffY = Math.abs(pos.y - y)
+        if (diffY < minDiffY) {
+          minDiffY = diffY
+          closestY = y
+        }
+      }
+      newY = closestY
+    }
+
+    // Keep within viewport bounds
+    newX = Math.min(Math.max(padding, newX), window.innerWidth - rect.width - padding)
+    newY = Math.min(Math.max(padding, newY), window.innerHeight - rect.height - padding)
 
     setPos({ x: newX, y: newY })
   }
@@ -94,7 +138,9 @@ export function FloatingToolbar({ accent }: { accent: string }) {
   const onResizePointerUp = (e: React.PointerEvent) => {
     if (resizing.current) {
       resizing.current = false
-      e.currentTarget.releasePointerCapture(e.pointerId)
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+      }
     }
   }
 
@@ -104,8 +150,18 @@ export function FloatingToolbar({ accent }: { accent: string }) {
     shortcut: "absolute bottom-1 right-1 text-[8px] font-semibold text-zinc-400 pointer-events-none"
   }
 
-  const getBtnStyle = (isActive: boolean) => isActive ? { color: accent, backgroundColor: `${accent}25` } : { color: '#3f3f46' }
+  const getBtnStyle = (isActive: boolean) => isActive ? { color: accent, backgroundColor: `${accent}25` } : {}
   const btnSize = isVertical ? "w-10 h-10" : "w-10 h-10"
+
+  const svgPattern = encodeURIComponent(`
+    <svg width="40" height="69.28" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 0L40 69.28M0 34.64L20 69.28M20 0L40 34.64M40 0L0 69.28M40 34.64L20 69.28M20 0L0 34.64M0 34.64L40 34.64M0 69.28L40 69.28" stroke="${accent}" stroke-width="1" opacity="0.15"/>
+      <circle cx="20" cy="34.64" r="2.5" fill="${accent}" opacity="0.3"/>
+      <circle cx="0" cy="0" r="2.5" fill="${accent}" opacity="0.3"/>
+      <circle cx="20" cy="0" r="2.5" fill="${accent}" opacity="0.3"/>
+      <circle cx="0" cy="34.64" r="2.5" fill="${accent}" opacity="0.3"/>
+    </svg>
+  `)
   
   return (
     <div
@@ -113,17 +169,19 @@ export function FloatingToolbar({ accent }: { accent: string }) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      className={`fixed z-[100] flex bg-white rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)] ring-1 ring-zinc-200/50 p-2 gap-1 select-none touch-none flex-wrap overflow-hidden ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isVertical ? 'flex-col items-center content-start' : 'flex-row items-center content-start'}`}
+      onPointerCancel={onPointerUp}
+      onLostPointerCapture={() => { dragging.current = false }}
+      className={`ls-toolbar fixed z-[100] flex bg-zinc-50 border border-zinc-200/80 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.05)] p-2 gap-1 select-none touch-none flex-wrap overflow-hidden ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isVertical ? 'flex-col items-center content-start' : 'flex-row items-center content-start'}`}
       style={{
         left: pos.x,
         top: pos.y,
         width: size.width,
         height: size.height,
-        transition: dragging.current ? 'none' : 'left 0.3s cubic-bezier(0.2, 0, 0, 1), top 0.3s cubic-bezier(0.2, 0, 0, 1)',
-        backgroundImage: `radial-gradient(${accent}40 1px, transparent 1px), radial-gradient(${accent}40 1px, transparent 1px)`,
-        backgroundSize: "20px 20px",
-        backgroundPosition: "0 0, 10px 10px",
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        transition: dragging.current ? 'none' : 'left 0.15s cubic-bezier(0.2, 0, 0, 1), top 0.15s cubic-bezier(0.2, 0, 0, 1)',
+        backgroundImage: `url("data:image/svg+xml,${svgPattern}")`,
+        backgroundSize: "40px 69.28px",
+        backgroundPosition: "0 0",
+        backgroundColor: "rgba(250, 250, 250, 0.95)",
         backdropFilter: "blur(12px)"
       }}
     >
@@ -225,6 +283,8 @@ export function FloatingToolbar({ accent }: { accent: string }) {
         onPointerDown={onResizePointerDown}
         onPointerMove={onResizePointerMove}
         onPointerUp={onResizePointerUp}
+        onPointerCancel={onResizePointerUp}
+        onLostPointerCapture={() => { resizing.current = false }}
         className="absolute bottom-1 right-1 w-3 h-3 cursor-nwse-resize opacity-20 hover:opacity-100 transition-opacity"
         style={{ color: accent }}
       >

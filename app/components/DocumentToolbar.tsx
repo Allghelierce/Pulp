@@ -29,7 +29,7 @@ export function DocumentToolbar({
   const [colMenuPos, setColMenuPos] = useState({ top: 0, left: 0 })
 
   return (
-    <div className="ls-toolbar h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between" onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
+    <div id="document-toolbar" className="ls-toolbar h-10 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-3 gap-2 z-20 shrink-0 overflow-x-auto justify-between" onClick={() => { setShowTableMenu(false); setShowColumnMenu(false) }}>
       <div className="flex items-center gap-2">
         <select onMouseDown={saveSelection} onChange={e=>execCmd("fontName",e.target.value)} className="text-[11px] border border-zinc-200 rounded px-2 py-1 outline-none bg-white shrink-0 text-zinc-600">
           <option value="Original Surfer">Default</option>
