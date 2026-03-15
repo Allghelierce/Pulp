@@ -14,12 +14,14 @@ interface RightToolbarProps {
   setSketchPrompt: (v: string) => void
   openAlert: (title: string, message?: string) => void
   clearPage: () => void
+  autoAlign: () => void
+  insertCornell: () => void
 }
 
 export function RightToolbar({
   theme, accent, gridView, sketchMode, rightSidebarOpen, currentPageIdx,
   setRightSidebarOpen, setGridView, setCarouselIdx,
-  setSketchMode, setSketchPrompt, openAlert, clearPage,
+  setSketchMode, setSketchPrompt, openAlert, clearPage, autoAlign, insertCornell,
 }: RightToolbarProps) {
   return (
     <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
@@ -87,6 +89,42 @@ export function RightToolbar({
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             <span style={{ fontSize: 7, fontWeight: 600 }}>Sketch</span>
+          </button>
+
+          <div style={{ height: 4 }} />
+
+          {/* AI Align */}
+          <button
+            onMouseDown={e => { e.preventDefault(); autoAlign() }}
+            title="Auto Align"
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+              backgroundColor: theme === "dark" ? "#D4AF3715" : "#D4AF3720", color: "#D4AF37",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16M4 12h10M4 18h14" />
+            </svg>
+            <span style={{ fontSize: 7, fontWeight: 700 }}>Align</span>
+          </button>
+
+          <div style={{ height: 4 }} />
+
+          {/* Cornell Notes */}
+          <button
+            onMouseDown={e => { e.preventDefault(); insertCornell() }}
+            title="Cornell Layout"
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+              backgroundColor: theme === "dark" ? "#D4AF3715" : "#D4AF3720", color: "#D4AF37",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16M4 18h16M9 6v12" />
+            </svg>
+            <span style={{ fontSize: 6, fontWeight: 700 }}>Cornell</span>
           </button>
 
           <div style={{ height: 4 }} />

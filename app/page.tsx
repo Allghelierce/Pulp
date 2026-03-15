@@ -63,7 +63,7 @@ export default function NoteApp() {
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
-  const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt })
+  const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt })
 
   // Auth
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function NoteApp() {
     const timer = setTimeout(async () => {
       const { error } = await supabase.from("notes").upsert({ id: activeNote.id, subject: activeNote.subject, pages: activeNote.pages, boxes: activeNote.boxes, folder_id: activeNote.folderId, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
-    }, 2000)
+    }, 400)
     return () => clearTimeout(timer)
   }, [activeNote, user])
 
@@ -178,6 +178,42 @@ export default function NoteApp() {
         if (n.id !== activeTabId) return n
         const newPages = [...n.pages]; newPages[currentPageIdx] = ""
         const newBoxes = { ...n.boxes }; newBoxes[currentPageIdx] = []
+        return { ...n, pages: newPages, boxes: newBoxes }
+      }))
+    })
+
+  const insertCornell = () =>
+    openConfirm("Apply Cornell Layout?", "This will clear everything currently on this page.", "Apply", true, () => {
+      const topH = 150
+      const botH = 800
+      const leftW = 280
+      const lblStyle = "font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(113, 113, 122, 0.7)"
+
+      if (editorRef.current) {
+        editorRef.current.innerHTML = `
+          <div style="position: absolute; top: ${topH}px; left: 40px; right: 40px; height: 1.5px; background: rgba(0,0,0,0.5);"></div>
+          <div style="position: absolute; top: ${topH}px; height: ${botH - topH}px; left: ${leftW}px; width: 1.5px; background: rgba(0,0,0,0.5);"></div>
+          <div style="position: absolute; top: ${botH}px; left: 40px; right: 40px; height: 1.5px; background: rgba(0,0,0,0.5);"></div>
+
+          <div style="position: absolute; left: 60px; top: 30px; ${lblStyle}">Title</div>
+          <div style="position: absolute; right: 100px; top: 30px; ${lblStyle}">Date</div>
+          <div style="position: absolute; left: 60px; top: ${topH + 30}px; ${lblStyle}">Keywords & Questions</div>
+          <div style="position: absolute; left: ${leftW + 30}px; top: ${topH + 30}px; ${lblStyle}">Main Notes</div>
+          <div style="position: absolute; left: 60px; top: ${botH + 30}px; ${lblStyle}">Summary</div>
+        `
+      }
+      setNotes(prev => prev.map(n => {
+        if (n.id !== activeTabId) return n
+        const newPages = [...n.pages]; newPages[currentPageIdx] = editorRef.current?.innerHTML || ""
+        const newBoxes = { ...n.boxes }
+
+        newBoxes[currentPageIdx] = [
+          { id: uid(), x: 50, y: 55, w: 400, h: 50, content: "" }, // Title
+          { id: uid(), x: 600, y: 55, w: 150, h: 50, content: "" }, // Date
+          { id: uid(), x: 50, y: topH + 55, w: 200, h: 550, content: "" }, // Keywords
+          { id: uid(), x: leftW + 20, y: topH + 55, w: 460, h: 550, content: "" }, // Notes
+          { id: uid(), x: 50, y: botH + 55, w: 700, h: 100, content: "" }, // Summary
+        ]
         return { ...n, pages: newPages, boxes: newBoxes }
       }))
     })
@@ -311,8 +347,22 @@ export default function NoteApp() {
                         }
                       `}</style>
 
+                      {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
+                      <div
+                        ref={boxes.selectionRectRef}
+                        style={{
+                          display: "none",
+                          position: "absolute",
+                          left: 0, top: 0, width: 0, height: 0,
+                          backgroundColor: "rgba(10, 132, 255, 0.12)",
+                          border: "1px solid rgba(10, 132, 255, 0.4)",
+                          pointerEvents: "none",
+                          zIndex: 100,
+                        }}
+                      />
+
                       {(activeNote.boxes[currentPageIdx] || []).map(box => {
-                        const isSelected = boxes.selectedBoxId === box.id
+                        const isSelected = boxes.selectedBoxIds.has(box.id)
                         const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
                         const corners: [string, React.CSSProperties][] = [
                           ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
@@ -349,7 +399,7 @@ export default function NoteApp() {
                                 <textarea
                                   onKeyDown={e => e.stopPropagation()}
                                   onMouseDown={e => e.stopPropagation()}
-                                  onFocus={() => boxes.setSelectedBoxId(box.id)}
+                                  onFocus={() => boxes.setSelectedBoxIds(new Set([box.id]))}
                                   style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, lineHeight: 1.55, color: "#1a1a1a", cursor: "text", padding: 0 }}
                                   value={box.content}
                                   onChange={e => boxes.updateBoxContent(box.id, e.target.value)}
@@ -375,7 +425,7 @@ export default function NoteApp() {
         </div>
 
         {notes.length > 0 && (
-          <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} />
+          <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} insertCornell={insertCornell} />
         )}
         {notes.length > 0 && !gridView && (
           <FloatingToolbar accent={accent} />
