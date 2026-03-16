@@ -1,4 +1,4 @@
-"use client"
+import { memo } from "react"
 
 interface RightToolbarProps {
   theme: "light" | "dark"
@@ -16,12 +16,15 @@ interface RightToolbarProps {
   clearPage: () => void
   autoAlign: () => void
   insertCornell: () => void
+  drawLineMode: boolean
+  setDrawLineMode: (v: boolean) => void
 }
 
-export function RightToolbar({
+export const RightToolbar = memo(function RightToolbar({
   theme, accent, gridView, sketchMode, rightSidebarOpen, currentPageIdx,
   setRightSidebarOpen, setGridView, setCarouselIdx,
   setSketchMode, setSketchPrompt, openAlert, clearPage, autoAlign, insertCornell,
+  drawLineMode, setDrawLineMode,
 }: RightToolbarProps) {
   return (
     <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
@@ -91,6 +94,20 @@ export function RightToolbar({
             <span style={{ fontSize: 7, fontWeight: 600 }}>Sketch</span>
           </button>
 
+          {/* Vertical Line Tool */}
+          <button
+            onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode) }}
+            title="Draw Vertical Line"
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+              ...(drawLineMode ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="3" x2="12" y2="21"/></svg>
+            <span style={{ fontSize: 7, fontWeight: 600 }}>Line</span>
+          </button>
+
           <div style={{ height: 4 }} />
 
           {/* AI Align */}
@@ -141,7 +158,7 @@ export function RightToolbar({
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2H8a2 2 0 01-2-2L5 6"/>
               <line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
             <span style={{ fontSize: 7, fontWeight: 600 }}>Clear</span>
@@ -150,4 +167,4 @@ export function RightToolbar({
       </div>
     </div>
   )
-}
+})

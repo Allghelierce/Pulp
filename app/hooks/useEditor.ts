@@ -1,5 +1,5 @@
 "use client"
-import { useRef } from "react"
+import { useRef, useCallback } from "react"
 import type { NoteData } from "@/app/types"
 
 interface UseEditorOptions {
@@ -13,45 +13,56 @@ interface UseEditorOptions {
 export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent }: UseEditorOptions) {
   const savedRange = useRef<Range | null>(null)
 
-  const saveSelection = () => {
+  const saveSelection = useCallback(() => {
     const sel = window.getSelection()
     if (sel && sel.rangeCount > 0) savedRange.current = sel.getRangeAt(0).cloneRange()
-  }
+  }, [])
 
-  const restoreSelection = () => {
-    editorRef.current?.focus()
+  const restoreSelection = useCallback(() => {
     const sel = window.getSelection()
-    if (sel && savedRange.current) { sel.removeAllRanges(); sel.addRange(savedRange.current) }
-  }
+    if (sel && savedRange.current) {
+      // Find the contenteditable ancestor to restore focus
+      let node = savedRange.current.commonAncestorContainer as Node | null
+      while (node && node.nodeType !== 1) node = node.parentNode
+      const editable = (node as HTMLElement)?.closest?.('[contenteditable]') as HTMLElement | null
+      if (editable && editable !== document.activeElement) {
+        editable.focus()
+      } else if (!editable) {
+        editorRef.current?.focus()
+      }
+      sel.removeAllRanges()
+      sel.addRange(savedRange.current)
+    } else {
+      editorRef.current?.focus()
+    }
+  }, [editorRef])
 
-  const syncContent = () => {
+  const syncContent = useCallback(() => {
     const content = editorRef.current?.innerHTML || ""
     setNotes(prev => prev.map(n =>
       n.id === activeTabId ? { ...n, pages: n.pages.map((p, i) => i === currentPageIdx ? content : p) } : n
     ))
-  }
+  }, [activeTabId, currentPageIdx, editorRef, setNotes])
 
-  const execCmd = (cmd: string, value?: string) => {
+  const execCmd = useCallback((cmd: string, value?: string) => {
     restoreSelection()
     document.execCommand(cmd, false, value)
     saveSelection()
-    editorRef.current?.focus()
-  }
+  }, [restoreSelection, saveSelection])
 
-  const insertHTML = (html: string) => {
+  const insertHTML = useCallback((html: string) => {
     restoreSelection()
     document.execCommand("insertHTML", false, html)
     saveSelection()
-    editorRef.current?.focus()
-  }
+  }, [restoreSelection, saveSelection])
 
-  const applyFontSize = (sizePx: string) => {
+  const applyFontSize = useCallback((sizePx: string) => {
     if (!sizePx || isNaN(Number(sizePx))) return
     restoreSelection()
     const sel = window.getSelection()
-    if (!sel || sel.rangeCount === 0) { editorRef.current?.focus(); return }
+    if (!sel || sel.rangeCount === 0) return
     const range = sel.getRangeAt(0)
-    if (range.collapsed) { editorRef.current?.focus(); return }
+    if (range.collapsed) return
     const span = document.createElement("span")
     span.style.fontSize = sizePx + "px"
     const fragment = range.extractContents()
@@ -66,12 +77,11 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     range.insertNode(span)
     const nr = document.createRange(); nr.selectNodeContents(span)
     sel.removeAllRanges(); sel.addRange(nr); savedRange.current = nr.cloneRange()
-    editorRef.current?.focus()
-  }
+  }, [restoreSelection])
 
-  const applyBlockStyle = (tag: string) => {
+  const applyBlockStyle = useCallback((tag: string) => {
     const editor = editorRef.current
-    if (!editor || !savedRange.current) { editor?.focus(); return }
+    if (!editor || !savedRange.current) return
     const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
       h1: { fontSize: "3rem", fontWeight: "800", margin: "1.25rem 0" },
       h2: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
@@ -96,9 +106,9 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       }
     }
     syncContent()
-  }
+  }, [editorRef, restoreSelection, syncContent])
 
-  const toggleScript = (cmd: "superscript" | "subscript") => {
+  const toggleScript = useCallback((cmd: "superscript" | "subscript") => {
     const tag = cmd === "superscript" ? "SUP" : "SUB"
     const saved = savedRange.current
     let node: Node | null = saved?.commonAncestorContainer ?? null
@@ -108,7 +118,6 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       if ((node as HTMLElement).tagName === tag) { scriptEl = node as HTMLElement; break }
       node = node.parentNode
     }
-    editorRef.current?.focus()
     const sel = window.getSelection()
     if (scriptEl && scriptEl.parentNode) {
       if (saved && !saved.collapsed) {
@@ -126,9 +135,9 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       document.execCommand(cmd, false)
       saveSelection()
     }
-  }
+  }, [editorRef, saveSelection])
 
-  const getRangeAtSaved = (): Range => {
+  const getRangeAtSaved = useCallback((): Range => {
     const editor = editorRef.current!
     if (savedRange.current) {
       try {
@@ -137,16 +146,16 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       } catch { /* stale range */ }
     }
     const r = document.createRange(); r.selectNodeContents(editor); r.collapse(false); return r
-  }
+  }, [editorRef])
 
-  const focusFirstCell = (el: Element | null) => {
+  const focusFirstCell = useCallback((el: Element | null) => {
     if (!el) return
     const r = document.createRange(); r.setStart(el, 0); r.collapse(true)
     window.getSelection()?.removeAllRanges(); window.getSelection()?.addRange(r)
     savedRange.current = r.cloneRange()
-  }
+  }, [])
 
-  const insertTable = (rows: number, cols: number) => {
+  const insertTable = useCallback((rows: number, cols: number) => {
     const cellStyle = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
     const table = document.createElement("table")
     table.style.cssText = "border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed"
@@ -160,29 +169,28 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     }
     table.appendChild(tbody)
     const spacer = document.createElement("p"); spacer.appendChild(document.createElement("br"))
-    editorRef.current?.focus()
+    restoreSelection()
     const range = getRangeAtSaved()
     range.deleteContents(); range.insertNode(spacer); range.insertNode(table)
     focusFirstCell(table.querySelector("td"))
-    editorRef.current?.focus()
-  }
+    restoreSelection()
+  }, [focusFirstCell, getRangeAtSaved, restoreSelection])
 
-  const insertColumns = (num: number) => {
+  const insertColumns = useCallback((num: number) => {
     const grid = document.createElement("div")
     grid.style.cssText = `display:grid;grid-template-columns:repeat(${num},1fr);gap:16px;margin:16px 0`
     for (let i = 0; i < num; i++) {
       const col = document.createElement("div"); col.style.cssText = "border:1px dashed #e4e4e7;padding:12px;min-height:80px;"; col.appendChild(document.createElement("br")); grid.appendChild(col)
     }
     const spacer = document.createElement("p"); spacer.appendChild(document.createElement("br"))
-    editorRef.current?.focus()
+    restoreSelection()
     const range = getRangeAtSaved()
     const frag = document.createDocumentFragment(); frag.appendChild(grid); frag.appendChild(spacer)
     range.deleteContents(); range.insertNode(frag)
     focusFirstCell(grid.firstElementChild)
-    editorRef.current?.focus()
-  }
+  }, [focusFirstCell, getRangeAtSaved, restoreSelection])
 
-  const handleEditorKeyDown = (e: React.KeyboardEvent) => {
+  const handleEditorKeyDown = useCallback((e: React.KeyboardEvent) => {
     const sel = window.getSelection()
     if (!sel || !sel.rangeCount) return
     const range = sel.getRangeAt(0)
@@ -250,7 +258,7 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     }
     if (before === "*") tryConvert("insertUnorderedList")
     else if (/^\d+\.$/.test(before)) tryConvert("insertOrderedList")
-  }
+  }, [editorRef])
 
   return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent }
 }

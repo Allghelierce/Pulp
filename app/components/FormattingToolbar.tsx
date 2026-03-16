@@ -1,4 +1,4 @@
-"use client"
+import { memo } from "react"
 
 const btnBase = "w-7 h-7 rounded-[4px] flex items-center justify-center transition-colors hover:bg-zinc-200"
 
@@ -9,12 +9,13 @@ interface FormattingToolbarProps {
   toggleScript: (cmd: "superscript" | "subscript") => void
   insertHTML: (html: string) => void
   openAlert: (title: string, message?: string) => void
-  downloadNote: () => void
+  setBoxAlignment: (align: "left" | "center" | "right") => void
+  hasSelectedBoxes: boolean
   editorRef: React.RefObject<HTMLDivElement | null>
 }
 
-export function FormattingToolbar({
-  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, downloadNote, editorRef,
+export const FormattingToolbar = memo(function FormattingToolbar({
+  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, setBoxAlignment, hasSelectedBoxes, editorRef,
 }: FormattingToolbarProps) {
   return (
     <div className="ls-toolbar h-14 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -70,10 +71,20 @@ export function FormattingToolbar({
           <button onMouseDown={e=>{e.preventDefault();insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)}} className={`${btnBase} text-sm`} title="Checklist">☑</button>
         </div>
 
-        {/* Indent */}
+        {/* Indent & Align */}
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
           <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`} title="Outdent">⇤</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`} title="Indent">⇥</button>
+          <div className="w-[1px] h-4 bg-zinc-200 mx-1"></div>
+          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("left") : execCmd("justifyLeft")}} className={`${btnBase} text-xs`} title="Align Left">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z"/></svg>
+          </button>
+          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("center") : execCmd("justifyCenter")}} className={`${btnBase} text-xs`} title="Align Center">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z"/></svg>
+          </button>
+          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("right") : execCmd("justifyRight")}} className={`${btnBase} text-xs`} title="Align Right">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z"/></svg>
+          </button>
         </div>
 
         {/* Blocks */}
@@ -85,11 +96,23 @@ export function FormattingToolbar({
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-3 shrink-0 pl-2">
-        <button onMouseDown={e=>{e.preventDefault();openAlert("Full Access","Subscription options coming soon!")}} className="h-7 px-4 rounded-[5px] text-[13px] font-bold tracking-wide text-[#3B4A3E] bg-[#E4E9E0] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#A1B3A5]/60 hover:shadow hover:-translate-y-[0.5px] hover:bg-[#D4DBCF] active:translate-y-[0px] mr-10" style={{ fontFamily: '"EB Garamond", serif' }} title="Upgrade to Full Access">+ Full Access</button>
-        <button onMouseDown={e=>{e.preventDefault();openAlert("Share note","Sharing is coming soon!")}} className="h-8 px-4 rounded-[5px] text-[12px] font-semibold text-white bg-blue-600/90 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow hover:bg-blue-600 hover:-translate-y-[0.5px] active:translate-y-[0px]" title="Share">Share</button>
-        <button onMouseDown={e=>{e.preventDefault();downloadNote()}} className="h-8 px-4 rounded-[5px] text-[12px] font-semibold text-white bg-blue-600/90 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow hover:bg-blue-600 hover:-translate-y-[0.5px] active:translate-y-[0px]" title="Download note">Save</button>
+      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
+        
+        <button onClick={()=>openAlert("Full Access","Subscription options coming soon!")} className="flex items-center h-[36px] px-3.5 rounded-[8px] text-[15px] font-medium tracking-wide text-[#b18b32] bg-[#fcf9f2] border border-[#f2e6cf] transition-colors hover:bg-[#f8f0dd] mr-6" title="Upgrade to Full Access">
+          <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6z"/></svg>
+          Full Access
+        </button>
+
+        {/* Share Button (Elegant) */}
+        <button onClick={()=>openAlert("Share note","Sharing is coming soon!")} className="flex items-center h-[36px] px-3.5 rounded-[8px] text-[15px] font-medium tracking-wide text-[#3f3f46] bg-white border border-[#e4e4e7] transition-colors hover:bg-[#f4f4f5] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" title="Share note">
+          <svg className="w-4 h-4 mr-2 text-[#71717a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+          Share
+        </button>
       </div>
     </div>
   )
-}
+})

@@ -1,5 +1,4 @@
-"use client"
-import { useRef, useState } from "react"
+import { useRef, useState, memo } from "react"
 import { TablePicker } from "./TablePicker"
 import { ColumnPicker } from "./ColumnPicker"
 
@@ -17,7 +16,7 @@ interface DocumentToolbarProps {
   insertColumns: (num: number) => void
 }
 
-export function DocumentToolbar({
+export const DocumentToolbar = memo(function DocumentToolbar({
   accent, zoom, customSize, saveSelection, execCmd, applyFontSize, applyBlockStyle,
   setCustomSize, setZoom, insertTable, insertColumns,
 }: DocumentToolbarProps) {
@@ -46,7 +45,7 @@ export function DocumentToolbar({
           <input type="number" min={1} max={400} value={customSize} onChange={e=>setCustomSize(e.target.value)} onMouseDown={saveSelection} onKeyDown={e=>{if(e.key==="Enter")applyFontSize(customSize)}} className="w-14 text-[12px] font-medium border border-zinc-200 rounded-[5px] px-1.5 py-1 outline-none bg-white text-center text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)]" />
         </div>
 
-        <select onMouseDown={saveSelection} defaultValue="" onChange={e=>{const v=e.target.value; if(!v) return; applyBlockStyle(v); e.target.value=""}} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer">
+        <select onMouseDown={saveSelection} onChange={e=>{const v=e.target.value; if(!v) return; applyBlockStyle(v); e.target.value=""}} defaultValue="" className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer">
           <option value="" disabled>Style</option>
           <option value="default">Default</option>
           <option value="h1">Heading 1</option>
@@ -88,4 +87,4 @@ export function DocumentToolbar({
       </div>
     </div>
   )
-}
+})

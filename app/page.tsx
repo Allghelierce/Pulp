@@ -1,11 +1,12 @@
 "use client"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, memo, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
-import type { NoteData, FolderData, DialogConfig } from "@/app/types"
+import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig } from "@/app/types"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
+import { useDrawing } from "@/app/hooks/useDrawing"
 import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
@@ -14,6 +15,212 @@ import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { RightToolbar } from "@/app/components/RightToolbar"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { GridView } from "@/app/components/GridView"
+
+function htmlToPlain(html: string): string {
+  return html.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+}
+
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 14 }
+const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400 }
+const BOX_FONTS = [
+  { value: "", label: "Garamond" },
+  { value: "Georgia, serif", label: "Georgia" },
+  { value: "Arial, sans-serif", label: "Arial" },
+  { value: '"Courier New", monospace', label: "Mono" },
+]
+const BOX_SIZES = [8, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64, 72]
+const BOX_STYLES = [
+  { value: "default", label: "Default" },
+  { value: "h1", label: "H1" },
+  { value: "h2", label: "H2" },
+  { value: "h3", label: "H3" },
+]
+
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
+  box: TextBoxType; accentSolid: string
+  onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
+}) {
+  const [open, setOpen] = useState<"style" | "font" | "size" | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(null) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [open])
+
+  const styleKey = box.boxHeadingStyle || "default"
+  const currentFont = BOX_FONTS.find(f => f.value === (box.boxFontFamily ?? "")) ?? BOX_FONTS[0]
+
+  const dropdownStyle: React.CSSProperties = {
+    position: "absolute", bottom: "calc(100% + 4px)", left: 0,
+    background: "white", border: "1px solid #e4e4e7", borderRadius: 6,
+    boxShadow: "0 4px 16px rgba(0,0,0,0.13)", zIndex: 400, minWidth: 80,
+  }
+  const optionStyle = (active: boolean): React.CSSProperties => ({
+    display: "block", width: "100%", textAlign: "left", padding: "6px 12px",
+    fontSize: 11, border: "none", background: active ? "#f4f4f5" : "white",
+    cursor: "pointer", color: "#3f3f46",
+  })
+  const triggerStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 600, color: "#52525b", background: "none", border: "none",
+    cursor: "pointer", padding: "2px 5px", borderRadius: 4,
+    display: "flex", alignItems: "center", gap: 3,
+  }
+  const chevron = <svg width="6" height="5" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+
+  return (
+    <div
+      ref={ref}
+      onMouseDown={e => e.stopPropagation()}
+      style={{
+        position: "absolute", bottom: "calc(100% + 5px)", left: -1,
+        display: "flex", alignItems: "center", gap: 0,
+        background: "rgba(255,255,255,0.97)",
+        border: `1px solid ${accentSolid}28`,
+        borderRadius: 7, padding: "2px 4px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.09), 0 1px 3px rgba(0,0,0,0.05)",
+        zIndex: 200, backdropFilter: "blur(8px)", whiteSpace: "nowrap",
+      }}
+    >
+      {/* Eye toggle button */}
+      <button
+        onClick={() => { setCollapsed(c => !c); setOpen(null) }}
+        title={collapsed ? "Show formatting" : "Hide formatting"}
+        style={{ background: "none", border: "none", cursor: "pointer", padding: "1px 4px", display: "flex", alignItems: "center", color: accentSolid }}
+      >
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)", transform: collapsed ? "scaleY(0.12)" : "scaleY(1)", transformOrigin: "50% 50%", display: "block" }}
+        >
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle
+            cx="12" cy="12" r="3"
+            style={{ transition: "opacity 0.15s ease", opacity: collapsed ? 0 : 1 } as React.CSSProperties}
+          />
+        </svg>
+      </button>
+
+      {/* Sliding options — width collapses toward the eye on hide */}
+      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 320, transition: "max-width 0.38s cubic-bezier(0.4,0,0.2,1)" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 1,
+          opacity: collapsed ? 0 : 1,
+          transform: collapsed ? "translateX(-10px)" : "translateX(0)",
+          transition: "opacity 0.22s ease, transform 0.32s cubic-bezier(0.4,0,0.2,1)",
+          paddingLeft: 2,
+        }}>
+          <div style={{ width: 1, height: 13, background: "#e4e4e7", margin: "0 3px 0 1px", flexShrink: 0 }} />
+
+          {/* Style */}
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button style={triggerStyle} onClick={() => setOpen(o => o === "style" ? null : "style")}>
+              {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
+            </button>
+            {open === "style" && (
+              <div style={dropdownStyle}>
+                {BOX_STYLES.map(s => (
+                  <button key={s.value} style={{ ...optionStyle(styleKey === s.value), fontWeight: s.value !== "default" ? 700 : 400 }}
+                    onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as TextBoxType["boxHeadingStyle"] }); setOpen(null) }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Font */}
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button style={triggerStyle} onClick={() => setOpen(o => o === "font" ? null : "font")}>
+              {currentFont.label} {chevron}
+            </button>
+            {open === "font" && (
+              <div style={dropdownStyle}>
+                {BOX_FONTS.map(f => (
+                  <button key={f.value} style={{ ...optionStyle((box.boxFontFamily ?? "") === f.value), fontFamily: f.value || '"EB Garamond", Georgia, serif' }}
+                    onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Size */}
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <button style={triggerStyle} onClick={() => setOpen(o => o === "size" ? null : "size")}>
+              {box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]}px {chevron}
+            </button>
+            {open === "size" && (
+              <div style={{ ...dropdownStyle, maxHeight: 180, overflowY: "auto" }}>
+                {BOX_SIZES.map(sz => (
+                  <button key={sz} style={optionStyle((box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]) === sz)}
+                    onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>
+                    {sz}px
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus }: {
+  id: string; content: string; textAlign?: string
+  boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string
+  onUpdate: (id: string, v: string) => void
+  onFocus: () => void
+}) {
+  const taRef = useRef<HTMLTextAreaElement>(null)
+  const focusedRef = useRef(false)
+  const pendingRef = useRef<string | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => {
+    if (taRef.current && !taRef.current.value && content) {
+      taRef.current.value = htmlToPlain(content)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!focusedRef.current && taRef.current) {
+      const plain = htmlToPlain(content)
+      if (taRef.current.value !== plain) taRef.current.value = plain
+    }
+  }, [content])
+
+  const styleKey = boxHeadingStyle || "default"
+  const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
+  const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
+  const resolvedFont = boxFontFamily || '"EB Garamond", Georgia, serif'
+
+  return (
+    <textarea
+      ref={taRef}
+      onKeyDown={e => e.stopPropagation()}
+      onMouseDown={e => e.stopPropagation()}
+      onFocus={() => { focusedRef.current = true; onFocus() }}
+      onBlur={() => {
+        focusedRef.current = false
+        clearTimeout(timerRef.current)
+        if (pendingRef.current !== null) { onUpdate(id, pendingRef.current); pendingRef.current = null }
+      }}
+      onChange={e => {
+        const v = e.currentTarget.value
+        pendingRef.current = v
+        clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => { onUpdate(id, v); pendingRef.current = null }, 150)
+      }}
+      style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight, lineHeight: 1.45, color: "#1a1a1a", cursor: "text", padding: 0, textAlign: (textAlign || "left") as React.CSSProperties["textAlign"], wordWrap: "break-word", overflowY: "auto" }}
+    />
+  )
+})
 
 export default function NoteApp() {
   const [notes, setNotes] = useState<NoteData[]>([])
@@ -35,6 +242,7 @@ export default function NoteApp() {
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
   const [sketchMode, setSketchMode] = useState(false)
   const [sketchPrompt, setSketchPrompt] = useState("")
+  const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [customSize, setCustomSize] = useState("16")
 
@@ -51,19 +259,35 @@ export default function NoteApp() {
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
   const [bgEffect, setBgEffect] = useState(true)
 
+  const [activeTool, setActiveTool] = useState('select')
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
 
   const activeNote = (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData
 
   // Dialog helpers
-  const openPrompt  = (title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm })
-  const openConfirm = (title: string, message: string, confirmLabel: string, danger: boolean, onConfirm: () => void) => setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm })
-  const openAlert   = (title: string, message?: string) => setDialog({ type: "alert", title, message })
+  const openPrompt  = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
+  const openConfirm = useCallback((title: string, message: string, confirmLabel: string, danger: boolean, onConfirm: () => void) => setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm }), [])
+  const openAlert   = useCallback((title: string, message?: string) => setDialog({ type: "alert", title, message }), [])
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
-  const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt })
+  const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
+  const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
+
+  // Keyboard shortcuts for tools
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
+      const map: Record<string, string> = { '1': 'select', '2': 'rect', '3': 'diamond', '4': 'circle', '5': 'arrow', '6': 'line', '7': 'pen', '8': 'text', '9': 'image', '0': 'eraser' }
+      if (map[e.key]) setActiveTool(map[e.key])
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   // Auth
   useEffect(() => {
@@ -243,6 +467,23 @@ export default function NoteApp() {
     setDraggedNoteId(null)
   }
 
+  const handleImageUpload = useCallback((dataUrl: string) => {
+    const paper = paperRef.current
+    if (!paper || !activeTabId) return
+    const rect = paper.getBoundingClientRect()
+    const scale = parseFloat(zoom)
+    const x = (window.innerWidth / 2 - rect.left) / scale - 150
+    const y = (window.innerHeight / 2 - rect.top) / scale - 100
+    const id = uid()
+    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+      ...n,
+      boxes: {
+        ...n.boxes,
+        [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), { id, x: Math.max(10, x), y: Math.max(10, y), w: 300, h: 200, content: dataUrl }]
+      }
+    }))
+  }, [activeTabId, currentPageIdx, zoom])
+
   const downloadNote = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${activeNote.subject}</title>
     <style>body{font-family:Georgia,serif;max-width:720px;margin:0 auto;padding:48px;color:#1a1a1a}
@@ -281,7 +522,7 @@ export default function NoteApp() {
         </button>
 
         {notes.length > 0 && <>
-          <FormattingToolbar accent={accent} execCmd={editor.execCmd} saveSelection={editor.saveSelection} toggleScript={editor.toggleScript} insertHTML={editor.insertHTML} openAlert={openAlert} downloadNote={downloadNote} editorRef={editorRef} />
+          <FormattingToolbar accent={accent} execCmd={editor.execCmd} saveSelection={editor.saveSelection} toggleScript={editor.toggleScript} insertHTML={editor.insertHTML} openAlert={openAlert} setBoxAlignment={boxes.setBoxAlignment} hasSelectedBoxes={boxes.selectedBoxIds.size > 0} editorRef={editorRef} />
           <DocumentToolbar accent={accent} zoom={zoom} customSize={customSize} saveSelection={editor.saveSelection} execCmd={editor.execCmd} applyFontSize={editor.applyFontSize} applyBlockStyle={editor.applyBlockStyle} setCustomSize={setCustomSize} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} />
         </>}
 
@@ -304,7 +545,12 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: 0, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 0 6px rgba(0,0,0,0.08)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", cursor: "default", backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={boxes.onPaperMouseDown}>
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
+                         if (activeTool !== 'select') return
+                         const target = e.target as HTMLElement
+                         if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
+                         boxes.onPaperMouseDown(e)
+                       }}>
 
                       {/* Spiral binding */}
                       {showBinding && !bindingCompact && (
@@ -336,14 +582,39 @@ export default function NoteApp() {
 
                       <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
                       <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
+                      
+                      {/* Render custom user-drawn lines */}
+                      {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (
+                        <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
+                      ))}
 
-                      <div ref={editorRef} className="w-full min-h-[1000px]" style={{ pointerEvents: "none" }} />
+                      <div
+                        ref={editorRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        spellCheck={spellCheck}
+                        className="w-full min-h-[1000px] outline-none"
+                        style={{ fontFamily: `"${editorFont}", Georgia, serif`, caretColor: accent.length > 7 ? accent.slice(0, 7) : accent }}
+                        onKeyDown={editor.handleEditorKeyDown}
+                        onInput={editor.syncContent}
+                        onMouseUp={editor.saveSelection}
+                        onKeyUp={editor.saveSelection}
+                        onBlur={editor.saveSelection}
+                      />
 
                       <style>{`
                         #editor-paper textarea {
                           color: #1a1a1a !important;
                           caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                           opacity: 1 !important;
+                        }
+                        @keyframes box-ripple {
+                          0%   { inset: 0px;   opacity: 0.9; }
+                          100% { inset: -22px; opacity: 0; }
+                        }
+                        @keyframes box-ripple-2 {
+                          0%   { inset: 0px;   opacity: 0.45; }
+                          100% { inset: -36px; opacity: 0; }
                         }
                       `}</style>
 
@@ -354,11 +625,33 @@ export default function NoteApp() {
                           display: "none",
                           position: "absolute",
                           left: 0, top: 0, width: 0, height: 0,
-                          backgroundColor: "rgba(10, 132, 255, 0.12)",
-                          border: "1px solid rgba(10, 132, 255, 0.4)",
+                          backgroundColor: "rgba(255, 255, 255, 0.25)",
+                          border: "1px solid rgba(255, 255, 255, 0.45)",
+                          backdropFilter: "blur(2.5px)",
+                          boxShadow: "0 0 15px rgba(255,255,255,0.1)",
+                          borderRadius: "1px",
                           pointerEvents: "none",
                           zIndex: 100,
                         }}
+                      />
+
+                      {/* Drawing canvas overlay */}
+                      <canvas
+                        ref={canvasRef}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
+                          cursor: drawing.getCursor(),
+                          zIndex: activeTool === 'select' ? 10 : 45,
+                          touchAction: "none",
+                        }}
+                        onPointerDown={drawing.onPointerDown}
+                        onPointerMove={drawing.onPointerMove}
+                        onPointerUp={drawing.onPointerUp}
+                        onPointerCancel={drawing.onPointerUp}
                       />
 
                       {(activeNote.boxes[currentPageIdx] || []).map(box => {
@@ -382,7 +675,11 @@ export default function NoteApp() {
                               zIndex: 50, overflow: "visible", cursor: "grab",
                             }}
                           >
-                            {isSelected && corners.map(([h, pos]) => (
+                            {isSelected && (<>
+                            <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
+                            <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
+                          </>)}
+                          {isSelected && corners.map(([h, pos]) => (
                               <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); boxes.startResize(e, box, h) }}
                                 style={{ position: "absolute", width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, zIndex: 20, ...pos }} />
                             ))}
@@ -390,19 +687,24 @@ export default function NoteApp() {
                               <button onMouseDown={e => { e.stopPropagation(); boxes.deleteBox(box.id) }}
                                 style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
                             )}
+                            {isSelected && !(box.content.includes("http") || box.content.startsWith("data:image")) && (
+                              <BoxToolbar box={box} accentSolid={accentSolid} onUpdateBox={boxes.updateBox} />
+                            )}
                             <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
                               {boxes.loadingBoxId === box.id ? (
                                 <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
                               ) : box.content.includes("http") || box.content.startsWith("data:image") ? (
                                 <img src={box.content} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "grayscale(1)", mixBlendMode: "multiply", opacity: 0.9 }} alt="sketch" />
                               ) : (
-                                <textarea
-                                  onKeyDown={e => e.stopPropagation()}
-                                  onMouseDown={e => e.stopPropagation()}
+                                <BoxTextarea
+                                  id={box.id}
+                                  content={box.content}
+                                  textAlign={box.textAlign}
+                                  boxFontFamily={box.boxFontFamily}
+                                  boxFontSize={box.boxFontSize}
+                                  boxHeadingStyle={box.boxHeadingStyle}
+                                  onUpdate={boxes.updateBoxContent}
                                   onFocus={() => boxes.setSelectedBoxIds(new Set([box.id]))}
-                                  style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, lineHeight: 1.55, color: "#1a1a1a", cursor: "text", padding: 0 }}
-                                  value={box.content}
-                                  onChange={e => boxes.updateBoxContent(box.id, e.target.value)}
                                 />
                               )}
                             </div>
@@ -425,10 +727,10 @@ export default function NoteApp() {
         </div>
 
         {notes.length > 0 && (
-          <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} insertCornell={insertCornell} />
+          <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} insertCornell={insertCornell} drawLineMode={drawLineMode} setDrawLineMode={setDrawLineMode} />
         )}
         {notes.length > 0 && !gridView && (
-          <FloatingToolbar accent={accent} />
+          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} />
         )}
       </div>
     </div>
