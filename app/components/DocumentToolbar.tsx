@@ -1,6 +1,4 @@
-import { useRef, useState, memo } from "react"
-import { TablePicker } from "./TablePicker"
-import { ColumnPicker } from "./ColumnPicker"
+import { memo } from "react"
 
 interface DocumentToolbarProps {
   accent: string
@@ -30,26 +28,14 @@ interface DocumentToolbarProps {
 }
 
 const GOLD = "#D4AF37"
-const chevron = (
-  <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, marginLeft: 2 }}><path d="M0 0l5 6 5-6z"/></svg>
-)
 
 export const DocumentToolbar = memo(function DocumentToolbar({
-  accent, zoom, gridView, sketchMode, drawLineMode, currentPageIdx,
-  saveSelection, setZoom, setCarouselIdx, setGridView, setSketchMode, setSketchPrompt, setDrawLineMode,
-  insertTable, insertColumns, openAlert, clearPage, autoAlign, insertCornell,
+  zoom, gridView, drawLineMode, currentPageIdx,
+  setZoom, setCarouselIdx, setGridView, setDrawLineMode,
+  openAlert, clearPage, autoAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
 }: DocumentToolbarProps) {
-  const insertButtonRef = useRef<HTMLButtonElement>(null)
-  const aiButtonRef = useRef<HTMLButtonElement>(null)
-  const [showInsertMenu, setShowInsertMenu] = useState(false)
-  const [insertSubmenu, setInsertSubmenu] = useState<"table" | "columns" | null>(null)
-  const [showAiMenu, setShowAiMenu] = useState(false)
-  const [insertMenuPos, setInsertMenuPos] = useState({ top: 0, left: 0 })
-  const [aiMenuPos, setAiMenuPos] = useState({ top: 0, left: 0 })
-
-  const closeAll = () => { setShowInsertMenu(false); setInsertSubmenu(null); setShowAiMenu(false) }
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer"
 
@@ -57,79 +43,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
     : {}
 
-  const menuItemStyle: React.CSSProperties = {
-    display: "flex", alignItems: "center", gap: 8,
-    width: "100%", padding: "7px 10px",
-    fontSize: 12, fontWeight: 500,
-    color: "#18181b", background: "transparent",
-    border: "none", borderRadius: 6, cursor: "pointer",
-    textAlign: "left",
-  }
-
   return (
     <div
       id="document-toolbar"
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-20 shrink-0 overflow-x-auto justify-between"
-      onClick={closeAll}
       style={{ transform: "translateZ(0)" }}
     >
       <div className="flex items-center gap-2">
-
-        {/* Insert dropdown: Table, Columns, Cornell */}
-        <div className="relative shrink-0">
-          <button
-            ref={insertButtonRef}
-            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); saveSelection(); const r = insertButtonRef.current?.getBoundingClientRect(); if (r) setInsertMenuPos({ top: r.bottom + 4, left: r.left }); setShowInsertMenu(v => !v); setInsertSubmenu(null); setShowAiMenu(false) }}
-            onClick={e => e.stopPropagation()}
-            className={`${btnBase} flex items-center`}
-            style={activeStyle(showInsertMenu)}
-          >
-            Insert {chevron}
-          </button>
-          {showInsertMenu && (
-            <div
-              style={{ position: "fixed", top: insertMenuPos.top, left: insertMenuPos.left, zIndex: 1000, minWidth: 160, background: "white", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 8, padding: 4, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}
-              onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
-            >
-              <button
-                onMouseDown={e => { e.preventDefault(); setInsertSubmenu(s => s === "table" ? null : "table") }}
-                style={{ ...menuItemStyle, justifyContent: "space-between" }}
-              >
-                Table
-                <svg width="6" height="9" viewBox="0 0 6 10" fill="currentColor" style={{ opacity: 0.4 }}><path d="M0 0l6 5-6 5z"/></svg>
-              </button>
-              {insertSubmenu === "table" && (
-                <div style={{ padding: "4px 6px 2px" }}>
-                  <TablePicker accent={accent} onSelect={(rows, cols) => { insertTable(rows, cols); setShowInsertMenu(false); setInsertSubmenu(null) }} />
-                </div>
-              )}
-
-              <button
-                onMouseDown={e => { e.preventDefault(); setInsertSubmenu(s => s === "columns" ? null : "columns") }}
-                style={{ ...menuItemStyle, justifyContent: "space-between" }}
-              >
-                Columns
-                <svg width="6" height="9" viewBox="0 0 6 10" fill="currentColor" style={{ opacity: 0.4 }}><path d="M0 0l6 5-6 5z"/></svg>
-              </button>
-              {insertSubmenu === "columns" && (
-                <div style={{ padding: "4px 6px 2px" }}>
-                  <ColumnPicker onSelect={n => { insertColumns(n); setShowInsertMenu(false); setInsertSubmenu(null) }} />
-                </div>
-              )}
-
-              <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "4px 6px" }} />
-
-              <button
-                onMouseDown={e => { e.preventDefault(); insertCornell(); setShowInsertMenu(false) }}
-                style={menuItemStyle}
-              >
-                Cornell Notes
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="w-px h-5 bg-zinc-200 shrink-0" />
 
         {/* Grid */}
         <button
@@ -141,66 +61,24 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Grid
         </button>
 
-        {/* Line */}
-        <button
-          onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode) }}
-          title="Draw vertical line"
-          className={btnBase}
-          style={activeStyle(drawLineMode)}
-        >
-          Line
-        </button>
-
-        {/* Align */}
-        <button
-          onMouseDown={e => { e.preventDefault(); autoAlign() }}
-          title="Auto align boxes"
-          className={btnBase}
-        >
-          Align
-        </button>
-
-        {/* Clear */}
-        <button
-          onMouseDown={e => { e.preventDefault(); clearPage() }}
-          title="Clear page"
-          className={btnBase}
-          style={{ color: "#dc2626", borderColor: "#fecaca", backgroundColor: "#fff5f5" }}
-        >
-          Clear
-        </button>
-
-        <div className="w-px h-5 bg-zinc-200 shrink-0" />
-
-        {/* AI dropdown */}
-        <div className="relative shrink-0">
+        {/* Align + Line grouped button */}
+        <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
-            ref={aiButtonRef}
-            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); const r = aiButtonRef.current?.getBoundingClientRect(); if (r) setAiMenuPos({ top: r.bottom + 4, left: r.left }); setShowAiMenu(v => !v); setShowInsertMenu(false); setInsertSubmenu(null) }}
-            onClick={e => e.stopPropagation()}
-            className={`${btnBase} flex items-center`}
-            style={{ ...activeStyle(showAiMenu || sketchMode), color: GOLD }}
+            onMouseDown={e => { e.preventDefault(); autoAlign() }}
+            title="Auto align boxes"
+            className="text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap"
           >
-            AI {chevron}
+            Align
           </button>
-          {showAiMenu && (
-            <div
-              style={{ position: "fixed", top: aiMenuPos.top, left: aiMenuPos.left, zIndex: 1000, minWidth: 150, background: "white", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 8, padding: 4, boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}
-              onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
-            >
-              <button
-                onMouseDown={e => {
-                  e.preventDefault()
-                  const selection = window.getSelection()?.toString()
-                  if (!selection) { openAlert("Select text first", "Highlight some text before drawing a sketch box."); return }
-                  setSketchPrompt(selection); setSketchMode(true); setShowAiMenu(false)
-                }}
-                style={{ ...menuItemStyle, ...(sketchMode ? { background: "#f4f4f5" } : {}) }}
-              >
-                AI Sketch
-              </button>
-            </div>
-          )}
+          <div className="w-px bg-zinc-200 self-stretch" />
+          <button
+            onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode) }}
+            title="Draw vertical line"
+            className="px-2 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center"
+            style={drawLineMode ? { color: "#18181b", backgroundColor: "#f4f4f5" } : { color: "#a1a1aa" }}
+          >
+            <svg width="9" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21"/></svg>
+          </button>
         </div>
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />

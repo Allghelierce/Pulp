@@ -12,7 +12,6 @@ import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
-import { RightToolbar } from "@/app/components/RightToolbar"
 import { RightSidebar } from "@/app/components/RightSidebar"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
@@ -383,7 +382,6 @@ export default function NoteApp() {
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showDrawToolbar, setShowDrawToolbar] = useState(true)
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
 
@@ -677,7 +675,7 @@ export default function NoteApp() {
   useEffect(() => {
     const fetchNotes = async () => {
       const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) { setIsLoading(false); return }
+      if (!u) { setNotes([]); setActiveTabId(null); setIsLoading(false); return }
       const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
       if (!error && data?.length) {
         setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null })))
@@ -693,16 +691,30 @@ export default function NoteApp() {
     openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
       if (!name.trim()) return
       const id = uid()
-      setNotes(prev => [...prev, { id, subject: name.trim(), pages: [""], folderId, boxes: {} }])
+      const newNote = { id, subject: name.trim(), pages: [""], folderId, boxes: {} }
+      setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
     })
 
   const insertBacklink = useCallback(() => {
     editor.saveSelection()
-    openPrompt("Name your subpage", "Subpage", "Subpage name…", "Create", name => {
+    openPrompt("Name your subpage", "Subpage", "Subpage name…", "Create", async name => {
       if (!name.trim()) return
       const newId = uid()
-      setNotes(prev => [...prev, { id: newId, subject: name.trim(), pages: [""], folderId: activeNote.folderId, boxes: {} }])
+      const newNote = { id: newId, subject: name.trim(), pages: [""], folderId: null, boxes: {} }
+      setNotes(prev => [...prev, newNote])
+      
+      // Explicitly save the new note to Supabase if logged in
+      if (user) {
+        await supabase.from("notes").insert({
+          id: newId,
+          subject: name.trim(),
+          pages: [""],
+          boxes: {},
+          folder_id: null,
+          user_id: user.id
+        })
+      }
       
       const color = accent.length > 7 ? accent.slice(0, 7) : accent
       const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display: inline-flex; align-items: center; gap: 4px; background: ${color}15; color: ${color}; border: 1px solid ${color}33; padding: 1px 8px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin: 0 2px; transition: all 0.2s; user-select: none; -webkit-user-modify: read-only;">
@@ -712,7 +724,7 @@ export default function NoteApp() {
       
       editor.insertHTML(linkHtml)
     })
-  }, [accent, activeNote, editor, openPrompt])
+  }, [accent, activeNote, editor, openPrompt, user])
 
   const renameNote = (id: string, currentName: string) =>
     openPrompt("Rename note", currentName, "Note name…", "Rename", newName => {
@@ -862,7 +874,7 @@ export default function NoteApp() {
             setDrawLineMode={setDrawLineMode}
             insertTable={editor.insertTable} insertColumns={editor.insertColumns}
             openAlert={openAlert} clearPage={clearPage}
-            autoAlign={boxes.autoAlign} insertCornell={insertCornell}
+            autoAlign={() => boxes.autoAlign()} insertCornell={insertCornell}
             showDrawToolbar={showDrawToolbar} onToggleDrawToolbar={() => setShowDrawToolbar(v => !v)}
             rightSidebarOpen={contentSidebarOpen} setRightSidebarOpen={setContentSidebarOpen}
           />
@@ -991,17 +1003,6 @@ export default function NoteApp() {
                 </div>
               </div>
             </main>
-          )}
-          {notes.length > 0 && !gridView && (
-            <RightToolbar 
-              theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} 
-              rightSidebarOpen={rightSidebarOpen} setRightSidebarOpen={setRightSidebarOpen}
-              setGridView={setGridView} setCarouselIdx={setCarouselIdx} 
-              setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} 
-              openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} 
-              insertCornell={insertCornell} drawLineMode={drawLineMode} setDrawLineMode={setDrawLineMode} 
-              currentPageIdx={currentPageIdx}
-            />
           )}
 
           <RightSidebar 

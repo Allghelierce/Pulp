@@ -14,7 +14,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
   const btnColor = config.type === "confirm" && config.danger ? "#dc2626" : accent
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-[300] flex items-center justify-center p-4" onMouseDown={onClose}>
+    <div className="fixed inset-0 bg-black/40 z-[300] flex items-center justify-center p-4 text-zinc-900" onMouseDown={onClose}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
         onMouseDown={e => e.stopPropagation()}
@@ -30,7 +30,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
             value={val}
             onChange={e => setVal(e.target.value)}
             placeholder={config.placeholder ?? ""}
-            className="mt-4 w-full border border-zinc-200 rounded-lg px-3 py-2 text-[13px] outline-none bg-zinc-50 focus:border-zinc-400"
+            className="mt-4 w-full border border-zinc-200 rounded-lg px-3 py-2 text-[13px] text-zinc-800 outline-none bg-zinc-50 focus:border-zinc-400"
           />
         )}
         <div className="flex gap-2 mt-5 justify-end">
