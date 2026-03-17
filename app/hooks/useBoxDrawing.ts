@@ -55,13 +55,24 @@ export function useBoxDrawing({
   useEffect(() => { notesRef.current = notes }, [notes])
   useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode } }, [sketchMode, sketchPrompt, drawLineMode])
 
-  // Delete key — remove all selected boxes when not typing in a textarea/input
+  // Keyboard shortcuts — delete selected boxes, select all
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
       const target = e.target as HTMLElement
-      // Never intercept when typing inside a box or a plain input
       if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
+
+      // Ctrl/Cmd+A — select all boxes on current page
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const allIds = new Set((notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []).map(b => b.id))
+        if (allIds.size === 0) return
+        e.preventDefault()
+        setSelectedBoxIds(allIds)
+        return
+      }
+
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
       const ids = selectedBoxIdsRef.current
       if (ids.size === 0) return
       e.preventDefault()

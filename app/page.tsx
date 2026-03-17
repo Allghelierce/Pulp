@@ -11,8 +11,9 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
-import { RightToolbar } from "@/app/components/RightToolbar"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
+import { RightToolbar } from "@/app/components/RightToolbar"
+import { RightSidebar } from "@/app/components/RightSidebar"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 
@@ -372,7 +373,6 @@ export default function NoteApp() {
   // UI state
   const [zoom, setZoom] = useState("0.85")
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
   const [gridView, setGridView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
@@ -383,6 +383,8 @@ export default function NoteApp() {
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showDrawToolbar, setShowDrawToolbar] = useState(true)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
+  const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
 
   // Settings
@@ -475,6 +477,12 @@ export default function NoteApp() {
     // Only call editor.handleEditorKeyDown if it's the main editor
     if ((e.currentTarget as any) === editorRef.current) {
       editor.handleEditorKeyDown(e)
+    }
+
+    if (e.key === "Escape") {
+      const isBox = (e.currentTarget as any) !== editorRef.current
+      if (isBox) { (e.currentTarget as HTMLElement).blur(); e.preventDefault() }
+      return
     }
 
     if (e.key === "@" || e.key === "/") {
@@ -808,7 +816,19 @@ export default function NoteApp() {
         </button>
 
         {notes.length > 0 && (
-          <DocumentToolbar accent={accent} zoom={zoom} saveSelection={editor.saveSelection} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} openAlert={openAlert} showDrawToolbar={showDrawToolbar} onToggleDrawToolbar={() => setShowDrawToolbar(v => !v)} />
+          <DocumentToolbar
+            accent={accent} zoom={zoom} theme={theme}
+            gridView={gridView} drawLineMode={drawLineMode}
+            currentPageIdx={currentPageIdx}
+            saveSelection={editor.saveSelection} setZoom={setZoom}
+            setCarouselIdx={setCarouselIdx} setGridView={setGridView}
+            setDrawLineMode={setDrawLineMode}
+            insertTable={editor.insertTable} insertColumns={editor.insertColumns}
+            openAlert={openAlert} clearPage={clearPage}
+            autoAlign={boxes.autoAlign} insertCornell={insertCornell}
+            showDrawToolbar={showDrawToolbar} onToggleDrawToolbar={() => setShowDrawToolbar(v => !v)}
+            rightSidebarOpen={contentSidebarOpen} setRightSidebarOpen={setContentSidebarOpen}
+          />
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
@@ -935,11 +955,30 @@ export default function NoteApp() {
               </div>
             </main>
           )}
+          {notes.length > 0 && !gridView && (
+            <RightToolbar 
+              theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} 
+              rightSidebarOpen={rightSidebarOpen} setRightSidebarOpen={setRightSidebarOpen}
+              setGridView={setGridView} setCarouselIdx={setCarouselIdx} 
+              setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} 
+              openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} 
+              insertCornell={insertCornell} drawLineMode={drawLineMode} setDrawLineMode={setDrawLineMode} 
+              currentPageIdx={currentPageIdx}
+            />
+          )}
+
+          <RightSidebar 
+            isOpen={contentSidebarOpen} 
+            onClose={() => setContentSidebarOpen(false)} 
+            theme={theme} 
+            accent={accent}
+            sketchMode={sketchMode}
+            setSketchMode={setSketchMode}
+            setSketchPrompt={setSketchPrompt}
+            openAlert={openAlert}
+          />
         </div>
 
-        {notes.length > 0 && (
-          <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} insertCornell={insertCornell} drawLineMode={drawLineMode} setDrawLineMode={setDrawLineMode} />
-        )}
         {notes.length > 0 && !gridView && (
           <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
         )}
