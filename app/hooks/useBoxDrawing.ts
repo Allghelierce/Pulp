@@ -23,7 +23,9 @@ export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
   sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode
 }: UseBoxDrawingOptions) {
-  const [selectedBoxIds, _setSelectedBoxIds] = useState<Set<string>>(new Set())
+  // Selection is only in a ref. A cheap counter triggers box-list re-renders.
+  const selectedBoxIdsRef = useRef<Set<string>>(new Set())
+  const [selectionVersion, setSelectionVersion] = useState(0)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
 
   // Stable refs so DOM handlers never have stale closures
@@ -32,19 +34,18 @@ export function useBoxDrawing({
   const currentPageIdxRef = useRef(currentPageIdx)
   const notesRef = useRef(notes)
   const sketchRef = useRef({ sketchMode, sketchPrompt, drawLineMode })
-  const selectedBoxIdsRef = useRef<Set<string>>(new Set())
   const accentRef = useRef(accent)
   // Page attaches its selection rect div to this ref for zero-React-state drag updates
   const selectionRectRef = useRef<HTMLDivElement | null>(null)
 
-  // Synchronously update ref + state so the delete keydown handler never reads a stale set
+  // Update ref + bump version counter (cheap number, not a new Set object in state)
   const setSelectedBoxIds = useCallback((v: Set<string> | ((prev: Set<string>) => Set<string>)) => {
     if (typeof v === 'function') {
-      _setSelectedBoxIds(prev => { const next = v(prev); selectedBoxIdsRef.current = next; return next })
+      selectedBoxIdsRef.current = v(selectedBoxIdsRef.current)
     } else {
       selectedBoxIdsRef.current = v
-      _setSelectedBoxIds(v)
     }
+    setSelectionVersion(c => c + 1)
   }, [])
 
   useEffect(() => { zoomRef.current = zoom }, [zoom])
@@ -224,10 +225,14 @@ export function useBoxDrawing({
           }
         }
       } else {
-        // Drag-select: prune empty boxes AND commit selection in one state update
-        setNotes(prev => prev.map(n => n.id !== tid ? n : {
-          ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '') }
-        }))
+        // Drag-select: only prune if there are empty boxes (avoid spurious re-renders)
+        const currentTab = notesRef.current.find(n => n.id === tid)
+        const hasEmpty = (currentTab?.boxes[pidx] || []).some(b => b.content.trim() === '')
+        if (hasEmpty) {
+          setNotes(prev => prev.map(n => n.id !== tid ? n : {
+            ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '') }
+          }))
+        }
         setSelectedBoxIds(pendingSelected)
       }
 
@@ -389,8 +394,8 @@ export function useBoxDrawing({
     updateBoxes(bs => bs.map(b => b.id === id ? { ...b, ...updates } : b)), [updateBoxes])
 
   return useMemo(() => ({
-    selectedBoxIds, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
+    selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
     autoAlign, setBoxAlignment
-  }), [selectedBoxIds, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, setBoxAlignment])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, setBoxAlignment])
 }

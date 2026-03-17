@@ -37,12 +37,40 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     }
   }, [editorRef])
 
-  const syncContent = useCallback(() => {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Debounced sync: never call setNotes more than once per 500 ms while typing.
+  // The DOM (contentEditable) is the live source of truth; React state is only
+  // needed for cloud persistence and page/tab switching.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const activeTabIdRef = useRef(activeTabId)
+  const currentPageIdxRef = useRef(currentPageIdx)
+  // Keep refs in sync so the debounced callback always captures current values
+  // without needing them in the useCallback dependency array.
+  activeTabIdRef.current = activeTabId
+  currentPageIdxRef.current = currentPageIdx
+
+  const commitToState = useCallback(() => {
     const content = editorRef.current?.innerHTML || ""
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
     setNotes(prev => prev.map(n =>
-      n.id === activeTabId ? { ...n, pages: n.pages.map((p, i) => i === currentPageIdx ? content : p) } : n
+      n.id === tid ? { ...n, pages: n.pages.map((p, i) => i === pidx ? content : p) } : n
     ))
-  }, [activeTabId, currentPageIdx, editorRef, setNotes])
+  }, [editorRef, setNotes])
+
+  // Called on every onInput — schedules a debounced state sync
+  const syncContent = useCallback(() => {
+    clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(commitToState, 500)
+  }, [commitToState])
+
+  // Call this before page/tab navigation to immediately commit pending edits
+  const flushSync = useCallback(() => {
+    clearTimeout(syncTimer.current)
+    commitToState()
+  }, [commitToState])
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const execCmd = useCallback((cmd: string, value?: string) => {
     restoreSelection()
@@ -105,8 +133,8 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
         sel.removeAllRanges(); sel.addRange(nr); savedRange.current = nr.cloneRange()
       }
     }
-    syncContent()
-  }, [editorRef, restoreSelection, syncContent])
+    commitToState()
+  }, [editorRef, restoreSelection, commitToState])
 
   const toggleScript = useCallback((cmd: "superscript" | "subscript") => {
     const tag = cmd === "superscript" ? "SUP" : "SUB"
@@ -260,5 +288,5 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     else if (/^\d+\.$/.test(before)) tryConvert("insertOrderedList")
   }, [editorRef])
 
-  return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent }
+  return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent, flushSync }
 }

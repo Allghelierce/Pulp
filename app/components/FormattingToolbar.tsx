@@ -10,15 +10,18 @@ interface FormattingToolbarProps {
   insertHTML: (html: string) => void
   openAlert: (title: string, message?: string) => void
   setBoxAlignment: (align: "left" | "center" | "right") => void
-  hasSelectedBoxes: boolean
+  // Using a ref so this component NEVER re-renders when selection changes
+  selectedBoxIdsRef: React.RefObject<Set<string>>
   editorRef: React.RefObject<HTMLDivElement | null>
 }
 
 export const FormattingToolbar = memo(function FormattingToolbar({
-  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, setBoxAlignment, hasSelectedBoxes, editorRef,
+  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, setBoxAlignment, selectedBoxIdsRef, editorRef,
 }: FormattingToolbarProps) {
+  // Read from ref at click time — this fn is never used in render so no re-render happens
+  const hasBoxes = () => (selectedBoxIdsRef.current?.size ?? 0) > 0
   return (
-    <div className="ls-toolbar h-14 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="ls-toolbar h-14 bg-white border-b border-zinc-200/80 flex items-center pl-10 pr-3 z-30 shrink-0 overflow-x-auto gap-0.5 justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)]" style={{ transform: "translateZ(0)" }}>
       <div className="flex items-center gap-0.5">
 
         {/* Text style */}
@@ -76,13 +79,13 @@ export const FormattingToolbar = memo(function FormattingToolbar({
           <button onMouseDown={e=>{e.preventDefault();execCmd("outdent")}} className={`${btnBase} text-sm`} title="Outdent">⇤</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("indent")}} className={`${btnBase} text-sm`} title="Indent">⇥</button>
           <div className="w-[1px] h-4 bg-zinc-200 mx-1"></div>
-          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("left") : execCmd("justifyLeft")}} className={`${btnBase} text-xs`} title="Align Left">
+          <button onMouseDown={e=>{e.preventDefault(); hasBoxes() ? setBoxAlignment("left") : execCmd("justifyLeft")}} className={`${btnBase} text-xs`} title="Align Left">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z"/></svg>
           </button>
-          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("center") : execCmd("justifyCenter")}} className={`${btnBase} text-xs`} title="Align Center">
+          <button onMouseDown={e=>{e.preventDefault(); hasBoxes() ? setBoxAlignment("center") : execCmd("justifyCenter")}} className={`${btnBase} text-xs`} title="Align Center">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z"/></svg>
           </button>
-          <button onMouseDown={e=>{e.preventDefault(); hasSelectedBoxes ? setBoxAlignment("right") : execCmd("justifyRight")}} className={`${btnBase} text-xs`} title="Align Right">
+          <button onMouseDown={e=>{e.preventDefault(); hasBoxes() ? setBoxAlignment("right") : execCmd("justifyRight")}} className={`${btnBase} text-xs`} title="Align Right">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z"/></svg>
           </button>
         </div>

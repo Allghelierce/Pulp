@@ -16,7 +16,7 @@ export const SETTINGS_TABS = [
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS = [
-  { hex: "#600b27", name: "Crimson"  },
+  { hex: "#4a081eff", name: "Crimson"  },
   { hex: "#1e3a8a", name: "Cobalt"   },
   { hex: "#166534", name: "Forest"   },
   { hex: "#92400e", name: "Amber"    },

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect, memo, useCallback } from "react"
+import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig } from "@/app/types"
 import { uid } from "@/app/lib/uid"
@@ -10,15 +10,121 @@ import { useDrawing } from "@/app/hooks/useDrawing"
 import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
-import { FormattingToolbar } from "@/app/components/FormattingToolbar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { RightToolbar } from "@/app/components/RightToolbar"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { GridView } from "@/app/components/GridView"
+import { SlashMenu } from "@/app/components/SlashMenu"
+
+// ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
+const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
+  return (<>
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; }` }} />
+    {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
+  </>)
+})
 
 function htmlToPlain(html: string): string {
-  return html.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+  return html.replace(/<br\s*\/?>\n/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
 }
+
+// ─── Memoized spiral binding — NEVER re-renders during box operations ──────────
+const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingCompact }: {
+  theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean
+}) {
+  if (!showBinding) return null
+  if (!bindingCompact) return (
+    <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-hidden">
+      {Array.from({ length: 40 }).map((_, i) => (
+        <div key={i} className="relative w-full h-[32px]">
+          <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+          <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+          <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
+          <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
+          <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
+        </div>
+      ))}
+    </div>
+  )
+  return (
+    <div className="absolute top-[-28px] left-0 right-0 h-16 z-30 pointer-events-none flex flex-row pl-[32px]">
+      {Array.from({ length: 30 }).map((_, i) => (
+        <div key={i} className="relative h-full w-[32px]">
+          <div className="absolute left-2 top-[34px] w-5 h-4 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+          <div className="absolute left-[14px] top-[12px] w-[10px] h-[28px] border-r-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
+          <div className="absolute left-[10px] top-0 w-[15px] h-[42px] border-l-[3.5px] border-r-[3.5px] border-b-[3.5px] border-[#D4AF37] rounded-b-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#D4AF37 #D4AF37 #8B6914 transparent' }} />
+          <div className="absolute left-[11px] top-[2px] w-[10px] h-[38px] border-l-[1px] border-r-[1px] border-b-[1.5px] border-[#FFF3A3] rounded-b-full z-20 opacity-50" />
+          <div className="absolute left-[18px] top-[38px] w-[2px] h-[10px] bg-black/10 blur-[2px] z-0" />
+        </div>
+      ))}
+    </div>
+  )
+})
+
+// ─── Memoized single box — only re-renders when THIS box data or selection changes ─
+const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds }: {
+  box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string
+  startDrag: (e: React.MouseEvent, box: TextBoxType) => void
+  startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
+  deleteBox: (id: string) => void
+  updateBox: (id: string, updates: Partial<TextBoxType>) => void
+  updateBoxContent: (id: string, v: string) => void
+  setSelectedBoxIds: (v: Set<string> | ((p: Set<string>) => Set<string>)) => void
+}) {
+  const corners: [string, React.CSSProperties][] = [
+    ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
+    ["ne", { top: -4, right: -4, cursor: "ne-resize" }],
+    ["sw", { bottom: -4, left: -4, cursor: "sw-resize" }],
+    ["se", { bottom: -4, right: -4, cursor: "se-resize" }],
+  ]
+  const isImage = box.content.includes("http") || box.content.startsWith("data:image")
+  return (
+    <div
+      id={`box-${box.id}`}
+      onMouseDown={e => startDrag(e, box)}
+      style={{
+        position: "absolute", left: box.x, top: box.y, width: box.w, height: box.h,
+        border: isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent",
+        borderRadius: 2, backgroundColor: "transparent",
+        zIndex: 50, overflow: "visible", cursor: "grab",
+      }}
+    >
+      {isSelected && (<>
+        <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
+        <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
+      </>)}
+      {isSelected && corners.map(([h, pos]) => (
+        <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); startResize(e, box, h) }}
+          style={{ position: "absolute", width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, zIndex: 20, ...pos }} />
+      ))}
+      {isSelected && (
+        <button onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
+          style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
+      )}
+      {isSelected && !isImage && (
+        <BoxToolbar box={box} accentSolid={accentSolid} onUpdateBox={updateBox} />
+      )}
+      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+        {loadingBoxId === box.id ? (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
+        ) : isImage ? (
+          <img src={box.content} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "grayscale(1)", mixBlendMode: "multiply", opacity: 0.9 }} alt="sketch" />
+        ) : (
+          <BoxTextarea
+            id={box.id}
+            content={box.content}
+            textAlign={box.textAlign}
+            boxFontFamily={box.boxFontFamily}
+            boxFontSize={box.boxFontSize}
+            boxHeadingStyle={box.boxHeadingStyle}
+            onUpdate={updateBoxContent}
+            onFocus={() => setSelectedBoxIds(new Set([box.id]))}
+          />
+        )}
+      </div>
+    </div>
+  )
+})
 
 const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 14 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400 }
@@ -42,7 +148,12 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
 }) {
   const [open, setOpen] = useState<"style" | "font" | "size" | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [anchorLeft, setAnchorLeft] = useState(0)
+  const [customSize, setCustomSize] = useState("")
   const ref = useRef<HTMLDivElement>(null)
+  const styleBtnRef = useRef<HTMLButtonElement>(null)
+  const fontBtnRef = useRef<HTMLButtonElement>(null)
+  const sizeBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -51,122 +162,141 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
+  const openDropdown = (type: "style" | "font" | "size") => {
+    const btnRef = type === "style" ? styleBtnRef : type === "font" ? fontBtnRef : sizeBtnRef
+    if (btnRef.current && ref.current) {
+      const b = btnRef.current.getBoundingClientRect()
+      const t = ref.current.getBoundingClientRect()
+      setAnchorLeft(b.left - t.left)
+    }
+    setOpen(o => o === type ? null : type)
+  }
+
   const styleKey = box.boxHeadingStyle || "default"
   const currentFont = BOX_FONTS.find(f => f.value === (box.boxFontFamily ?? "")) ?? BOX_FONTS[0]
+  const currentSize = box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]
 
-  const dropdownStyle: React.CSSProperties = {
-    position: "absolute", bottom: "calc(100% + 4px)", left: 0,
-    background: "white", border: "1px solid #e4e4e7", borderRadius: 6,
-    boxShadow: "0 4px 16px rgba(0,0,0,0.13)", zIndex: 400, minWidth: 80,
+  const dropdownBase: React.CSSProperties = {
+    position: "absolute", top: "calc(100% + 4px)", left: anchorLeft,
+    background: "#ffffff", border: "1px solid rgba(0,0,0,0.09)",
+    borderRadius: 6, padding: 3,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)",
+    zIndex: 400, minWidth: 90,
   }
-  const optionStyle = (active: boolean): React.CSSProperties => ({
-    display: "block", width: "100%", textAlign: "left", padding: "6px 12px",
-    fontSize: 11, border: "none", background: active ? "#f4f4f5" : "white",
-    cursor: "pointer", color: "#3f3f46",
+  const optionBtn = (active: boolean): React.CSSProperties => ({
+    display: "block", width: "100%", textAlign: "left", padding: "5px 9px",
+    fontSize: 11.5, fontWeight: active ? 500 : 400, border: "none",
+    background: active ? "rgba(0,0,0,0.05)" : "transparent",
+    cursor: "pointer", color: "#18181b", borderRadius: 4,
+    letterSpacing: "-0.01em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 10, fontWeight: 600, color: "#52525b", background: "none", border: "none",
-    cursor: "pointer", padding: "2px 5px", borderRadius: 4,
-    display: "flex", alignItems: "center", gap: 3,
+    fontSize: 11, fontWeight: 500, color: "#3f3f46", background: "none", border: "none",
+    cursor: "pointer", padding: "2px 6px", borderRadius: 4,
+    display: "flex", alignItems: "center", gap: 3, letterSpacing: "-0.01em",
   }
-  const chevron = <svg width="6" height="5" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+  const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z"/></svg>
 
   return (
-    <div
-      ref={ref}
-      onMouseDown={e => e.stopPropagation()}
-      style={{
-        position: "absolute", bottom: "calc(100% + 5px)", left: -1,
-        display: "flex", alignItems: "center", gap: 0,
-        background: "rgba(255,255,255,0.97)",
-        border: `1px solid ${accentSolid}28`,
-        borderRadius: 7, padding: "2px 4px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.09), 0 1px 3px rgba(0,0,0,0.05)",
-        zIndex: 200, backdropFilter: "blur(8px)", whiteSpace: "nowrap",
-      }}
-    >
-      {/* Eye toggle button */}
-      <button
-        onClick={() => { setCollapsed(c => !c); setOpen(null) }}
+    <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
+      position: "absolute", bottom: "calc(100% + 5px)", left: -1,
+      display: "flex", alignItems: "center", gap: 0,
+      background: "#ffffff", border: "1px solid rgba(0,0,0,0.09)",
+      borderRadius: 6, padding: "2px 3px",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
+      zIndex: 200, whiteSpace: "nowrap",
+    }}>
+      {/* Eye toggle */}
+      <button onClick={() => { setCollapsed(c => !c); setOpen(null) }}
         title={collapsed ? "Show formatting" : "Hide formatting"}
-        style={{ background: "none", border: "none", cursor: "pointer", padding: "1px 4px", display: "flex", alignItems: "center", color: accentSolid }}
-      >
-        <svg
-          width="14" height="14" viewBox="0 0 24 24" fill="none"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 5px", display: "flex", alignItems: "center", color: accentSolid, borderRadius: 4 }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-          style={{ transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)", transform: collapsed ? "scaleY(0.12)" : "scaleY(1)", transformOrigin: "50% 50%", display: "block" }}
-        >
+          style={{ transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)", transform: collapsed ? "scaleY(0.1)" : "scaleY(1)", transformOrigin: "50% 50%", display: "block" }}>
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle
-            cx="12" cy="12" r="3"
-            style={{ transition: "opacity 0.15s ease", opacity: collapsed ? 0 : 1 } as React.CSSProperties}
-          />
+          <circle cx="12" cy="12" r="3"
+            style={{ transition: "opacity 0.12s ease", opacity: collapsed ? 0 : 1 } as React.CSSProperties} />
         </svg>
       </button>
 
-      {/* Sliding options — width collapses toward the eye on hide */}
-      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 320, transition: "max-width 0.38s cubic-bezier(0.4,0,0.2,1)" }}>
+      {/* Triggers inside overflow:hidden for the slide animation — NO dropdown panels here */}
+      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 320, transition: "max-width 0.32s cubic-bezier(0.4,0,0.2,1)" }}>
         <div style={{
-          display: "flex", alignItems: "center", gap: 1,
+          display: "flex", alignItems: "center", gap: 1, paddingLeft: 1,
           opacity: collapsed ? 0 : 1,
-          transform: collapsed ? "translateX(-10px)" : "translateX(0)",
-          transition: "opacity 0.22s ease, transform 0.32s cubic-bezier(0.4,0,0.2,1)",
-          paddingLeft: 2,
+          transform: collapsed ? "translateX(-8px)" : "translateX(0)",
+          transition: "opacity 0.18s ease, transform 0.28s cubic-bezier(0.4,0,0.2,1)",
         }}>
-          <div style={{ width: 1, height: 13, background: "#e4e4e7", margin: "0 3px 0 1px", flexShrink: 0 }} />
-
-          {/* Style */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button style={triggerStyle} onClick={() => setOpen(o => o === "style" ? null : "style")}>
-              {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
+          <div style={{ width: 1, height: 12, background: "rgba(0,0,0,0.1)", margin: "0 2px 0 1px", flexShrink: 0 }} />
+          <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
+            {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
+          </button>
+          <button ref={fontBtnRef} style={triggerStyle} onClick={() => openDropdown("font")}>
+            {currentFont.label} {chevron}
+          </button>
+          <button ref={sizeBtnRef} style={triggerStyle} onClick={() => openDropdown("size")}>
+            {currentSize}px {chevron}
+          </button>
+          <div style={{ width: 1, height: 12, background: "rgba(0,0,0,0.1)", margin: "0 2px", flexShrink: 0 }} />
+          {(["left", "center", "right"] as const).map(align => (
+            <button key={align} style={{ ...triggerStyle, padding: "2px 4px", ...(box.textAlign === align ? { color: accentSolid, background: "rgba(0,0,0,0.06)" } : {}) }}
+              onClick={() => onUpdateBox(box.id, { textAlign: align })}>
+              {align === "left"   && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z"/></svg>}
+              {align === "center" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z"/></svg>}
+              {align === "right"  && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z"/></svg>}
             </button>
-            {open === "style" && (
-              <div style={dropdownStyle}>
-                {BOX_STYLES.map(s => (
-                  <button key={s.value} style={{ ...optionStyle(styleKey === s.value), fontWeight: s.value !== "default" ? 700 : 400 }}
-                    onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as TextBoxType["boxHeadingStyle"] }); setOpen(null) }}>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Font */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button style={triggerStyle} onClick={() => setOpen(o => o === "font" ? null : "font")}>
-              {currentFont.label} {chevron}
-            </button>
-            {open === "font" && (
-              <div style={dropdownStyle}>
-                {BOX_FONTS.map(f => (
-                  <button key={f.value} style={{ ...optionStyle((box.boxFontFamily ?? "") === f.value), fontFamily: f.value || '"EB Garamond", Georgia, serif' }}
-                    onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Size */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button style={triggerStyle} onClick={() => setOpen(o => o === "size" ? null : "size")}>
-              {box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]}px {chevron}
-            </button>
-            {open === "size" && (
-              <div style={{ ...dropdownStyle, maxHeight: 180, overflowY: "auto" }}>
-                {BOX_SIZES.map(sz => (
-                  <button key={sz} style={optionStyle((box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]) === sz)}
-                    onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>
-                    {sz}px
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          ))}
         </div>
       </div>
+
+      {/* Dropdown panels rendered as siblings to the overflow wrapper — not clipped by it */}
+      {open === "style" && (
+        <div style={dropdownBase}>
+          {BOX_STYLES.map(s => (
+            <button key={s.value} style={{ ...optionBtn(styleKey === s.value), fontWeight: s.value !== "default" ? 600 : 400 }}
+              onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as TextBoxType["boxHeadingStyle"] }); setOpen(null) }}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {open === "font" && (
+        <div style={dropdownBase}>
+          {BOX_FONTS.map(f => (
+            <button key={f.value} style={{ ...optionBtn((box.boxFontFamily ?? "") === f.value), fontFamily: f.value || '"EB Garamond", Georgia, serif' }}
+              onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {open === "size" && (
+        <div style={{ ...dropdownBase, display: "flex", flexDirection: "column", maxHeight: 220 }}>
+          <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid rgba(0,0,0,0.06)", marginBottom: 3, flexShrink: 0 }}>
+            <input
+              type="number" min={1} max={400} placeholder="Custom…"
+              value={customSize}
+              onChange={e => setCustomSize(e.target.value)}
+              onKeyDown={e => {
+                e.stopPropagation()
+                if (e.key === "Enter" && customSize) {
+                  const n = parseInt(customSize)
+                  if (n > 0) { onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") }
+                }
+              }}
+              style={{ width: "100%", border: "1px solid rgba(0,0,0,0.10)", borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: "#18181b", background: "#fafafa" }}
+            />
+          </div>
+          <div style={{ overflowY: "auto" }}>
+            {BOX_SIZES.map(sz => (
+              <button key={sz} style={optionBtn(currentSize === sz)}
+                onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>
+                {sz}px
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 })
@@ -215,7 +345,7 @@ const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontF
         const v = e.currentTarget.value
         pendingRef.current = v
         clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => { onUpdate(id, v); pendingRef.current = null }, 150)
+        timerRef.current = setTimeout(() => { onUpdate(id, v); pendingRef.current = null }, 500)
       }}
       style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight, lineHeight: 1.45, color: "#1a1a1a", cursor: "text", padding: 0, textAlign: (textAlign || "left") as React.CSSProperties["textAlign"], wordWrap: "break-word", overflowY: "auto" }}
     />
@@ -265,7 +395,10 @@ export default function NoteApp() {
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
 
-  const activeNote = (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData
+  const activeNote = useMemo(
+    () => (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData,
+    [notes, activeTabId]
+  )
 
   // Dialog helpers
   const openPrompt  = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
@@ -276,6 +409,73 @@ export default function NoteApp() {
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
   const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
+
+  // Slash (@) menu state
+  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string } | null>(null)
+  const slashMenuRef = useRef<{ x: number; y: number; filter: string } | null>(null)
+  const slashStartRef = useRef<{ node: Text; offset: number } | null>(null)
+
+  const updateSlashMenu = useCallback((v: { x: number; y: number; filter: string } | null) => {
+    slashMenuRef.current = v
+    setSlashMenu(v)
+  }, [])
+
+  const closeSlashMenu = useCallback(() => {
+    updateSlashMenu(null)
+    slashStartRef.current = null
+  }, [updateSlashMenu])
+
+  const executeSlashItem = useCallback((action: () => void) => {
+    if (slashStartRef.current && slashMenuRef.current) {
+      const { node, offset: startOffset } = slashStartRef.current
+      const endOffset = Math.min(startOffset + 1 + slashMenuRef.current.filter.length, node.textContent?.length ?? 0)
+      try {
+        const sel = window.getSelection()
+        if (sel) {
+          const r = document.createRange()
+          r.setStart(node, startOffset)
+          r.setEnd(node, endOffset)
+          sel.removeAllRanges()
+          sel.addRange(r)
+          document.execCommand("delete")
+        }
+      } catch {}
+    }
+    updateSlashMenu(null)
+    slashStartRef.current = null
+    editorRef.current?.focus()
+    action()
+  }, [updateSlashMenu, editorRef])
+
+  const detectSlash = useCallback(() => {
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0) { updateSlashMenu(null); slashStartRef.current = null; return }
+    const range = sel.getRangeAt(0)
+    const node = range.startContainer
+    if (node.nodeType !== Node.TEXT_NODE || !editorRef.current?.contains(node)) {
+      updateSlashMenu(null); slashStartRef.current = null; return
+    }
+    const text = node.textContent || ""
+    const offset = range.startOffset
+    const match = text.slice(0, offset).match(/@(\w*)$/)
+    if (match) {
+      const filter = match[1]
+      const atOffset = offset - filter.length - 1
+      if (!slashStartRef.current) {
+        slashStartRef.current = { node: node as Text, offset: atOffset }
+      }
+      const rect = range.getBoundingClientRect()
+      updateSlashMenu({ x: rect.left, y: rect.bottom + 6, filter })
+    } else {
+      updateSlashMenu(null)
+      slashStartRef.current = null
+    }
+  }, [editorRef, updateSlashMenu])
+
+  const handleEditorInput = useCallback(() => {
+    editor.syncContent()
+    detectSlash()
+  }, [editor.syncContent, detectSlash])
 
   // Keyboard shortcuts for tools
   useEffect(() => {
@@ -344,7 +544,7 @@ export default function NoteApp() {
     const timer = setTimeout(async () => {
       const { error } = await supabase.from("notes").upsert({ id: activeNote.id, subject: activeNote.subject, pages: activeNote.pages, boxes: activeNote.boxes, folder_id: activeNote.folderId, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
-    }, 400)
+    }, 800)
     return () => clearTimeout(timer)
   }, [activeNote, user])
 
@@ -511,20 +711,18 @@ export default function NoteApp() {
     <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; }` }} />
-      {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
+      <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} />
+      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
           {sidebarOpen ? "‹" : "›"}
         </button>
 
-        {notes.length > 0 && <>
-          <FormattingToolbar accent={accent} execCmd={editor.execCmd} saveSelection={editor.saveSelection} toggleScript={editor.toggleScript} insertHTML={editor.insertHTML} openAlert={openAlert} setBoxAlignment={boxes.setBoxAlignment} hasSelectedBoxes={boxes.selectedBoxIds.size > 0} editorRef={editorRef} />
-          <DocumentToolbar accent={accent} zoom={zoom} customSize={customSize} saveSelection={editor.saveSelection} execCmd={editor.execCmd} applyFontSize={editor.applyFontSize} applyBlockStyle={editor.applyBlockStyle} setCustomSize={setCustomSize} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} />
-        </>}
+        {notes.length > 0 && (
+          <DocumentToolbar accent={accent} zoom={zoom} saveSelection={editor.saveSelection} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} openAlert={openAlert} />
+        )}
 
         <div className="flex-1 flex overflow-hidden relative">
           {notes.length === 0 ? (
@@ -537,48 +735,22 @@ export default function NoteApp() {
           ) : gridView ? (
             <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
           ) : (
-            <main className="flex-1 overflow-auto px-8 pt-16 pb-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
-              <div style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }} className="w-full max-w-5xl shrink-0">
+            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+              <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: 0, backgroundColor: theme === "dark" ? "#1f1f23" : "#f0e9e0", borderRadius: 2, zIndex: 1, boxShadow: "2px 0 6px rgba(0,0,0,0.10)" }} />
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: 0, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 0 6px rgba(0,0,0,0.08)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
                          if (activeTool !== 'select') return
                          const target = e.target as HTMLElement
                          if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
                          boxes.onPaperMouseDown(e)
                        }}>
 
-                      {/* Spiral binding */}
-                      {showBinding && !bindingCompact && (
-                        <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-hidden">
-                          {Array.from({ length: 40 }).map((_, i) => (
-                            <div key={i} className="relative w-full h-[32px]">
-                              <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
-                              <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
-                              <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
-                              <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
-                              <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {showBinding && bindingCompact && (
-                        <div className="absolute top-[-28px] left-0 right-0 h-16 z-30 pointer-events-none flex flex-row pl-[32px]">
-                          {Array.from({ length: 30 }).map((_, i) => (
-                            <div key={i} className="relative h-full w-[32px]">
-                              <div className="absolute left-2 top-[34px] w-5 h-4 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
-                              <div className="absolute left-[14px] top-[12px] w-[10px] h-[28px] border-r-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
-                              <div className="absolute left-[10px] top-0 w-[15px] h-[42px] border-l-[3.5px] border-r-[3.5px] border-b-[3.5px] border-[#D4AF37] rounded-b-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#D4AF37 #D4AF37 #8B6914 transparent' }} />
-                              <div className="absolute left-[11px] top-[2px] w-[10px] h-[38px] border-l-[1px] border-r-[1px] border-b-[1.5px] border-[#FFF3A3] rounded-b-full z-20 opacity-50" />
-                              <div className="absolute left-[18px] top-[38px] w-[2px] h-[10px] bg-black/10 blur-[2px] z-0" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} />
 
                       <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
                       <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
@@ -596,7 +768,7 @@ export default function NoteApp() {
                         className="w-full min-h-[1000px] outline-none"
                         style={{ fontFamily: `"${editorFont}", Georgia, serif`, caretColor: accent.length > 7 ? accent.slice(0, 7) : accent }}
                         onKeyDown={editor.handleEditorKeyDown}
-                        onInput={editor.syncContent}
+                        onInput={handleEditorInput}
                         onMouseUp={editor.saveSelection}
                         onKeyUp={editor.saveSelection}
                         onBlur={editor.saveSelection}
@@ -654,68 +826,26 @@ export default function NoteApp() {
                         onPointerCancel={drawing.onPointerUp}
                       />
 
-                      {(activeNote.boxes[currentPageIdx] || []).map(box => {
-                        const isSelected = boxes.selectedBoxIds.has(box.id)
-                        const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
-                        const corners: [string, React.CSSProperties][] = [
-                          ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
-                          ["ne", { top: -4, right: -4, cursor: "ne-resize" }],
-                          ["sw", { bottom: -4, left: -4, cursor: "sw-resize" }],
-                          ["se", { bottom: -4, right: -4, cursor: "se-resize" }],
-                        ]
-                        return (
-                          <div
-                            key={box.id}
-                            id={`box-${box.id}`}
-                            onMouseDown={e => boxes.startDrag(e, box)}
-                            style={{
-                              position: "absolute", left: box.x, top: box.y, width: box.w, height: box.h,
-                              border: isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent",
-                              borderRadius: 2, backgroundColor: "transparent",
-                              zIndex: 50, overflow: "visible", cursor: "grab",
-                            }}
-                          >
-                            {isSelected && (<>
-                            <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
-                            <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
-                          </>)}
-                          {isSelected && corners.map(([h, pos]) => (
-                              <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); boxes.startResize(e, box, h) }}
-                                style={{ position: "absolute", width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, zIndex: 20, ...pos }} />
-                            ))}
-                            {isSelected && (
-                              <button onMouseDown={e => { e.stopPropagation(); boxes.deleteBox(box.id) }}
-                                style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
-                            )}
-                            {isSelected && !(box.content.includes("http") || box.content.startsWith("data:image")) && (
-                              <BoxToolbar box={box} accentSolid={accentSolid} onUpdateBox={boxes.updateBox} />
-                            )}
-                            <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
-                              {boxes.loadingBoxId === box.id ? (
-                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
-                              ) : box.content.includes("http") || box.content.startsWith("data:image") ? (
-                                <img src={box.content} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "grayscale(1)", mixBlendMode: "multiply", opacity: 0.9 }} alt="sketch" />
-                              ) : (
-                                <BoxTextarea
-                                  id={box.id}
-                                  content={box.content}
-                                  textAlign={box.textAlign}
-                                  boxFontFamily={box.boxFontFamily}
-                                  boxFontSize={box.boxFontSize}
-                                  boxHeadingStyle={box.boxHeadingStyle}
-                                  onUpdate={boxes.updateBoxContent}
-                                  onFocus={() => boxes.setSelectedBoxIds(new Set([box.id]))}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
+                      {(activeNote.boxes[currentPageIdx] || []).map(box => (
+                        <BoxItem
+                          key={box.id}
+                          box={box}
+                          isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
+                          loadingBoxId={boxes.loadingBoxId}
+                          accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
+                          startDrag={boxes.startDrag}
+                          startResize={boxes.startResize}
+                          deleteBox={boxes.deleteBox}
+                          updateBox={boxes.updateBox}
+                          updateBoxContent={boxes.updateBoxContent}
+                          setSelectedBoxIds={boxes.setSelectedBoxIds}
+                        />
+                      ))}
 
                       <div className="flex justify-center items-center gap-10 py-10 relative z-20">
-                        <button disabled={currentPageIdx === 0} onClick={() => setCurrentPageIdx(p => p - 1)} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&larr;</button>
+                        <button disabled={currentPageIdx === 0} onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&larr;</button>
                         <span className="px-4 py-1 bg-zinc-50 rounded-full text-[10px] font-bold text-zinc-400">PAGE {currentPageIdx + 1} / {activeNote.pages.length}</span>
-                        <button onClick={() => { if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1); else { const np = [...activeNote.pages, ""]; setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n)); setCurrentPageIdx(activeNote.pages.length) } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&rarr;</button>
+                        <button onClick={() => { editor.flushSync(); if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1); else { const np = [...activeNote.pages, ""]; setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n)); setCurrentPageIdx(activeNote.pages.length) } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&rarr;</button>
                       </div>
                     </div>
                   </div>
@@ -733,6 +863,20 @@ export default function NoteApp() {
           <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} />
         )}
       </div>
+
+      {slashMenu && (
+        <SlashMenu
+          x={slashMenu.x}
+          y={slashMenu.y}
+          filter={slashMenu.filter}
+          accent={accent}
+          onSelect={executeSlashItem}
+          onClose={closeSlashMenu}
+          execCmd={editor.execCmd}
+          insertHTML={editor.insertHTML}
+          toggleScript={editor.toggleScript}
+        />
+      )}
     </div>
   )
 }

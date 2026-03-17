@@ -1,4 +1,5 @@
 "use client"
+import { memo } from "react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 
@@ -25,7 +26,7 @@ interface SidebarProps {
   onOpenSettings: () => void
 }
 
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarOpen,
   onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
@@ -35,7 +36,7 @@ export function Sidebar({
   const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid)
 
   return (
-    <div id="app-sidebar" className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`}>
+    <div id="app-sidebar" className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`} style={{ scrollbarGutter: "stable" }}>
       <div className="p-4 border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3 mb-5 cursor-default">
           <img src="/Gemini_Generated_Image_ctyul6ctyul6ctyu.png" width="36" height="36" style={{ filter: "invert(1)", objectFit: "contain" }} alt="Logo" />
@@ -125,4 +126,4 @@ export function Sidebar({
       </div>
     </div>
   )
-}
+})
