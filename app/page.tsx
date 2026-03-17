@@ -470,8 +470,9 @@ export default function NoteApp() {
     if (m?.type === "editor") editorRef.current?.focus()
     else if (m?.target) m.target.focus()
     
+    editor.saveSelection()
     action()
-  }, [closeSlashMenu, editorRef])
+  }, [closeSlashMenu, editorRef, editor])
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
     // Only call editor.handleEditorKeyDown if it's the main editor
@@ -600,6 +601,24 @@ export default function NoteApp() {
     return () => ro.disconnect()
   }, [])
 
+  // Backlink click handler
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const link = target.closest("[data-backlink-id]")
+      if (link) {
+        const id = link.getAttribute("data-backlink-id")
+        if (id) {
+          editor.flushSync()
+          setActiveTabId(id)
+          setCurrentPageIdx(0)
+        }
+      }
+    }
+    window.addEventListener("click", handler)
+    return () => window.removeEventListener("click", handler)
+  }, [editor])
+
   // Load settings from cloud
   useEffect(() => {
     if (!user) return
@@ -677,6 +696,23 @@ export default function NoteApp() {
       setNotes(prev => [...prev, { id, subject: name.trim(), pages: [""], folderId, boxes: {} }])
       setActiveTabId(id); setCurrentPageIdx(0)
     })
+
+  const insertBacklink = useCallback(() => {
+    editor.saveSelection()
+    openPrompt("Name your subpage", "Subpage", "Subpage name…", "Create", name => {
+      if (!name.trim()) return
+      const newId = uid()
+      setNotes(prev => [...prev, { id: newId, subject: name.trim(), pages: [""], folderId: activeNote.folderId, boxes: {} }])
+      
+      const color = accent.length > 7 ? accent.slice(0, 7) : accent
+      const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display: inline-flex; align-items: center; gap: 4px; background: ${color}15; color: ${color}; border: 1px solid ${color}33; padding: 1px 8px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin: 0 2px; transition: all 0.2s; user-select: none; -webkit-user-modify: read-only;">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        ${name.trim()}
+      </span>&nbsp;`
+      
+      editor.insertHTML(linkHtml)
+    })
+  }, [accent, activeNote, editor, openPrompt])
 
   const renameNote = (id: string, currentName: string) =>
     openPrompt("Rename note", currentName, "Note name…", "Rename", newName => {
@@ -822,6 +858,7 @@ export default function NoteApp() {
             currentPageIdx={currentPageIdx}
             saveSelection={editor.saveSelection} setZoom={setZoom}
             setCarouselIdx={setCarouselIdx} setGridView={setGridView}
+            sketchMode={sketchMode} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt}
             setDrawLineMode={setDrawLineMode}
             insertTable={editor.insertTable} insertColumns={editor.insertColumns}
             openAlert={openAlert} clearPage={clearPage}
@@ -842,7 +879,7 @@ export default function NoteApp() {
           ) : gridView ? (
             <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
           ) : (
-            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
               <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "relative" }}>
@@ -995,6 +1032,7 @@ export default function NoteApp() {
           execCmd={editor.execCmd}
           insertHTML={editor.insertHTML}
           toggleScript={editor.toggleScript}
+          insertBacklink={insertBacklink}
         />
       )}
     </div>

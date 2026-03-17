@@ -19,10 +19,11 @@ interface SlashMenuProps {
   execCmd: (cmd: string, value?: string) => void
   insertHTML: (html: string) => void
   toggleScript: (cmd: "superscript" | "subscript") => void
+  insertBacklink: () => void
 }
 
 export const SlashMenu = memo(function SlashMenu({
-  x, y, filter, accent, onSelect, onClose, execCmd, insertHTML, toggleScript,
+  x, y, filter, accent, onSelect, onClose, execCmd, insertHTML, toggleScript, insertBacklink,
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
@@ -67,6 +68,10 @@ export const SlashMenu = memo(function SlashMenu({
     { id: "divider", label: "Divider", shortcut: "—", group: "Block",
       icon: <svg width="13" height="4" viewBox="0 0 16 4" fill="none"><line x1="0" y1="2" x2="16" y2="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
       action: () => insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>') },
+    
+    { id: "backlink", label: "Backlink", group: "Block",
+      icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>,
+      action: () => insertBacklink() },
   ]
 
   const filtered = filter
