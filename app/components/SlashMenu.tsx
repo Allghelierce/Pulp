@@ -169,8 +169,8 @@ export const SlashMenu = memo(function SlashMenu({
         borderTop: "1px solid rgba(0,0,0,0.06)", margin: "4px 0 0",
         padding: "5px 14px", display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
-        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>Type &apos;@&apos; on the page</span>
-        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>esc</span>
+        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>Type &apos;@&apos; or &apos;/&apos; to search</span>
+        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>esc to close</span>
       </div>
     </div>
   )

@@ -62,7 +62,7 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 // ─── Memoized single box — only re-renders when THIS box data or selection changes ─
-const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds }: {
+const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput }: {
   box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
@@ -70,6 +70,8 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
   updateBox: (id: string, updates: Partial<TextBoxType>) => void
   updateBoxContent: (id: string, v: string) => void
   setSelectedBoxIds: (v: Set<string> | ((p: Set<string>) => Set<string>)) => void
+  onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
+  onInput: (e: React.FormEvent<HTMLElement>) => void
 }) {
   const corners: [string, React.CSSProperties][] = [
     ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
@@ -119,6 +121,8 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
             boxHeadingStyle={box.boxHeadingStyle}
             onUpdate={updateBoxContent}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
+            onKeyDown={onKeyDown}
+            onInput={onInput}
           />
         )}
       </div>
@@ -301,27 +305,21 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
   )
 })
 
-const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus }: {
+const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus, onKeyDown, onInput }: {
   id: string; content: string; textAlign?: string
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string
   onUpdate: (id: string, v: string) => void
   onFocus: () => void
+  onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
+  onInput: (e: React.FormEvent<HTMLElement>) => void
 }) {
-  const taRef = useRef<HTMLTextAreaElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const focusedRef = useRef(false)
-  const pendingRef = useRef<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
-    if (taRef.current && !taRef.current.value && content) {
-      taRef.current.value = htmlToPlain(content)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!focusedRef.current && taRef.current) {
-      const plain = htmlToPlain(content)
-      if (taRef.current.value !== plain) taRef.current.value = plain
+    if (ref.current && ref.current.innerHTML !== content) {
+      ref.current.innerHTML = content
     }
   }, [content])
 
@@ -331,23 +329,33 @@ const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontF
   const resolvedFont = boxFontFamily || '"EB Garamond", Georgia, serif'
 
   return (
-    <textarea
-      ref={taRef}
-      onKeyDown={e => e.stopPropagation()}
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      onKeyDown={e => {
+        onKeyDown(e)
+        if (!e.defaultPrevented) e.stopPropagation()
+      }}
+      onInput={e => {
+        onInput(e)
+        const v = e.currentTarget.innerHTML
+        clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => onUpdate(id, v), 500)
+      }}
       onMouseDown={e => e.stopPropagation()}
       onFocus={() => { focusedRef.current = true; onFocus() }}
       onBlur={() => {
         focusedRef.current = false
         clearTimeout(timerRef.current)
-        if (pendingRef.current !== null) { onUpdate(id, pendingRef.current); pendingRef.current = null }
+        onUpdate(id, ref.current?.innerHTML || "")
       }}
-      onChange={e => {
-        const v = e.currentTarget.value
-        pendingRef.current = v
-        clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => { onUpdate(id, v); pendingRef.current = null }, 500)
+      style={{
+        width: "100%", height: "100%", outline: "none",
+        fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
+        lineHeight: 1.45, color: "#1a1a1a", cursor: "text",
+        textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflowY: "auto"
       }}
-      style={{ width: "100%", height: "100%", background: "transparent", border: "none", outline: "none", resize: "none", fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight, lineHeight: 1.45, color: "#1a1a1a", cursor: "text", padding: 0, textAlign: (textAlign || "left") as React.CSSProperties["textAlign"], wordWrap: "break-word", overflowY: "auto" }}
     />
   )
 })
@@ -374,6 +382,7 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showDrawToolbar, setShowDrawToolbar] = useState(true)
   const [customSize, setCustomSize] = useState("16")
 
   // Settings
@@ -410,72 +419,150 @@ export default function NoteApp() {
   const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
-  // Slash (@) menu state
-  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string } | null>(null)
-  const slashMenuRef = useRef<{ x: number; y: number; filter: string } | null>(null)
-  const slashStartRef = useRef<{ node: Text; offset: number } | null>(null)
-
-  const updateSlashMenu = useCallback((v: { x: number; y: number; filter: string } | null) => {
-    slashMenuRef.current = v
-    setSlashMenu(v)
-  }, [])
+  // Slash (@) menu
+  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement } | null>(null)
+  const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement } | null>(null)
+  const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
 
   const closeSlashMenu = useCallback(() => {
-    updateSlashMenu(null)
-    slashStartRef.current = null
-  }, [updateSlashMenu])
+    slashMenuRef.current = null
+    slashAnchorRef.current = null
+    setSlashMenu(null)
+  }, [])
 
   const executeSlashItem = useCallback((action: () => void) => {
-    if (slashStartRef.current && slashMenuRef.current) {
-      const { node, offset: startOffset } = slashStartRef.current
-      const endOffset = Math.min(startOffset + 1 + slashMenuRef.current.filter.length, node.textContent?.length ?? 0)
+    const m = slashMenuRef.current
+    const anchor = slashAnchorRef.current
+    const filter = m?.filter ?? ""
+    
+    if (m?.type === "textarea" && anchor) {
       try {
-        const sel = window.getSelection()
-        if (sel) {
+        const textNode = anchor.node as Text
+        if (textNode.nodeType === Node.TEXT_NODE) {
+          // @ was prevented from being typed — delete only the filter text (no +1 for @)
+          const endOffset = Math.min(anchor.offset + filter.length, textNode.length)
           const r = document.createRange()
-          r.setStart(node, startOffset)
-          r.setEnd(node, endOffset)
-          sel.removeAllRanges()
-          sel.addRange(r)
+          r.setStart(textNode, anchor.offset)
+          r.setEnd(textNode, endOffset)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(r)
           document.execCommand("delete")
         }
       } catch {}
+    } else if (m?.type === "editor" && anchor) {
+      try {
+        const textNode = anchor.node as Text
+        const endOffset = Math.min(anchor.offset + 1 + filter.length, textNode.length)
+        const r = document.createRange()
+        r.setStart(textNode, anchor.offset)
+        r.setEnd(textNode, endOffset)
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(r)
+        document.execCommand("delete")
+      } catch {}
     }
-    updateSlashMenu(null)
-    slashStartRef.current = null
-    editorRef.current?.focus()
-    action()
-  }, [updateSlashMenu, editorRef])
 
-  const detectSlash = useCallback(() => {
+    closeSlashMenu()
+    if (m?.type === "editor") editorRef.current?.focus()
+    else if (m?.target) m.target.focus()
+    
+    action()
+  }, [closeSlashMenu, editorRef])
+
+  const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    // Only call editor.handleEditorKeyDown if it's the main editor
+    if ((e.currentTarget as any) === editorRef.current) {
+      editor.handleEditorKeyDown(e)
+    }
+
+    if (e.key === "@" || e.key === "/") {
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0) return
+      const isBox = (e.currentTarget as any) !== editorRef.current
+
+      // For boxes: store cursor position before any DOM changes — @ won't be typed
+      if (isBox) {
+        const r = sel.getRangeAt(0)
+        slashAnchorRef.current = {
+          node: r.startContainer,
+          offset: r.startContainer.nodeType === Node.TEXT_NODE ? r.startOffset : -1,
+        }
+      }
+
+      const range = sel.getRangeAt(0).cloneRange()
+      range.collapse(true)
+      const span = document.createElement("span")
+      span.textContent = "\u200b"
+      range.insertNode(span)
+      const rect = span.getBoundingClientRect()
+      span.parentNode?.removeChild(span)
+      sel.removeAllRanges()
+      sel.addRange(range)
+
+      const m = { x: rect.left, y: rect.bottom + 8, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement }
+      slashMenuRef.current = m
+      setSlashMenu(m)
+      if (isBox) e.preventDefault()
+    }
+  }, [editor.handleEditorKeyDown])
+
+  const handleEditorInput = useCallback((e: React.FormEvent<HTMLElement>) => {
+    if ((e.currentTarget as any) === editorRef.current) {
+      editor.syncContent()
+    }
+    
+    if (!slashMenuRef.current) return
+
     const sel = window.getSelection()
-    if (!sel || sel.rangeCount === 0) { updateSlashMenu(null); slashStartRef.current = null; return }
+    if (!sel || sel.rangeCount === 0) { closeSlashMenu(); return }
     const range = sel.getRangeAt(0)
     const node = range.startContainer
-    if (node.nodeType !== Node.TEXT_NODE || !editorRef.current?.contains(node)) {
-      updateSlashMenu(null); slashStartRef.current = null; return
-    }
-    const text = node.textContent || ""
-    const offset = range.startOffset
-    const match = text.slice(0, offset).match(/@(\w*)$/)
-    if (match) {
-      const filter = match[1]
-      const atOffset = offset - filter.length - 1
-      if (!slashStartRef.current) {
-        slashStartRef.current = { node: node as Text, offset: atOffset }
-      }
-      const rect = range.getBoundingClientRect()
-      updateSlashMenu({ x: rect.left, y: rect.bottom + 6, filter })
-    } else {
-      updateSlashMenu(null)
-      slashStartRef.current = null
-    }
-  }, [editorRef, updateSlashMenu])
 
-  const handleEditorInput = useCallback(() => {
-    editor.syncContent()
-    detectSlash()
-  }, [editor.syncContent, detectSlash])
+    // Box menu: @ was prevented, compute filter from anchor stored at keydown
+    if (slashMenuRef.current.type === "textarea") {
+      const anchor = slashAnchorRef.current
+      if (!anchor) { closeSlashMenu(); return }
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textNode = node as Text
+        let anchorOffset: number
+        if (anchor.node === node) {
+          anchorOffset = anchor.offset
+        } else if (anchor.offset === -1) {
+          // Box was empty when @ was pressed; first text node just created
+          anchorOffset = 0
+          slashAnchorRef.current = { node: textNode, offset: 0 }
+        } else {
+          closeSlashMenu(); return
+        }
+        if (range.startOffset < anchorOffset) { closeSlashMenu(); return }
+        const filter = textNode.textContent?.slice(anchorOffset, range.startOffset) ?? ""
+        if (filter.includes(" ")) { closeSlashMenu(); return }
+        const updated = { ...slashMenuRef.current, filter }
+        slashMenuRef.current = updated
+        setSlashMenu(updated)
+      } else {
+        closeSlashMenu()
+      }
+      return
+    }
+
+    // Main editor: search for @ or / before cursor
+    if (node.nodeType !== Node.TEXT_NODE) { closeSlashMenu(); return }
+    const textNode = node as Text
+    const textBefore = (textNode.textContent ?? "").slice(0, range.startOffset)
+    const atIdx = textBefore.lastIndexOf("@")
+    const slIdx = textBefore.lastIndexOf("/")
+    const lastIdx = Math.max(atIdx, slIdx)
+    if (lastIdx === -1) { closeSlashMenu(); return }
+    const filter = textBefore.slice(lastIdx + 1)
+    if (filter.includes(" ")) { closeSlashMenu(); return }
+    slashAnchorRef.current = { node: textNode, offset: lastIdx }
+    const updated = { ...slashMenuRef.current, filter }
+    slashMenuRef.current = updated
+    setSlashMenu(updated)
+  }, [editor.syncContent, closeSlashMenu])
 
   // Keyboard shortcuts for tools
   useEffect(() => {
@@ -721,7 +808,7 @@ export default function NoteApp() {
         </button>
 
         {notes.length > 0 && (
-          <DocumentToolbar accent={accent} zoom={zoom} saveSelection={editor.saveSelection} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} openAlert={openAlert} />
+          <DocumentToolbar accent={accent} zoom={zoom} saveSelection={editor.saveSelection} setZoom={setZoom} insertTable={editor.insertTable} insertColumns={editor.insertColumns} openAlert={openAlert} showDrawToolbar={showDrawToolbar} onToggleDrawToolbar={() => setShowDrawToolbar(v => !v)} />
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
@@ -744,11 +831,11 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
                     <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
-                         if (activeTool !== 'select') return
-                         const target = e.target as HTMLElement
-                         if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
-                         boxes.onPaperMouseDown(e)
-                       }}>
+                          if (activeTool !== 'select' && activeTool !== 'text') return
+                          const target = e.target as HTMLElement
+                          if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
+                          boxes.onPaperMouseDown(e)
+                        }}>
 
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} />
 
@@ -762,20 +849,12 @@ export default function NoteApp() {
 
                       <div
                         ref={editorRef}
-                        contentEditable
-                        suppressContentEditableWarning
-                        spellCheck={spellCheck}
-                        className="w-full min-h-[1000px] outline-none"
-                        style={{ fontFamily: `"${editorFont}", Georgia, serif`, caretColor: accent.length > 7 ? accent.slice(0, 7) : accent }}
-                        onKeyDown={editor.handleEditorKeyDown}
-                        onInput={handleEditorInput}
-                        onMouseUp={editor.saveSelection}
-                        onKeyUp={editor.saveSelection}
-                        onBlur={editor.saveSelection}
+                        className="w-full min-h-[1000px] outline-none pointer-events-none"
+                        style={{ fontFamily: `"${editorFont}", Georgia, serif` }}
                       />
 
                       <style>{`
-                        #editor-paper textarea {
+                        #editor-paper [contenteditable] {
                           color: #1a1a1a !important;
                           caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                           opacity: 1 !important;
@@ -839,6 +918,8 @@ export default function NoteApp() {
                           updateBox={boxes.updateBox}
                           updateBoxContent={boxes.updateBoxContent}
                           setSelectedBoxIds={boxes.setSelectedBoxIds}
+                          onKeyDown={handleEditorKeyDown}
+                          onInput={handleEditorInput}
                         />
                       ))}
 
@@ -860,7 +941,7 @@ export default function NoteApp() {
           <RightToolbar theme={theme} accent={accent} gridView={gridView} sketchMode={sketchMode} rightSidebarOpen={rightSidebarOpen} currentPageIdx={currentPageIdx} setRightSidebarOpen={setRightSidebarOpen} setGridView={setGridView} setCarouselIdx={setCarouselIdx} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt} openAlert={openAlert} clearPage={clearPage} autoAlign={boxes.autoAlign} insertCornell={insertCornell} drawLineMode={drawLineMode} setDrawLineMode={setDrawLineMode} />
         )}
         {notes.length > 0 && !gridView && (
-          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} />
+          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
         )}
       </div>
 

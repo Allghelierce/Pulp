@@ -12,6 +12,7 @@ export const SETTINGS_TABS = [
   { id: "appearance",      label: "Appearance",     group: "App"       },
   { id: "editor",          label: "Editor",         group: "App"       },
   { id: "personalization", label: "Personalization",group: "Customize" },
+  { id: "subscription",    label: "Subscription",   group: "Premium"   },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
@@ -101,21 +102,24 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
           </div>
           <nav className="flex-1 overflow-y-auto p-2 space-y-3">
             {visibleGroups.map(group => (
-              <div key={group.name}>
+              <div key={group.name} className={group.name === "Premium" ? "pt-2 mt-2 border-t border-zinc-200/50" : ""}>
                 <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-2 mb-1">{group.name}</p>
-                {group.tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
-                    className={`w-full text-left px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                      activeTab === tab.id
-                        ? "bg-white text-zinc-900 shadow-sm"
-                        : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                {group.tabs.map(tab => {
+                  const isPremium = tab.id === "subscription";
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                        activeTab === tab.id
+                          ? (isPremium ? "bg-amber-100 text-amber-900 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+                          : (isPremium ? "text-amber-600 hover:text-amber-800 hover:bg-amber-50" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60")
+                      }`}
+                    >
+                      {isPremium ? "✨ " : ""}{tab.label}
+                    </button>
+                  );
+                })}
               </div>
             ))}
           </nav>
@@ -286,6 +290,110 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 </div>
               </SettingSection>
             </>)}
+
+            {/* ── Subscription ── */}
+            {activeTab === "subscription" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="text-center space-y-2 mb-8">
+                  <h3 className="text-2xl font-bold text-zinc-800">Choose your plan</h3>
+                  <p className="text-[13px] text-zinc-500">Unlock the full power of Letter Soup</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-5">
+                  {[
+                    {
+                      id: "basic",
+                      name: "Starter",
+                      price: "Free",
+                      period: "Forever",
+                      color: "#71717a",
+                      features: ["100 Monthly AI Drawings", "1GB Cloud Storage", "Basic Page Styles", "Community Support"],
+                      button: "Current Plan",
+                      disabled: true
+                    },
+                    {
+                      id: "pro",
+                      name: "Pro",
+                      price: "$8",
+                      period: "per month",
+                      color: accentColor,
+                      featured: true,
+                      features: ["Unlimited AI Sketches", "10GB Cloud Storage", "All Page Styles", "Priority Support", "Advanced Export"],
+                      button: "Upgrade to Pro"
+                    },
+                    {
+                      id: "lifetime",
+                      name: "Lifetime",
+                      price: "$99",
+                      period: "one-time",
+                      color: "#b45309",
+                      features: ["Everything in Pro", "Lifetime Updates", "Early Beta Access", "Personal Concierge", "Custom Page Design"],
+                      button: "Get Lifetime"
+                    }
+                  ].map(plan => (
+                    <div 
+                      key={plan.id} 
+                      className={`relative flex flex-col p-6 rounded-2xl border transition-all hover:scale-[1.02] ${
+                        plan.featured 
+                          ? "bg-white border-zinc-200 shadow-xl ring-2" 
+                          : "bg-zinc-50/50 border-zinc-200"
+                      }`}
+                      style={{ boxShadow: plan.featured ? `0 0 0 2px ${plan.color}, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)` : undefined }}
+                    >
+                      {plan.featured && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-sm">
+                          Most Popular
+                        </div>
+                      )}
+                      
+                      <div className="mb-6">
+                        <p className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: plan.color }}>{plan.name}</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-extrabold text-zinc-900">{plan.price}</span>
+                          <span className="text-[11px] text-zinc-500">{plan.period}</span>
+                        </div>
+                      </div>
+
+                      <ul className="flex-1 space-y-3 mb-8">
+                        {plan.features.map(f => (
+                          <li key={f} className="flex items-center gap-2.5 text-[11.5px] text-zinc-600">
+                            <svg className="w-4 h-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <button 
+                        disabled={plan.disabled}
+                        className={`w-full py-2.5 rounded-xl text-[12px] font-bold transition-all ${
+                          plan.disabled 
+                            ? "bg-zinc-200 text-zinc-500 cursor-default" 
+                            : "text-white shadow-md hover:shadow-lg hover:opacity-90 active:scale-95"
+                        }`}
+                        style={{ backgroundColor: plan.disabled ? undefined : plan.color }}
+                      >
+                        {plan.button}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 p-5 bg-amber-50 rounded-2xl border border-amber-100 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white text-lg">✨</div>
+                    <div>
+                      <p className="text-[13px] font-bold text-amber-900">Education Discount</p>
+                      <p className="text-[11px] text-amber-700/80">Are you a student or teacher? Get Pro for $4/mo.</p>
+                    </div>
+                  </div>
+                  <button className="text-[11px] font-bold text-amber-700 border-2 border-amber-200 px-4 py-2 rounded-xl hover:bg-amber-100 transition-colors">
+                    Verify School
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

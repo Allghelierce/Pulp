@@ -1,12 +1,13 @@
 "use client"
 import { useState, useRef, useEffect, memo } from "react"
 
-export const FloatingToolbar = memo(function FloatingToolbar({ accent, activeTool, onToolChange, onClearDrawing, onImageUpload }: {
+export const FloatingToolbar = memo(function FloatingToolbar({ accent, activeTool, onToolChange, onClearDrawing, onImageUpload, isVisible }: {
   accent: string
   activeTool: string
   onToolChange: (t: string) => void
   onClearDrawing: () => void
   onImageUpload: (dataUrl: string) => void
+  isVisible: boolean
 }) {
   const [isVertical, setIsVertical] = useState(false)
   const [isLocked, setIsLocked] = useState(true)
@@ -135,8 +136,11 @@ export const FloatingToolbar = memo(function FloatingToolbar({ accent, activeToo
       className={`ls-toolbar fixed z-[100] flex bg-zinc-50 border border-zinc-200/80 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.05)] p-2 gap-1 select-none touch-none overflow-hidden ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isVertical ? 'flex-col items-center content-start' : 'flex-row items-center content-start'}`}
       style={{
         left: pos.x, top: pos.y,
-        transform: `scale(${scale})`, transformOrigin: "top left",
-        transition: dragging.current ? 'none' : 'left 0.15s cubic-bezier(0.2, 0, 0, 1), top 0.15s cubic-bezier(0.2, 0, 0, 1)',
+        transform: `scale(${scale}) translateY(${isVisible ? '0' : '100px'})`, 
+        transformOrigin: "top left",
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? 'auto' : 'none',
+        transition: dragging.current ? 'none' : 'left 0.15s cubic-bezier(0.2, 0, 0, 1), top 0.15s cubic-bezier(0.2, 0, 0, 1), transform 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease',
         backgroundImage: `url("data:image/svg+xml,${svgPattern}")`,
         backgroundSize: "40px 69.28px", backgroundPosition: "0 0",
         backgroundColor: "rgba(250, 250, 250, 0.95)", backdropFilter: "blur(12px)"

@@ -60,8 +60,8 @@ export function useBoxDrawing({
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
       const target = e.target as HTMLElement
-      // Never intercept when typing inside a box's textarea or a plain input
-      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return
+      // Never intercept when typing inside a box or a plain input
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
       const ids = selectedBoxIdsRef.current
       if (ids.size === 0) return
       e.preventDefault()
@@ -216,7 +216,17 @@ export function useBoxDrawing({
           }))
           setSelectedBoxIds(new Set([id]))
           requestAnimationFrame(() => {
-            document.getElementById(`box-${id}`)?.querySelector<HTMLTextAreaElement>('textarea')?.focus()
+            const el = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
+            if (el) {
+              el.focus()
+              // Ensure cursor is inside the new contentEditable
+              const range = document.createRange()
+              range.selectNodeContents(el)
+              range.collapse(false)
+              const sel = window.getSelection()
+              sel?.removeAllRanges()
+              sel?.addRange(range)
+            }
           })
           const { sketchMode, sketchPrompt } = sketchRef.current
           if (sketchMode) {
@@ -302,7 +312,16 @@ export function useBoxDrawing({
 
   const onPaperMouseDown = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current) return
+    
+    // Force blur current element if it's within our editor area
+    if (document.activeElement instanceof HTMLElement && 
+        (document.activeElement.tagName === 'TEXTAREA' || 
+         document.activeElement.hasAttribute('contenteditable') ||
+         document.activeElement.tagName === 'INPUT')) {
+      document.activeElement.blur()
+    }
 
+    e.preventDefault()
     if (sketchRef.current.drawLineMode) {
       const r = paperRef.current.getBoundingClientRect()
       const x = (e.clientX - r.left) / Number(zoomRef.current)

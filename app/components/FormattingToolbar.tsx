@@ -101,10 +101,6 @@ export const FormattingToolbar = memo(function FormattingToolbar({
       {/* Right: Actions */}
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
         
-        <button onClick={()=>openAlert("Full Access","Subscription options coming soon!")} className="flex items-center h-[36px] px-3.5 rounded-[8px] text-[15px] font-medium tracking-wide text-[#b18b32] bg-[#fcf9f2] border border-[#f2e6cf] transition-colors hover:bg-[#f8f0dd] mr-6" title="Upgrade to Full Access">
-          <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4L22 12l-7.6 2.6L12 22l-2.4-7.4L2 12l7.6-2.6z"/></svg>
-          Full Access
-        </button>
 
         {/* Share Button (Elegant) */}
         <button onClick={()=>openAlert("Share note","Sharing is coming soon!")} className="flex items-center h-[36px] px-3.5 rounded-[8px] text-[15px] font-medium tracking-wide text-[#3f3f46] bg-white border border-[#e4e4e7] transition-colors hover:bg-[#f4f4f5] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" title="Share note">
