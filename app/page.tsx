@@ -508,7 +508,7 @@ export default function NoteApp() {
       sel.removeAllRanges()
       sel.addRange(range)
 
-      const m = { x: rect.left, y: rect.bottom + 8, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement }
+      const m = { x: rect.left, y: rect.bottom + 14, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement }
       slashMenuRef.current = m
       setSlashMenu(m)
       if (isBox) e.preventDefault()

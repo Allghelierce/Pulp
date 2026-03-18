@@ -4,6 +4,7 @@ interface SlashItem {
   id: string
   label: string
   shortcut?: string
+  hint?: string
   group: string
   icon: React.ReactNode
   action: () => void
@@ -25,52 +26,46 @@ interface SlashMenuProps {
 export const SlashMenu = memo(function SlashMenu({
   x, y, filter, accent, onSelect, onClose, execCmd, insertHTML, toggleScript, insertBacklink,
 }: SlashMenuProps) {
-  const [activeIdx, setActiveIdx] = useState(0)
+  const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const ref = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLDivElement>(null)
 
   const allItems: SlashItem[] = [
-    { id: "bold", label: "Bold", shortcut: "B", group: "Style",
-      icon: <span style={{ fontWeight: 800, fontSize: 13 }}>B</span>,
+    { id: "bold", label: "Bold", shortcut: "⌘B", group: "Typography",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>,
       action: () => execCmd("bold") },
-    { id: "italic", label: "Italic", shortcut: "I", group: "Style",
-      icon: <span style={{ fontStyle: "italic", fontFamily: "Georgia, serif", fontSize: 14 }}>I</span>,
+    { id: "italic", label: "Italic", shortcut: "⌘I", group: "Typography",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>,
       action: () => execCmd("italic") },
-    { id: "underline", label: "Underline", shortcut: "U", group: "Style",
-      icon: <span style={{ textDecoration: "underline", fontSize: 13 }}>U</span>,
+    { id: "underline", label: "Underline", shortcut: "⌘U", group: "Typography",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>,
       action: () => execCmd("underline") },
-    { id: "strikethrough", label: "Strikethrough", shortcut: "S", group: "Style",
-      icon: <span style={{ textDecoration: "line-through", fontSize: 13 }}>S</span>,
+    { id: "strikethrough", label: "Strikethrough", group: "Typography",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>,
       action: () => execCmd("strikeThrough") },
-    { id: "highlight", label: "Highlight", shortcut: "H", group: "Style",
-      icon: <span style={{ background: "#fef08a", padding: "0 3px", fontSize: 11, fontWeight: 700 }}>H</span>,
+    { id: "highlight", label: "Highlight", group: "Typography", hint: "Yellow",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
       action: () => execCmd("hiliteColor", "#fef08a") },
-    { id: "superscript", label: "Superscript", group: "Style",
-      icon: <span style={{ fontSize: 11 }}>x²</span>,
-      action: () => toggleScript("superscript") },
-    { id: "subscript", label: "Subscript", group: "Style",
-      icon: <span style={{ fontSize: 11 }}>x₂</span>,
-      action: () => toggleScript("subscript") },
-
-    { id: "bullet", label: "Bulleted list", shortcut: "–", group: "List",
-      icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><circle cx="2.5" cy="4.5" r="1.5"/><rect x="5" y="3.5" width="10" height="2" rx="1"/><circle cx="2.5" cy="9" r="1.5"/><rect x="5" y="8" width="10" height="2" rx="1"/><circle cx="2.5" cy="13.5" r="1.5"/><rect x="5" y="12.5" width="10" height="2" rx="1"/></svg>,
+    
+    { id: "bullet", label: "Bulleted list", shortcut: "-", group: "Structure",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
       action: () => execCmd("insertUnorderedList") },
-    { id: "numbered", label: "Numbered list", shortcut: "1.", group: "List",
-      icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><text x="0" y="6" fontSize="6" fontWeight="700">1.</text><rect x="6" y="4" width="9" height="2" rx="1"/><text x="0" y="11" fontSize="6" fontWeight="700">2.</text><rect x="6" y="9" width="9" height="2" rx="1"/><text x="0" y="16" fontSize="6" fontWeight="700">3.</text><rect x="6" y="14" width="9" height="2" rx="1"/></svg>,
+    { id: "numbered", label: "Numbered list", shortcut: "1.", group: "Structure",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="10 6 21 6"/><polyline points="10 12 21 12"/><polyline points="10 18 21 18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>,
       action: () => execCmd("insertOrderedList") },
-    { id: "todo", label: "To-do list", shortcut: "[ ]", group: "List",
-      icon: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="6" height="6" rx="1"/><polyline points="2.5,4 4,5.5 6.5,2.5"/><rect x="1" y="9" width="6" height="6" rx="1"/><line x1="9" y1="4" x2="15" y2="4"/><line x1="9" y1="12" x2="15" y2="12"/></svg>,
+    { id: "todo", label: "To-do list", shortcut: "[]", group: "Structure", hint: "Interactive",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>,
       action: () => insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`) },
 
-    { id: "quote", label: "Quote", shortcut: '"', group: "Block",
-      icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zm12 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>,
+    { id: "quote", label: "Blockquote", shortcut: ">", group: "Structure",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
       action: () => insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`) },
-    { id: "divider", label: "Divider", shortcut: "—", group: "Block",
-      icon: <svg width="13" height="4" viewBox="0 0 16 4" fill="none"><line x1="0" y1="2" x2="16" y2="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+    { id: "divider", label: "Separator", shortcut: "---", group: "Structure",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>,
       action: () => insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>') },
     
-    { id: "backlink", label: "Backlink", group: "Block",
-      icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>,
+    { id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference", hint: "Create subpage",
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>,
       action: () => insertBacklink() },
   ]
 
@@ -86,9 +81,9 @@ export const SlashMenu = memo(function SlashMenu({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min(i + 1, filtered.length - 1)) }
-      else if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max(i - 1, 0)) }
-      else if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); if (filtered[activeIdx]) onSelect(filtered[activeIdx].action) }
+      if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min((i ?? -1) + 1, filtered.length - 1)) }
+      else if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max((i ?? -1) - 1, 0)) }
+      else if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); if (activeIdx !== null && filtered[activeIdx]) onSelect(filtered[activeIdx].action) }
       else if (e.key === "Escape" || e.key === "Tab") { e.stopPropagation(); onClose() }
     }
     document.addEventListener("keydown", handler, true)
@@ -111,17 +106,33 @@ export const SlashMenu = memo(function SlashMenu({
 
   // Flip upward if too close to bottom of viewport
   const menuHeight = Math.min(filtered.length * 40 + 80, 340)
-  const adjustedY = y + menuHeight > window.innerHeight - 20 ? y - menuHeight - 12 : y
+  const adjustedY = y + menuHeight > window.innerHeight - 20 ? y - menuHeight - 24 : y
+  const animationStyles = `
+    .slash-menu-scroll::-webkit-scrollbar { display: none; }
+    .slash-menu-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+  `
 
   return (
-    <div ref={ref} style={{
-      position: "fixed", left: Math.max(8, x), top: adjustedY, zIndex: 9999,
-      background: "#ffffff", border: "1px solid rgba(0,0,0,0.09)",
-      borderRadius: 10, padding: "4px 0",
-      boxShadow: "0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)",
-      minWidth: 240, maxHeight: 340, overflowY: "auto",
-      fontFamily: "'Inter', system-ui, sans-serif",
-    }}>
+    <>
+      <style>{animationStyles}</style>
+      <div 
+        ref={ref} 
+        onMouseLeave={() => setActiveIdx(null)}
+        className="slash-menu-scroll"
+        style={{
+          position: "fixed", left: Math.max(8, x), top: adjustedY, zIndex: 9999,
+          background: "rgba(10, 10, 11, 0.9)", 
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          borderRadius: 6, padding: "6px 0",
+          boxShadow: "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
+          minWidth: 260, maxHeight: 400, overflowY: "auto",
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        }}
+      >
       {filtered.length === 0 ? (
         <div style={{ padding: "10px 14px", fontSize: 12, color: "#a1a1aa" }}>No results</div>
       ) : (() => {
@@ -130,9 +141,8 @@ export const SlashMenu = memo(function SlashMenu({
           <div key={group.label}>
             {group.label && (
               <div style={{
-                fontSize: 10, fontWeight: 600, color: "#a1a1aa", letterSpacing: "0.06em",
-                textTransform: "uppercase", padding: "8px 12px 3px",
-                ...(gi > 0 ? { borderTop: "1px solid rgba(0,0,0,0.06)", marginTop: 4, paddingTop: 10 } : {}),
+                fontSize: 10.5, fontWeight: 650, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em",
+                padding: "12px 14px 6px",
               }}>
                 {group.label}
               </div>
@@ -146,37 +156,61 @@ export const SlashMenu = memo(function SlashMenu({
                   onMouseDown={e => { e.preventDefault(); onSelect(item.action) }}
                   onMouseEnter={() => setActiveIdx(idx)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "5px 10px", margin: "1px 4px", borderRadius: 6,
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "10px 14px", margin: "0 6px", borderRadius: 4,
                     cursor: "pointer",
-                    background: isActive ? "rgba(0,0,0,0.05)" : "transparent",
+                    background: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                    transition: "background 0.06s ease",
                   }}
                 >
                   <div style={{
-                    width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-                    background: "#f4f4f5", border: "1px solid rgba(0,0,0,0.07)",
+                    width: 18, height: 18, flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, color: "#3f3f46",
+                    color: isActive ? "#ffffff" : "#D4AF37",
                   }}>{item.icon}</div>
-                  <div style={{ flex: 1, fontSize: 13, fontWeight: 450, color: "#18181b", letterSpacing: "-0.01em" }}>
-                    {item.label}
+                  
+                  <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 500, color: isActive ? "#ffffff" : "#e4e4e7", letterSpacing: "-0.01em" }}>
+                      {item.label}
+                    </span>
+                    {item.hint && (
+                      <span style={{ 
+                        fontSize: 10, 
+                        background: isActive ? "rgba(255,255,255,0.15)" : "rgba(212, 175, 55, 0.1)",
+                        color: isActive ? "#ffffff" : "#D4AF37",
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                        fontWeight: 650,
+                        letterSpacing: "0.02em"
+                      }}>
+                        {item.hint.toUpperCase()}
+                      </span>
+                    )}
                   </div>
+
                   {item.shortcut && (
-                    <div style={{ fontSize: 11, color: "#a1a1aa" }}>{item.shortcut}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.02em", fontWeight: 500, fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace' }}>
+                      {item.shortcut}
+                    </div>
                   )}
                 </div>
               )
             })}
+            {gi < groups.length - 1 && (
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", margin: "8px 14px 4px" }} />
+            )}
           </div>
         ))
       })()}
+
       <div style={{
-        borderTop: "1px solid rgba(0,0,0,0.06)", margin: "4px 0 0",
-        padding: "5px 14px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderTop: "1px solid rgba(255,255,255,0.06)", margin: "8px 0 0",
+        padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
-        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>Type &apos;@&apos; or &apos;/&apos; to search</span>
-        <span style={{ fontSize: 10.5, color: "#a1a1aa" }}>esc to close</span>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>Type &apos;@&apos; to search</span>
+        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>ESC</span>
       </div>
     </div>
+    </>
   )
 })
