@@ -126,10 +126,10 @@ export const SlashMenu = memo(function SlashMenu({
           backgroundSize: '40px 40px',
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          borderRadius: 6, padding: "6px 0",
-          boxShadow: "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
-          minWidth: 260, maxHeight: 400, overflowY: "auto",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          borderRadius: 6, padding: "5px 0",
+          boxShadow: "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
+          minWidth: 280, maxHeight: 400, overflowY: "auto",
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         }}
       >
@@ -157,10 +157,10 @@ export const SlashMenu = memo(function SlashMenu({
                   onMouseEnter={() => setActiveIdx(idx)}
                   style={{
                     display: "flex", alignItems: "center", gap: 14,
-                    padding: "10px 14px", margin: "0 6px", borderRadius: 4,
+                    padding: "6px 14px", margin: 0, 
                     cursor: "pointer",
                     background: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                    transition: "background 0.06s ease",
+                    transition: "background 0.05s ease",
                   }}
                 >
                   <div style={{
@@ -204,11 +204,11 @@ export const SlashMenu = memo(function SlashMenu({
       })()}
 
       <div style={{
-        borderTop: "1px solid rgba(255,255,255,0.06)", margin: "8px 0 0",
-        padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderTop: "1px solid rgba(255,255,255,0.08)", margin: "4px 0 0",
+        padding: "8px 14px", display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>Type &apos;@&apos; to search</span>
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>ESC</span>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontWeight: 500, letterSpacing: "0.01em" }}>Type &apos;@&apos; to search</span>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>ESC</span>
       </div>
     </div>
     </>
