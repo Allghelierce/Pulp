@@ -242,6 +242,56 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       }
     }
 
+    // Toggle block handling
+    let toggle: HTMLDetailsElement | null = null
+    let summary: HTMLElement | null = null
+    let curr: Node | null = range.startContainer
+    while (curr && curr !== editorRef.current) {
+      if ((curr as HTMLElement).tagName === "SUMMARY") summary = curr as HTMLElement
+      if ((curr as HTMLElement).tagName === "DETAILS" && (curr as HTMLElement).classList.contains("toggle-block")) { toggle = curr as HTMLDetailsElement; break }
+      curr = curr.parentNode
+    }
+
+    if (toggle && summary) {
+      const headerSpan = summary.querySelector('span')
+      if (e.key === "Enter") {
+        e.preventDefault(); e.stopPropagation()
+        toggle.open = true
+        setTimeout(() => {
+          const content = toggle?.querySelector('div[data-placeholder*="Enter content"]') as HTMLElement | null
+          if (!content) return
+          if (!content.firstChild) content.innerHTML = "<br>"
+          const r = document.createRange()
+          r.setStart(content, 0); r.collapse(true)
+          editorRef.current?.focus()
+          const s = window.getSelection()
+          s?.removeAllRanges(); s?.addRange(r)
+          savedRange.current = r.cloneRange()
+        }, 0)
+        return
+      }
+      if (e.key === "Backspace") {
+        const isHeaderEmpty = !headerSpan || !headerSpan.textContent?.replace(/\u200B/g, "").trim()
+        if (isHeaderEmpty) {
+          e.preventDefault(); e.stopPropagation()
+          const prev = toggle.previousSibling
+          const next = toggle.nextSibling
+          toggle.remove()
+          const r = document.createRange()
+          if (prev) {
+            r.setStartAfter(prev); r.collapse(true)
+          } else if (next) {
+            r.setStart(next, 0); r.collapse(true)
+          } else {
+            r.setStart(editorRef.current!, 0); r.collapse(true)
+          }
+          const s = window.getSelection()
+          s?.removeAllRanges(); s?.addRange(r)
+          commitToState(); return
+        }
+      }
+    }
+
     // Tab → table navigation
     if (e.key === "Tab") {
       let cell: HTMLElement | null = null, cn: Node | null = range.startContainer

@@ -199,7 +199,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
     cursor: "pointer", padding: "2px 6px", borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "-0.01em",
   }
-  const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z"/></svg>
+  const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
@@ -245,9 +245,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
           {(["left", "center", "right"] as const).map(align => (
             <button key={align} style={{ ...triggerStyle, padding: "2px 4px", ...(box.textAlign === align ? { color: accentSolid, background: "rgba(0,0,0,0.06)" } : {}) }}
               onClick={() => onUpdateBox(box.id, { textAlign: align })}>
-              {align === "left"   && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z"/></svg>}
-              {align === "center" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z"/></svg>}
-              {align === "right"  && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z"/></svg>}
+              {align === "left" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z" /></svg>}
+              {align === "center" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z" /></svg>}
+              {align === "right" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z" /></svg>}
             </button>
           ))}
         </div>
@@ -410,13 +410,13 @@ export default function NoteApp() {
   )
 
   // Dialog helpers
-  const openPrompt  = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
+  const openPrompt = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
   const openConfirm = useCallback((title: string, message: string, confirmLabel: string, danger: boolean, onConfirm: () => void) => setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm }), [])
-  const openAlert   = useCallback((title: string, message?: string) => setDialog({ type: "alert", title, message }), [])
+  const openAlert = useCallback((title: string, message?: string) => setDialog({ type: "alert", title, message }), [])
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
-  const boxes  = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
+  const boxes = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
   // Slash (@) menu
@@ -434,7 +434,7 @@ export default function NoteApp() {
     const m = slashMenuRef.current
     const anchor = slashAnchorRef.current
     const filter = m?.filter ?? ""
-    
+
     if (m?.type === "textarea" && anchor) {
       try {
         const textNode = anchor.node as Text
@@ -449,7 +449,7 @@ export default function NoteApp() {
           sel?.addRange(r)
           document.execCommand("delete")
         }
-      } catch {}
+      } catch { }
     } else if (m?.type === "editor" && anchor) {
       try {
         const textNode = anchor.node as Text
@@ -461,13 +461,13 @@ export default function NoteApp() {
         sel?.removeAllRanges()
         sel?.addRange(r)
         document.execCommand("delete")
-      } catch {}
+      } catch { }
     }
 
     closeSlashMenu()
     if (m?.type === "editor") editorRef.current?.focus()
     else if (m?.target) m.target.focus()
-    
+
     editor.saveSelection()
     action()
   }, [closeSlashMenu, editorRef, editor])
@@ -519,7 +519,7 @@ export default function NoteApp() {
     if ((e.currentTarget as any) === editorRef.current) {
       editor.syncContent()
     }
-    
+
     if (!slashMenuRef.current) return
 
     const sel = window.getSelection()
@@ -623,17 +623,17 @@ export default function NoteApp() {
     supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
       if (!data?.settings) return
       const s = data.settings
-      if (s.accent)                    setAccent(s.accent)
-      if (s.theme)                     setTheme(s.theme)
-      if (s.autoSave      !== undefined) setAutoSave(s.autoSave)
-      if (s.spellCheck    !== undefined) setSpellCheck(s.spellCheck)
-      if (s.editorFont)                setEditorFont(s.editorFont)
-      if (s.lineSpacing)               setLineSpacing(s.lineSpacing)
-      if (s.paperStyle)                setPaperStyle(s.paperStyle)
-      if (s.showBinding   !== undefined) setShowBinding(s.showBinding)
-      if (s.reduceMotion  !== undefined) setReduceMotion(s.reduceMotion)
+      if (s.accent) setAccent(s.accent)
+      if (s.theme) setTheme(s.theme)
+      if (s.autoSave !== undefined) setAutoSave(s.autoSave)
+      if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
+      if (s.editorFont) setEditorFont(s.editorFont)
+      if (s.lineSpacing) setLineSpacing(s.lineSpacing)
+      if (s.paperStyle) setPaperStyle(s.paperStyle)
+      if (s.showBinding !== undefined) setShowBinding(s.showBinding)
+      if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
       if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
-      if (s.bgEffect      !== undefined) setBgEffect(s.bgEffect)
+      if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
     })
   }, [user])
 
@@ -703,7 +703,7 @@ export default function NoteApp() {
       const newId = uid()
       const newNote = { id: newId, subject: name.trim(), pages: [""], folderId: null, boxes: {} }
       setNotes(prev => [...prev, newNote])
-      
+
       // Explicitly save the new note to Supabase if logged in
       if (user) {
         await supabase.from("notes").insert({
@@ -715,13 +715,13 @@ export default function NoteApp() {
           user_id: user.id
         })
       }
-      
+
       const color = accent.length > 7 ? accent.slice(0, 7) : accent
       const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display: inline-flex; align-items: center; gap: 4px; background: ${color}15; color: ${color}; border: 1px solid ${color}33; padding: 1px 8px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin: 0 2px; transition: all 0.2s; user-select: none; -webkit-user-modify: read-only;">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
         ${name.trim()}
       </span>&nbsp;`
-      
+
       editor.insertHTML(linkHtml)
     })
   }, [accent, activeNote, editor, openPrompt, user])
@@ -900,17 +900,17 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
                     <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
-                          if (activeTool !== 'select' && activeTool !== 'text') return
-                          const target = e.target as HTMLElement
-                          if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
-                          boxes.onPaperMouseDown(e)
-                        }}>
+                      if (activeTool !== 'select' && activeTool !== 'text') return
+                      const target = e.target as HTMLElement
+                      if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
+                      boxes.onPaperMouseDown(e)
+                    }}>
 
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} />
 
                       <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
                       <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
-                      
+
                       {/* Render custom user-drawn lines */}
                       {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (
                         <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
@@ -1005,10 +1005,10 @@ export default function NoteApp() {
             </main>
           )}
 
-          <RightSidebar 
-            isOpen={contentSidebarOpen} 
-            onClose={() => setContentSidebarOpen(false)} 
-            theme={theme} 
+          <RightSidebar
+            isOpen={contentSidebarOpen}
+            onClose={() => setContentSidebarOpen(false)}
+            theme={theme}
             accent={accent}
             sketchMode={sketchMode}
             setSketchMode={setSketchMode}

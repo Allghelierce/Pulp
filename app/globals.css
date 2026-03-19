@@ -44,3 +44,25 @@ body {
   resize: both;
   overflow: hidden;
 }
+
+/* Toggle block styling */
+details.toggle-block summary::-webkit-details-marker {
+  display: none;
+}
+details.toggle-block summary {
+  list-style: none;
+}
+details.toggle-block[open] .toggle-caret-icon {
+  transform: rotate(90deg);
+}
+details.toggle-block summary:focus {
+  outline: none;
+}
+
+/* Placeholder styling for toggle block */
+[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  cursor: text;
+}

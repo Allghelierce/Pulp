@@ -8,23 +8,23 @@ import { SettingSection } from "./SettingSection"
 // ── Settings tabs config ───────────────────────────────────────────────────
 
 export const SETTINGS_TABS = [
-  { id: "general",         label: "General",        group: "App"       },
-  { id: "appearance",      label: "Appearance",     group: "App"       },
-  { id: "editor",          label: "Editor",         group: "App"       },
-  { id: "personalization", label: "Personalization",group: "Customize" },
-  { id: "subscription",    label: "Subscription",   group: "Premium"   },
+  { id: "general", label: "General", group: "App" },
+  { id: "appearance", label: "Appearance", group: "App" },
+  { id: "editor", label: "Editor", group: "App" },
+  { id: "personalization", label: "Personalization", group: "Customize" },
+  { id: "subscription", label: "Subscription", group: "Premium" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS = [
-  { hex: "#4a081eff", name: "Crimson"  },
-  { hex: "#1e3a8a", name: "Cobalt"   },
-  { hex: "#166534", name: "Forest"   },
-  { hex: "#92400e", name: "Amber"    },
-  { hex: "#4c1d95", name: "Violet"   },
-  { hex: "#0f4c5c", name: "Teal"     },
-  { hex: "#881337", name: "Rose"     },
-  { hex: "#374151", name: "Slate"    },
+  { hex: "#4a081eff", name: "Crimson" },
+  { hex: "#1e3a8a", name: "Cobalt" },
+  { hex: "#166534", name: "Forest" },
+  { hex: "#92400e", name: "Amber" },
+  { hex: "#4c1d95", name: "Violet" },
+  { hex: "#0f4c5c", name: "Teal" },
+  { hex: "#881337", name: "Rose" },
+  { hex: "#374151", name: "Slate" },
 ]
 
 // ── Main settings modal ────────────────────────────────────────────────────
@@ -43,22 +43,22 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   autoSave: boolean; setAutoSave: (v: boolean) => void
   spellCheck: boolean; setSpellCheck: (v: boolean) => void
   editorFont: string; setEditorFont: (v: string) => void
-  lineSpacing: "compact"|"normal"|"relaxed"; setLineSpacing: (v: "compact"|"normal"|"relaxed") => void
-  paperStyle: "lined"|"dotgrid"|"plain"|"stenopad"; setPaperStyle: (v: "lined"|"dotgrid"|"plain"|"stenopad") => void
+  lineSpacing: "compact" | "normal" | "relaxed"; setLineSpacing: (v: "compact" | "normal" | "relaxed") => void
+  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad") => void
   showBinding: boolean; setShowBinding: (v: boolean) => void
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
   bgEffect: boolean; setBgEffect: (v: boolean) => void
 }) {
-  const [activeTab, setActiveTab]         = useState<SettingsTabId>("general")
-  const [searchQuery, setSearchQuery]     = useState("")
+  const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
+  const [searchQuery, setSearchQuery] = useState("")
 
   const visibleGroups = searchQuery
     ? [{ name: "Results", tabs: SETTINGS_TABS.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase())) }]
     : Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
-        name: g,
-        tabs: SETTINGS_TABS.filter(t => t.group === g),
-      }))
+      name: g,
+      tabs: SETTINGS_TABS.filter(t => t.group === g),
+    }))
 
   const SegmentedControl = ({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) => (
     <div className="flex rounded-lg overflow-hidden border border-zinc-200 text-[11px] font-semibold">
@@ -110,11 +110,10 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                        activeTab === tab.id
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${activeTab === tab.id
                           ? (isPremium ? "bg-amber-100 text-amber-900 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
                           : (isPremium ? "text-amber-600 hover:text-amber-800 hover:bg-amber-50" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60")
-                      }`}
+                        }`}
                     >
                       {isPremium ? "✨ " : ""}{tab.label}
                     </button>
@@ -199,7 +198,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Color scheme"
                   description="Choose how Letter Soup looks to you"
-                  control={<SegmentedControl options={[["light","Light"],["dark","Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} />}
+                  control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} />}
                 />
                 <SettingRow
                   title="Reduce motion"
@@ -223,7 +222,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Page style"
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined","Lined"],["dotgrid","Dot Grid"],["plain","Plain"],["stenopad","Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Dot Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
                 />
                 <SettingRow
                   title="Show spiral binding"
@@ -264,7 +263,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 />
                 <SettingRow
                   title="Line spacing"
-                  control={<SegmentedControl options={[["compact","Compact"],["normal","Normal"],["relaxed","Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact"|"normal"|"relaxed")} />}
+                  control={<SegmentedControl options={[["compact", "Compact"], ["normal", "Normal"], ["relaxed", "Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact" | "normal" | "relaxed")} />}
                 />
               </SettingSection>
             </>)}
@@ -331,13 +330,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                       button: "Get Lifetime"
                     }
                   ].map(plan => (
-                    <div 
-                      key={plan.id} 
-                      className={`relative flex flex-col p-6 rounded-2xl border transition-all hover:scale-[1.02] ${
-                        plan.featured 
-                          ? "bg-white border-zinc-200 shadow-xl ring-2" 
+                    <div
+                      key={plan.id}
+                      className={`relative flex flex-col p-6 rounded-2xl border transition-all hover:scale-[1.02] ${plan.featured
+                          ? "bg-white border-zinc-200 shadow-xl ring-2"
                           : "bg-zinc-50/50 border-zinc-200"
-                      }`}
+                        }`}
                       style={{ boxShadow: plan.featured ? `0 0 0 2px ${plan.color}, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)` : undefined }}
                     >
                       {plan.featured && (
@@ -345,7 +343,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                           Most Popular
                         </div>
                       )}
-                      
+
                       <div className="mb-6">
                         <p className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: plan.color }}>{plan.name}</p>
                         <div className="flex items-baseline gap-1">
@@ -365,13 +363,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                         ))}
                       </ul>
 
-                      <button 
+                      <button
                         disabled={plan.disabled}
-                        className={`w-full py-2.5 rounded-xl text-[12px] font-bold transition-all ${
-                          plan.disabled 
-                            ? "bg-zinc-200 text-zinc-500 cursor-default" 
+                        className={`w-full py-2.5 rounded-xl text-[12px] font-bold transition-all ${plan.disabled
+                            ? "bg-zinc-200 text-zinc-500 cursor-default"
                             : "text-white shadow-md hover:shadow-lg hover:opacity-90 active:scale-95"
-                        }`}
+                          }`}
                         style={{ backgroundColor: plan.disabled ? undefined : plan.color }}
                       >
                         {plan.button}

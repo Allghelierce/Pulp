@@ -38,9 +38,22 @@ export const Sidebar = memo(function Sidebar({
   return (
     <div id="app-sidebar" className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`} style={{ scrollbarGutter: "stable" }}>
       <div className="p-4 border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-3 mb-5 cursor-default">
-          <img src="/Gemini_Generated_Image_ctyul6ctyul6ctyu.png" width="36" height="36" style={{ filter: "invert(1)", objectFit: "contain" }} alt="Logo" />
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: '"Licorice", cursive' }}> Letter Soup </h1>
+        <div className="flex items-center gap-2.5 mb-5 cursor-default">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Rind ring */}
+            <circle cx="14" cy="14" r="13" fill="#B8661A"/>
+            {/* Flesh */}
+            <circle cx="14" cy="14" r="11" fill="#F5A030"/>
+            {/* Segment dividers — 3 lines = 6 segments */}
+            <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55"/>
+            <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55"/>
+            <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55"/>
+            {/* Center pip */}
+            <circle cx="14" cy="14" r="1.8" fill="#B8661A" fillOpacity="0.75"/>
+            {/* Shine */}
+            <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none"/>
+          </svg>
+          <h1 className="text-3xl text-white" style={{ fontFamily: '"Original Surfer", cursive', letterSpacing: '0.01em' }}>Pulp</h1>
         </div>
         <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
       </div>
