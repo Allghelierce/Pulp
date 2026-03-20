@@ -196,6 +196,24 @@ export function useBoxDrawing({
       setLoadingBoxId(null)
     }
   }, [setNotes])
+  
+  const rewriteBox = useCallback(async (text: string, boxId: string) => {
+    if (!text.trim() || !activeTabIdRef.current) return
+    setLoadingBoxId(boxId)
+    try {
+      const res = await fetch('/api/rewrite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text.trim() }) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (!data.rewritten) throw new Error('No rewritten text returned')
+      setNotes(prev => prev.map(n => n.id !== activeTabIdRef.current ? n : {
+        ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: (n.boxes[currentPageIdxRef.current] || []).map(b => b.id === boxId ? { ...b, content: data.rewritten } : b) }
+      }))
+    } catch (err) {
+      console.error('Rewrite failed:', err)
+    } finally {
+      setLoadingBoxId(null)
+    }
+  }, [setNotes])
 
   const handleUp = useRef((e: MouseEvent) => {
     const scale = s()
@@ -440,6 +458,6 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
-    autoAlign, setBoxAlignment
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, setBoxAlignment])
+    autoAlign, setBoxAlignment, generateSketch, rewriteBox
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, setBoxAlignment, generateSketch, rewriteBox])
 }

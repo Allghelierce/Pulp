@@ -62,7 +62,7 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 // ─── Memoized single box — only re-renders when THIS box data or selection changes ─
-const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, theme, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput }: {
+const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, theme, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput, onRewrite, onImageGen }: {
   box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
@@ -72,6 +72,8 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
   setSelectedBoxIds: (v: Set<string> | ((p: Set<string>) => Set<string>)) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
+  onRewrite: (text: string, id: string) => void
+  onImageGen: (text: string, id: string) => void
 }) {
   const corners: [string, React.CSSProperties][] = [
     ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
@@ -104,9 +106,9 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
           style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
       )}
       {isSelected && !isImage && (
-        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} />
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen} />
       )}
-      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+      <div onMouseDown={e => e.stopPropagation()} style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -119,6 +121,7 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
             boxFontFamily={box.boxFontFamily}
             boxFontSize={box.boxFontSize}
             boxHeadingStyle={box.boxHeadingStyle}
+            boxHighlightColor={box.boxHighlightColor}
             onUpdate={updateBoxContent}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
             onKeyDown={onKeyDown}
@@ -140,24 +143,28 @@ const BOX_FONTS = [
 ]
 const BOX_SIZES = [8, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 64, 72]
 const BOX_STYLES = [
-  { value: "default", label: "Default" },
+  { value: "default", label: "NA" },
   { value: "h1", label: "H1" },
   { value: "h2", label: "H2" },
   { value: "h3", label: "H3" },
 ]
 
-const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox }: {
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox, onRewrite, onImageGen }: {
   box: TextBoxType; accentSolid: string; theme: "light" | "dark"
   onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
+  onRewrite: (text: string, id: string) => void
+  onImageGen: (text: string, id: string) => void
 }) {
-  const [open, setOpen] = useState<"style" | "font" | "size" | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
+  const [open, setOpen] = useState<"style" | "font" | "size" | "color" | null>(null)
+  const [collapsed, setCollapsed] = useState(true)
+  const [aiOpen, setAiOpen] = useState(false)
   const [anchorLeft, setAnchorLeft] = useState(0)
   const [customSize, setCustomSize] = useState("")
   const ref = useRef<HTMLDivElement>(null)
   const styleBtnRef = useRef<HTMLButtonElement>(null)
   const fontBtnRef = useRef<HTMLButtonElement>(null)
   const sizeBtnRef = useRef<HTMLButtonElement>(null)
+  const colorBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -166,8 +173,8 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
-  const openDropdown = (type: "style" | "font" | "size") => {
-    const btnRef = type === "style" ? styleBtnRef : type === "font" ? fontBtnRef : sizeBtnRef
+  const openDropdown = (type: any) => {
+    const btnRef = type === "style" ? styleBtnRef : type === "font" ? fontBtnRef : type === "size" ? sizeBtnRef : colorBtnRef
     if (btnRef.current && ref.current) {
       const b = btnRef.current.getBoundingClientRect()
       const t = ref.current.getBoundingClientRect()
@@ -196,50 +203,50 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     letterSpacing: "-0.01em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 500, color: dk ? "#a1a1aa" : "#3f3f46", background: "none", border: "none",
+    fontSize: 11, fontWeight: 700, color: dk ? "#FAFAFA" : "#18181b", background: "none", border: "none",
     cursor: "pointer", padding: "2px 6px", borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "-0.01em",
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
 
+  const highlightColors = ["transparent", "#fef08a", "#bbf7d0", "#bae6fd", "#fed7aa", "#f5d0fe"]
+
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
-      position: "absolute", top: -30, left: 0,
+      position: "absolute", top: -34, left: 0,
       display: "flex", alignItems: "center", gap: 0,
-      background: collapsed ? "transparent" : (dk ? "#1f1f23" : "#ffffff"),
-      border: `1px solid ${collapsed ? "transparent" : (dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.09)")}`,
-      borderRadius: 6, padding: "2px 3px",
-      boxShadow: collapsed ? "none" : (dk ? "0 2px 8px rgba(0,0,0,0.4)" : "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)"),
-      transition: "background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease",
-      zIndex: 200, whiteSpace: "nowrap",
+      background: "transparent",
+      border: "none",
+      zIndex: 9999, whiteSpace: "nowrap",
+      pointerEvents: "auto",
+      maxWidth: box.w,
     }}>
-      {/* Eye toggle */}
-      <button onClick={() => { setCollapsed(c => !c); setOpen(null) }}
-        title={collapsed ? "Show formatting" : "Hide formatting"}
-        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 5px", display: "flex", alignItems: "center", color: accentSolid, borderRadius: 4 }}>
-        {collapsed ? (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
-            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-            <line x1="1" y1="1" x2="23" y2="23" />
-          </svg>
-        ) : (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-        )}
-      </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        {/* Eye toggle */}
+        <button onClick={() => { setCollapsed(c => !c); setAiOpen(false); setOpen(null) }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px 4px 0", display: "flex", alignItems: "center", color: !collapsed ? accentSolid : (dk ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)"), borderRadius: 4 }}>
+          {collapsed ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+          )}
+        </button>
 
-      {/* Triggers inside overflow:hidden for the slide animation — NO dropdown panels here */}
-      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 320, transition: "max-width 0.32s cubic-bezier(0.4,0,0.2,1)" }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 1, paddingLeft: 1,
-          opacity: collapsed ? 0 : 1,
-          transform: collapsed ? "translateX(-8px)" : "translateX(0)",
-          transition: "opacity 0.18s ease, transform 0.28s cubic-bezier(0.4,0,0.2,1)",
-        }}>
-          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px 0 1px", flexShrink: 0 }} />
+        {/* Sparkles toggle (@ Menu) */}
+        <button onClick={() => { setAiOpen(a => !a); setCollapsed(true); setOpen(null) }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", color: aiOpen ? accentSolid : (dk ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)"), borderRadius: 4 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+            <path d="M5 3L6 4M19 21L20 22M5 21L6 20M19 3L20 2" />
+          </svg>
+        </button>
+      </div>
+
+      {( !collapsed || aiOpen ) && <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", margin: "0 8px", flexShrink: 0 }} />}
+
+      {/* Formatting Menu */}
+      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 400, transition: "max-width 0.3s ease" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 1, opacity: collapsed ? 0 : 1, transition: "opacity 0.2s" }}>
           <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
@@ -249,73 +256,60 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           <button ref={sizeBtnRef} style={triggerStyle} onClick={() => openDropdown("size")}>
             {currentSize}px {chevron}
           </button>
-          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px", flexShrink: 0 }} />
+
+          <button ref={colorBtnRef} style={{ ...triggerStyle, paddingLeft: 4 }} onClick={() => openDropdown("color")}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><path d="m18 10 3-3"/></svg>
+            <div style={{ width: 10, height: 10, borderRadius: 2, background: box.boxHighlightColor || "transparent", border: "1px solid rgba(0,0,0,0.1)", marginLeft: 2 }} />
+          </button>
+
+          <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => { 
+            onUpdateBox(box.id, { boxFontFamily: "", boxFontSize: 14, boxHeadingStyle: "default", boxHighlightColor: "transparent" }); setOpen(null) }}>
+            Clear
+          </button>
+          
+          {open === "style" && <div style={dropdownBase}>{BOX_STYLES.map(s => <button key={s.value} style={optionBtn(styleKey === s.value)} onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as any }); setOpen(null) }}>{s.label}</button>)}</div>}
+          {open === "font" && <div style={dropdownBase}>{BOX_FONTS.map(f => <button key={f.value} style={optionBtn(currentFont.value === f.value)} onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>{f.label}</button>)}</div>}
+          {open === "size" && (
+            <div style={{ ...dropdownBase, display: "flex", flexDirection: "column", maxHeight: 220 }}>
+              <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid rgba(0,0,0,0.06)", marginBottom: 3, flexShrink: 0 }}>
+                <input type="number" min={1} max={400} placeholder="Custom…" value={customSize} onChange={e => setCustomSize(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" && customSize) { const n = parseInt(customSize); if (n > 0) { onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") } } }} style={{ width: "100%", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.10)"}`, borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: dk ? "#e4e4e7" : "#18181b", background: dk ? "#2a2a2e" : "#fafafa" }} />
+              </div>
+              <div style={{ overflowY: "auto" }}>
+                {BOX_SIZES.map(sz => <button key={sz} style={optionBtn(currentSize === sz)} onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>{sz}px</button>)}
+              </div>
+            </div>
+          )}
+          {open === "color" && (
+            <div style={{ ...dropdownBase, display: "flex", gap: 3, padding: 6 }}>
+              {highlightColors.map(c => <button key={c} onClick={() => { onUpdateBox(box.id, { boxHighlightColor: c }); setOpen(null) }} style={{ width: 16, height: 16, borderRadius: 2, background: c, border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer" }} />)}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* AI Menu */}
+      <div style={{ overflow: "hidden", maxWidth: aiOpen ? 400 : 0, transition: "max-width 0.3s ease" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, opacity: aiOpen ? 1 : 0, transition: "opacity 0.2s" }}>
+          <button style={triggerStyle} onClick={() => { onRewrite(box.content, box.id); setAiOpen(false) }}>Rewrite</button>
+          <button style={triggerStyle} onClick={() => { onImageGen(box.content, box.id); setAiOpen(false) }}>Img Gen</button>
+          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", margin: "0 6px" }} />
           {(["left", "center", "right"] as const).map(align => (
-            <button key={align} style={{ ...triggerStyle, padding: "2px 4px", ...(box.textAlign === align ? { color: accentSolid, background: "rgba(0,0,0,0.06)" } : {}) }}
+            <button key={align} style={{ ...triggerStyle, padding: "2px 4px", color: box.textAlign === align ? accentSolid : triggerStyle.color }}
               onClick={() => onUpdateBox(box.id, { textAlign: align })}>
-              {align === "left" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h12v2H2v-2z" /></svg>}
-              {align === "center" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm-2 4h12v2H2v-2z" /></svg>}
-              {align === "right" && <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm4 4h8v2H6V7zm-4 4h12v2H2v-2z" /></svg>}
+              {align === "left" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>}
+              {align === "center" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>}
+              {align === "right" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>}
             </button>
           ))}
         </div>
       </div>
-
-      {/* Dropdown panels rendered as siblings to the overflow wrapper — not clipped by it */}
-      {open === "style" && (
-        <div style={dropdownBase}>
-          {BOX_STYLES.map(s => (
-            <button key={s.value} style={{ ...optionBtn(styleKey === s.value), fontWeight: s.value !== "default" ? 600 : 400 }}
-              onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as TextBoxType["boxHeadingStyle"] }); setOpen(null) }}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      )}
-      {open === "font" && (
-        <div style={dropdownBase}>
-          {BOX_FONTS.map(f => (
-            <button key={f.value} style={{ ...optionBtn((box.boxFontFamily ?? "") === f.value), fontFamily: f.value || '"EB Garamond", Georgia, serif' }}
-              onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>
-              {f.label}
-            </button>
-          ))}
-        </div>
-      )}
-      {open === "size" && (
-        <div style={{ ...dropdownBase, display: "flex", flexDirection: "column", maxHeight: 220 }}>
-          <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid rgba(0,0,0,0.06)", marginBottom: 3, flexShrink: 0 }}>
-            <input
-              type="number" min={1} max={400} placeholder="Custom…"
-              value={customSize}
-              onChange={e => setCustomSize(e.target.value)}
-              onKeyDown={e => {
-                e.stopPropagation()
-                if (e.key === "Enter" && customSize) {
-                  const n = parseInt(customSize)
-                  if (n > 0) { onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") }
-                }
-              }}
-              style={{ width: "100%", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.10)"}`, borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: dk ? "#e4e4e7" : "#18181b", background: dk ? "#2a2a2e" : "#fafafa" }}
-            />
-          </div>
-          <div style={{ overflowY: "auto" }}>
-            {BOX_SIZES.map(sz => (
-              <button key={sz} style={optionBtn(currentSize === sz)}
-                onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>
-                {sz}px
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 })
 
-const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus, onKeyDown, onInput }: {
+const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxHighlightColor, onUpdate, onFocus, onKeyDown, onInput }: {
   id: string; content: string; textAlign?: string
-  boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string
+  boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
   onUpdate: (id: string, v: string) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -362,7 +356,8 @@ const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontF
         width: "100%", height: "100%", outline: "none",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
         lineHeight: 1.45, color: "#1a1a1a", cursor: "text",
-        textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflowY: "auto"
+        textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflowY: "auto",
+        backgroundColor: boxHighlightColor || "transparent",
       }}
     />
   )
@@ -672,7 +667,7 @@ export default function NoteApp() {
   useEffect(() => {
     if (!autoSave || isLoading || !activeNote || !user) return
     const timer = setTimeout(async () => {
-      const { error } = await supabase.from("notes").upsert({ id: activeNote.id, subject: activeNote.subject, pages: activeNote.pages, boxes: activeNote.boxes, folder_id: activeNote.folderId, user_id: user.id })
+      const { error } = await supabase.from("notes").upsert({ id: activeNote.id, subject: activeNote.subject, pages: activeNote.pages, boxes: activeNote.boxes, folder_id: activeNote.folderId, icon: activeNote.icon ?? null, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
     }, 800)
     return () => clearTimeout(timer)
@@ -696,7 +691,7 @@ export default function NoteApp() {
       if (!u) { setNotes([]); setActiveTabId(null); setIsLoading(false); return }
       const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
       if (!error && data?.length) {
-        setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null })))
+        setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined })))
         setActiveTabId(data[0].id)
       } else { setNotes([]); setActiveTabId(null) }
       setIsLoading(false)
@@ -757,6 +752,11 @@ export default function NoteApp() {
   const setNoteParent = useCallback((id: string, parentId: string | undefined) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, parentId } : n))
   }, [])
+
+  const changeNoteIcon = useCallback((id: string, icon: string) => {
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, icon } : n))
+    if (user) supabase.from("notes").update({ icon }).eq("id", id).then(({ error }) => { if (error) console.error("Icon save failed:", error.message) })
+  }, [user])
 
   const renameNote = (id: string, currentName: string) =>
     openPrompt("Rename note", currentName, "Note name…", "Rename", newName => {
@@ -888,7 +888,7 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} />
+      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
@@ -1023,7 +1023,7 @@ export default function NoteApp() {
 
                       {(activeNote.boxes[currentPageIdx] || []).map(box => (
                         <BoxItem
-                          key={box.id}
+                          key={`${box.id}-${boxes.selectionVersion}`}
                           box={box}
                           isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                           loadingBoxId={boxes.loadingBoxId}
@@ -1037,44 +1037,46 @@ export default function NoteApp() {
                           setSelectedBoxIds={boxes.setSelectedBoxIds}
                           onKeyDown={handleEditorKeyDown}
                           onInput={handleEditorInput}
+                          onRewrite={boxes.rewriteBox}
+                          onImageGen={boxes.generateSketch}
                         />
                       ))}
 
                       {/* Top Right Navigation */}
                       <div className="absolute top-6 right-8 flex items-center gap-1.5 z-50 no-print">
-                        <button 
-                          disabled={currentPageIdx === 0} 
+                        <button
+                          disabled={currentPageIdx === 0}
                           onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
                           className={`p-2 rounded-full transition-all ${currentPageIdx === 0 ? "opacity-20 grayscale" : "hover:bg-black/5 hover:scale-110 active:scale-95"}`}
                           style={{ color: accent }}
                           title="Previous Page"
                         >
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                         </button>
-                        <button 
-                          onClick={() => { 
-                            editor.flushSync(); 
-                            if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1); 
-                            else { 
-                              const np = [...activeNote.pages, ""]; 
-                              setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n)); 
-                              setCurrentPageIdx(activeNote.pages.length) 
-                            } 
+                        <button
+                          onClick={() => {
+                            editor.flushSync();
+                            if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
+                            else {
+                              const np = [...activeNote.pages, ""];
+                              setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
+                              setCurrentPageIdx(activeNote.pages.length)
+                            }
                           }}
                           className="p-2 hover:bg-black/5 hover:scale-110 active:scale-95 rounded-full transition-all"
                           style={{ color: accent }}
                           title="Next Page / Add Page"
                         >
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                         </button>
                       </div>
 
                       {/* Bottom Right Page Number */}
-                      <div 
-                        className="absolute bottom-10 right-12 z-50 pointer-events-none select-none no-print" 
-                        style={{ 
-                          fontFamily: 'var(--font-caveat)', 
-                          fontSize: '38px', 
+                      <div
+                        className="absolute bottom-10 right-12 z-50 pointer-events-none select-none no-print"
+                        style={{
+                          fontFamily: 'var(--font-caveat)',
+                          fontSize: '38px',
                           color: accent,
                           opacity: 0.35,
                           transform: 'rotate(-5deg)'

@@ -1,4 +1,4 @@
-export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3" }
+export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3"; boxHighlightColor?: string }
 export type BoxesMap = { [pageIdx: number]: TextBox[] }
 export interface NoteData {
   id: string;
@@ -6,6 +6,7 @@ export interface NoteData {
   pages: string[];
   folderId: number | null;
   parentId?: string;
+  icon?: string;
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   drawings?: { [pageIdx: number]: DrawingPath[] };
@@ -20,6 +21,6 @@ export interface DrawingPath {
 export interface FolderData { id: number; name: string; open: boolean }
 
 export type DialogConfig =
-  | { type: "prompt";  title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; onConfirm: (val: string) => void }
+  | { type: "prompt"; title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; onConfirm: (val: string) => void }
   | { type: "confirm"; title: string; message?: string; confirmLabel?: string; danger?: boolean; onConfirm: () => void }
-  | { type: "alert";   title: string; message?: string }
+  | { type: "alert"; title: string; message?: string }
