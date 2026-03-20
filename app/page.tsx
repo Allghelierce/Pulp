@@ -197,15 +197,19 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   }
   const optionBtn = (active: boolean): React.CSSProperties => ({
     display: "block", width: "100%", textAlign: "left", padding: "5px 9px",
-    fontSize: 11.5, fontWeight: active ? 500 : 400, border: "none",
+    fontSize: 10, fontWeight: active ? 600 : 400, border: "none",
     background: active ? (dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)") : "transparent",
     cursor: "pointer", color: dk ? "#e4e4e7" : "#18181b", borderRadius: 4,
-    letterSpacing: "-0.01em",
+    fontFamily: "'Inter', sans-serif",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 700, color: dk ? "#FAFAFA" : "#18181b", background: "none", border: "none",
+    fontSize: 9, fontWeight: 700, color: "#71717a", background: "none", border: "none",
     cursor: "pointer", padding: "2px 6px", borderRadius: 4,
-    display: "flex", alignItems: "center", gap: 3, letterSpacing: "-0.01em",
+    display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em",
+    fontFamily: "'Inter', sans-serif",
+    textTransform: "uppercase",
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
 
@@ -224,7 +228,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
       <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
         {/* Eye toggle */}
         <button onClick={() => { setCollapsed(c => !c); setAiOpen(false); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px 4px 0", display: "flex", alignItems: "center", color: !collapsed ? accentSolid : (dk ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)"), borderRadius: 4 }}>
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px 4px 0", display: "flex", alignItems: "center", color: `${accentSolid}88`, borderRadius: 4 }}>
           {collapsed ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
           ) : (
@@ -234,7 +238,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 
         {/* Sparkles toggle (@ Menu) */}
         <button onClick={() => { setAiOpen(a => !a); setCollapsed(true); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", color: aiOpen ? accentSolid : (dk ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)"), borderRadius: 4 }}>
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", color: `${accentSolid}88`, borderRadius: 4 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
             <path d="M5 3L6 4M19 21L20 22M5 21L6 20M19 3L20 2" />
@@ -242,11 +246,26 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
         </button>
       </div>
 
-      {( !collapsed || aiOpen ) && <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", margin: "0 8px", flexShrink: 0 }} />}
+      <div style={{ 
+        width: (!collapsed || aiOpen) ? 1 : 0, 
+        height: 12, 
+        background: dk ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
+        margin: (!collapsed || aiOpen) ? "0 8px" : 0, 
+        flexShrink: 0,
+        opacity: (!collapsed || aiOpen) ? 1 : 0,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      }} />
 
-      {/* Formatting Menu */}
-      <div style={{ overflow: "hidden", maxWidth: collapsed ? 0 : 400, transition: "max-width 0.3s ease" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 1, opacity: collapsed ? 0 : 1, transition: "opacity 0.2s" }}>
+      <div style={{
+        overflow: "hidden",
+        maxWidth: collapsed ? 0 : 400,
+        opacity: collapsed ? 0 : 1,
+        transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        background: !collapsed ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
+        borderRadius: 6,
+        padding: !collapsed ? "0 2px" : 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 1, whiteSpace: "nowrap" }}>
           <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
@@ -258,15 +277,16 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           </button>
 
           <button ref={colorBtnRef} style={{ ...triggerStyle, paddingLeft: 4 }} onClick={() => openDropdown("color")}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><path d="m18 10 3-3"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" /><path d="m18 10 3-3" /></svg>
             <div style={{ width: 10, height: 10, borderRadius: 2, background: box.boxHighlightColor || "transparent", border: "1px solid rgba(0,0,0,0.1)", marginLeft: 2 }} />
           </button>
 
-          <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => { 
-            onUpdateBox(box.id, { boxFontFamily: "", boxFontSize: 14, boxHeadingStyle: "default", boxHighlightColor: "transparent" }); setOpen(null) }}>
+          <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => {
+            onUpdateBox(box.id, { boxFontFamily: "", boxFontSize: 14, boxHeadingStyle: "default", boxHighlightColor: "transparent" }); setOpen(null)
+          }}>
             Clear
           </button>
-          
+
           {open === "style" && <div style={dropdownBase}>{BOX_STYLES.map(s => <button key={s.value} style={optionBtn(styleKey === s.value)} onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as any }); setOpen(null) }}>{s.label}</button>)}</div>}
           {open === "font" && <div style={dropdownBase}>{BOX_FONTS.map(f => <button key={f.value} style={optionBtn(currentFont.value === f.value)} onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>{f.label}</button>)}</div>}
           {open === "size" && (
@@ -288,17 +308,25 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
       </div>
 
       {/* AI Menu */}
-      <div style={{ overflow: "hidden", maxWidth: aiOpen ? 400 : 0, transition: "max-width 0.3s ease" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 3, opacity: aiOpen ? 1 : 0, transition: "opacity 0.2s" }}>
+      <div style={{
+        overflow: "hidden",
+        maxWidth: aiOpen ? 400 : 0,
+        opacity: aiOpen ? 1 : 0,
+        transition: "max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        background: aiOpen ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
+        borderRadius: 6,
+        padding: aiOpen ? "0 2px" : 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}>
           <button style={triggerStyle} onClick={() => { onRewrite(box.content, box.id); setAiOpen(false) }}>Rewrite</button>
           <button style={triggerStyle} onClick={() => { onImageGen(box.content, box.id); setAiOpen(false) }}>Img Gen</button>
-          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", margin: "0 6px" }} />
+          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", margin: "0 6px", transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }} />
           {(["left", "center", "right"] as const).map(align => (
             <button key={align} style={{ ...triggerStyle, padding: "2px 4px", color: box.textAlign === align ? accentSolid : triggerStyle.color }}
               onClick={() => onUpdateBox(box.id, { textAlign: align })}>
-              {align === "left" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>}
-              {align === "center" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>}
-              {align === "right" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>}
+              {align === "left" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="17" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="17" y1="18" x2="3" y2="18" /></svg>}
+              {align === "center" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="10" x2="6" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="18" y1="18" x2="6" y2="18" /></svg>}
+              {align === "right" && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="21" y1="10" x2="7" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="21" y1="18" x2="7" y2="18" /></svg>}
             </button>
           ))}
         </div>
