@@ -384,6 +384,8 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(true)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
+  const [allCompacted, setAllCompacted] = useState(false)
+
 
   // Settings
   const [accent, setAccent] = useState("#600b2779")
@@ -430,6 +432,17 @@ export default function NoteApp() {
     setSlashMenu(null)
   }, [])
 
+  const handleCompactAll = useCallback(() => {
+    const allDetails = Array.from(
+      document.querySelectorAll('details.toggle-block')
+    ) as HTMLDetailsElement[]
+    const anyOpen = allDetails.some(d => d.open)
+    allDetails.forEach(d => { d.open = !anyOpen })
+    setAllCompacted(anyOpen)
+    editor.syncContent()
+  }, [editor])
+
+
   const executeSlashItem = useCallback((action: () => void) => {
     const m = slashMenuRef.current
     const anchor = slashAnchorRef.current
@@ -473,10 +486,7 @@ export default function NoteApp() {
   }, [closeSlashMenu, editorRef, editor])
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-    // Only call editor.handleEditorKeyDown if it's the main editor
-    if ((e.currentTarget as any) === editorRef.current) {
-      editor.handleEditorKeyDown(e)
-    }
+    editor.handleEditorKeyDown(e)
 
     if (e.key === "Escape") {
       const isBox = (e.currentTarget as any) !== editorRef.current
@@ -865,18 +875,33 @@ export default function NoteApp() {
 
         {notes.length > 0 && (
           <DocumentToolbar
-            accent={accent} zoom={zoom} theme={theme}
-            gridView={gridView} drawLineMode={drawLineMode}
-            currentPageIdx={currentPageIdx}
-            saveSelection={editor.saveSelection} setZoom={setZoom}
-            setCarouselIdx={setCarouselIdx} setGridView={setGridView}
-            sketchMode={sketchMode} setSketchMode={setSketchMode} setSketchPrompt={setSketchPrompt}
+            accent={accent}
+            theme={theme}
+            zoom={zoom}
+            setZoom={setZoom}
+            gridView={gridView}
+            setGridView={setGridView}
+            setCarouselIdx={setCarouselIdx}
+            sketchMode={sketchMode}
+            setSketchMode={setSketchMode}
+            setSketchPrompt={setSketchPrompt}
+            drawLineMode={drawLineMode}
             setDrawLineMode={setDrawLineMode}
-            insertTable={editor.insertTable} insertColumns={editor.insertColumns}
-            openAlert={openAlert} clearPage={clearPage}
-            autoAlign={() => boxes.autoAlign()} insertCornell={insertCornell}
-            showDrawToolbar={showDrawToolbar} onToggleDrawToolbar={() => setShowDrawToolbar(v => !v)}
-            rightSidebarOpen={contentSidebarOpen} setRightSidebarOpen={setContentSidebarOpen}
+
+            currentPageIdx={currentPageIdx}
+            saveSelection={editor.saveSelection}
+            insertTable={editor.insertTable}
+            insertColumns={editor.insertColumns}
+            openAlert={openAlert}
+            clearPage={clearPage}
+            autoAlign={boxes.autoAlign}
+            insertCornell={insertCornell}
+            showDrawToolbar={showDrawToolbar}
+            onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
+            rightSidebarOpen={contentSidebarOpen}
+            setRightSidebarOpen={setContentSidebarOpen}
+            allCompacted={allCompacted}
+            onCompactAll={handleCompactAll}
           />
         )}
 

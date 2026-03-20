@@ -61,7 +61,7 @@ export const Sidebar = memo(function Sidebar({
       <div className="flex-1 overflow-y-auto overflow-x-visible p-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={e => onDropNote(e, null)}>
         <>
           <div className="flex items-center justify-between px-2 mb-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Binder</p>
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
             <div className="flex gap-1">
               <button onClick={() => onAddNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
               <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>

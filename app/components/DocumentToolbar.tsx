@@ -25,7 +25,10 @@ interface DocumentToolbarProps {
   onToggleDrawToolbar: () => void
   rightSidebarOpen: boolean
   setRightSidebarOpen: (v: boolean) => void
+  allCompacted: boolean
+  onCompactAll: () => void
 }
+
 
 const GOLD = "#D4AF37"
 
@@ -35,6 +38,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   openAlert, clearPage, autoAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
+  allCompacted, onCompactAll,
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer"
@@ -91,6 +95,19 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         >
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
           Draw
+        </button>
+
+        {/* Compact All */}
+        <button
+          onClick={onCompactAll}
+          className={`${btnBase} flex items-center gap-1.5`}
+          style={activeStyle(allCompacted)}
+          title={allCompacted ? "Expand All" : "Collapse All"}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: allCompacted ? 'rotate(0deg)' : 'rotate(90deg)' }}>
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          Compact
         </button>
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
