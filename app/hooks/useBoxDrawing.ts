@@ -93,7 +93,7 @@ export function useBoxDrawing({
       ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: fn(n.boxes[currentPageIdxRef.current] || []) }
     })), [setNotes])
 
-  const dragRef = useRef<{ ids: string[]; sx: number; sy: number; originalBoxes: Record<string, {x: number, y: number}>; elements: Record<string, HTMLElement> } | null>(null)
+  const dragRef = useRef<{ ids: string[]; sx: number; sy: number; originalBoxes: Record<string, { x: number, y: number }>; elements: Record<string, HTMLElement> } | null>(null)
   const resizeRef = useRef<{ id: string; handle: string; sx: number; sy: number; ox: number; oy: number; ow: number; oh: number; element: HTMLElement | null } | null>(null)
   const selectionRef = useRef<{ sx: number; sy: number; active: boolean; pendingSelected: Set<string>; cachedBoxes: TextBox[] } | null>(null)
 
@@ -138,7 +138,7 @@ export function useBoxDrawing({
 
             for (const b of boxesToCheck) {
               const hit = b.x < rectX + rectW && b.x + b.w > rectX &&
-                          b.y < rectY + rectH && b.y + b.h > rectY
+                b.y < rectY + rectH && b.y + b.h > rectY
               const node = el(b.id)
               if (node) node.style.outline = hit ? `1.5px solid ${solid}` : ''
               if (hit) newPending.add(b.id)
@@ -299,7 +299,7 @@ export function useBoxDrawing({
       draggingIds = [box.id]
     }
 
-    const originalBoxes: Record<string, {x: number, y: number}> = {}
+    const originalBoxes: Record<string, { x: number, y: number }> = {}
     const elements: Record<string, HTMLElement> = {}
     const tid = activeTabIdRef.current
     const pidx = currentPageIdxRef.current
@@ -323,12 +323,12 @@ export function useBoxDrawing({
 
   const onPaperMouseDown = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current) return
-    
+
     // Force blur current element if it's within our editor area
-    if (document.activeElement instanceof HTMLElement && 
-        (document.activeElement.tagName === 'TEXTAREA' || 
-         document.activeElement.hasAttribute('contenteditable') ||
-         document.activeElement.tagName === 'INPUT')) {
+    if (document.activeElement instanceof HTMLElement &&
+      (document.activeElement.tagName === 'TEXTAREA' ||
+        document.activeElement.hasAttribute('contenteditable') ||
+        document.activeElement.tagName === 'INPUT')) {
       document.activeElement.blur()
     }
 
@@ -381,34 +381,48 @@ export function useBoxDrawing({
       rows.push(currentRow)
 
       let currentY = Math.max(sorted[0].y, 60)
-      const standardMarginX = 90
+      const standardMarginX = 128
       const newBoxes: TextBox[] = []
-      
+
       const tid = activeTabIdRef.current
       const pidx = currentPageIdxRef.current
       const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
-      const lines = [...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
-      
+      // Include the default 112px red margin line as a base line for snapping
+      const lines = [112, ...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
+
       for (const row of rows) {
         row.sort((a, b) => a.x - b.x)
         let currentX = standardMarginX
         let maxH = 0
-        for (const rowBox of row) {
+        for (let i = 0; i < row.length; i++) {
+          const rowBox = row[i]
           let snappedX = currentX
+
           if (lines.length > 0) {
             let matchedLine = -1
-            for (const lx of lines) {
-              if (rowBox.x >= lx - 20) matchedLine = lx
+            // Use the leftmost line as a primary margin for the first box in a row if it's nearby
+            if (i === 0 && rowBox.x < lines[0] + 250) {
+              matchedLine = lines[0]
+            } else {
+              // Otherwise find the line it's most likely aligned to
+              for (const lx of lines) {
+                if (rowBox.x >= lx - 40) matchedLine = lx
+              }
             }
-            if (matchedLine !== -1) snappedX = matchedLine + 16
-            snappedX = Math.max(snappedX, currentX)
+
+            if (matchedLine !== -1) {
+              snappedX = matchedLine + 32 // 32px padding from the line for a natural look
+            }
           }
 
+          // Don't allow it to go behind the cumulative X position of the row
+          snappedX = Math.max(snappedX, currentX)
+
           newBoxes.push({ ...rowBox, x: snappedX, y: currentY })
-          currentX = snappedX + rowBox.w + 40
+          currentX = snappedX + rowBox.w + 48
           maxH = Math.max(maxH, rowBox.h)
         }
-        currentY += maxH + 32
+        currentY += maxH + 24
       }
       return newBoxes
     })

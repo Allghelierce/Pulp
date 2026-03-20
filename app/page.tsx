@@ -62,8 +62,8 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 // ─── Memoized single box — only re-renders when THIS box data or selection changes ─
-const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput }: {
-  box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string
+const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, theme, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput }: {
+  box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -104,7 +104,7 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
           style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
       )}
       {isSelected && !isImage && (
-        <BoxToolbar box={box} accentSolid={accentSolid} onUpdateBox={updateBox} />
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} />
       )}
       <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
         {loadingBoxId === box.id ? (
@@ -146,8 +146,8 @@ const BOX_STYLES = [
   { value: "h3", label: "H3" },
 ]
 
-const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
-  box: TextBoxType; accentSolid: string
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox }: {
+  box: TextBoxType; accentSolid: string; theme: "light" | "dark"
   onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
 }) {
   const [open, setOpen] = useState<"style" | "font" | "size" | null>(null)
@@ -180,22 +180,23 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
   const currentFont = BOX_FONTS.find(f => f.value === (box.boxFontFamily ?? "")) ?? BOX_FONTS[0]
   const currentSize = box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]
 
+  const dk = theme === "dark"
   const dropdownBase: React.CSSProperties = {
     position: "absolute", top: "calc(100% + 4px)", left: anchorLeft,
-    background: "#ffffff", border: "1px solid rgba(0,0,0,0.09)",
+    background: dk ? "#1f1f23" : "#ffffff", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.09)"}`,
     borderRadius: 6, padding: 3,
-    boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)",
+    boxShadow: dk ? "0 4px 12px rgba(0,0,0,0.4)" : "0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)",
     zIndex: 400, minWidth: 90,
   }
   const optionBtn = (active: boolean): React.CSSProperties => ({
     display: "block", width: "100%", textAlign: "left", padding: "5px 9px",
     fontSize: 11.5, fontWeight: active ? 500 : 400, border: "none",
-    background: active ? "rgba(0,0,0,0.05)" : "transparent",
-    cursor: "pointer", color: "#18181b", borderRadius: 4,
+    background: active ? (dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)") : "transparent",
+    cursor: "pointer", color: dk ? "#e4e4e7" : "#18181b", borderRadius: 4,
     letterSpacing: "-0.01em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 11, fontWeight: 500, color: "#3f3f46", background: "none", border: "none",
+    fontSize: 11, fontWeight: 500, color: dk ? "#a1a1aa" : "#3f3f46", background: "none", border: "none",
     cursor: "pointer", padding: "2px 6px", borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "-0.01em",
   }
@@ -203,24 +204,31 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
-      position: "absolute", bottom: "calc(100% + 5px)", left: -1,
+      position: "absolute", top: -30, left: 0,
       display: "flex", alignItems: "center", gap: 0,
-      background: "#ffffff", border: "1px solid rgba(0,0,0,0.09)",
+      background: collapsed ? "transparent" : (dk ? "#1f1f23" : "#ffffff"),
+      border: `1px solid ${collapsed ? "transparent" : (dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.09)")}`,
       borderRadius: 6, padding: "2px 3px",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
+      boxShadow: collapsed ? "none" : (dk ? "0 2px 8px rgba(0,0,0,0.4)" : "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)"),
+      transition: "background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease",
       zIndex: 200, whiteSpace: "nowrap",
     }}>
       {/* Eye toggle */}
       <button onClick={() => { setCollapsed(c => !c); setOpen(null) }}
         title={collapsed ? "Show formatting" : "Hide formatting"}
         style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 5px", display: "flex", alignItems: "center", color: accentSolid, borderRadius: 4 }}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-          style={{ transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)", transform: collapsed ? "scaleY(0.1)" : "scaleY(1)", transformOrigin: "50% 50%", display: "block" }}>
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3"
-            style={{ transition: "opacity 0.12s ease", opacity: collapsed ? 0 : 1 } as React.CSSProperties} />
-        </svg>
+        {collapsed ? (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+            <line x1="1" y1="1" x2="23" y2="23" />
+          </svg>
+        ) : (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        )}
       </button>
 
       {/* Triggers inside overflow:hidden for the slide animation — NO dropdown panels here */}
@@ -231,7 +239,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
           transform: collapsed ? "translateX(-8px)" : "translateX(0)",
           transition: "opacity 0.18s ease, transform 0.28s cubic-bezier(0.4,0,0.2,1)",
         }}>
-          <div style={{ width: 1, height: 12, background: "rgba(0,0,0,0.1)", margin: "0 2px 0 1px", flexShrink: 0 }} />
+          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px 0 1px", flexShrink: 0 }} />
           <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
@@ -241,7 +249,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
           <button ref={sizeBtnRef} style={triggerStyle} onClick={() => openDropdown("size")}>
             {currentSize}px {chevron}
           </button>
-          <div style={{ width: 1, height: 12, background: "rgba(0,0,0,0.1)", margin: "0 2px", flexShrink: 0 }} />
+          <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)", margin: "0 2px", flexShrink: 0 }} />
           {(["left", "center", "right"] as const).map(align => (
             <button key={align} style={{ ...triggerStyle, padding: "2px 4px", ...(box.textAlign === align ? { color: accentSolid, background: "rgba(0,0,0,0.06)" } : {}) }}
               onClick={() => onUpdateBox(box.id, { textAlign: align })}>
@@ -288,7 +296,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, onUpdateBox }: {
                   if (n > 0) { onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") }
                 }
               }}
-              style={{ width: "100%", border: "1px solid rgba(0,0,0,0.10)", borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: "#18181b", background: "#fafafa" }}
+              style={{ width: "100%", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.10)"}`, borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: dk ? "#e4e4e7" : "#18181b", background: dk ? "#2a2a2e" : "#fafafa" }}
             />
           </div>
           <div style={{ overflowY: "auto" }}>
@@ -381,7 +389,7 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showDrawToolbar, setShowDrawToolbar] = useState(true)
+  const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
@@ -711,30 +719,44 @@ export default function NoteApp() {
     openPrompt("Name your subpage", "Subpage", "Subpage name…", "Create", async name => {
       if (!name.trim()) return
       const newId = uid()
-      const newNote = { id: newId, subject: name.trim(), pages: [""], folderId: null, boxes: {} }
-      setNotes(prev => [...prev, newNote])
-
-      // Explicitly save the new note to Supabase if logged in
-      if (user) {
-        await supabase.from("notes").insert({
-          id: newId,
-          subject: name.trim(),
-          pages: [""],
-          boxes: {},
-          folder_id: null,
-          user_id: user.id
-        })
-      }
+      const parentId = activeTabId ?? undefined
+      const newNote: NoteData = { id: newId, subject: name.trim(), pages: [""], folderId: null, parentId, boxes: {} }
 
       const color = accent.length > 7 ? accent.slice(0, 7) : accent
-      const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display: inline-flex; align-items: center; gap: 4px; background: ${color}15; color: ${color}; border: 1px solid ${color}33; padding: 1px 8px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin: 0 2px; transition: all 0.2s; user-select: none; -webkit-user-modify: read-only;">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-        ${name.trim()}
-      </span>&nbsp;`
+      const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color}44;padding:1px 8px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;margin:0 2px;user-select:none;-webkit-user-modify:read-only;text-decoration:none;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>${name.trim()}</span>&nbsp;`
 
+      // Insert into DOM first, then capture the updated innerHTML before any React re-render
       editor.insertHTML(linkHtml)
+
+      const focused = document.activeElement as HTMLElement | null
+      const isBox = focused?.isContentEditable === true && focused !== editorRef.current
+      if (isBox && focused) {
+        const boxWrapper = focused.closest('[id^="box-"]')
+        const boxId = boxWrapper?.id.replace('box-', '')
+        const updatedContent = focused.innerHTML
+        setNotes(prev => {
+          const updated = prev.map(n => {
+            if (n.id !== activeTabId || !boxId) return n
+            return { ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).map(b => b.id === boxId ? { ...b, content: updatedContent } : b) } }
+          })
+          return [...updated, newNote]
+        })
+      } else {
+        editor.flushSync()
+        setNotes(prev => [...prev, newNote])
+      }
+
+      if (user) {
+        await supabase.from("notes").insert({
+          id: newId, subject: name.trim(), pages: [""], boxes: {}, folder_id: null, parent_id: parentId ?? null, user_id: user.id
+        })
+      }
     })
-  }, [accent, activeNote, editor, openPrompt, user])
+  }, [accent, activeTabId, currentPageIdx, editor, editorRef, openPrompt, user])
+
+  const setNoteParent = useCallback((id: string, parentId: string | undefined) => {
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, parentId } : n))
+  }, [])
 
   const renameNote = (id: string, currentName: string) =>
     openPrompt("Rename note", currentName, "Note name…", "Rename", newName => {
@@ -866,7 +888,7 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} />
+      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
@@ -1006,6 +1028,7 @@ export default function NoteApp() {
                           isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                           loadingBoxId={boxes.loadingBoxId}
                           accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
+                          theme={theme}
                           startDrag={boxes.startDrag}
                           startResize={boxes.startResize}
                           deleteBox={boxes.deleteBox}
@@ -1017,11 +1040,49 @@ export default function NoteApp() {
                         />
                       ))}
 
-                      <div className="flex justify-center items-center gap-10 py-10 relative z-20">
-                        <button disabled={currentPageIdx === 0} onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }} className="text-3xl disabled:opacity-10 hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&larr;</button>
-                        <span className="px-4 py-1 bg-zinc-50 rounded-full text-[10px] font-bold text-zinc-400">PAGE {currentPageIdx + 1} / {activeNote.pages.length}</span>
-                        <button onClick={() => { editor.flushSync(); if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1); else { const np = [...activeNote.pages, ""]; setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n)); setCurrentPageIdx(activeNote.pages.length) } }} className="text-3xl hover:scale-110 transition-transform bg-white rounded-full px-2" style={{ color: accent }}>&rarr;</button>
+                      {/* Top Right Navigation */}
+                      <div className="absolute top-6 right-8 flex items-center gap-1.5 z-50 no-print">
+                        <button 
+                          disabled={currentPageIdx === 0} 
+                          onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
+                          className={`p-2 rounded-full transition-all ${currentPageIdx === 0 ? "opacity-20 grayscale" : "hover:bg-black/5 hover:scale-110 active:scale-95"}`}
+                          style={{ color: accent }}
+                          title="Previous Page"
+                        >
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        </button>
+                        <button 
+                          onClick={() => { 
+                            editor.flushSync(); 
+                            if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1); 
+                            else { 
+                              const np = [...activeNote.pages, ""]; 
+                              setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n)); 
+                              setCurrentPageIdx(activeNote.pages.length) 
+                            } 
+                          }}
+                          className="p-2 hover:bg-black/5 hover:scale-110 active:scale-95 rounded-full transition-all"
+                          style={{ color: accent }}
+                          title="Next Page / Add Page"
+                        >
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
                       </div>
+
+                      {/* Bottom Right Page Number */}
+                      <div 
+                        className="absolute bottom-10 right-12 z-50 pointer-events-none select-none no-print" 
+                        style={{ 
+                          fontFamily: 'var(--font-caveat)', 
+                          fontSize: '38px', 
+                          color: accent,
+                          opacity: 0.35,
+                          transform: 'rotate(-5deg)'
+                        }}
+                      >
+                        {currentPageIdx + 1}
+                      </div>
+
                     </div>
                   </div>
                   <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />

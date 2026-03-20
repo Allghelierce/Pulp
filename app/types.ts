@@ -1,10 +1,11 @@
 export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3" }
 export type BoxesMap = { [pageIdx: number]: TextBox[] }
-export interface NoteData { 
-  id: string; 
-  subject: string; 
-  pages: string[]; 
-  folderId: number | null; 
+export interface NoteData {
+  id: string;
+  subject: string;
+  pages: string[];
+  folderId: number | null;
+  parentId?: string;
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   drawings?: { [pageIdx: number]: DrawingPath[] };

@@ -12,9 +12,9 @@ interface RightSidebarProps {
   openAlert: (title: string, message?: string) => void
 }
 
-export const RightSidebar = memo(function RightSidebar({ 
-  isOpen, onClose, theme, accent, 
-  sketchMode, setSketchMode, setSketchPrompt, openAlert 
+export const RightSidebar = memo(function RightSidebar({
+  isOpen, onClose, theme, accent,
+  sketchMode, setSketchMode, setSketchPrompt, openAlert
 }: RightSidebarProps) {
   const [llmRequest, setLlmRequest] = useState("")
 
@@ -38,7 +38,7 @@ export const RightSidebar = memo(function RightSidebar({
   }
 
   return (
-    <div 
+    <div
       className={`fixed right-0 top-12 bottom-0 z-40 flex transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       style={{ width: 320 }}
     >
@@ -58,11 +58,11 @@ export const RightSidebar = memo(function RightSidebar({
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
               <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Smart AI Hub</h3>
             </div>
-            
+
             <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200'} space-y-4`}>
               <div className="space-y-2">
                 <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">AI Request</label>
-                <textarea 
+                <textarea
                   value={llmRequest}
                   onChange={(e) => setLlmRequest(e.target.value)}
                   onKeyDown={handleLlmSubmit}
@@ -71,7 +71,7 @@ export const RightSidebar = memo(function RightSidebar({
                 />
                 <div className="flex justify-between items-center">
                    <span className="text-[9px] text-zinc-400 font-medium italic">Press Enter to send</span>
-                   <button 
+                   <button
                     onClick={() => { if(llmRequest.trim()) { openAlert("Smart LLM", "Thinking about: " + llmRequest); setLlmRequest("") } }}
                     className="p-1.5 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
                    >
@@ -81,7 +81,7 @@ export const RightSidebar = memo(function RightSidebar({
               </div>
 
               <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                <button 
+                <button
                   onClick={handleAiSketch}
                   className={`w-full py-2.5 rounded-lg text-[11px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm ${sketchMode ? 'text-white' : 'text-zinc-600 dark:text-zinc-300'}`}
                   style={{ backgroundColor: sketchMode ? accent : 'transparent', border: sketchMode ? 'none' : `1px solid ${theme === 'dark' ? '#333' : '#e4e4e7'}` }}
@@ -118,7 +118,7 @@ export const RightSidebar = memo(function RightSidebar({
 
         {/* Brand Label */}
         <div className="p-6 text-center">
-          <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-300 dark:text-zinc-700 uppercase">Letter Soup AI</span>
+          <span className="text-[10px] font-bold tracking-[0.2em] text-zinc-300 dark:text-zinc-700 uppercase">Pulp AI</span>
         </div>
       </div>
     </div>

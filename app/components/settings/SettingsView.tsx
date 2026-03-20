@@ -130,16 +130,17 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             ))}
           </nav>
           <div className={`px-4 py-3 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/70"}`}>
-            <p className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Letter Soup · v1.0.0</p>
+            <p className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Pulp · v1.0.0</p>
           </div>
         </div>
 
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 py-4 border-b ${isDark ? "border-zinc-800" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className={`text-[19px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`} style={{ fontFamily: '"EB Garamond", serif' }}>
+            <h2 className={`text-[22px] ${isDark ? "text-zinc-200" : "text-zinc-800"}`} style={{ fontFamily: 'var(--font-dancing), cursive', fontWeight: 600 }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
+
 
           </div>
 
@@ -209,7 +210,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Color scheme"
                   isDark={isDark}
-                  description="Choose how Letter Soup looks to you"
+                  description="Choose how Pulp looks to you"
                   control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} />}
                 />
                 <SettingRow
@@ -315,8 +316,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             {activeTab === "subscription" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="text-center space-y-2 mb-8">
-                  <h3 className={`text-2xl font-bold ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>Choose your plan</h3>
-                  <p className={`text-[13px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Unlock the full power of Letter Soup</p>
+                  <h3 className={`text-3xl ${isDark ? "text-zinc-100" : "text-zinc-800"}`} style={{ fontFamily: 'var(--font-dancing), cursive', fontWeight: 600 }}>Choose your plan</h3>
+                  <p className={`text-[13px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Unlock the full power of Pulp</p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-5">
