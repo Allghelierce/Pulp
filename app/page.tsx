@@ -62,7 +62,12 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 // ─── Memoized single box — only re-renders when THIS box data or selection changes ─
-const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSolid, theme, startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds, onKeyDown, onInput, onRewrite, onImageGen }: {
+const BoxItem = memo(function BoxItem({
+  box, isSelected, loadingBoxId, accentSolid, theme,
+  startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
+  onKeyDown, onInput, onRewrite, onImageGen,
+  formattingOpen, setFormattingOpen, aiOpen, setAiOpen
+}: {
   box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
@@ -74,6 +79,8 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
   onInput: (e: React.FormEvent<HTMLElement>) => void
   onRewrite: (text: string, id: string) => void
   onImageGen: (text: string, id: string) => void
+  formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
+  aiOpen: boolean; setAiOpen: (v: boolean) => void
 }) {
   const corners: [string, React.CSSProperties][] = [
     ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
@@ -106,9 +113,10 @@ const BoxItem = memo(function BoxItem({ box, isSelected, loadingBoxId, accentSol
           style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
       )}
       {isSelected && !isImage && (
-        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen} />
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen} 
+          formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
-      <div onMouseDown={e => e.stopPropagation()} style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -149,15 +157,15 @@ const BOX_STYLES = [
   { value: "h3", label: "H3" },
 ]
 
-const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox, onRewrite, onImageGen }: {
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox, onRewrite, onImageGen, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
   box: TextBoxType; accentSolid: string; theme: "light" | "dark"
   onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
   onRewrite: (text: string, id: string) => void
   onImageGen: (text: string, id: string) => void
+  formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
+  aiOpen: boolean; setAiOpen: (v: boolean) => void
 }) {
   const [open, setOpen] = useState<"style" | "font" | "size" | "color" | null>(null)
-  const [collapsed, setCollapsed] = useState(true)
-  const [aiOpen, setAiOpen] = useState(false)
   const [anchorLeft, setAnchorLeft] = useState(0)
   const [customSize, setCustomSize] = useState("")
   const ref = useRef<HTMLDivElement>(null)
@@ -196,7 +204,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     zIndex: 400, minWidth: 90,
   }
   const optionBtn = (active: boolean): React.CSSProperties => ({
-    display: "block", width: "100%", textAlign: "left", padding: "5px 9px",
+    display: "block", width: "100%", textAlign: "left", paddingTop: 5, paddingBottom: 5, paddingLeft: 9, paddingRight: 9,
     fontSize: 10, fontWeight: active ? 600 : 400, border: "none",
     background: active ? (dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)") : "transparent",
     cursor: "pointer", color: dk ? "#e4e4e7" : "#18181b", borderRadius: 4,
@@ -205,8 +213,8 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     letterSpacing: "0.05em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 9, fontWeight: 700, color: "#71717a", background: "none", border: "none",
-    cursor: "pointer", padding: "2px 6px", borderRadius: 4,
+    fontSize: 9, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
+    cursor: "pointer", paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6, borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em",
     fontFamily: "'Inter', sans-serif",
     textTransform: "uppercase",
@@ -217,53 +225,40 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
-      position: "absolute", top: -34, left: 0,
+      position: "absolute", top: -26, left: 0,
       display: "flex", alignItems: "center", gap: 0,
       background: "transparent",
-      border: "none",
       zIndex: 9999, whiteSpace: "nowrap",
       pointerEvents: "auto",
-      maxWidth: box.w,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-        {/* Eye toggle */}
-        <button onClick={() => { setCollapsed(c => !c); setAiOpen(false); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px 4px 0", display: "flex", alignItems: "center", color: `${accentSolid}88`, borderRadius: 4 }}>
-          {collapsed ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+      {/* Stacked Icons on the Left side of the box - Moved Down */}
+      <div style={{ position: "absolute", left: -24, top: 30, display: "flex", flexDirection: "column", gap: 4 }}>
+        <button onClick={() => { setFormattingOpen(!formattingOpen); setAiOpen(false); setOpen(null) }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", color: formattingOpen ? accentSolid : "#a1a1aa", borderRadius: 4, transition: "color 0.2s" }}>
+          {!formattingOpen ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
           )}
         </button>
-
-        {/* Sparkles toggle (@ Menu) */}
-        <button onClick={() => { setAiOpen(a => !a); setCollapsed(true); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", color: `${accentSolid}88`, borderRadius: 4 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <button onClick={() => { setAiOpen(!aiOpen); setFormattingOpen(false); setOpen(null) }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", color: aiOpen ? accentSolid : "#a1a1aa", borderRadius: 4, transition: "color 0.2s" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
             <path d="M5 3L6 4M19 21L20 22M5 21L6 20M19 3L20 2" />
           </svg>
         </button>
       </div>
 
-      <div style={{ 
-        width: (!collapsed || aiOpen) ? 1 : 0, 
-        height: 12, 
-        background: dk ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)", 
-        margin: (!collapsed || aiOpen) ? "0 8px" : 0, 
-        flexShrink: 0,
-        opacity: (!collapsed || aiOpen) ? 1 : 0,
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-      }} />
 
       <div style={{
         overflow: "hidden",
-        maxWidth: collapsed ? 0 : 400,
-        opacity: collapsed ? 0 : 1,
+        maxWidth: !formattingOpen ? 0 : 400,
+        opacity: !formattingOpen ? 0 : 1,
         transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-        background: !collapsed ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
+        background: formattingOpen ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
         borderRadius: 6,
-        padding: !collapsed ? "0 2px" : 0,
+        padding: formattingOpen ? "0 2px" : 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 1, whiteSpace: "nowrap" }}>
           <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
@@ -274,11 +269,6 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           </button>
           <button ref={sizeBtnRef} style={triggerStyle} onClick={() => openDropdown("size")}>
             {currentSize}px {chevron}
-          </button>
-
-          <button ref={colorBtnRef} style={{ ...triggerStyle, paddingLeft: 4 }} onClick={() => openDropdown("color")}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" /><path d="m18 10 3-3" /></svg>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: box.boxHighlightColor || "transparent", border: "1px solid rgba(0,0,0,0.1)", marginLeft: 2 }} />
           </button>
 
           <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => {
@@ -308,11 +298,11 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
       </div>
 
       {/* AI Menu */}
-      <div style={{
-        overflow: "hidden",
-        maxWidth: aiOpen ? 400 : 0,
+      <div style={{ 
+        overflow: "hidden", 
+        maxWidth: aiOpen ? 400 : 0, 
         opacity: aiOpen ? 1 : 0,
-        transition: "max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
         background: aiOpen ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
         borderRadius: 6,
         padding: aiOpen ? "0 2px" : 0,
@@ -416,6 +406,8 @@ export default function NoteApp() {
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
+  const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
+  const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
 
 
   // Settings
@@ -1051,7 +1043,7 @@ export default function NoteApp() {
 
                       {(activeNote.boxes[currentPageIdx] || []).map(box => (
                         <BoxItem
-                          key={`${box.id}-${boxes.selectionVersion}`}
+                          key={box.id}
                           box={box}
                           isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                           loadingBoxId={boxes.loadingBoxId}
@@ -1067,6 +1059,10 @@ export default function NoteApp() {
                           onInput={handleEditorInput}
                           onRewrite={boxes.rewriteBox}
                           onImageGen={boxes.generateSketch}
+                          formattingOpen={toolbarFormattingOpen}
+                          setFormattingOpen={setToolbarFormattingOpen}
+                          aiOpen={toolbarAiOpen}
+                          setAiOpen={setToolbarAiOpen}
                         />
                       ))}
 

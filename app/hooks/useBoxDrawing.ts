@@ -309,7 +309,10 @@ export function useBoxDrawing({
   const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '')), [updateBoxes])
 
   const startDrag = useCallback((e: React.MouseEvent, box: TextBox) => {
-    e.preventDefault(); e.stopPropagation()
+    const target = e.target as HTMLElement
+    const isEditable = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+    if (!isEditable) e.preventDefault()
+    e.stopPropagation()
 
     let draggingIds = Array.from(selectedBoxIdsRef.current)
     if (!selectedBoxIdsRef.current.has(box.id)) {
@@ -350,7 +353,9 @@ export function useBoxDrawing({
       document.activeElement.blur()
     }
 
-    e.preventDefault()
+    const target = e.target as HTMLElement
+    const isEditable = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+    if (!isEditable) e.preventDefault()
     if (sketchRef.current.drawLineMode) {
       const r = paperRef.current.getBoundingClientRect()
       const x = (e.clientX - r.left) / Number(zoomRef.current)
