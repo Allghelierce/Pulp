@@ -70,7 +70,27 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "todo", label: "To-do list", shortcut: "[]", group: "Structure", hint: "Interactive",
       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><polyline points="9 11 12 14 22 4" /></svg>,
-      action: () => insertHTML(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/><span>Task</span></div><br/>`)
+      action: () => {
+        const id = "todo-" + Math.random().toString(36).slice(2, 9)
+        insertHTML(`<div class="task-item" style="display:flex;align-items:flex-start;gap:8px;margin:4px 0">` +
+          `<div contenteditable="false" style="user-select:none;display:flex;padding-top:4px;">` +
+            `<input type="checkbox" style="width:15px;height:15px;accent-color:${accent}"/>` +
+          `</div>` +
+          `<span id="${id}" style="flex:1;outline:none;min-height:1.2em;">&#8203;</span>` +
+        `</div>`)
+        setTimeout(() => {
+          const el = document.getElementById(id)
+          if (el && el.firstChild) {
+            const range = document.createRange()
+            range.setStart(el.firstChild, 1) // after ZWSP
+            range.collapse(true)
+            const sel = window.getSelection()
+            sel?.removeAllRanges()
+            sel?.addRange(range)
+            el.removeAttribute('id')
+          }
+        }, 0)
+      }
     },
     {
       id: "toggle", label: "Toggle list", shortcut: ">>", group: "Structure",

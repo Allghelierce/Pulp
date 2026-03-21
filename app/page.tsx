@@ -1,6 +1,5 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
-import { Library } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig } from "@/app/types"
 import { uid } from "@/app/lib/uid"
@@ -118,7 +117,18 @@ const BoxItem = memo(function BoxItem({
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
-      <div onMouseDown={e => e.stopPropagation()} style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+      
+      {/* Explicit Drag Handle */}
+      {isSelected && (
+        <div 
+          onMouseDown={e => startDrag(e, box)}
+          style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "6px 6px 0 0", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+        >
+          <div style={{ width: 14, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
+        </div>
+      )}
+
+      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -384,7 +394,7 @@ const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontF
         onUpdate(id, ref.current?.innerHTML || "")
       }}
       style={{
-        width: "100%", height: "100%", outline: "none",
+        width: "100%", outline: "none", minHeight: "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
         lineHeight: 1.45, color: "#1a1a1a", cursor: "text",
         textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflowY: "auto",
@@ -402,7 +412,6 @@ export default function NoteApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
-  const [currentView, setCurrentView] = useState<"shelf" | "editor">("shelf")
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
@@ -422,6 +431,7 @@ export default function NoteApp() {
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
+  const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
 
 
   // Settings
@@ -758,14 +768,13 @@ export default function NoteApp() {
   }, [user])
 
   // Note/folder actions
-  const addNote = (folderId: number | null = null, onCreated?: (id: string) => void) =>
+  const addNote = (folderId: number | null = null) =>
     openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
       if (!name.trim()) return
       const id = uid()
       const newNote = { id, subject: name.trim(), pages: [""], folderId, boxes: {} }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
-      if (onCreated) onCreated(id)
     })
 
   const insertBacklink = useCallback(() => {
@@ -940,30 +949,6 @@ export default function NoteApp() {
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
-  if (currentView === "shelf") {
-    return (
-      <>
-        {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-        <ShelfView
-          notes={notes}
-          onOpenNote={(id) => {
-            if (id) {
-              editor.flushSync()
-              setActiveTabId(id)
-              setCurrentPageIdx(0)
-            }
-            setCurrentView("editor")
-          }}
-          onCreateNote={() => {
-             addNote(null, () => {
-               setCurrentView("editor")
-             })
-          }}
-          theme={theme}
-        />
-      </>
-    )
-  }
 
   return (
     <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
@@ -971,33 +956,18 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar 
-        notes={notes} 
-        folders={folders} 
-        activeTabId={activeTabId} 
-        accent={accent} 
-        draggedNoteId={draggedNoteId} 
-        renamingFolder={renamingFolder} 
-        user={user} 
-        sidebarOpen={sidebarOpen} 
-        onAddNote={addNote} 
-        onAddFolder={addFolder} 
-        onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} 
-        onRenameNote={renameNote} 
-        onDeleteNote={deleteNote} 
-        onToggleFolder={toggleFolder} 
-        onRenameFolder={renameFolder} 
-        onDeleteFolder={deleteFolder} 
-        onSetRenamingFolder={setRenamingFolder} 
-        onSetDraggedNoteId={setDraggedNoteId} 
-        onDropNote={handleDropNote} 
-        onOpenSettings={() => setShowSettings(true)} 
-        onSetNoteParent={setNoteParent} 
-        onChangeNoteIcon={changeNoteIcon}
-        onGoToShelf={() => setCurrentView("shelf")}
-      />
+      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} onGoToShelf={() => setCurrentView("shelf")} />
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      {currentView === "shelf" && (
+        <ShelfView
+          notes={notes}
+          onOpenNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
+          onCreateNote={() => { addNote(null); setCurrentView("editor") }}
+          theme={theme}
+        />
+      )}
+
+      <div className="flex-1 flex flex-col overflow-hidden relative" style={{ display: currentView === "shelf" ? "none" : undefined }}>
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
           {sidebarOpen ? "‹" : "›"}
         </button>

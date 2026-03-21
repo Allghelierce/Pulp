@@ -1,6 +1,5 @@
 "use client"
 import { memo, useState } from "react"
-import { Library } from "lucide-react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
@@ -35,8 +34,7 @@ export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarOpen,
   onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
-  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings,
-  onGoToShelf,
+  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [iconPicker, setIconPicker] = useState<{ noteId: string; x: number; y: number } | null>(null)
@@ -149,21 +147,18 @@ export const Sidebar = memo(function Sidebar({
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
           <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
-
-          {/* Library / Shelf Button */}
-          <button 
-            onClick={onGoToShelf}
-            className="mt-4 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
-          >
-            <Library className="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 group-hover:text-zinc-100 transition-colors">My Shelf</span>
-          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
           <>
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Binder</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Binder</p>
+                <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00"/><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)"/><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none"/><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)"/></svg>
+                  <span className="text-[10px] text-zinc-600 group-hover:text-zinc-300 transition-colors">Shelf</span>
+                </button>
+              </div>
               <div className="flex gap-1">
                 <button onClick={() => onAddNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
                 <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>

@@ -242,6 +242,45 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       }
     }
 
+    // Task handling
+    let taskItem: HTMLElement | null = null
+    n = range.startContainer
+    while (n && n !== editorRef.current) {
+      if ((n as HTMLElement).classList?.contains("task-item")) { taskItem = n as HTMLElement; break }
+      n = n.parentNode
+    }
+    if (taskItem) {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        const textSpan = taskItem.querySelector('span')
+        if (!textSpan?.textContent?.replace(/\u00a0|\u200B/g, '').trim()) {
+           taskItem.remove()
+           document.execCommand("insertHTML", false, "<p><br></p>")
+           return
+        }
+        const newTask = taskItem.cloneNode(true) as HTMLElement
+        const newSpan = newTask.querySelector('span')
+        if (newSpan) newSpan.innerHTML = "&#8203;"
+        const cb = newTask.querySelector('input[type="checkbox"]') as HTMLInputElement
+        if (cb) cb.checked = false
+        taskItem.after(newTask)
+        const nr = document.createRange()
+        const targetNode = newSpan?.firstChild || newTask
+        nr.setStart(targetNode, targetNode.nodeType === Node.TEXT_NODE ? 1 : 0)
+        nr.collapse(true)
+        sel.removeAllRanges(); sel.addRange(nr)
+        return
+      }
+      if ((e.key === "Backspace" || e.key === "Delete") && !(taskItem.textContent ?? "").replace(/\u00a0|\u200B/g, "").trim()) {
+        e.preventDefault()
+        const afterNode = taskItem.nextSibling; taskItem.remove()
+        const nr = document.createRange()
+        if (afterNode) nr.setStart(afterNode, 0)
+        else if (editorRef.current) nr.setStart(editorRef.current, editorRef.current.childNodes.length)
+        nr.collapse(true); sel.removeAllRanges(); sel.addRange(nr); return
+      }
+    }
+
     // Tab → table navigation
     if (e.key === "Tab") {
       let cell: HTMLElement | null = null, cn: Node | null = range.startContainer
