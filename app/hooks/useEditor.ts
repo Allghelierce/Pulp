@@ -321,10 +321,13 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       e.preventDefault()
       const del = document.createRange(); del.setStart(node, 0); del.setEnd(node, range.startOffset)
       sel.removeAllRanges(); sel.addRange(del)
-      document.execCommand("delete", false); document.execCommand(cmd, false)
+      // Convert to list first so the wrapper exists
+      document.execCommand(cmd, false)
+      // Then delete the trigger character
+      document.execCommand("delete", false)
     }
-    if (before === "*") tryConvert("insertUnorderedList")
-    else if (/^\d+\.$/.test(before)) tryConvert("insertOrderedList")
+    if (before === "*" || before === "-") tryConvert("insertUnorderedList")
+    else if (/^\d+[\.\)]$/.test(before)) tryConvert("insertOrderedList")
   }, [editorRef])
 
   // Capture-phase listener: fires BEFORE browser processes <summary> default

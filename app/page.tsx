@@ -1061,6 +1061,9 @@ export default function NoteApp() {
                           0%   { inset: 0px;   opacity: 0.45; }
                           100% { inset: -36px; opacity: 0; }
                         }
+                        #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+                        #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+                        #editor-paper li { margin-bottom: 0.15em !important; }
                       `}</style>
 
                       {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}

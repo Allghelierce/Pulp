@@ -57,16 +57,7 @@ export const SlashMenu = memo(function SlashMenu({
       action: () => execCmd("hiliteColor", "#fef08a")
     },
 
-    {
-      id: "bullet", label: "Bulleted list", shortcut: "-", group: "Structure",
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>,
-      action: () => execCmd("insertUnorderedList")
-    },
-    {
-      id: "numbered", label: "Numbered list", shortcut: "1.", group: "Structure",
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="10 6 21 6" /><polyline points="10 12 21 12" /><polyline points="10 18 21 18" /><path d="M4 6h1v4" /><path d="M4 10h2" /><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" /></svg>,
-      action: () => execCmd("insertOrderedList")
-    },
+
     {
       id: "todo", label: "To-do list", shortcut: "[]", group: "Structure", hint: "Interactive",
       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><polyline points="9 11 12 14 22 4" /></svg>,
