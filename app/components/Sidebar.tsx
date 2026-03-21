@@ -1,5 +1,6 @@
 "use client"
 import { memo, useState } from "react"
+import { Library } from "lucide-react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
@@ -27,6 +28,7 @@ interface SidebarProps {
   onSetNoteParent: (id: string, parentId: string | undefined) => void
   onChangeNoteIcon: (id: string, icon: string) => void
   onOpenSettings: () => void
+  onGoToShelf: () => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -34,6 +36,7 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings,
+  onGoToShelf,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [iconPicker, setIconPicker] = useState<{ noteId: string; x: number; y: number } | null>(null)
@@ -146,6 +149,15 @@ export const Sidebar = memo(function Sidebar({
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
           <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
+
+          {/* Library / Shelf Button */}
+          <button 
+            onClick={onGoToShelf}
+            className="mt-4 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
+          >
+            <Library className="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 group-hover:text-zinc-100 transition-colors">My Shelf</span>
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>

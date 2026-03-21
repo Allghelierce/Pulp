@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
+import { Library } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig } from "@/app/types"
 import { uid } from "@/app/lib/uid"
@@ -15,6 +16,7 @@ import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { RightSidebar } from "@/app/components/RightSidebar"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
+import { ShelfView } from "@/app/components/ShelfView"
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
@@ -113,10 +115,10 @@ const BoxItem = memo(function BoxItem({
           style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
       )}
       {isSelected && !isImage && (
-        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen} 
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
-      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+      <div onMouseDown={e => e.stopPropagation()} style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -272,7 +274,18 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           </button>
 
           <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => {
-            onUpdateBox(box.id, { boxFontFamily: "", boxFontSize: 14, boxHeadingStyle: "default", boxHighlightColor: "transparent" }); setOpen(null)
+            const temp = document.createElement("div");
+            temp.innerHTML = box.content;
+            const plain = temp.textContent || temp.innerText || "";
+            onUpdateBox(box.id, {
+              content: plain,
+              boxFontFamily: "",
+              boxFontSize: 14,
+              boxHeadingStyle: "default",
+              boxHighlightColor: "transparent",
+              textAlign: "left"
+            });
+            setOpen(null)
           }}>
             Clear
           </button>
@@ -298,9 +311,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
       </div>
 
       {/* AI Menu */}
-      <div style={{ 
-        overflow: "hidden", 
-        maxWidth: aiOpen ? 400 : 0, 
+      <div style={{
+        overflow: "hidden",
+        maxWidth: aiOpen ? 400 : 0,
         opacity: aiOpen ? 1 : 0,
         transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
         background: aiOpen ? (dk ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)") : "transparent",
@@ -389,6 +402,7 @@ export default function NoteApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
+  const [currentView, setCurrentView] = useState<"shelf" | "editor">("shelf")
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
@@ -650,6 +664,27 @@ export default function NoteApp() {
     return () => window.removeEventListener("click", handler)
   }, [editor])
 
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("pulp-settings")
+    if (saved) {
+      try {
+        const s = JSON.parse(saved)
+        if (s.accent) setAccent(s.accent)
+        if (s.theme) setTheme(s.theme)
+        if (s.autoSave !== undefined) setAutoSave(s.autoSave)
+        if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
+        if (s.editorFont) setEditorFont(s.editorFont)
+        if (s.lineSpacing) setLineSpacing(s.lineSpacing)
+        if (s.paperStyle) setPaperStyle(s.paperStyle)
+        if (s.showBinding !== undefined) setShowBinding(s.showBinding)
+        if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
+        if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
+        if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
+      } catch (e) { console.error("Local settings load failed:", e) }
+    }
+  }, [])
+
   // Load settings from cloud
   useEffect(() => {
     if (!user) return
@@ -670,13 +705,16 @@ export default function NoteApp() {
     })
   }, [user])
 
-  // Save settings to cloud (debounced)
+  // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
+    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect }
+    localStorage.setItem("pulp-settings", JSON.stringify(settings))
+
     if (!user) return
     const timer = setTimeout(async () => {
       const { error } = await supabase.from("user_settings").upsert({
         user_id: user.id,
-        settings: { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect }
+        settings
       })
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
@@ -720,13 +758,14 @@ export default function NoteApp() {
   }, [user])
 
   // Note/folder actions
-  const addNote = (folderId: number | null = null) =>
+  const addNote = (folderId: number | null = null, onCreated?: (id: string) => void) =>
     openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
       if (!name.trim()) return
       const id = uid()
       const newNote = { id, subject: name.trim(), pages: [""], folderId, boxes: {} }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
+      if (onCreated) onCreated(id)
     })
 
   const insertBacklink = useCallback(() => {
@@ -901,6 +940,30 @@ export default function NoteApp() {
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
+  if (currentView === "shelf") {
+    return (
+      <>
+        {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
+        <ShelfView
+          notes={notes}
+          onOpenNote={(id) => {
+            if (id) {
+              editor.flushSync()
+              setActiveTabId(id)
+              setCurrentPageIdx(0)
+            }
+            setCurrentView("editor")
+          }}
+          onCreateNote={() => {
+             addNote(null, () => {
+               setCurrentView("editor")
+             })
+          }}
+          theme={theme}
+        />
+      </>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
@@ -908,7 +971,31 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} />
+      <Sidebar 
+        notes={notes} 
+        folders={folders} 
+        activeTabId={activeTabId} 
+        accent={accent} 
+        draggedNoteId={draggedNoteId} 
+        renamingFolder={renamingFolder} 
+        user={user} 
+        sidebarOpen={sidebarOpen} 
+        onAddNote={addNote} 
+        onAddFolder={addFolder} 
+        onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0) }} 
+        onRenameNote={renameNote} 
+        onDeleteNote={deleteNote} 
+        onToggleFolder={toggleFolder} 
+        onRenameFolder={renameFolder} 
+        onDeleteFolder={deleteFolder} 
+        onSetRenamingFolder={setRenamingFolder} 
+        onSetDraggedNoteId={setDraggedNoteId} 
+        onDropNote={handleDropNote} 
+        onOpenSettings={() => setShowSettings(true)} 
+        onSetNoteParent={setNoteParent} 
+        onChangeNoteIcon={changeNoteIcon}
+        onGoToShelf={() => setCurrentView("shelf")}
+      />
 
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
@@ -962,14 +1049,15 @@ export default function NoteApp() {
               <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "relative" }}>
-                    <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: 0, backgroundColor: theme === "dark" ? "#1f1f23" : "#f0e9e0", borderRadius: 2, zIndex: 1, boxShadow: "2px 0 6px rgba(0,0,0,0.10)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: 0, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 0 6px rgba(0,0,0,0.08)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: 0, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
+                    <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#f0e9e0", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.12)" }} />
+                    <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.10)" }} />
+                    <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)" }} onMouseDown={e => {
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }} onMouseDown={e => {
                       if (activeTool !== 'select' && activeTool !== 'text') return
                       const target = e.target as HTMLElement
-                      if (target !== paperRef.current && target !== editorRef.current && editorRef.current?.contains(target)) return
+                      const isBox = target.closest('[id^="box-"]')
+                      if (isBox || editorRef.current?.contains(target)) return
                       boxes.onPaperMouseDown(e)
                     }}>
 
