@@ -160,8 +160,8 @@ export const Sidebar = memo(function Sidebar({
         />
       )}
 
-      <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 350ms cubic-bezier(0.34, 1.06, 0.64, 1)", willChange: "width" }}>
-        <div className="p-4 border-b border-white/5 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 200ms ease", minWidth: 256 }}>
+      <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
+        <div className="p-4 border-b border-white/5 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           <div className="flex items-center gap-2.5 mb-5 cursor-default">
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="14" cy="14" r="13" fill="#B8661A" />
@@ -177,7 +177,7 @@ export const Sidebar = memo(function Sidebar({
           <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 200ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
+        <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
           {/* Binder Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
@@ -278,7 +278,7 @@ export const Sidebar = memo(function Sidebar({
           </div>
         </div>
 
-        <div className="border-t border-white/5 px-3 py-2 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 200ms ease", minWidth: 256 }}>
+        <div className="border-t border-white/5 px-3 py-2 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           <button onClick={onOpenSettings} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
             <span className="text-[13px] shrink-0">⚙️</span>
             <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>

@@ -18,15 +18,76 @@ import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
-import { AiCommandBar } from "@/app/components/AiCommandBar"
+import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 
-// ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
+function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
+  currentPageIdx: number; totalPages: number; theme: "light" | "dark"; onNavigate: (idx: number) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const color = theme === "dark" ? "#9ca3af" : "#4b5563"
+  const fontStyle: React.CSSProperties = { color, fontFamily: '"SF Mono","Fira Code","Roboto Mono",monospace', fontWeight: 600, fontSize: 13 }
+
+  const commit = (val: string) => {
+    const n = parseInt(val, 10)
+    if (!isNaN(n) && n >= 1) onNavigate(Math.min(n, totalPages) - 1)
+    setEditing(false)
+  }
+
+  if (editing) return (
+    <div className="relative px-1 cursor-text" style={fontStyle}>
+      {/* Hidden real input captures keyboard */}
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={e => {
+          const raw = e.target.value.replace(/\D/g, "").slice(0, 3)
+          setDraft(raw)
+        }}
+        onBlur={() => commit(draft)}
+        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(draft) } if (e.key === "Escape") setEditing(false) }}
+        inputMode="numeric"
+        className="absolute inset-0 opacity-0 w-full"
+        style={{ caretColor: "transparent" }}
+      />
+      {/* Visual display */}
+      <span style={{ opacity: 0.9 }}>{draft || ""}</span>
+      <span
+        className="inline-block w-[1px] h-[1em] align-middle ml-[1px]"
+        style={{ backgroundColor: color, animation: "pulp-blink 1s step-end infinite" }}
+      />
+      <style>{`@keyframes pulp-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+    </div>
+  )
+
+  return (
+    <div
+      className="px-1 cursor-text select-none"
+      title="Click to jump to page"
+      style={{ ...fontStyle, opacity: 0.8 }}
+      onClick={() => { setDraft(""); setEditing(true); setTimeout(() => inputRef.current?.focus(), 0) }}
+    >
+      <AnimatedCounter value={currentPageIdx + 1} />
+    </div>
+  )
+}
+
+// ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { filter: url(#handwritten-jitter); outline: none !important; cursor: url('/pencil.png'), text; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
+    <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
+      <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.08 0.05" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" result="wobble" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" result="noise2" />
+        <feDisplacementMap in="wobble" in2="noise2" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
   </>)
 })
 
@@ -35,15 +96,15 @@ function htmlToPlain(html: string): string {
 }
 
 // ─── Memoized spiral binding — NEVER re-renders during box operations ──────────
-const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingCompact }: {
-  theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean
+const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingCompact, paperBg }: {
+  theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean; paperBg: string
 }) {
   if (!showBinding) return null
   if (!bindingCompact) return (
-    <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-hidden">
+    <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-visible">
       {Array.from({ length: 40 }).map((_, i) => (
         <div key={i} className="relative w-full h-[32px]">
-          <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
+          <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm shadow-[inset_2px_3px_5px_rgba(0,0,0,0.5)]" style={{ backgroundColor: paperBg }} />
           <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
           <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
           <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
@@ -200,6 +261,10 @@ const BoxItem = memo(function BoxItem({
 const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 14 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400 }
 const BOX_FONTS = [
+  { value: "'Caveat', cursive", label: "Handwritten" },
+  { value: "'Gochi Hand', cursive", label: "Gochi Hand" },
+  { value: "'Indie Flower', cursive", label: "Marker" },
+  { value: "'Dancing Script', cursive", label: "Script" },
   { value: "", label: "Garamond" },
   { value: "Georgia, serif", label: "Georgia" },
   { value: "Arial, sans-serif", label: "Arial" },
@@ -423,7 +488,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
   const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
-  const resolvedFont = boxFontFamily || '"EB Garamond", Georgia, serif'
+  const resolvedFont = boxFontFamily || "'Caveat', cursive"
 
   return (
     <div
@@ -522,7 +587,7 @@ export default function NoteApp() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
   const [autoSave, setAutoSave] = useState(true)
   const [spellCheck, setSpellCheck] = useState(true)
-  const [editorFont, setEditorFont] = useState("EB Garamond")
+  const [editorFont, setEditorFont] = useState("Caveat")
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
   const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger">("lined")
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -597,7 +662,7 @@ export default function NoteApp() {
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
-  const [showAiBar, setShowAiBar] = useState(false)
+  const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
 
@@ -671,7 +736,17 @@ export default function NoteApp() {
       return
     }
     if (e.key === "\\") {
-      e.preventDefault(); setShowAiBar(true); return
+      e.preventDefault()
+      const sel = window.getSelection()
+      const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
+      let x = 200, y = 200
+      if (sel && sel.rangeCount > 0) {
+        const rect = sel.getRangeAt(0).getBoundingClientRect()
+        x = rect.left
+        y = rect.bottom + 8
+      }
+      setAiMenu({ x, y, selectedText })
+      return
     }
 
     if (e.key === "@" || e.key === "/") {
@@ -1242,6 +1317,57 @@ export default function NoteApp() {
           />
         </button>
 
+        {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
+        {(() => {
+          const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+          const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
+          const ribbonDark = isBookmarked ? "#b01535" : (theme === "dark" ? "#2d2d32" : "#a8a8ac")
+          return (
+            <motion.div
+              onClick={() => {
+                const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+                if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
+                else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
+              }}
+              animate={{ scaleY: isBookmarked ? 1 : 0.6, opacity: isBookmarked ? 1 : 0.45 }}
+              whileHover={{ scaleY: 1, opacity: 1 }}
+              whileTap={{ scaleY: 0.9 }}
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
+              style={{
+                position: "absolute",
+                top: 48,
+                left: 104,
+                width: 22,
+                zIndex: 30,
+                cursor: "pointer",
+                transformOrigin: "top",
+                filter: isBookmarked ? "drop-shadow(0 4px 8px rgba(225,29,72,0.5))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+              }}
+            >
+              <div style={{
+                width: "100%",
+                height: 10,
+                backgroundColor: ribbonDark,
+                borderRadius: "3px 3px 0 0",
+                boxShadow: `inset 0 -2px 3px rgba(0,0,0,0.18)`,
+              }} />
+              <div style={{
+                width: "100%",
+                height: 64,
+                backgroundColor: ribbonColor,
+                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 88%, 0% 100%)",
+                position: "relative",
+              }}>
+                <div style={{ position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: 5 }}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", backgroundColor: isBookmarked ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.18)" }} />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })()}
+
         {notes.length > 0 && (
           <DocumentToolbar
             activeTool={activeTool}
@@ -1308,6 +1434,9 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.10)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
+                    <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
+
+
                     <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                       onMouseDown={e => {
                         if (activeTool === 'sticky') {
@@ -1332,8 +1461,6 @@ export default function NoteApp() {
                         placeStickyNote(e)
                       }}
                     >
-
-                      <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} />
 
                       <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
                       <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
@@ -1440,25 +1567,37 @@ export default function NoteApp() {
                         onClick={e => e.stopPropagation()}
                       >
                         <div
-                          className="flex items-center gap-1.5"
+                          className="flex items-center gap-0.5"
                           onMouseDown={e => e.stopPropagation()}
                           onPointerDown={e => e.stopPropagation()}
                         >
+                          {/* Skip to first */}
+                          <button
+                            disabled={currentPageIdx === 0}
+                            onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
+                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            title="First Page"
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8"/><path d="m11 20-4-8 4-8"/></svg>
+                          </button>
+                          {/* Previous */}
                           <button
                             disabled={currentPageIdx === 0}
                             onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                            className={`p-2 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-25" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                             style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
                             title="Previous Page"
                           >
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
                           </button>
-                          <div
-                            className="px-1"
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563", opacity: 0.8, fontWeight: 600, fontFamily: '"SF Mono", "Fira Code", "Roboto Mono", monospace' }}
-                          >
-                            <AnimatedCounter value={currentPageIdx + 1} />
-                          </div>
+                          <PageNumberInput
+                            currentPageIdx={currentPageIdx}
+                            totalPages={activeNote.pages.length}
+                            theme={theme}
+                            onNavigate={(idx: number) => { editor.flushSync(); setCurrentPageIdx(idx) }}
+                          />
+                          {/* Next */}
                           <button
                             onClick={() => {
                               editor.flushSync();
@@ -1469,44 +1608,22 @@ export default function NoteApp() {
                                 setCurrentPageIdx(activeNote.pages.length)
                               }
                             }}
-                            className="p-2 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
+                            className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
                             style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
                             title="Next Page / Add Page"
                           >
-                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
                           </button>
-                          {/* Bookmark ribbon — inline with nav */}
-                          {(() => {
-                            const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
-                            return (
-                              <motion.div
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
-                                  if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
-                                  else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
-                                }}
-                                animate={{ scaleY: isBookmarked ? 1 : 0.72, opacity: isBookmarked ? 1 : 0.55 }}
-                                whileHover={{ scaleY: 1, opacity: 1, transition: { duration: 0.15 } }}
-                                whileTap={{ scaleY: 0.88, transition: { duration: 0.08 } }}
-                                transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                                className="ml-2 w-[18px] h-12 cursor-pointer shrink-0 relative"
-                                style={{
-                                  backgroundColor: isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#d4d4d8"),
-                                  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 87%, 0% 100%)",
-                                  transformOrigin: "top",
-                                  filter: isBookmarked ? "drop-shadow(0 3px 6px rgba(225,29,72,0.45))" : "drop-shadow(0 2px 3px rgba(0,0,0,0.18))",
-                                }}
-                              >
-                                {/* Stitching dots */}
-                                <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col gap-[5px]">
-                                  {[0, 1, 2].map(i => (
-                                    <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: isBookmarked ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.2)" }} />
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )
-                          })()}
+                          {/* Skip to last */}
+                          <button
+                            disabled={currentPageIdx === activeNote.pages.length - 1}
+                            onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
+                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            title="Last Page"
+                          >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8"/><path d="m13 20 4-8-4-8"/></svg>
+                          </button>
                         </div>{/* end inner flex */}
                       </div>{/* end deadzone */}
 
@@ -1564,12 +1681,16 @@ export default function NoteApp() {
         />
       )}
 
-      {showAiBar && (
-        <AiCommandBar
-          onClose={() => setShowAiBar(false)}
-          onSubmit={(prompt) => {
-            openAlert("AI Command", `Processing: "${prompt}"... (Integration coming soon)`)
-            setShowAiBar(false)
+      {aiMenu && (
+        <AiInlineMenu
+          x={aiMenu.x}
+          y={aiMenu.y}
+          selectedText={aiMenu.selectedText}
+          isDark={theme === "dark"}
+          onClose={() => setAiMenu(null)}
+          onSubmit={(prompt: string) => {
+            openAlert("AI", `Processing: "${prompt}"`)
+            setAiMenu(null)
           }}
         />
       )}
