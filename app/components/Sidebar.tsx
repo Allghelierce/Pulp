@@ -12,7 +12,7 @@ interface SidebarProps {
   draggedNoteId: string | null
   renamingFolder: number | null
   user: any
-  sidebarOpen: boolean
+  sidebarWidth: number
   onAddNote: (folderId: number | null) => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
@@ -31,7 +31,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = memo(function Sidebar({
-  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarOpen,
+  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth,
   onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
@@ -132,7 +132,7 @@ export const Sidebar = memo(function Sidebar({
         />
       )}
 
-      <div id="app-sidebar" className={`${sidebarOpen ? "w-64" : "w-0"} bg-[#110d0e] text-white flex flex-col shrink-0 transition-all duration-300 overflow-hidden border-r border-white/5`} style={{ scrollbarGutter: "stable" }}>
+      <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: "width 0.15s ease" }}>
         <div className="p-4 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2.5 mb-5 cursor-default">
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">

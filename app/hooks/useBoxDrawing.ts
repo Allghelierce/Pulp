@@ -239,7 +239,7 @@ export function useBoxDrawing({
           const x = (sx - r.left) / scale
           const y = (sy - r.top) / scale
           const id = uid()
-          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 420, h: 64, content: '' }
+          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 150, h: 32, content: '' }
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
             ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== ''), newBox] }
           }))

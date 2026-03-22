@@ -11,8 +11,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --border: rgba(0, 0, 0, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --border: rgba(255, 255, 255, 0.15);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -65,4 +76,144 @@ details.toggle-block summary:focus {
   color: rgba(0, 0, 0, 0.25);
   pointer-events: none;
   cursor: text;
+}
+
+/* ── Neon Task Checkbox ─────────────────────────────────────── */
+.neon-cb {
+  --ncb-p: #00ffaa;
+  --ncb-d: #00cc88;
+  --ncb-sz: 22px;
+  position: relative;
+  display: inline-block;
+  width: var(--ncb-sz);
+  height: var(--ncb-sz);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.neon-cb__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.neon-cb__box {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid var(--ncb-d);
+  border-radius: 5px;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.neon-cb__input:checked ~ .neon-cb__box {
+  border-color: var(--ncb-p);
+  background: rgba(0, 255, 170, 0.08);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.3), inset 0 0 8px rgba(0, 255, 170, 0.04);
+}
+
+/* Animated SVG checkmark */
+.neon-cb__check {
+  position: absolute;
+  inset: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  fill: none;
+  stroke: var(--ncb-p);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+  transform: scale(0.9);
+}
+
+.neon-cb__input:checked ~ .neon-cb__box .neon-cb__check {
+  stroke-dashoffset: 0;
+  transform: scale(1.08);
+}
+
+/* Glow behind box */
+.neon-cb__glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: 7px;
+  background: #00ffaa;
+  filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.neon-cb__input:checked ~ .neon-cb__box .neon-cb__glow {
+  opacity: 0.18;
+}
+
+/* Ring pulse on check */
+.neon-cb__box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ncb-p);
+  border-radius: 5px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.neon-cb__input:checked ~ .neon-cb__box::after {
+  animation: ncb-ring 0.55s ease-out forwards;
+}
+
+@keyframes ncb-ring {
+  0%   { transform: scale(0.7); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0;   }
+}
+
+/* Flowing border sparks */
+.neon-cb__border {
+  position: absolute;
+  background: var(--ncb-p);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.neon-cb__input:checked ~ .neon-cb__box .neon-cb__border {
+  opacity: 1;
+}
+
+.neon-cb__border--t { top: 0;    left: -100%;  width: 40px; height: 1px;  animation: ncb-bt 2s linear infinite; }
+.neon-cb__border--r { top: -100%; right: 0;    width: 1px;  height: 40px; animation: ncb-br 2s linear infinite; }
+.neon-cb__border--b { bottom: 0; right: -100%; width: 40px; height: 1px;  animation: ncb-bb 2s linear infinite; }
+.neon-cb__border--l { bottom: -100%; left: 0;  width: 1px;  height: 40px; animation: ncb-bl 2s linear infinite; }
+
+@keyframes ncb-bt { 0% { transform: translateX(0); }    100% { transform: translateX(200%); }  }
+@keyframes ncb-br { 0% { transform: translateY(0); }    100% { transform: translateY(200%); }  }
+@keyframes ncb-bb { 0% { transform: translateX(0); }    100% { transform: translateX(-200%); } }
+@keyframes ncb-bl { 0% { transform: translateY(0); }    100% { transform: translateY(-200%); } }
+
+/* NeonCheckbox standalone component keyframes */
+@keyframes borderFlow1 { 0% { transform: translateX(0); }    100% { transform: translateX(200%); }  }
+@keyframes borderFlow2 { 0% { transform: translateY(0); }    100% { transform: translateY(200%); }  }
+@keyframes borderFlow3 { 0% { transform: translateX(0); }    100% { transform: translateX(-200%); } }
+@keyframes borderFlow4 { 0% { transform: translateY(0); }    100% { transform: translateY(-200%); } }
+
+@keyframes particleExplosion {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--x, 20px)), calc(-50% + var(--y, 20px))) scale(0); opacity: 0; }
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(0); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes sparkFlash {
+  0%   { transform: rotate(var(--r, 0deg)) translateX(0)    scale(1); opacity: 1; }
+  100% { transform: rotate(var(--r, 0deg)) translateX(30px) scale(0); opacity: 0; }
 }

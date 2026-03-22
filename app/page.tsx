@@ -16,11 +16,12 @@ import { RightSidebar } from "@/app/components/RightSidebar"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
+import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
   </>)
 })
@@ -99,9 +100,9 @@ const BoxItem = memo(function BoxItem({
       id={`box-${box.id}`}
       onMouseDown={e => startDrag(e, box)}
       style={{
-        position: "absolute", left: box.x, top: box.y, width: box.w, height: box.h,
-        border: isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent",
-        borderRadius: 2, backgroundColor: "transparent",
+        position: "absolute", left: box.x, top: box.y, width: box.w, height: "auto", minHeight: box.h,
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid rgba(0,0,0,0.15)` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
+        borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: 50, overflow: "visible", cursor: "grab",
       }}
     >
@@ -132,7 +133,7 @@ const BoxItem = memo(function BoxItem({
         </div>
       )}
 
-      <div style={{ position: "absolute", inset: 0, padding: "5px 7px", overflow: "hidden" }}>
+      <div style={{ padding: "5px 7px" }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -146,7 +147,7 @@ const BoxItem = memo(function BoxItem({
             boxFontSize={box.boxFontSize}
             boxHeadingStyle={box.boxHeadingStyle}
             boxHighlightColor={box.boxHighlightColor}
-            onUpdate={updateBoxContent}
+            onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
             onKeyDown={onKeyDown}
             onInput={onInput}
@@ -346,23 +347,33 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   )
 })
 
-const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxHighlightColor, onUpdate, onFocus, onKeyDown, onInput }: {
+interface BoxTextareaProps {
   id: string; content: string; textAlign?: string
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
-  onUpdate: (id: string, v: string) => void
+  onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
-}) {
+}
+
+const BoxTextarea = memo(function BoxTextarea({ 
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus, onKeyDown, onInput 
+}: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const focusedRef = useRef(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const timerRef = useRef<any>(null)
 
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== content) {
       ref.current.innerHTML = content
     }
   }, [content])
+
+  const syncState = useCallback(() => {
+    if (!ref.current) return
+    const v = ref.current.innerHTML
+    const sh = ref.current.scrollHeight
+    onUpdate(id, { content: v, h: Math.max(sh, 32) })
+  }, [id, onUpdate])
 
   const styleKey = boxHeadingStyle || "default"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
@@ -380,23 +391,21 @@ const BoxTextarea = memo(function BoxTextarea({ id, content, textAlign, boxFontF
       }}
       onInput={e => {
         onInput(e)
-        const v = e.currentTarget.innerHTML
         clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => onUpdate(id, v), 500)
+        timerRef.current = setTimeout(syncState, 500)
       }}
       onMouseDown={e => e.stopPropagation()}
-      onFocus={() => { focusedRef.current = true; onFocus() }}
+      onFocus={() => { onFocus() }}
       onBlur={() => {
-        focusedRef.current = false
         clearTimeout(timerRef.current)
-        onUpdate(id, ref.current?.innerHTML || "")
+        syncState()
       }}
       style={{
         width: "100%", outline: "none", minHeight: "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
         lineHeight: 1.45, color: "#1a1a1a", cursor: "text",
-        textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflowY: "auto",
-        backgroundColor: boxHighlightColor || "transparent",
+        textAlign: (textAlign || "left") as any, wordWrap: "break-word", overflow: "visible",
+        backgroundColor: "transparent",
       }}
     />
   )
@@ -413,7 +422,8 @@ export default function NoteApp() {
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarWidth, setSidebarWidth] = useState(256)
+  const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
   const [gridView, setGridView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
@@ -466,9 +476,10 @@ export default function NoteApp() {
   const boxes = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
-  // Slash (@) menu
-  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
-  const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
+  // Slash (@ and /) menu
+  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
+  const [showImageModal, setShowImageModal] = useState(false)
+  const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
 
   const closeSlashMenu = useCallback(() => {
@@ -560,7 +571,15 @@ export default function NoteApp() {
         e.preventDefault()
         const r = sel.getRangeAt(0)
         const rect = r.getBoundingClientRect()
-        const m = { x: rect.right - 20, y: rect.bottom + 14, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement, isSelectionMode: true }
+        const m = { 
+          x: rect.right - 20, 
+          y: rect.bottom + 14, 
+          filter: "", 
+          type: isBox ? ("textarea" as const) : ("editor" as const), 
+          mode: e.key as "@" | "/",
+          target: e.currentTarget as HTMLElement, 
+          isSelectionMode: true 
+        }
         slashMenuRef.current = m
         setSlashMenu(m)
         return
@@ -576,7 +595,14 @@ export default function NoteApp() {
       sel.removeAllRanges()
       sel.addRange(range)
 
-      const m = { x: rect.left, y: rect.bottom + 14, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement }
+      const m = { 
+        x: rect.left, 
+        y: rect.bottom + 14, 
+        filter: "", 
+        type: isBox ? ("textarea" as const) : ("editor" as const), 
+        mode: e.key as "@" | "/",
+        target: e.currentTarget as HTMLElement 
+      }
       slashMenuRef.current = m
       setSlashMenu(m)
       if (isBox) e.preventDefault()
@@ -953,8 +979,61 @@ export default function NoteApp() {
 
 
   if (isLoading) return (
-    <div className="h-screen bg-[#110d0e] flex items-center justify-center text-white font-sans">
-      <div className="animate-pulse text-xl">Loading Letter Soup...</div>
+    <div className="h-screen bg-[#141008] flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Texture Layer */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+      
+      <div className="relative z-10 flex flex-col items-center gap-10">
+        <div className="relative w-40 h-40">
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(232,112,26,0.4)]">
+            <defs>
+              <linearGradient id="juiceGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#c04a08" />
+                <stop offset="60%" stopColor="#e8701a" />
+                <stop offset="100%" stopColor="#ff9d33" />
+              </linearGradient>
+              <mask id="orangeMask">
+                <circle cx="50" cy="54" r="42" fill="white" />
+              </mask>
+            </defs>
+            
+            {/* Empty Orange Background */}
+            <circle cx="50" cy="54" r="42" fill="#2a1a0a" stroke="rgba(232,112,26,0.2)" strokeWidth="1.5" />
+            
+            {/* Filling Juice */}
+            <g mask="url(#orangeMask)">
+              <rect x="0" y="0" width="100" height="100" fill="url(#juiceGrad)" 
+                style={{ transform: "translateY(100px)", animation: "orange-fill-up 3.5s ease-in-out infinite" }} />
+              {/* Optional: Simple Ripple Line */}
+              <rect x="0" y="0" width="100" height="2" fill="rgba(255,255,255,0.25)"
+                style={{ transform: "translateY(100px)", animation: "orange-fill-up 3.5s ease-in-out infinite" }} />
+            </g>
+
+            {/* Shine/Texture */}
+            <circle cx="50" cy="54" r="42" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" strokeDasharray="2,8" opacity="0.4" />
+            
+            {/* Stem/Leaf (always visible) */}
+            <path d="M 50 12 Q 52 4 62 2" stroke="#4a6e2f" strokeWidth="5" strokeLinecap="round" fill="none" />
+            <path d="M 62 2 C 70 2 75 8 68 14 C 62 20 54 16 54 10 Z" fill="#5a8a36" />
+          </svg>
+        </div>
+        
+        <div className="flex flex-col items-center">
+          <h2 className="font-serif italic text-4xl text-[#e8701a] mb-2 tracking-tight">Gathering Oranges</h2>
+          <div className="w-32 h-[1.5px] bg-[#e8701a]/20 relative overflow-hidden rounded-full">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#e8701a] to-transparent" 
+              style={{ width: "100%", transform: "translateX(-100%)", animation: "orange-loading-bar 1.5s ease-in-out infinite" }} />
+          </div>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes orange-fill-up {
+              0%   { transform: translateY(100px); }
+              80%  { transform: translateY(12px); }
+              100% { transform: translateY(12px); }
+            }
+            @keyframes orange-loading-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+          ` }} />
+        </div>
+      </div>
     </div>
   )
 
@@ -967,7 +1046,7 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} onGoToShelf={() => setCurrentView("shelf")} />
+      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarWidth={sidebarWidth} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} onGoToShelf={() => setCurrentView("shelf")} />
 
       {currentView === "shelf" && (
         <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
@@ -981,15 +1060,31 @@ export default function NoteApp() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
-        <button 
-          onClick={() => setSidebarOpen(v => !v)} 
-          title="Toggle sidebar" 
-          className="absolute left-6 md:left-2 lg:left-8 top-[42px] z-[10] flex flex-col items-center transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-y-[1.05] active:scale-x-[0.98] drop-shadow-xl opacity-90 hover:opacity-100 outline-none"
+        <button
+          title="Drag to resize sidebar"
+          onMouseDown={e => {
+            e.preventDefault()
+            sidebarDragRef.current = { startX: e.clientX, startWidth: sidebarWidth }
+            const onMove = (ev: MouseEvent) => {
+              if (!sidebarDragRef.current) return
+              const dx = ev.clientX - sidebarDragRef.current.startX
+              setSidebarWidth(Math.max(0, Math.min(320, sidebarDragRef.current.startWidth + dx)))
+            }
+            const onUp = () => {
+              sidebarDragRef.current = null
+              setSidebarWidth(w => w < 128 ? 0 : 256)
+              window.removeEventListener("mousemove", onMove)
+              window.removeEventListener("mouseup", onUp)
+            }
+            window.addEventListener("mousemove", onMove)
+            window.addEventListener("mouseup", onUp)
+          }}
+          className="absolute left-6 md:left-2 lg:left-8 top-[42px] z-[10] flex flex-col items-center drop-shadow-xl opacity-90 hover:opacity-100 outline-none cursor-ew-resize"
           style={{ transformOrigin: "top center", animation: "leaf-sway 6s ease-in-out infinite" }}
         >
           {/* Extended slim twilight-twine string */}
-          <div style={{ width: "1.5px", height: 50, background: "linear-gradient(to right, #402919, #75553d, #402919)", marginBottom: -16, position: "relative", zIndex: 0, boxShadow: "0 0 2px rgba(0,0,0,0.3)" }} />
-          <img src="/plant2.png?v=3" alt="Toggle Sidebar" style={{ width: 68, height: "auto", objectFit: "contain", pointerEvents: "none", position: "relative", zIndex: 10, marginLeft: 4 }} />
+          <div style={{ width: "1.5px", height: 36, background: "linear-gradient(to right, #402919, #75553d, #402919)", marginBottom: -12, position: "relative", zIndex: 0, boxShadow: "0 0 2px rgba(0,0,0,0.3)" }} />
+          <img src="/plant2.png?v=3" alt="Toggle Sidebar" style={{ width: 44, height: "auto", objectFit: "contain", pointerEvents: "none", position: "relative", zIndex: 10, marginLeft: 3 }} />
         </button>
 
         {notes.length > 0 && (
@@ -1222,6 +1317,9 @@ export default function NoteApp() {
           y={slashMenu.y}
           filter={slashMenu.filter}
           accent={accent}
+          mode={slashMenu.mode}
+          box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
+          onUpdateBox={boxes.updateBox}
           isSelectionMode={slashMenu.isSelectionMode}
           onSelect={executeSlashItem}
           onClose={closeSlashMenu}
@@ -1229,6 +1327,16 @@ export default function NoteApp() {
           insertHTML={editor.insertHTML}
           toggleScript={editor.toggleScript}
           insertBacklink={insertBacklink}
+          onInsertImage={() => { closeSlashMenu(); setShowImageModal(true) }}
+        />
+      )}
+
+      {showImageModal && (
+        <ImageUploadModal
+          onConfirm={(url) => {
+            editor.insertHTML(`<img src="${url}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Uploaded image" /><br/>`)
+          }}
+          onClose={() => setShowImageModal(false)}
         />
       )}
     </div>
