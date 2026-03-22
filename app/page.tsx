@@ -201,6 +201,40 @@ const BoxItem = memo(function BoxItem({
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
+      {/* Rotation handle */}
+      {isSelected && !isSticky && (
+        <div
+          title="Rotate"
+          onMouseDown={e => {
+            e.preventDefault(); e.stopPropagation()
+            const el = document.getElementById(`box-${box.id}`)
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            const cx = rect.left + rect.width / 2
+            const cy = rect.top + rect.height / 2
+            const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI
+            const startRotation = box.boxRotation || 0
+            const onMove = (me: MouseEvent) => {
+              const a = Math.atan2(me.clientY - cy, me.clientX - cx) * 180 / Math.PI
+              updateBox(box.id, { boxRotation: startRotation + (a - startAngle) })
+            }
+            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+            window.addEventListener('mousemove', onMove)
+            window.addEventListener('mouseup', onUp)
+          }}
+          style={{
+            position: "absolute", top: -28, left: "50%", transform: "translateX(-50%)",
+            width: 14, height: 14, borderRadius: "50%",
+            background: "white", border: `1.5px solid ${accentSolid}`,
+            cursor: "grab", zIndex: 120,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={accentSolid} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.5 2v6h-6" /><path d="M2.5 12a10 10 0 0 1 18-6" />
+          </svg>
+        </div>
+      )}
       {isSelected && (
         <button
           onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
@@ -258,7 +292,7 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 13 }
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "'Caveat', cursive", label: "Handwritten" },
@@ -490,7 +524,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
   const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
-  const resolvedFont = isMarginStyle ? "'Indie Flower', cursive" : (boxFontFamily || "'Caveat', cursive")
+  const resolvedFont = isMarginStyle ? "'Licorice', cursive" : (boxFontFamily || "'Caveat', cursive")
 
   return (
     <div
@@ -517,11 +551,11 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
-        lineHeight: 1.45, color: isMarginStyle ? "#8a8a8a" : "#1a1a1a", cursor: "text",
+        lineHeight: 1.45, color: isMarginStyle ? "#d4d4d8" : "#1a1a1a", cursor: "text",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-1.2deg) skewX(-2deg)" : undefined,
         transformOrigin: "top left",
-        opacity: isMarginStyle ? 0.75 : 1,
+        opacity: isMarginStyle ? 0.6 : 1,
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
         overflow: isSticky ? "hidden" : "visible",
         backgroundColor: "transparent",
@@ -1575,7 +1609,7 @@ export default function NoteApp() {
                             disabled={currentPageIdx === 0}
                             onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
                             className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
                             title="First Page"
                           >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8"/><path d="m11 20-4-8 4-8"/></svg>
@@ -1585,7 +1619,7 @@ export default function NoteApp() {
                             disabled={currentPageIdx === 0}
                             onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
                             className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
                             title="Previous Page"
                           >
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
@@ -1608,7 +1642,7 @@ export default function NoteApp() {
                               }
                             }}
                             className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
                             title="Next Page / Add Page"
                           >
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
@@ -1618,7 +1652,7 @@ export default function NoteApp() {
                             disabled={currentPageIdx === activeNote.pages.length - 1}
                             onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
                             className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
                             title="Last Page"
                           >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8"/><path d="m13 20 4-8-4-8"/></svg>

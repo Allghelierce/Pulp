@@ -193,7 +193,7 @@ function Submenu({
 
 function CustomMenuFlyout({ children, parentRef, mode }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/" }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ left: 0, top: 0, valid: false })
+  const [top, setTop] = useState(0)
 
   useEffect(() => {
     if (parentRef.current && ref.current) {
@@ -201,13 +201,9 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      setPos({ left: pr.right + 4, top: t, valid: true })
+      setTop(t)
     }
-  }, [parentRef, children]) // children dependency to recalculate if dimensions shift
-
-  if (!pos.valid) {
-    return <div ref={ref} style={{ position: "fixed", left: -9999, top: -9999, opacity: 0 }}>{children}</div>
-  }
+  }, [parentRef, children])
 
   const isLight = mode === "/"
 
@@ -216,8 +212,8 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       ref={ref}
       style={{
         position: "fixed",
-        left: pos.left,
-        top: pos.top,
+        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 4,
+        top,
         zIndex: 10000,
         background: isLight ? "rgba(255,255,255,0.97)" : "rgba(14,14,16,0.96)",
         backdropFilter: "blur(20px)",
