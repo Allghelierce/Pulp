@@ -915,15 +915,28 @@ export default function NoteApp() {
   useEffect(() => {
     const saved = localStorage.getItem("pulp-notes")
     const savedFolders = localStorage.getItem("pulp-folders")
-    if (saved) setNotes(JSON.parse(saved))
+    const savedActiveTab = localStorage.getItem("pulp-active-tab")
+    if (saved) {
+      const parsed: NoteData[] = JSON.parse(saved)
+      setNotes(parsed)
+      // Restore last opened note, or fall back to the first note in the list
+      if (parsed.length > 0) {
+        const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
+        setActiveTabId(lastId)
+      }
+    }
     if (savedFolders) setFolders(JSON.parse(savedFolders))
   }, [])
 
-  // Save to localStorage whenever notes or folders change
+  // Save to localStorage whenever notes, folders, or active tab changes
   useEffect(() => {
     if (notes.length > 0) localStorage.setItem("pulp-notes", JSON.stringify(notes))
     if (folders.length > 0) localStorage.setItem("pulp-folders", JSON.stringify(folders))
   }, [notes, folders])
+
+  useEffect(() => {
+    if (activeTabId) localStorage.setItem("pulp-active-tab", activeTabId)
+  }, [activeTabId])
 
   // Fetch notes from cloud — runs once on mount only
   // Only hydrates from cloud if localStorage has no data (local always wins)
@@ -1426,7 +1439,7 @@ export default function NoteApp() {
                         onPointerDown={e => e.stopPropagation()}
                         onClick={e => e.stopPropagation()}
                       >
-                        <div 
+                        <div
                           className="flex items-center gap-1.5"
                           onMouseDown={e => e.stopPropagation()}
                           onPointerDown={e => e.stopPropagation()}
@@ -1487,7 +1500,7 @@ export default function NoteApp() {
                               >
                                 {/* Stitching dots */}
                                 <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col gap-[5px]">
-                                  {[0,1,2].map(i => (
+                                  {[0, 1, 2].map(i => (
                                     <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: isBookmarked ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.2)" }} />
                                   ))}
                                 </div>

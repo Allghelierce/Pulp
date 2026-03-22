@@ -115,7 +115,7 @@ function Submenu({
       {options.map((opt) => (
         <div
           key={opt.label}
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); opt.action(); onSelect(() => {}); onClose() }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); opt.action(); onSelect(() => { }); onClose() }}
           style={{
             padding: "6px 12px",
             display: "flex",
@@ -202,20 +202,20 @@ export const SlashMenu = memo(function SlashMenu({
         const id = "todo-" + Math.random().toString(36).slice(2, 9)
         insertHTML(
           `<div class="task-item" style="display:flex;align-items:flex-start;gap:10px;margin:4px 0">` +
-            `<div contenteditable="false" style="user-select:none;display:flex;align-items:center;padding-top:2px;flex-shrink:0;">` +
-              `<label class="neon-cb">` +
-                `<input type="checkbox" class="neon-cb__input"/>` +
-                `<div class="neon-cb__box">` +
-                  `<svg viewBox="0 0 24 24" class="neon-cb__check"><path d="M3,12.5l7,7L21,5"/></svg>` +
-                  `<div class="neon-cb__glow"></div>` +
-                  `<span class="neon-cb__border neon-cb__border--t"></span>` +
-                  `<span class="neon-cb__border neon-cb__border--r"></span>` +
-                  `<span class="neon-cb__border neon-cb__border--b"></span>` +
-                  `<span class="neon-cb__border neon-cb__border--l"></span>` +
-                `</div>` +
-              `</label>` +
-            `</div>` +
-            `<span id="${id}" style="flex:1;outline:none;min-height:1.2em;">&#8203;</span>` +
+          `<div contenteditable="false" style="user-select:none;display:flex;align-items:center;padding-top:2px;flex-shrink:0;">` +
+          `<label class="neon-cb">` +
+          `<input type="checkbox" class="neon-cb__input"/>` +
+          `<div class="neon-cb__box">` +
+          `<svg viewBox="0 0 24 24" class="neon-cb__check"><path d="M3,12.5l7,7L21,5"/></svg>` +
+          `<div class="neon-cb__glow"></div>` +
+          `<span class="neon-cb__border neon-cb__border--t"></span>` +
+          `<span class="neon-cb__border neon-cb__border--r"></span>` +
+          `<span class="neon-cb__border neon-cb__border--b"></span>` +
+          `<span class="neon-cb__border neon-cb__border--l"></span>` +
+          `</div>` +
+          `</label>` +
+          `</div>` +
+          `<span id="${id}" style="flex:1;outline:none;min-height:1.2em;">&#8203;</span>` +
           `</div>`
         )
         setTimeout(() => {
@@ -354,8 +354,8 @@ export const SlashMenu = memo(function SlashMenu({
   const itemsToDisplay = mode === "/"
     ? settingsItems
     : (isSelectionMode
-        ? allItems.filter(item => item.group === "Typography" || item.group === "Reference")
-        : allItems)
+      ? allItems.filter(item => item.group === "Typography" || item.group === "Reference")
+      : allItems)
 
   const filtered = filter
     ? itemsToDisplay.filter(item => item.label.toLowerCase().includes(filter.toLowerCase()))
