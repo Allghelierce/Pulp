@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
 import { SettingSection } from "./SettingSection"
+import { PricingSection } from "@/components/blocks/pricing-section"
+import { Zap, Sparkles } from "lucide-react"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
@@ -314,101 +316,62 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="text-center space-y-2 mb-8">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="text-center space-y-1 mb-2">
                   <h3 className={`text-3xl ${isDark ? "text-zinc-100" : "text-zinc-800"}`} style={{ fontFamily: 'var(--font-dancing), cursive', fontWeight: 600 }}>Choose your plan</h3>
                   <p className={`text-[13px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Unlock the full power of Pulp</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-5">
-                  {[
+                <PricingSection
+                  isDark={isDark}
+                  accentColor={accentColor}
+                  tiers={[
                     {
-                      id: "basic",
-                      name: "Starter",
-                      price: "Free",
-                      period: "Forever",
-                      color: "#71717a",
-                      features: ["100 Monthly AI Drawings", "1GB Cloud Storage", "Basic Page Styles", "Community Support"],
-                      button: "Current Plan",
-                      disabled: true
+                      name: "Free",
+                      price: { monthly: 0, yearly: 0 },
+                      description: "For individuals getting started",
+                      buttonLabel: "Current Plan",
+                      buttonDisabled: true,
+                      icon: <Zap className="w-5 h-5 text-zinc-500" />,
+                      features: [
+                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
+                        { name: "100 AI Sketches / month", description: "Generate images with AI prompts", included: true },
+                        { name: "1 GB Cloud Storage", description: "Sync notes across devices", included: true },
+                        { name: "Basic Page Styles", description: "Lined, dotgrid, and plain paper", included: true },
+                        { name: "Priority Support", description: "Fast-track email & chat support", included: false },
+                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: false },
+                      ],
                     },
                     {
-                      id: "pro",
                       name: "Pro",
-                      price: "$8",
-                      period: "per month",
-                      color: accentColor,
-                      featured: true,
-                      features: ["Unlimited AI Sketches", "10GB Cloud Storage", "All Page Styles", "Priority Support", "Advanced Export"],
-                      button: "Upgrade to Pro"
+                      price: { monthly: 8, yearly: 72 },
+                      description: "For power users who want it all",
+                      buttonLabel: "Upgrade to Pro",
+                      highlight: true,
+                      badge: "Most Popular",
+                      icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
+                      features: [
+                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
+                        { name: "Unlimited AI Sketches", description: "No monthly cap on AI generations", included: true },
+                        { name: "10 GB Cloud Storage", description: "Ample space for all your notes", included: true },
+                        { name: "All Page Styles", description: "Including stenopad and custom layouts", included: true },
+                        { name: "Priority Support", description: "Fast-track email & chat support", included: true },
+                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: true },
+                      ],
                     },
-                    {
-                      id: "lifetime",
-                      name: "Lifetime",
-                      price: "$99",
-                      period: "one-time",
-                      color: "#b45309",
-                      features: ["Everything in Pro", "Lifetime Updates", "Early Beta Access", "Personal Concierge", "Custom Page Design"],
-                      button: "Get Lifetime"
-                    }
-                  ].map(plan => (
-                    <div
-                      key={plan.id}
-                      className={`relative flex flex-col p-6 rounded-none border transition-all hover:scale-[1.02] ${plan.featured
-                          ? (isDark ? "bg-zinc-900 border-zinc-700 shadow-2xl" : "bg-white border-zinc-200 shadow-xl ring-2")
-                          : (isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-zinc-50/50 border-zinc-200")
-                        }`}
-                      style={{ boxShadow: plan.featured ? (isDark ? `0 0 20px ${plan.color}22` : `0 0 0 2px ${plan.color}, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)`) : undefined }}
-                    >
-                      {plan.featured && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-none shadow-sm">
-                          Most Popular
-                        </div>
-                      )}
+                  ]}
+                />
 
-                      <div className="mb-6">
-                        <p className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: plan.color }}>{plan.name}</p>
-                        <div className="flex items-baseline gap-1">
-                          <span className={`text-3xl font-extrabold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{plan.price}</span>
-                          <span className={`text-[11px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{plan.period}</span>
-                        </div>
-                      </div>
-
-                      <ul className="flex-1 space-y-3 mb-8">
-                        {plan.features.map(f => (
-                          <li key={f} className={`flex items-center gap-2.5 text-[11.5px] ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                            <svg className="w-4 h-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-
-                      <button
-                        disabled={plan.disabled}
-                        className={`w-full py-2.5 rounded-none text-[12px] font-bold transition-all ${plan.disabled
-                            ? (isDark ? "bg-zinc-800 text-zinc-600" : "bg-zinc-200 text-zinc-500 cursor-default")
-                            : "text-white shadow-md hover:shadow-lg hover:opacity-90 active:scale-95"
-                          }`}
-                        style={{ backgroundColor: plan.disabled ? undefined : plan.color }}
-                      >
-                        {plan.button}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className={`mt-8 p-5 ${isDark ? "bg-amber-950/20 border-amber-900/50" : "bg-amber-50 border-amber-100"} rounded-none border flex items-center justify-between`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-none bg-amber-500 flex items-center justify-center text-white text-lg">✨</div>
+                <div className={`p-4 rounded-xl border flex items-center justify-between ${isDark ? "bg-amber-950/20 border-amber-900/40" : "bg-amber-50 border-amber-100"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white text-sm">✨</div>
                     <div>
-                      <p className={`text-[13px] font-bold ${isDark ? "text-amber-200" : "text-amber-900"}`}>Education Discount</p>
-                      <p className={`text-[11px] ${isDark ? "text-amber-500/80" : "text-amber-700/80"}`}>Are you a student or teacher? Get Pro for $4/mo.</p>
+                      <p className={`text-[12px] font-semibold ${isDark ? "text-amber-200" : "text-amber-900"}`}>Education Discount</p>
+                      <p className={`text-[11px] ${isDark ? "text-amber-500/80" : "text-amber-700/70"}`}>Student or teacher? Get Pro for $4/mo.</p>
                     </div>
                   </div>
-                  <button className={`text-[11px] font-bold ${isDark ? "text-amber-500 border-amber-900/50 hover:bg-amber-900/20" : "text-amber-700 border-amber-200 hover:bg-amber-100"} border-2 px-4 py-2 rounded-none transition-colors`}>
-                    Verify School
+                  <button className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors ${isDark ? "text-amber-500 border-amber-900/50 hover:bg-amber-900/20" : "text-amber-700 border-amber-200 hover:bg-amber-100"}`}>
+                    Verify
                   </button>
                 </div>
               </div>

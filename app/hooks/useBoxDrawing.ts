@@ -237,7 +237,7 @@ export function useBoxDrawing({
       }
 
       if (!active) {
-        const { activeTool } = sketchRef.current
+        const { activeTool, stickyColor, sketchMode, sketchPrompt } = sketchRef.current
         if (activeTool === 'sticky') {
           const r = paperRef.current?.getBoundingClientRect()
           if (r) {
@@ -258,7 +258,6 @@ export function useBoxDrawing({
             setSelectedBoxIds(new Set([id]))
             setActiveTool('select')
             
-            // Subtle "thud" placement effect using direct DOM for speed
             setTimeout(() => {
               const node = document.getElementById(`box-${id}`)
               if (node) {
@@ -272,7 +271,7 @@ export function useBoxDrawing({
           return
         }
 
-        // Plain click — prune empty boxes AND create new box in one state update
+        // Plain click — always create a box (page.tsx already gates on valid tools)
         const r = paperRef.current?.getBoundingClientRect()
         if (r) {
           const x = (sx - r.left) / scale
@@ -284,19 +283,17 @@ export function useBoxDrawing({
           }))
           setSelectedBoxIds(new Set([id]))
           requestAnimationFrame(() => {
-            const el = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
-            if (el) {
-              el.focus()
-              // Ensure cursor is inside the new contentEditable
+            const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
+            if (targetNode) {
+              targetNode.focus()
               const range = document.createRange()
-              range.selectNodeContents(el)
+              range.selectNodeContents(targetNode)
               range.collapse(false)
               const sel = window.getSelection()
               sel?.removeAllRanges()
               sel?.addRange(range)
             }
           })
-          const { sketchMode, sketchPrompt } = sketchRef.current
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')
