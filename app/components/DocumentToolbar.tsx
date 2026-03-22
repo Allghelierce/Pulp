@@ -20,6 +20,7 @@ interface DocumentToolbarProps {
   openAlert: (title: string, message?: string) => void
   clearPage: () => void
   autoAlign: () => void
+  verticalAlign: () => void
   insertCornell: () => void
   showDrawToolbar: boolean
   onToggleDrawToolbar: () => void
@@ -35,7 +36,7 @@ const GOLD = "#D4AF37"
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx,
   setZoom, setCarouselIdx, setGridView, setDrawLineMode,
-  openAlert, clearPage, autoAlign,
+  openAlert, clearPage, autoAlign, verticalAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
   allCompacted, onCompactAll,
@@ -69,10 +70,18 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
             onMouseDown={e => { e.preventDefault(); autoAlign() }}
-            title="Auto align boxes"
+            title="Auto align boxes (Rows)"
             className="text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap"
           >
             Align
+          </button>
+          <div className="w-px bg-zinc-200 self-stretch" />
+          <button
+            onMouseDown={e => { e.preventDefault(); verticalAlign() }}
+            title="Vertical stack boxes (Column)"
+            className="px-2.5 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center text-zinc-600"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="3" rx="1" /><rect x="7" y="9" width="10" height="6" rx="1" /><rect x="7" y="19" width="10" height="3" rx="1" /></svg>
           </button>
           <div className="w-px bg-zinc-200 self-stretch" />
           <button

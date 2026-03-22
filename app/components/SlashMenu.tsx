@@ -15,6 +15,7 @@ interface SlashMenuProps {
   y: number
   filter: string
   accent: string
+  isSelectionMode?: boolean
   onSelect: (action: () => void) => void
   onClose: () => void
   execCmd: (cmd: string, value?: string) => void
@@ -24,7 +25,7 @@ interface SlashMenuProps {
 }
 
 export const SlashMenu = memo(function SlashMenu({
-  x, y, filter, accent, onSelect, onClose, execCmd, insertHTML, toggleScript, insertBacklink,
+  x, y, filter, accent, isSelectionMode, onSelect, onClose, execCmd, insertHTML, toggleScript, insertBacklink,
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const ref = useRef<HTMLDivElement>(null)
@@ -135,9 +136,13 @@ export const SlashMenu = memo(function SlashMenu({
     },
   ]
 
-  const filtered = filter
-    ? allItems.filter(item => item.label.toLowerCase().includes(filter.toLowerCase()))
+  const itemsToDisplay = isSelectionMode 
+    ? allItems.filter(item => item.group === "Typography" || item.group === "Reference")
     : allItems
+
+  const filtered = filter
+    ? itemsToDisplay.filter(item => item.label.toLowerCase().includes(filter.toLowerCase()))
+    : itemsToDisplay
 
   useEffect(() => { setActiveIdx(0) }, [filter])
 

@@ -20,7 +20,7 @@ import { ShelfView } from "@/app/components/ShelfView"
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
   </>)
 })
@@ -83,11 +83,15 @@ const BoxItem = memo(function BoxItem({
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
 }) {
-  const corners: [string, React.CSSProperties][] = [
-    ["nw", { top: -4, left: -4, cursor: "nw-resize" }],
-    ["ne", { top: -4, right: -4, cursor: "ne-resize" }],
-    ["sw", { bottom: -4, left: -4, cursor: "sw-resize" }],
-    ["se", { bottom: -4, right: -4, cursor: "se-resize" }],
+  const resizeHandles: [string, React.CSSProperties][] = [
+    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "nw-resize" }],
+    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "ne-resize" }],
+    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "sw-resize" }],
+    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "se-resize" }],
+    ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
+    ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
+    ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
+    ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
   ]
   const isImage = box.content.includes("http") || box.content.startsWith("data:image")
   return (
@@ -105,9 +109,9 @@ const BoxItem = memo(function BoxItem({
         <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
         <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
       </>)}
-      {isSelected && corners.map(([h, pos]) => (
+      {isSelected && resizeHandles.map(([h, pos]) => (
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); startResize(e, box, h) }}
-          style={{ position: "absolute", width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, zIndex: 20, ...pos }} />
+          style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
       {isSelected && (
         <button onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
@@ -117,12 +121,12 @@ const BoxItem = memo(function BoxItem({
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
-      
+
       {/* Explicit Drag Handle */}
       {isSelected && (
-        <div 
+        <div
           onMouseDown={e => startDrag(e, box)}
-          style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "6px 6px 0 0", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           <div style={{ width: 14, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
         </div>
@@ -225,11 +229,10 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     letterSpacing: "0.05em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 9, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
+    fontSize: 13, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
     cursor: "pointer", paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6, borderRadius: 4,
-    display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.06em",
-    fontFamily: "'Inter', sans-serif",
-    textTransform: "uppercase",
+    display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.01em",
+    fontFamily: "'EB Garamond', serif",
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
 
@@ -237,30 +240,21 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
-      position: "absolute", top: -26, left: 0,
-      display: "flex", alignItems: "center", gap: 0,
+      position: "absolute", top: -22, left: -24,
+      display: "flex", alignItems: "center", gap: 6,
       background: "transparent",
       zIndex: 9999, whiteSpace: "nowrap",
       pointerEvents: "auto",
     }}>
-      {/* Stacked Icons on the Left side of the box - Moved Down */}
-      <div style={{ position: "absolute", left: -24, top: 30, display: "flex", flexDirection: "column", gap: 4 }}>
-        <button onClick={() => { setFormattingOpen(!formattingOpen); setAiOpen(false); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", color: formattingOpen ? accentSolid : "#a1a1aa", borderRadius: 4, transition: "color 0.2s" }}>
-          {!formattingOpen ? (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-          ) : (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-          )}
-        </button>
-        <button onClick={() => { setAiOpen(!aiOpen); setFormattingOpen(false); setOpen(null) }}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", color: aiOpen ? accentSolid : "#a1a1aa", borderRadius: 4, transition: "color 0.2s" }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-            <path d="M5 3L6 4M19 21L20 22M5 21L6 20M19 3L20 2" />
-          </svg>
-        </button>
-      </div>
+      <button onClick={() => { setFormattingOpen(!formattingOpen); setAiOpen(false); setOpen(null) }}
+        style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center", justifyContent: "center", color: formattingOpen ? accentSolid : "#a1a1aa", opacity: formattingOpen ? 1 : 0.6, borderRadius: 4, transition: "all 0.2s" }}
+        onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = formattingOpen ? "1" : "0.6"}>
+        {!formattingOpen ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+        )}
+      </button>
 
 
       <div style={{
@@ -283,7 +277,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
             {currentSize}px {chevron}
           </button>
 
-          <button style={{ ...triggerStyle, color: "#ef4444", marginLeft: 4 }} onClick={() => {
+          <button style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onClick={() => {
             const temp = document.createElement("div");
             temp.innerHTML = box.content;
             const plain = temp.textContent || temp.innerText || "";
@@ -296,8 +290,12 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
               textAlign: "left"
             });
             setOpen(null)
-          }}>
-            Clear
+          }} title="Clear formatting">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
+              <path d="M22 21H7"></path>
+              <path d="m5 11 9 9"></path>
+            </svg>
           </button>
 
           {open === "style" && <div style={dropdownBase}>{BOX_STYLES.map(s => <button key={s.value} style={optionBtn(styleKey === s.value)} onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as any }); setOpen(null) }}>{s.label}</button>)}</div>}
@@ -469,8 +467,8 @@ export default function NoteApp() {
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
   // Slash (@) menu
-  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement } | null>(null)
-  const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement } | null>(null)
+  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
+  const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
 
   const closeSlashMenu = useCallback(() => {
@@ -495,12 +493,26 @@ export default function NoteApp() {
     const anchor = slashAnchorRef.current
     const filter = m?.filter ?? ""
 
-    if (m?.type === "textarea" && anchor) {
-      try {
-        const textNode = anchor.node as Text
-        if (textNode.nodeType === Node.TEXT_NODE) {
-          // @ was prevented from being typed — delete only the filter text (no +1 for @)
-          const endOffset = Math.min(anchor.offset + filter.length, textNode.length)
+    if (!m?.isSelectionMode) {
+      if (m?.type === "textarea" && anchor) {
+        try {
+          const textNode = anchor.node as Text
+          if (textNode.nodeType === Node.TEXT_NODE) {
+            // @ was prevented from being typed — delete only the filter text (no +1 for @)
+            const endOffset = Math.min(anchor.offset + filter.length, textNode.length)
+            const r = document.createRange()
+            r.setStart(textNode, anchor.offset)
+            r.setEnd(textNode, endOffset)
+            const sel = window.getSelection()
+            sel?.removeAllRanges()
+            sel?.addRange(r)
+            document.execCommand("delete")
+          }
+        } catch { }
+      } else if (m?.type === "editor" && anchor) {
+        try {
+          const textNode = anchor.node as Text
+          const endOffset = Math.min(anchor.offset + 1 + filter.length, textNode.length)
           const r = document.createRange()
           r.setStart(textNode, anchor.offset)
           r.setEnd(textNode, endOffset)
@@ -508,20 +520,8 @@ export default function NoteApp() {
           sel?.removeAllRanges()
           sel?.addRange(r)
           document.execCommand("delete")
-        }
-      } catch { }
-    } else if (m?.type === "editor" && anchor) {
-      try {
-        const textNode = anchor.node as Text
-        const endOffset = Math.min(anchor.offset + 1 + filter.length, textNode.length)
-        const r = document.createRange()
-        r.setStart(textNode, anchor.offset)
-        r.setEnd(textNode, endOffset)
-        const sel = window.getSelection()
-        sel?.removeAllRanges()
-        sel?.addRange(r)
-        document.execCommand("delete")
-      } catch { }
+        } catch { }
+      }
     }
 
     closeSlashMenu()
@@ -545,14 +545,25 @@ export default function NoteApp() {
       const sel = window.getSelection()
       if (!sel || sel.rangeCount === 0) return
       const isBox = (e.currentTarget as any) !== editorRef.current
+      const isSelectionMode = !sel.isCollapsed
 
-      // For boxes: store cursor position before any DOM changes — @ won't be typed
+      // For boxes: store cursor position before any DOM changes
       if (isBox) {
         const r = sel.getRangeAt(0)
         slashAnchorRef.current = {
           node: r.startContainer,
           offset: r.startContainer.nodeType === Node.TEXT_NODE ? r.startOffset : -1,
         }
+      }
+
+      if (isSelectionMode) {
+        e.preventDefault()
+        const r = sel.getRangeAt(0)
+        const rect = r.getBoundingClientRect()
+        const m = { x: rect.right - 20, y: rect.bottom + 14, filter: "", type: isBox ? ("textarea" as const) : ("editor" as const), target: e.currentTarget as HTMLElement, isSelectionMode: true }
+        slashMenuRef.current = m
+        setSlashMenu(m)
+        return
       }
 
       const range = sel.getRangeAt(0).cloneRange()
@@ -959,17 +970,26 @@ export default function NoteApp() {
       <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarOpen={sidebarOpen} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} onGoToShelf={() => setCurrentView("shelf")} />
 
       {currentView === "shelf" && (
-        <ShelfView
-          notes={notes}
-          onOpenNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
-          onCreateNote={() => { addNote(null); setCurrentView("editor") }}
-          theme={theme}
-        />
+        <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
+          <ShelfView
+            notes={notes}
+            onOpenNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
+            onCreateNote={() => { addNote(null); setCurrentView("editor") }}
+            theme={theme}
+          />
+        </div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden relative" style={{ display: currentView === "shelf" ? "none" : undefined }}>
-        <button onClick={() => setSidebarOpen(v => !v)} className="absolute left-2 top-[54px] z-50 text-zinc-400 hover:text-zinc-700 transition-colors p-1 text-2xl leading-none">
-          {sidebarOpen ? "‹" : "›"}
+      <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
+        <button 
+          onClick={() => setSidebarOpen(v => !v)} 
+          title="Toggle sidebar" 
+          className="absolute left-6 md:left-2 lg:left-8 top-[42px] z-[10] flex flex-col items-center transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-y-[1.05] active:scale-x-[0.98] drop-shadow-xl opacity-90 hover:opacity-100 outline-none"
+          style={{ transformOrigin: "top center", animation: "leaf-sway 6s ease-in-out infinite" }}
+        >
+          {/* Extended slim twilight-twine string */}
+          <div style={{ width: "1.5px", height: 50, background: "linear-gradient(to right, #402919, #75553d, #402919)", marginBottom: -16, position: "relative", zIndex: 0, boxShadow: "0 0 2px rgba(0,0,0,0.3)" }} />
+          <img src="/plant2.png?v=3" alt="Toggle Sidebar" style={{ width: 68, height: "auto", objectFit: "contain", pointerEvents: "none", position: "relative", zIndex: 10, marginLeft: 4 }} />
         </button>
 
         {notes.length > 0 && (
@@ -994,6 +1014,7 @@ export default function NoteApp() {
             openAlert={openAlert}
             clearPage={clearPage}
             autoAlign={boxes.autoAlign}
+            verticalAlign={boxes.verticalAlign}
             insertCornell={insertCornell}
             showDrawToolbar={showDrawToolbar}
             onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
@@ -1201,6 +1222,7 @@ export default function NoteApp() {
           y={slashMenu.y}
           filter={slashMenu.filter}
           accent={accent}
+          isSelectionMode={slashMenu.isSelectionMode}
           onSelect={executeSlashItem}
           onClose={closeSlashMenu}
           execCmd={editor.execCmd}

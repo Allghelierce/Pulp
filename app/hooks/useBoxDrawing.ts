@@ -239,7 +239,7 @@ export function useBoxDrawing({
           const x = (sx - r.left) / scale
           const y = (sy - r.top) / scale
           const id = uid()
-          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 260, h: 80, content: '' }
+          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 420, h: 64, content: '' }
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
             ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== ''), newBox] }
           }))
@@ -410,7 +410,6 @@ export function useBoxDrawing({
       const tid = activeTabIdRef.current
       const pidx = currentPageIdxRef.current
       const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
-      // Include the default 112px red margin line as a base line for snapping
       const lines = [112, ...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
 
       for (const row of rows) {
@@ -420,27 +419,20 @@ export function useBoxDrawing({
         for (let i = 0; i < row.length; i++) {
           const rowBox = row[i]
           let snappedX = currentX
-
           if (lines.length > 0) {
             let matchedLine = -1
-            // Use the leftmost line as a primary margin for the first box in a row if it's nearby
             if (i === 0 && rowBox.x < lines[0] + 250) {
               matchedLine = lines[0]
             } else {
-              // Otherwise find the line it's most likely aligned to
               for (const lx of lines) {
                 if (rowBox.x >= lx - 40) matchedLine = lx
               }
             }
-
             if (matchedLine !== -1) {
-              snappedX = matchedLine + 32 // 32px padding from the line for a natural look
+              snappedX = matchedLine + 32
             }
           }
-
-          // Don't allow it to go behind the cumulative X position of the row
           snappedX = Math.max(snappedX, currentX)
-
           newBoxes.push({ ...rowBox, x: snappedX, y: currentY })
           currentX = snappedX + rowBox.w + 48
           maxH = Math.max(maxH, rowBox.h)
@@ -448,6 +440,34 @@ export function useBoxDrawing({
         currentY += maxH + 24
       }
       return newBoxes
+    })
+  }, [updateBoxes])
+
+  const verticalAlign = useCallback(() => {
+    updateBoxes(bs => {
+      const selectedIds = selectedBoxIdsRef.current
+      const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+      if (toAlign.length === 0) return bs
+      
+      const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
+      
+      const tid = activeTabIdRef.current
+      const pidx = currentPageIdxRef.current
+      const currentNote = tid ? notesRef.current.find(n => n.id === tid) : null
+      const noteLines = currentNote?.lines?.[pidx] || []
+      const lines = [112, ...noteLines].sort((a, b) => a - b)
+      
+      let currentY = 60
+      const baseMarginX = lines[0] + 32
+
+      const alignedBoxesMap = new Map()
+      let tempY = currentY
+      for (const box of sorted) {
+        alignedBoxesMap.set(box.id, { ...box, x: baseMarginX, y: tempY })
+        tempY += box.h + 24
+      }
+
+      return bs.map(b => alignedBoxesMap.get(b.id) || b)
     })
   }, [updateBoxes])
 
@@ -463,6 +483,6 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
-    autoAlign, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, setBoxAlignment, generateSketch, rewriteBox])
+    autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox])
 }
