@@ -9,6 +9,7 @@ export interface NoteData {
   icon?: string;
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
+  hlines?: { [pageIdx: number]: number[] };
   drawings?: { [pageIdx: number]: DrawingPath[] };
 }
 export interface DrawingPath {
@@ -19,6 +20,8 @@ export interface DrawingPath {
   width: number;
 }
 export interface FolderData { id: number; name: string; open: boolean }
+
+export interface Bookmark { id: string; noteId: string; pageIdx: number; noteTitle: string; icon?: string }
 
 export type DialogConfig =
   | { type: "prompt"; title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; onConfirm: (val: string) => void }

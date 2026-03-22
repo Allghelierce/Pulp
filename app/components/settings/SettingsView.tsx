@@ -5,7 +5,9 @@ import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
+import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
+import { DestructiveButton } from "@/components/ui/destructive-button"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
@@ -46,7 +48,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   spellCheck: boolean; setSpellCheck: (v: boolean) => void
   editorFont: string; setEditorFont: (v: string) => void
   lineSpacing: "compact" | "normal" | "relaxed"; setLineSpacing: (v: "compact" | "normal" | "relaxed") => void
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad") => void
+  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger") => void
   showBinding: boolean; setShowBinding: (v: boolean) => void
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
@@ -54,6 +56,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const isDark = theme === "dark"
 
   const visibleGroups = searchQuery
@@ -64,14 +67,14 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
     }))
 
   const SegmentedControl = ({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) => (
-    <div className={`flex rounded-none overflow-hidden border ${isDark ? "border-zinc-800" : "border-zinc-200"} text-[11px] font-semibold`}>
+    <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
       {options.map(([val, label]) => (
         <button
           key={val}
           onClick={() => onChange(val)}
-          className={`px-3 py-1.5 transition-all ${value === val 
-            ? (isDark ? "bg-zinc-100 text-zinc-900" : "bg-zinc-800 text-white") 
-            : (isDark ? "bg-zinc-900 text-zinc-400 hover:bg-zinc-800" : "bg-white text-zinc-500 hover:bg-zinc-50")}`}
+          className={`px-2.5 py-1 rounded-md transition-all ${value === val
+            ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+            : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")}`}
         >
           {label}
         </button>
@@ -80,84 +83,82 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   )
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className={`relative w-full max-w-4xl ${isDark ? "bg-[#0c0c0e] text-zinc-100 border-zinc-800" : "bg-[#F7F4F3] text-zinc-900 border-zinc-200/80"} rounded-none shadow-2xl border flex overflow-hidden`} style={{ height: 640 }}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+      <div className={`relative w-full max-w-[900px] ${isDark ? "bg-[#0a0a0c] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* Close */}
         <button
           onClick={onClose}
-          className={`absolute top-3.5 right-3.5 z-20 w-7 h-7 flex items-center justify-center rounded-none ${isDark ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-400" : "bg-zinc-200/80 hover:bg-zinc-300 text-zinc-500"} hover:text-white text-sm transition-colors`}
-        >&times;</button>
-        <button
-          onClick={onClose}
-          className="absolute bottom-4 right-6 z-20 px-5 py-2 rounded-none text-[13px] font-semibold text-white transition-opacity hover:opacity-85"
-          style={{ backgroundColor: accentColor }}
-        >Save & Close</button>
+          className={`absolute top-4 right-4 z-20 w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
 
         {/* ── Sidebar ── */}
-        <div className={`w-52 ${isDark ? "bg-[#050505] border-zinc-800" : "bg-[#EDE9E7] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
-          <div className={`px-4 pt-5 pb-3 border-b ${isDark ? "border-zinc-800" : "border-zinc-200/70"}`}>
-            <p className={`text-[11px] font-bold ${isDark ? "text-zinc-600" : "text-zinc-500"} uppercase tracking-widest mb-3`}>Settings</p>
-            <input
-              placeholder="Filter…"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className={`w-full ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-200 focus:border-zinc-500" : "bg-white/80 border-zinc-200 text-zinc-800 focus:border-zinc-400"} border rounded-none px-3 py-1.5 text-[11px] outline-none transition-colors`}
-            />
+        <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
+          <div className="px-5 pt-6 pb-4">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Settings</p>
           </div>
-          <nav className="flex-1 overflow-y-auto p-2 space-y-3">
+          <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
-              <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-2 mt-2 border-t border-zinc-800" : "pt-2 mt-2 border-t border-zinc-200/50") : ""}>
-                <p className={`text-[9px] font-bold ${isDark ? "text-zinc-600" : "text-zinc-400"} uppercase tracking-widest px-2 mb-1`}>{group.name}</p>
+              <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-3 mt-3 border-t border-zinc-800" : "pt-3 mt-3 border-t border-zinc-300/40") : "mb-1"}>
+                <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
                 {group.tabs.map(tab => {
-                  const isPremium = tab.id === "subscription";
+                  const isPremium = tab.id === "subscription"
+                  const isActive = activeTab === tab.id
                   return (
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
-                      className={`w-full text-left px-3 py-1.5 rounded-none text-[12px] font-medium transition-all ${activeTab === tab.id
-                          ? (isPremium 
-                              ? (isDark ? "bg-amber-950 text-amber-200 shadow-sm" : "bg-amber-100 text-amber-900 shadow-sm") 
-                              : (isDark ? "bg-white/10 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"))
-                          : (isPremium 
-                              ? "text-amber-600 hover:text-amber-800 hover:bg-amber-50/10" 
-                              : (isDark ? "text-zinc-500 hover:text-zinc-100 hover:bg-white/5" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/60"))
-                        }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all ${
+                        isActive
+                          ? isPremium
+                            ? isDark ? "bg-amber-950/60 text-amber-300" : "bg-amber-100 text-amber-900"
+                            : isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
+                          : isPremium
+                            ? isDark ? "text-amber-600 hover:bg-amber-950/30" : "text-amber-600 hover:bg-amber-50"
+                            : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
+                      }`}
                     >
-                      {isPremium ? "✨ " : ""}{tab.label}
+                      {isPremium ? "✦ " : ""}{tab.label}
                     </button>
-                  );
+                  )
                 })}
               </div>
             ))}
           </nav>
-          <div className={`px-4 py-3 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/70"}`}>
-            <p className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Pulp · v1.0.0</p>
+          <div className={`px-5 py-4 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/60"}`}>
+            <p className={`text-[10px] font-medium ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Pulp · v1.0.0</p>
           </div>
         </div>
 
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className={`px-8 py-4 border-b ${isDark ? "border-zinc-800" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className={`text-[22px] ${isDark ? "text-zinc-200" : "text-zinc-800"}`} style={{ fontFamily: 'var(--font-dancing), cursive', fontWeight: 600 }}>
+          <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
+            <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-
-
+            <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+              {activeTab === "general" && "Manage your account and application preferences"}
+              {activeTab === "appearance" && "Customize how Pulp looks and feels"}
+              {activeTab === "editor" && "Configure your writing environment"}
+              {activeTab === "personalization" && "Make Pulp uniquely yours"}
+              {activeTab === "subscription" && "Manage your plan and billing"}
+            </p>
           </div>
 
-          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#0c0c0e]" : ""}`}>
+          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#0a0a0c]" : "bg-[#f5f3f1]"}`}>
 
             {/* ── General ── */}
             {activeTab === "general" && (<>
               <SettingSection title="Account" isDark={isDark}>
-                <div className={`flex items-center gap-3 py-4 border-b ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
-                  <div className="w-10 h-10 rounded-none flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ background: `linear-gradient(135deg,${accentColor}cc,${accentColor})` }}>
+                <div className="flex items-center gap-4 px-5 py-4">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: `linear-gradient(135deg, ${accentColor}99, ${accentColor})` }}>
                     {user?.email?.[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[13px] font-medium ${isDark ? "text-zinc-200" : "text-zinc-800"} truncate`}>{user?.email ?? "Not signed in"}</p>
-                    <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} mt-0.5`}>Free Plan</p>
+                    <p className={`text-[13px] font-semibold truncate ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{user?.email ?? "Not signed in"}</p>
+                    <span className={`inline-flex items-center gap-1 mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
                   </div>
                 </div>
                 {user ? (
@@ -168,7 +169,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     control={
                       <button
                         onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
-                        className={`text-[11px] font-semibold text-red-500 hover:text-red-400 border ${isDark ? "border-red-900 hover:border-red-700" : "border-red-100 hover:border-red-400"} px-3 py-1.5 rounded-none transition-colors`}
+                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-red-400 bg-red-950/40 hover:bg-red-950/70 border border-red-900/50" : "text-red-600 bg-red-50 hover:bg-red-100 border border-red-100"}`}
                       >
                         Sign Out
                       </button>
@@ -182,23 +183,33 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     control={
                       <button
                         onClick={() => window.location.href = "/login"}
-                        className={`text-[11px] font-semibold text-green-600 hover:text-green-500 border ${isDark ? "border-green-900 hover:border-green-700" : "border-green-200 hover:border-green-400"} px-3 py-1.5 rounded-none transition-colors`}
+                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-900/50" : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100"}`}
                       >
                         Sign In
                       </button>
                     }
                   />
                 )}
+                <SettingRow
+                  title="Delete all notes"
+                  isDark={isDark}
+                  description="Permanently erase every note and page. This cannot be undone."
+                  control={
+                    <DestructiveButton onClick={() => setShowDeleteConfirm(true)}>
+                      Delete All
+                    </DestructiveButton>
+                  }
+                />
               </SettingSection>
 
               <SettingSection title="About" isDark={isDark}>
-                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11px] font-mono ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>1.0.0</span>} />
-                <SettingRow title="Build" isDark={isDark} control={<span className={`text-[11px] font-mono ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>2026.03</span>} />
+                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0</span>} />
+                <SettingRow title="Build" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>2026.03</span>} />
                 <SettingRow
                   title="Check for updates"
                   isDark={isDark}
                   control={
-                    <button className={`text-[11px] font-semibold ${isDark ? "text-zinc-400 hover:text-zinc-200 border-zinc-800 hover:border-zinc-600" : "text-zinc-600 hover:text-zinc-900 border-zinc-200 hover:border-zinc-400"} border px-3 py-1.5 rounded-none transition-colors`}>
+                    <button className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}>
                       Check
                     </button>
                   }
@@ -241,7 +252,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Page style"
                   isDark={isDark}
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Dot Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as typeof paperStyle)} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"], ["parchment", "Vintage"], ["kraft", "Kraft"], ["ledger", "Ledger"]]} value={paperStyle} onChange={v => setPaperStyle(v as any)} />}
                 />
                 <SettingRow
                   title="Show spiral binding"
@@ -316,10 +327,10 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="text-center space-y-1 mb-2">
-                  <h3 className={`text-3xl ${isDark ? "text-zinc-100" : "text-zinc-800"}`} style={{ fontFamily: 'var(--font-dancing), cursive', fontWeight: 600 }}>Choose your plan</h3>
-                  <p className={`text-[13px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>Unlock the full power of Pulp</p>
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-0.5">
+                  <h3 className={`text-[15px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
+                  <p className={`text-[12px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Unlimited AI, more storage, and priority support</p>
                 </div>
 
                 <PricingSection
@@ -350,6 +361,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                       highlight: true,
                       badge: "Most Popular",
                       icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
+                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
                         { name: "Unlimited AI Sketches", description: "No monthly cap on AI generations", included: true },
@@ -362,24 +374,63 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   ]}
                 />
 
-                <div className={`p-4 rounded-xl border flex items-center justify-between ${isDark ? "bg-amber-950/20 border-amber-900/40" : "bg-amber-50 border-amber-100"}`}>
+                <div className={`mt-4 p-4 rounded-2xl border flex items-center justify-between ${isDark ? "bg-amber-950/20 border-amber-900/30" : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60"}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white text-sm">✨</div>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-base shadow-md shadow-amber-500/20">✦</div>
                     <div>
-                      <p className={`text-[12px] font-semibold ${isDark ? "text-amber-200" : "text-amber-900"}`}>Education Discount</p>
-                      <p className={`text-[11px] ${isDark ? "text-amber-500/80" : "text-amber-700/70"}`}>Student or teacher? Get Pro for $4/mo.</p>
+                      <p className={`text-[12.5px] font-semibold ${isDark ? "text-amber-200" : "text-amber-900"}`}>Education Discount</p>
+                      <p className={`text-[11px] ${isDark ? "text-amber-500/70" : "text-amber-700/60"}`}>Students & teachers get Pro for $4/mo</p>
                     </div>
                   </div>
-                  <button className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors ${isDark ? "text-amber-500 border-amber-900/50 hover:bg-amber-900/20" : "text-amber-700 border-amber-200 hover:bg-amber-100"}`}>
-                    Verify
+                  <button className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all active:scale-[0.97] ${isDark ? "text-amber-400 bg-amber-950/60 hover:bg-amber-950 border border-amber-900/50" : "text-amber-800 bg-white hover:bg-amber-50 border border-amber-200 shadow-sm"}`}>
+                    Verify →
                   </button>
                 </div>
               </div>
             )}
 
           </div>
+          <div className={`px-8 py-3.5 border-t ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0 flex items-center justify-between`}>
+            <p className={`text-[11px] ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Changes save automatically</p>
+            <button
+              onClick={onClose}
+              className="px-5 py-2 rounded-xl text-[12.5px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] shadow-md"
+              style={{ backgroundColor: accentColor }}
+            >Done</button>
+          </div>
         </div>
       </div>
+
+      {/* Delete confirmation popup */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
+          <div className={`w-[340px] ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"} border rounded-2xl shadow-2xl p-7 flex flex-col gap-5`}>
+            <div className="flex flex-col gap-2">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </div>
+              <p className="text-[15px] font-semibold">Delete all notes?</p>
+              <p className={`text-[12.5px] leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                Every note, page, and drawing will be permanently erased. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl border transition-all ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { localStorage.clear(); setShowDeleteConfirm(false); window.location.reload() }}
+                className="flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all active:scale-[0.97]"
+              >
+                Delete Everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

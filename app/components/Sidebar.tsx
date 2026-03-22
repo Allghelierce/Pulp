@@ -29,6 +29,11 @@ interface SidebarProps {
   onChangeNoteIcon: (id: string, icon: string) => void
   onOpenSettings: () => void
   onGoToShelf: () => void
+  bookmarks: any[]
+  onJumpToBookmark: (b: any) => void
+  onReorderBookmarks: (b: any[]) => void
+  onDeleteBookmark: (id: string) => void
+  onRenameBookmark: (id: string, current: string) => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -36,9 +41,13 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
+  bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
+  const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
   const [iconPicker, setIconPicker] = useState<{ noteId: string; x: number; y: number } | null>(null)
+  const [draggedBookmarkId, setDraggedBookmarkId] = useState<string | null>(null)
+  const [bookmarkTargetId, setBookmarkTargetId] = useState<string | null>(null)
 
   const topLevelNotes = notes.filter(n => n.folderId === null && !n.parentId)
   const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid && !n.parentId)
@@ -52,13 +61,31 @@ export const Sidebar = memo(function Sidebar({
   const handleNestDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault()
     e.stopPropagation()
+    if (draggedBookmarkId) return // Differentiate between note and bookmark drag
     if (draggedNoteId && draggedNoteId !== targetId && !isDescendant(draggedNoteId, targetId)) {
       onSetNoteParent(draggedNoteId, targetId)
       onSetDraggedNoteId(null)
+      setNestTargetId(null)
     }
-    setNestTargetId(null)
   }
 
+  const handleBookmarkDrop = (targetId: string) => {
+    if (!draggedBookmarkId || draggedBookmarkId === targetId) {
+      setDraggedBookmarkId(null)
+      setBookmarkTargetId(null)
+      return
+    }
+    const oldIdx = bookmarks.findIndex(b => b.id === draggedBookmarkId)
+    const newIdx = bookmarks.findIndex(b => b.id === targetId)
+    if (oldIdx === -1 || newIdx === -1) return
+
+    const newBookmarks = [...bookmarks]
+    const [moved] = newBookmarks.splice(oldIdx, 1)
+    newBookmarks.splice(newIdx, 0, moved)
+    onReorderBookmarks(newBookmarks)
+    setDraggedBookmarkId(null)
+    setBookmarkTargetId(null)
+  }
   const handleRootDrop = (e: React.DragEvent) => {
     if (draggedNoteId) {
       const dragged = notes.find(n => n.id === draggedNoteId)
@@ -151,12 +178,13 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 200ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
-          <>
+          {/* Binder Section */}
+          <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
                 <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Binder</p>
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00"/><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)"/><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none"/><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
                   <span className="text-[10px] text-zinc-600 group-hover:text-zinc-300 transition-colors">Shelf</span>
                 </button>
               </div>
@@ -167,7 +195,6 @@ export const Sidebar = memo(function Sidebar({
             </div>
 
             {topLevelNotes.map(n => renderNote(n, 12))}
-
             {folders.map(f => (
               <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => onDropNote(e, f.id)}>
                 <div className="flex items-center gap-1.5 px-6 py-1.5 cursor-pointer hover:bg-zinc-900/60 group uppercase" onClick={() => onToggleFolder(f.id)}>
@@ -190,7 +217,65 @@ export const Sidebar = memo(function Sidebar({
                 )}
               </div>
             ))}
-          </>
+            {topLevelNotes.length === 0 && folders.length === 0 && (
+              <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+            )}
+          </div>
+
+          {/* Bookmarks Section */}
+          <div className="mb-6 pt-4 border-t border-white/5">
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-6 mb-2" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
+            {bookmarks && bookmarks.length > 0 ? (
+              bookmarks.map((b: any, idx) => (
+                <div
+                  key={b.id}
+                  draggable
+                  onDragStart={() => setDraggedBookmarkId(b.id)}
+                  onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (draggedBookmarkId && draggedBookmarkId !== b.id) setBookmarkTargetId(b.id) }}
+                  onDrop={() => handleBookmarkDrop(b.id)}
+                  className={`relative group flex items-center transition-all ${draggedBookmarkId === b.id ? "opacity-30" : ""} ${bookmarkTargetId === b.id ? "border-t-2" : ""}`}
+                  style={{ borderTopColor: bookmarkTargetId === b.id ? accent : "transparent" }}
+                >
+                  <div
+                    onClick={() => onJumpToBookmark(b)}
+                    className="flex-1 flex items-center gap-2 cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all truncate min-w-0"
+                  >
+                    <span className="shrink-0 text-[10px] font-bold text-zinc-600 w-4 text-right">{idx + 1}.</span>
+                    <span className="truncate text-xs">{b.noteTitle} <span className="text-[10px] opacity-40 ml-1">p.{b.pageIdx + 1}</span></span>
+                  </div>
+                  <button
+                    onClick={e => { e.stopPropagation(); setBookmarkMenuId(bookmarkMenuId === b.id ? null : b.id) }}
+                    className="shrink-0 mr-3 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all text-zinc-500 hover:text-zinc-300"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                  </button>
+                  {bookmarkMenuId === b.id && (
+                    <div
+                      className="absolute right-2 top-7 z-50 w-36 bg-[#1c1c1f] border border-white/10 rounded-md shadow-xl overflow-hidden"
+                      onMouseLeave={() => setBookmarkMenuId(null)}
+                    >
+                      <button
+                        onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); onRenameBookmark(b.id, b.noteTitle) }}
+                        className="w-full text-left px-3 py-2 text-[11px] text-zinc-300 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Rename
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); onDeleteBookmark(b.id) }}
+                        className="w-full text-left px-3 py-2 text-[11px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+            )}
+          </div>
         </div>
 
         <div className="border-t border-white/5 px-3 py-2 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 200ms ease", minWidth: 256 }}>

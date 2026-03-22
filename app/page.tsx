@@ -1,7 +1,8 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
+import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
-import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig } from "@/app/types"
+import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark } from "@/app/types"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
@@ -24,7 +25,7 @@ import { AnimatedCounter } from "@/components/ui/animated-counter"
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
   </>)
 })
@@ -125,7 +126,7 @@ const BoxItem = memo(function BoxItem({
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
-          ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" 
+          ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
           : "none",
         transition: localDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
@@ -140,7 +141,7 @@ const BoxItem = memo(function BoxItem({
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
       {isSelected && (
-        <button 
+        <button
           onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
           className="hover:scale-110 active:scale-95 transition-transform"
           style={{ position: "absolute", top: isSticky ? 10 : 6, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
@@ -523,7 +524,8 @@ export default function NoteApp() {
   const [spellCheck, setSpellCheck] = useState(true)
   const [editorFont, setEditorFont] = useState("EB Garamond")
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
-  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("lined")
+  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger">("lined")
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [showBinding, setShowBinding] = useState(true)
   const [reduceMotion, setReduceMotion] = useState(false)
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
@@ -585,10 +587,10 @@ export default function NoteApp() {
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
-  const boxes = useBoxDrawing({ 
-    activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, 
-    sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, 
-    drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor 
+  const boxes = useBoxDrawing({
+    activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
+    sketchMode, sketchPrompt, setSketchMode, setSketchPrompt,
+    drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor
   })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
@@ -691,14 +693,14 @@ export default function NoteApp() {
         e.preventDefault()
         const r = sel.getRangeAt(0)
         const rect = r.getBoundingClientRect()
-        const m = { 
-          x: rect.right - 20, 
-          y: rect.bottom + 14, 
-          filter: "", 
-          type: isBox ? ("textarea" as const) : ("editor" as const), 
+        const m = {
+          x: rect.right - 20,
+          y: rect.bottom + 14,
+          filter: "",
+          type: isBox ? ("textarea" as const) : ("editor" as const),
           mode: e.key as "@" | "/",
-          target: e.currentTarget as HTMLElement, 
-          isSelectionMode: true 
+          target: e.currentTarget as HTMLElement,
+          isSelectionMode: true
         }
         slashMenuRef.current = m
         setSlashMenu(m)
@@ -715,13 +717,13 @@ export default function NoteApp() {
       sel.removeAllRanges()
       sel.addRange(range)
 
-      const m = { 
-        x: rect.left, 
-        y: rect.bottom + 14, 
-        filter: "", 
-        type: isBox ? ("textarea" as const) : ("editor" as const), 
+      const m = {
+        x: rect.left,
+        y: rect.bottom + 14,
+        filter: "",
+        type: isBox ? ("textarea" as const) : ("editor" as const),
         mode: e.key as "@" | "/",
-        target: e.currentTarget as HTMLElement 
+        target: e.currentTarget as HTMLElement
       }
       slashMenuRef.current = m
       setSlashMenu(m)
@@ -874,7 +876,7 @@ export default function NoteApp() {
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect }
+    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
 
     if (!user) return
@@ -886,7 +888,7 @@ export default function NoteApp() {
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, user])
+  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, user])
 
   // Cloud autosave
   useEffect(() => {
@@ -941,7 +943,7 @@ export default function NoteApp() {
       setIsLoading(false)
     }
     fetchNotes()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // [] — run once on mount only, not on every user change
 
 
@@ -1130,7 +1132,41 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
 
-      <Sidebar notes={notes} folders={folders} activeTabId={activeTabId} accent={accent} draggedNoteId={draggedNoteId} renamingFolder={renamingFolder} user={user} sidebarWidth={sidebarWidth} isDragging={isSidebarDragging} onAddNote={addNote} onAddFolder={addFolder} onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }} onRenameNote={renameNote} onDeleteNote={deleteNote} onToggleFolder={toggleFolder} onRenameFolder={renameFolder} onDeleteFolder={deleteFolder} onSetRenamingFolder={setRenamingFolder} onSetDraggedNoteId={setDraggedNoteId} onDropNote={handleDropNote} onOpenSettings={() => setShowSettings(true)} onSetNoteParent={setNoteParent} onChangeNoteIcon={changeNoteIcon} onGoToShelf={() => setCurrentView("shelf")} />
+      <Sidebar
+        notes={notes}
+        folders={folders}
+        activeTabId={activeTabId}
+        accent={accent}
+        draggedNoteId={draggedNoteId}
+        renamingFolder={renamingFolder}
+        user={user}
+        sidebarWidth={sidebarWidth}
+        isDragging={isSidebarDragging}
+        onAddNote={addNote}
+        onAddFolder={addFolder}
+        onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
+        onRenameNote={renameNote}
+        onDeleteNote={deleteNote}
+        onToggleFolder={toggleFolder}
+        onRenameFolder={renameFolder}
+        onDeleteFolder={deleteFolder}
+        onSetRenamingFolder={setRenamingFolder}
+        onSetDraggedNoteId={setDraggedNoteId}
+        onDropNote={handleDropNote}
+        onOpenSettings={() => setShowSettings(true)}
+        onSetNoteParent={setNoteParent}
+        onChangeNoteIcon={changeNoteIcon}
+        onGoToShelf={() => setCurrentView("shelf")}
+        bookmarks={bookmarks}
+        onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
+        onReorderBookmarks={(newB) => setBookmarks(newB)}
+        onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
+        onRenameBookmark={(id, current) => {
+          openPrompt("Rename Bookmark", current, "Enter new title...", "Rename", (val: string) => {
+            if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
+          })
+        }}
+      />
 
       {/* Sidebar edge resize handle */}
       <div
@@ -1162,10 +1198,10 @@ export default function NoteApp() {
           style={{ transformOrigin: "top center", animation: "leaf-sway 18s ease-in-out infinite" }}
         >
           {/* Textured rope from topbar */}
-          <div style={{ 
-            width: "1.8px", 
-            height: "120px", 
-            background: theme === 'dark' 
+          <div style={{
+            width: "1.8px",
+            height: "120px",
+            background: theme === 'dark'
               ? "linear-gradient(to right, #C6A664 0%, #78350f 40%, #C6A664 100%)"
               : "linear-gradient(to right, #78350f 0%, #C6A664 40%, #78350f 100%)",
             boxShadow: theme === 'dark' ? "0 0 4px rgba(198, 166, 100, 0.4)" : "1px 0 3px rgba(0,0,0,0.3)",
@@ -1173,23 +1209,23 @@ export default function NoteApp() {
             position: "relative",
             zIndex: 0
           }} />
-          <img 
-            src="/lightbulb.png" 
-            alt="Toggle Menu" 
-            style={{ 
-              width: 72, 
-              height: "auto", 
-              objectFit: "contain", 
-              pointerEvents: "none", 
-              position: "relative", 
+          <img
+            src="/lightbulb.png"
+            alt="Toggle Menu"
+            style={{
+              width: 72,
+              height: "auto",
+              objectFit: "contain",
+              pointerEvents: "none",
+              position: "relative",
               zIndex: 10,
-              filter: sidebarWidth > 0 
-                ? "drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 30px rgba(251, 191, 36, 0.3)) brightness(1.2) contrast(1.1)" 
-                : (theme === "dark" 
-                  ? "brightness(0.85) contrast(1.1)" 
+              filter: sidebarWidth > 0
+                ? "drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 30px rgba(251, 191, 36, 0.3)) brightness(1.2) contrast(1.1)"
+                : (theme === "dark"
+                  ? "brightness(0.85) contrast(1.1)"
                   : "brightness(0.85) grayscale(0.1)"),
               transition: "filter 0.4s ease-in-out"
-            }} 
+            }}
           />
         </button>
 
@@ -1227,6 +1263,16 @@ export default function NoteApp() {
             setRightSidebarOpen={setContentSidebarOpen}
             allCompacted={allCompacted}
             onCompactAll={handleCompactAll}
+            onDownload={() => {
+              if (!activeNote) return
+              const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement("a")
+              a.href = url
+              a.download = `${activeNote.subject || "note"}.json`
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
           />
         )}
 
@@ -1249,30 +1295,30 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.10)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
-                       onMouseDown={e => {
-                         if (activeTool === 'sticky') {
-                           // Handled by onClick below to ensure clean single-click placement
-                           return
-                         }
-                         if (activeTool !== 'select' && activeTool !== 'text') return
-                         const target = e.target as HTMLElement
-                         const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
-                         if (boxEl) {
-                           const boxId = boxEl.id.replace('box-', '')
-                           const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
-                           if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
-                           // Empty box — treat click as paper click so it gets replaced
-                         }
-                         boxes.onPaperMouseDown(e)
-                       }}
-                       onClick={e => {
-                         if (activeTool !== 'sticky') return
-                         const target = e.target as HTMLElement
-                         if (target.closest('[id^="box-"]')) return
-                         placeStickyNote(e)
-                       }}
-                     >
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                      onMouseDown={e => {
+                        if (activeTool === 'sticky') {
+                          // Handled by onClick below to ensure clean single-click placement
+                          return
+                        }
+                        if (activeTool !== 'select' && activeTool !== 'text') return
+                        const target = e.target as HTMLElement
+                        const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
+                        if (boxEl) {
+                          const boxId = boxEl.id.replace('box-', '')
+                          const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
+                          if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
+                          // Empty box — treat click as paper click so it gets replaced
+                        }
+                        boxes.onPaperMouseDown(e)
+                      }}
+                      onClick={e => {
+                        if (activeTool !== 'sticky') return
+                        const target = e.target as HTMLElement
+                        if (target.closest('[id^="box-"]')) return
+                        placeStickyNote(e)
+                      }}
+                    >
 
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} />
 
@@ -1372,45 +1418,82 @@ export default function NoteApp() {
                         />
                       ))}
 
-                      {/* Page Navigation — generous deadzone prevents accidental textbox creation */}
+                      {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
                       <div
                         className="absolute top-0 right-0 z-50 no-print select-none"
-                        style={{ padding: "28px 16px 32px 40px" }}
+                        style={{ padding: "32px 20px 48px 60px" }}
                         onMouseDown={e => e.stopPropagation()}
+                        onPointerDown={e => e.stopPropagation()}
                         onClick={e => e.stopPropagation()}
                       >
-                        <div className="flex items-center gap-1.5">
-                        <button
-                          disabled={currentPageIdx === 0}
-                          onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                          className={`p-2 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-25" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                          style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
-                          title="Previous Page"
+                        <div 
+                          className="flex items-center gap-1.5"
+                          onMouseDown={e => e.stopPropagation()}
+                          onPointerDown={e => e.stopPropagation()}
                         >
-                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
-                        </button>
-                        <div
-                          className="px-1"
-                          style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563", opacity: 0.8, fontWeight: 600, fontFamily: '"SF Mono", "Fira Code", "Roboto Mono", monospace' }}
-                        >
-                          <AnimatedCounter value={currentPageIdx + 1} />
-                        </div>
-                        <button
-                          onClick={() => {
-                            editor.flushSync();
-                            if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
-                            else {
-                              const np = [...activeNote.pages, ""];
-                              setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
-                              setCurrentPageIdx(activeNote.pages.length)
-                            }
-                          }}
-                          className="p-2 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                          style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
-                          title="Next Page / Add Page"
-                        >
-                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
-                        </button>
+                          <button
+                            disabled={currentPageIdx === 0}
+                            onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
+                            className={`p-2 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-25" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            title="Previous Page"
+                          >
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
+                          </button>
+                          <div
+                            className="px-1"
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563", opacity: 0.8, fontWeight: 600, fontFamily: '"SF Mono", "Fira Code", "Roboto Mono", monospace' }}
+                          >
+                            <AnimatedCounter value={currentPageIdx + 1} />
+                          </div>
+                          <button
+                            onClick={() => {
+                              editor.flushSync();
+                              if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
+                              else {
+                                const np = [...activeNote.pages, ""];
+                                setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
+                                setCurrentPageIdx(activeNote.pages.length)
+                              }
+                            }}
+                            className="p-2 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
+                            style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
+                            title="Next Page / Add Page"
+                          >
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
+                          </button>
+                          {/* Bookmark ribbon — inline with nav */}
+                          {(() => {
+                            const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+                            return (
+                              <motion.div
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+                                  if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
+                                  else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
+                                }}
+                                animate={{ scaleY: isBookmarked ? 1 : 0.72, opacity: isBookmarked ? 1 : 0.55 }}
+                                whileHover={{ scaleY: 1, opacity: 1, transition: { duration: 0.15 } }}
+                                whileTap={{ scaleY: 0.88, transition: { duration: 0.08 } }}
+                                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                                className="ml-2 w-[18px] h-12 cursor-pointer shrink-0 relative"
+                                style={{
+                                  backgroundColor: isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#d4d4d8"),
+                                  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 87%, 0% 100%)",
+                                  transformOrigin: "top",
+                                  filter: isBookmarked ? "drop-shadow(0 3px 6px rgba(225,29,72,0.45))" : "drop-shadow(0 2px 3px rgba(0,0,0,0.18))",
+                                }}
+                              >
+                                {/* Stitching dots */}
+                                <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col gap-[5px]">
+                                  {[0,1,2].map(i => (
+                                    <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: isBookmarked ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.2)" }} />
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )
+                          })()}
                         </div>{/* end inner flex */}
                       </div>{/* end deadzone */}
 
@@ -1469,7 +1552,7 @@ export default function NoteApp() {
       )}
 
       {showAiBar && (
-        <AiCommandBar 
+        <AiCommandBar
           onClose={() => setShowAiBar(false)}
           onSubmit={(prompt) => {
             openAlert("AI Command", `Processing: "${prompt}"... (Integration coming soon)`)

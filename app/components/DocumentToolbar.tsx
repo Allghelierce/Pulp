@@ -1,4 +1,5 @@
 import { memo } from "react"
+import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 
 interface DocumentToolbarProps {
   accent: string
@@ -32,6 +33,7 @@ interface DocumentToolbarProps {
   setActiveTool: (tool: string) => void
   stickyColor: string
   setStickyColor: (color: string) => void
+  onDownload: () => void
 }
 
 
@@ -46,9 +48,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   allCompacted, onCompactAll,
   activeTool, setActiveTool,
   stickyColor, setStickyColor,
+  onDownload,
 }: DocumentToolbarProps) {
 
-  const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-all cursor-pointer hover:scale-[1.07] hover:-translate-y-[1px] active:scale-[0.96] active:translate-y-0"
+  const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
 
   const activeStyle = (active: boolean): React.CSSProperties => active
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
@@ -75,19 +78,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {/* Align + Line grouped button */}
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
-            onMouseDown={e => { e.preventDefault(); autoAlign() }}
-            title="Auto align boxes (Rows)"
+            onMouseDown={e => { e.preventDefault(); autoAlign(); verticalAlign() }}
+            title="Align boxes"
             className="text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap"
           >
             Align
-          </button>
-          <div className="w-px bg-zinc-200 self-stretch" />
-          <button
-            onMouseDown={e => { e.preventDefault(); verticalAlign() }}
-            title="Vertical stack boxes (Column)"
-            className="px-2.5 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center text-zinc-600"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="3" rx="1" /><rect x="7" y="9" width="10" height="6" rx="1" /><rect x="7" y="19" width="10" height="3" rx="1" /></svg>
           </button>
           <div className="w-px bg-zinc-200 self-stretch" />
           <button
@@ -168,7 +163,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
       {/* Right: Share + sidebar toggle */}
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
-        <button onClick={() => openAlert("Share note", "Sharing is coming soon!")} className="flex items-center h-[28px] px-2.5 rounded-[6px] text-[13.5px] font-normal tracking-wide text-[#6b6b72] bg-transparent border border-[#e4e4e7]/60 transition-all hover:bg-[#f9f9f9] hover:border-[#d4d4d8] hover:text-zinc-700 hover:scale-[1.07] hover:-translate-y-[1px] active:scale-[0.96]" title="Share note">
+        <AnimatedDownloadButton onDownload={onDownload} />
+        <button onClick={() => openAlert("Share note", "Sharing is coming soon!")} className="flex items-center h-[28px] px-2.5 rounded-[6px] text-[13.5px] font-normal tracking-wide text-[#6b6b72] bg-transparent border border-[#e4e4e7]/60 transition-all hover:bg-zinc-100 hover:border-zinc-300 hover:text-zinc-700 active:scale-[0.97]" title="Share note">
           <svg className="w-3 h-3 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="#b85e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8">
             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
             <polyline points="16 6 12 2 8 6" />

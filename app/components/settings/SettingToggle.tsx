@@ -1,15 +1,19 @@
 "use client"
+import { motion } from "framer-motion"
 
 export function SettingToggle({ checked, onChange, isDark }: { checked: boolean; onChange: (v: boolean) => void; isDark: boolean }) {
   return (
     <button
       onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 rounded-none transition-all duration-200 shrink-0 ${checked 
-        ? (isDark ? "bg-zinc-100" : "bg-zinc-800") 
-        : (isDark ? "bg-zinc-800" : "bg-zinc-200")}`}
+      className="relative w-[42px] h-[24px] rounded-full shrink-0 focus:outline-none transition-colors duration-300"
+      style={{ backgroundColor: checked ? (isDark ? "#e4e4e7" : "#18181b") : (isDark ? "#3f3f46" : "#d4d4d8") }}
     >
-      <div className={`absolute top-0.5 w-5 h-5 rounded-none shadow-sm transition-transform duration-200 ${isDark ? "bg-zinc-900" : "bg-white"} ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+      <motion.div
+        className="absolute top-[3px] w-[18px] h-[18px] rounded-full shadow-md"
+        style={{ backgroundColor: checked ? (isDark ? "#18181b" : "#ffffff") : (isDark ? "#71717a" : "#ffffff") }}
+        animate={{ x: checked ? 21 : 3 }}
+        transition={{ type: "spring", stiffness: 600, damping: 40, mass: 0.6 }}
+      />
     </button>
   )
 }
-

@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowRightIcon, CheckIcon } from "@radix-ui/react-icons"
-import { cn } from "@/lib/utils"
+import { cn } from "@/app/lib/utils"
 
 interface Feature {
   name: string
@@ -21,6 +20,7 @@ interface PricingTier {
   buttonLabel: string
   buttonDisabled?: boolean
   onSelect?: () => void
+  ctaOverride?: (props: { className: string; style?: React.CSSProperties; children: React.ReactNode }) => React.ReactNode
 }
 
 interface PricingSectionProps {
@@ -35,42 +35,42 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
 
   return (
     <section className={cn("w-full", className)}>
-      {/* Toggle */}
-      <div className="flex flex-col items-center gap-3 mb-8">
+      {/* Billing toggle */}
+      <div className="flex items-center justify-center mb-7">
         <div className={cn(
-          "inline-flex items-center p-1 rounded-full border shadow-sm",
-          isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200"
+          "inline-flex items-center p-1 rounded-xl border",
+          isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-100 border-zinc-200/80"
         )}>
-          {["Monthly", "Yearly"].map((period) => (
-            <button
-              key={period}
-              onClick={() => setIsYearly(period === "Yearly")}
-              className={cn(
-                "px-6 py-2 text-xs font-semibold rounded-full transition-all duration-200",
-                (period === "Yearly") === isYearly
-                  ? "text-white shadow-md"
-                  : isDark
-                    ? "text-zinc-500 hover:text-zinc-300"
-                    : "text-zinc-500 hover:text-zinc-800"
-              )}
-              style={(period === "Yearly") === isYearly ? { backgroundColor: accentColor } : undefined}
-            >
-              {period}
-              {period === "Yearly" && (
-                <span className={cn(
-                  "ml-1.5 text-[10px] font-bold",
-                  (period === "Yearly") === isYearly ? "text-orange-200" : "text-green-500"
-                )}>
-                  −25%
-                </span>
-              )}
-            </button>
-          ))}
+          {(["Monthly", "Yearly"] as const).map((period) => {
+            const active = (period === "Yearly") === isYearly
+            return (
+              <button
+                key={period}
+                onClick={() => setIsYearly(period === "Yearly")}
+                className={cn(
+                  "relative px-5 py-1.5 text-[12px] font-semibold rounded-lg transition-all duration-200",
+                  active
+                    ? isDark ? "bg-zinc-700 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                    : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
+                )}
+              >
+                {period}
+                {period === "Yearly" && (
+                  <span className={cn(
+                    "ml-1.5 text-[10px] font-bold",
+                    active ? "text-green-400" : "text-green-500"
+                  )}>
+                    −25%
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-4">
         {tiers.map((tier) => (
           <div
             key={tier.name}
@@ -78,83 +78,92 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
               "relative flex flex-col rounded-2xl border transition-all duration-200",
               tier.highlight
                 ? isDark
-                  ? "bg-zinc-900 border-zinc-700 shadow-2xl"
-                  : "bg-white border-zinc-300 shadow-xl"
+                  ? "bg-zinc-900 border-zinc-700"
+                  : "bg-white border-zinc-300/80"
                 : isDark
-                  ? "bg-zinc-900/50 border-zinc-800"
-                  : "bg-zinc-50/60 border-zinc-200"
+                  ? "bg-zinc-900/40 border-zinc-800/80"
+                  : "bg-zinc-50 border-zinc-200/70"
             )}
             style={tier.highlight ? {
-              boxShadow: `0 0 0 1.5px ${accentColor}55, 0 20px 40px -12px ${accentColor}33`
+              boxShadow: `0 0 0 1px ${accentColor}40, 0 24px 48px -8px rgba(0,0,0,0.18)`
             } : undefined}
           >
-            {/* Badge */}
+            {/* Pro badge */}
             {tier.badge && (
               <div
-                className="absolute -top-3.5 left-6 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-md"
+                className="absolute -top-3 left-5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-lg"
                 style={{ backgroundColor: accentColor }}
               >
                 {tier.badge}
               </div>
             )}
 
-            <div className="p-7 flex-1">
+            <div className="p-6 flex-1">
               {/* Header */}
-              <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center gap-2.5 mb-5">
                 <div className={cn(
-                  "p-2.5 rounded-xl",
+                  "p-2 rounded-xl",
                   isDark ? "bg-zinc-800" : "bg-zinc-100"
                 )}>
                   {tier.icon}
                 </div>
-                <h3 className={cn(
-                  "text-lg font-semibold",
-                  isDark ? "text-zinc-100" : "text-zinc-900"
-                )}>
-                  {tier.name}
-                </h3>
+                <div>
+                  <h3 className={cn("text-[14px] font-bold", isDark ? "text-zinc-100" : "text-zinc-900")}>
+                    {tier.name}
+                  </h3>
+                  <p className={cn("text-[11px]", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                    {tier.description}
+                  </p>
+                </div>
               </div>
 
               {/* Price */}
-              <div className="mb-5">
-                <div className="flex items-baseline gap-1.5">
-                  <span className={cn("text-4xl font-extrabold", isDark ? "text-white" : "text-zinc-900")}>
-                    {tier.price.monthly === 0
-                      ? "Free"
-                      : `$${isYearly ? tier.price.yearly : tier.price.monthly}`}
+              <div className="mb-5 pb-5 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
+                <div className="flex items-baseline gap-1">
+                  <span className={cn("text-[36px] font-extrabold tracking-tight leading-none", isDark ? "text-white" : "text-zinc-900")}>
+                    {tier.price.monthly === 0 ? "Free" : `$${isYearly ? tier.price.yearly : tier.price.monthly}`}
                   </span>
                   {tier.price.monthly > 0 && (
-                    <span className={cn("text-xs", isDark ? "text-zinc-500" : "text-zinc-400")}>
-                      /{isYearly ? "year" : "month"}
+                    <span className={cn("text-[12px] font-medium", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                      /{isYearly ? "yr" : "mo"}
                     </span>
                   )}
                 </div>
                 {isYearly && tier.price.monthly > 0 && (
-                  <p className="text-[11px] text-green-500 mt-0.5 font-medium">
-                    Save ${(tier.price.monthly * 12 - tier.price.yearly)} vs monthly
+                  <p className="text-[11px] text-green-500 font-semibold mt-1">
+                    Save ${tier.price.monthly * 12 - tier.price.yearly} vs monthly billing
                   </p>
                 )}
-                <p className={cn("text-xs mt-1.5", isDark ? "text-zinc-500" : "text-zinc-500")}>
-                  {tier.description}
-                </p>
               </div>
 
               {/* Features */}
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {tier.features.map((feature) => (
-                  <li key={feature.name} className="flex gap-3">
+                  <li key={feature.name} className="flex items-start gap-2.5">
                     <div className={cn(
-                      "mt-0.5 shrink-0",
-                      feature.included ? "text-green-500" : isDark ? "text-zinc-700" : "text-zinc-300"
+                      "mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0",
+                      feature.included
+                        ? "bg-green-500/15"
+                        : isDark ? "bg-zinc-800" : "bg-zinc-100"
                     )}>
-                      <CheckIcon className="w-4 h-4" />
+                      {feature.included ? (
+                        <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#22c55e" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5h6" stroke={isDark ? "#52525b" : "#d4d4d8"} strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      )}
                     </div>
                     <div>
-                      <p className={cn("text-xs font-medium", isDark ? "text-zinc-200" : "text-zinc-800")}>
+                      <p className={cn(
+                        "text-[12px] font-medium leading-tight",
+                        feature.included
+                          ? isDark ? "text-zinc-200" : "text-zinc-800"
+                          : isDark ? "text-zinc-600" : "text-zinc-400"
+                      )}>
                         {feature.name}
-                      </p>
-                      <p className={cn("text-[11px]", isDark ? "text-zinc-500" : "text-zinc-500")}>
-                        {feature.description}
                       </p>
                     </div>
                   </li>
@@ -163,23 +172,43 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
             </div>
 
             {/* CTA */}
-            <div className="px-7 pb-7">
-              <button
-                disabled={tier.buttonDisabled}
-                onClick={tier.onSelect}
-                className={cn(
-                  "w-full h-11 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2",
-                  tier.buttonDisabled
-                    ? isDark
-                      ? "bg-zinc-800 text-zinc-600 cursor-default"
-                      : "bg-zinc-100 text-zinc-400 cursor-default"
-                    : "text-white shadow-md hover:shadow-lg hover:opacity-90 active:scale-[0.98]"
-                )}
-                style={!tier.buttonDisabled ? { backgroundColor: accentColor } : undefined}
-              >
-                {tier.buttonLabel}
-                {!tier.buttonDisabled && <ArrowRightIcon className="w-4 h-4" />}
-              </button>
+            <div className="px-6 pb-6">
+              {tier.ctaOverride ? (
+                tier.ctaOverride({
+                  className: "w-full h-10 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 text-white shadow-md hover:opacity-90 active:scale-[0.98]",
+                  style: { backgroundColor: accentColor },
+                  children: (
+                    <>
+                      {tier.buttonLabel}
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </>
+                  )
+                })
+              ) : (
+                <button
+                  disabled={tier.buttonDisabled}
+                  onClick={tier.onSelect}
+                  className={cn(
+                    "w-full h-10 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5",
+                    tier.buttonDisabled
+                      ? isDark ? "bg-zinc-800/80 text-zinc-600 cursor-default border border-zinc-800" : "bg-zinc-100 text-zinc-400 cursor-default border border-zinc-200"
+                      : "text-white shadow-md hover:opacity-90 active:scale-[0.98]"
+                  )}
+                  style={!tier.buttonDisabled ? { backgroundColor: accentColor } : undefined}
+                >
+                  {tier.buttonDisabled ? (
+                    <span className="flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                      {tier.buttonLabel}
+                    </span>
+                  ) : (
+                    <>
+                      {tier.buttonLabel}
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         ))}

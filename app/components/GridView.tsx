@@ -8,7 +8,7 @@ interface GridViewProps {
   activeTabId: string | null
   carouselIdx: number
   lineSpacing: "compact" | "normal" | "relaxed"
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"
+  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger"
   theme: "light" | "dark"
   editorFont: string
   accent: string
@@ -36,8 +36,8 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
         <div className="flex flex-col gap-1">
           <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-bold pointer-events-auto">{activeNote.pages.length} Pages</p>
         </div>
-        
-        <button 
+
+        <button
           onClick={() => setGridView(false)}
           className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-none bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 hover:scale-105 group"
         >
@@ -51,24 +51,24 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
         {activeNote.pages.map((pageHtml, idx) => {
           const { backgroundColor, backgroundImage, backgroundSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark", true)
           const pageNum = (idx + 1).toString().padStart(2, '0')
-          
+
           return (
-            <div 
+            <div
               key={idx}
               onClick={() => { setCurrentPageIdx(idx); setGridView(false) }}
               className="group relative cursor-pointer flex flex-col items-center"
             >
-              <div 
+              <div
                 className="relative w-[380px] h-[538px] rounded-none overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/5 bg-white transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-[0_45px_100px_rgba(0,0,0,0.8)]"
                 style={{ backgroundColor }}
               >
                 {/* 1:1 Scale Simulation (Scaled to ~0.46 to fit 380px width) */}
-                <div 
+                <div
                   className="absolute top-0 left-0 w-[827px] h-[1170px] origin-top-left pointer-events-none"
-                  style={{ 
+                  style={{
                     transform: 'scale(0.4595)',
                     backgroundImage, backgroundSize,
-                    backgroundColor: theme === 'dark' ? backgroundColor : backgroundColor 
+                    backgroundColor: theme === 'dark' ? backgroundColor : backgroundColor
                   }}
                 >
                   {/* Margin Line */}
@@ -77,9 +77,9 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                   {/* High Fidelity Content Layers */}
                   <div className="absolute inset-0 z-10 overflow-hidden">
                     {/* Main Flowing Text Content */}
-                    <div 
+                    <div
                       className="w-full h-full"
-                      style={{ 
+                      style={{
                         padding: '80px 60px 80px 140px',
                         fontSize: '18px',
                         lineHeight: lh + 'px',
@@ -100,7 +100,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                           strokeWidth={path.width}
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          style={{ 
+                          style={{
                             opacity: path.tool === 'highlighter' ? 0.45 : 1,
                             mixBlendMode: path.tool === 'highlighter' ? (theme === 'dark' ? 'lighten' : 'multiply') : 'normal'
                           }}
@@ -128,7 +128,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
 
                 {/* Subtle Hover selection hint (No popup) */}
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
-                
+
                 {/* Page Number in Top Right */}
                 <div className="absolute top-4 right-5 z-[50] mix-blend-difference pointer-events-none">
                   <span className="text-[18px] font-bold text-white/20 group-hover:text-white/60 transition-colors uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>
@@ -141,7 +141,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
         })}
 
         {/* Add Page Card */}
-        <div 
+        <div
           onClick={() => {
             const np = [...activeNote.pages, ""]
             setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n))

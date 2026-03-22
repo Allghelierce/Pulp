@@ -419,6 +419,16 @@ export const SlashMenu = memo(function SlashMenu({
     >
       <div style={{ maxHeight: 320, overflowY: "auto", overscrollBehavior: "contain" }}>
         <div style={{ padding: "4px 0" }}>
+          <div style={{
+            padding: "10px 14px 4px",
+            fontSize: 9,
+            fontWeight: 700,
+            color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+          }}>
+            {mode === "/" ? "text box presets" : "inline options"}
+          </div>
           {filtered.length === 0 ? (
             <div style={{ padding: "8px 12px", fontSize: 11, color: isLight ? "#a1a1aa" : "#52525b" }}>No results</div>
           ) : (
