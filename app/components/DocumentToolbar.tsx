@@ -35,6 +35,7 @@ interface DocumentToolbarProps {
   setRightSidebarOpen: (v: boolean) => void
   allCompacted: boolean
   onCompactAll: () => void
+  onInsertHR: () => void
   activeTool: string
   setActiveTool: (tool: string) => void
   stickyColor: string
@@ -51,7 +52,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   openAlert, clearPage, autoAlign, verticalAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
-  allCompacted, onCompactAll,
+  allCompacted, onCompactAll, onInsertHR,
   activeTool, setActiveTool,
   stickyColor, setStickyColor,
   onDownload,
@@ -98,6 +99,15 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             style={drawLineMode ? { color: "#18181b", backgroundColor: "#f4f4f5" } : { color: "#a1a1aa" }}
           >
             <svg width="9" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21" /></svg>
+          </button>
+          <div className="w-px bg-zinc-200 self-stretch" />
+          <button
+            onMouseDown={e => { e.preventDefault(); onInsertHR() }}
+            title="Insert horizontal line"
+            className="px-2 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center"
+            style={{ color: "#a1a1aa" }}
+          >
+            <svg width="13" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /></svg>
           </button>
         </div>
 

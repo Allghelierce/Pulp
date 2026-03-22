@@ -78,7 +78,7 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme, handwrittenEffect }: { reduceMotion: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { ${handwrittenEffect ? "filter: url(#handwritten-jitter);" : ""} outline: none !important; cursor: url('/pencil.png'), text; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { ${handwrittenEffect ? "filter: url(#handwritten-jitter);" : ""} outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
       <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
@@ -201,7 +201,13 @@ const BoxItem = memo(function BoxItem({
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
-      {/* Rotation handle */}
+      {isSelected && (
+        <button
+          onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
+          className="hover:scale-110 active:scale-95 transition-transform"
+          style={{ position: "absolute", top: isSticky ? 10 : 6, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
+      )}
+      {/* Rotation handle — to the right of the × button */}
       {isSelected && !isSticky && (
         <div
           title="Rotate"
@@ -223,7 +229,7 @@ const BoxItem = memo(function BoxItem({
             window.addEventListener('mouseup', onUp)
           }}
           style={{
-            position: "absolute", top: -28, left: "50%", transform: "translateX(-50%)",
+            position: "absolute", top: 6, right: -22,
             width: 14, height: 14, borderRadius: "50%",
             background: "white", border: `1.5px solid ${accentSolid}`,
             cursor: "grab", zIndex: 120,
@@ -234,12 +240,6 @@ const BoxItem = memo(function BoxItem({
             <path d="M21.5 2v6h-6" /><path d="M2.5 12a10 10 0 0 1 18-6" />
           </svg>
         </div>
-      )}
-      {isSelected && (
-        <button
-          onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
-          className="hover:scale-110 active:scale-95 transition-transform"
-          style={{ position: "absolute", top: isSticky ? 10 : 6, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
       )}
       {isSelected && !isImage && !isSticky && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
@@ -321,7 +321,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
 }) {
-  const [open, setOpen] = useState<"style" | "font" | "size" | "color" | null>(null)
+  const [open, setOpen] = useState<"style" | "font" | "size" | "color" | "textColor" | null>(null)
   const [anchorLeft, setAnchorLeft] = useState(0)
   const [customSize, setCustomSize] = useState("")
   const ref = useRef<HTMLDivElement>(null)
@@ -329,6 +329,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   const fontBtnRef = useRef<HTMLButtonElement>(null)
   const sizeBtnRef = useRef<HTMLButtonElement>(null)
   const colorBtnRef = useRef<HTMLButtonElement>(null)
+  const textColorBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -338,7 +339,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   }, [open])
 
   const openDropdown = (type: any) => {
-    const btnRef = type === "style" ? styleBtnRef : type === "font" ? fontBtnRef : type === "size" ? sizeBtnRef : colorBtnRef
+    const btnRef = type === "style" ? styleBtnRef : type === "font" ? fontBtnRef : type === "size" ? sizeBtnRef : type === "textColor" ? textColorBtnRef : colorBtnRef
     if (btnRef.current && ref.current) {
       const b = btnRef.current.getBoundingClientRect()
       const t = ref.current.getBoundingClientRect()
@@ -375,8 +376,10 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     fontFamily: "'EB Garamond', serif",
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
-
+  // Handlers
   const highlightColors = ["transparent", "#fef08a", "#bbf7d0", "#bae6fd", "#fed7aa", "#f5d0fe"]
+  const textColors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#52525b", "#d4d4d8"]
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {e.stopPropagation()}, [])
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
@@ -417,6 +420,14 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
             {currentSize}px {chevron}
           </button>
 
+          <button ref={textColorBtnRef} style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onClick={() => openDropdown("textColor")} title="Text color">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 20h16"></path>
+              <path d="m6 16 6-12 6 12"></path>
+              <path d="M8 12h8"></path>
+            </svg>
+          </button>
+
           <button style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onClick={() => {
             const temp = document.createElement("div");
             temp.innerHTML = box.content;
@@ -453,6 +464,36 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           {open === "color" && (
             <div style={{ ...dropdownBase, display: "flex", gap: 3, padding: 6 }}>
               {highlightColors.map(c => <button key={c} onClick={() => { onUpdateBox(box.id, { boxHighlightColor: c }); setOpen(null) }} style={{ width: 16, height: 16, borderRadius: 2, background: c, border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer" }} />)}
+            </div>
+          )}
+          {open === "textColor" && (
+            <div style={{ ...dropdownBase, minWidth: 140, padding: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 5, marginBottom: 8 }}>
+                {textColors.map(c => (
+                  <button
+                    key={c}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      document.execCommand('foreColor', false, c)
+                      setOpen(null)
+                    }}
+                    style={{ width: 22, height: 22, borderRadius: 4, background: c, border: `1px solid ${dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: "pointer" }}
+                  />
+                ))}
+              </div>
+              <div style={{ borderTop: `1px solid ${dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, paddingTop: 6 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", paddingLeft: 2 }}>
+                  <input
+                    type="color"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onInput={e => {
+                      document.execCommand('foreColor', false, (e.target as HTMLInputElement).value)
+                    }}
+                    style={{ width: 16, height: 16, padding: 0, border: "none", borderRadius: 3, cursor: "pointer", background: "transparent" }}
+                  />
+                  <span style={{ fontSize: 10, color: dk ? "#a1a1aa" : "#71717a", fontWeight: 500 }}>Custom color</span>
+                </label>
+              </div>
             </div>
           )}
         </div>
@@ -524,13 +565,14 @@ const BoxTextarea = memo(function BoxTextarea({
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
   const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
-  const resolvedFont = isMarginStyle ? "'Licorice', cursive" : (boxFontFamily || "'Caveat', cursive")
+  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Caveat', cursive")
 
   return (
     <div
       ref={ref}
       contentEditable
       suppressContentEditableWarning
+      data-box-style={styleKey}
       onKeyDown={e => {
         onKeyDown(e)
         if (!e.defaultPrevented) e.stopPropagation()
@@ -551,11 +593,11 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
-        lineHeight: 1.45, color: isMarginStyle ? "#d4d4d8" : "#1a1a1a", cursor: "text",
+        lineHeight: 1.45, color: isMarginStyle ? "rgba(0,0,0,0.32)" : "#1a1a1a", cursor: "text",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-1.2deg) skewX(-2deg)" : undefined,
         transformOrigin: "top left",
-        opacity: isMarginStyle ? 0.6 : 1,
+        WebkitFontSmoothing: isMarginStyle ? ("antialiased" as any) : undefined,
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
         overflow: isSticky ? "hidden" : "visible",
         backgroundColor: "transparent",
@@ -1435,6 +1477,7 @@ export default function NoteApp() {
             setRightSidebarOpen={setContentSidebarOpen}
             allCompacted={allCompacted}
             onCompactAll={handleCompactAll}
+            onInsertHR={() => editor.insertHTML('<hr style="border:none;border-top:2px solid #000;margin:16px auto;width:90%"/><br/>')}
             onDownload={() => {
               if (!activeNote) return
               const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })

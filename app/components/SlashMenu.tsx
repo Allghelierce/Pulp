@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react"
+import { createPortal } from "react-dom"
 import { format } from "date-fns"
 import { DatetimePicker } from "@/components/ui/datetime-picker"// ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -132,7 +133,9 @@ function Submenu({
   const isLight = mode === "/"
   const isDark = !isLight
 
-  return (
+  if (typeof document === "undefined") return null
+
+  return createPortal(
     <div
       ref={ref}
       style={{
@@ -185,7 +188,8 @@ function Submenu({
           {opt.label}
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -207,7 +211,9 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
 
   const isLight = mode === "/"
 
-  return (
+  if (typeof document === "undefined") return null
+
+  return createPortal(
     <div
       ref={ref}
       style={{
@@ -230,7 +236,8 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       onClick={(e) => e.stopPropagation()}
     >
       {children}
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -350,7 +357,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-      action: () => insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')
+      action: () => insertHTML('<hr style="border:none;border-top:2px solid #000;margin:16px auto;width:90%"/><br/>')
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",
@@ -530,7 +537,12 @@ export const SlashMenu = memo(function SlashMenu({
         overflow: "hidden",
       }}
     >
-      <div style={{ maxHeight: 320, overflowY: "auto", overscrollBehavior: "contain" }}>
+      <div
+        className="hide-scroll"
+        onScroll={() => setOpenSubmenuId(null)}
+        style={{ maxHeight: 320, overflowY: "auto", overscrollBehavior: "contain" }}
+      >
+        <style dangerouslySetInnerHTML={{ __html: `.hide-scroll::-webkit-scrollbar { display: none; } .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }` }} />
         <div style={{ padding: "4px 0" }}>
           <div style={{
             padding: "10px 14px 4px",
