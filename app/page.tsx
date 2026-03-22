@@ -76,9 +76,9 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 }
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
-const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
+const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme, handwrittenEffect }: { reduceMotion: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { filter: url(#handwritten-jitter); outline: none !important; cursor: url('/pencil.png'), text; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { ${handwrittenEffect ? "filter: url(#handwritten-jitter);" : ""} outline: none !important; cursor: url('/pencil.png'), text; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
       <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
@@ -258,8 +258,8 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 14 }
-const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400 }
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 13 }
+const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "'Caveat', cursive", label: "Handwritten" },
   { value: "'Gochi Hand', cursive", label: "Gochi Hand" },
@@ -276,6 +276,7 @@ const BOX_STYLES = [
   { value: "h1", label: "H1" },
   { value: "h2", label: "H2" },
   { value: "h3", label: "H3" },
+  { value: "margin", label: "Mg" },
 ]
 
 const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox, onRewrite, onImageGen, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
@@ -486,9 +487,10 @@ const BoxTextarea = memo(function BoxTextarea({
   }, [id, isSticky, onUpdate])
 
   const styleKey = boxHeadingStyle || "default"
+  const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
   const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
-  const resolvedFont = boxFontFamily || "'Caveat', cursive"
+  const resolvedFont = isMarginStyle ? "'Indie Flower', cursive" : (boxFontFamily || "'Caveat', cursive")
 
   return (
     <div
@@ -515,7 +517,11 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
-        lineHeight: 1.45, color: "#1a1a1a", cursor: "text",
+        lineHeight: 1.45, color: isMarginStyle ? "#8a8a8a" : "#1a1a1a", cursor: "text",
+        fontStyle: isMarginStyle ? "italic" : "normal",
+        transform: isMarginStyle ? "rotate(-1.2deg) skewX(-2deg)" : undefined,
+        transformOrigin: "top left",
+        opacity: isMarginStyle ? 0.75 : 1,
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
         overflow: isSticky ? "hidden" : "visible",
         backgroundColor: "transparent",
@@ -595,6 +601,8 @@ export default function NoteApp() {
   const [reduceMotion, setReduceMotion] = useState(false)
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
   const [bgEffect, setBgEffect] = useState(true)
+  const [smearEffect, setSmearEffect] = useState(true)
+  const [handwrittenEffect, setHandwrittenEffect] = useState(true)
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
@@ -1099,12 +1107,11 @@ export default function NoteApp() {
       if (newName.trim()) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName.trim() } : n))
     })
 
-  const deleteNote = (id: string) =>
-    openConfirm("Delete note?", "This cannot be undone.", "Delete", true, async () => {
-      setNotes(prev => prev.filter(n => n.id !== id))
-      if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
-      if (user) await supabase.from("notes").delete().eq("id", id)
-    })
+  const deleteNote = async (id: string) => {
+    setNotes(prev => prev.filter(n => n.id !== id))
+    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
+    if (user) await supabase.from("notes").delete().eq("id", id)
+  }
 
   const clearPage = () =>
     openConfirm("Clear this page?", "All content on this page will be deleted. This cannot be undone.", "Clear", true, () => {
@@ -1217,8 +1224,8 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} />}
-      <GlobalStyles reduceMotion={reduceMotion} theme={theme} />
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} />}
+      <GlobalStyles reduceMotion={reduceMotion} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
         notes={notes}
@@ -1321,7 +1328,6 @@ export default function NoteApp() {
         {(() => {
           const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
           const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
-          const ribbonDark = isBookmarked ? "#b01535" : (theme === "dark" ? "#2d2d32" : "#a8a8ac")
           return (
             <motion.div
               onClick={() => {
@@ -1344,13 +1350,6 @@ export default function NoteApp() {
                 filter: isBookmarked ? "drop-shadow(0 4px 8px rgba(225,29,72,0.5))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
               }}
             >
-              <div style={{
-                width: "100%",
-                height: 10,
-                backgroundColor: ribbonDark,
-                borderRadius: "3px 3px 0 0",
-                boxShadow: `inset 0 -2px 3px rgba(0,0,0,0.18)`,
-              }} />
               <div style={{
                 width: "100%",
                 height: 64,
@@ -1463,7 +1462,7 @@ export default function NoteApp() {
                     >
 
                       <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
-                      <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />
+                      {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
 
                       {/* Render custom user-drawn lines */}
                       {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (

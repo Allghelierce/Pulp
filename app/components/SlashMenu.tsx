@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from "react"
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
+import { format } from "date-fns"
+import { DatetimePicker } from "@/components/ui/datetime-picker"// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface SubOption {
   label: string
@@ -17,6 +17,7 @@ interface SlashItem {
   icon: React.ReactNode
   action: () => void
   subOptions?: SubOption[]   // if present, clicking opens a submenu panel
+  customContent?: React.ReactNode // if present, clicking opens custom react node
 }
 
 interface SlashMenuProps {
@@ -53,6 +54,47 @@ function OIcon({ children, isActive, mode }: { children: React.ReactNode; isActi
       transition: "background 0.1s ease",
     }}>
       {children}
+    </div>
+  )
+}
+
+// ─── Custom Date Wrapper ────────────────────────────────────────────────────────
+
+function CustomDateWrapper({ onInsert, onClose, mode }: { onInsert: (str: string) => void, onClose: () => void, mode: "@" | "/" }) {
+  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [showTime, setShowTime] = useState(false)
+  const isLight = mode === "/"
+
+  return (
+    <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <DatetimePicker
+        value={date}
+        onChange={setDate}
+        format={[
+          ["months", "days", "years"],
+          ...(showTime ? [["hours", "minutes", "am/pm"]] : [])
+        ] as any}
+      />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)", cursor: "pointer", userSelect: "none" }}>
+          <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} style={{ cursor: "pointer" }} />
+          Include Time
+        </label>
+        <button
+          onClick={() => {
+            if (!date) return
+            const str = format(date, showTime ? "MM-dd-yyyy hh:mm a" : "MM-dd-yyyy")
+            onInsert(str)
+            onClose()
+          }}
+          style={{
+            background: "#b85e22", color: "white", padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500, cursor: "pointer",
+            border: "none"
+          }}
+        >
+          Insert
+        </button>
+      </div>
     </div>
   )
 }
@@ -143,6 +185,55 @@ function Submenu({
           {opt.label}
         </div>
       ))}
+    </div>
+  )
+}
+
+// ─── Custom Flyout Wrapper ──────────────────────────────────────────────────
+
+function CustomMenuFlyout({ children, parentRef, mode }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/" }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ left: 0, top: 0, valid: false })
+
+  useEffect(() => {
+    if (parentRef.current && ref.current) {
+      const pr = parentRef.current.getBoundingClientRect()
+      const rh = ref.current.getBoundingClientRect()
+      let t = pr.top
+      if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
+      setPos({ left: pr.right + 4, top: t, valid: true })
+    }
+  }, [parentRef, children]) // children dependency to recalculate if dimensions shift
+
+  if (!pos.valid) {
+    return <div ref={ref} style={{ position: "fixed", left: -9999, top: -9999, opacity: 0 }}>{children}</div>
+  }
+
+  const isLight = mode === "/"
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: "fixed",
+        left: pos.left,
+        top: pos.top,
+        zIndex: 10000,
+        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(14,14,16,0.96)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 5,
+        boxShadow: isLight
+          ? "0 8px 32px -8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)"
+          : "0 16px 48px -8px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)",
+        animation: "slide-up-fade 0.15s cubic-bezier(0.16,1,0.3,1)",
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      }}
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
     </div>
   )
 }
@@ -275,6 +366,22 @@ export const SlashMenu = memo(function SlashMenu({
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
       action: () => onInsertImage?.()
     },
+    {
+      id: "date", label: "Today's Date", shortcut: "today", group: "Accessories",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+      action: () => {
+        const str = format(new Date(), "MM-dd-yyyy")
+        insertHTML(`<span>${str}</span>`)
+      }
+    },
+    {
+      id: "date-custom", label: "Custom Date", group: "Accessories",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+      action: () => {}, 
+      customContent: <CustomDateWrapper onInsert={(str) => {
+        onSelect(() => insertHTML(`<span>${str}</span>`))
+      }} onClose={onClose} mode={mode} />
+    },
   ]
 
   // ── / menu items ──────────────────────────────────────────────────────────
@@ -372,7 +479,17 @@ export const SlashMenu = memo(function SlashMenu({
       if (openSubmenuId) { if (e.key === "Escape") { e.stopPropagation(); setOpenSubmenuId(null) }; return }
       if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min((i ?? -1) + 1, filtered.length - 1)) }
       else if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max((i ?? -1) - 1, 0)) }
-      else if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); if (activeIdx !== null && filtered[activeIdx]) onSelect(filtered[activeIdx].action) }
+      else if (e.key === "Enter") {
+        e.preventDefault(); e.stopPropagation(); 
+        if (activeIdx !== null && filtered[activeIdx]) {
+          const item = filtered[activeIdx];
+          if (item.subOptions || item.customContent) {
+            setOpenSubmenuId(item.id)
+          } else {
+            onSelect(item.action)
+          }
+        }
+      }
       else if (e.key === "Escape" || e.key === "Tab") { if (filtered.length > 0) e.stopPropagation(); onClose() }
     }
     document.addEventListener("keydown", handler, true)
@@ -450,7 +567,7 @@ export const SlashMenu = memo(function SlashMenu({
                 {group.items.map((item) => {
                   const actualIdx = filtered.indexOf(item)
                   const isActive = activeIdx === actualIdx
-                  const hasSubmenu = !!item.subOptions?.length
+                  const hasSubmenu = !!item.subOptions?.length || !!item.customContent
                   const submenuOpen = openSubmenuId === item.id
 
                   return (
@@ -526,6 +643,12 @@ export const SlashMenu = memo(function SlashMenu({
                           mode={mode}
                           parentRef={submenuRowRef}
                         />
+                      )}
+                      
+                      {submenuOpen && item.customContent && (
+                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode}>
+                          {item.customContent}
+                        </CustomMenuFlyout>
                       )}
                     </div>
                   )

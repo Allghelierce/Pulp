@@ -37,6 +37,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   autoSave, setAutoSave, spellCheck, setSpellCheck, editorFont, setEditorFont,
   lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
   reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
+  smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
 }: {
   user: any
   onClose: () => void
@@ -53,6 +54,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
   bgEffect: boolean; setBgEffect: (v: boolean) => void
+  smearEffect: boolean; setSmearEffect: (v: boolean) => void
+  handwrittenEffect: boolean; setHandwrittenEffect: (v: boolean) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -259,6 +262,18 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   isDark={isDark}
                   description="Display the decorative binding on the left edge"
                   control={<SettingToggle checked={showBinding} onChange={setShowBinding} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Smear effect"
+                  isDark={isDark}
+                  description="Show a subtle ink smear shadow along the left margin"
+                  control={<SettingToggle checked={smearEffect} onChange={setSmearEffect} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Handwritten effect"
+                  isDark={isDark}
+                  description="Apply a slight wobble filter to text for a hand-drawn look"
+                  control={<SettingToggle checked={handwrittenEffect} onChange={setHandwrittenEffect} isDark={isDark} />}
                 />
               </SettingSection>
             </>)}

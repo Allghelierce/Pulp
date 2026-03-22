@@ -1,8 +1,9 @@
 "use client"
-import { memo, useState } from "react"
+import { memo, useState, useRef, useCallback } from "react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
+import { BackgroundPlus } from "@/components/ui/background-plus"
 
 interface SidebarProps {
   notes: NoteData[]
@@ -48,6 +49,34 @@ export const Sidebar = memo(function Sidebar({
   const [iconPicker, setIconPicker] = useState<{ noteId: string; x: number; y: number } | null>(null)
   const [draggedBookmarkId, setDraggedBookmarkId] = useState<string | null>(null)
   const [bookmarkTargetId, setBookmarkTargetId] = useState<string | null>(null)
+  const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
+  const [holdingId, setHoldingId] = useState<string | null>(null)
+  const [holdProgress, setHoldProgress] = useState(0)
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const startHold = useCallback((id: string) => {
+    setHoldingId(id)
+    setHoldProgress(0)
+    const start = Date.now()
+    holdIntervalRef.current = setInterval(() => {
+      const p = Math.min((Date.now() - start) / 1800, 1)
+      setHoldProgress(p)
+      if (p >= 1) {
+        clearInterval(holdIntervalRef.current!)
+        holdIntervalRef.current = null
+        setHoldingId(null)
+        setHoldProgress(0)
+        onDeleteNote(id)
+      }
+    }, 16)
+  }, [onDeleteNote])
+
+  const cancelHold = useCallback(() => {
+    if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
+    setHoldingId(null)
+    setHoldProgress(0)
+  }, [])
 
   const topLevelNotes = notes.filter(n => n.folderId === null && !n.parentId)
   const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid && !n.parentId)
@@ -125,7 +154,7 @@ export const Sidebar = memo(function Sidebar({
         onMouseEnter={e => { if (activeTabId !== n.id && nestTargetId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.03)" }}
         onMouseLeave={e => { if (activeTabId !== n.id && nestTargetId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}
       >
-        <span className="flex items-center gap-1.5 truncate">
+        <span className="flex items-center gap-1.5 truncate min-w-0">
           {indentPx > 12 && <span className="text-[9px] text-zinc-600 shrink-0">↳</span>}
           <span
             className="shrink-0 cursor-pointer hover:scale-125 transition-transform"
@@ -138,12 +167,43 @@ export const Sidebar = memo(function Sidebar({
           >
             {n.icon ?? "📄"}
           </span>
-          <span className="truncate">{n.subject}</span>
+          {renamingNoteId === n.id ? (
+            <input
+              autoFocus
+              value={renameValue}
+              onChange={e => setRenameValue(e.target.value)}
+              onBlur={() => { if (renameValue.trim()) onRenameNote(n.id, renameValue.trim()); setRenamingNoteId(null) }}
+              onKeyDown={e => {
+                e.stopPropagation()
+                if (e.key === "Enter") { if (renameValue.trim()) onRenameNote(n.id, renameValue.trim()); setRenamingNoteId(null) }
+                if (e.key === "Escape") setRenamingNoteId(null)
+              }}
+              onClick={e => e.stopPropagation()}
+              className="flex-1 bg-white/10 text-white text-xs rounded px-1.5 outline-none min-w-0"
+            />
+          ) : (
+            <span
+              className="truncate"
+              onDoubleClick={e => { e.stopPropagation(); setRenamingNoteId(n.id); setRenameValue(n.subject) }}
+            >{n.subject}</span>
+          )}
         </span>
-        <ItemMenu actions={[
-          { label: "Rename", onClick: () => onRenameNote(n.id, n.subject) },
-          { label: "Delete 🗑️", onClick: () => onDeleteNote(n.id), danger: true },
-        ]} />
+        {/* Hold-to-delete button */}
+        <button
+          onMouseDown={e => { e.stopPropagation(); startHold(n.id) }}
+          onMouseUp={e => { e.stopPropagation(); cancelHold() }}
+          onMouseLeave={() => cancelHold()}
+          onTouchStart={e => { e.stopPropagation(); startHold(n.id) }}
+          onTouchEnd={() => cancelHold()}
+          onClick={e => e.stopPropagation()}
+          title="Hold to delete"
+          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity relative w-5 h-5 flex items-center justify-center rounded"
+          style={{ background: holdingId === n.id ? `conic-gradient(#ef4444 ${holdProgress * 360}deg, rgba(255,255,255,0.06) 0deg)` : "transparent" }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={holdingId === n.id ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#71717a" }}>
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
       </div>
       {childNotes(n.id).map(child => renderNote(child, indentPx + 16))}
     </div>
@@ -161,8 +221,9 @@ export const Sidebar = memo(function Sidebar({
       )}
 
       <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
-        <div className="p-4 border-b border-white/5 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          <div className="flex items-center gap-2.5 mb-5 cursor-default">
+        <div className="relative p-4 border-b border-white/5 shrink-0 overflow-hidden" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+          <BackgroundPlus plusColor="#e8862a" plusSize={40} fade={false} style={{ opacity: 0.5, pointerEvents: "none", maskImage: "radial-gradient(ellipse at center, white 0%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse at center, white 0%, transparent 75%)" }} />
+          <div className="relative flex items-center gap-2.5 mb-5 cursor-default">
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="14" cy="14" r="13" fill="#B8661A" />
               <circle cx="14" cy="14" r="11" fill="#F5A030" />
@@ -174,7 +235,7 @@ export const Sidebar = memo(function Sidebar({
             </svg>
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
-          <input placeholder="Search…" className="w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
+          <input placeholder="Search…" className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
@@ -275,6 +336,28 @@ export const Sidebar = memo(function Sidebar({
             ) : (
               <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
             )}
+          </div>
+          {/* Backlinks Section */}
+          <div className="mb-6 pt-4 border-t border-white/5">
+            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-6 mb-2" style={{ fontFamily: 'var(--font-italiana)' }}>Backlinks</p>
+            {(() => {
+              const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
+                n.pages.some(p => p.includes(`data-backlink-id="${activeTabId}"`)) ||
+                Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some((b: any) => b.content.includes(`data-backlink-id="${activeTabId}"`)))
+              )) : []
+              if (bls.length === 0) return <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+              return bls.map(b => (
+                <div key={b.id} className="relative group flex items-center transition-all">
+                  <div
+                    onClick={() => onSelectNote(b.id)}
+                    className="flex-1 flex items-center gap-2 cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all truncate min-w-0"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>
+                    <span className="truncate text-xs">{b.subject}</span>
+                  </div>
+                </div>
+              ))
+            })()}
           </div>
         </div>
 
