@@ -19,11 +19,12 @@ import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
+import { AnimatedCounter } from "@/components/ui/animated-counter"
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: rotate(0deg) translateY(0); } 18% { transform: rotate(14deg) translateY(22px); } 42% { transform: rotate(-6deg) translateY(6px); } 62% { transform: rotate(3deg) translateY(3px); } 78% { transform: rotate(-1deg) translateY(1px); } 100% { transform: rotate(0deg) translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
   </>)
 })
@@ -159,27 +160,17 @@ const BoxItem = memo(function BoxItem({
         </div>
       )}
 
-      {/* Sticky note top strip with pin */}
+      {/* Sticky note top strip */}
       {isSticky && (
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: 32,
-          background: "rgba(0,0,0,0.13)",
+          background: "rgba(255,255,255,0.18)",
           borderRadius: "2px 2px 0 0",
-          display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 10, pointerEvents: "none",
-        }}>
-          {/* Pushpin SVG */}
-          <svg width="18" height="22" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Pin head */}
-            <circle cx="9" cy="7" r="5.5" fill="#cc2200" stroke="rgba(0,0,0,0.25)" strokeWidth="0.8" />
-            <circle cx="7.5" cy="5.5" r="1.5" fill="rgba(255,255,255,0.35)" />
-            {/* Pin shaft */}
-            <line x1="9" y1="12" x2="9" y2="21" stroke="rgba(0,0,0,0.55)" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </div>
+        }} />
       )}
 
-      <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined }}>
+      <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -507,8 +498,6 @@ export default function NoteApp() {
     window.addEventListener("mouseup", onUp)
   }, [sidebarWidth])
   const [gridView, setGridView] = useState(false)
-  const [bulbPulling, setBulbPulling] = useState(false)
-  const bulbPullTimer = useRef<any>(null)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
@@ -559,7 +548,7 @@ export default function NoteApp() {
     const rotation = parseFloat((Math.random() * 10 - 5).toFixed(1))
     const newBox: TextBoxType = {
       id,
-      x: x - 100, y: y - 100, w: 200, h: 200,
+      x: x - 150, y: y - 150, w: 300, h: 300,
       content: '',
       boxHighlightColor: stickyColor,
       boxFontFamily: '"Bilbo", cursive',
@@ -1169,18 +1158,8 @@ export default function NoteApp() {
         <button
           title={sidebarWidth > 0 ? "Close Menu" : "Open Menu"}
           onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
-          onClick={() => {
-            setBulbPulling(true)
-            clearTimeout(bulbPullTimer.current)
-            bulbPullTimer.current = setTimeout(() => setBulbPulling(false), 750)
-          }}
-          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-pointer transition-all translate-y-[-2px]"
-          style={{ 
-            transformOrigin: "top center", 
-            animation: bulbPulling
-              ? "bulb-pull 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards"
-              : "leaf-sway 18s ease-in-out infinite"
-          }}
+          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-pointer transition-all active:scale-95 translate-y-[-2px]"
+          style={{ transformOrigin: "top center", animation: "leaf-sway 18s ease-in-out infinite" }}
         >
           {/* Textured rope from topbar */}
           <div style={{ 
@@ -1393,26 +1372,29 @@ export default function NoteApp() {
                         />
                       ))}
 
-                      {/* Top Right Navigation — stopPropagation prevents textbox creation in this zone */}
+                      {/* Page Navigation — generous deadzone prevents accidental textbox creation */}
                       <div
-                        className="absolute top-5 right-16 flex items-center gap-1 z-50 no-print select-none"
+                        className="absolute top-0 right-0 z-50 no-print select-none"
+                        style={{ padding: "28px 16px 32px 40px" }}
                         onMouseDown={e => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
                       >
+                        <div className="flex items-center gap-1.5">
                         <button
                           disabled={currentPageIdx === 0}
                           onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                          className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-25" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                          className={`p-2 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-25" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                           style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
                           title="Previous Page"
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
                         </button>
-                        <span
-                          className="text-xs font-semibold tabular-nums px-1"
-                          style={{ color: theme === "dark" ? "#d4a574" : "#78350f", opacity: 0.8, minWidth: 28, textAlign: "center" }}
+                        <div
+                          className="px-1"
+                          style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563", opacity: 0.8, fontWeight: 600, fontFamily: '"SF Mono", "Fira Code", "Roboto Mono", monospace' }}
                         >
-                          {currentPageIdx + 1}
-                        </span>
+                          <AnimatedCounter value={currentPageIdx + 1} />
+                        </div>
                         <button
                           onClick={() => {
                             editor.flushSync();
@@ -1423,13 +1405,14 @@ export default function NoteApp() {
                               setCurrentPageIdx(activeNote.pages.length)
                             }
                           }}
-                          className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
+                          className="p-2 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
                           style={{ color: theme === "dark" ? "#d4a574" : "#78350f" }}
                           title="Next Page / Add Page"
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
                         </button>
-                      </div>
+                        </div>{/* end inner flex */}
+                      </div>{/* end deadzone */}
 
                     </div>
                   </div>

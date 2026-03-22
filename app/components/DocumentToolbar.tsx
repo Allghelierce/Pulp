@@ -113,11 +113,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         </button>
 
         {/* Sticky Note Tool */}
-        <div className="flex items-center gap-1.5 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] px-2 py-1 select-none">
+        <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
             onClick={() => setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky')}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-zinc-700 hover:scale-105 transition-transform cursor-pointer"
-            style={activeTool === 'sticky' ? { color: "#18181b" } : {}}
+            className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap`}
+            style={activeTool === 'sticky' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}}
             title="Add Sticky Note"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'sticky' ? stickyColor : "currentColor"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -126,18 +126,19 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </svg>
             Sticky
           </button>
-          <div className="w-px h-3 bg-zinc-200 ml-1 mr-0.5" />
-          <div className="flex items-center gap-1">
+          <div className="w-px bg-zinc-200 self-stretch" />
+          <div className="flex items-center gap-1 px-2">
             {[
               ['Yellow', '#fef08a'],
               ['Pink', '#fce7f3'],
               ['Blue', '#bae6fd'],
-              ['Green', '#bbf7d0']
+              ['Green', '#bbf7d0'],
+              ['Orange', '#fed7aa']
             ].map(([name, color]) => (
               <button
                 key={name}
                 onClick={() => { setStickyColor(color); setActiveTool('sticky') }}
-                className={`w-3.5 h-3.5 rounded-full border border-black/5 transition-all hover:scale-125 hover:rotate-6 ${stickyColor === color && activeTool === 'sticky' ? 'ring-2 ring-zinc-400 ring-offset-1' : ''}`}
+                className={`w-3.5 h-3.5 rounded-full border border-black/5 transition-all hover:scale-125 ${stickyColor === color && activeTool === 'sticky' ? 'ring-2 ring-zinc-400 ring-offset-1' : ''}`}
                 style={{ backgroundColor: color }}
                 title={name}
               />
