@@ -17,6 +17,8 @@ import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
+import { AiCommandBar } from "@/app/components/AiCommandBar"
+import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render 
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme }: { reduceMotion: boolean, theme: "light" | "dark" }) {
@@ -63,12 +65,12 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
   )
 })
 
-// ─── Memoized single box — only re-renders when THIS box data or selection changes ─
 const BoxItem = memo(function BoxItem({
   box, isSelected, loadingBoxId, accentSolid, theme,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
-  formattingOpen, setFormattingOpen, aiOpen, setAiOpen
+  formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
+  onDragStart, onDragEnd
 }: {
   box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
@@ -83,7 +85,9 @@ const BoxItem = memo(function BoxItem({
   onImageGen: (text: string, id: string) => void
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
+  onDragStart: () => void; onDragEnd: () => void
 }) {
+  const [localDragging, setLocalDragging] = useState(false)
   const resizeHandles: [string, React.CSSProperties][] = [
     ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "nw-resize" }],
     ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "ne-resize" }],
@@ -98,12 +102,21 @@ const BoxItem = memo(function BoxItem({
   return (
     <div
       id={`box-${box.id}`}
-      onMouseDown={e => startDrag(e, box)}
+      onMouseDown={e => {
+        setLocalDragging(true); onDragStart(); startDrag(e, box);
+        const up = () => { setLocalDragging(false); onDragEnd(); window.removeEventListener('mouseup', up) }
+        window.addEventListener('mouseup', up)
+      }}
       style={{
         position: "absolute", left: box.x, top: box.y, width: box.w, height: "auto", minHeight: box.h,
+        transform: `rotate(${box.boxRotation || 0}deg)`,
         border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid rgba(0,0,0,0.15)` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
-        zIndex: 50, overflow: "visible", cursor: "grab",
+        zIndex: isSelected ? 100 : 50, overflow: "visible", cursor: "grab",
+        boxShadow: box.boxHighlightColor && box.boxHighlightColor !== 'transparent' 
+          ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" 
+          : "none",
+        transition: localDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       {isSelected && (<>
@@ -111,12 +124,14 @@ const BoxItem = memo(function BoxItem({
         <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
       </>)}
       {isSelected && resizeHandles.map(([h, pos]) => (
-        <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); startResize(e, box, h) }}
+        <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
       {isSelected && (
-        <button onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
-          style={{ position: "absolute", top: 3, right: 5, background: "none", border: "none", cursor: "pointer", fontSize: 12, lineHeight: 1, color: `${accentSolid}66`, zIndex: 30, padding: 0 }}>×</button>
+        <button 
+          onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
+          className="hover:scale-110 active:scale-95 transition-transform"
+          style={{ position: "absolute", top: 6, right: 8, background: "rgba(0,0,0,0.05)", border: "none", cursor: "pointer", fontSize: 16, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.4)", zIndex: 120 }}>×</button>
       )}
       {isSelected && !isImage && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
@@ -151,6 +166,7 @@ const BoxItem = memo(function BoxItem({
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
             onKeyDown={onKeyDown}
             onInput={onInput}
+            onDeleteIfEmpty={() => deleteBox(box.id)}
           />
         )}
       </div>
@@ -354,10 +370,11 @@ interface BoxTextareaProps {
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
+  onDeleteIfEmpty?: () => void
 }
 
-const BoxTextarea = memo(function BoxTextarea({ 
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus, onKeyDown, onInput 
+const BoxTextarea = memo(function BoxTextarea({
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, onUpdate, onFocus, onKeyDown, onInput, onDeleteIfEmpty
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -398,6 +415,8 @@ const BoxTextarea = memo(function BoxTextarea({
       onFocus={() => { onFocus() }}
       onBlur={() => {
         clearTimeout(timerRef.current)
+        const isEmpty = !ref.current?.innerText.trim()
+        if (isEmpty && onDeleteIfEmpty) { onDeleteIfEmpty(); return }
         syncState()
       }}
       style={{
@@ -440,6 +459,7 @@ export default function NoteApp() {
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
+  const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
 
 
   // Settings
@@ -456,6 +476,7 @@ export default function NoteApp() {
   const [bgEffect, setBgEffect] = useState(true)
 
   const [activeTool, setActiveTool] = useState('select')
+  const [stickyColor, setStickyColor] = useState('#fef08a')
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const editorRef = useRef<HTMLDivElement>(null)
@@ -473,12 +494,17 @@ export default function NoteApp() {
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
-  const boxes = useBoxDrawing({ activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode })
+  const boxes = useBoxDrawing({ 
+    activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef, 
+    sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, 
+    drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor 
+  })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
+  const [showAiBar, setShowAiBar] = useState(false)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
 
@@ -550,6 +576,9 @@ export default function NoteApp() {
       const isBox = (e.currentTarget as any) !== editorRef.current
       if (isBox) { (e.currentTarget as HTMLElement).blur(); e.preventDefault() }
       return
+    }
+    if (e.key === "\\") {
+      e.preventDefault(); setShowAiBar(true); return
     }
 
     if (e.key === "@" || e.key === "/") {
@@ -789,16 +818,30 @@ export default function NoteApp() {
     }
   }, [activeTabId, currentPageIdx, gridView, activeNote?.pages])
 
+  // LocalStorage Persistence
+  useEffect(() => {
+    const saved = localStorage.getItem("pulp-notes")
+    const savedFolders = localStorage.getItem("pulp-folders")
+    if (saved) setNotes(JSON.parse(saved))
+    if (savedFolders) setFolders(JSON.parse(savedFolders))
+  }, [])
+
+  useEffect(() => {
+    if (notes.length > 0) localStorage.setItem("pulp-notes", JSON.stringify(notes))
+    if (folders.length > 0) localStorage.setItem("pulp-folders", JSON.stringify(folders))
+  }, [notes, folders])
+
   // Fetch notes from cloud
   useEffect(() => {
     const fetchNotes = async () => {
       const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) { setNotes([]); setActiveTabId(null); setIsLoading(false); return }
+      if (!u) { setUser(null); setIsLoading(false); return }
+      setUser(u)
       const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
       if (!error && data?.length) {
         setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined })))
-        setActiveTabId(data[0].id)
-      } else { setNotes([]); setActiveTabId(null) }
+        if (!activeTabId) setActiveTabId(data[0].id)
+      }
       setIsLoading(false)
     }
     fetchNotes()
@@ -978,64 +1021,7 @@ export default function NoteApp() {
   }
 
 
-  if (isLoading) return (
-    <div className="h-screen bg-[#141008] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Texture Layer */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
-      
-      <div className="relative z-10 flex flex-col items-center gap-10">
-        <div className="relative w-40 h-40">
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(232,112,26,0.4)]">
-            <defs>
-              <linearGradient id="juiceGrad" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#c04a08" />
-                <stop offset="60%" stopColor="#e8701a" />
-                <stop offset="100%" stopColor="#ff9d33" />
-              </linearGradient>
-              <mask id="orangeMask">
-                <circle cx="50" cy="54" r="42" fill="white" />
-              </mask>
-            </defs>
-            
-            {/* Empty Orange Background */}
-            <circle cx="50" cy="54" r="42" fill="#2a1a0a" stroke="rgba(232,112,26,0.2)" strokeWidth="1.5" />
-            
-            {/* Filling Juice */}
-            <g mask="url(#orangeMask)">
-              <rect x="0" y="0" width="100" height="100" fill="url(#juiceGrad)" 
-                style={{ transform: "translateY(100px)", animation: "orange-fill-up 3.5s ease-in-out infinite" }} />
-              {/* Optional: Simple Ripple Line */}
-              <rect x="0" y="0" width="100" height="2" fill="rgba(255,255,255,0.25)"
-                style={{ transform: "translateY(100px)", animation: "orange-fill-up 3.5s ease-in-out infinite" }} />
-            </g>
-
-            {/* Shine/Texture */}
-            <circle cx="50" cy="54" r="42" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="4" strokeDasharray="2,8" opacity="0.4" />
-            
-            {/* Stem/Leaf (always visible) */}
-            <path d="M 50 12 Q 52 4 62 2" stroke="#4a6e2f" strokeWidth="5" strokeLinecap="round" fill="none" />
-            <path d="M 62 2 C 70 2 75 8 68 14 C 62 20 54 16 54 10 Z" fill="#5a8a36" />
-          </svg>
-        </div>
-        
-        <div className="flex flex-col items-center">
-          <h2 className="font-serif italic text-4xl text-[#e8701a] mb-2 tracking-tight">Gathering Oranges</h2>
-          <div className="w-32 h-[1.5px] bg-[#e8701a]/20 relative overflow-hidden rounded-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#e8701a] to-transparent" 
-              style={{ width: "100%", transform: "translateX(-100%)", animation: "orange-loading-bar 1.5s ease-in-out infinite" }} />
-          </div>
-          <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes orange-fill-up {
-              0%   { transform: translateY(100px); }
-              80%  { transform: translateY(12px); }
-              100% { transform: translateY(12px); }
-            }
-            @keyframes orange-loading-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-          ` }} />
-        </div>
-      </div>
-    </div>
-  )
+  if (isLoading) return <PulpLoadingScreen />
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
@@ -1061,34 +1047,76 @@ export default function NoteApp() {
 
       <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
         <button
-          title="Drag to resize sidebar"
+          title={sidebarWidth > 0 ? "Close Menu" : "Open Menu"}
           onMouseDown={e => {
             e.preventDefault()
-            sidebarDragRef.current = { startX: e.clientX, startWidth: sidebarWidth }
+            const startX = e.clientX
+            const startW = sidebarWidth
+            sidebarDragRef.current = { startX, startWidth: startW }
+            
             const onMove = (ev: MouseEvent) => {
               if (!sidebarDragRef.current) return
               const dx = ev.clientX - sidebarDragRef.current.startX
               setSidebarWidth(Math.max(0, Math.min(320, sidebarDragRef.current.startWidth + dx)))
             }
-            const onUp = () => {
+            const onUp = (ev: MouseEvent) => {
               sidebarDragRef.current = null
-              setSidebarWidth(w => w < 128 ? 0 : 256)
+              const dx = Math.abs(ev.clientX - startX)
+              if (dx < 5) {
+                setSidebarWidth(prev => prev > 0 ? 0 : 256)
+              } else {
+                setSidebarWidth(w => w < 128 ? 0 : 256)
+              }
               window.removeEventListener("mousemove", onMove)
               window.removeEventListener("mouseup", onUp)
             }
             window.addEventListener("mousemove", onMove)
             window.addEventListener("mouseup", onUp)
           }}
-          className="absolute left-6 md:left-2 lg:left-8 top-[42px] z-[10] flex flex-col items-center drop-shadow-xl opacity-90 hover:opacity-100 outline-none cursor-ew-resize"
-          style={{ transformOrigin: "top center", animation: "leaf-sway 6s ease-in-out infinite" }}
+          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-pointer transition-all active:scale-95 translate-y-[-2px]"
+          style={{ 
+            transformOrigin: "top center", 
+            animation: "leaf-sway 12s ease-in-out infinite" 
+          }}
         >
-          {/* Extended slim twilight-twine string */}
-          <div style={{ width: "1.5px", height: 36, background: "linear-gradient(to right, #402919, #75553d, #402919)", marginBottom: -12, position: "relative", zIndex: 0, boxShadow: "0 0 2px rgba(0,0,0,0.3)" }} />
-          <img src="/plant2.png?v=3" alt="Toggle Sidebar" style={{ width: 44, height: "auto", objectFit: "contain", pointerEvents: "none", position: "relative", zIndex: 10, marginLeft: 3 }} />
+          {/* Textured rope from topbar */}
+          <div style={{ 
+            width: "1.8px", 
+            height: "120px", 
+            background: theme === 'dark' 
+              ? "linear-gradient(to right, #C6A664 0%, #78350f 40%, #C6A664 100%)"
+              : "linear-gradient(to right, #78350f 0%, #C6A664 40%, #78350f 100%)",
+            boxShadow: theme === 'dark' ? "0 0 4px rgba(198, 166, 100, 0.4)" : "1px 0 3px rgba(0,0,0,0.3)",
+            marginBottom: "-25px",
+            position: "relative",
+            zIndex: 0
+          }} />
+          <img 
+            src="/lightbulb.png" 
+            alt="Toggle Menu" 
+            style={{ 
+              width: 72, 
+              height: "auto", 
+              objectFit: "contain", 
+              pointerEvents: "none", 
+              position: "relative", 
+              zIndex: 10,
+              filter: sidebarWidth > 0 
+                ? "drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 30px rgba(251, 191, 36, 0.3)) brightness(1.2) contrast(1.1)" 
+                : (theme === "dark" 
+                  ? "brightness(0.9) contrast(1.1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.05))" 
+                  : "brightness(0.6) grayscale(0.1)"),
+              transition: "filter 0.4s ease-in-out"
+            }} 
+          />
         </button>
 
         {notes.length > 0 && (
           <DocumentToolbar
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            stickyColor={stickyColor}
+            setStickyColor={setStickyColor}
             accent={accent}
             theme={theme}
             zoom={zoom}
@@ -1139,8 +1167,8 @@ export default function NoteApp() {
                     <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.10)" }} />
                     <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }} onMouseDown={e => {
-                      if (activeTool !== 'select' && activeTool !== 'text') return
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' ? 'copy' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }} onMouseDown={e => {
+                      if (activeTool !== 'select' && activeTool !== 'text' && activeTool !== 'sticky') return
                       const target = e.target as HTMLElement
                       const isBox = target.closest('[id^="box-"]')
                       if (isBox || editorRef.current?.contains(target)) return
@@ -1240,6 +1268,8 @@ export default function NoteApp() {
                           setFormattingOpen={setToolbarFormattingOpen}
                           aiOpen={toolbarAiOpen}
                           setAiOpen={setToolbarAiOpen}
+                          onDragStart={() => setIsAnyBoxDragging(true)}
+                          onDragEnd={() => setIsAnyBoxDragging(false)}
                         />
                       ))}
 
@@ -1337,6 +1367,16 @@ export default function NoteApp() {
             editor.insertHTML(`<img src="${url}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Uploaded image" /><br/>`)
           }}
           onClose={() => setShowImageModal(false)}
+        />
+      )}
+
+      {showAiBar && (
+        <AiCommandBar 
+          onClose={() => setShowAiBar(false)}
+          onSubmit={(prompt) => {
+            openAlert("AI Command", `Processing: "${prompt}"... (Integration coming soon)`)
+            setShowAiBar(false)
+          }}
         />
       )}
     </div>

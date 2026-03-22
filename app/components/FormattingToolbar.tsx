@@ -1,6 +1,6 @@
 import { memo } from "react"
 
-const btnBase = "w-7 h-7 rounded-[4px] flex items-center justify-center transition-colors hover:bg-zinc-200"
+const btnBase = "w-7 h-7 rounded-[4px] flex items-center justify-center transition-all hover:bg-zinc-200 hover:scale-[1.12] hover:-translate-y-[1px] active:scale-[0.94] active:translate-y-0"
 
 interface FormattingToolbarProps {
   accent: string
@@ -102,9 +102,9 @@ export const FormattingToolbar = memo(function FormattingToolbar({
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
         
 
-        {/* Share Button (Elegant) */}
-        <button onClick={()=>openAlert("Share note","Sharing is coming soon!")} className="flex items-center h-[36px] px-3.5 rounded-[8px] text-[15px] font-medium tracking-wide text-[#3f3f46] bg-white border border-[#e4e4e7] transition-colors hover:bg-[#f4f4f5] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" title="Share note">
-          <svg className="w-4 h-4 mr-2 text-[#71717a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {/* Share Button */}
+        <button onClick={()=>openAlert("Share note","Sharing is coming soon!")} className="flex items-center h-[30px] px-3 rounded-[6px] text-[13.5px] font-normal tracking-wide text-[#6b6b72] bg-transparent border border-[#e4e4e7]/60 transition-all hover:bg-[#f9f9f9] hover:border-[#d4d4d8] hover:text-zinc-700 hover:scale-[1.07] hover:-translate-y-[1px] active:scale-[0.96]" title="Share note">
+          <svg className="w-3 h-3 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="#b85e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8">
             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
             <polyline points="16 6 12 2 8 6"/>
             <line x1="12" y1="2" x2="12" y2="15"/>

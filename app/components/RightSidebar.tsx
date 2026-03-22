@@ -54,9 +54,8 @@ export const RightSidebar = memo(function RightSidebar({
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* AI Assistance Section */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Smart AI Hub</h3>
+            <div className="flex items-center gap-1.5 px-1">
+              <h3 className="text-[9px] font-normal uppercase tracking-widest text-zinc-300">Smart AI Hub</h3>
             </div>
 
             <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-zinc-50 border-zinc-200'} space-y-4`}>

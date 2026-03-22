@@ -28,6 +28,10 @@ interface DocumentToolbarProps {
   setRightSidebarOpen: (v: boolean) => void
   allCompacted: boolean
   onCompactAll: () => void
+  activeTool: string
+  setActiveTool: (tool: string) => void
+  stickyColor: string
+  setStickyColor: (color: string) => void
 }
 
 
@@ -40,9 +44,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
   allCompacted, onCompactAll,
+  activeTool, setActiveTool,
+  stickyColor, setStickyColor,
 }: DocumentToolbarProps) {
 
-  const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer"
+  const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-all cursor-pointer hover:scale-[1.07] hover:-translate-y-[1px] active:scale-[0.96] active:translate-y-0"
 
   const activeStyle = (active: boolean): React.CSSProperties => active
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
@@ -106,6 +112,39 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Draw
         </button>
 
+        {/* Sticky Note Tool */}
+        <div className="flex items-center gap-1.5 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] px-2 py-1 select-none">
+          <button
+            onClick={() => setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky')}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-zinc-700 hover:scale-105 transition-transform cursor-pointer"
+            style={activeTool === 'sticky' ? { color: "#18181b" } : {}}
+            title="Add Sticky Note"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'sticky' ? stickyColor : "currentColor"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15.5 3h-10A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21h13a2.5 2.5 0 0 0 2.5-2.5v-10L15.5 3z" />
+              <path d="M15 3v5.5a2.5 2.5 0 0 0 2.5 2.5h5.5" />
+            </svg>
+            Sticky
+          </button>
+          <div className="w-px h-3 bg-zinc-200 ml-1 mr-0.5" />
+          <div className="flex items-center gap-1">
+            {[
+              ['Yellow', '#fef08a'],
+              ['Pink', '#fce7f3'],
+              ['Blue', '#bae6fd'],
+              ['Green', '#bbf7d0']
+            ].map(([name, color]) => (
+              <button
+                key={name}
+                onClick={() => { setStickyColor(color); setActiveTool('sticky') }}
+                className={`w-3.5 h-3.5 rounded-full border border-black/5 transition-all hover:scale-125 hover:rotate-6 ${stickyColor === color && activeTool === 'sticky' ? 'ring-2 ring-zinc-400 ring-offset-1' : ''}`}
+                style={{ backgroundColor: color }}
+                title={name}
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Compact All */}
         <button
           onClick={onCompactAll}
@@ -128,8 +167,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
       {/* Right: Share + sidebar toggle */}
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
-        <button onClick={() => openAlert("Share note", "Sharing is coming soon!")} className="flex items-center h-[34px] px-3.5 rounded-[7px] text-[14px] font-medium tracking-wide text-[#3f3f46] bg-white border border-[#e4e4e7] transition-colors hover:bg-[#f4f4f5] shadow-[0_1px_2px_rgba(0,0,0,0.04)]" title="Share note">
-          <svg className="w-4 h-4 mr-2 text-[#71717a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+        <button onClick={() => openAlert("Share note", "Sharing is coming soon!")} className="flex items-center h-[28px] px-2.5 rounded-[6px] text-[13.5px] font-normal tracking-wide text-[#6b6b72] bg-transparent border border-[#e4e4e7]/60 transition-all hover:bg-[#f9f9f9] hover:border-[#d4d4d8] hover:text-zinc-700 hover:scale-[1.07] hover:-translate-y-[1px] active:scale-[0.96]" title="Share note">
+          <svg className="w-3 h-3 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="#b85e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
           Share
         </button>
 

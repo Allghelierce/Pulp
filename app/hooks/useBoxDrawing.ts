@@ -17,11 +17,15 @@ interface UseBoxDrawingOptions {
   setSketchPrompt: (v: string) => void
   drawLineMode: boolean
   setDrawLineMode: (v: boolean) => void
+  activeTool: string
+  setActiveTool: (v: string) => void
+  stickyColor: string
 }
 
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
-  sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode
+  sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode,
+  activeTool, setActiveTool, stickyColor
 }: UseBoxDrawingOptions) {
   // Selection is only in a ref. A cheap counter triggers box-list re-renders.
   const selectedBoxIdsRef = useRef<Set<string>>(new Set())
@@ -33,7 +37,7 @@ export function useBoxDrawing({
   const activeTabIdRef = useRef(activeTabId)
   const currentPageIdxRef = useRef(currentPageIdx)
   const notesRef = useRef(notes)
-  const sketchRef = useRef({ sketchMode, sketchPrompt, drawLineMode })
+  const sketchRef = useRef({ sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor })
   const accentRef = useRef(accent)
   // Page attaches its selection rect div to this ref for zero-React-state drag updates
   const selectionRectRef = useRef<HTMLDivElement | null>(null)
@@ -53,7 +57,7 @@ export function useBoxDrawing({
   useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
   useEffect(() => { currentPageIdxRef.current = currentPageIdx }, [currentPageIdx])
   useEffect(() => { notesRef.current = notes }, [notes])
-  useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode } }, [sketchMode, sketchPrompt, drawLineMode])
+  useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor } }, [sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor])
 
   // Keyboard shortcuts — delete selected boxes, select all
   useEffect(() => {
@@ -233,15 +237,50 @@ export function useBoxDrawing({
       }
 
       if (!active) {
+        const { activeTool } = sketchRef.current
+        if (activeTool === 'sticky') {
+          const r = paperRef.current?.getBoundingClientRect()
+          if (r) {
+            const x = (sx - r.left) / scale
+            const y = (sy - r.top) / scale
+            const id = uid()
+            const newBox: TextBox = { 
+              id, x: x - 100, y: y - 100, w: 200, h: 200, content: '', 
+              boxHighlightColor: stickyColor, 
+              boxFontFamily: '"Bilbo", cursive', 
+              boxFontSize: 24,
+              boxOutlineWidth: 0,
+              boxRotation: 2, // Slight tilt
+            }
+            setNotes(prev => prev.map(n => n.id !== tid ? n : {
+              ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []), newBox] }
+            }))
+            setSelectedBoxIds(new Set([id]))
+            setActiveTool('select')
+            
+            // Subtle "thud" placement effect using direct DOM for speed
+            setTimeout(() => {
+              const node = document.getElementById(`box-${id}`)
+              if (node) {
+                node.animate([
+                  { transform: 'scale(1.2) rotate(5deg)', opacity: 0 },
+                  { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+                ], { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+              }
+            }, 0)
+          }
+          return
+        }
+
         // Plain click — prune empty boxes AND create new box in one state update
         const r = paperRef.current?.getBoundingClientRect()
         if (r) {
           const x = (sx - r.left) / scale
           const y = (sy - r.top) / scale
           const id = uid()
-          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 150, h: 32, content: '' }
+          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 300, h: 32, content: '' }
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== ''), newBox] }
+            ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor), newBox] }
           }))
           setSelectedBoxIds(new Set([id]))
           requestAnimationFrame(() => {
@@ -266,10 +305,10 @@ export function useBoxDrawing({
       } else {
         // Drag-select: only prune if there are empty boxes (avoid spurious re-renders)
         const currentTab = notesRef.current.find(n => n.id === tid)
-        const hasEmpty = (currentTab?.boxes[pidx] || []).some(b => b.content.trim() === '')
+        const hasEmpty = (currentTab?.boxes[pidx] || []).some(b => b.content.trim() === '' && !b.boxHighlightColor)
         if (hasEmpty) {
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '') }
+            ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) }
           }))
         }
         setSelectedBoxIds(pendingSelected)
@@ -306,7 +345,7 @@ export function useBoxDrawing({
     document.addEventListener('mouseup', handleUp.current)
   }, [])
 
-  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '')), [updateBoxes])
+  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '' || !!b.boxHighlightColor)), [updateBoxes])
 
   const startDrag = useCallback((e: React.MouseEvent, box: TextBox) => {
     const target = e.target as HTMLElement
@@ -456,15 +495,17 @@ export function useBoxDrawing({
       const currentNote = tid ? notesRef.current.find(n => n.id === tid) : null
       const noteLines = currentNote?.lines?.[pidx] || []
       const lines = [112, ...noteLines].sort((a, b) => a - b)
-      
-      let currentY = 60
-      const baseMarginX = lines[0] + 32
+
+      // Start Y from the first box's Y or 80
+      let tempY = Math.max(sorted[0].y, 80)
+      // Align to the first margin line (usually 112 + 32 = 144)
+      const baseMarginX = (lines[0] || 112) + 32
 
       const alignedBoxesMap = new Map()
-      let tempY = currentY
       for (const box of sorted) {
+        const height = box.h || 40
         alignedBoxesMap.set(box.id, { ...box, x: baseMarginX, y: tempY })
-        tempY += box.h + 24
+        tempY += height + 16 // Consistent gap
       }
 
       return bs.map(b => alignedBoxesMap.get(b.id) || b)
