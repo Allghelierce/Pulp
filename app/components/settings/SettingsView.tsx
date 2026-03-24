@@ -16,7 +16,7 @@ export const SETTINGS_TABS = [
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "editor", label: "Editor", group: "App" },
   { id: "personalization", label: "Personalization", group: "Customize" },
-  { id: "subscription", label: "Subscription", group: "Premium" },
+  { id: "subscription", label: "Pro", group: "Premium" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
@@ -370,12 +370,11 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     },
                     {
                       name: "Pro",
-                      price: { monthly: 8, yearly: 72 },
+                      price: { monthly: 6, yearly: 54 },
                       description: "For power users who want it all",
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
-                      badge: "Most Popular",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: "#3b82f6" }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
@@ -389,18 +388,6 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   ]}
                 />
 
-                <div className={`mt-4 p-4 rounded-2xl border flex items-center justify-between ${isDark ? "bg-amber-950/20 border-amber-900/30" : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60"}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-base shadow-md shadow-amber-500/20">✦</div>
-                    <div>
-                      <p className={`text-[12.5px] font-semibold ${isDark ? "text-amber-200" : "text-amber-900"}`}>Education Discount</p>
-                      <p className={`text-[11px] ${isDark ? "text-amber-500/70" : "text-amber-700/60"}`}>Students & teachers get Pro for $4/mo</p>
-                    </div>
-                  </div>
-                  <button className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all active:scale-[0.97] ${isDark ? "text-amber-400 bg-amber-950/60 hover:bg-amber-950 border border-amber-900/50" : "text-amber-800 bg-white hover:bg-amber-50 border border-amber-200 shadow-sm"}`}>
-                    Verify →
-                  </button>
-                </div>
               </div>
             )}
 

@@ -129,13 +129,13 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 const BoxItem = memo(function BoxItem({
-  box, isSelected, loadingBoxId, accentSolid, theme,
+  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd
 }: {
-  box: TextBoxType; isSelected: boolean; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
+  box: TextBoxType; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -183,7 +183,7 @@ const BoxItem = memo(function BoxItem({
         // Sticky: always fixed height. Regular: auto-grow.
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid rgba(0,0,0,0.15)` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid ${theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
@@ -241,7 +241,7 @@ const BoxItem = memo(function BoxItem({
           </svg>
         </div>
       )}
-      {isSelected && !isImage && !isSticky && (
+      {isSelected && selectedCount === 1 && !isImage && !isSticky && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
@@ -377,9 +377,27 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
   // Handlers
-  const highlightColors = ["transparent", "#fef08a", "#bbf7d0", "#bae6fd", "#fed7aa", "#f5d0fe"]
+  const highlightColors = ["transparent", "rgba(239,68,68,0.15)", "rgba(249,115,22,0.15)", "rgba(234,179,8,0.15)", "rgba(34,197,94,0.15)", "rgba(14,165,233,0.15)", "rgba(59,130,246,0.15)", "rgba(168,85,247,0.15)", "rgba(236,72,153,0.15)", "rgba(156,163,175,0.15)"]
   const textColors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#52525b", "#d4d4d8"]
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {e.stopPropagation()}, [])
+
+  const applyInlineCSS = useCallback((css: string): boolean => {
+    const sel = window.getSelection()
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false
+    const range = sel.getRangeAt(0)
+    const span = document.createElement('span')
+    span.setAttribute('style', css)
+    try {
+      range.surroundContents(span)
+    } catch {
+      const frag = range.extractContents()
+      span.appendChild(frag)
+      range.insertNode(span)
+    }
+    const ce = span.closest('[contenteditable]')
+    if (ce) ce.dispatchEvent(new InputEvent('input', { bubbles: true }))
+    return true
+  }, [])
 
   return (
     <div ref={ref} onMouseDown={e => e.stopPropagation()} style={{
@@ -410,17 +428,17 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
         padding: formattingOpen ? "0 2px" : 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 1, whiteSpace: "nowrap" }}>
-          <button ref={styleBtnRef} style={triggerStyle} onClick={() => openDropdown("style")}>
+          <button ref={styleBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("style") }}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
-          <button ref={fontBtnRef} style={triggerStyle} onClick={() => openDropdown("font")}>
-            {currentFont.label} {chevron}
+          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || "'EB Garamond', serif" }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
+            {currentFont.label.toLowerCase()} {chevron}
           </button>
-          <button ref={sizeBtnRef} style={triggerStyle} onClick={() => openDropdown("size")}>
+          <button ref={sizeBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("size") }}>
             {currentSize}px {chevron}
           </button>
 
-          <button ref={textColorBtnRef} style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onClick={() => openDropdown("textColor")} title="Text color">
+          <button ref={textColorBtnRef} style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onMouseDown={e => { e.preventDefault(); openDropdown("textColor") }} title="Text color">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 20h16"></path>
               <path d="m6 16 6-12 6 12"></path>
@@ -428,7 +446,8 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
             </svg>
           </button>
 
-          <button style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onClick={() => {
+          <button style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onMouseDown={e => {
+            e.preventDefault()
             const temp = document.createElement("div");
             temp.innerHTML = box.content;
             const plain = temp.textContent || temp.innerText || "";
@@ -449,21 +468,48 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
             </svg>
           </button>
 
-          {open === "style" && <div style={dropdownBase}>{BOX_STYLES.map(s => <button key={s.value} style={optionBtn(styleKey === s.value)} onClick={() => { onUpdateBox(box.id, { boxHeadingStyle: s.value as any }); setOpen(null) }}>{s.label}</button>)}</div>}
-          {open === "font" && <div style={dropdownBase}>{BOX_FONTS.map(f => <button key={f.value} style={optionBtn(currentFont.value === f.value)} onClick={() => { onUpdateBox(box.id, { boxFontFamily: f.value }); setOpen(null) }}>{f.label}</button>)}</div>}
+          {open === "style" && (
+            <div style={dropdownBase}>
+              {BOX_STYLES.map(s => {
+                const sizeMap: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 26 }
+                const weightMap: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
+                const css = s.value === "margin"
+                  ? `font-family: 'Shadows Into Light', cursive; font-size: 26px; font-style: italic`
+                  : `font-size: ${sizeMap[s.value]}px; font-weight: ${weightMap[s.value]}`
+                return (
+                  <button key={s.value} style={optionBtn(styleKey === s.value)} onMouseDown={e => {
+                    e.preventDefault()
+                    if (!applyInlineCSS(css)) onUpdateBox(box.id, { boxHeadingStyle: s.value as any })
+                    setOpen(null)
+                  }}>{s.label}</button>
+                )
+              })}
+            </div>
+          )}
+          {open === "font" && (
+            <div style={dropdownBase}>
+              {BOX_FONTS.map(f => (
+                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || "'EB Garamond', serif" }} onMouseDown={e => {
+                  e.preventDefault()
+                  if (!applyInlineCSS(`font-family: ${f.value || "'EB Garamond', serif"}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
+                  setOpen(null)
+                }}>{f.label.toLowerCase()}</button>
+              ))}
+            </div>
+          )}
           {open === "size" && (
             <div style={{ ...dropdownBase, display: "flex", flexDirection: "column", maxHeight: 220 }}>
               <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid rgba(0,0,0,0.06)", marginBottom: 3, flexShrink: 0 }}>
-                <input type="number" min={1} max={400} placeholder="Custom…" value={customSize} onChange={e => setCustomSize(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" && customSize) { const n = parseInt(customSize); if (n > 0) { onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") } } }} style={{ width: "100%", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.10)"}`, borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: dk ? "#e4e4e7" : "#18181b", background: dk ? "#2a2a2e" : "#fafafa" }} />
+                <input type="number" min={1} max={400} placeholder="Custom…" value={customSize} onChange={e => setCustomSize(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" && customSize) { const n = parseInt(customSize); if (n > 0) { if (!applyInlineCSS(`font-size: ${n}px`)) onUpdateBox(box.id, { boxFontSize: n }); setOpen(null); setCustomSize("") } } }} style={{ width: "100%", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.10)"}`, borderRadius: 4, padding: "3px 7px", fontSize: 11, outline: "none", color: dk ? "#e4e4e7" : "#18181b", background: dk ? "#2a2a2e" : "#fafafa" }} />
               </div>
               <div style={{ overflowY: "auto" }}>
-                {BOX_SIZES.map(sz => <button key={sz} style={optionBtn(currentSize === sz)} onClick={() => { onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>{sz}px</button>)}
+                {BOX_SIZES.map(sz => <button key={sz} style={optionBtn(currentSize === sz)} onMouseDown={e => { e.preventDefault(); if (!applyInlineCSS(`font-size: ${sz}px`)) onUpdateBox(box.id, { boxFontSize: sz }); setOpen(null) }}>{sz}px</button>)}
               </div>
             </div>
           )}
           {open === "color" && (
-            <div style={{ ...dropdownBase, display: "flex", gap: 3, padding: 6 }}>
-              {highlightColors.map(c => <button key={c} onClick={() => { onUpdateBox(box.id, { boxHighlightColor: c }); setOpen(null) }} style={{ width: 16, height: 16, borderRadius: 2, background: c, border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer" }} />)}
+            <div style={{ ...dropdownBase, display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4, padding: 6 }}>
+              {highlightColors.map(c => <button key={c} onClick={() => { onUpdateBox(box.id, { boxHighlightColor: c }); setOpen(null) }} style={{ width: 18, height: 18, borderRadius: 3, background: c, border: c === "transparent" ? "1px solid rgba(150,150,150,0.4)" : `1px solid ${c.replace("0.15)", "0.45)")}`, cursor: "pointer" }} />)}
             </div>
           )}
           {open === "textColor" && (
@@ -687,6 +733,29 @@ export default function NoteApp() {
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
 
+  const placeHorizontalLine = useCallback((e: React.MouseEvent) => {
+    if (!paperRef.current || !activeTabId) return
+    e.preventDefault()
+    const r = paperRef.current.getBoundingClientRect()
+    const scale = Number(zoom) || 1
+    const y = (e.clientY - r.top) / scale
+    const id = uid()
+    const width = paperRef.current.clientWidth - 128
+    const newBox: TextBoxType = {
+      id,
+      x: 64, y: y - 10, w: width, h: 24,
+      content: `<hr style="border:none;border-top:2px solid currentColor;width:100%;opacity:0.6" />`,
+      boxHighlightColor: 'transparent',
+      boxOutlineWidth: 0,
+      boxFontSize: 16,
+    }
+    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+      ...n,
+      boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
+    }))
+    setActiveTool('select')
+  }, [activeTabId, currentPageIdx, setNotes, zoom])
+
   // ─── Sticky note placement — handled directly in page to avoid stale hook state ─
   const placeStickyNote = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current || !activeTabId) return
@@ -696,7 +765,7 @@ export default function NoteApp() {
     const x = (e.clientX - r.left) / scale
     const y = (e.clientY - r.top) / scale
     const id = uid()
-    const rotation = parseFloat((Math.random() * 10 - 5).toFixed(1))
+    const rotation = parseFloat((Math.random() * 4 - 2).toFixed(1))
     const newBox: TextBoxType = {
       id,
       x: x - 150, y: y - 150, w: 300, h: 300,
@@ -749,8 +818,13 @@ export default function NoteApp() {
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
+  const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
 
   const closeSlashMenu = useCallback(() => {
+    if (slashFilterSpanRef.current) {
+      slashFilterSpanRef.current.remove()
+      slashFilterSpanRef.current = null
+    }
     slashMenuRef.current = null
     slashAnchorRef.current = null
     setSlashMenu(null)
@@ -777,15 +851,19 @@ export default function NoteApp() {
         try {
           const textNode = anchor.node as Text
           if (textNode.nodeType === Node.TEXT_NODE) {
-            // @ was prevented from being typed — delete only the filter text (no +1 for @)
-            const endOffset = Math.min(anchor.offset + filter.length, textNode.length)
+            // Delete "@" plus ghost span (filter chars were not typed into the box)
             const r = document.createRange()
             r.setStart(textNode, anchor.offset)
-            r.setEnd(textNode, endOffset)
+            if (slashFilterSpanRef.current?.isConnected) {
+              r.setEndAfter(slashFilterSpanRef.current)
+            } else {
+              r.setEnd(textNode, Math.min(anchor.offset + 1, textNode.length))
+            }
             const sel = window.getSelection()
             sel?.removeAllRanges()
             sel?.addRange(r)
             document.execCommand("delete")
+            slashFilterSpanRef.current = null
           }
         } catch { }
       } else if (m?.type === "editor" && anchor) {
@@ -812,11 +890,86 @@ export default function NoteApp() {
   }, [closeSlashMenu, editorRef, editor])
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    // Intercept typing while @ menu is open in a box (non-selection mode)
+    if (slashMenuRef.current?.type === "textarea" && slashMenuRef.current?.mode === "@" && !slashMenuRef.current?.isSelectionMode) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
+        closeSlashMenu()
+        // fall through to let cursor move
+      } else if (e.key === "Backspace") {
+        e.preventDefault()
+        const f = slashMenuRef.current.filter ?? ""
+        if (f.length > 0) {
+          const newFilter = f.slice(0, -1)
+          if (slashFilterSpanRef.current) {
+            if (newFilter === "") {
+              slashFilterSpanRef.current.remove()
+              slashFilterSpanRef.current = null
+            } else {
+              slashFilterSpanRef.current.textContent = newFilter
+            }
+          }
+          const updated = { ...slashMenuRef.current, filter: newFilter }
+          slashMenuRef.current = updated
+          setSlashMenu(updated)
+        } else {
+          // Filter empty — Backspace deletes "@" and closes menu
+          const anchor = slashAnchorRef.current
+          if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
+            const textNode = anchor.node as Text
+            if (anchor.offset < textNode.length) {
+              const r = document.createRange()
+              r.setStart(textNode, anchor.offset)
+              r.setEnd(textNode, anchor.offset + 1)
+              const sel = window.getSelection()
+              sel?.removeAllRanges()
+              sel?.addRange(r)
+              document.execCommand("delete")
+            }
+          }
+          closeSlashMenu()
+        }
+        return
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        const newFilter = (slashMenuRef.current.filter ?? "") + e.key
+        if (!slashFilterSpanRef.current) {
+          const anchor = slashAnchorRef.current
+          if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
+            const textNode = anchor.node as Text
+            const span = document.createElement("span")
+            span.setAttribute("contenteditable", "false")
+            span.setAttribute("data-slash-ghost", "1")
+            span.style.cssText = "color:rgba(0,0,0,0.32);pointer-events:none;"
+            slashFilterSpanRef.current = span
+            const r = document.createRange()
+            r.setStart(textNode, Math.min(anchor.offset + 1, textNode.length))
+            r.collapse(true)
+            r.insertNode(span)
+            const s = window.getSelection()
+            const after = document.createRange()
+            after.setStartAfter(span)
+            after.collapse(true)
+            s?.removeAllRanges()
+            s?.addRange(after)
+          }
+        }
+        if (slashFilterSpanRef.current) slashFilterSpanRef.current.textContent = newFilter
+        const updated = { ...slashMenuRef.current, filter: newFilter }
+        slashMenuRef.current = updated
+        setSlashMenu(updated)
+        return
+      }
+    }
+
     editor.handleEditorKeyDown(e)
 
     if (e.key === "Escape") {
       const isBox = (e.currentTarget as any) !== editorRef.current
-      if (isBox) { (e.currentTarget as HTMLElement).blur(); e.preventDefault() }
+      if (isBox) {
+        (e.currentTarget as HTMLElement).blur()
+        boxes.setSelectedBoxIds(new Set())
+        e.preventDefault()
+      }
       return
     }
     if (e.key === "\\") {
@@ -833,7 +986,7 @@ export default function NoteApp() {
       return
     }
 
-    if (e.key === "@" || e.key === "/") {
+    if (e.key === "@") {
       const sel = window.getSelection()
       if (!sel || sel.rangeCount === 0) return
       const isBox = (e.currentTarget as any) !== editorRef.current
@@ -857,12 +1010,12 @@ export default function NoteApp() {
           y: rect.bottom + 14,
           filter: "",
           type: isBox ? ("textarea" as const) : ("editor" as const),
-          mode: e.key as "@" | "/",
+          mode: "@" as const,
           target: e.currentTarget as HTMLElement,
           isSelectionMode: true
         }
         slashMenuRef.current = m
-        setSlashMenu(m)
+        setSlashMenu(m as any)
         return
       }
 
@@ -881,14 +1034,13 @@ export default function NoteApp() {
         y: rect.bottom + 14,
         filter: "",
         type: isBox ? ("textarea" as const) : ("editor" as const),
-        mode: e.key as "@" | "/",
+        mode: "@" as const,
         target: e.currentTarget as HTMLElement
       }
       slashMenuRef.current = m
-      setSlashMenu(m)
-      if (isBox) e.preventDefault()
+      setSlashMenu(m as any)
     }
-  }, [editor.handleEditorKeyDown])
+  }, [editor.handleEditorKeyDown, closeSlashMenu])
 
   const handleEditorInput = useCallback((e: React.FormEvent<HTMLElement>) => {
     if ((e.currentTarget as any) === editorRef.current) {
@@ -902,8 +1054,10 @@ export default function NoteApp() {
     const range = sel.getRangeAt(0)
     const node = range.startContainer
 
-    // Box menu: @ was prevented, compute filter from anchor stored at keydown
+    // Box menu: "@" is now printed; filter chars are intercepted in keydown (not typed)
     if (slashMenuRef.current.type === "textarea") {
+      // Ghost span exists: filter is managed via keydown intercept; ignore input events
+      if (slashFilterSpanRef.current) return
       const anchor = slashAnchorRef.current
       if (!anchor) { closeSlashMenu(); return }
       if (node.nodeType === Node.TEXT_NODE) {
@@ -918,8 +1072,9 @@ export default function NoteApp() {
         } else {
           closeSlashMenu(); return
         }
-        if (range.startOffset < anchorOffset) { closeSlashMenu(); return }
-        const filter = textNode.textContent?.slice(anchorOffset, range.startOffset) ?? ""
+        // +1 to skip the "@" character itself
+        if (range.startOffset <= anchorOffset) { closeSlashMenu(); return }
+        const filter = textNode.textContent?.slice(anchorOffset + 1, range.startOffset) ?? ""
         if (filter.includes(" ")) { closeSlashMenu(); return }
         const updated = { ...slashMenuRef.current, filter }
         slashMenuRef.current = updated
@@ -930,20 +1085,19 @@ export default function NoteApp() {
       return
     }
 
-    // Main editor: search for @ or / before cursor
+    // Main editor: search for @ before cursor
     if (node.nodeType !== Node.TEXT_NODE) { closeSlashMenu(); return }
     const textNode = node as Text
     const textBefore = (textNode.textContent ?? "").slice(0, range.startOffset)
     const atIdx = textBefore.lastIndexOf("@")
-    const slIdx = textBefore.lastIndexOf("/")
-    const lastIdx = Math.max(atIdx, slIdx)
+    const lastIdx = atIdx
     if (lastIdx === -1) { closeSlashMenu(); return }
     const filter = textBefore.slice(lastIdx + 1)
     if (filter.includes(" ")) { closeSlashMenu(); return }
     slashAnchorRef.current = { node: textNode, offset: lastIdx }
     const updated = { ...slashMenuRef.current, filter }
     slashMenuRef.current = updated
-    setSlashMenu(updated)
+    setSlashMenu(updated as any)
   }, [editor.syncContent, closeSlashMenu])
 
   // Keyboard shortcuts for tools
@@ -1477,7 +1631,7 @@ export default function NoteApp() {
             setRightSidebarOpen={setContentSidebarOpen}
             allCompacted={allCompacted}
             onCompactAll={handleCompactAll}
-            onInsertHR={() => editor.insertHTML('<hr style="border:none;border-top:2px solid #000;margin:16px auto;width:90%"/><br/>')}
+            onInsertHR={() => editor.insertHTML('<div contenteditable="false" style="height:2px;background:#000;width:90%;margin:14px auto;border-radius:1px;display:block"></div><br/>')}
             onDownload={() => {
               if (!activeNote) return
               const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
@@ -1513,9 +1667,9 @@ export default function NoteApp() {
                     <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                       onMouseDown={e => {
-                        if (activeTool === 'sticky') {
+                        if (activeTool === 'sticky' || activeTool === 'hr') {
                           // Handled by onClick below to ensure clean single-click placement
                           return
                         }
@@ -1531,10 +1685,13 @@ export default function NoteApp() {
                         boxes.onPaperMouseDown(e)
                       }}
                       onClick={e => {
-                        if (activeTool !== 'sticky') return
                         const target = e.target as HTMLElement
                         if (target.closest('[id^="box-"]')) return
-                        placeStickyNote(e)
+                        if (activeTool === 'sticky') {
+                          placeStickyNote(e)
+                        } else if (activeTool === 'hr') {
+                          placeHorizontalLine(e)
+                        }
                       }}
                     >
 
@@ -1578,10 +1735,9 @@ export default function NoteApp() {
                           display: "none",
                           position: "absolute",
                           left: 0, top: 0, width: 0, height: 0,
-                          backgroundColor: "rgba(255, 255, 255, 0.25)",
-                          border: "1px solid rgba(255, 255, 255, 0.45)",
-                          backdropFilter: "blur(2.5px)",
-                          boxShadow: "0 0 15px rgba(255,255,255,0.1)",
+                          backgroundColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.06)",
+                          border: `1px solid ${theme === "dark" ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.2)"}`,
+                          boxShadow: "none",
                           borderRadius: "1px",
                           pointerEvents: "none",
                           zIndex: 100,
@@ -1612,6 +1768,7 @@ export default function NoteApp() {
                           key={box.id}
                           box={box}
                           isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
+                          selectedCount={boxes.selectedBoxIdsRef.current.size}
                           loadingBoxId={boxes.loadingBoxId}
                           accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
                           theme={theme}
@@ -1750,8 +1907,12 @@ export default function NoteApp() {
 
       {showImageModal && (
         <ImageUploadModal
-          onConfirm={(url) => {
-            editor.insertHTML(`<img src="${url}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Uploaded image" /><br/>`)
+          onConfirm={(htmlOrUrl, isHtml) => {
+            if (isHtml) {
+              editor.insertHTML(htmlOrUrl)
+            } else {
+              editor.insertHTML(`<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`)
+            }
           }}
           onClose={() => setShowImageModal(false)}
         />

@@ -100,15 +100,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           >
             <svg width="9" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21" /></svg>
           </button>
-          <div className="w-px bg-zinc-200 self-stretch" />
-          <button
-            onMouseDown={e => { e.preventDefault(); onInsertHR() }}
-            title="Insert horizontal line"
-            className="px-2 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center"
-            style={{ color: "#a1a1aa" }}
-          >
-            <svg width="13" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /></svg>
-          </button>
         </div>
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
@@ -156,6 +147,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             ))}
           </div>
         </div>
+
+        {/* HR Tool */}
+        <button
+          onClick={() => setActiveTool(activeTool === 'hr' ? 'select' : 'hr')}
+          className={`${btnBase} flex items-center gap-1.5`}
+          style={activeTool === 'hr' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}}
+          title="Add Horizontal Line"
+        >
+          <svg width="13" height="9" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'hr' ? 'currentColor' : '#a1a1aa'} strokeWidth="3" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /></svg>
+          H-Line
+        </button>
 
         {/* Compact All */}
         <button

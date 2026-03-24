@@ -78,23 +78,23 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
               "relative flex flex-col rounded-2xl border transition-all duration-200",
               tier.highlight
                 ? isDark
-                  ? "bg-zinc-900 border-zinc-700"
-                  : "bg-white border-zinc-300/80"
+                  ? "bg-zinc-900 border-blue-700/60"
+                  : "bg-white border-blue-300/80"
                 : isDark
                   ? "bg-zinc-900/40 border-zinc-800/80"
                   : "bg-zinc-50 border-zinc-200/70"
             )}
             style={tier.highlight ? {
-              boxShadow: `0 0 0 1px ${accentColor}40, 0 24px 48px -8px rgba(0,0,0,0.18)`
+              boxShadow: `0 0 0 1px rgba(59,130,246,0.35), 0 24px 48px -8px rgba(0,0,0,0.18)`
             } : undefined}
           >
-            {/* Pro badge */}
-            {tier.badge && (
-              <div
-                className="absolute -top-3 left-5 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-white shadow-lg"
-                style={{ backgroundColor: accentColor }}
-              >
-                {tier.badge}
+            {/* Orange ambient glow for Pro */}
+            {tier.highlight && (
+              <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
+                <div style={{
+                  position: "absolute", inset: 0,
+                  background: "radial-gradient(ellipse at 50% -10%, rgba(184,94,34,0.22) 0%, rgba(184,94,34,0.08) 45%, transparent 70%)",
+                }} />
               </div>
             )}
 
@@ -176,7 +176,7 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
               {tier.ctaOverride ? (
                 tier.ctaOverride({
                   className: "w-full h-10 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 text-white shadow-md hover:opacity-90 active:scale-[0.98]",
-                  style: { backgroundColor: accentColor },
+                  style: { backgroundColor: "#2563eb" },
                   children: (
                     <>
                       {tier.buttonLabel}
@@ -194,7 +194,7 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
                       ? isDark ? "bg-zinc-800/80 text-zinc-600 cursor-default border border-zinc-800" : "bg-zinc-100 text-zinc-400 cursor-default border border-zinc-200"
                       : "text-white shadow-md hover:opacity-90 active:scale-[0.98]"
                   )}
-                  style={!tier.buttonDisabled ? { backgroundColor: accentColor } : undefined}
+                  style={!tier.buttonDisabled ? { backgroundColor: tier.highlight ? "#2563eb" : accentColor } : undefined}
                 >
                   {tier.buttonDisabled ? (
                     <span className="flex items-center gap-1.5">

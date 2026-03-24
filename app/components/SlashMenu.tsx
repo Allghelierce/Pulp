@@ -6,6 +6,7 @@ import { DatetimePicker } from "@/components/ui/datetime-picker"// ─── Typ
 interface SubOption {
   label: string
   swatch?: string       // css color for color swatches
+  fontPreview?: string  // css font-family for font previews
   action: () => void
 }
 
@@ -131,7 +132,6 @@ function Submenu({
   }, [onClose, parentRef])
 
   const isLight = mode === "/"
-  const isDark = !isLight
 
   if (typeof document === "undefined") return null
 
@@ -185,7 +185,9 @@ function Submenu({
                 : undefined,
             }} />
           )}
-          {opt.label}
+          <span style={opt.fontPreview ? { fontFamily: opt.fontPreview } : {}}>
+            {opt.label}
+          </span>
         </div>
       ))}
     </div>,
@@ -238,6 +240,234 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       {children}
     </div>,
     document.body
+  )
+}
+
+// ─── Block helpers ─────────────────────────────────────────────────────────────
+
+function makeTable(rows: number, cols: number): string {
+  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1px solid #e4e4e7;padding:6px 10px;background:#f9f9fa;font-size:12px;font-weight:600;min-width:80px;outline:none;text-align:left">Header</th>`).join("")}</tr>`
+  const bodyRows = Array.from({ length: rows - 1 }, () =>
+    `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1px solid #e4e4e7;padding:6px 10px;font-size:12px;min-width:80px;outline:none;"></td>`).join("")}</tr>`
+  ).join("")
+  return `<table style="border-collapse:collapse;margin:8px 0;width:auto">${headerRow}${bodyRows}</table><br/>`
+}
+
+function makeColumns(num: number): string {
+  const cols = Array.from({ length: num }, () =>
+    `<div contenteditable="true" style="flex:1;min-height:60px;padding:8px;border:1px dashed #e4e4e7;border-radius:4px;font-size:13px;outline:none;"></div>`
+  ).join("")
+  return `<div contenteditable="false" style="display:flex;gap:8px;margin:8px 0">${cols}</div><br/>`
+}
+
+function makeTOC(): string {
+  const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1,[contenteditable]:not([data-box-style]) h2,[contenteditable]:not([data-box-style]) h3"))
+  if (headers.length === 0) return `<div style="padding:8px;color:#999;font-size:12px;font-style:italic">No headings found.</div><br/>`
+  const items = headers.map(h => {
+    const level = parseInt(h.tagName[1])
+    const indent = (level - 1) * 16
+    return `<div style="padding:2px 0 2px ${indent}px;font-size:${14 - level}px;color:#374151">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+  }).join("")
+  return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:12px 16px;margin:8px 0;background:#fafafa"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;margin-bottom:8px">Table of Contents</div>${items}</div><br/>`
+}
+
+const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:'Courier New',monospace;background:#1e1e2e"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#16161e;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:10px;color:#6c7086;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#cdd6f4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#cdd6f4;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
+
+// ─── Table Grid Picker ──────────────────────────────────────────────────────
+
+function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string) => void; onClose: () => void }) {
+  const [hover, setHover] = useState<[number, number]>([0, 0])
+  const ROWS = 6, COLS = 8
+  return (
+    <div style={{ padding: 12 }}>
+      <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginBottom: 8, textAlign: "center" }}>
+        {hover[0] > 0 ? `${hover[1]} × ${hover[0]} table` : "Select table size"}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 18px)`, gap: 2 }}>
+        {Array.from({ length: ROWS * COLS }, (_, i) => {
+          const r = Math.floor(i / COLS) + 1
+          const c = (i % COLS) + 1
+          const active = r <= hover[0] && c <= hover[1]
+          return (
+            <div
+              key={i}
+              onMouseEnter={() => setHover([r, c])}
+              onMouseLeave={() => setHover([0, 0])}
+              onClick={() => { onInsert(makeTable(r, c)); onClose() }}
+              style={{
+                width: 18, height: 18, borderRadius: 2, cursor: "pointer",
+                background: active ? "rgba(184,94,34,0.25)" : "rgba(0,0,0,0.06)",
+                border: active ? "1px solid rgba(184,94,34,0.5)" : "1px solid rgba(0,0,0,0.1)",
+                transition: "all 0.05s",
+              }}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── Media Input ──────────────────────────────────────────────────────────────
+
+function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) => void; onUpload?: () => void; onClose: () => void }) {
+  const [tab, setTab] = useState<"upload" | "link">("upload")
+  const [url, setUrl] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  useEffect(() => { if (tab === "link") setTimeout(() => inputRef.current?.focus(), 50) }, [tab])
+
+  const handleInsert = () => {
+    if (!url.trim()) return
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
+    const vmMatch = url.match(/vimeo\.com\/(\d+)/)
+    const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i)
+    
+    let html = ""
+    if (ytMatch) {
+      const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`
+      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${embedUrl}" style="width:100%;height:100%;border:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div><br/>`
+    } else if (vmMatch) {
+      const embedUrl = `https://player.vimeo.com/video/${vmMatch[1]}`
+      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${embedUrl}" style="width:100%;height:100%;border:none" allowfullscreen></iframe></div><br/>`
+    } else if (isImage) {
+      html = `<img src="${url.trim()}" style="max-width:100%;margin:8px 0;border-radius:8px;display:block" /><br/>`
+    } else {
+      html = `<video src="${url.trim()}" controls style="max-width:100%;margin:8px 0;border-radius:8px;display:block"></video><br/>`
+    }
+    onInsert(html)
+    onClose()
+  }
+
+  return (
+    <div style={{ padding: 12, width: 280 }}>
+      <div style={{ display: "flex", gap: 16, borderBottom: "1px solid rgba(0,0,0,0.1)", marginBottom: 12 }}>
+        <button 
+          onClick={() => setTab("upload")} 
+          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "upload" ? 600 : 400, color: tab === "upload" ? "#111" : "#777", borderBottom: tab === "upload" ? "2px solid #111" : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
+        >Upload</button>
+        <button 
+          onClick={() => setTab("link")} 
+          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "link" ? 600 : 400, color: tab === "link" ? "#111" : "#777", borderBottom: tab === "link" ? "2px solid #111" : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
+        >Link</button>
+      </div>
+
+      {tab === "upload" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button onClick={() => { onUpload?.(); onClose(); }} style={{ width: "100%", padding: "8px 0", background: "white", color: "#111", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 4, fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose File
+          </button>
+          <div style={{ fontSize: 10, color: "#888", textAlign: "center", fontStyle: "italic", marginTop: 2 }}>Accepts Images, Videos & GIFs</div>
+        </div>
+      )}
+
+      {tab === "link" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <input
+            ref={inputRef}
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleInsert(); if (e.key === "Escape") onClose() }}
+            placeholder="Paste Link (Image, Video, YouTube)"
+            style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box" }}
+          />
+          <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            Embed Link
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Equation Input ───────────────────────────────────────────────────────────
+
+function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void; onClose: () => void }) {
+  const [latex, setLatex] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => { setTimeout(() => textareaRef.current?.focus(), 50) }, [])
+
+  const handleInsert = () => {
+    if (!latex.trim()) return
+    const escaped = latex.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const html = `<div contenteditable="false" style="margin:12px auto;text-align:center;padding:10px 16px;background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;font-style:italic;font-size:15px;color:#1a1a2e;font-family:'Georgia',serif;display:block">${escaped}</div><br/>`
+    onInsert(html)
+    onClose()
+  }
+
+  return (
+    <div style={{ padding: 12, width: 260 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(0,0,0,0.6)", marginBottom: 8 }}>Equation (LaTeX)</div>
+      <textarea
+        ref={textareaRef}
+        value={latex}
+        onChange={e => setLatex(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter" && e.metaKey) { e.preventDefault(); handleInsert() }; if (e.key === "Escape") onClose() }}
+        placeholder="e.g. E = mc²"
+        rows={3}
+        style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "monospace", marginBottom: 8 }}
+      />
+      {latex && (
+        <div style={{ padding: "6px 10px", background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: 4, fontStyle: "italic", fontFamily: "Georgia, serif", fontSize: 13, color: "#1a1a2e", marginBottom: 8, textAlign: "center" }}>
+          {latex}
+        </div>
+      )}
+      <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
+        Insert (⌘↵)
+      </button>
+    </div>
+  )
+}
+
+// ─── Bookmark Input ───────────────────────────────────────────────────────────
+
+function BookmarkInput({ onInsert, onClose, mode }: { onInsert: (html: string) => void; onClose: () => void; mode: "@" | "/" }) {
+  const [url, setUrl] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50) }, [])
+  const isLight = mode === "/"
+
+  const handleFetch = async () => {
+    if (!url.trim()) return
+    setLoading(true); setError("")
+    try {
+      const res = await fetch(`/api/bookmark?url=${encodeURIComponent(url.trim())}`)
+      const data = await res.json()
+      if (data.error) { setError(data.error); setLoading(false); return }
+      const { title, description, image, domain } = data
+      const safeUrl = url.trim().replace(/'/g, "\\'")
+      const safeTitle = (title || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const safeDesc = (description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const safeDomain = (domain || url).replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const imgHtml = image ? `<img src="${image}" style="width:72px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" />` : ""
+      const html = `<div contenteditable="false" onclick="window.open('${safeUrl}','_blank')" style="display:flex;gap:12px;border:1px solid #e4e4e7;border-radius:8px;padding:12px 14px;margin:8px 0;background:#fafafa;max-width:480px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#111;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safeTitle}</div><div style="font-size:11px;color:#666;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${safeDesc}</div><div style="font-size:10px;color:#9ca3af">${safeDomain}</div></div>${imgHtml}</div><br/>`
+      onInsert(html)
+      onClose()
+    } catch {
+      setError("Failed to fetch URL")
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{ padding: 12, width: 260 }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)", marginBottom: 8 }}>Web Bookmark</div>
+      <input
+        ref={inputRef}
+        value={url}
+        onChange={e => setUrl(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") handleFetch(); if (e.key === "Escape") onClose() }}
+        placeholder="Paste a URL..."
+        style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box", marginBottom: 8, background: isLight ? "#fff" : "#1a1a2e", color: isLight ? "#111" : "#eee" }}
+      />
+      {error && <div style={{ fontSize: 10.5, color: "#ef4444", marginBottom: 6 }}>{error}</div>}
+      <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? "#d4a87a" : "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
+        {loading ? "Fetching…" : "Fetch & Insert"}
+      </button>
+    </div>
   )
 }
 
@@ -357,7 +587,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-      action: () => insertHTML('<hr style="border:none;border-top:2px solid #000;margin:16px auto;width:90%"/><br/>')
+      action: () => insertHTML('<div contenteditable="false" style="height:2px;background:#000;width:90%;margin:14px auto;border-radius:1px;display:block"></div><br/>')
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",
@@ -365,9 +595,10 @@ export const SlashMenu = memo(function SlashMenu({
       action: () => insertBacklink()
     },
     {
-      id: "image", label: "Image", group: "Media",
+      id: "media", label: "Image / Video / GIF", group: "Media",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
-      action: () => onInsertImage?.()
+      action: () => {},
+      customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} />
     },
     {
       id: "date", label: "Today's Date", shortcut: "today", group: "Accessories",
@@ -384,6 +615,44 @@ export const SlashMenu = memo(function SlashMenu({
       customContent: <CustomDateWrapper onInsert={(str) => {
         onSelect(() => insertHTML(`<span>${str}</span>`))
       }} onClose={onClose} mode={mode} />
+    },
+    {
+      id: "table", label: "Table", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>,
+      action: () => {},
+      customContent: <TableGridPicker onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} />
+    },
+    {
+      id: "equation", label: "Equation", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9"/></svg>,
+      action: () => {},
+      customContent: <EquationInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} />
+    },
+    {
+      id: "columns", label: "Columns", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
+      action: () => onSelect(() => insertHTML(makeColumns(2))),
+      subOptions: [
+        { label: "2 Columns", action: () => onSelect(() => insertHTML(makeColumns(2))) },
+        { label: "3 Columns", action: () => onSelect(() => insertHTML(makeColumns(3))) },
+        { label: "4 Columns", action: () => onSelect(() => insertHTML(makeColumns(4))) },
+      ]
+    },
+    {
+      id: "toc", label: "Table of Contents", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/></svg>,
+      action: () => onSelect(() => insertHTML(makeTOC()))
+    },
+    {
+      id: "code", label: "Code Block", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+      action: () => onSelect(() => insertHTML(CODE_BLOCK_HTML))
+    },
+    {
+      id: "bookmark", label: "Web Bookmark", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+      action: () => {},
+      customContent: <BookmarkInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} mode={mode} />
     },
   ]
 
@@ -405,10 +674,10 @@ export const SlashMenu = memo(function SlashMenu({
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 7V4h16v3M9 20h6M12 4v16" /></svg>,
       action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }),
       subOptions: [
-        { label: "Garamond (Elegant)", action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }) },
-        { label: "Georgia (Modern)", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Georgia, serif" }) },
-        { label: "Arial (Clean)", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Arial, sans-serif" }) },
-        { label: "Monospace (Code)", action: () => onUpdateBox?.(box.id, { boxFontFamily: '"Courier New", monospace' }) },
+        { label: "garamond (elegant)", fontPreview: "'EB Garamond', serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }) },
+        { label: "georgia (modern)", fontPreview: "Georgia, serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Georgia, serif" }) },
+        { label: "arial (clean)", fontPreview: "Arial, sans-serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Arial, sans-serif" }) },
+        { label: "monospace (code)", fontPreview: '"Courier New", monospace', action: () => onUpdateBox?.(box.id, { boxFontFamily: '"Courier New", monospace' }) },
       ]
     },
     {
@@ -449,23 +718,46 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "fill", label: "Fill color", group: "Style",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 11H5" /><path d="M12 5l7 7-7 7" /></svg>,
-      action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#fdf6e3" }),
-      subOptions: [
-        { label: "Transparent", swatch: "transparent", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "transparent" }) },
-        { label: "Clean Paper", swatch: "#fdf6e3", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#fdf6e3" }) },
-        { label: "Yellow Tint", swatch: "#fef08a", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#fef08a" }) },
-        { label: "Green Tint", swatch: "#bbf7d0", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#bbf7d0" }) },
-        { label: "Blue Tint", swatch: "#bae6fd", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#bae6fd" }) },
-        { label: "Pink Tint", swatch: "#fce7f3", action: () => onUpdateBox?.(box.id, { boxHighlightColor: "#fce7f3" }) },
-      ]
+      action: () => onUpdateBox?.(box.id, { boxHighlightColor: "rgba(234,179,8,0.15)" }),
+      customContent: (
+        <div style={{ width: 140, padding: "10px 8px 8px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
+            {[
+              "transparent",
+              "rgba(239,68,68,0.15)",   
+              "rgba(249,115,22,0.15)",  
+              "rgba(234,179,8,0.15)",   
+              "rgba(34,197,94,0.15)",   
+              "rgba(14,165,233,0.15)",  
+              "rgba(59,130,246,0.15)",  
+              "rgba(168,85,247,0.15)",  
+              "rgba(236,72,153,0.15)",  
+              "rgba(156,163,175,0.15)"  
+            ].map(c => (
+              <button
+                key={c}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onUpdateBox?.(box.id, { boxHighlightColor: c }); setOpenSubmenuId(null) }}
+                style={{
+                  width: 20, height: 20, borderRadius: 4, cursor: "pointer", padding: 0,
+                  background: c === "transparent" ? "none" : c,
+                  border: c === "transparent" ? "1px solid rgba(150,150,150,0.3)" : `1px solid ${c.replace("0.15)", "0.45)")}`
+                }}
+                title={c === "transparent" ? "None" : "Tint"}
+              >
+                {c === "transparent" && <div style={{ width: "100%", height: 1, background: "rgba(150,150,150,0.4)", transform: "rotate(45deg)" }} />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
     },
   ] : []
+  
+  const combinedItems = box ? [...allItems, ...settingsItems] : allItems
 
-  const itemsToDisplay = mode === "/"
-    ? settingsItems
-    : (isSelectionMode
-      ? allItems.filter(item => item.group === "Typography" || item.group === "Reference")
-      : allItems)
+  const itemsToDisplay = isSelectionMode
+      ? combinedItems.filter(item => item.group === "Typography" || item.group === "Reference")
+      : combinedItems
 
   const filtered = filter
     ? itemsToDisplay.filter(item => item.label.toLowerCase().includes(filter.toLowerCase()))

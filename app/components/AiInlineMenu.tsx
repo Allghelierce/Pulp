@@ -2,6 +2,75 @@
 import { useEffect, useRef, useState, memo } from "react"
 import { useAutoResizeTextarea } from "@/components/hooks/use-auto-resize-textarea"
 
+const PROMPTS = [
+  "Summarize this",
+  "Make it shorter",
+  "Expand on this",
+  "Fix grammar",
+  "Rewrite more clearly",
+  "Add bullet points",
+  "Make it formal",
+  "Make it casual",
+  "Explain simply",
+  "Add an example",
+  "Write a conclusion",
+  "List key points",
+  "Rephrase this",
+  "Add more detail",
+  "Simplify language",
+  "Make it persuasive",
+  "Add a summary",
+  "Translate to Spanish",
+  "Correct spelling",
+  "Rewrite as a story",
+]
+
+function PromptCarousel({ onSelect, isDark }: { onSelect: (p: string) => void; isDark: boolean }) {
+  const textColor = isDark ? "rgba(255,255,255,0.42)" : "rgba(0,0,0,0.36)"
+  const sepColor = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.13)"
+
+  return (
+    <div style={{ overflow: "hidden", padding: "7px 0 8px", userSelect: "none" }}>
+      <style>{`
+        @keyframes ai-prompt-scroll {
+          from { transform: translateX(0) }
+          to   { transform: translateX(-50%) }
+        }
+        .ai-prompt-track {
+          display: inline-flex;
+          align-items: center;
+          animation: ai-prompt-scroll 55s linear infinite;
+          white-space: nowrap;
+          will-change: transform;
+        }
+        .ai-prompt-track:hover { animation-play-state: paused; }
+        .ai-prompt-btn {
+          background: none; border: none; padding: 0 1px;
+          font-size: 11px; font-weight: 500; cursor: pointer;
+          font-family: inherit; white-space: nowrap;
+          transition: color 0.1s;
+        }
+      `}</style>
+      <div className="ai-prompt-track">
+        {[...PROMPTS, ...PROMPTS].map((p, i) => (
+          <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
+            <button
+              className="ai-prompt-btn"
+              style={{ color: textColor }}
+              onClick={() => onSelect(p)}
+              onMouseEnter={e => { e.currentTarget.style.color = "#b85e22" }}
+              onMouseLeave={e => { e.currentTarget.style.color = textColor }}
+            >
+              {p}
+            </button>
+            <span style={{ margin: "0 9px", fontSize: 5.5, color: sepColor, lineHeight: 1, display: "inline-block", verticalAlign: "middle" }}>◆</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 interface AiInlineMenuProps {
   x: number
   y: number
@@ -183,9 +252,22 @@ export const AiInlineMenu = memo(function AiInlineMenu({
         </button>
       </div>
 
+      {/* Prompt suggestions carousel */}
+      {!loading && (
+        <div style={{ borderTop: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(0,0,0,0.05)" }}>
+          <PromptCarousel
+            isDark={isDark}
+            onSelect={p => {
+              setValue(p)
+              textareaRef.current?.focus()
+            }}
+          />
+        </div>
+      )}
+
       {/* Footer hint */}
       <div style={{
-        padding: "4px 12px 6px",
+        padding: "3px 12px 6px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
