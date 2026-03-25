@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, memo } from "react"
+import { useState, useEffect, useRef, memo, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { format } from "date-fns"
+import katex from "katex"
 import { DatetimePicker } from "@/components/ui/datetime-picker"// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface SubOption {
@@ -246,18 +247,19 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
 // ─── Block helpers ─────────────────────────────────────────────────────────────
 
 function makeTable(rows: number, cols: number): string {
-  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1px solid #e4e4e7;padding:6px 10px;background:#f9f9fa;font-size:12px;font-weight:600;min-width:80px;outline:none;text-align:left">Header</th>`).join("")}</tr>`
+  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;background:none;font-size:13px;font-weight:600;min-width:100px;outline:none;text-align:left;filter:none;">Header</th>`).join("")}</tr>`
   const bodyRows = Array.from({ length: rows - 1 }, () =>
-    `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1px solid #e4e4e7;padding:6px 10px;font-size:12px;min-width:80px;outline:none;"></td>`).join("")}</tr>`
+    `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;font-size:13px;min-width:100px;outline:none;filter:none;"></td>`).join("")}</tr>`
   ).join("")
-  return `<table style="border-collapse:collapse;margin:8px 0;width:auto">${headerRow}${bodyRows}</table><br/>`
+  return `<table style="border-collapse:collapse;margin:12px 0;width:100%">${headerRow}${bodyRows}</table><br/>`
 }
 
 function makeColumns(num: number): string {
-  const cols = Array.from({ length: num }, () =>
-    `<div contenteditable="true" style="flex:1;min-height:60px;padding:8px;border:1px dashed #e4e4e7;border-radius:4px;font-size:13px;outline:none;"></div>`
-  ).join("")
-  return `<div contenteditable="false" style="display:flex;gap:8px;margin:8px 0">${cols}</div><br/>`
+  const cols = Array.from({ length: num }, (_, i) => {
+    const isLast = i === num - 1;
+    return `<div contenteditable="true" style="flex:1;min-height:60px;padding:8px 16px;${isLast ? '' : 'border-right:1.5px solid rgba(0,0,0,0.3);'}font-size:inherit;font-family:inherit;outline:none;filter:none;"></div>`
+  }).join("")
+  return `<div contenteditable="false" style="display:flex;gap:4px;margin:12px 0">${cols}</div><br/>`
 }
 
 function makeTOC(): string {
@@ -275,7 +277,7 @@ const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" st
 
 // ─── Table Grid Picker ──────────────────────────────────────────────────────
 
-function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string) => void; onClose: () => void }) {
+function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols: number) => void; onClose: () => void }) {
   const [hover, setHover] = useState<[number, number]>([0, 0])
   const ROWS = 6, COLS = 8
   return (
@@ -293,7 +295,7 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string) => vo
               key={i}
               onMouseEnter={() => setHover([r, c])}
               onMouseLeave={() => setHover([0, 0])}
-              onClick={() => { onInsert(makeTable(r, c)); onClose() }}
+              onClick={() => { onInsert(makeTable(r, c), c); onClose() }}
               style={{
                 width: 18, height: 18, borderRadius: 2, cursor: "pointer",
                 background: active ? "rgba(184,94,34,0.25)" : "rgba(0,0,0,0.06)",
@@ -388,30 +390,36 @@ function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => { setTimeout(() => textareaRef.current?.focus(), 50) }, [])
 
+  const renderedLatex = useMemo(() => {
+    if (!latex.trim()) return ""
+    try {
+      return katex.renderToString(latex, { throwOnError: false, displayMode: true })
+    } catch {
+      return latex.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+  }, [latex])
+
   const handleInsert = () => {
     if (!latex.trim()) return
-    const escaped = latex.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    const html = `<div contenteditable="false" style="margin:12px auto;text-align:center;padding:10px 16px;background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;font-style:italic;font-size:15px;color:#1a1a2e;font-family:'Georgia',serif;display:block">${escaped}</div><br/>`
+    const html = `<div contenteditable="false" style="margin:16px auto;text-align:center;padding:12px 24px;border-radius:6px;color:#1a1a2e;display:block">${renderedLatex}</div><br/>`
     onInsert(html)
     onClose()
   }
 
   return (
-    <div style={{ padding: 12, width: 260 }}>
+    <div style={{ padding: 12, width: 340 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(0,0,0,0.6)", marginBottom: 8 }}>Equation (LaTeX)</div>
       <textarea
         ref={textareaRef}
         value={latex}
         onChange={e => setLatex(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter" && e.metaKey) { e.preventDefault(); handleInsert() }; if (e.key === "Escape") onClose() }}
-        placeholder="e.g. E = mc²"
+        placeholder="e.g. E = mc^2"
         rows={3}
         style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "monospace", marginBottom: 8 }}
       />
-      {latex && (
-        <div style={{ padding: "6px 10px", background: "#fafafa", border: "1px solid #e4e4e7", borderRadius: 4, fontStyle: "italic", fontFamily: "Georgia, serif", fontSize: 13, color: "#1a1a2e", marginBottom: 8, textAlign: "center" }}>
-          {latex}
-        </div>
+      {latex.trim() && (
+        <div style={{ padding: "8px 10px", background: "#fdfdfd", border: "1px solid #e4e4e7", borderRadius: 4, marginBottom: 8, color: "#1a1a2e", overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: renderedLatex }} />
       )}
       <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
         Insert (⌘↵)
@@ -587,7 +595,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-      action: () => insertHTML('<div contenteditable="false" style="height:2px;background:#000;width:90%;margin:14px auto;border-radius:1px;display:block"></div><br/>')
+      action: () => insertHTML('<div style="height:2px;background:#1a1a1a;border-radius:1px;margin:10px 0;display:block">&#8203;</div><br>')
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",
@@ -620,7 +628,17 @@ export const SlashMenu = memo(function SlashMenu({
       id: "table", label: "Table", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>,
       action: () => {},
-      customContent: <TableGridPicker onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} />
+      customContent: <TableGridPicker onInsert={(html, cols) => {
+        onSelect(() => {
+          insertHTML(html)
+          if (box && onUpdateBox) {
+            const requiredW = (cols * 100) + 48
+            if ((box.w || 0) < requiredW) {
+              onUpdateBox(box.id, { w: requiredW })
+            }
+          }
+        })
+      }} onClose={onClose} />
     },
     {
       id: "equation", label: "Equation", group: "Blocks",
@@ -631,11 +649,14 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "columns", label: "Columns", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
-      action: () => onSelect(() => insertHTML(makeColumns(2))),
+      action: () => onSelect(() => {
+        insertHTML(makeColumns(2))
+        if (box && onUpdateBox && (box.w || 0) < 280) onUpdateBox(box.id, { w: 280 })
+      }),
       subOptions: [
-        { label: "2 Columns", action: () => onSelect(() => insertHTML(makeColumns(2))) },
-        { label: "3 Columns", action: () => onSelect(() => insertHTML(makeColumns(3))) },
-        { label: "4 Columns", action: () => onSelect(() => insertHTML(makeColumns(4))) },
+        { label: "2 Columns", action: () => onSelect(() => { insertHTML(makeColumns(2)); if (box && onUpdateBox && (box.w || 0) < 280) onUpdateBox(box.id, { w: 280 }) }) },
+        { label: "3 Columns", action: () => onSelect(() => { insertHTML(makeColumns(3)); if (box && onUpdateBox && (box.w || 0) < 400) onUpdateBox(box.id, { w: 400 }) }) },
+        { label: "4 Columns", action: () => onSelect(() => { insertHTML(makeColumns(4)); if (box && onUpdateBox && (box.w || 0) < 520) onUpdateBox(box.id, { w: 520 }) }) },
       ]
     },
     {
@@ -836,16 +857,6 @@ export const SlashMenu = memo(function SlashMenu({
       >
         <style dangerouslySetInnerHTML={{ __html: `.hide-scroll::-webkit-scrollbar { display: none; } .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }` }} />
         <div style={{ padding: "4px 0" }}>
-          <div style={{
-            padding: "10px 14px 4px",
-            fontSize: 9,
-            fontWeight: 700,
-            color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-          }}>
-            {mode === "/" ? "text box presets" : "inline options"}
-          </div>
           {filtered.length === 0 ? (
             <div style={{ padding: "8px 12px", fontSize: 11, color: isLight ? "#a1a1aa" : "#52525b" }}>No results</div>
           ) : (
@@ -877,12 +888,16 @@ export const SlashMenu = memo(function SlashMenu({
                         if (isActive) (activeRef as any).current = el
                         if (submenuOpen) (submenuRowRef as any).current = el
                       }}
-                      onMouseEnter={() => setActiveIdx(actualIdx)}
+                      onMouseEnter={() => {
+                        setActiveIdx(actualIdx)
+                        if (hasSubmenu) setOpenSubmenuId(item.id)
+                      }}
+                      onMouseLeave={() => {
+                        if (hasSubmenu) setOpenSubmenuId(null)
+                      }}
                       onClick={(e) => {
-                        if (hasSubmenu) {
+                        if (!hasSubmenu) {
                           e.stopPropagation()
-                          setOpenSubmenuId(submenuOpen ? null : item.id)
-                        } else {
                           onSelect(item.action)
                         }
                       }}

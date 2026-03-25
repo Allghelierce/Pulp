@@ -78,7 +78,7 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme, handwrittenEffect }: { reduceMotion: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(6px); } 65% { transform: translateY(-2px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { ${handwrittenEffect ? "filter: url(#handwritten-jitter);" : ""} outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
       <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
@@ -183,7 +183,8 @@ const BoxItem = memo(function BoxItem({
         // Sticky: always fixed height. Regular: auto-grow.
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid ${theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
+        color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : "#1a1a1a",
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
@@ -201,45 +202,47 @@ const BoxItem = memo(function BoxItem({
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
-      {isSelected && (
+      {isSelected && !isSticky && (
+        <div style={{ position: "absolute", top: 0, right: -34, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, zIndex: 120 }}>
+          {/* Rotate button */}
+          <div
+            title="Rotate"
+            className="hover:scale-110 active:scale-95 transition-transform"
+            onMouseDown={e => {
+              e.preventDefault(); e.stopPropagation()
+              const el = document.getElementById(`box-${box.id}`)
+              if (!el) return
+              const rect = el.getBoundingClientRect()
+              const cx = rect.left + rect.width / 2
+              const cy = rect.top + rect.height / 2
+              const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI
+              const startRotation = box.boxRotation || 0
+              const onMove = (me: MouseEvent) => {
+                const a = Math.atan2(me.clientY - cy, me.clientX - cx) * 180 / Math.PI
+                updateBox(box.id, { boxRotation: startRotation + (a - startAngle) })
+              }
+              const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+              window.addEventListener('mousemove', onMove)
+              window.addEventListener('mouseup', onUp)
+            }}
+            style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.12)", cursor: "grab", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,0.5)", flexShrink: 0 }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6" /><path d="M2.5 12a10 10 0 0 1 18-6" />
+            </svg>
+          </div>
+          {/* Delete button */}
+          <button
+            onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
+            className="hover:scale-110 active:scale-95 transition-transform"
+            style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0 }}>×</button>
+        </div>
+      )}
+      {isSelected && isSticky && (
         <button
           onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
           className="hover:scale-110 active:scale-95 transition-transform"
-          style={{ position: "absolute", top: isSticky ? 10 : 6, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
-      )}
-      {/* Rotation handle — to the right of the × button */}
-      {isSelected && !isSticky && (
-        <div
-          title="Rotate"
-          onMouseDown={e => {
-            e.preventDefault(); e.stopPropagation()
-            const el = document.getElementById(`box-${box.id}`)
-            if (!el) return
-            const rect = el.getBoundingClientRect()
-            const cx = rect.left + rect.width / 2
-            const cy = rect.top + rect.height / 2
-            const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI
-            const startRotation = box.boxRotation || 0
-            const onMove = (me: MouseEvent) => {
-              const a = Math.atan2(me.clientY - cy, me.clientX - cx) * 180 / Math.PI
-              updateBox(box.id, { boxRotation: startRotation + (a - startAngle) })
-            }
-            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-            window.addEventListener('mousemove', onMove)
-            window.addEventListener('mouseup', onUp)
-          }}
-          style={{
-            position: "absolute", top: 6, right: -22,
-            width: 14, height: 14, borderRadius: "50%",
-            background: "white", border: `1.5px solid ${accentSolid}`,
-            cursor: "grab", zIndex: 120,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={accentSolid} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.5 2v6h-6" /><path d="M2.5 12a10 10 0 0 1 18-6" />
-          </svg>
-        </div>
+          style={{ position: "absolute", top: 10, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
       )}
       {isSelected && selectedCount === 1 && !isImage && !isSticky && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
@@ -292,7 +295,7 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 26 }
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 20, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "'Caveat', cursive", label: "Handwritten" },
@@ -743,9 +746,8 @@ export default function NoteApp() {
     const width = paperRef.current.clientWidth - 128
     const newBox: TextBoxType = {
       id,
-      x: 64, y: y - 10, w: width, h: 24,
-      content: `<hr style="border:none;border-top:2px solid currentColor;width:100%;opacity:0.6" />`,
-      boxHighlightColor: 'transparent',
+      x: 64, y: y - 1, w: width, h: 2,
+      content: `<div style="height:2px;background:#1a1a1a;width:100%;border-radius:1px;display:block"></div>`,
       boxOutlineWidth: 0,
       boxFontSize: 16,
     }
@@ -916,10 +918,11 @@ export default function NoteApp() {
           const anchor = slashAnchorRef.current
           if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
             const textNode = anchor.node as Text
-            if (anchor.offset < textNode.length) {
+            // Handle the case where @ was inserted: delete the character right after anchor.offset
+            if (anchor.offset <= textNode.length) {
               const r = document.createRange()
               r.setStart(textNode, anchor.offset)
-              r.setEnd(textNode, anchor.offset + 1)
+              r.setEnd(textNode, Math.min(anchor.offset + 1, textNode.length))
               const sel = window.getSelection()
               sel?.removeAllRanges()
               sel?.addRange(r)
@@ -1019,15 +1022,48 @@ export default function NoteApp() {
         return
       }
 
-      const range = sel.getRangeAt(0).cloneRange()
-      range.collapse(true)
+      e.preventDefault()
+
+      // Insert @ character at cursor position
+      const range = sel.getRangeAt(0)
+      const textNode = range.startContainer.nodeType === Node.TEXT_NODE
+        ? (range.startContainer as Text)
+        : null
+
+      if (textNode) {
+        // Insert @ into existing text node
+        textNode.insertData(range.startOffset, "@")
+        range.setStart(textNode, range.startOffset + 1)
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        // Update anchor to point to the correct position
+        slashAnchorRef.current = { node: textNode, offset: range.startOffset - 1 }
+      } else {
+        // Create new text node for @
+        const newText = document.createTextNode("@")
+        range.insertNode(newText)
+        range.setStart(newText, 1)
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        // Update anchor to point to the new text node
+        slashAnchorRef.current = { node: newText, offset: 0 }
+      }
+
+      // Sync content if in editor
+      if ((e.currentTarget as any) === editorRef.current) {
+        editor.syncContent()
+      }
+
+      // Measure menu position
+      const clonedRange = sel.getRangeAt(0).cloneRange()
+      clonedRange.collapse(true)
       const span = document.createElement("span")
       span.textContent = "\u200b"
-      range.insertNode(span)
+      clonedRange.insertNode(span)
       const rect = span.getBoundingClientRect()
       span.parentNode?.removeChild(span)
-      sel.removeAllRanges()
-      sel.addRange(range)
 
       const m = {
         x: rect.left,
@@ -1519,26 +1555,24 @@ export default function NoteApp() {
         <button
           title={sidebarWidth > 0 ? "Close Menu" : "Open Menu"}
           onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
-          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-pointer transition-all active:scale-95 translate-y-[-2px]"
-          style={{ transformOrigin: "top center", animation: "leaf-sway 18s ease-in-out infinite" }}
+          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-grab active:cursor-grabbing transition-all"
+          style={{ transformOrigin: "top center", animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 4s ease-in-out infinite" : "leaf-sway 14s ease-in-out infinite" }}
         >
-          {/* Textured rope from topbar */}
-          <div style={{
-            width: "1.8px",
-            height: "120px",
-            background: theme === 'dark'
-              ? "linear-gradient(to right, #C6A664 0%, #78350f 40%, #C6A664 100%)"
-              : "linear-gradient(to right, #78350f 0%, #C6A664 40%, #78350f 100%)",
-            boxShadow: theme === 'dark' ? "0 0 4px rgba(198, 166, 100, 0.4)" : "1px 0 3px rgba(0,0,0,0.3)",
-            marginBottom: "-25px",
-            position: "relative",
-            zIndex: 0
-          }} />
+          {/* Wavy cable from topbar */}
+          <svg width="14" height="72" viewBox="0 0 14 72" fill="none" style={{ marginBottom: "-18px", position: "relative", zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M7 0 C6 10, 8.5 20, 7 30 C5.5 40, 8 50, 7 60 C6.2 66, 7 72, 7 72"
+              stroke={theme === 'dark' ? "rgba(160,160,160,0.7)" : "rgba(110,110,110,0.6)"}
+              strokeWidth="1.15"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
           <img
             src="/lightbulb.png"
             alt="Toggle Menu"
             style={{
-              width: 72,
+              width: 54,
               height: "auto",
               objectFit: "contain",
               pointerEvents: "none",
@@ -1631,7 +1665,7 @@ export default function NoteApp() {
             setRightSidebarOpen={setContentSidebarOpen}
             allCompacted={allCompacted}
             onCompactAll={handleCompactAll}
-            onInsertHR={() => editor.insertHTML('<div contenteditable="false" style="height:2px;background:#000;width:90%;margin:14px auto;border-radius:1px;display:block"></div><br/>')}
+            onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
             onDownload={() => {
               if (!activeNote) return
               const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })

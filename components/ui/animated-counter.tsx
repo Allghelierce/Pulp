@@ -14,7 +14,7 @@ export function AnimatedCounter({ value }: { value: number }) {
       className="flex items-center tabular-nums overflow-hidden"
     >
       {value >= 100 && <Digit place={100} value={value} />}
-      <Digit place={10} value={value} />
+      {value >= 10 && <Digit place={10} value={value} />}
       <Digit place={1} value={value} />
     </div>
   );

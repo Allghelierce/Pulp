@@ -14,6 +14,9 @@ const dancing = Dancing_Script({ subsets: ["latin"], variable: "--font-dancing" 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+      </head>
       <body className={`${inter.variable} ${hand.variable} ${caveat.variable} ${indie.variable} ${mono.variable} ${playfair.variable} ${italiana.variable} ${dancing.variable} antialiased`}>
 
         {children}

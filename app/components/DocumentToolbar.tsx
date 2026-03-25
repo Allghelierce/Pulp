@@ -1,4 +1,4 @@
-import { memo } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShareButton } from "@/components/ui/share-button"
 import { Link as LinkIcon } from "lucide-react"
@@ -55,7 +55,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   allCompacted, onCompactAll, onInsertHR,
   activeTool, setActiveTool,
   stickyColor, setStickyColor,
-  onDownload,
+  onDownload, theme
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -64,13 +64,54 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
     : {}
 
+  const leftToolsRef = useRef<HTMLDivElement>(null)
+  const [wireWidth, setWireWidth] = useState(0)
+
+  useEffect(() => {
+    if (!leftToolsRef.current) return
+    const ro = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        setWireWidth(entries[0].contentRect.width)
+      }
+    })
+    ro.observe(leftToolsRef.current)
+    return () => ro.disconnect()
+  }, [])
+
+  const w = wireWidth > 0 ? (40 + wireWidth + 14) - 59 : 0
+
   return (
     <div
       id="document-toolbar"
-      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-20 shrink-0 overflow-x-auto justify-between"
+      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-20 shrink-0 justify-between relative"
       style={{ transform: "translateZ(0)" }}
     >
-      <div className="flex items-center gap-2">
+      {/* The organic trailing horizontal lightbulb wire routing smoothly through the interior bottom padding channel of the toolbar! */}
+      <svg 
+        className="absolute pointer-events-none overflow-visible"
+        width={w}
+        height="48"
+        style={{
+          left: 59, // Directly connecting exactly to x=59 (the lightbulb vertical source)
+          top: 0, // Starts at the toolbar's top edge to use full interior Y coords
+          zIndex: 0, // In standard flow: draws over toolbar background but safely under overlapping buttons
+          opacity: wireWidth > 0 ? 1 : 0, transition: "opacity 0.2s"
+        }}
+      >
+        <path
+          d={(() => {
+            if (w <= 0) return "";
+            return `M 0 48 C ${w * 0.2} 47, ${w * 0.35} 40, ${w * 0.5} 43 S ${w * 0.8} 39, ${w - 18} 44 Q ${w} 43, ${w} 12`;
+          })()}
+          stroke={typeof theme !== 'undefined' && theme === 'dark' ? "rgba(160,160,160,0.7)" : "rgba(110,110,110,0.6)"}
+          strokeWidth="1.15"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
+      
+      <div className="flex items-center gap-2 relative z-10" ref={leftToolsRef}>
 
         {/* Grid */}
         <button
