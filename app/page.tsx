@@ -740,6 +740,50 @@ export default function NoteApp() {
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
 
+  // ─── Pulp Grove Gamification State ───
+  const [sunshine, setSunshine] = useState(0) // Main currency: Earned by time spent (1 per 30s)
+  const [nectar, setNectar] = useState(0)   // Secondary: Earned by writing (1 per 500 chars)
+  const [grove, setGrove] = useState<any[]>([]) // Your planted trees
+  const [lastCharCount, setLastCharCount] = useState(0)
+
+  // Restore Grove from LocalStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('pulp-grove')
+    if (saved) {
+      const data = JSON.parse(saved)
+      setSunshine(data.sunshine || 0)
+      setNectar(data.nectar || 0)
+      setGrove(data.grove || [])
+    }
+  }, [])
+
+  // Persist Grove
+  useEffect(() => {
+    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, nectar, grove }))
+  }, [sunshine, nectar, grove])
+
+  // Earn Sunshine over time (1 every 30 seconds of activity)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSunshine(s => s + 1)
+    }, 30000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Earn Nectar via writing
+  const totalChars = useMemo(() => {
+    const activeNote = notes.find(n => n.id === activeTabId)
+    if (!activeNote) return 0
+    return Object.values(activeNote.boxes).flat().reduce((acc, b) => acc + (b.content ? b.content.length : 0), 0)
+  }, [notes, activeTabId])
+
+  useEffect(() => {
+    if (totalChars > lastCharCount + 500) {
+      setNectar(n => n + Math.floor((totalChars - lastCharCount) / 500))
+      setLastCharCount(totalChars)
+    }
+  }, [totalChars, lastCharCount])
+
 
   // Settings
   const [accent, setAccent] = useState("#600b2779")
@@ -1903,10 +1947,12 @@ export default function NoteApp() {
             onClose={() => setContentSidebarOpen(false)}
             theme={theme}
             accent={accent}
-            sketchMode={sketchMode}
-            setSketchMode={setSketchMode}
-            setSketchPrompt={setSketchPrompt}
-            openAlert={openAlert}
+            sunshine={sunshine}
+            nectar={nectar}
+            grove={grove}
+            setSunshine={setSunshine}
+            setNectar={setNectar}
+            setGrove={setGrove}
           />
         </div>
 

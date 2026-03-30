@@ -69,20 +69,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     : {}
 
   const leftToolsRef = useRef<HTMLDivElement>(null)
-  const [wireWidth, setWireWidth] = useState(0)
-
   useEffect(() => {
     if (!leftToolsRef.current) return
-    const ro = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setWireWidth(entries[0].contentRect.width)
-      }
-    })
-    ro.observe(leftToolsRef.current)
-    return () => ro.disconnect()
   }, [])
-
-  const w = wireWidth > 0 ? (40 + wireWidth + 14) - 59 : 0
 
   return (
     <div
@@ -90,32 +79,76 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-20 shrink-0 justify-between relative"
       style={{ transform: "translateZ(0)" }}
     >
-      {/* The organic trailing horizontal lightbulb wire routing smoothly through the interior bottom padding channel of the toolbar! */}
-      <svg 
-        className="absolute pointer-events-none overflow-visible"
-        width={w}
-        height="48"
-        style={{
-          left: 59, // Directly connecting exactly to x=59 (the lightbulb vertical source)
-          top: 0, // Starts at the toolbar's top edge to use full interior Y coords
-          zIndex: 0, // In standard flow: draws over toolbar background but safely under overlapping buttons
-          opacity: wireWidth > 0 ? 1 : 0, transition: "opacity 0.2s"
-        }}
-      >
-        <path
-          d={(() => {
-            if (w <= 0) return "";
-            return `M 0 48 C ${w * 0.2} 47, ${w * 0.35} 40, ${w * 0.5} 43 S ${w * 0.8} 39, ${w - 18} 44 Q ${w} 43, ${w} 12`;
-          })()}
-          stroke={typeof theme !== 'undefined' && theme === 'dark' ? "rgba(160,160,160,0.7)" : "rgba(110,110,110,0.6)"}
-          strokeWidth="1.15"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </svg>
       
-      <div className="flex items-center gap-2 relative z-10" ref={leftToolsRef}>
+      <div className="flex items-center gap-3 relative z-10" ref={leftToolsRef}>
+        <button
+          title="Toggle Sidebar"
+          onMouseDown={e => { e.preventDefault(); onStartSidebarDrag(e.clientX) }}
+          className="absolute top-0 left-[14px] z-50 flex flex-col items-center outline-none cursor-grab active:cursor-grabbing group h-0"
+          style={{ 
+            width: 32,
+            transformOrigin: "top center", 
+            animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 4s ease-in-out infinite" : "leaf-sway 14s ease-in-out infinite" 
+          }}
+        >
+          {/* Extended Botanical Twine - Starting from negative top to hit the screen's very upper edge */}
+          <svg width="2" height="142" viewBox="0 0 2 142" className="overflow-visible" style={{ marginTop: -48 }}>
+            <path d="M1 0 L1 142" stroke="#f1f1f1" strokeWidth="0.8" strokeDasharray="2 1.5" />
+            <path d="M1 0 L1 142" stroke="#d47c2a" strokeWidth="0.8" strokeDasharray="1.5 2" strokeDashoffset="1.5" />
+          </svg>
+
+          {/* Delicate Hollow Silver Keychain Ring (6px) - Centered Alignment */}
+          <div className="relative flex flex-col items-center" style={{ filter: "url(#handwritten-jitter-subtle)", marginTop: -2 }}>
+            <div style={{
+              width: 6, height: 6,
+              borderRadius: "50%",
+              border: "1.2px solid #a1a1aa",
+              background: "transparent",
+              boxShadow: "0.5px 0.5px 1px rgba(0,0,0,0.2)",
+              position: "relative",
+              zIndex: 20
+            }} />
+
+            {/* Small Hand-Drawn Half-Circle Orange Slice (28px width) */}
+            <div className="relative mt-[-4px] z-10">
+              <div style={{
+                width: 28, height: 16,
+                borderRadius: "0 0 28px 28px",
+                background: "linear-gradient(to bottom, #8b4513, #a64d1a)",
+                border: "1px solid #5c2d0b",
+                boxShadow: "0 6px 12px rgba(0,0,0,0.4), inset 0 -1.5px 3px rgba(0,0,0,0.5)",
+                overflow: "hidden",
+                position: "relative"
+              }}>
+                <div style={{
+                  position: "absolute", bottom: 1, left: 1.5, right: 1.5, top: 0,
+                  borderRadius: "0 0 25px 25px",
+                  background: "radial-gradient(ellipse at center top, rgba(232, 134, 42, 0.9), rgba(166, 77, 26, 0.8))",
+                  backdropFilter: "blur(0.3px)",
+                  display: "flex", alignItems: "flex-end", justifyContent: "center"
+                }}>
+                  <svg width="24" height="14" viewBox="0 0 100 50" style={{ opacity: 0.5 }}>
+                    {[30, 60, 90, 120, 150].map(deg => (
+                      <line key={deg} x1="50" y1="0" x2={50 + Math.cos((deg * Math.PI) / 180) * 50} y2={Math.sin((deg * Math.PI) / 180) * 50} stroke="#fce7c0" strokeWidth="3.5" strokeLinecap="round" />
+                    ))}
+                    <circle cx="50" cy="0" r="10" fill="#fce7c0" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div style={{
+                position: "absolute", inset: 0,
+                borderRadius: "0 0 28px 28px",
+                background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%)",
+                pointerEvents: "none"
+              }} />
+            </div>
+          </div>
+        </button>
+
+        <div className="w-14 shrink-0" />
+
+        <div className="w-px h-5 bg-zinc-200/60 mr-1" />
 
         {/* Grid */}
         <button
