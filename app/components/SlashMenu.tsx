@@ -247,17 +247,20 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
 // ─── Block helpers ─────────────────────────────────────────────────────────────
 
 function makeTable(rows: number, cols: number): string {
-  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;background:none;font-size:13px;font-weight:600;min-width:100px;outline:none;text-align:left;filter:none;">Header</th>`).join("")}</tr>`
+  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;background:none;font-size:13px;font-weight:600;min-width:100px;outline:none;text-align:left;">Header</th>`).join("")}</tr>`
   const bodyRows = Array.from({ length: rows - 1 }, () =>
-    `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;font-size:13px;min-width:100px;outline:none;filter:none;"></td>`).join("")}</tr>`
+    `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;font-size:13px;min-width:100px;outline:none;"></td>`).join("")}</tr>`
   ).join("")
-  return `<table style="border-collapse:collapse;margin:12px 0;width:100%">${headerRow}${bodyRows}</table><br/>`
+  return `<table style="border-collapse:collapse;margin:12px 0;width:100%;filter:url(#handwritten-jitter-subtle);">${headerRow}${bodyRows}</table><br/>`
 }
 
 function makeColumns(num: number): string {
   const cols = Array.from({ length: num }, (_, i) => {
     const isLast = i === num - 1;
-    return `<div contenteditable="true" style="flex:1;min-height:60px;padding:8px 16px;${isLast ? '' : 'border-right:1.5px solid rgba(0,0,0,0.3);'}font-size:inherit;font-family:inherit;outline:none;filter:none;"></div>`
+    return `
+      <div contenteditable="true" style="flex:1;min-height:60px;padding:8px 16px;font-size:inherit;font-family:inherit;outline:none;"></div>
+      ${isLast ? '' : '<div style="width:2px;background:rgba(0,0,0,0.3);margin:12px 4px;filter:url(#handwritten-jitter-subtle);"></div>'}
+    `
   }).join("")
   return `<div contenteditable="false" style="display:flex;gap:4px;margin:12px 0">${cols}</div><br/>`
 }
@@ -595,7 +598,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-      action: () => insertHTML('<div style="height:2px;background:#1a1a1a;border-radius:1px;margin:10px 0;display:block">&#8203;</div><br>')
+      action: () => insertHTML('<div style="height:2px;background:#1a1a1a;margin:12px 0;display:block;filter:url(#handwritten-jitter);">&#8203;</div><br>')
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",

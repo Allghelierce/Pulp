@@ -41,6 +41,9 @@ interface DocumentToolbarProps {
   stickyColor: string
   setStickyColor: (color: string) => void
   onDownload: () => void
+  onStartSidebarDrag: (x: number) => void
+  sidebarWidth: number
+  isSidebarDragging: boolean
 }
 
 
@@ -55,7 +58,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   allCompacted, onCompactAll, onInsertHR,
   activeTool, setActiveTool,
   stickyColor, setStickyColor,
-  onDownload, theme
+  onDownload, theme,
+  onStartSidebarDrag, sidebarWidth, isSidebarDragging
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"

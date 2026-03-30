@@ -87,6 +87,10 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme, handwritt
         <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" result="noise2" />
         <feDisplacementMap in="wobble" in2="noise2" scale="2" xChannelSelector="R" yChannelSelector="G" />
       </filter>
+      <filter id="handwritten-jitter-subtle" colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.03" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
     </svg>
   </>)
 })
@@ -225,24 +229,48 @@ const BoxItem = memo(function BoxItem({
               window.addEventListener('mousemove', onMove)
               window.addEventListener('mouseup', onUp)
             }}
-            style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.12)", cursor: "grab", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,0,0,0.5)", flexShrink: 0 }}
+            style={{ 
+              width: 17, height: 17, borderRadius: "50%", 
+              background: "rgba(0,0,0,0.08)", cursor: "grab", 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              color: "rgba(0,0,0,0.5)", flexShrink: 0,
+              filter: "url(#handwritten-jitter-subtle)"
+            }}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.5 2v6h-6" /><path d="M2.5 12a10 10 0 0 1 18-6" />
+            {/* Wobbly handwritten-style rotate arrow */}
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 2v5h-5" />
+              <path d="M2.5 12a10 10 0 0 1 17-7" />
             </svg>
           </div>
-          {/* Delete button */}
+          {/* Delete button (Handwritten style) */}
           <button
             onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
             className="hover:scale-110 active:scale-95 transition-transform"
-            style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0 }}>×</button>
+            style={{ 
+              width: 17, height: 17, borderRadius: "50%", 
+              background: "rgba(0,0,0,0.08)", border: "none", 
+              cursor: "pointer", fontSize: 13, 
+              display: "flex", alignItems: "center", justifyContent: "center", 
+              lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0,
+              fontFamily: '"Caveat", cursive', fontWeight: 600,
+              filter: "url(#handwritten-jitter-subtle)"
+            }}>×</button>
         </div>
       )}
       {isSelected && isSticky && (
         <button
           onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
           className="hover:scale-110 active:scale-95 transition-transform"
-          style={{ position: "absolute", top: 10, right: 8, background: "rgba(0,0,0,0.12)", border: "none", cursor: "pointer", fontSize: 14, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", zIndex: 120 }}>×</button>
+          style={{ 
+            position: "absolute", top: 10, right: 8, 
+            background: "rgba(0,0,0,0.08)", border: "none", 
+            cursor: "pointer", fontSize: 13, width: 17, height: 17, 
+            display: "flex", alignItems: "center", justifyContent: "center", 
+            borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", 
+            zIndex: 120, fontFamily: '"Caveat", cursive', fontWeight: 600,
+            filter: "url(#handwritten-jitter-subtle)"
+          }}>×</button>
       )}
       {isSelected && selectedCount === 1 && !isImage && !isSticky && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
@@ -746,10 +774,9 @@ export default function NoteApp() {
     const width = paperRef.current.clientWidth - 128
     const newBox: TextBoxType = {
       id,
-      x: 64, y: y - 1, w: width, h: 2,
-      content: `<div style="height:2px;background:#1a1a1a;width:100%;border-radius:1px;display:block"></div>`,
-      boxOutlineWidth: 0,
-      boxFontSize: 16,
+      x: 64, y: y - 4, w: width, h: 8,
+      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="4" viewBox="0 0 100 4" preserveAspectRatio="none" style="filter:url(#handwritten-jitter);overflow:visible;"><line x1="0" y1="2" x2="100" y2="2" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" /></svg></div>`,
+      boxHeadingStyle: 'default'
     }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
       ...n,
@@ -1552,41 +1579,7 @@ export default function NoteApp() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
-        <button
-          title={sidebarWidth > 0 ? "Close Menu" : "Open Menu"}
-          onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
-          className="absolute left-8 top-[48px] z-[30] flex flex-col items-center opacity-95 hover:opacity-100 outline-none cursor-grab active:cursor-grabbing transition-all"
-          style={{ transformOrigin: "top center", animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 4s ease-in-out infinite" : "leaf-sway 14s ease-in-out infinite" }}
-        >
-          {/* Wavy cable from topbar */}
-          <svg width="14" height="72" viewBox="0 0 14 72" fill="none" style={{ marginBottom: "-18px", position: "relative", zIndex: 0 }} xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M7 0 C6 10, 8.5 20, 7 30 C5.5 40, 8 50, 7 60 C6.2 66, 7 72, 7 72"
-              stroke={theme === 'dark' ? "rgba(160,160,160,0.7)" : "rgba(110,110,110,0.6)"}
-              strokeWidth="1.15"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
-          <img
-            src="/lightbulb.png"
-            alt="Toggle Menu"
-            style={{
-              width: 54,
-              height: "auto",
-              objectFit: "contain",
-              pointerEvents: "none",
-              position: "relative",
-              zIndex: 10,
-              filter: sidebarWidth > 0
-                ? "drop-shadow(0 0 15px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 30px rgba(251, 191, 36, 0.3)) brightness(1.2) contrast(1.1)"
-                : (theme === "dark"
-                  ? "brightness(0.85) contrast(1.1)"
-                  : "brightness(0.85) grayscale(0.1)"),
-              transition: "filter 0.4s ease-in-out"
-            }}
-          />
-        </button>
+
 
         {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
         {(() => {
@@ -1676,6 +1669,9 @@ export default function NoteApp() {
               a.click()
               URL.revokeObjectURL(url)
             }}
+            onStartSidebarDrag={startSidebarDrag}
+            sidebarWidth={sidebarWidth}
+            isSidebarDragging={isSidebarDragging}
           />
         )}
 
