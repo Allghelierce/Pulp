@@ -17,6 +17,7 @@ export const SETTINGS_TABS = [
   { id: "editor", label: "Editor", group: "App" },
   { id: "personalization", label: "Personalization", group: "Customize" },
   { id: "subscription", label: "Pro", group: "Premium" },
+  { id: "danger", label: "Danger Zone", group: "Advanced" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
@@ -38,6 +39,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
   reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
+  language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
+  focusMode, setFocusMode, baseFontSize, setBaseFontSize,
 }: {
   user: any
   onClose: () => void
@@ -56,10 +59,17 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   bgEffect: boolean; setBgEffect: (v: boolean) => void
   smearEffect: boolean; setSmearEffect: (v: boolean) => void
   handwrittenEffect: boolean; setHandwrittenEffect: (v: boolean) => void
+  language: string; setLanguage: (v: string) => void
+  defaultSort: string; setDefaultSort: (v: string) => void
+  wordCountVisible: boolean; setWordCountVisible: (v: boolean) => void
+  focusMode: boolean; setFocusMode: (v: boolean) => void
+  baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
+  const [deleteUsername, setDeleteUsername] = useState("")
+  const [deletePassword, setDeletePassword] = useState("")
   const isDark = theme === "dark"
 
   const visibleGroups = searchQuery
@@ -147,6 +157,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               {activeTab === "editor" && "Configure your writing environment"}
               {activeTab === "personalization" && "Make Pulp uniquely yours"}
               {activeTab === "subscription" && "Manage your plan and billing"}
+              {activeTab === "danger" && "Irreversible and destructive actions"}
             </p>
           </div>
 
@@ -193,14 +204,42 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     }
                   />
                 )}
+              </SettingSection>
+
+              <SettingSection title="System" isDark={isDark}>
                 <SettingRow
-                  title="Delete all notes"
+                  title="Language"
                   isDark={isDark}
-                  description="Permanently erase every note and page. This cannot be undone."
+                  description="Choose the language for the user interface"
                   control={
-                    <DestructiveButton onClick={() => setShowDeleteConfirm(true)}>
-                      Delete All
-                    </DestructiveButton>
+                    <select
+                      value={language}
+                      onChange={e => setLanguage(e.target.value)}
+                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
+                    >
+                      <option value="english">English (US)</option>
+                      <option value="spanish">Español</option>
+                      <option value="french">Français</option>
+                      <option value="german">Deutsch</option>
+                      <option value="japanese">日本語</option>
+                      <option value="chinese">中文</option>
+                    </select>
+                  }
+                />
+                <SettingRow
+                  title="Default Sort Order"
+                  isDark={isDark}
+                  description="How your notes are sorted in the sidebar"
+                  control={
+                    <select
+                      value={defaultSort}
+                      onChange={e => setDefaultSort(e.target.value)}
+                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
+                    >
+                      <option value="modified">Date Modified</option>
+                      <option value="created">Date Created</option>
+                      <option value="title">Alphabetical (A-Z)</option>
+                    </select>
                   }
                 />
               </SettingSection>
@@ -315,6 +354,26 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   isDark={isDark}
                   control={<SegmentedControl options={[["compact", "Compact"], ["normal", "Normal"], ["relaxed", "Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact" | "normal" | "relaxed")} />}
                 />
+                <SettingRow
+                  title="Base font size"
+                  isDark={isDark}
+                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={v => setBaseFontSize(v as "small" | "medium" | "large")} />}
+                />
+              </SettingSection>
+
+              <SettingSection title="Reading & Focus" isDark={isDark}>
+                <SettingRow
+                  title="Show word count"
+                  isDark={isDark}
+                  description="Display live character and word count while typing"
+                  control={<SettingToggle checked={wordCountVisible} onChange={setWordCountVisible} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Focus mode"
+                  isDark={isDark}
+                  description="Dim interface elements when typing to minimize distractions"
+                  control={<SettingToggle checked={focusMode} onChange={setFocusMode} isDark={isDark} />}
+                />
               </SettingSection>
             </>)}
 
@@ -337,6 +396,32 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     </button>
                   ))}
                 </div>
+              </SettingSection>
+            </>)}
+
+            {/* ── Danger Zone ── */}
+            {activeTab === "danger" && (<>
+              <SettingSection title="Danger Zone" isDark={isDark}>
+                <SettingRow
+                  title="Delete all notes"
+                  isDark={isDark}
+                  description="Permanently erase every note and page. This cannot be undone."
+                  control={
+                    <DestructiveButton onClick={() => setDeleteConfirmType("notes")}>
+                      Delete All
+                    </DestructiveButton>
+                  }
+                />
+                <SettingRow
+                  title="Delete account"
+                  isDark={isDark}
+                  description="Permanently delete your account and all associated data."
+                  control={
+                    <DestructiveButton onClick={() => setDeleteConfirmType("account")}>
+                      Delete Account
+                    </DestructiveButton>
+                  }
+                />
               </SettingSection>
             </>)}
 
@@ -404,30 +489,72 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
       </div>
 
       {/* Delete confirmation popup */}
-      {showDeleteConfirm && (
+      {deleteConfirmType && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
           <div className={`w-[340px] ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"} border rounded-2xl shadow-2xl p-7 flex flex-col gap-5`}>
             <div className="flex flex-col gap-2">
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-1">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-1 shrink-0">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
               </div>
-              <p className="text-[15px] font-semibold">Delete all notes?</p>
-              <p className={`text-[12.5px] leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-                Every note, page, and drawing will be permanently erased. This action cannot be undone.
+              <p className="text-[15px] font-semibold">
+                {deleteConfirmType === "notes" ? "Delete all notes?" : "Delete account?"}
               </p>
+              <p className={`text-[12.5px] leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                {deleteConfirmType === "notes"
+                  ? "Every note, page, and drawing will be permanently erased. This action cannot be undone."
+                  : "Your account and all associated data will be permanently erased. This action cannot be undone."}
+              </p>
+
+              <div className="mt-2 space-y-3">
+                <div className="space-y-1">
+                  <label className={`text-[11px] font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Username or Email</label>
+                  <input
+                    type="text"
+                    value={deleteUsername}
+                    onChange={(e) => setDeleteUsername(e.target.value)}
+                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-red-500/50" : "bg-white border-zinc-200 focus:border-red-400/50"}`}
+                    placeholder="Enter username"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className={`text-[11px] font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Password</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-red-500/50" : "bg-white border-zinc-200 focus:border-red-400/50"}`}
+                    placeholder="Enter password"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5">
+
+            <div className="flex items-center gap-2.5 mt-2">
               <button
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() => { setDeleteConfirmType(null); setDeleteUsername(""); setDeletePassword(""); }}
                 className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl border transition-all ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
               >
                 Cancel
               </button>
               <button
-                onClick={() => { localStorage.clear(); setShowDeleteConfirm(false); window.location.reload() }}
-                className="flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all active:scale-[0.97]"
+                disabled={!deleteUsername || !deletePassword}
+                onClick={async () => {
+                  if (!deleteUsername || !deletePassword) return;
+                  
+                  if (deleteConfirmType === "account") {
+                    await supabase.auth.signOut();
+                  } else {
+                    localStorage.clear();
+                  }
+
+                  setDeleteConfirmType(null);
+                  setDeleteUsername("");
+                  setDeletePassword("");
+                  window.location.reload();
+                }}
+                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
               >
-                Delete Everything
+                {deleteConfirmType === "notes" ? "Delete All" : "Delete Account"}
               </button>
             </div>
           </div>

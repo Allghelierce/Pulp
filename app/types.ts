@@ -7,6 +7,7 @@ export interface NoteData {
   folderId: number | null;
   parentId?: string;
   icon?: string;
+  cover?: string;
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   hlines?: { [pageIdx: number]: number[] };

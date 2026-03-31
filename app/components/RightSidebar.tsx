@@ -7,16 +7,16 @@ interface RightSidebarProps {
   theme: "light" | "dark"
   accent: string
   sunshine: number
-  nectar: number
+  gems: number
   grove: any[]
   setSunshine: (v: number | ((p: number) => number)) => void
-  setNectar: (v: number | ((p: number) => number)) => void
+  setGems: (v: number | ((p: number) => number)) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
 }
 
 export const RightSidebar = memo(function RightSidebar({
   isOpen, onClose, theme, accent,
-  sunshine, nectar, grove, setSunshine, setNectar, setGrove
+  sunshine, gems, grove, setSunshine, setGems, setGrove
 }: RightSidebarProps) {
 
   const plantSeed = (type: 'navel' | 'blood' | 'clementine') => {
@@ -57,7 +57,12 @@ export const RightSidebar = memo(function RightSidebar({
         <div className="flex-1 overflow-y-auto p-5 space-y-8">
           {/* Wallet / Currencies */}
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-orange-50/30 border-orange-100/50'} flex flex-col items-center text-center`}>
+            <div className={`p-4 rounded-2xl border flex flex-col items-center text-center relative ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-orange-50/30 border-orange-100/50'}`}>
+              <button 
+                onClick={() => setSunshine(s => s + 100)}
+                className="absolute top-2 right-2 w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center text-xs pb-[1px]"
+                title="Buy 100 ☀️ ($1.99)"
+              >+</button>
               <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center mb-2 animate-pulse">
                 <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></svg>
               </div>
@@ -65,12 +70,17 @@ export const RightSidebar = memo(function RightSidebar({
               <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Sunshine</span>
             </div>
 
-            <div className={`p-4 rounded-2xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-red-50/30 border-red-100/50'} flex flex-col items-center text-center`}>
-              <div className="w-8 h-8 rounded-full bg-red-400/20 flex items-center justify-center mb-2">
-                <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.5c-4.5-5-7-8.5-7-11.5a7 7 0 1 1 14 0c0 3-2.5 6.5-7 11.5z"/></svg>
+            <div className={`p-4 rounded-2xl border flex flex-col items-center text-center relative ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-purple-50/30 border-purple-100/50'}`}>
+              <button 
+                onClick={() => setGems(g => g + 50)}
+                className="absolute top-2 right-2 w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center text-xs pb-[1px]"
+                title="Buy 50 💎 ($0.99)"
+              >+</button>
+              <div className="w-8 h-8 rounded-full bg-purple-400/20 flex items-center justify-center mb-2">
+                <span className="text-sm">💎</span>
               </div>
-              <span className="text-[18px] font-bold font-serif">{nectar}</span>
-              <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Nectar Drops</span>
+              <span className="text-[18px] font-bold font-serif">{gems}</span>
+              <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Gems</span>
             </div>
           </div>
 
@@ -153,7 +163,7 @@ export const RightSidebar = memo(function RightSidebar({
 
         {/* Footer */}
         <div className="p-8 text-center border-t border-zinc-200/50">
-          <p className="text-[9px] text-zinc-400 italic">"Patience is the nectar of the wise."</p>
+          <p className="text-[9px] text-zinc-400 italic">"Patience is the true gem of the wise."</p>
         </div>
       </div>
     </div>

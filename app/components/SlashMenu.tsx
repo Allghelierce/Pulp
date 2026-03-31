@@ -247,7 +247,7 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
 // ─── Block helpers ─────────────────────────────────────────────────────────────
 
 function makeTable(rows: number, cols: number): string {
-  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;background:none;font-size:13px;font-weight:600;min-width:100px;outline:none;text-align:left;">Header</th>`).join("")}</tr>`
+  const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;background:none;font-size:13px;font-weight:600;min-width:100px;outline:none;text-align:left;"><br></th>`).join("")}</tr>`
   const bodyRows = Array.from({ length: rows - 1 }, () =>
     `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="border:1.5px solid rgba(0,0,0,0.4);padding:8px 12px;font-size:13px;min-width:100px;outline:none;"></td>`).join("")}</tr>`
   ).join("")
@@ -301,8 +301,8 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
               onClick={() => { onInsert(makeTable(r, c), c); onClose() }}
               style={{
                 width: 18, height: 18, borderRadius: 2, cursor: "pointer",
-                background: active ? "rgba(184,94,34,0.25)" : "rgba(0,0,0,0.06)",
-                border: active ? "1px solid rgba(184,94,34,0.5)" : "1px solid rgba(0,0,0,0.1)",
+                background: active ? "rgba(184,94,34,0.5)" : "rgba(184,94,34,0.15)",
+                border: active ? "1.5px solid rgba(184,94,34,0.8)" : "1px solid rgba(184,94,34,0.3)",
                 transition: "all 0.05s",
               }}
             />

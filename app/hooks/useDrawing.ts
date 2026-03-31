@@ -209,7 +209,63 @@ export function useDrawing({
     }
   }
 
-  return useMemo(() => ({ onPointerDown, onPointerMove, onPointerUp, clearCanvas, getCursor }), 
+  // Smooth a path using Catmull-Rom curve fitting
+  const smoothPath = (points: { x: number; y: number }[]) => {
+    if (points.length < 4) return points
+
+    const smoothed: { x: number; y: number }[] = []
+    const tension = 0.5
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)]
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const p3 = points[Math.min(points.length - 1, i + 2)]
+
+      // Generate 4 intermediate points for smoothness
+      for (let t = 0; t < 1; t += 0.25) {
+        const t2 = t * t
+        const t3 = t2 * t
+
+        const v0 = (p2.x - p0.x) * tension
+        const v1 = (p3.x - p1.x) * tension
+        const x = p1.x + v0 * t + (3 * (p2.x - p1.x) - 2 * v0 - v1) * t2 + (2 * (p1.x - p2.x) + v0 + v1) * t3
+
+        const v0y = (p2.y - p0.y) * tension
+        const v1y = (p3.y - p1.y) * tension
+        const y = p1.y + v0y * t + (3 * (p2.y - p1.y) - 2 * v0y - v1y) * t2 + (2 * (p1.y - p2.y) + v0y + v1y) * t3
+
+        smoothed.push({ x, y })
+      }
+    }
+    smoothed.push(points[points.length - 1])
+    return smoothed
+  }
+
+  const improveDrawing = () => {
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+
+    setNotes(prev => prev.map(n => {
+      if (n.id !== tid) return n
+      const drawings = n.drawings || {}
+      const pageDrawings = drawings[pidx] || []
+
+      const improvedDrawings = pageDrawings.map(stroke => {
+        // Only smooth pen and eraser strokes (not shapes)
+        if (['pen', 'eraser'].includes(stroke.tool) && stroke.points.length > 3) {
+          return { ...stroke, points: smoothPath(stroke.points) }
+        }
+        return stroke
+      })
+
+      return { ...n, drawings: { ...drawings, [pidx]: improvedDrawings } }
+    }))
+
+    render()
+  }
+
+  return useMemo(() => ({ onPointerDown, onPointerMove, onPointerUp, clearCanvas, getCursor, improveDrawing }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeTool, accent, zoom])
 }

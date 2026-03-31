@@ -53,6 +53,8 @@ export const Sidebar = memo(function Sidebar({
   const [renameValue, setRenameValue] = useState("")
   const [holdingId, setHoldingId] = useState<string | null>(null)
   const [holdProgress, setHoldProgress] = useState(0)
+  const [noteMenuId, setNoteMenuId] = useState<string | null>(null)
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startHold = useCallback((id: string) => {
@@ -167,6 +169,14 @@ export const Sidebar = memo(function Sidebar({
           >
             {n.icon ?? "📄"}
           </span>
+          {n.cover && (
+            <img
+              src={n.cover}
+              alt="Cover"
+              className="shrink-0 rounded"
+              style={{ width: 14, height: 18, objectFit: "cover" }}
+            />
+          )}
           {renamingNoteId === n.id ? (
             <input
               autoFocus
@@ -204,6 +214,22 @@ export const Sidebar = memo(function Sidebar({
             <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
           </svg>
         </button>
+
+        {/* Menu button */}
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            setNoteMenuId(noteMenuId === n.id ? null : n.id)
+            setMenuPos({ x: rect.right + 4, y: rect.top })
+          }}
+          title="More options"
+          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700"
+        >
+          <svg width="4" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#71717a" }}>
+            <circle cx="12" cy="5" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="12" cy="19" r="2.5" />
+          </svg>
+        </button>
       </div>
       {childNotes(n.id).map(child => renderNote(child, indentPx + 16))}
     </div>
@@ -218,6 +244,57 @@ export const Sidebar = memo(function Sidebar({
           onSelect={icon => onChangeNoteIcon(iconPicker.noteId, icon)}
           onClose={() => setIconPicker(null)}
         />
+      )}
+
+      {noteMenuId && menuPos && (
+        <div
+          className="fixed z-[1000] min-w-max rounded-lg shadow-lg border border-zinc-700 bg-zinc-900 overflow-hidden"
+          style={{ left: menuPos.x, top: menuPos.y }}
+          onMouseLeave={() => setNoteMenuId(null)}
+        >
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              setRenamingNoteId(noteMenuId)
+              const note = notes.find(n => n.id === noteMenuId)
+              if (note) setRenameValue(note.subject)
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200"
+          >
+            Rename
+          </button>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              onSelectNote(noteMenuId)
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200 border-t border-zinc-700"
+          >
+            Open
+          </button>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              if (noteMenuId) onChangeNoteIcon(noteMenuId, "📄")
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200 border-t border-zinc-700"
+          >
+            Change icon
+          </button>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              onDeleteNote(noteMenuId)
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-red-900/30 transition-colors text-red-400 border-t border-zinc-700"
+          >
+            Delete
+          </button>
+        </div>
       )}
 
       <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5 relative" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
@@ -251,10 +328,12 @@ export const Sidebar = memo(function Sidebar({
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
                 <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Binder</p>
+                {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
                   <span className="text-[10px] text-zinc-600 group-hover:text-zinc-300 transition-colors">Shelf</span>
                 </button>
+                */}
               </div>
               <div className="flex gap-1">
                 <button onClick={() => onAddNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
@@ -369,6 +448,12 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         <div className="border-t border-white/5 px-3 py-2 shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+          {!user && (
+            <button onClick={() => window.location.href = "/login"} className="w-full mb-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] group shadow-sm">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <span className="text-[10px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
+            </button>
+          )}
           <button onClick={onOpenSettings} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
             <span className="text-[13px] shrink-0">⚙️</span>
             <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>

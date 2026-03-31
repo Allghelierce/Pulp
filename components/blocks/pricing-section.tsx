@@ -11,7 +11,7 @@ interface Feature {
 
 interface PricingTier {
   name: string
-  price: { monthly: number; yearly: number }
+  price: { monthly: number; yearly: number } | string
   description: string
   features: Feature[]
   highlight?: boolean
@@ -35,39 +35,41 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
 
   return (
     <section className={cn("w-full", className)}>
-      {/* Billing toggle */}
-      <div className="flex items-center justify-center mb-7">
-        <div className={cn(
-          "inline-flex items-center p-1 rounded-xl border",
-          isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-100 border-zinc-200/80"
-        )}>
-          {(["Monthly", "Yearly"] as const).map((period) => {
-            const active = (period === "Yearly") === isYearly
-            return (
-              <button
-                key={period}
-                onClick={() => setIsYearly(period === "Yearly")}
-                className={cn(
-                  "relative px-5 py-1.5 text-[12px] font-semibold rounded-lg transition-all duration-200",
-                  active
-                    ? isDark ? "bg-zinc-700 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
-                    : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
-                )}
-              >
-                {period}
-                {period === "Yearly" && (
-                  <span className={cn(
-                    "ml-1.5 text-[10px] font-bold",
-                    active ? "text-green-400" : "text-green-500"
-                  )}>
-                    −25%
-                  </span>
-                )}
-              </button>
-            )
-          })}
+      {/* Billing toggle (Only show if at least one tier has monthly/yearly pricing) */}
+      {tiers.some(t => typeof t.price === 'object') && (
+        <div className="flex items-center justify-center mb-7">
+          <div className={cn(
+            "inline-flex items-center p-1 rounded-xl border",
+            isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-100 border-zinc-200/80"
+          )}>
+            {(["Monthly", "Yearly"] as const).map((period) => {
+              const active = (period === "Yearly") === isYearly
+              return (
+                <button
+                  key={period}
+                  onClick={() => setIsYearly(period === "Yearly")}
+                  className={cn(
+                    "relative px-5 py-1.5 text-[12px] font-semibold rounded-lg transition-all duration-200",
+                    active
+                      ? isDark ? "bg-zinc-700 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                      : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
+                  )}
+                >
+                  {period}
+                  {period === "Yearly" && (
+                    <span className={cn(
+                      "ml-1.5 text-[10px] font-bold",
+                      active ? "text-green-400" : "text-green-500"
+                    )}>
+                      −25%
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Cards */}
       <div className="grid grid-cols-2 gap-4">
@@ -121,15 +123,22 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
               <div className="mb-5 pb-5 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
                 <div className="flex items-baseline gap-1">
                   <span className={cn("text-[36px] font-extrabold tracking-tight leading-none", isDark ? "text-white" : "text-zinc-900")}>
-                    {tier.price.monthly === 0 ? "Free" : `$${isYearly ? tier.price.yearly : tier.price.monthly}`}
+                    {typeof tier.price === 'string' 
+                      ? tier.price 
+                      : (tier.price.monthly === 0 ? "Free" : `$${isYearly ? tier.price.yearly : tier.price.monthly}`)}
                   </span>
-                  {tier.price.monthly > 0 && (
+                  {typeof tier.price === 'object' && tier.price.monthly > 0 && (
                     <span className={cn("text-[12px] font-medium", isDark ? "text-zinc-500" : "text-zinc-400")}>
                       /{isYearly ? "yr" : "mo"}
                     </span>
                   )}
+                  {typeof tier.price === 'string' && tier.price !== "Free" && (
+                    <span className={cn("text-[12px] font-medium ml-1", isDark ? "text-zinc-500" : "text-zinc-400")}>
+                      one-time
+                    </span>
+                  )}
                 </div>
-                {isYearly && tier.price.monthly > 0 && (
+                {typeof tier.price === 'object' && isYearly && tier.price.monthly > 0 && (
                   <p className="text-[11px] text-green-500 font-semibold mt-1">
                     Save ${tier.price.monthly * 12 - tier.price.yearly} vs monthly billing
                   </p>

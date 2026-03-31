@@ -12,12 +12,13 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
-import { FloatingToolbar } from "@/app/components/FloatingToolbar"
-import { RightSidebar } from "@/app/components/RightSidebar"
+import { DrawingToolbar } from "@/app/components/DrawingToolbar"
+import { OrchardView } from "@/app/components/OrchardView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
+import { CoverModal } from "@/app/components/CoverModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
@@ -732,6 +733,7 @@ export default function NoteApp() {
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
+  const [showCoverModal, setShowCoverModal] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
@@ -742,7 +744,7 @@ export default function NoteApp() {
 
   // ─── Pulp Grove Gamification State ───
   const [sunshine, setSunshine] = useState(0) // Main currency: Earned by time spent (1 per 30s)
-  const [nectar, setNectar] = useState(0)   // Secondary: Earned by writing (1 per 500 chars)
+  const [gems, setGems] = useState(0)   // Secondary: Earned by writing (1 per 500 chars)
   const [grove, setGrove] = useState<any[]>([]) // Your planted trees
   const [lastCharCount, setLastCharCount] = useState(0)
 
@@ -752,15 +754,15 @@ export default function NoteApp() {
     if (saved) {
       const data = JSON.parse(saved)
       setSunshine(data.sunshine || 0)
-      setNectar(data.nectar || 0)
+      setGems(data.gems || 0)
       setGrove(data.grove || [])
     }
   }, [])
 
   // Persist Grove
   useEffect(() => {
-    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, nectar, grove }))
-  }, [sunshine, nectar, grove])
+    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove }))
+  }, [sunshine, gems, grove])
 
   // Earn Sunshine over time (1 every 30 seconds of activity)
   useEffect(() => {
@@ -770,7 +772,7 @@ export default function NoteApp() {
     return () => clearInterval(timer)
   }, [])
 
-  // Earn Nectar via writing
+  // Earn Gems via writing
   const totalChars = useMemo(() => {
     const activeNote = notes.find(n => n.id === activeTabId)
     if (!activeNote) return 0
@@ -779,7 +781,7 @@ export default function NoteApp() {
 
   useEffect(() => {
     if (totalChars > lastCharCount + 500) {
-      setNectar(n => n + Math.floor((totalChars - lastCharCount) / 500))
+      setGems(n => n + Math.floor((totalChars - lastCharCount) / 500))
       setLastCharCount(totalChars)
     }
   }, [totalChars, lastCharCount])
@@ -800,9 +802,20 @@ export default function NoteApp() {
   const [bgEffect, setBgEffect] = useState(true)
   const [smearEffect, setSmearEffect] = useState(true)
   const [handwrittenEffect, setHandwrittenEffect] = useState(true)
+  const [language, setLanguage] = useState("english")
+  const [defaultSort, setDefaultSort] = useState("modified")
+  const [wordCountVisible, setWordCountVisible] = useState(true)
+  const [focusMode, setFocusMode] = useState(false)
+  const [baseFontSize, setBaseFontSize] = useState<"small" | "medium" | "large">("medium")
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
+
+  const setCover = useCallback((dataUrl: string) => {
+    setNotes(ns => ns.map(n => n.id === activeTabId ? { ...n, cover: dataUrl } : n))
+    setShowCoverModal(false)
+  }, [activeTabId])
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const editorRef = useRef<HTMLDivElement>(null)
@@ -870,6 +883,14 @@ export default function NoteApp() {
     () => (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData,
     [notes, activeTabId]
   )
+
+  const wordCount = useMemo(() => {
+    if (!activeNote) return 0
+    let text = activeNote.pages[currentPageIdx] || ""
+    const boxText = (activeNote.boxes[currentPageIdx] || []).map(b => htmlToPlain(b.content)).join(" ")
+    text = htmlToPlain(text) + " " + boxText
+    return text.split(/\s+/).filter(Boolean).length
+  }, [activeNote, currentPageIdx])
 
   // Dialog helpers
   const openPrompt = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
@@ -1270,6 +1291,11 @@ export default function NoteApp() {
         if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
         if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
         if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
+        if (s.language) setLanguage(s.language)
+        if (s.defaultSort) setDefaultSort(s.defaultSort)
+        if (s.wordCountVisible !== undefined) setWordCountVisible(s.wordCountVisible)
+        if (s.focusMode !== undefined) setFocusMode(s.focusMode)
+        if (s.baseFontSize) setBaseFontSize(s.baseFontSize)
       } catch (e) { console.error("Local settings load failed:", e) }
     }
   }, [])
@@ -1291,12 +1317,17 @@ export default function NoteApp() {
       if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
       if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
       if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
+      if (s.language) setLanguage(s.language)
+      if (s.defaultSort) setDefaultSort(s.defaultSort)
+      if (s.wordCountVisible !== undefined) setWordCountVisible(s.wordCountVisible)
+      if (s.focusMode !== undefined) setFocusMode(s.focusMode)
+      if (s.baseFontSize) setBaseFontSize(s.baseFontSize)
     })
   }, [user])
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks }
+    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
 
     if (!user) return
@@ -1308,7 +1339,7 @@ export default function NoteApp() {
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, user])
+  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, user])
 
   // Cloud autosave
   useEffect(() => {
@@ -1561,7 +1592,7 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} />}
       <GlobalStyles reduceMotion={reduceMotion} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
@@ -1669,54 +1700,67 @@ export default function NoteApp() {
         })()}
 
         {notes.length > 0 && (
-          <DocumentToolbar
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            stickyColor={stickyColor}
-            setStickyColor={setStickyColor}
-            accent={accent}
-            theme={theme}
-            zoom={zoom}
-            setZoom={setZoom}
-            gridView={gridView}
-            setGridView={setGridView}
-            setCarouselIdx={setCarouselIdx}
-            sketchMode={sketchMode}
-            setSketchMode={setSketchMode}
-            setSketchPrompt={setSketchPrompt}
-            drawLineMode={drawLineMode}
-            setDrawLineMode={setDrawLineMode}
+          <div className="relative">
+            <DocumentToolbar
+              activeTool={activeTool}
+              setActiveTool={setActiveTool}
+              stickyColor={stickyColor}
+              setStickyColor={setStickyColor}
+              accent={accent}
+              theme={theme}
+              zoom={zoom}
+              setZoom={setZoom}
+              gridView={gridView}
+              setGridView={setGridView}
+              setCarouselIdx={setCarouselIdx}
+              sketchMode={sketchMode}
+              setSketchMode={setSketchMode}
+              setSketchPrompt={setSketchPrompt}
+              drawLineMode={drawLineMode}
+              setDrawLineMode={setDrawLineMode}
 
-            currentPageIdx={currentPageIdx}
-            saveSelection={editor.saveSelection}
-            insertTable={editor.insertTable}
-            insertColumns={editor.insertColumns}
-            openAlert={openAlert}
-            clearPage={clearPage}
-            autoAlign={boxes.autoAlign}
-            verticalAlign={boxes.verticalAlign}
-            insertCornell={insertCornell}
-            showDrawToolbar={showDrawToolbar}
-            onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
-            rightSidebarOpen={contentSidebarOpen}
-            setRightSidebarOpen={setContentSidebarOpen}
-            allCompacted={allCompacted}
-            onCompactAll={handleCompactAll}
-            onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
-            onDownload={() => {
-              if (!activeNote) return
-              const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement("a")
-              a.href = url
-              a.download = `${activeNote.subject || "note"}.json`
-              a.click()
-              URL.revokeObjectURL(url)
-            }}
-            onStartSidebarDrag={startSidebarDrag}
-            sidebarWidth={sidebarWidth}
-            isSidebarDragging={isSidebarDragging}
-          />
+              currentPageIdx={currentPageIdx}
+              saveSelection={editor.saveSelection}
+              insertTable={editor.insertTable}
+              insertColumns={editor.insertColumns}
+              openAlert={openAlert}
+              clearPage={clearPage}
+              autoAlign={boxes.autoAlign}
+              verticalAlign={boxes.verticalAlign}
+              insertCornell={insertCornell}
+              showDrawToolbar={showDrawToolbar}
+              onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
+              rightSidebarOpen={contentSidebarOpen}
+              setRightSidebarOpen={setContentSidebarOpen}
+              allCompacted={allCompacted}
+              onCompactAll={handleCompactAll}
+              onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
+              onDownload={() => {
+                if (!activeNote) return
+                const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `${activeNote.subject || "note"}.json`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              onStartSidebarDrag={startSidebarDrag}
+              sidebarWidth={sidebarWidth}
+              isSidebarDragging={isSidebarDragging}
+              onOpenCover={() => setShowCoverModal(true)}
+              hasCover={!!activeNote?.cover}
+            />
+            <DrawingToolbar
+              isOpen={showDrawToolbar}
+              onClose={() => setShowDrawToolbar(false)}
+              activeTool={activeTool}
+              onToolChange={setActiveTool}
+              onClearDrawing={drawing.clearCanvas}
+              onImageUpload={handleImageUpload}
+              onImproveDrawing={drawing.improveDrawing}
+            />
+          </div>
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
@@ -1777,10 +1821,17 @@ export default function NoteApp() {
                         <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
                       ))}
 
+                      {/* Cover display on first page */}
+                      {activeNote.cover && currentPageIdx === 0 && (
+                        <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+                          <img src={activeNote.cover} style={{ width: "100%", display: "block" }} alt="Notebook Cover" />
+                        </div>
+                      )}
+
                       <div
                         ref={editorRef}
-                        className="w-full min-h-[1000px] outline-none pointer-events-none"
-                        style={{ fontFamily: `"${editorFont}", Georgia, serif` }}
+                        className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
+                        style={{ fontFamily: `"${editorFont}", Georgia, serif`, fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18 }}
                       />
 
                       <style>{`
@@ -1942,24 +1993,27 @@ export default function NoteApp() {
             </main>
           )}
 
-          <RightSidebar
+          <OrchardView
             isOpen={contentSidebarOpen}
             onClose={() => setContentSidebarOpen(false)}
             theme={theme}
             accent={accent}
             sunshine={sunshine}
-            nectar={nectar}
+            gems={gems}
             grove={grove}
             setSunshine={setSunshine}
-            setNectar={setNectar}
+            setGems={setGems}
             setGrove={setGrove}
           />
         </div>
 
-        {notes.length > 0 && !gridView && (
-          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
-        )}
       </div>
+
+      {wordCountVisible && !gridView && currentView === "editor" && (
+        <div className={`fixed bottom-6 right-6 px-3 py-1.5 rounded-full shadow-sm text-[11px] font-medium z-40 backdrop-blur-md pointer-events-none transition-all ${theme === "dark" ? "bg-zinc-800/80 text-zinc-400 border border-zinc-700/50" : "bg-white/80 text-zinc-500 border border-zinc-200/50"}`}>
+          {wordCount} {wordCount === 1 ? 'word' : 'words'}
+        </div>
+      )}
 
       {slashMenu && (
         <SlashMenu
@@ -1991,6 +2045,14 @@ export default function NoteApp() {
             }
           }}
           onClose={() => setShowImageModal(false)}
+        />
+      )}
+
+      {showCoverModal && (
+        <CoverModal
+          existingCover={activeNote?.cover}
+          onConfirm={setCover}
+          onClose={() => setShowCoverModal(false)}
         />
       )}
 

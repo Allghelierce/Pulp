@@ -44,6 +44,8 @@ interface DocumentToolbarProps {
   onStartSidebarDrag: (x: number) => void
   sidebarWidth: number
   isSidebarDragging: boolean
+  onOpenCover: () => void
+  hasCover: boolean
 }
 
 
@@ -59,7 +61,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   activeTool, setActiveTool,
   stickyColor, setStickyColor,
   onDownload, theme,
-  onStartSidebarDrag, sidebarWidth, isSidebarDragging
+  onStartSidebarDrag, sidebarWidth, isSidebarDragging,
+  onOpenCover, hasCover
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -192,6 +195,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Draw
         </button>
 
+        {/* Cover button */}
+        <button
+          onClick={onOpenCover}
+          className={`${btnBase} flex items-center gap-1.5`}
+          title="Edit notebook cover"
+          style={hasCover ? { backgroundColor: '#f4f4f5', borderColor: '#d4d4d8', color: '#18181b' } : {}}
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20"/></svg>
+          Cover
+        </button>
+
         {/* Sticky Note Tool */}
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
@@ -211,8 +225,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             {[
               ['Yellow', '#fef08a'],
               ['Pink', '#fce7f3'],
-              ['Blue', '#bae6fd'],
-              ['Green', '#bbf7d0'],
               ['Orange', '#fed7aa']
             ].map(([name, color]) => (
               <button
@@ -273,18 +285,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </svg>
           Share
         </ShareButton>
-
-        <button
-          onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-          className={`flex items-center justify-center w-[34px] h-[34px] rounded-[7px] border transition-all shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${rightSidebarOpen ? 'bg-zinc-100 border-zinc-300' : 'bg-white border-[#e4e4e7] hover:bg-[#f4f4f5]'}`}
-          title="Toggle Sidebar"
-          style={rightSidebarOpen ? { color: GOLD, borderColor: `${GOLD}44`, backgroundColor: `${GOLD}10` } : {}}
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="15" y1="3" x2="15" y2="21" />
-          </svg>
-        </button>
       </div>
     </div>
   )
