@@ -57,6 +57,7 @@ export const Sidebar = memo(function Sidebar({
   const [noteMenuId, setNoteMenuId] = useState<string | null>(null)
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null)
   const [newMenuOpen, setNewMenuOpen] = useState<string | null>(null)
+  const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startHold = useCallback((id: string) => {
@@ -71,10 +72,19 @@ export const Sidebar = memo(function Sidebar({
         holdIntervalRef.current = null
         setHoldingId(null)
         setHoldProgress(0)
-        onDeleteNote(id)
+        
+        // Mass delete if this note is part of the multi-selection
+        if (multiSelectedIds.has(id)) {
+          multiSelectedIds.forEach(selectedId => {
+            onDeleteNote(selectedId)
+          })
+          setMultiSelectedIds(new Set())
+        } else {
+          onDeleteNote(id)
+        }
       }
     }, 16)
-  }, [onDeleteNote])
+  }, [onDeleteNote, multiSelectedIds])
 
   const cancelHold = useCallback(() => {
     if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
@@ -136,6 +146,7 @@ export const Sidebar = memo(function Sidebar({
 
   const noteRowStyle = (id: string): React.CSSProperties => {
     const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
+    if (multiSelectedIds.has(id)) return { backgroundColor: `${accentSolid}33`, color: "white" }
     if (nestTargetId === id && draggedNoteId !== id)
       return { outline: `1.5px solid ${accent}`, outlineOffset: -1, backgroundColor: `${accent}22`, color: "white" }
     if (activeTabId === id) return { backgroundColor: `${accentSolid}44`, color: "white" }
@@ -152,13 +163,26 @@ export const Sidebar = memo(function Sidebar({
         onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (draggedNoteId !== n.id) setNestTargetId(n.id) }}
         onDragLeave={() => setNestTargetId(t => t === n.id ? null : t)}
         onDrop={e => handleNestDrop(e, n.id)}
-        onClick={() => onSelectNote(n.id)}
-        className={`group w-full text-left transition-all flex items-center justify-between cursor-pointer ${draggedNoteId === n.id ? "opacity-40" : ""}`}
+        onClick={e => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey) {
+            e.preventDefault(); e.stopPropagation()
+            setMultiSelectedIds(prev => {
+              const next = new Set(prev)
+              if (next.has(n.id)) next.delete(n.id)
+              else next.add(n.id)
+              return next
+            })
+          } else {
+            setMultiSelectedIds(new Set())
+            onSelectNote(n.id)
+          }
+        }}
+        className={`group w-full text-left transition-all flex items-center cursor-pointer ${draggedNoteId === n.id ? "opacity-40" : ""}`}
         style={{ paddingLeft: indentPx + 12, paddingRight: 16, paddingTop: indentPx > 12 ? 4 : 6, paddingBottom: indentPx > 12 ? 4 : 6, fontSize: indentPx > 12 ? 11 : 12, ...noteRowStyle(n.id) }}
-        onMouseEnter={e => { if (activeTabId !== n.id && nestTargetId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.03)" }}
-        onMouseLeave={e => { if (activeTabId !== n.id && nestTargetId !== n.id) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}
+        onMouseEnter={e => { if (activeTabId !== n.id && nestTargetId !== n.id && !multiSelectedIds.has(n.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.03)" }}
+        onMouseLeave={e => { if (activeTabId !== n.id && nestTargetId !== n.id && !multiSelectedIds.has(n.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "" }}
       >
-        <span className="flex items-center gap-1.5 truncate min-w-0">
+        <span className="flex items-center gap-1.5 truncate min-w-0 flex-1">
           {indentPx > 12 && <span className="text-[9px] text-zinc-600 shrink-0">↳</span>}
           <span
             className="shrink-0 cursor-pointer hover:scale-125 transition-transform"
@@ -178,6 +202,25 @@ export const Sidebar = memo(function Sidebar({
               className="shrink-0 rounded"
               style={{ width: 14, height: 18, objectFit: "cover" }}
             />
+          )}
+          {/* Note type indicator */}
+          {n.noteType === "flashcard" && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Flashcard">
+              <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" style={{ strokeDasharray: "2,2" }}/>
+              <line x1="6" y1="12" x2="18" y2="12" style={{ strokeDasharray: "2,2" }}/>
+            </svg>
+          )}
+          {n.noteType === "singlepage" && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Single Page">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" style={{ strokeDasharray: "2,2" }}/>
+              <polyline points="14 2 14 8 20 8" style={{ strokeDasharray: "2,2" }}/>
+            </svg>
+          )}
+          {(!n.noteType || n.noteType === "notebook") && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Notebook">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" style={{ strokeDasharray: "2,2" }}/>
+              <path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" style={{ strokeDasharray: "2,2" }}/>
+            </svg>
           )}
           {renamingNoteId === n.id ? (
             <input
@@ -200,38 +243,41 @@ export const Sidebar = memo(function Sidebar({
             >{n.subject}</span>
           )}
         </span>
-        {/* Hold-to-delete button */}
-        <button
-          onMouseDown={e => { e.stopPropagation(); startHold(n.id) }}
-          onMouseUp={e => { e.stopPropagation(); cancelHold() }}
-          onMouseLeave={() => cancelHold()}
-          onTouchStart={e => { e.stopPropagation(); startHold(n.id) }}
-          onTouchEnd={() => cancelHold()}
-          onClick={e => e.stopPropagation()}
-          title="Hold to delete"
-          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity relative w-5 h-5 flex items-center justify-center rounded"
-          style={{ background: holdingId === n.id ? `conic-gradient(#ef4444 ${holdProgress * 360}deg, rgba(255,255,255,0.06) 0deg)` : "transparent" }}
-        >
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={holdingId === n.id ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#71717a" }}>
-            <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-          </svg>
-        </button>
+        
+        <div className="flex items-center shrink-0 ml-1.5 gap-0.5">
+          {/* Hold-to-delete button */}
+          <button
+            onMouseDown={e => { e.stopPropagation(); startHold(n.id) }}
+            onMouseUp={e => { e.stopPropagation(); cancelHold() }}
+            onMouseLeave={() => cancelHold()}
+            onTouchStart={e => { e.stopPropagation(); startHold(n.id) }}
+            onTouchEnd={() => cancelHold()}
+            onClick={e => e.stopPropagation()}
+            title="Hold to delete"
+            className="opacity-0 group-hover:opacity-100 transition-opacity relative w-5 h-5 flex items-center justify-center rounded"
+            style={{ background: holdingId === n.id ? `conic-gradient(#ef4444 ${holdProgress * 360}deg, rgba(255,255,255,0.06) 0deg)` : "transparent" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={holdingId === n.id ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#71717a" }}>
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+            </svg>
+          </button>
 
-        {/* Menu button */}
-        <button
-          onClick={e => {
-            e.stopPropagation()
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-            setNoteMenuId(noteMenuId === n.id ? null : n.id)
-            setMenuPos({ x: rect.right + 4, y: rect.top })
-          }}
-          title="More options"
-          className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700"
-        >
-          <svg width="4" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#71717a" }}>
-            <circle cx="12" cy="5" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="12" cy="19" r="2.5" />
-          </svg>
-        </button>
+          {/* Menu button */}
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+              setNoteMenuId(noteMenuId === n.id ? null : n.id)
+              setMenuPos({ x: rect.right + 4, y: rect.top })
+            }}
+            title="More options"
+            className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#71717a" }}>
+              <circle cx="12" cy="5" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="12" cy="19" r="2.5" />
+            </svg>
+          </button>
+        </div>
       </div>
       {childNotes(n.id).map(child => renderNote(child, indentPx + 16))}
     </div>

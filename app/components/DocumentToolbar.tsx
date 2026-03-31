@@ -44,8 +44,6 @@ interface DocumentToolbarProps {
   onStartSidebarDrag: (x: number) => void
   sidebarWidth: number
   isSidebarDragging: boolean
-  onOpenCover: () => void
-  hasCover: boolean
   sunshine: number
   gems: number
 }
@@ -64,7 +62,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  onOpenCover, hasCover, sunshine, gems
+  sunshine, gems
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -100,10 +98,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           title="Toggle Sidebar"
           onMouseDown={e => { e.preventDefault(); onStartSidebarDrag(e.clientX) }}
           className="absolute top-0 left-[14px] z-50 flex flex-col items-center outline-none cursor-grab active:cursor-grabbing group h-0"
-          style={{ 
+          style={{
             width: 32,
-            transformOrigin: "top center", 
-            animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 4s ease-in-out infinite" : "leaf-sway 14s ease-in-out infinite" 
+            transformOrigin: "top center",
+            animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite" : "leaf-sway 18s cubic-bezier(0.34, 1.56, 0.64, 1) infinite"
           }}
         >
           {/* Extended Botanical Twine - Starting from negative top to hit the screen's very upper edge */}
@@ -225,17 +223,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Draw
         </button>
 
-        {/* Cover button */}
-        <button
-          onClick={onOpenCover}
-          className={`${btnBase} flex items-center gap-1.5`}
-          title="Edit notebook cover"
-          style={hasCover ? { backgroundColor: '#f4f4f5', borderColor: '#d4d4d8', color: '#18181b' } : {}}
-        >
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20"/></svg>
-          Cover
-        </button>
-
         {/* Sticky Note Tool */}
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
@@ -297,18 +284,18 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer">
           {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
+      </div>
 
-        {/* Currencies Display */}
-        <div className="flex items-center gap-2.5 px-3 py-1 text-[11px] font-bold text-zinc-600 select-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
-          <div className="flex items-center gap-1.5">
-            <span>☀️</span>
-            <span>{sunshine}</span>
-          </div>
-          <div className="w-px h-4 bg-zinc-300/40" />
-          <div className="flex items-center gap-1.5">
-            <span>💎</span>
-            <span>{gems}</span>
-          </div>
+      {/* Currencies Display - Centered */}
+      <div className="flex items-center gap-2 px-2.5 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+        <div className="flex items-center gap-1">
+          <span className="text-[8px] leading-none">☀️</span>
+          <span>{sunshine}</span>
+        </div>
+        <div className="w-px h-3 bg-zinc-300/40" />
+        <div className="flex items-center gap-1">
+          <span className="text-[8px] leading-none">💎</span>
+          <span>{gems}</span>
         </div>
       </div>
 

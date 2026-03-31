@@ -8,7 +8,7 @@ interface GridViewProps {
   activeTabId: string | null
   carouselIdx: number
   lineSpacing: "compact" | "normal" | "relaxed"
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger"
+  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"
   theme: "light" | "dark"
   editorFont: string
   accent: string

@@ -39,7 +39,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
       ctx.fillStyle = "white"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       if (existingCover && existingCover.startsWith("data:image")) {
-        const img = new Image()
+        const img = new (window as any).Image()
         img.src = existingCover
         img.onload = () => ctx.drawImage(img, 0, 0)
       }

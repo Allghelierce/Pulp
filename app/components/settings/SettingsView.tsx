@@ -37,7 +37,7 @@ export const ACCENT_COLORS = [
 export function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
   autoSave, setAutoSave, spellCheck, setSpellCheck, editorFont, setEditorFont,
   lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
-  reduceMotion, setReduceMotion, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
+  reduceMotion, setReduceMotion, reduceVisuals, setReduceVisuals, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
   language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
@@ -52,9 +52,10 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   spellCheck: boolean; setSpellCheck: (v: boolean) => void
   editorFont: string; setEditorFont: (v: string) => void
   lineSpacing: "compact" | "normal" | "relaxed"; setLineSpacing: (v: "compact" | "normal" | "relaxed") => void
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger") => void
+  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad") => void
   showBinding: boolean; setShowBinding: (v: boolean) => void
   reduceMotion: boolean; setReduceMotion: (v: boolean) => void
+  reduceVisuals: boolean; setReduceVisuals: (v: boolean) => void
   sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
   bgEffect: boolean; setBgEffect: (v: boolean) => void
   smearEffect: boolean; setSmearEffect: (v: boolean) => void
@@ -274,6 +275,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   description="Minimize animations and transitions across the app"
                   control={<SettingToggle checked={reduceMotion} onChange={setReduceMotion} isDark={isDark} />}
                 />
+                <SettingRow
+                  title="Reduce visuals"
+                  isDark={isDark}
+                  description="Disable pulsating effects, glows, and background animations"
+                  control={<SettingToggle checked={reduceVisuals} onChange={setReduceVisuals} isDark={isDark} />}
+                />
               </SettingSection>
               <SettingSection title="Layout" isDark={isDark}>
                 <SettingRow
@@ -294,7 +301,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Page style"
                   isDark={isDark}
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"], ["parchment", "Vintage"], ["kraft", "Kraft"], ["ledger", "Ledger"]]} value={paperStyle} onChange={v => setPaperStyle(v as any)} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as any)} />}
                 />
                 <SettingRow
                   title="Show spiral binding"

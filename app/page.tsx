@@ -22,8 +22,10 @@ import { CoverModal } from "@/app/components/CoverModal"
 import { FlashcardView } from "@/app/components/FlashcardView"
 import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
+import { AiCommandBar } from "@/app/components/AiCommandBar"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
+import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 
 function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme: "light" | "dark"; onNavigate: (idx: number) => void
@@ -79,9 +81,9 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 }
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
-const GlobalStyles = memo(function GlobalStyles({ reduceMotion, theme, handwrittenEffect }: { reduceMotion: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
+const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
       <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
@@ -798,10 +800,11 @@ export default function NoteApp() {
   const [spellCheck, setSpellCheck] = useState(true)
   const [editorFont, setEditorFont] = useState("Caveat")
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
-  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad" | "parchment" | "kraft" | "ledger">("lined")
+  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("lined")
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [showBinding, setShowBinding] = useState(true)
   const [reduceMotion, setReduceMotion] = useState(false)
+  const [reduceVisuals, setReduceVisuals] = useState(false)
   const [sidebarOnStart, setSidebarOnStart] = useState(true)
   const [bgEffect, setBgEffect] = useState(true)
   const [smearEffect, setSmearEffect] = useState(true)
@@ -914,6 +917,7 @@ export default function NoteApp() {
   const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
+  const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
   const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
@@ -1077,9 +1081,17 @@ export default function NoteApp() {
       const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
       let x = 200, y = 200
       if (sel && sel.rangeCount > 0) {
-        const rect = sel.getRangeAt(0).getBoundingClientRect()
+        let rect = sel.getRangeAt(0).getBoundingClientRect()
+        // If it's a collapsed selection, getBoundingClientRect might have 0 width/height giving wrong pos
+        if (rect.x === 0 && rect.y === 0) {
+          const span = document.createElement("span")
+          span.textContent = "\u200b"
+          sel.getRangeAt(0).insertNode(span)
+          rect = span.getBoundingClientRect()
+          span.parentNode?.removeChild(span)
+        }
         x = rect.left
-        y = rect.bottom + 8
+        y = rect.top - 12 // open a bit higher so it's clearly above the line
       }
       setAiMenu({ x, y, selectedText })
       return
@@ -1244,6 +1256,32 @@ export default function NoteApp() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
+  useEffect(() => {
+    const checkViewport = () => {
+      const isNarrow = window.innerWidth < 1000
+      setWordCountVisible(!isNarrow)
+    }
+    checkViewport()
+    window.addEventListener('resize', checkViewport)
+    return () => window.removeEventListener('resize', checkViewport)
+  }, [])
+
+  // Global AI shortcut (\ to open command bar when not focused)
+  useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if (e.key === "\\") {
+        const active = document.activeElement as HTMLElement | null
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
+          return // Let the editor or inputs handle it
+        }
+        e.preventDefault()
+        setShowAiCommandBar(true)
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKey)
+    return () => window.removeEventListener("keydown", handleGlobalKey)
+  }, [])
+
   // Auth
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
@@ -1293,6 +1331,7 @@ export default function NoteApp() {
         if (s.paperStyle) setPaperStyle(s.paperStyle)
         if (s.showBinding !== undefined) setShowBinding(s.showBinding)
         if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
+        if (s.reduceVisuals !== undefined) setReduceVisuals(s.reduceVisuals)
         if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
         if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
         if (s.language) setLanguage(s.language)
@@ -1319,6 +1358,7 @@ export default function NoteApp() {
       if (s.paperStyle) setPaperStyle(s.paperStyle)
       if (s.showBinding !== undefined) setShowBinding(s.showBinding)
       if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
+      if (s.reduceVisuals !== undefined) setReduceVisuals(s.reduceVisuals)
       if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
       if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
       if (s.language) setLanguage(s.language)
@@ -1331,7 +1371,7 @@ export default function NoteApp() {
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize }
+    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
 
     if (!user) return
@@ -1343,7 +1383,7 @@ export default function NoteApp() {
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, user])
+  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, user])
 
   // Cloud autosave
   useEffect(() => {
@@ -1634,8 +1674,8 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} />}
-      <GlobalStyles reduceMotion={reduceMotion} theme={theme} handwrittenEffect={handwrittenEffect} />
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} />}
+      <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
         notes={notes}
@@ -1791,8 +1831,6 @@ export default function NoteApp() {
               onStartSidebarDrag={startSidebarDrag}
               sidebarWidth={sidebarWidth}
               isSidebarDragging={isSidebarDragging}
-              onOpenCover={() => setShowCoverModal(true)}
-              hasCover={!!activeNote?.cover}
               sunshine={sunshine}
               gems={gems}
             />
@@ -2037,6 +2075,20 @@ export default function NoteApp() {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8"/><path d="m13 20 4-8-4-8"/></svg>
                           </button>
                         </div>{/* end inner flex */}
+
+                        {/* Cover button — subtle, top-right corner */}
+                        <button
+                          onClick={() => setShowCoverModal(true)}
+                          className="absolute top-4 right-4 p-1.5 opacity-0 hover:opacity-100 transition-opacity rounded-md hover:bg-black/5"
+                          style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                          title={activeNote?.cover ? "Edit cover" : "Add cover"}
+                        >
+                          {activeNote?.cover ? (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.6"><path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" strokeWidth="2" fill="none"/></svg>
+                          ) : (
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20"/></svg>
+                          )}
+                        </button>
                       </div>{/* end deadzone */}
 
                     </div>
@@ -2061,6 +2113,9 @@ export default function NoteApp() {
           />
         </div>
 
+        {notes.length > 0 && !gridView && (
+          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
+        )}
       </div>
 
       {wordCountVisible && !gridView && currentView === "editor" && (
@@ -2117,9 +2172,25 @@ export default function NoteApp() {
           selectedText={aiMenu.selectedText}
           isDark={theme === "dark"}
           onClose={() => setAiMenu(null)}
-          onSubmit={(prompt: string) => {
-            openAlert("AI", `Processing: "${prompt}"`)
+          onSubmit={async (prompt: string, selectedText?: string) => {
             setAiMenu(null)
+            setAiResult({ title: "AI Response", result: "", loading: true })
+
+            try {
+              const response = await fetch("/api/ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt, text: selectedText || "" })
+              })
+
+              if (!response.ok) throw new Error("AI request failed")
+              const data = await response.json()
+
+              setAiResult({ title: "AI Response", result: data.result || "", loading: false })
+            } catch (error) {
+              console.error("AI error:", error)
+              setAiResult({ title: "AI Response", result: "Error processing request", loading: false })
+            }
           }}
         />
       )}
@@ -2134,16 +2205,39 @@ export default function NoteApp() {
         />
       )}
 
+      {showAiCommandBar && (
+        <AiCommandBar
+          onClose={() => setShowAiCommandBar(false)}
+          onSubmit={async (prompt) => {
+            setShowAiCommandBar(false)
+            setAiResult({ title: "AI Generation", result: "", loading: true })
+            try {
+              const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action: "generate", text: prompt }) })
+              if (!res.ok) throw new Error("API error")
+              const data = await res.json()
+              setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
+            } catch {
+              setAiResult(null); openAlert("AI Error", "Could not process your request.")
+            }
+          }}
+        />
+      )}
+
       {/* AI Quick-Action Button */}
       {currentView === "editor" && activeNote && activeNote.noteType !== "flashcard" && (
         <div className="fixed bottom-6 right-6 z-50">
           {aiQuickMenuOpen && (
-            <div className="absolute bottom-12 right-0 flex flex-col gap-1 items-end mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+            <div className="absolute bottom-12 right-0 flex flex-col items-stretch mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden pb-1">
+              <div className="px-3.5 py-2.5 w-full border-b border-zinc-700/80 bg-zinc-900/40 mb-1">
+                <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
+                  Tip: Use <kbd className="font-mono bg-zinc-700/80 text-zinc-300 px-1.5 py-[1px] rounded-[3px] mx-0.5">\</kbd> to open AI
+                </span>
+              </div>
               {AI_ACTIONS.map(action => (
                 <button
                   key={action.id}
                   onClick={() => handleAiAction(action.id)}
-                  className="px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
+                  className="px-4 py-1.5 text-[13px] text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
                 >
                   {action.label}
                 </button>
