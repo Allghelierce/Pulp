@@ -16,6 +16,7 @@ interface SidebarProps {
   sidebarWidth: number
   isDragging?: boolean
   onAddNote: (folderId: number | null) => void
+  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard") => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
   onRenameNote: (id: string, currentName: string) => void
@@ -39,7 +40,7 @@ interface SidebarProps {
 
 export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging,
-  onAddNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
+  onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
@@ -55,6 +56,7 @@ export const Sidebar = memo(function Sidebar({
   const [holdProgress, setHoldProgress] = useState(0)
   const [noteMenuId, setNoteMenuId] = useState<string | null>(null)
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null)
+  const [newMenuOpen, setNewMenuOpen] = useState<string | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startHold = useCallback((id: string) => {
@@ -335,8 +337,15 @@ export const Sidebar = memo(function Sidebar({
                 </button>
                 */}
               </div>
-              <div className="flex gap-1">
-                <button onClick={() => onAddNote(null)} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Note</button>
+              <div className="flex gap-1 relative">
+                <div className="relative group">
+                  <button className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ New</button>
+                  <div className="hidden group-hover:flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
+                    <button onClick={() => { onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">📓 Notebook</button>
+                    <button onClick={() => { onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">📄 Single Page</button>
+                    <button onClick={() => { onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">🃏 Flashcard Set</button>
+                  </div>
+                </div>
                 <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>
               </div>
             </div>
@@ -359,7 +368,14 @@ export const Sidebar = memo(function Sidebar({
                 {f.open && (
                   <div className="pl-5 space-y-0.5">
                     {notesInFolder(f.id).map(n => renderNote(n, 12))}
-                    <button onClick={() => onAddNote(f.id)} className="text-[11px] text-zinc-600 hover:text-white px-3 py-0.5 block">+ Note</button>
+                    <div className="relative group inline-block">
+                      <button className="text-[11px] text-zinc-600 hover:text-white px-3 py-0.5 block">+ New</button>
+                      <div className="hidden group-hover:flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
+                        <button onClick={() => { onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
+                        <button onClick={() => { onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
+                        <button onClick={() => { onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

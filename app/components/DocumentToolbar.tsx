@@ -46,6 +46,8 @@ interface DocumentToolbarProps {
   isSidebarDragging: boolean
   onOpenCover: () => void
   hasCover: boolean
+  sunshine: number
+  gems: number
 }
 
 
@@ -62,7 +64,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  onOpenCover, hasCover
+  onOpenCover, hasCover, sunshine, gems
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -72,6 +74,16 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     : {}
 
   const leftToolsRef = useRef<HTMLDivElement>(null)
+  const alignRef = useRef<HTMLDivElement>(null)
+  const [alignOpen, setAlignOpen] = useState(false)
+  
+  useEffect(() => {
+    if (!alignOpen) return
+    const handler = (e: MouseEvent) => { if (!alignRef.current?.contains(e.target as Node)) setAlignOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [alignOpen])
+
   useEffect(() => {
     if (!leftToolsRef.current) return
   }, [])
@@ -160,27 +172,45 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           className={btnBase}
           style={activeStyle(gridView)}
         >
-          Grid
+          Grid View
         </button>
 
-        {/* Align + Line grouped button */}
-        <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        {/* Align Dropdown */}
+        <div ref={alignRef} className="relative flex shrink-0">
           <button
-            onMouseDown={e => { e.preventDefault(); autoAlign(); verticalAlign() }}
-            title="Align boxes"
-            className="text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap"
+            onMouseDown={e => { e.preventDefault(); setAlignOpen(!alignOpen) }}
+            title="Align options"
+            className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
+            style={alignOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}}
           >
             Align
+            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
           </button>
-          <div className="w-px bg-zinc-200 self-stretch" />
-          <button
-            onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode) }}
-            title="Draw vertical line"
-            className="px-2 py-1 hover:bg-zinc-100 transition-colors cursor-pointer flex items-center"
-            style={drawLineMode ? { color: "#18181b", backgroundColor: "#f4f4f5" } : { color: "#a1a1aa" }}
-          >
-            <svg width="9" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="3" x2="12" y2="21" /></svg>
-          </button>
+
+          {alignOpen && (
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[130px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+              <button
+                onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+              >
+                Horizontal Snap
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+              >
+                Vertical Distribute
+              </button>
+              <div className={`h-px my-1 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-200"}`} />
+              <button
+                onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode); setAlignOpen(false) }}
+                className={`w-full flex items-center gap-1.5 text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+              >
+                <svg width="8" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.6"><line x1="12" y1="3" x2="12" y2="21" /></svg>
+                Insert Divider
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
@@ -267,6 +297,19 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer">
           {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
+
+        {/* Currencies Display */}
+        <div className="flex items-center gap-2.5 px-3 py-1 text-[11px] font-bold text-zinc-600 select-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+          <div className="flex items-center gap-1.5">
+            <span>☀️</span>
+            <span>{sunshine}</span>
+          </div>
+          <div className="w-px h-4 bg-zinc-300/40" />
+          <div className="flex items-center gap-1.5">
+            <span>💎</span>
+            <span>{gems}</span>
+          </div>
+        </div>
       </div>
 
       {/* Right: Share + sidebar toggle */}

@@ -19,6 +19,8 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 import { CoverModal } from "@/app/components/CoverModal"
+import { FlashcardView } from "@/app/components/FlashcardView"
+import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
@@ -739,12 +741,14 @@ export default function NoteApp() {
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
+  const [aiQuickMenuOpen, setAiQuickMenuOpen] = useState(false)
+  const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
 
   // ─── Pulp Grove Gamification State ───
-  const [sunshine, setSunshine] = useState(0) // Main currency: Earned by time spent (1 per 30s)
-  const [gems, setGems] = useState(0)   // Secondary: Earned by writing (1 per 500 chars)
+  const [sunshine, setSunshine] = useState(1000) // Main currency: Earned by time spent (1 per 30s)
+  const [gems, setGems] = useState(5)   // Secondary: Earned by writing (1 per 500 chars)
   const [grove, setGrove] = useState<any[]>([]) // Your planted trees
   const [lastCharCount, setLastCharCount] = useState(0)
 
@@ -753,8 +757,8 @@ export default function NoteApp() {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       const data = JSON.parse(saved)
-      setSunshine(data.sunshine || 0)
-      setGems(data.gems || 0)
+      setSunshine(data.sunshine ?? 1000)
+      setGems(data.gems ?? 5)
       setGrove(data.grove || [])
     }
   }, [])
@@ -1421,6 +1425,44 @@ export default function NoteApp() {
       setActiveTabId(id); setCurrentPageIdx(0)
     })
 
+  const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) =>
+    openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
+      if (!name.trim()) return
+      const id = uid()
+      const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType }
+      const newNote: NoteData = noteType === "flashcard"
+        ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "" }] }
+        : noteType === "singlepage"
+        ? { ...baseNote, pages: [""], icon: "📄" }
+        : { ...baseNote, pages: [""] }
+      setNotes(prev => [...prev, newNote])
+      setActiveTabId(id); setCurrentPageIdx(0)
+    })
+
+  const AI_ACTIONS = [
+    { id: "quiz", label: "Quiz me" },
+    { id: "summarize", label: "Summarize" },
+    { id: "explain", label: "Explain" },
+    { id: "outline", label: "Outline" },
+    { id: "improve", label: "Improve writing" },
+  ]
+
+  const handleAiAction = useCallback(async (action: string) => {
+    setAiQuickMenuOpen(false)
+    const pageText = editorRef.current?.innerText?.trim() || ""
+    if (!pageText) { openAlert("Nothing to process", "Add some text to your note first."); return }
+    const actionLabel = AI_ACTIONS.find(a => a.id === action)?.label || action
+    setAiResult({ title: actionLabel, result: "", loading: true })
+    try {
+      const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action, text: pageText }) })
+      if (!res.ok) throw new Error("API error")
+      const data = await res.json()
+      setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
+    } catch {
+      setAiResult(null); openAlert("AI Error", "Could not process your request.")
+    }
+  }, [AI_ACTIONS])
+
   const insertBacklink = useCallback(() => {
     editor.saveSelection()
     openPrompt("Name your subpage", "Subpage", "Subpage name…", "Create", async name => {
@@ -1606,6 +1648,7 @@ export default function NoteApp() {
         sidebarWidth={sidebarWidth}
         isDragging={isSidebarDragging}
         onAddNote={addNote}
+        onAddTypedNote={addTypedNote}
         onAddFolder={addFolder}
         onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
         onRenameNote={renameNote}
@@ -1750,6 +1793,8 @@ export default function NoteApp() {
               isSidebarDragging={isSidebarDragging}
               onOpenCover={() => setShowCoverModal(true)}
               hasCover={!!activeNote?.cover}
+              sunshine={sunshine}
+              gems={gems}
             />
             <DrawingToolbar
               isOpen={showDrawToolbar}
@@ -1773,6 +1818,15 @@ export default function NoteApp() {
             </main>
           ) : gridView ? (
             <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
+          ) : activeNote?.noteType === "flashcard" ? (
+            <main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+              <FlashcardView
+                cards={activeNote.flashcards || []}
+                onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? {...n, flashcards: cards} : n))}
+                noteTitle={activeNote.subject}
+                theme={theme}
+              />
+            </main>
           ) : (
             <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
               <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
@@ -2068,6 +2122,44 @@ export default function NoteApp() {
             setAiMenu(null)
           }}
         />
+      )}
+
+      {aiResult && (
+        <AiResultModal
+          title={aiResult.title}
+          result={aiResult.result}
+          loading={aiResult.loading}
+          onClose={() => setAiResult(null)}
+          onInsert={text => { editor.insertHTML(`<p>${text}</p>`); setAiResult(null) }}
+        />
+      )}
+
+      {/* AI Quick-Action Button */}
+      {currentView === "editor" && activeNote && activeNote.noteType !== "flashcard" && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {aiQuickMenuOpen && (
+            <div className="absolute bottom-12 right-0 flex flex-col gap-1 items-end mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+              {AI_ACTIONS.map(action => (
+                <button
+                  key={action.id}
+                  onClick={() => handleAiAction(action.id)}
+                  className="px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setAiQuickMenuOpen(v => !v)}
+            className="w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center transition-all"
+            title="AI Quick Actions"
+          >
+            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+          </button>
+        </div>
       )}
     </div>
   )

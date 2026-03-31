@@ -1,5 +1,11 @@
 export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3"; boxHighlightColor?: string; boxOutlineWidth?: number; boxRotation?: number }
 export type BoxesMap = { [pageIdx: number]: TextBox[] }
+export interface FlashcardItem {
+  id: string;
+  front: string;
+  back: string;
+}
+
 export interface NoteData {
   id: string;
   subject: string;
@@ -8,6 +14,8 @@ export interface NoteData {
   parentId?: string;
   icon?: string;
   cover?: string;
+  noteType?: "notebook" | "singlepage" | "flashcard";
+  flashcards?: FlashcardItem[];
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   hlines?: { [pageIdx: number]: number[] };
