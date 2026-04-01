@@ -737,10 +737,18 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [blockedSites, setBlockedSites] = useState<string[]>([])
+  const [blockedApps, setBlockedApps] = useState<string[]>([])
+  const [isDevUnlocked, setIsDevUnlocked] = useState(false)
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [timerOpen, setTimerOpen] = useState(false)
+  const [timerElapsed, setTimerElapsed] = useState(0)
+  const [timerTotal, setTimerTotal] = useState(25 * 60)
+  const [timerRunning, setTimerRunning] = useState(false)
+  const [timerDone, setTimerDone] = useState(false)
+  const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">("focus")
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -1565,7 +1573,7 @@ export default function NoteApp() {
       const id = uid()
       const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType, password: pwd }
       const newNote: NoteData = noteType === "flashcard"
-        ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "" }] }
+        ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "", interval: 1, easeFactor: 2.5, repetitions: 0, nextReviewDate: Date.now() }] }
         : noteType === "singlepage"
         ? { ...baseNote, pages: [""], icon: "📄" }
         : noteType === "vault"
@@ -1827,13 +1835,21 @@ export default function NoteApp() {
 
   if (isLoading) return <PulpLoadingScreen />
 
+  const handleUnlockDev = () => {
+    setIsDevUnlocked(true)
+  }
+
+  const handleOpenShop = () => {
+    openAlert("Coming Soon", "The Pulp Boutique is currently in development.")
+  }
+
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
 
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
@@ -1892,6 +1908,7 @@ export default function NoteApp() {
             if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
           })
         }}
+        onUnlockDev={handleUnlockDev}
       />
 
       {/* Sidebar edge resize handle */}
@@ -2024,6 +2041,7 @@ export default function NoteApp() {
               sidebarOpen={sidebarWidth > 40}
               onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
               onTimerOpen={() => setTimerOpen(!timerOpen)}
+              onOpenShop={handleOpenShop}
             />
           </div>
         )}
@@ -2127,10 +2145,50 @@ export default function NoteApp() {
             </div>
           )}
           {notes.length === 0 ? (
-            <main className="flex-1 flex items-center justify-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
-              <div className="text-center">
-                <p className="text-5xl font-bold mb-6" style={{ fontFamily: '"Licorice", cursive', color: accent }}>Ready?</p>
-                <button onClick={() => addNote(null)} className="w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white mx-auto transition-all hover:scale-110" style={{ backgroundColor: accent }}>+</button>
+            <main className="flex-1 flex items-center justify-center px-4" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
+              <div className="text-center max-w-md">
+                {/* Decorative Element */}
+                <div className="mb-8 flex justify-center">
+                  <div style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: `${accent}15`,
+                    border: `2px solid ${accent}30`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "40px"
+                  }}>
+                    📝
+                  </div>
+                </div>
+
+                {/* Heading */}
+                <h1 className="text-3xl font-bold mb-2" style={{ color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Start Writing</h1>
+                <p className="text-sm mb-8" style={{ color: theme === "dark" ? "#a1a1a1" : "#666" }}>Create your first note and begin capturing your ideas</p>
+
+                {/* Primary Button */}
+                <button
+                  onClick={() => addNote(null)}
+                  className="w-full py-3 rounded-lg font-medium mb-3 transition-all hover:shadow-lg active:scale-95"
+                  style={{
+                    backgroundColor: accent,
+                    color: "#fff"
+                  }}
+                >
+                  Create Your First Note
+                </button>
+
+                {/* Quick Tips */}
+                <div className="mt-8 pt-6" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
+                  <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>✨ Quick Tips</p>
+                  <ul className="text-xs space-y-2" style={{ color: theme === "dark" ? "#999" : "#777" }}>
+                    <li>📋 Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>Cmd+N</code> to create notes</li>
+                    <li>🔍 Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>Cmd+K</code> to search</li>
+                    <li>✂️ Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>\</code> for AI editing</li>
+                  </ul>
+                </div>
               </div>
             </main>
           ) : gridView ? (
@@ -2142,6 +2200,7 @@ export default function NoteApp() {
                 onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? {...n, flashcards: cards} : n))}
                 noteTitle={activeNote.subject}
                 theme={theme}
+                accent={accent}
               />
             </main>
           ) : (
@@ -2429,7 +2488,20 @@ export default function NoteApp() {
             onClose={() => setTimerOpen(false)}
             theme={theme}
             accent={accent}
-            onSessionComplete={() => setSunshine(s => s + 5)}
+            elapsed={timerElapsed}
+            total={timerTotal}
+            running={timerRunning}
+            done={timerDone}
+            preset={timerPreset}
+            onSetRunning={setTimerRunning}
+            onSetElapsed={setTimerElapsed}
+            onSetTotal={setTimerTotal}
+            onSetPreset={setTimerPreset}
+            onSetDone={setTimerDone}
+            onSessionCancel={(ratio) => {
+              setSunshine(s => Math.max(0, s + Math.floor(5 * ratio)))
+              openAlert("Session Stopped", `You earned ${Math.floor(5 * ratio)} ☀️ for the work you did.`)
+            }}
           />
         </div>
 
