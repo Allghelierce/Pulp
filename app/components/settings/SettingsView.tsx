@@ -8,7 +8,7 @@ import { PricingSection } from "@/components/blocks/pricing-section"
 import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
-import type { Achievement } from "@/app/types"
+import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
@@ -21,6 +21,7 @@ export const SETTINGS_TABS = [
   { id: "ai", label: "AI Kai", group: "Writing" },
   { id: "blocker", label: "Focus Blocker", group: "Writing" },
   { id: "achievements", label: "Achievements", group: "App" },
+  { id: "socials", label: "Socials", group: "App" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
@@ -52,6 +53,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   shortcuts, setShortcuts, achievements, onClaimAchievement,
   devMode, setDevMode, isDevUnlocked,
   blockedSites, setBlockedSites, blockedApps, setBlockedApps,
+  trashNotes, onRestoreNote, onPermanentlyDeleteNote,
+  socials, setSocials,
 }: {
   user: any
   onClose: () => void
@@ -85,6 +88,11 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   isDevUnlocked: boolean
   blockedSites: string[]; setBlockedSites: (v: string[]) => void
   blockedApps: string[]; setBlockedApps: (v: string[]) => void
+  trashNotes: NoteData[]
+  onRestoreNote: (id: string) => void
+  onPermanentlyDeleteNote: (id: string) => void
+  socials: { twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }
+  setSocials: (v: { twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -181,6 +189,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               {activeTab === "ai" && "Optimize your intelligence partner"}
               {activeTab === "blocker" && "Restrict distractions during focus sessions"}
               {activeTab === "achievements" && "Track your progress and claim rewards"}
+              {activeTab === "socials" && "Connect your social media profiles"}
               {activeTab === "data" && "Manage your local data and backups"}
               {activeTab === "shortcuts" && "Master Pulp with keyboard acceleration"}
               {activeTab === "subscription" && "Manage your plan and billing"}
@@ -314,6 +323,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   isDark={isDark}
                   description="Show a subtle noise texture on the app background"
                   control={<SettingToggle checked={bgEffect} onChange={setBgEffect} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Handwritten feel"
+                  isDark={isDark}
+                  description="Apply handwritten styling and imperfections to the editor"
+                  control={<SettingToggle checked={handwrittenEffect} onChange={setHandwrittenEffect} isDark={isDark} />}
                 />
               </SettingSection>
 
@@ -592,6 +607,64 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               </div>
             </>)}
 
+            {/* ── Socials ── */}
+            {activeTab === "socials" && (<>
+              <SettingSection title="Social Media Links" isDark={isDark}>
+                <div className="flex flex-col gap-4 px-5 py-4">
+                  <div>
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Twitter</label>
+                    <input
+                      type="text"
+                      value={socials.twitter || ""}
+                      onChange={(e) => setSocials({ ...socials, twitter: e.target.value })}
+                      placeholder="@username or profile URL"
+                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Instagram</label>
+                    <input
+                      type="text"
+                      value={socials.instagram || ""}
+                      onChange={(e) => setSocials({ ...socials, instagram: e.target.value })}
+                      placeholder="@username or profile URL"
+                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>GitHub</label>
+                    <input
+                      type="text"
+                      value={socials.github || ""}
+                      onChange={(e) => setSocials({ ...socials, github: e.target.value })}
+                      placeholder="username or profile URL"
+                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>LinkedIn</label>
+                    <input
+                      type="text"
+                      value={socials.linkedin || ""}
+                      onChange={(e) => setSocials({ ...socials, linkedin: e.target.value })}
+                      placeholder="profile URL"
+                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Website</label>
+                    <input
+                      type="text"
+                      value={socials.website || ""}
+                      onChange={(e) => setSocials({ ...socials, website: e.target.value })}
+                      placeholder="https://yoursite.com"
+                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
+                    />
+                  </div>
+                </div>
+              </SettingSection>
+            </>)}
+
             {/* ── Data ── */}
             {activeTab === "data" && (<>
                <SettingSection title="Local Storage" isDark={isDark}>
@@ -610,6 +683,35 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                    </button>
                  </div>
                </SettingSection>
+
+               {/* Trash Section */}
+               {trashNotes.length > 0 && (
+                 <SettingSection title="Trash" isDark={isDark}>
+                   <div className={`flex flex-col ${isDark ? "bg-zinc-900/30" : "bg-zinc-100/30"} rounded-lg p-4`}>
+                     {trashNotes.map(tn => (
+                       <div key={tn.id} className={`group flex items-center justify-between gap-3 p-3 rounded border-b ${isDark ? "border-zinc-800/50 hover:bg-zinc-800/30" : "border-zinc-200/50 hover:bg-zinc-50/50"} transition-colors last:border-b-0`}>
+                         <span className={`text-[12px] truncate ${isDark ? "text-zinc-400 group-hover:text-zinc-300" : "text-zinc-600 group-hover:text-zinc-700"}`}>
+                           {tn.subject || "Untitled"}
+                         </span>
+                         <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <button
+                             onClick={() => onRestoreNote(tn.id)}
+                             className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
+                           >
+                             Restore
+                           </button>
+                           <button
+                             onClick={() => onPermanentlyDeleteNote(tn.id)}
+                             className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors ${isDark ? "text-red-400 hover:bg-red-500/20" : "text-red-600 hover:bg-red-100/50"}`}
+                           >
+                             Delete
+                           </button>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </SettingSection>
+               )}
 
                {isDevUnlocked && (
                  <SettingSection title="Developer" isDark={isDark}>
