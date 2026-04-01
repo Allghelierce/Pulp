@@ -23,20 +23,16 @@ function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }
   )
 }
 
-// Random faces for the orange - cute and small
+// Simple geometric faces for the orange
 const faces = [
-  { emoji: "😊", label: "happy" },
-  { emoji: "😆", label: "excited" },
-  { emoji: "😐", label: "serious" },
-  { emoji: "😮", label: "surprised" },
-  { emoji: "😵", label: "dizzy" },
-  { emoji: "😢", label: "sad" },
-  { emoji: "😴", label: "sleepy" },
-  { emoji: "😍", label: "love" },
-  { emoji: "🥰", label: "grateful" },
-  { emoji: "😋", label: "yummy" },
-  { emoji: "🤔", label: "thinking" },
-  { emoji: "😎", label: "cool" },
+  { eyes: "circle", eyeSize: 2.5, mouth: "curve-up", label: "happy" },
+  { eyes: "circle-happy", eyeSize: 2, mouth: "line-up", label: "excited" },
+  { eyes: "line", eyeSize: 2, mouth: "line-straight", label: "serious" },
+  { eyes: "circle-big", eyeSize: 3, mouth: "o", label: "surprised" },
+  { eyes: "x", eyeSize: 2.5, mouth: "x", label: "dizzy" },
+  { eyes: "circle", eyeSize: 2.5, mouth: "curve-down", label: "sad" },
+  { eyes: "line-closed", eyeSize: 1.5, mouth: "line-straight", label: "sleepy" },
+  { eyes: "heart", eyeSize: 2, mouth: "curve-up", label: "love" },
 ]
 
 export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick: () => void }) {
@@ -156,18 +152,77 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
            }} />
 
            {/* Face */}
-           <motion.div style={{ scale: faceScaleSpring }} className="absolute inset-0 flex items-center justify-center">
-             <div style={{
-               fontSize: "18px",
-               lineHeight: 1,
-               userSelect: "none",
-               pointerEvents: "none",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: "center"
-             }}>
-               {faces[faceIndex].emoji}
-             </div>
+           <motion.div style={{ scale: faceScaleSpring }} className="absolute inset-0">
+             <svg width="100%" height="100%" viewBox="0 0 30 30" style={{ pointerEvents: "none" }}>
+               {/* Eyes */}
+               {faces[faceIndex].eyes === "circle" && (
+                 <>
+                   <circle cx="10" cy="10" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                   <circle cx="20" cy="10" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "circle-happy" && (
+                 <>
+                   <circle cx="10" cy="11" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                   <circle cx="20" cy="11" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "line" && (
+                 <>
+                   <line x1="8" y1="10" x2="12" y2="10" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                   <line x1="18" y1="10" x2="22" y2="10" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "circle-big" && (
+                 <>
+                   <circle cx="10" cy="10" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                   <circle cx="20" cy="10" r={faces[faceIndex].eyeSize} fill="rgba(0,0,0,0.6)" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "x" && (
+                 <>
+                   <line x1="8" y1="8" x2="12" y2="12" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                   <line x1="12" y1="8" x2="8" y2="12" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                   <line x1="18" y1="8" x2="22" y2="12" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                   <line x1="22" y1="8" x2="18" y2="12" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "line-closed" && (
+                 <>
+                   <path d="M 8 11 Q 10 9 12 11" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                   <path d="M 18 11 Q 20 9 22 11" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                 </>
+               )}
+               {faces[faceIndex].eyes === "heart" && (
+                 <>
+                   <path d="M 8 12 L 10 10 Q 11 9 12 10 L 10 12 Z" fill="rgba(0,0,0,0.6)" />
+                   <path d="M 18 12 L 20 10 Q 21 9 22 10 L 20 12 Z" fill="rgba(0,0,0,0.6)" />
+                 </>
+               )}
+
+               {/* Mouth */}
+               {faces[faceIndex].mouth === "curve-up" && (
+                 <path d="M 10 18 Q 15 22 20 18" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+               )}
+               {faces[faceIndex].mouth === "line-up" && (
+                 <line x1="10" y1="20" x2="20" y2="20" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+               )}
+               {faces[faceIndex].mouth === "line-straight" && (
+                 <line x1="10" y1="19" x2="20" y2="19" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+               )}
+               {faces[faceIndex].mouth === "o" && (
+                 <circle cx="15" cy="19" r="1.5" fill="rgba(0,0,0,0.6)" />
+               )}
+               {faces[faceIndex].mouth === "x" && (
+                 <>
+                   <line x1="13" y1="17" x2="17" y2="21" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                   <line x1="17" y1="17" x2="13" y2="21" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" />
+                 </>
+               )}
+               {faces[faceIndex].mouth === "curve-down" && (
+                 <path d="M 10 18 Q 15 14 20 18" stroke="rgba(0,0,0,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+               )}
+             </svg>
            </motion.div>
         </div>
 
