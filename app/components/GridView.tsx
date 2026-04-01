@@ -2,6 +2,7 @@
 import React, { useEffect } from "react"
 import type { NoteData } from "@/app/types"
 import { getPaperBg } from "@/app/lib/paperStyle"
+import { sanitizeHTML } from "@/lib/sanitize"
 
 interface GridViewProps {
   activeNote: NoteData
@@ -50,7 +51,6 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
       <div className="max-w-[1900px] mx-auto w-full px-16 pb-48 pt-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-6">
         {activeNote.pages.map((pageHtml, idx) => {
           const { backgroundColor, backgroundImage, backgroundSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark", true)
-          const pageNum = (idx + 1).toString().padStart(2, '0')
 
           return (
             <div
@@ -86,7 +86,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                         fontFamily: `"${editorFont}", serif`,
                         color: "#1A1A1A",
                       }}
-                      dangerouslySetInnerHTML={{ __html: pageHtml || "" }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(pageHtml || "") }}
                     />
 
                     {/* Drawings Layer (SVG Ink) */}
@@ -115,13 +115,13 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                         left: box.x, top: box.y, width: box.w, height: box.h,
                         fontFamily: box.boxFontFamily || editorFont || '"EB Garamond", serif',
                         fontSize: (box.boxFontSize || 16) + 'px',
-                        textAlign: box.textAlign as any,
+                        textAlign: box.textAlign,
                         color: "#1A1A1A",
                         lineHeight: 1.45,
                         wordWrap: 'break-word',
                         overflow: 'hidden',
                         zIndex: 40
-                      }} dangerouslySetInnerHTML={{ __html: box.content }} />
+                      }} dangerouslySetInnerHTML={{ __html: sanitizeHTML(box.content) }} />
                     ))}
                   </div>
                 </div>

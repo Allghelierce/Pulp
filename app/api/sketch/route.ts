@@ -1,7 +1,9 @@
 // app/api/sketch/route.ts
 import { NextResponse } from "next/server";
+import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit";
 
 const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN;
+const MAX_PROMPT_LENGTH = 500;
 
 if (!HF_TOKEN) {
   console.error("❌ MISSING HUGGINGFACE_API_TOKEN in .env.local");
@@ -9,14 +11,30 @@ if (!HF_TOKEN) {
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting - sketch is expensive
+    const key = getRateLimitKey(req);
+    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 10 })) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { prompt } = await req.json();
 
-    if (!prompt) {
-      return NextResponse.json({ error: "No prompt provided" }, { status: 400 });
+    if (!prompt || typeof prompt !== "string") {
+      return NextResponse.json({ error: "Invalid prompt provided" }, { status: 400 });
+    }
+
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return NextResponse.json(
+        { error: `Prompt exceeds maximum length of ${MAX_PROMPT_LENGTH}` },
+        { status: 400 }
+      );
     }
 
     // Use a reliable, free-tier-supported model
-    const MODEL = "stabilityai/stable-diffusion-xl-base-1.0";  // or "runwayml/stable-diffusion-v1-5"
+    const MODEL = "stabilityai/stable-diffusion-xl-base-1.0";
 
     const response = await fetch(
       `https://router.huggingface.co/hf-inference/models/${MODEL}`,
@@ -29,7 +47,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           inputs: `simple minimalist black and white hand-drawn pencil sketch of ${prompt}, notebook doodle style, clean lines, white background, line art, no color, no shading, no text, no watermark`,
           parameters: {
-            num_inference_steps: 20,   // SDXL needs more steps
+            num_inference_steps: 20,
             guidance_scale: 7.5,
             negative_prompt: "color, photorealistic, blurry, text, logo, watermark, ugly, deformed",
           },
@@ -38,11 +56,10 @@ export async function POST(req: Request) {
     );
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("HF error:", response.status, errText);
+      console.error("HF error:", response.status);
       return NextResponse.json(
-        { error: `Hugging Face error: ${response.status} - ${errText}` },
-        { status: response.status }
+        { error: "Failed to generate image" },
+        { status: 500 }
       );
     }
 
@@ -51,10 +68,10 @@ export async function POST(req: Request) {
     const url = `data:image/png;base64,${base64}`;
 
     return NextResponse.json({ url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Generation failed:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate image" },
+      { error: "Failed to generate image" },
       { status: 500 }
     );
   }

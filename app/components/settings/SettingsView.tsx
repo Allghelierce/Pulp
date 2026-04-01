@@ -8,6 +8,7 @@ import { PricingSection } from "@/components/blocks/pricing-section"
 import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
+import { verifyPasswordAndDelete } from "@/app/actions/deleteAccount"
 import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
@@ -40,6 +41,31 @@ export const ACCENT_COLORS = [
   { hex: "#374151", name: "Slate" },
 ]
 
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+function SegmentedControl({ options, value, onChange, isDark }: { 
+  options: [string, string][]; 
+  value: string; 
+  onChange: (v: string) => void;
+  isDark: boolean;
+}) {
+  return (
+    <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
+      {options.map(([val, label]) => (
+        <button
+          key={val}
+          onClick={() => onChange(val)}
+          className={`px-2.5 py-1 rounded-md transition-all ${value === val
+            ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+            : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── Main settings modal ────────────────────────────────────────────────────
 
 export function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
@@ -56,7 +82,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   trashNotes, onRestoreNote, onPermanentlyDeleteNote,
   socials, setSocials,
 }: {
-  user: any
+  user: { email?: string } | null
   onClose: () => void
   accentColor: string
   setAccentColor: (color: string) => void
@@ -83,7 +109,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
   headingFont: string; setHeadingFont: (v: string) => void
   shortcuts: { ai: string; slash: string; sidebar: string; newNote: string; search: string }
-  setShortcuts: (s: any) => void
+  setShortcuts: (s: { ai: string; slash: string; sidebar: string; newNote: string; search: string }) => void
   achievements: Achievement[]
   onClaimAchievement: (id: string) => void
   devMode: boolean; setDevMode: (v: boolean) => void
@@ -109,22 +135,6 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
       name: g,
       tabs: SETTINGS_TABS.filter(t => t.group === g),
     }))
-
-  const SegmentedControl = ({ options, value, onChange }: { options: [string, string][]; value: string; onChange: (v: string) => void }) => (
-    <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
-      {options.map(([val, label]) => (
-        <button
-          key={val}
-          onClick={() => onChange(val)}
-          className={`px-2.5 py-1 rounded-md transition-all ${value === val
-            ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
-            : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")}`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  )
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
@@ -304,7 +314,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Color scheme"
                   isDark={isDark}
                   description="Choose how Pulp looks to you"
-                  control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} />}
+                  control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Reduce motion"
@@ -399,12 +409,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Base Font Size"
                   isDark={isDark}
-                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={v => setBaseFontSize(v as any)} />}
+                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={(v: string) => setBaseFontSize(v as "small" | "medium" | "large")} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Line Spacing"
                   isDark={isDark}
-                  control={<SegmentedControl options={[["compact", "Comp"], ["normal", "Norm"], ["relaxed", "Relax"]]} value={lineSpacing} onChange={v => setLineSpacing(v as any)} />}
+                  control={<SegmentedControl options={[["compact", "Comp"], ["normal", "Norm"], ["relaxed", "Relax"]]} value={lineSpacing} onChange={(v: string) => setLineSpacing(v as "compact" | "normal" | "relaxed")} isDark={isDark} />}
                 />
               </SettingSection>
 
@@ -413,7 +423,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Page style"
                   isDark={isDark}
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={v => setPaperStyle(v as any)} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={(v: string) => setPaperStyle(v as "lined" | "dotgrid" | "plain" | "stenopad")} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Show spiral binding"
@@ -926,10 +936,27 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 disabled={!deleteUsername || !deletePassword}
                 onClick={async () => {
                   if (!deleteUsername || !deletePassword) return;
-                  
-                  if (deleteConfirmType === "account") {
-                    await supabase.auth.signOut();
-                  } else {
+
+                  const user = (await supabase.auth.getUser()).data.user
+                  if (!user) {
+                    alert("Authentication error. Please try again.");
+                    return;
+                  }
+
+                  // Verify password server-side
+                  const result = await verifyPasswordAndDelete(
+                    user.id,
+                    deletePassword,
+                    deleteConfirmType as "account" | "notes"
+                  )
+
+                  if (!result.success) {
+                    alert(result.error || "Verification failed");
+                    setDeletePassword("");
+                    return;
+                  }
+
+                  if (deleteConfirmType === "notes") {
                     localStorage.clear();
                   }
 
@@ -963,7 +990,7 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
       if (e.key === "Escape") { setIsRecording(false); return }
       
       // Captured modifiers
-      let parts = []
+      const parts = []
       if (e.ctrlKey) parts.push("ctrl")
       if (e.altKey) parts.push("alt")
       if (e.shiftKey) parts.push("shift")
