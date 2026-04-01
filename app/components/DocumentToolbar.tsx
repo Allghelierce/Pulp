@@ -180,7 +180,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             rotate: springAngle,
             transformOrigin: "top center",
             top: -56, // pivot is above the toolbar top edge
-            left: 14,
+            left: 4,
             width: 32,
             display: "flex",
             flexDirection: "column",
@@ -236,7 +236,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </div>
         </motion.button>
 
-        <div className="w-14 shrink-0" />
+        <div className="w-10 shrink-0" />
 
         <div className="w-px h-5 bg-zinc-200/60 mr-1" />
 
@@ -390,8 +390,30 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         </div>
       </div>
 
-      {/* Right: Share + sidebar toggle */}
+      {/* Right: Timer + Share + sidebar toggle */}
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
+        <motion.button
+          onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+          className="h-[28px] flex items-center gap-1.5 px-2.5 rounded-[6px] border border-[#e4e4e7]/60 hover:border-[#d4d4d8] hover:bg-[#f9f9f9] bg-white transition-all"
+          style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#b85e22"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="1" />
+            <path d="M12 1v6m0 6v6" />
+            <path d="M4.22 4.22l4.24 4.24m0 5.08l4.24 4.24M19.78 4.22l-4.24 4.24m0 5.08l-4.24 4.24" />
+          </svg>
+          <span className="text-[13.5px]" style={{ color: '#b85e22' }}>Timer</span>
+        </motion.button>
         <AnimatedDownloadButton onDownload={onDownload} />
         <ShareButton
           links={[

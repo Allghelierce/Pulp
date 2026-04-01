@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
@@ -14,8 +14,12 @@ import { DestructiveButton } from "@/components/ui/destructive-button"
 export const SETTINGS_TABS = [
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
-  { id: "editor", label: "Editor", group: "App" },
-  { id: "personalization", label: "Personalization", group: "Customize" },
+  { id: "typography", label: "Typography", group: "App" },
+  { id: "interface", label: "Interface", group: "App" },
+  { id: "editor", label: "Editor", group: "Writing" },
+  { id: "ai", label: "AI Antigravity", group: "Writing" },
+  { id: "data", label: "Data & Storage", group: "Advanced" },
+  { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
   { id: "danger", label: "Danger Zone", group: "Advanced" },
 ] as const
@@ -41,6 +45,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
   language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
+  shortcuts, setShortcuts,
 }: {
   user: any
   onClose: () => void
@@ -65,6 +70,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   wordCountVisible: boolean; setWordCountVisible: (v: boolean) => void
   focusMode: boolean; setFocusMode: (v: boolean) => void
   baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
+  shortcuts: { ai: string; slash: string; sidebar: string; newNote: string; search: string }
+  setShortcuts: (s: any) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -154,9 +161,13 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             </h2>
             <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
               {activeTab === "general" && "Manage your account and application preferences"}
-              {activeTab === "appearance" && "Customize how Pulp looks and feels"}
+              {activeTab === "appearance" && "Customize accent colors, themes, and layouts"}
+              {activeTab === "typography" && "Fine-tune your writing aesthetics"}
+              {activeTab === "interface" && "Customize the Pulp application shell"}
               {activeTab === "editor" && "Configure your writing environment"}
-              {activeTab === "personalization" && "Make Pulp uniquely yours"}
+              {activeTab === "ai" && "Optimize your intelligence partner"}
+              {activeTab === "data" && "Manage your local data and backups"}
+              {activeTab === "shortcuts" && "Master Pulp with keyboard acceleration"}
               {activeTab === "subscription" && "Manage your plan and billing"}
               {activeTab === "danger" && "Irreversible and destructive actions"}
             </p>
@@ -282,13 +293,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={<SettingToggle checked={reduceVisuals} onChange={setReduceVisuals} isDark={isDark} />}
                 />
               </SettingSection>
-              <SettingSection title="Layout" isDark={isDark}>
-                <SettingRow
-                  title="Show sidebar on launch"
-                  isDark={isDark}
-                  description="Keep the notes panel open when you start the app"
-                  control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} isDark={isDark} />}
-                />
+              <SettingSection title="Effects" isDark={isDark}>
                 <SettingRow
                   title="Background texture"
                   isDark={isDark}
@@ -296,7 +301,78 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={<SettingToggle checked={bgEffect} onChange={setBgEffect} isDark={isDark} />}
                 />
               </SettingSection>
-              <SettingSection title="Paper" isDark={isDark}>
+
+              <SettingSection title="Personalization" isDark={isDark}>
+                <div className="px-5 py-4">
+                  <p className={`text-[12px] font-semibold mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Accent Color</p>
+                  <div className="flex flex-wrap gap-4">
+                    {ACCENT_COLORS.map(({ hex, name }) => (
+                      <button
+                        key={hex}
+                        onClick={() => setAccentColor(hex)}
+                        title={name}
+                        className="group flex flex-col items-center gap-1.5"
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-none border-[3px] transition-transform hover:scale-110 shadow-sm`}
+                          style={{ backgroundColor: hex, borderColor: accentColor.startsWith(hex) ? (isDark ? "#ffffff" : "#1a1a1a") : "transparent" }}
+                        />
+                        <span className={`text-[9px] ${isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"} transition-colors`}>{name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </SettingSection>
+            </>)}
+
+            {/* ── Typography ── */}
+            {activeTab === "typography" && (<>
+              <SettingSection title="Font Selection" isDark={isDark}>
+                 <SettingRow
+                  title="Heading Font"
+                  isDark={isDark}
+                  description="Used for large titles and notebook covers"
+                  control={
+                    <select className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}>
+                      <option>Playfair Display</option>
+                      <option>EB Garamond</option>
+                      <option>Italiana</option>
+                      <option>Bodoni</option>
+                    </select>
+                  }
+                />
+                <SettingRow
+                  title="Body Copy Font"
+                  isDark={isDark}
+                  description="The default font for notes and boxes"
+                  control={
+                    <select 
+                      value={editorFont}
+                      onChange={e => setEditorFont(e.target.value)}
+                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
+                    >
+                      <option value="EB Garamond">EB Garamond</option>
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Arial">Arial</option>
+                    </select>
+                  }
+                />
+              </SettingSection>
+              <SettingSection title="Sizing & Spacing" isDark={isDark}>
+                <SettingRow
+                  title="Base Font Size"
+                  isDark={isDark}
+                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={v => setBaseFontSize(v as any)} />}
+                />
+                <SettingRow
+                  title="Line Spacing"
+                  isDark={isDark}
+                  control={<SegmentedControl options={[["compact", "Comp"], ["normal", "Norm"], ["relaxed", "Relax"]]} value={lineSpacing} onChange={v => setLineSpacing(v as any)} />}
+                />
+              </SettingSection>
+
+              <SettingSection title="Paper & Page" isDark={isDark}>
                 <SettingRow
                   title="Page style"
                   isDark={isDark}
@@ -324,6 +400,25 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               </SettingSection>
             </>)}
 
+            {/* ── Interface ── */}
+            {activeTab === "interface" && (<>
+               <SettingSection title="Sidebar" isDark={isDark}>
+                <SettingRow
+                  title="Show sidebar on launch"
+                  isDark={isDark}
+                  control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} isDark={isDark} />}
+                />
+              </SettingSection>
+              <SettingSection title="Toolbars" isDark={isDark}>
+                <SettingRow
+                  title="Status bar"
+                  isDark={isDark}
+                  description="Show word count and stats in the bottom-right"
+                  control={<SettingToggle checked={wordCountVisible} onChange={setWordCountVisible} isDark={isDark} />}
+                />
+              </SettingSection>
+            </>)}
+
             {/* ── Editor ── */}
             {activeTab === "editor" && (<>
               <SettingSection title="Writing" isDark={isDark}>
@@ -339,42 +434,9 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   description="Underline possible misspellings while typing"
                   control={<SettingToggle checked={spellCheck} onChange={setSpellCheck} isDark={isDark} />}
                 />
-                <SettingRow
-                  title="Default font"
-                  isDark={isDark}
-                  control={
-                    <select
-                      value={editorFont}
-                      onChange={e => setEditorFont(e.target.value)}
-                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
-                    >
-                      <option value="EB Garamond">EB Garamond</option>
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="Original Surfer">Original Surfer</option>
-                      <option value="Georgia">Georgia</option>
-                      <option value="Arial">Arial</option>
-                    </select>
-                  }
-                />
-                <SettingRow
-                  title="Line spacing"
-                  isDark={isDark}
-                  control={<SegmentedControl options={[["compact", "Compact"], ["normal", "Normal"], ["relaxed", "Relaxed"]]} value={lineSpacing} onChange={v => setLineSpacing(v as "compact" | "normal" | "relaxed")} />}
-                />
-                <SettingRow
-                  title="Base font size"
-                  isDark={isDark}
-                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={v => setBaseFontSize(v as "small" | "medium" | "large")} />}
-                />
               </SettingSection>
 
               <SettingSection title="Reading & Focus" isDark={isDark}>
-                <SettingRow
-                  title="Show word count"
-                  isDark={isDark}
-                  description="Display live character and word count while typing"
-                  control={<SettingToggle checked={wordCountVisible} onChange={setWordCountVisible} isDark={isDark} />}
-                />
                 <SettingRow
                   title="Focus mode"
                   isDark={isDark}
@@ -384,27 +446,51 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               </SettingSection>
             </>)}
 
-            {/* ── Personalization ── */}
-            {activeTab === "personalization" && (<>
-              <SettingSection title="Accent Color" isDark={isDark}>
-                <div className="py-4 flex flex-wrap gap-4">
-                  {ACCENT_COLORS.map(({ hex, name }) => (
-                    <button
-                      key={hex}
-                      onClick={() => setAccentColor(hex)}
-                      title={name}
-                      className="group flex flex-col items-center gap-1.5"
-                    >
-                      <div
-                        className={`w-9 h-9 rounded-none border-[3px] transition-transform hover:scale-110 shadow-sm`}
-                        style={{ backgroundColor: hex, borderColor: accentColor.startsWith(hex) ? (isDark ? "#ffffff" : "#1a1a1a") : "transparent" }}
-                      />
-                      <span className={`text-[9px] ${isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"} transition-colors`}>{name}</span>
-                    </button>
-                  ))}
+            {/* ── AI ── */}
+            {activeTab === "ai" && (<>
+              <SettingSection title="Antigravity Intelligence" isDark={isDark}>
+                <SettingRow
+                  title="Inline suggestions"
+                  isDark={isDark}
+                  description="Antigravity predicts your next words as you write"
+                  control={<SettingToggle checked={true} onChange={() => {}} isDark={isDark} />}
+                />
+              </SettingSection>
+            </>)}
+
+            {/* ── Data ── */}
+            {activeTab === "data" && (<>
+               <SettingSection title="Local Storage" isDark={isDark}>
+                 <SettingRow title="Used space" isDark={isDark} control={<span className="text-[11px] font-mono opacity-50">14.2 MB</span>} />
+               </SettingSection>
+               <SettingSection title="Exports" isDark={isDark}>
+                 <div className="flex flex-col gap-2 p-5">
+                   <button className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm"}`}>
+                     Export Binder as JSON
+                   </button>
+                 </div>
+               </SettingSection>
+            </>)}
+
+            {/* ── Shortcuts ── */}
+            {activeTab === "shortcuts" && (<>
+              <SettingSection title="Global Shortcuts" isDark={isDark}>
+                <div className="flex flex-col gap-0.5 px-3 py-2">
+                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => setShortcuts({ ...shortcuts, [id]: k })} />
+                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => setShortcuts({ ...shortcuts, [id]: k })} />
+                  
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
+                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>New Note</span>
+                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ N</kbd>
+                  </div>
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
+                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Toggle Sidebar</span>
+                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ \</kbd>
+                  </div>
                 </div>
               </SettingSection>
             </>)}
+
 
             {/* ── Danger Zone ── */}
             {activeTab === "danger" && (<>
@@ -567,6 +653,40 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: { 
+  label: string; id: string; currentKey: string; onUpdate: (id: string, key: string) => void; isDark: boolean 
+}) {
+  const [isRecording, setIsRecording] = useState(false)
+
+  useEffect(() => {
+    if (!isRecording) return
+    const handler = (e: KeyboardEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.key === "Escape") { setIsRecording(false); return }
+      // We only want single character keys or specialized ones
+      if (e.key.length === 1 || ["Enter", "Tab", "Escape", "Backspace"].includes(e.key)) {
+        onUpdate(id, e.key)
+        setIsRecording(false)
+      }
+    }
+    window.addEventListener("keydown", handler, true)
+    return () => window.removeEventListener("keydown", handler, true)
+  }, [isRecording, id, onUpdate])
+
+  return (
+    <div className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
+      <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{label}</span>
+      <button
+        onClick={() => setIsRecording(true)}
+        className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
+      >
+        {isRecording ? "Press key..." : currentKey.toUpperCase()}
+      </button>
     </div>
   )
 }

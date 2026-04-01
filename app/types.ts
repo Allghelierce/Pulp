@@ -33,6 +33,18 @@ export interface DrawingPath {
 }
 export interface FolderData { id: number; name: string; open: boolean }
 
+export interface Achievement {
+  id: string
+  title: string
+  description: string
+  reward: number
+  rewardType: 'gems' | 'sunshine'
+  completed: boolean
+  claimed: boolean
+  progress?: number
+  goal?: number
+}
+
 export interface Bookmark { id: string; noteId: string; pageIdx: number; noteTitle: string; icon?: string }
 
 export type DialogConfig =

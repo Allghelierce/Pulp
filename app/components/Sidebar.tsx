@@ -12,6 +12,7 @@ function TrashSection({ trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
   onPermanentlyDeleteNote: (id: string) => void
 }) {
   const [query, setQuery] = useState("")
+  const [isExpanded, setIsExpanded] = useState(true)
   const filtered = trashNotes.filter(n => n.subject.toLowerCase().includes(query.toLowerCase()))
 
   const daysLeft = (deletedAt?: string) => {
@@ -20,37 +21,47 @@ function TrashSection({ trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
   }
 
   return (
-    <div className="border-t border-white/5 bg-zinc-950/60 z-10 shrink-0 flex flex-col px-4 py-2 gap-1.5" style={{ height: 120 }}>
+    <div className="border-t border-white/5 bg-zinc-950/40 z-10 shrink-0 flex flex-col" style={{ height: isExpanded ? 120 : "auto" }}>
       {/* Header: small trash icon + label */}
-      <div className="flex items-center gap-1.5 shrink-0 h-4">
+      <div className="flex items-center gap-1.5 shrink-0 h-4 px-6 py-2">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+        >
+          {isExpanded ? "▾" : "▸"}
+        </button>
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
           <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
         </svg>
         <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Trash</span>
         <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({trashNotes.length})</span>
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search…"
-          className="ml-auto bg-zinc-900/60 border border-white/8 rounded-full px-2 py-0.5 text-[9px] outline-none text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 transition-colors w-24"
-        />
+        {isExpanded && (
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search…"
+            className="ml-auto bg-zinc-900/60 border border-white/8 rounded-full px-2 py-0.5 text-[9px] outline-none text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 transition-colors w-24"
+          />
+        )}
       </div>
       {/* Scrollable list */}
-      <div className="overflow-y-auto flex-1 space-y-0.5 pr-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
-        {filtered.length === 0 && <p className="text-[10px] text-zinc-700 italic px-1">Nothing found.</p>}
-        {filtered.map(tn => (
-          <div key={tn.id} className="group/tr flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[10px] truncate text-zinc-500 group-hover/tr:text-zinc-300 transition-colors">{tn.subject}</span>
-              <span className="text-[9px] text-zinc-700 shrink-0">{daysLeft(tn.deletedAt)}d</span>
+      {isExpanded && (
+        <div className="overflow-y-auto flex-1 space-y-0.5 px-6 pb-2" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
+          {filtered.length === 0 && <p className="text-[10px] text-zinc-700 italic">Nothing found.</p>}
+          {filtered.map(tn => (
+            <div key={tn.id} className="group/tr flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[10px] truncate text-zinc-500 group-hover/tr:text-zinc-300 transition-colors">{tn.subject}</span>
+                <span className="text-[9px] text-zinc-700 shrink-0">{daysLeft(tn.deletedAt)}d</span>
+              </div>
+              <div className="flex gap-1 opacity-0 group-hover/tr:opacity-100 transition-opacity shrink-0">
+                <button onClick={() => onRestoreNote(tn.id)} title="Restore" className="text-[9px] text-zinc-500 hover:text-green-400 transition-colors">↩</button>
+                <button onClick={() => onPermanentlyDeleteNote(tn.id)} title="Delete forever" className="text-[9px] text-zinc-500 hover:text-red-400 transition-colors">✕</button>
+              </div>
             </div>
-            <div className="flex gap-1 opacity-0 group-hover/tr:opacity-100 transition-opacity shrink-0">
-              <button onClick={() => onRestoreNote(tn.id)} title="Restore" className="text-[9px] text-zinc-500 hover:text-green-400 transition-colors">↩</button>
-              <button onClick={() => onPermanentlyDeleteNote(tn.id)} title="Delete forever" className="text-[9px] text-zinc-500 hover:text-red-400 transition-colors">✕</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

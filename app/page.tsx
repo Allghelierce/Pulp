@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
-import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark } from "@/app/types"
+import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement } from "@/app/types"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
@@ -22,6 +22,7 @@ import { FlashcardView } from "@/app/components/FlashcardView"
 import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
+import { TimerPanel } from "@/app/components/TimerPanel"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -738,6 +739,7 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
+  const [timerOpen, setTimerOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -753,6 +755,13 @@ export default function NoteApp() {
   const [gems, setGems] = useState(5)   // Secondary: Earned by writing (1 per 500 chars)
   const [grove, setGrove] = useState<any[]>([]) // Your planted trees
   const [lastCharCount, setLastCharCount] = useState(0)
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    { id: 'caught_in_the_act', title: 'Caught in the Act!', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'novice_writer', title: 'Novice Writer', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
+    { id: 'binder_buddy', title: 'Binder Buddy', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
+    { id: 'archivist', title: 'The Archivist', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
+    { id: 'night_owl', title: 'Night Owl', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
+  ])
 
   // Restore Grove from LocalStorage
   useEffect(() => {
@@ -762,13 +771,44 @@ export default function NoteApp() {
       setSunshine(data.sunshine ?? 1000)
       setGems(data.gems ?? 5)
       setGrove(data.grove || [])
+      if (data.achievements) setAchievements(data.achievements)
+    }
+    
+    // Night Owl Check
+    const hour = new Date().getHours()
+    if (hour >= 23 || hour <= 4) {
+      setAchievements(prev => prev.map(a => a.id === 'night_owl' ? { ...a, completed: true } : a))
     }
   }, [])
 
   // Persist Grove
   useEffect(() => {
-    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove }))
-  }, [sunshine, gems, grove])
+    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove, achievements }))
+  }, [sunshine, gems, grove, achievements])
+
+  const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
+    setAchievements(prev => prev.map(a => {
+      if (a.id !== id || a.completed) return a
+      const updated = update ? { ...a, ...update(a) } : { ...a, completed: true }
+      // Progress behavior
+      if (updated.goal !== undefined && (updated.progress || 0) >= updated.goal) {
+        updated.completed = true
+      }
+      return updated
+    }))
+  }, [])
+
+  const claimAchievement = useCallback((id: string) => {
+    setAchievements(prev => {
+      const target = prev.find(x => x.id === id)
+      if (!target || !target.completed || target.claimed) return prev
+      
+      if (target.rewardType === 'gems') setGems(g => g + target.reward)
+      else setSunshine(s => s + target.reward)
+      
+      return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
+    })
+  }, [])
 
   // Earn Sunshine over time (1 every 30 seconds of activity)
   useEffect(() => {
@@ -789,8 +829,9 @@ export default function NoteApp() {
     if (totalChars > lastCharCount + 500) {
       setGems(n => n + Math.floor((totalChars - lastCharCount) / 500))
       setLastCharCount(totalChars)
+      checkAchievement('novice_writer', a => ({ progress: totalChars }))
     }
-  }, [totalChars, lastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement])
 
 
   // Settings
@@ -920,6 +961,14 @@ export default function NoteApp() {
   const [showImageModal, setShowImageModal] = useState(false)
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
+  const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
+  const [shortcuts, setShortcuts] = useState({
+    ai: "\\",
+    slash: "/",
+    sidebar: "\\", // meta + \
+    newNote: "n", // meta + n
+    search: "k", // meta + k
+  })
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
   const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
@@ -1077,7 +1126,7 @@ export default function NoteApp() {
       }
       return
     }
-    if (e.key === "\\") {
+    if (e.key === shortcuts.ai) {
       e.preventDefault()
       const sel = window.getSelection()
       const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
@@ -1099,7 +1148,7 @@ export default function NoteApp() {
       return
     }
 
-    if (e.key === "@") {
+    if (e.key === shortcuts.slash || e.key === "@") {
       const sel = window.getSelection()
       if (!sel || sel.rangeCount === 0) return
       const isBox = (e.currentTarget as any) !== editorRef.current
@@ -1402,13 +1451,33 @@ export default function NoteApp() {
   // Sync editor DOM with active note/page
   const lastSyncKey = useRef<string>("")
   useEffect(() => {
-    if (!activeNote) return
+    if (!activeTabId || gridView) return
     const key = `${activeTabId}:${currentPageIdx}:${gridView}`
     if (!gridView && editorRef.current && lastSyncKey.current !== key) {
-      editorRef.current.innerHTML = activeNote.pages[currentPageIdx] || ""
+      editorRef.current.innerHTML = activeNote?.pages[currentPageIdx] || ""
       lastSyncKey.current = key
     }
   }, [activeTabId, currentPageIdx, gridView, activeNote?.pages])
+
+  // AI Easter Egg Expression Loop
+  useEffect(() => {
+    const expressions: Array<typeof aiExpression> = ["wink", "sleepy", "heart", "surprised"]
+    const scheduleNext = () => {
+      // Random delay: 1–3 hours (3,600,000 – 10,800,000 ms)
+      const delay = 3600000 + Math.random() * 7200000 
+      return setTimeout(() => {
+        const next = expressions[Math.floor(Math.random() * expressions.length)]
+        setAiExpression(next)
+        
+        // Reset to normal after 5-8 seconds
+        setTimeout(() => setAiExpression("normal"), 5000 + Math.random() * 3000)
+        
+        scheduleNext() // Loop
+      }, delay)
+    }
+    const timer = scheduleNext()
+    return () => clearTimeout(timer)
+  }, [])
 
   // LocalStorage Persistence — load once on mount
   useEffect(() => {
@@ -1609,6 +1678,7 @@ export default function NoteApp() {
   const archiveNote = (id: string) => {
     if (activeTabId === id) setActiveTabId(null)
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: true } : n))
+    checkAchievement('archivist', a => ({ progress: (a.progress || 0) + 1 }))
   }
 
   const unarchiveNote = (id: string) => {
@@ -1679,7 +1749,12 @@ export default function NoteApp() {
       }))
     })
 
-  const addFolder = () => { const id = Date.now(); setFolders(prev => [...prev, { id, name: "New Folder", open: true }]); setRenamingFolder(id) }
+  const addFolder = () => {
+    const id = Date.now()
+    setFolders(prev => [...prev, { id, name: "New Folder", open: true }])
+    setRenamingFolder(id)
+    checkAchievement('binder_buddy', a => ({ progress: (a.progress || 0) + 1 }))
+  }
   const toggleFolder = (id: number) => setFolders(prev => prev.map(f => f.id === id ? { ...f, open: !f.open } : f))
   const renameFolder = (id: number, name: string) => setFolders(prev => prev.map(f => f.id === id ? { ...f, name } : f))
   const deleteFolder = (id: number) =>
@@ -1743,7 +1818,7 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} shortcuts={shortcuts} setShortcuts={setShortcuts} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
@@ -1848,7 +1923,7 @@ export default function NoteApp() {
                 position: "absolute",
                 top: 48,
                 left: 104,
-                width: 22,
+                width: 14,
                 zIndex: 30,
                 cursor: "pointer",
                 transformOrigin: "top",
@@ -1857,7 +1932,7 @@ export default function NoteApp() {
             >
               <div style={{
                 width: "100%",
-                height: 64,
+                height: 52,
                 backgroundColor: ribbonColor,
                 clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 88%, 0% 100%)",
                 position: "relative",
@@ -1903,8 +1978,8 @@ export default function NoteApp() {
               insertCornell={insertCornell}
               showDrawToolbar={showDrawToolbar}
               onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
-              rightSidebarOpen={contentSidebarOpen}
-              setRightSidebarOpen={setContentSidebarOpen}
+              rightSidebarOpen={timerOpen}
+              setRightSidebarOpen={setTimerOpen}
               allCompacted={allCompacted}
               onCompactAll={handleCompactAll}
               onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
@@ -1936,6 +2011,103 @@ export default function NoteApp() {
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
+          {/* AI Quick-Action Button — Aligned vertically with hanging orange */}
+          {currentView === "editor" && activeNote && activeNote.noteType !== "flashcard" && (
+            <div className="absolute bottom-6 z-50 pointer-events-none" style={{ left: 60, transform: 'translateX(-50%)' }}>
+               <div className="relative pointer-events-auto">
+                {aiQuickMenuOpen && (
+                  <div className="absolute bottom-12 left-0 flex flex-col items-stretch mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden pb-1">
+                    <div className="px-3.5 py-2.5 w-full border-b border-zinc-700/80 bg-zinc-900/40 mb-1">
+                      <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
+                        Tip: Use <kbd className="font-mono bg-zinc-700/80 text-zinc-300 px-1.5 py-[1px] rounded-[3px] mx-0.5">\</kbd> to open AI
+                      </span>
+                    </div>
+                    {AI_ACTIONS.map(action => (
+                      <button
+                        key={action.id}
+                        onClick={() => handleAiAction(action.id)}
+                        className="px-4 py-1.5 text-[13px] text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    if (aiExpression !== "normal") {
+                      // Achievement!
+                      openAlert("Caught in the Act!", "You caught Antigravity making a face! You've earned 10 gems for your sharp eye. ✨")
+                      setGems(prev => prev + 10)
+                      setAiExpression("normal")
+                    }
+                    setAiQuickMenuOpen(v => !v)
+                  }}
+                  className="w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                  style={{ backgroundColor: accent }}
+                  title="Antigravity AI"
+                >
+                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Antennae */}
+                    <motion.line 
+                      x1="12" y1="9" x2="12" y2="4" 
+                      stroke="white" strokeWidth="1.5" strokeLinecap="round" 
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.circle 
+                      cx="12" cy="3" r="1.5" fill="white" 
+                      animate={{ x: [0, 1, -1, 0], y: [0, -0.5, 0.5, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    
+                    {/* Face (Orange Body) */}
+                    <circle cx="12" cy="15" r="7.5" fill="white" fillOpacity="0.1" stroke="white" strokeWidth="1.5" />
+                    <circle cx="12" cy="15" r="5.5" fill="white" />
+                    
+                    {/* Eyes */}
+                    {aiExpression === "normal" && (
+                      <>
+                        <circle cx="9.5" cy="14.5" r="0.8" fill={accent} />
+                        <circle cx="14.5" cy="14.5" r="0.8" fill={accent} />
+                      </>
+                    )}
+                    {aiExpression === "wink" && (
+                      <>
+                        <path d="M8.5 14.5C9 14 10 14 10.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
+                        <circle cx="14.5" cy="14.5" r="0.8" fill={accent} />
+                      </>
+                    )}
+                    {aiExpression === "sleepy" && (
+                      <>
+                        <path d="M8.5 14.5L10.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
+                        <path d="M13.5 14.5L15.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
+                      </>
+                    )}
+                    {aiExpression === "heart" && (
+                      <>
+                        <path d="M8.5 14.5C9 13.5 10.5 13.5 11 14.5L9.5 16L8.5 14.5Z" fill="#ef4444" />
+                        <path d="M13.5 14.5C14 13.5 15.5 13.5 16 14.5L14.5 16L13.5 14.5Z" fill="#ef4444" />
+                      </>
+                    )}
+                    {aiExpression === "surprised" && (
+                      <>
+                        <circle cx="9.5" cy="14.5" r="1.1" stroke={accent} strokeWidth="0.8" />
+                        <circle cx="14.5" cy="14.5" r="1.1" stroke={accent} strokeWidth="0.8" />
+                      </>
+                    )}
+                    
+                    {/* Mouth/Expression */}
+                    {aiExpression === "surprised" ? (
+                      <circle cx="12" cy="17.5" r="1" fill={accent} />
+                    ) : (
+                      <path d="M10.5 16.5C11 17.2 13 17.2 13.5 16.5" stroke={accent} strokeWidth="1" strokeLinecap="round" />
+                    )}
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
           {notes.length === 0 ? (
             <main className="flex-1 flex items-center justify-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
               <div className="text-center">
@@ -2233,6 +2405,14 @@ export default function NoteApp() {
             setGems={setGems}
             setGrove={setGrove}
           />
+
+          <TimerPanel
+            isOpen={timerOpen}
+            onClose={() => setTimerOpen(false)}
+            theme={theme}
+            accent={accent}
+            onSessionComplete={() => setSunshine(s => s + 5)}
+          />
         </div>
 
         {notes.length > 0 && !gridView && (
@@ -2350,60 +2530,6 @@ export default function NoteApp() {
         />
       )}
 
-      {/* AI Quick-Action Button */}
-      {currentView === "editor" && activeNote && activeNote.noteType !== "flashcard" && (
-        <div className="fixed bottom-6 right-6 z-50">
-          {aiQuickMenuOpen && (
-            <div className="absolute bottom-12 right-0 flex flex-col items-stretch mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden pb-1">
-              <div className="px-3.5 py-2.5 w-full border-b border-zinc-700/80 bg-zinc-900/40 mb-1">
-                <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
-                  Tip: Use <kbd className="font-mono bg-zinc-700/80 text-zinc-300 px-1.5 py-[1px] rounded-[3px] mx-0.5">\</kbd> to open AI
-                </span>
-              </div>
-              {AI_ACTIONS.map(action => (
-                <button
-                  key={action.id}
-                  onClick={() => handleAiAction(action.id)}
-                  className="px-4 py-1.5 text-[13px] text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <button
-            onClick={() => setAiQuickMenuOpen(v => !v)}
-            className="w-11 h-11 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            title="Antigravity AI"
-          >
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Antennae */}
-              <motion.line 
-                x1="12" y1="9" x2="12" y2="4" 
-                stroke="white" strokeWidth="1.5" strokeLinecap="round" 
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <motion.circle 
-                cx="12" cy="3" r="1.5" fill="white" 
-                animate={{ x: [0, 1, -1, 0], y: [0, -0.5, 0.5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              
-              {/* Face (Orange Body) */}
-              <circle cx="12" cy="15" r="7.5" fill="white" fillOpacity="0.1" stroke="white" strokeWidth="1.5" />
-              <circle cx="12" cy="15" r="5.5" fill="white" />
-              
-              {/* Eyes */}
-              <circle cx="9.5" cy="14.5" r="0.8" fill="#f97316" />
-              <circle cx="14.5" cy="14.5" r="0.8" fill="#f97316" />
-              
-              {/* Smile */}
-              <path d="M10.5 16.5C11 17.2 13 17.2 13.5 16.5" stroke="#f97316" strokeWidth="1" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   )
 }
