@@ -88,7 +88,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnFont: React.CSSProperties = { fontFamily: 'var(--font-playfair), "Playfair Display", Georgia, serif', letterSpacing: '0.01em' }
+  const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }
 
   const activeStyle = (active: boolean): React.CSSProperties => active
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }

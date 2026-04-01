@@ -8,6 +8,7 @@ import { PricingSection } from "@/components/blocks/pricing-section"
 import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
+import type { Achievement } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ export const SETTINGS_TABS = [
   { id: "interface", label: "Interface", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
   { id: "ai", label: "AI Antigravity", group: "Writing" },
+  { id: "achievements", label: "Achievements", group: "App" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
@@ -45,7 +47,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
   language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
-  shortcuts, setShortcuts,
+  shortcuts, setShortcuts, achievements, onClaimAchievement,
 }: {
   user: any
   onClose: () => void
@@ -72,6 +74,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
   shortcuts: { ai: string; slash: string; sidebar: string; newNote: string; search: string }
   setShortcuts: (s: any) => void
+  achievements: Achievement[]
+  onClaimAchievement: (id: string) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -166,6 +170,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               {activeTab === "interface" && "Customize the Pulp application shell"}
               {activeTab === "editor" && "Configure your writing environment"}
               {activeTab === "ai" && "Optimize your intelligence partner"}
+              {activeTab === "achievements" && "Track your progress and claim rewards"}
               {activeTab === "data" && "Manage your local data and backups"}
               {activeTab === "shortcuts" && "Master Pulp with keyboard acceleration"}
               {activeTab === "subscription" && "Manage your plan and billing"}
@@ -456,6 +461,72 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={<SettingToggle checked={true} onChange={() => {}} isDark={isDark} />}
                 />
               </SettingSection>
+            </>)}
+
+            {/* ── Achievements ── */}
+            {activeTab === "achievements" && (<>
+              <div className="px-5 py-4 grid gap-3">
+                {achievements.map(a => {
+                  const isClaimable = a.completed && !a.claimed
+                  const isClaimed = a.claimed
+                  const progress = a.goal ? Math.min(100, Math.floor(((a.progress || 0) / a.goal) * 100)) : (a.completed ? 100 : 0)
+                  
+                  return (
+                    <div 
+                      key={a.id} 
+                      className={`relative overflow-hidden rounded-xl border p-4 transition-all ${isDark ? (isClaimable ? "bg-orange-500/10 border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]" : "bg-zinc-900 border-zinc-800") : (isClaimable ? "bg-orange-50 border-orange-100 shadow-[0_4px_12px_rgba(249,115,22,0.1)]" : "bg-white border-zinc-200 shadow-sm")}`}
+                    >
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className={`text-[13px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{a.title}</h4>
+                            {isClaimed && <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest text-[9px]">Claimed ✓</span>}
+                          </div>
+                          <p className={`text-[11px] mt-1 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{a.description}</p>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
+                            {a.rewardType === 'gems' ? '💎' : '☀️'} {a.reward}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar for goals */}
+                      {a.goal && !a.completed && (
+                        <div className="mb-4 mt-1">
+                          <div className="flex justify-between text-[9px] font-mono mb-1.5 opacity-50">
+                            <span className="uppercase tracking-tighter">Progress</span>
+                            <span>{Math.floor(a.progress || 0)} / {a.goal}</span>
+                          </div>
+                          <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDark ? "bg-zinc-800" : "bg-zinc-100 shadow-inner"}`}>
+                            <div 
+                              className={`h-full transition-all duration-700 ease-out ${isDark ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" : "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.2)]"}`} 
+                              style={{ width: `${progress}%` }} 
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {isClaimed ? (
+                        <div className={`text-[10px] font-bold uppercase tracking-[0.2em] text-center py-2.5 rounded-lg ${isDark ? "bg-zinc-800/20 text-zinc-600" : "bg-zinc-50 text-zinc-300"}`}>
+                          Claimed
+                        </div>
+                      ) : isClaimable ? (
+                        <button 
+                          onClick={() => onClaimAchievement(a.id)}
+                          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] ring-1 ring-white/20"
+                        >
+                          Claim Reward
+                        </button>
+                      ) : (
+                        <div className={`text-[10px] font-bold uppercase tracking-[0.2em] text-center py-2.5 rounded-lg border border-dashed transition-colors ${isDark ? "border-zinc-800/80 text-zinc-700" : "border-zinc-200/60 text-zinc-300"}`}>
+                          {a.goal ? "In Progress" : "Locked"}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </>)}
 
             {/* ── Data ── */}
