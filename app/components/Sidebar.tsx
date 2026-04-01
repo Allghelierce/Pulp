@@ -5,51 +5,6 @@ import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
 import { BackgroundPlus } from "@/components/ui/background-plus"
 
-// ─── Trash Bin Panel ────────────────────────────────────────────────────────
-function TrashSection({ trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
-  trashNotes: NoteData[]
-  onRestoreNote: (id: string) => void
-  onPermanentlyDeleteNote: (id: string) => void
-}) {
-  return (
-    <div className="border-t border-white/5 bg-zinc-950/40 z-10 shrink-0 flex flex-col px-4 py-2 gap-1.5" style={{ height: 120 }}>
-      {/* Header: simplified trash icon + label */}
-      <div className="flex items-center gap-1.5 shrink-0 h-4">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
-          <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
-        </svg>
-        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Trash</span>
-        <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({trashNotes.length})</span>
-      </div>
-      {/* Scrollable list */}
-      <div className="overflow-y-auto flex-1 space-y-0.5 pr-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
-        {trashNotes.length === 0 && <p className="text-[10px] text-zinc-800 italic px-1">Trash is empty.</p>}
-        {trashNotes.map(tn => (
-          <div key={tn.id} className="group/tr flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
-            <span className="text-[10px] truncate text-zinc-600 group-hover/tr:text-zinc-400 transition-colors min-w-0">{tn.subject || "Untitled"}</span>
-            <div className="flex items-center gap-2 opacity-0 group-hover/tr:opacity-100 transition-opacity shrink-0">
-              <button 
-                onClick={() => onRestoreNote(tn.id)} 
-                title="Restore" 
-                className="text-[10px] text-zinc-500 hover:text-green-500 transition-colors"
-              >
-                Restore
-              </button>
-              <button 
-                onClick={() => onPermanentlyDeleteNote(tn.id)} 
-                title="Delete forever" 
-                className="text-[10px] text-zinc-500 hover:text-red-500 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 // ─── Archive Panel ────────────────────────────────────────────────────────────
 function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
   archivedNotes: NoteData[]
@@ -118,9 +73,6 @@ interface SidebarProps {
   onReorderBookmarks: (b: any[]) => void
   onDeleteBookmark: (id: string) => void
   onRenameBookmark: (id: string, current: string) => void
-  trashNotes: NoteData[]
-  onRestoreNote: (id: string) => void
-  onPermanentlyDeleteNote: (id: string) => void
   archivedNotes?: NoteData[]
   onArchiveNote?: (id: string) => void
   onUnarchiveNote?: (id: string) => void
@@ -132,7 +84,6 @@ export const Sidebar = memo(function Sidebar({
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onUnlockDev, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
-  trashNotes, onRestoreNote, onPermanentlyDeleteNote,
   archivedNotes = [], onArchiveNote, onUnarchiveNote,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
@@ -535,10 +486,10 @@ export const Sidebar = memo(function Sidebar({
                   </button>
                   {newMenuOpen === "ROOT" && (
                     <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
-                      <button onClick={() => { onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
-                      <button onClick={() => { onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
-                      <button onClick={() => { onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
-                      <button onClick={() => { onAddTypedNote(null, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
+                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
+                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
+                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
                     </div>
                   )}
                 </div>
@@ -573,10 +524,10 @@ export const Sidebar = memo(function Sidebar({
                       </button>
                       {newMenuOpen === String(f.id) && (
                         <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
-                          <button onClick={() => { onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
-                          <button onClick={() => { onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
-                          <button onClick={() => { onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
-                          <button onClick={() => { onAddTypedNote(f.id, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
+                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
+                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
+                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
                         </div>
                       )}
                     </div>
@@ -688,14 +639,52 @@ export const Sidebar = memo(function Sidebar({
           />
         )}
 
-        {/* Trash Bin Section */}
-        {trashNotes.length > 0 && (
-          <TrashSection
-            trashNotes={trashNotes}
-            onRestoreNote={onRestoreNote}
-            onPermanentlyDeleteNote={onPermanentlyDeleteNote}
-          />
-        )}
+        {/* Apple Tree Engraving - Bottom Right */}
+        <div className="flex justify-end pr-1 mt-auto pt-4" style={{ opacity: sidebarWidth > 100 ? 1 : 0, transition: "opacity 200ms ease" }}>
+          <svg width="60" height="70" viewBox="0 0 100 120" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(255,255,255,0.15)", filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))" }}>
+            {/* Roots */}
+            <path d="M 50 115 Q 35 110 30 100 M 50 115 Q 65 110 70 100" />
+            <path d="M 30 100 Q 25 85 28 75 M 70 100 Q 75 85 72 75" />
+
+            {/* Trunk */}
+            <path d="M 50 115 Q 48 90 47 60" strokeWidth="2" />
+            <path d="M 50 115 Q 52 90 53 60" strokeWidth="2" />
+
+            {/* Main branches */}
+            <path d="M 50 65 Q 35 55 28 45" />
+            <path d="M 50 65 Q 65 55 72 45" />
+            <path d="M 50 55 Q 38 42 32 32" />
+            <path d="M 50 55 Q 62 42 68 32" />
+
+            {/* Left foliage cluster */}
+            <ellipse cx="28" cy="35" rx="12" ry="14" />
+            <ellipse cx="20" cy="28" rx="10" ry="12" />
+            <ellipse cx="25" cy="22" rx="11" ry="13" />
+
+            {/* Right foliage cluster */}
+            <ellipse cx="72" cy="35" rx="12" ry="14" />
+            <ellipse cx="80" cy="28" rx="10" ry="12" />
+            <ellipse cx="75" cy="22" rx="11" ry="13" />
+
+            {/* Top foliage cluster */}
+            <ellipse cx="50" cy="20" rx="14" ry="16" />
+            <ellipse cx="42" cy="12" rx="12" ry="14" />
+            <ellipse cx="58" cy="12" rx="12" ry="14" />
+
+            {/* Apples */}
+            <circle cx="32" cy="38" r="3" fill="currentColor" />
+            <circle cx="45" cy="25" r="3" fill="currentColor" />
+            <circle cx="68" cy="38" r="3" fill="currentColor" />
+            <circle cx="55" cy="28" r="3" fill="currentColor" />
+
+            {/* Leaf details */}
+            <path d="M 20 35 Q 18 32 20 28" opacity="0.6" />
+            <path d="M 35 28 Q 33 25 35 22" opacity="0.6" />
+            <path d="M 80 35 Q 82 32 80 28" opacity="0.6" />
+            <path d="M 65 28 Q 67 25 65 22" opacity="0.6" />
+          </svg>
+        </div>
+
       </div>
     </>
   )
