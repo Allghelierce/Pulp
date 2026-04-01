@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
 
 export function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
-  const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
+  const [val, setVal] = useState("")
   const [checked, setChecked] = useState(false)
 
   const confirm = () => {
-    if (config.type === "prompt") config.onConfirm(val.trim())
+    if (config.type === "prompt") config.onConfirm(val.trim() || (config.defaultValue ?? ""))
     else if (config.type === "confirm") config.onConfirm(checked)
     else if (config.type === "alert" && (config as any).onConfirm) (config as any).onConfirm()
     onClose()
@@ -47,15 +47,28 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
 
         <div className="px-8 pt-10 pb-8 flex flex-col items-center text-center">
           {/* Icon/Visual feedback based on type */}
-          <div className="mb-6 w-14 h-14 rounded-full bg-zinc-700/30 flex items-center justify-center border border-zinc-700/50">
-            {config.type === "prompt" && <span className="text-2xl text-orange-400">✨</span>}
-            {config.type === "confirm" && <span className="text-2xl text-orange-400">⚠️</span>}
-            {config.type === "alert" && <span className="text-2xl text-orange-400">👋</span>}
-          </div>
+          {config.type === "prompt" && (
+            <svg className="w-7 h-7 mb-6 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          )}
+          {config.type === "confirm" && (
+            <svg className="w-7 h-7 mb-6 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          )}
+          {config.type === "alert" && (
+            <svg className="w-7 h-7 mb-6 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+          )}
 
-          <h2 
-            className="text-2xl text-white tracking-widest uppercase mb-3"
-            style={{ fontFamily: 'var(--font-italiana)' }}
+          <h2
+            className="text-lg text-white mb-3"
+            style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em', fontWeight: 600 }}
           >
             {config.type === "prompt" ? config.title : config.title}
           </h2>
@@ -72,9 +85,9 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
                 autoFocus
                 value={val}
                 onChange={e => setVal(e.target.value)}
-                placeholder={config.placeholder ?? "Type something..."}
+                placeholder={config.defaultValue ?? "Type something..."}
                 style={{ fontFamily: '"EB Garamond", serif' }}
-                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-2.5 text-base text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
               />
             </div>
           )}

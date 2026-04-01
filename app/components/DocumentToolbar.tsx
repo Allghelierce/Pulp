@@ -12,6 +12,7 @@ interface DocumentToolbarProps {
   zoom: string
   theme: "light" | "dark"
   gridView: boolean
+  gardenView: boolean
   sketchMode: boolean
   drawLineMode: boolean
   currentPageIdx: number
@@ -19,6 +20,7 @@ interface DocumentToolbarProps {
   setZoom: (v: string) => void
   setCarouselIdx: (idx: number) => void
   setGridView: (fn: (v: boolean) => boolean) => void
+  setGardenView: (fn: (v: boolean) => boolean) => void
   setSketchMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
   setDrawLineMode: (v: boolean) => void
@@ -59,8 +61,8 @@ interface DocumentToolbarProps {
 const GOLD = "#D4AF37"
 
 export const DocumentToolbar = memo(function DocumentToolbar({
-  zoom, gridView, drawLineMode, currentPageIdx,
-  setZoom, setCarouselIdx, setGridView, setDrawLineMode,
+  zoom, gridView, gardenView, drawLineMode, currentPageIdx,
+  setZoom, setCarouselIdx, setGridView, setGardenView, setDrawLineMode,
   openAlert, clearPage, autoAlign, verticalAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
@@ -134,6 +136,21 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <span>Grid</span>
         </button>
 
+        {/* Garden */}
+        <button
+          onMouseDown={e => { e.preventDefault(); setGardenView(v => !v) }}
+          title="Garden"
+          className={`${btnBase} flex items-center gap-1.5`}
+          style={{ ...activeStyle(gardenView), ...btnFont }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M12 2l2 4h4l-3 3 1 4-4-3-4 3 1-4-3-3h4l2-4z" />
+            <circle cx="6" cy="18" r="2" />
+            <circle cx="18" cy="18" r="2" />
+          </svg>
+          <span>Garden</span>
+        </button>
+
         {/* Align Dropdown */}
         <div ref={alignRef} className="relative flex shrink-0">
           <button
@@ -158,14 +175,14 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Horizontal Snap
+                Horizontally
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Vertical Distribute
+                Vertically
               </button>
             </div>
           )}

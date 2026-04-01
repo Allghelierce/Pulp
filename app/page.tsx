@@ -14,6 +14,7 @@ import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
 import { OrchardView } from "@/app/components/OrchardView"
+import { GardenView } from "@/app/components/GardenView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
@@ -729,6 +730,7 @@ export default function NoteApp() {
     window.addEventListener("mouseup", onUp)
   }, [sidebarWidth])
   const [gridView, setGridView] = useState(false)
+  const [gardenView, setGardenView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
@@ -740,6 +742,7 @@ export default function NoteApp() {
   const [blockedSites, setBlockedSites] = useState<string[]>([])
   const [blockedApps, setBlockedApps] = useState<string[]>([])
   const [isDevUnlocked, setIsDevUnlocked] = useState(false)
+  const [socials, setSocials] = useState<{ twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }>({})
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
@@ -818,6 +821,24 @@ export default function NoteApp() {
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
   }, [])
+
+  // Timer logic
+  useEffect(() => {
+    let interval: any
+    if (timerRunning && !timerDone) {
+      interval = setInterval(() => {
+        setTimerElapsed(prev => {
+          if (prev >= timerTotal) {
+            setTimerRunning(false)
+            setTimerDone(true)
+            return timerTotal
+          }
+          return prev + 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [timerRunning, timerDone, timerTotal])
 
   // Earn Sunshine over time (1 every 30 seconds of activity)
   useEffect(() => {
@@ -941,7 +962,7 @@ export default function NoteApp() {
   }, [activeTabId, currentPageIdx, stickyColor, zoom, setNotes])
 
   const activeNote = useMemo(
-    () => (notes.find(n => n.id === activeTabId) ?? notes[0]) as NoteData,
+    () => (notes.find(n => n.id === activeTabId) ?? notes.filter(n => !n.archived)[0]) as NoteData,
     [notes, activeTabId]
   )
 
@@ -954,7 +975,7 @@ export default function NoteApp() {
   }, [activeNote, currentPageIdx])
 
   // Dialog helpers
-  const openPrompt = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
+  const openPrompt = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void, icon?: string) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm, icon }), [])
   const openConfirm = useCallback((title: string, message: string, onConfirm: (checked?: boolean) => void, confirmLabel?: string, danger?: boolean, showCheckbox?: boolean, checkboxLabel?: string) => setDialog({ type: "confirm", title, message, onConfirm, confirmLabel, danger, showCheckbox, checkboxLabel }), [])
   const openAlert = useCallback((title: string, message?: string) => setDialog({ type: "alert", title, message }), [])
 
@@ -1521,8 +1542,8 @@ export default function NoteApp() {
 
   // Save to localStorage whenever notes, folders, or active tab changes
   useEffect(() => {
-    if (notes.length > 0) localStorage.setItem("pulp-notes", JSON.stringify(notes))
-    if (folders.length > 0) localStorage.setItem("pulp-folders", JSON.stringify(folders))
+    localStorage.setItem("pulp-notes", JSON.stringify(notes))
+    localStorage.setItem("pulp-folders", JSON.stringify(folders))
   }, [notes, folders])
 
   useEffect(() => {
@@ -1554,20 +1575,26 @@ export default function NoteApp() {
   // Note/folder actions
   const addNote = (folderId: number | null = null) =>
     openPrompt("Name your notebook", "New Notebook", "Notebook name…", "Create", name => {
-      if (!name.trim()) return
+      const finalName = name.trim() || "New Notebook"
       const id = uid()
-      const newNote = { id, subject: name.trim(), pages: [""], folderId, boxes: {} }
+      const newNote = { id, subject: finalName, pages: [""], folderId, boxes: {} }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
-    })
+    }, "📓")
 
   const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
     let title = "New Notebook"
     let placeholder = "Notebook name…"
     let promptTitle = "Name your notebook"
-    if (noteType === "singlepage") { title = "New Page"; placeholder = "Page name…"; promptTitle = "Name your page" }
-    else if (noteType === "flashcard") { title = "New Deck"; placeholder = "Deck name…"; promptTitle = "Name your deck" }
-    else if (noteType === "vault") { title = "New Vault"; placeholder = "Vault name…"; promptTitle = "Name your vault" }
+    let icon = "📓"
+
+    if (noteType === "singlepage") { 
+      title = "New Page"; placeholder = "Page name…"; promptTitle = "Name your page"; icon = "📄"
+    } else if (noteType === "flashcard") { 
+      title = "New Deck"; placeholder = "Deck name…"; promptTitle = "Name your deck"; icon = "🃏"
+    } else if (noteType === "vault") { 
+      title = "New Vault"; placeholder = "Vault name…"; promptTitle = "Name your vault"; icon = "🔐"
+    }
     
     const finishCreate = (name: string, pwd?: string) => {
       const id = uid()
@@ -1586,18 +1613,19 @@ export default function NoteApp() {
     }
 
     openPrompt(promptTitle, title, placeholder, "Create", name => {
-      if (!name.trim()) return
+      if (!name.trim() && !title) return
+      const finalName = name.trim() || title
       if (noteType === "vault") {
         setTimeout(() => {
           openPrompt("Set Password", "Vault Password", "Enter a password...", "Create", pwd => {
             if (!pwd) { openAlert("Error", "Password is required for a vault."); return }
-            finishCreate(name, pwd)
-          })
+            finishCreate(finalName, pwd)
+          }, "🔑")
         }, 150)
       } else {
-        finishCreate(name)
+        finishCreate(finalName)
       }
-    })
+    }, icon)
   }
 
   const AI_ACTIONS = [
@@ -1849,73 +1877,91 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} socials={socials} setSocials={setSocials} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      {!gridView && <div style={{ display: gridView ? 'none' : 'flex' }}>
-      <Sidebar
-        notes={notes}
-        folders={folders}
-        activeTabId={activeTabId}
-        accent={accent}
-        draggedNoteId={draggedNoteId}
-        renamingFolder={renamingFolder}
-        user={user}
-        sidebarWidth={sidebarWidth}
-        isDragging={isSidebarDragging}
-        onAddNote={addNote}
-        onAddTypedNote={addTypedNote}
-        onAddFolder={addFolder}
-        onSelectNote={id => {
-          const n = notes.find(x => x.id === id)
-          if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
-            openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
-              if (pwd === (n.password || "")) {
-                unlockedVaults.current.add(id)
-                editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
-              } else {
-                openAlert("Access Denied", "Incorrect password.")
-              }
+      {!gridView && !gardenView && <div style={{ display: gridView || gardenView ? 'none' : 'flex' }}>
+        <Sidebar
+          notes={notes}
+          folders={folders}
+          activeTabId={activeTabId}
+          accent={accent}
+          draggedNoteId={draggedNoteId}
+          renamingFolder={renamingFolder}
+          user={user}
+          sidebarWidth={sidebarWidth}
+          isDragging={isSidebarDragging}
+          onAddNote={addNote}
+          onAddTypedNote={addTypedNote}
+          onAddFolder={addFolder}
+          onSelectNote={id => {
+            const n = notes.find(x => x.id === id)
+            if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
+              openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
+                if (pwd === (n.password || "")) {
+                  unlockedVaults.current.add(id)
+                  editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+                } else {
+                  openAlert("Access Denied", "Incorrect password.")
+                }
+              })
+              return
+            }
+            editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+          }}
+          onRenameNote={renameNote}
+          onDeleteNote={deleteNote}
+          archivedNotes={archivedNotes}
+          onArchiveNote={archiveNote}
+          onUnarchiveNote={unarchiveNote}
+          unlockedIds={unlockedVaults.current}
+          onToggleFolder={toggleFolder}
+          onRenameFolder={renameFolder}
+          onDeleteFolder={deleteFolder}
+          onSetRenamingFolder={setRenamingFolder}
+          onSetDraggedNoteId={setDraggedNoteId}
+          onDropNote={handleDropNote}
+          onOpenSettings={() => setShowSettings(true)}
+          onSetNoteParent={setNoteParent}
+          onChangeNoteIcon={changeNoteIcon}
+          onGoToShelf={() => setCurrentView("shelf")}
+          bookmarks={bookmarks}
+          onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
+          onReorderBookmarks={(newB) => setBookmarks(newB)}
+          onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
+          onRenameBookmark={(id, current) => {
+            openPrompt("Rename Bookmark", current, "Enter new title...", "Rename", (val: string) => {
+              if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
             })
-            return
-          }
-          editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
-        }}
-        onRenameNote={renameNote}
-        onDeleteNote={deleteNote}
-        trashNotes={trashNotes}
-        onRestoreNote={restoreNote}
-        onPermanentlyDeleteNote={permanentlyDeleteNote}
-        archivedNotes={archivedNotes}
-        onArchiveNote={archiveNote}
-        onUnarchiveNote={unarchiveNote}
-        unlockedIds={unlockedVaults.current}
-        onToggleFolder={toggleFolder}
-        onRenameFolder={renameFolder}
-        onDeleteFolder={deleteFolder}
-        onSetRenamingFolder={setRenamingFolder}
-        onSetDraggedNoteId={setDraggedNoteId}
-        onDropNote={handleDropNote}
-        onOpenSettings={() => setShowSettings(true)}
-        onSetNoteParent={setNoteParent}
-        onChangeNoteIcon={changeNoteIcon}
-        onGoToShelf={() => setCurrentView("shelf")}
-        bookmarks={bookmarks}
-        onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
-        onReorderBookmarks={(newB) => setBookmarks(newB)}
-        onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
-        onRenameBookmark={(id, current) => {
-          openPrompt("Rename Bookmark", current, "Enter new title...", "Rename", (val: string) => {
-            if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
-          })
-        }}
-        onUnlockDev={handleUnlockDev}
-      />
+          }}
+          onUnlockDev={handleUnlockDev}
+        />
+        {timerOpen && (
+          <div className="absolute inset-0 z-[100] bg-[#09090b]">
+            <TimerPanel
+              isOpen={timerOpen}
+              onClose={() => setTimerOpen(false)}
+              theme={theme}
+              accent={accent}
+              elapsed={timerElapsed}
+              total={timerTotal}
+              running={timerRunning}
+              done={timerDone}
+              preset={timerPreset}
+              onSetRunning={setTimerRunning}
+              onSetElapsed={setTimerElapsed}
+              onSetTotal={setTimerTotal}
+              onSetPreset={setTimerPreset}
+              onSetDone={setTimerDone}
+            />
+          </div>
+        )}
+
       </div>
       }
 
       {/* Sidebar edge resize handle */}
-      {!gridView && <div
+      {!gridView && !gardenView && <div
         onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
         style={{
           position: "absolute", top: 0, bottom: 0,
@@ -1982,7 +2028,7 @@ export default function NoteApp() {
           )
         })()}
 
-        {notes.length > 0 && (
+        {notes.filter(n => !n.archived).length > 0 && (
           <div className="relative">
             <DocumentToolbar
               activeTool={activeTool}
@@ -1995,6 +2041,8 @@ export default function NoteApp() {
               setZoom={setZoom}
               gridView={gridView}
               setGridView={setGridView}
+              gardenView={gardenView}
+              setGardenView={setGardenView}
               setCarouselIdx={setCarouselIdx}
               sketchMode={sketchMode}
               setSketchMode={setSketchMode}
@@ -2147,7 +2195,7 @@ export default function NoteApp() {
               </div>
             </div>
           )}
-          {notes.length === 0 ? (
+          {notes.filter(n => !n.archived).length === 0 ? (
             <main className="flex-1 flex items-center justify-center px-4" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
               <div className="text-center max-w-md">
                 {/* Decorative Element */}
@@ -2194,6 +2242,8 @@ export default function NoteApp() {
                 </div>
               </div>
             </main>
+          ) : gardenView ? (
+            <GardenView />
           ) : gridView ? (
             <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
           ) : activeNote?.noteType === "flashcard" ? (
@@ -2486,29 +2536,10 @@ export default function NoteApp() {
             setGrove={setGrove}
           />
 
-          <TimerPanel
-            isOpen={timerOpen}
-            onClose={() => setTimerOpen(false)}
-            theme={theme}
-            accent={accent}
-            elapsed={timerElapsed}
-            total={timerTotal}
-            running={timerRunning}
-            done={timerDone}
-            preset={timerPreset}
-            onSetRunning={setTimerRunning}
-            onSetElapsed={setTimerElapsed}
-            onSetTotal={setTimerTotal}
-            onSetPreset={setTimerPreset}
-            onSetDone={setTimerDone}
-            onSessionCancel={(ratio) => {
-              setSunshine(s => Math.max(0, s + Math.floor(5 * ratio)))
-              openAlert("Session Stopped", `You earned ${Math.floor(5 * ratio)} ☀️ for the work you did.`)
-            }}
-          />
+
         </div>
 
-        {notes.length > 0 && !gridView && (
+        {notes.filter(n => !n.archived).length > 0 && !gridView && (
           <>
             <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
             <HangingOrange onClick={() => setTimerOpen(!timerOpen)} />

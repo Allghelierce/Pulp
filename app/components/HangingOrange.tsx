@@ -120,13 +120,20 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
 
         {/* The Orange Ball */}
         <div style={{
-          width: 30, height: 30, borderRadius: "50%",
+          width: 32, height: 32, borderRadius: "50%",
           background: "radial-gradient(circle at 35% 35%, #fb923c 0%, #ea580c 100%)",
-          boxShadow: "0 6px 16px rgba(0,0,0,0.15), inset -3px -3px 8px rgba(0,0,0,0.15), inset 3px 3px 6px rgba(255,255,255,0.25)",
+          boxShadow: "0 8px 24px rgba(234,88,12,0.3), inset -4px -4px 10px rgba(0,0,0,0.2), inset 4px 4px 8px rgba(255,255,255,0.3)",
           marginTop: -4,
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          border: "1.5px solid rgba(255,255,255,0.1)"
         }}>
+           {/* Flowing Highlight Glow */}
+           <motion.div 
+             animate={{ x: ["-100%", "100%"] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+           />
+           
            {/* Pores / Texture */}
            <svg width="100%" height="100%" style={{ position: "absolute", opacity: 0.15 }}>
              <filter id="orange-noise">
@@ -138,7 +145,7 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
            {/* Stem dimple */}
            <div style={{
              position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
-             width: 8, height: 4, background: "rgba(0,0,0,0.08)", borderRadius: "50%"
+             width: 8, height: 4, background: "rgba(0,0,0,0.15)", borderRadius: "50%"
            }} />
            
            {/* Primary Shine */}

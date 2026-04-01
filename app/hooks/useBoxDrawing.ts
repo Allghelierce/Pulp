@@ -31,6 +31,7 @@ export function useBoxDrawing({
   const selectedBoxIdsRef = useRef<Set<string>>(new Set())
   const [selectionVersion, setSelectionVersion] = useState(0)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
+  const aligningRef = useRef(false)
 
   // Stable refs so DOM handlers never have stale closures
   const zoomRef = useRef(zoom)
@@ -421,92 +422,104 @@ export function useBoxDrawing({
   const updateBoxContent = useCallback((id: string, text: string) => updateBoxes(bs => bs.map(b => b.id === id ? { ...b, content: text } : b)), [updateBoxes])
 
   const autoAlign = useCallback(() => {
-    updateBoxes(bs => {
-      if (bs.length === 0) return bs
-      const sorted = [...bs].sort((a, b) => a.y - b.y)
-      const rows: TextBox[][] = []
-      let currentRow: TextBox[] = [sorted[0]]
+    if (aligningRef.current) return
+    aligningRef.current = true
+    try {
+      updateBoxes(bs => {
+        if (bs.length === 0) return bs
+        const sorted = [...bs].sort((a, b) => a.y - b.y)
+        const rows: TextBox[][] = []
+        let currentRow: TextBox[] = [sorted[0]]
 
-      for (let i = 1; i < sorted.length; i++) {
-        const box = sorted[i]
-        const rowAvgY = currentRow.reduce((sum, b) => sum + b.y, 0) / currentRow.length
-        if (box.y < rowAvgY + 60) {
-          currentRow.push(box)
-        } else {
-          rows.push(currentRow)
-          currentRow = [box]
+        for (let i = 1; i < sorted.length; i++) {
+          const box = sorted[i]
+          const rowAvgY = currentRow.reduce((sum, b) => sum + b.y, 0) / currentRow.length
+          if (box.y < rowAvgY + 60) {
+            currentRow.push(box)
+          } else {
+            rows.push(currentRow)
+            currentRow = [box]
+          }
         }
-      }
-      rows.push(currentRow)
+        rows.push(currentRow)
 
-      let currentY = Math.max(sorted[0].y, 60)
-      const standardMarginX = 128
-      const newBoxes: TextBox[] = []
+        let currentY = Math.max(sorted[0].y, 60)
+        const standardMarginX = 128
+        const newBoxes: TextBox[] = []
 
-      const tid = activeTabIdRef.current
-      const pidx = currentPageIdxRef.current
-      const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
-      const lines = [112, ...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
+        const lines = [112, ...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
 
-      for (const row of rows) {
-        row.sort((a, b) => a.x - b.x)
-        let currentX = standardMarginX
-        let maxH = 0
-        for (let i = 0; i < row.length; i++) {
-          const rowBox = row[i]
-          let snappedX = currentX
-          if (lines.length > 0) {
-            let matchedLine = -1
-            if (i === 0 && rowBox.x < lines[0] + 250) {
-              matchedLine = lines[0]
-            } else {
-              for (const lx of lines) {
-                if (rowBox.x >= lx - 40) matchedLine = lx
+        for (const row of rows) {
+          row.sort((a, b) => a.x - b.x)
+          let currentX = standardMarginX
+          let maxH = 0
+          for (let i = 0; i < row.length; i++) {
+            const rowBox = row[i]
+            let snappedX = currentX
+            if (lines.length > 0) {
+              let matchedLine = -1
+              if (i === 0 && rowBox.x < lines[0] + 250) {
+                matchedLine = lines[0]
+              } else {
+                for (const lx of lines) {
+                  if (rowBox.x >= lx - 40) matchedLine = lx
+                }
+              }
+              if (matchedLine !== -1) {
+                snappedX = matchedLine + 32
               }
             }
-            if (matchedLine !== -1) {
-              snappedX = matchedLine + 32
-            }
+            snappedX = Math.max(snappedX, currentX)
+            newBoxes.push({ ...rowBox, x: snappedX, y: currentY })
+            currentX = snappedX + rowBox.w + 48
+            maxH = Math.max(maxH, rowBox.h)
           }
-          snappedX = Math.max(snappedX, currentX)
-          newBoxes.push({ ...rowBox, x: snappedX, y: currentY })
-          currentX = snappedX + rowBox.w + 48
-          maxH = Math.max(maxH, rowBox.h)
+          currentY += maxH + 24
         }
-        currentY += maxH + 24
-      }
-      return newBoxes
-    })
+        return newBoxes
+      })
+    } finally {
+      aligningRef.current = false
+    }
   }, [updateBoxes])
 
   const verticalAlign = useCallback(() => {
-    updateBoxes(bs => {
-      const selectedIds = selectedBoxIdsRef.current
-      const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
-      if (toAlign.length === 0) return bs
-      
-      const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
-      
-      const tid = activeTabIdRef.current
-      const pidx = currentPageIdxRef.current
-      const currentNote = tid ? notesRef.current.find(n => n.id === tid) : null
-      const noteLines = currentNote?.lines?.[pidx] || []
-      const lines = [112, ...noteLines].sort((a, b) => a - b)
+    if (aligningRef.current) return
+    aligningRef.current = true
+    try {
+      updateBoxes(bs => {
+        const selectedIds = selectedBoxIdsRef.current
+        const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+        if (toAlign.length === 0) return bs
 
-      // Start Y from the first box's Y or 80
-      let tempY = Math.max(sorted[0].y, 80)
-      // Align to the first margin line (usually 112 + 32 = 144)
-      const baseMarginX = (lines[0] || 112) + 32
+        const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
 
-      const alignedBoxesMap = new Map()
-      for (const box of sorted) {
-        const height = box.h || 40
-        alignedBoxesMap.set(box.id, { ...box, x: baseMarginX, y: tempY })
-        tempY += height + 16 // Consistent gap
-      }
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const currentNote = tid ? notesRef.current.find(n => n.id === tid) : null
+        const noteLines = currentNote?.lines?.[pidx] || []
+        const lines = [112, ...noteLines].sort((a, b) => a - b)
 
-      return bs.map(b => alignedBoxesMap.get(b.id) || b)
-    })
+        // Start Y from the first box's Y or 80
+        let tempY = Math.max(sorted[0].y, 80)
+        // Align to the first margin line (usually 112 + 32 = 144)
+        const baseMarginX = (lines[0] || 112) + 32
+
+        const alignedBoxesMap = new Map()
+        for (const box of sorted) {
+          const height = box.h || 40
+          alignedBoxesMap.set(box.id, { ...box, x: baseMarginX, y: tempY })
+          tempY += height + 16 // Consistent gap
+        }
+
+        return bs.map(b => alignedBoxesMap.get(b.id) || b)
+      })
+    } finally {
+      aligningRef.current = false
+    }
   }, [updateBoxes])
 
   const selectBox = useCallback((id: string) => { pruneEmpty(); setSelectedBoxIds(new Set([id])) }, [pruneEmpty, setSelectedBoxIds])
