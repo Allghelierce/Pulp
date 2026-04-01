@@ -1,5 +1,14 @@
-// Preload script for Electron security
-// This script runs in the renderer process context before the main content loads
+const { contextBridge, ipcRenderer } = require('electron')
 
-// You can define IPC (Inter-Process Communication) channels here if needed
-// For now, this is a minimal secure preload script
+contextBridge.exposeInMainWorld('electronAPI', {
+  /**
+   * Activate or deactivate the system-wide (or app-wide) focus blocker.
+   * @param {Object} config { active: boolean, sites: string[], apps: string[] }
+   */
+  setBlocker: (config) => ipcRenderer.send('set-blocker', config),
+  
+  /**
+   * Request system permissions for blocking (macOS specific)
+   */
+  requestPermissions: () => ipcRenderer.invoke('request-blocker-permissions')
+})

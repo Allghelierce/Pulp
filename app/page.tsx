@@ -1852,7 +1852,7 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      <Sidebar
+      {!gridView && <Sidebar
         notes={notes}
         folders={folders}
         activeTabId={activeTabId}
@@ -1909,7 +1909,7 @@ export default function NoteApp() {
           })
         }}
         onUnlockDev={handleUnlockDev}
-      />
+      />}
 
       {/* Sidebar edge resize handle */}
       <div

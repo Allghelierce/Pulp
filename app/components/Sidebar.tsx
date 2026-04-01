@@ -111,6 +111,7 @@ interface SidebarProps {
   onSetNoteParent: (id: string, parentId: string | undefined) => void
   onChangeNoteIcon: (id: string, icon: string) => void
   onOpenSettings: () => void
+  onUnlockDev: () => void
   onGoToShelf: () => void
   bookmarks: any[]
   onJumpToBookmark: (b: any) => void
@@ -129,7 +130,7 @@ export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds,
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
-  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
+  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onUnlockDev, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   trashNotes, onRestoreNote, onPermanentlyDeleteNote,
   archivedNotes = [], onArchiveNote, onUnarchiveNote,
@@ -147,6 +148,7 @@ export const Sidebar = memo(function Sidebar({
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null)
   const [newMenuOpen, setNewMenuOpen] = useState<string | null>(null)
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
+  const [devClicks, setDevClicks] = useState(0)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -484,7 +486,18 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         <div className="relative p-4 border-b border-white/5 shrink-0 overflow-hidden z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          <div className="relative flex items-center gap-2.5 mb-5 cursor-default">
+          <div 
+            onClick={() => {
+              const count = devClicks + 1
+              if (count >= 7) {
+                onUnlockDev()
+                setDevClicks(0)
+              } else {
+                setDevClicks(count)
+              }
+            }}
+            className="relative flex items-center gap-2.5 mb-5 cursor-default select-none active:scale-[0.98] transition-transform"
+          >
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="14" cy="14" r="13" fill="#B8661A" />
               <circle cx="14" cy="14" r="11" fill="#F5A030" />

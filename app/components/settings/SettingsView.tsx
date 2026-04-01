@@ -18,7 +18,8 @@ export const SETTINGS_TABS = [
   { id: "typography", label: "Typography", group: "App" },
   { id: "interface", label: "Interface", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
-  { id: "ai", label: "AI Antigravity", group: "Writing" },
+  { id: "ai", label: "AI Kai", group: "Writing" },
+  { id: "blocker", label: "Focus Blocker", group: "Writing" },
   { id: "achievements", label: "Achievements", group: "App" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
@@ -49,7 +50,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
   headingFont, setHeadingFont,
   shortcuts, setShortcuts, achievements, onClaimAchievement,
-  devMode, setDevMode,
+  devMode, setDevMode, isDevUnlocked,
+  blockedSites, setBlockedSites, blockedApps, setBlockedApps,
 }: {
   user: any
   onClose: () => void
@@ -80,6 +82,9 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   achievements: Achievement[]
   onClaimAchievement: (id: string) => void
   devMode: boolean; setDevMode: (v: boolean) => void
+  isDevUnlocked: boolean
+  blockedSites: string[]; setBlockedSites: (v: string[]) => void
+  blockedApps: string[]; setBlockedApps: (v: string[]) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -174,6 +179,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               {activeTab === "interface" && "Customize the Pulp application shell"}
               {activeTab === "editor" && "Configure your writing environment"}
               {activeTab === "ai" && "Optimize your intelligence partner"}
+              {activeTab === "blocker" && "Restrict distractions during focus sessions"}
               {activeTab === "achievements" && "Track your progress and claim rewards"}
               {activeTab === "data" && "Manage your local data and backups"}
               {activeTab === "shortcuts" && "Master Pulp with keyboard acceleration"}
@@ -461,13 +467,53 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
 
             {/* ── AI ── */}
             {activeTab === "ai" && (<>
-              <SettingSection title="Antigravity Intelligence" isDark={isDark}>
+              <SettingSection title="Kai Intelligence" isDark={isDark}>
                 <SettingRow
                   title="Inline suggestions"
                   isDark={isDark}
-                  description="Antigravity predicts your next words as you write"
+                  description="Kai predicts your next words as you write"
                   control={<SettingToggle checked={true} onChange={() => {}} isDark={isDark} />}
                 />
+              </SettingSection>
+            </>)}
+
+            {/* ── Focus Blocker ── */}
+            {activeTab === "blocker" && (<>
+              <SettingSection title="Session Protection" isDark={isDark}>
+                 <div className="px-5 py-4 pb-6">
+                    <p className={`text-[12px] leading-relaxed mb-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                      When active, Pulp will attempt to restrict access to these distractions while your Focus Timer is running.
+                    </p>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                      <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      </div>
+                      <div className="min-w-0">
+                         <p className="text-[11px] font-bold text-[#ea580c] uppercase tracking-widest">Protective Aura</p>
+                         <p className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Requires "Automation" permissions on macOS to monitor browsers.</p>
+                      </div>
+                    </div>
+                 </div>
+              </SettingSection>
+
+              <SettingSection title="Blocked Websites" isDark={isDark}>
+                 <BlockList 
+                   placeholder="e.g. twitter.com, reddit.com" 
+                   items={blockedSites} 
+                   onChange={setBlockedSites} 
+                   isDark={isDark} 
+                   description="Enter domains to restrict during focus"
+                 />
+              </SettingSection>
+
+              <SettingSection title="Blocked Applications" isDark={isDark}>
+                 <BlockList 
+                   placeholder="e.g. Discord, Slack, Steam" 
+                   items={blockedApps} 
+                   onChange={setBlockedApps} 
+                   isDark={isDark} 
+                   description="Executable names to close when focus begins"
+                 />
               </SettingSection>
             </>)}
 
@@ -565,17 +611,26 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                  </div>
                </SettingSection>
 
-               <SettingSection title="Developer" isDark={isDark}>
-                 <SettingRow
-                   title="Developer Authority"
-                   isDark={isDark}
-                   description="Grant infinite Sunshine and Gems for testing"
-                   control={<SettingToggle checked={devMode} onChange={setDevMode} isDark={isDark} />}
-                 />
-                 <div className="px-5 pb-3">
-                   <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} italic`}>Note: Infinite balances won't affect stored achievement progress.</p>
-                 </div>
-               </SettingSection>
+               {isDevUnlocked && (
+                 <SettingSection title="Developer" isDark={isDark}>
+                   <SettingRow
+                     title={
+                       <div className="flex items-center gap-2">
+                         Dev Mode
+                         <span className="px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-500 text-[8px] font-black uppercase tracking-tighter border border-orange-500/30">
+                           Verified Authority
+                         </span>
+                       </div>
+                     }
+                     isDark={isDark}
+                     description="Grant infinite Sunshine and Gems for testing"
+                     control={<SettingToggle checked={devMode} onChange={setDevMode} isDark={isDark} />}
+                   />
+                   <div className="px-5 pb-3">
+                     <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} italic`}>Note: Infinite balances won't affect stored achievement progress.</p>
+                   </div>
+                 </SettingSection>
+               )}
             </>)}
 
             {/* ── Shortcuts ── */}
@@ -805,4 +860,57 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
     </div>
   )
 }
+
+function BlockList({ placeholder, items, onChange, isDark, description }: {
+  placeholder: string; items: string[]; onChange: (v: string[]) => void; isDark: boolean; description: string
+}) {
+  const [val, setVal] = useState("")
+  
+  const add = () => {
+    if (!val.trim()) return
+    if (items.includes(val.trim())) return
+    onChange([...items, val.trim()])
+    setVal("")
+  }
+
+  return (
+    <div className="p-5 flex flex-col gap-4">
+       <p className={`text-[11.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{description}</p>
+       <div className="flex flex-wrap gap-2">
+          {items.map((it, i) => (
+             <div key={i} className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border text-[11px] font-bold group ${
+                isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-700"
+             }`}>
+                {it}
+                <button 
+                  onClick={() => onChange(items.filter((_, idx) => idx !== i))}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500"
+                >
+                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+             </div>
+          ))}
+       </div>
+       <div className="flex gap-2">
+          <input 
+            value={val} onChange={e => setVal(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && add()}
+            placeholder={placeholder}
+            className={`flex-1 text-[12px] px-4 py-2.5 rounded-xl border outline-none ${
+               isDark ? "bg-zinc-900 border-zinc-800 focus:border-zinc-500" : "bg-white border-zinc-200 focus:border-zinc-400"
+            }`}
+          />
+          <button 
+            onClick={add}
+            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest ${
+               isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 shadow-sm"
+            }`}
+          >
+             Add
+          </button>
+       </div>
+    </div>
+  )
+}
+
 

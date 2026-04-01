@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 
-export function SettingRow({ title, description, control, isDark }: { title: string; description?: string; control: React.ReactNode; isDark: boolean }) {
+export function SettingRow({ title, description, control, isDark }: { title: React.ReactNode; description?: string; control: React.ReactNode; isDark: boolean }) {
   return (
     <div className="flex items-center justify-between gap-8 px-5 py-4">
       <div className="min-w-0 flex-1">

@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShareButton } from "@/components/ui/share-button"
-import { Link as LinkIcon } from "lucide-react"
+import { Link as LinkIcon, ShoppingBag } from "lucide-react"
 
 const XIcon = (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
 const FbIcon = (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
@@ -52,6 +52,7 @@ interface DocumentToolbarProps {
   sidebarOpen?: boolean
   onSidebarToggle?: () => void
   onTimerOpen?: () => void
+  onOpenShop: () => void
 }
 
 
@@ -69,7 +70,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -121,10 +122,16 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <button
           onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
           title="Page grid"
-          className={btnBase}
+          className={`${btnBase} flex items-center gap-1.5`}
           style={{ ...activeStyle(gridView), ...btnFont }}
         >
-          Grid View
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          <span>Grid</span>
         </button>
 
         {/* Align Dropdown */}
@@ -135,7 +142,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
             style={{ ...(alignOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
           >
-            Align
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" strokeWidth="2" opacity="0.8" />
+              <line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" opacity="0.6" />
+              <line x1="7" y1="18" x2="17" y2="18" strokeWidth="2" opacity="0.4" />
+            </svg>
+            <span>Align</span>
             <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
           </button>
 
@@ -265,10 +277,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <span className="text-[10px] leading-none">💎</span>
           <span>{gems >= 999999 ? "∞" : gems}</span>
         </div>
+        <button 
+          onClick={onOpenShop}
+          className="flex items-center gap-1 ml-1 pl-1.5 border-l border-zinc-400/20 hover:text-orange-600 transition-colors group cursor-pointer"
+          title="Pulp Boutique"
+        >
+          <ShoppingBag size={11} strokeWidth={2.8} className="group-hover:scale-110 mb-0.5" />
+        </button>
       </div>
 
       {/* Right: Share */}
-      <div className="flex items-center gap-3 shrink-0 pl-2 pr-[92px]" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
+      <div className="flex items-center gap-3 shrink-0 pl-2 pr-[68px]" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
 
         <ShareButton
           links={[

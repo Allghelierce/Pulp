@@ -4,7 +4,14 @@ export interface FlashcardItem {
   id: string;
   front: string;
   back: string;
+  // Spaced Repetition System (SM-2 Algorithm)
+  interval: number; // days until next review
+  easeFactor: number; // difficulty multiplier (1.3 - 2.5)
+  repetitions: number; // times successfully reviewed
+  nextReviewDate: number; // timestamp for next review
+  lastReviewDate?: number; // timestamp of last review
 }
+
 
 export interface NoteData {
   id: string;

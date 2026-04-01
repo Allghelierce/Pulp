@@ -20,7 +20,7 @@ export const OrchardView = memo(function OrchardView({
   sunshine, gems, grove, setSunshine, setGems, setGrove
 }: OrchardViewProps) {
 
-  const plantSeed = (type: 'navel' | 'blood' | 'clementine') => {
+  const plantSeed = (type: keyof typeof TREE_TYPES) => {
     const cost = 10
     if (sunshine < cost) return
     setSunshine(s => s - cost)
@@ -36,7 +36,8 @@ export const OrchardView = memo(function OrchardView({
   const TREE_TYPES = {
     navel: { name: 'Navel Orange', color: '#b85e22', bg: 'rgba(184, 94, 34, 0.1)' },
     blood: { name: 'Blood Orange', color: '#800000', bg: 'rgba(128, 0, 0, 0.1)' },
-    clementine: { name: 'Clementine', color: '#ff8c00', bg: 'rgba(255, 140, 0, 0.1)' }
+    clementine: { name: 'Clementine', color: '#ff8c00', bg: 'rgba(255, 140, 0, 0.1)' },
+    spoiled: { name: 'Spoiled Grove', color: '#71717a', bg: 'rgba(113, 113, 122, 0.1)' }
   }
 
   if (!isOpen) return null
@@ -202,7 +203,7 @@ export const OrchardView = memo(function OrchardView({
           >
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-dancing), cursive', color: accent }}>
-                Your Harvest
+                Your Grove
               </h2>
               <span className={`text-sm font-bold tracking-wide ${theme === 'dark' ? 'text-zinc-400' : 'text-orange-700'}`}>
                 {grove.length}/9 Plots Used
@@ -240,16 +241,20 @@ export const OrchardView = memo(function OrchardView({
                         {/* Tree SVG */}
                         <svg width="56" height="56" viewBox="0 0 24 24" className="overflow-visible mb-2">
                           {/* Trunk */}
-                          <rect x="10.5" y="14" width="3" height="8" fill="#5c2d0b" rx="1" />
-                          {/* Leaves */}
-                          <circle
-                            cx="12" cy="11"
-                            r={5 + (tree.stage * 2)}
-                            fill={TREE_TYPES[tree.type as keyof typeof TREE_TYPES].color}
-                            opacity="0.9"
-                          />
-                          {/* Fruit */}
-                          {tree.stage >= 3 && (
+                          <rect x="10.5" y="14" width="3" height="8" fill={tree.type === 'spoiled' ? "#4b5563" : "#5c2d0b"} rx="1" />
+                          {/* Leaves / Dead Twigs */}
+                          {tree.type === 'spoiled' ? (
+                            <path d="M12 14v-4m-3 2l3-2 3 2" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" fill="none" />
+                          ) : (
+                            <circle
+                              cx="12" cy="11"
+                              r={5 + (tree.stage * 2)}
+                              fill={TREE_TYPES[tree.type as keyof typeof TREE_TYPES].color}
+                              opacity="0.9"
+                            />
+                          )}
+                          {/* Fruit (None if spoiled) */}
+                          {tree.stage >= 3 && tree.type !== 'spoiled' && (
                             <g>
                               <circle cx="8" cy="8" r="2" fill="#f97316" />
                               <circle cx="16" cy="10" r="2" fill="#f97316" />

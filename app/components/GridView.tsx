@@ -30,7 +30,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
   const lh = ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
 
   return (
-    <div className="fixed inset-0 z-[1000] flex flex-col bg-black/90 backdrop-blur-3xl overflow-y-auto animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[10000] flex flex-col bg-black/90 backdrop-blur-3xl overflow-y-auto animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="flex items-center justify-between px-10 py-5 z-50 pointer-events-none sticky top-0 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex flex-col gap-1">

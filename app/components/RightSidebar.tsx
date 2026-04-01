@@ -18,6 +18,8 @@ export const RightSidebar = memo(function RightSidebar({
   isOpen, onClose, theme, accent,
   sunshine, gems, grove, setSunshine, setGems, setGrove
 }: RightSidebarProps) {
+  const [sunshineTooltip, setSunshineTooltip] = useState(false)
+  const [gemsTooltip, setGemsTooltip] = useState(false)
 
   const plantSeed = (type: 'navel' | 'blood' | 'clementine') => {
     const cost = 10
@@ -57,9 +59,14 @@ export const RightSidebar = memo(function RightSidebar({
         <div className="flex-1 overflow-y-auto p-5 space-y-8">
           {/* Wallet / Currencies */}
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-4 rounded-2xl border flex flex-col items-center text-center relative ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-orange-50/30 border-orange-100/50'}`}>
-              <button 
-                onClick={() => setSunshine(s => s + 100)}
+            <div
+              className={`p-4 rounded-2xl border flex flex-col items-center text-center relative cursor-help transition-all ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-orange-50/30 border-orange-100/50 hover:bg-orange-50/50'}`}
+              onMouseEnter={() => setSunshineTooltip(true)}
+              onMouseLeave={() => setSunshineTooltip(false)}
+              onClick={() => setSunshineTooltip(!sunshineTooltip)}
+            >
+              <button
+                onClick={(e) => { e.stopPropagation(); setSunshine(s => s + 100) }}
                 className="absolute top-2 right-2 w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center text-xs pb-[1px]"
                 title="Buy 100 ☀️ ($1.99)"
               >+</button>
@@ -68,11 +75,23 @@ export const RightSidebar = memo(function RightSidebar({
               </div>
               <span className="text-[18px] font-bold font-serif">{sunshine}</span>
               <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Sunshine</span>
+
+              {sunshineTooltip && (
+                <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none ${theme === 'dark' ? 'bg-zinc-800 text-zinc-100' : 'bg-zinc-800 text-white'}`}>
+                  Earned by writing notes. Spend to plant trees.
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 ${theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-800'}`} style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
+                </div>
+              )}
             </div>
 
-            <div className={`p-4 rounded-2xl border flex flex-col items-center text-center relative ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-purple-50/30 border-purple-100/50'}`}>
-              <button 
-                onClick={() => setGems(g => g + 50)}
+            <div
+              className={`p-4 rounded-2xl border flex flex-col items-center text-center relative cursor-help transition-all ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-purple-50/30 border-purple-100/50 hover:bg-purple-50/50'}`}
+              onMouseEnter={() => setGemsTooltip(true)}
+              onMouseLeave={() => setGemsTooltip(false)}
+              onClick={() => setGemsTooltip(!gemsTooltip)}
+            >
+              <button
+                onClick={(e) => { e.stopPropagation(); setGems(g => g + 50) }}
                 className="absolute top-2 right-2 w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 flex items-center justify-center text-xs pb-[1px]"
                 title="Buy 50 💎 ($0.99)"
               >+</button>
@@ -81,6 +100,13 @@ export const RightSidebar = memo(function RightSidebar({
               </div>
               <span className="text-[18px] font-bold font-serif">{gems}</span>
               <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Gems</span>
+
+              {gemsTooltip && (
+                <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none ${theme === 'dark' ? 'bg-zinc-800 text-zinc-100' : 'bg-zinc-800 text-white'}`}>
+                  Rare rewards from achievements. Premium upgrades.
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 ${theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-800'}`} style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
+                </div>
+              )}
             </div>
           </div>
 
@@ -111,7 +137,7 @@ export const RightSidebar = memo(function RightSidebar({
           {/* The Grove Grid */}
           <section className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <h3 className="text-[9px] font-black uppercase tracking-widest text-zinc-300">Your Harvest</h3>
+              <h2 className="text-[9px] font-black uppercase tracking-widest text-zinc-300">Your Grove</h2>
               <span className="text-[9px] font-medium text-zinc-400 italic">{grove.length}/9 Plots Used</span>
             </div>
             
