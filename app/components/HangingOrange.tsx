@@ -23,16 +23,20 @@ function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }
   )
 }
 
-// Random faces for the orange
+// Random faces for the orange - cute and small
 const faces = [
-  { eyes: "o_o", mouth: "u", label: "happy" },
-  { eyes: "^_^", mouth: "D", label: "excited" },
-  { eyes: "-_-", mouth: "___", label: "serious" },
-  { eyes: "O_O", mouth: "o", label: "surprised" },
-  { eyes: ">_<", mouth: "v", label: "pained" },
-  { eyes: ";_;", mouth: "T", label: "sad" },
-  { eyes: "~_~", mouth: "-", label: "sleepy" },
-  { eyes: "♡_♡", mouth: "3", label: "love" },
+  { emoji: "😊", label: "happy" },
+  { emoji: "😆", label: "excited" },
+  { emoji: "😐", label: "serious" },
+  { emoji: "😮", label: "surprised" },
+  { emoji: "😵", label: "dizzy" },
+  { emoji: "😢", label: "sad" },
+  { emoji: "😴", label: "sleepy" },
+  { emoji: "😍", label: "love" },
+  { emoji: "🥰", label: "grateful" },
+  { emoji: "😋", label: "yummy" },
+  { emoji: "🤔", label: "thinking" },
+  { emoji: "😎", label: "cool" },
 ]
 
 export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick: () => void }) {
@@ -153,15 +157,16 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
 
            {/* Face */}
            <motion.div style={{ scale: faceScaleSpring }} className="absolute inset-0 flex items-center justify-center">
-             <div className="text-sm font-bold" style={{
-               color: "rgba(0,0,0,0.6)",
-               textShadow: "0 1px 2px rgba(255,255,255,0.3)",
+             <div style={{
+               fontSize: "18px",
                lineHeight: 1,
                userSelect: "none",
-               pointerEvents: "none"
+               pointerEvents: "none",
+               display: "flex",
+               alignItems: "center",
+               justifyContent: "center"
              }}>
-               <div className="text-center">{faces[faceIndex].eyes}</div>
-               <div className="text-center text-xs mt-0.5">{faces[faceIndex].mouth}</div>
+               {faces[faceIndex].emoji}
              </div>
            </motion.div>
         </div>
