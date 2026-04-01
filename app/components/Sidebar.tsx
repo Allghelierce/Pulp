@@ -639,52 +639,6 @@ export const Sidebar = memo(function Sidebar({
           />
         )}
 
-        {/* Apple Tree Engraving - Bottom Right */}
-        <div className="flex justify-end pr-1 mt-auto pt-4" style={{ opacity: sidebarWidth > 100 ? 1 : 0, transition: "opacity 200ms ease" }}>
-          <svg width="60" height="70" viewBox="0 0 100 120" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(255,255,255,0.15)", filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))" }}>
-            {/* Roots */}
-            <path d="M 50 115 Q 35 110 30 100 M 50 115 Q 65 110 70 100" />
-            <path d="M 30 100 Q 25 85 28 75 M 70 100 Q 75 85 72 75" />
-
-            {/* Trunk */}
-            <path d="M 50 115 Q 48 90 47 60" strokeWidth="2" />
-            <path d="M 50 115 Q 52 90 53 60" strokeWidth="2" />
-
-            {/* Main branches */}
-            <path d="M 50 65 Q 35 55 28 45" />
-            <path d="M 50 65 Q 65 55 72 45" />
-            <path d="M 50 55 Q 38 42 32 32" />
-            <path d="M 50 55 Q 62 42 68 32" />
-
-            {/* Left foliage cluster */}
-            <ellipse cx="28" cy="35" rx="12" ry="14" />
-            <ellipse cx="20" cy="28" rx="10" ry="12" />
-            <ellipse cx="25" cy="22" rx="11" ry="13" />
-
-            {/* Right foliage cluster */}
-            <ellipse cx="72" cy="35" rx="12" ry="14" />
-            <ellipse cx="80" cy="28" rx="10" ry="12" />
-            <ellipse cx="75" cy="22" rx="11" ry="13" />
-
-            {/* Top foliage cluster */}
-            <ellipse cx="50" cy="20" rx="14" ry="16" />
-            <ellipse cx="42" cy="12" rx="12" ry="14" />
-            <ellipse cx="58" cy="12" rx="12" ry="14" />
-
-            {/* Apples */}
-            <circle cx="32" cy="38" r="3" fill="currentColor" />
-            <circle cx="45" cy="25" r="3" fill="currentColor" />
-            <circle cx="68" cy="38" r="3" fill="currentColor" />
-            <circle cx="55" cy="28" r="3" fill="currentColor" />
-
-            {/* Leaf details */}
-            <path d="M 20 35 Q 18 32 20 28" opacity="0.6" />
-            <path d="M 35 28 Q 33 25 35 22" opacity="0.6" />
-            <path d="M 80 35 Q 82 32 80 28" opacity="0.6" />
-            <path d="M 65 28 Q 67 25 65 22" opacity="0.6" />
-          </svg>
-        </div>
-
       </div>
     </>
   )
