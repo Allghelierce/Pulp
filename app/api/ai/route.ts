@@ -7,7 +7,7 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
   const systemPrompt = "You are a helpful writing assistant. Provide concise, helpful responses to user requests about their text. Be direct and clear."
 
   const userMessage = context
-    ? `${prompt}\n\nHere's the text to work with:\n\n${context}`
+    ? `User request: ${prompt}\n\nText to work with:\n${context}`
     : prompt
 
   const response = await fetch(GROQ_API_URL, {
@@ -18,8 +18,8 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
     },
     body: JSON.stringify({
       model: "mixtral-8x7b-32768",
-      max_tokens: 1024,
-      system: systemPrompt,
+      max_tokens: 512,
+      temperature: 0.7,
       messages: [
         {
           role: "system",
@@ -34,16 +34,17 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
   })
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Groq API error: ${response.statusText} - ${error}`)
+    const errorText = await response.text()
+    console.error("Groq error response:", errorText)
+    throw new Error(`Groq API error: ${response.status} ${response.statusText}`)
   }
 
   const data = await response.json()
-  if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
-    return data.choices[0].message.content
+  if (data.choices?.[0]?.message?.content) {
+    return data.choices[0].message.content.trim()
   }
 
-  throw new Error("Unexpected Groq response format")
+  throw new Error("Invalid Groq response format")
 }
 
 export async function POST(request: Request) {
@@ -55,7 +56,6 @@ export async function POST(request: Request) {
     }
 
     const result = await callGroq(prompt, text)
-
     return NextResponse.json({ result })
   } catch (error) {
     console.error("AI API error:", error)

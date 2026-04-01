@@ -1,9 +1,101 @@
 "use client"
-import { memo, useState, useRef, useCallback } from "react"
+import { memo, useState, useRef, useCallback, useEffect } from "react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
 import { BackgroundPlus } from "@/components/ui/background-plus"
+
+// ─── Trash Bin Panel ────────────────────────────────────────────────────────
+function TrashSection({ trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
+  trashNotes: NoteData[]
+  onRestoreNote: (id: string) => void
+  onPermanentlyDeleteNote: (id: string) => void
+}) {
+  const [query, setQuery] = useState("")
+  const filtered = trashNotes.filter(n => n.subject.toLowerCase().includes(query.toLowerCase()))
+
+  const daysLeft = (deletedAt?: string) => {
+    if (!deletedAt) return 30
+    return Math.max(0, 30 - Math.floor((Date.now() - new Date(deletedAt).getTime()) / 86400000))
+  }
+
+  return (
+    <div className="border-t border-white/5 bg-zinc-950/60 z-10 shrink-0 flex flex-col px-4 py-2 gap-1.5" style={{ height: 120 }}>
+      {/* Header: small trash icon + label */}
+      <div className="flex items-center gap-1.5 shrink-0 h-4">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
+          <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+        </svg>
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Trash</span>
+        <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({trashNotes.length})</span>
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search…"
+          className="ml-auto bg-zinc-900/60 border border-white/8 rounded-full px-2 py-0.5 text-[9px] outline-none text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 transition-colors w-24"
+        />
+      </div>
+      {/* Scrollable list */}
+      <div className="overflow-y-auto flex-1 space-y-0.5 pr-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
+        {filtered.length === 0 && <p className="text-[10px] text-zinc-700 italic px-1">Nothing found.</p>}
+        {filtered.map(tn => (
+          <div key={tn.id} className="group/tr flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[10px] truncate text-zinc-500 group-hover/tr:text-zinc-300 transition-colors">{tn.subject}</span>
+              <span className="text-[9px] text-zinc-700 shrink-0">{daysLeft(tn.deletedAt)}d</span>
+            </div>
+            <div className="flex gap-1 opacity-0 group-hover/tr:opacity-100 transition-opacity shrink-0">
+              <button onClick={() => onRestoreNote(tn.id)} title="Restore" className="text-[9px] text-zinc-500 hover:text-green-400 transition-colors">↩</button>
+              <button onClick={() => onPermanentlyDeleteNote(tn.id)} title="Delete forever" className="text-[9px] text-zinc-500 hover:text-red-400 transition-colors">✕</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Archive Panel ────────────────────────────────────────────────────────────
+function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
+  archivedNotes: NoteData[]
+  onUnarchiveNote: (id: string) => void
+}) {
+  const [query, setQuery] = useState("")
+  const filtered = archivedNotes.filter(n => n.subject.toLowerCase().includes(query.toLowerCase()))
+
+  return (
+    <div className="border-t border-white/5 bg-zinc-950/40 z-10 shrink-0 flex flex-col px-4 py-2 gap-1.5" style={{ height: 120 }}>
+      {/* Header: small archive icon + label + inline search */}
+      <div className="flex items-center gap-1.5 shrink-0 h-4">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
+          <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
+        </svg>
+        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Archive</span>
+        <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({archivedNotes.length})</span>
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search…"
+          className="ml-auto bg-zinc-900/60 border border-white/8 rounded-full px-2 py-0.5 text-[9px] outline-none text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 transition-colors w-24"
+        />
+      </div>
+      {/* Scrollable list */}
+      <div className="overflow-y-auto flex-1 space-y-0.5 pr-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
+        {filtered.length === 0 && <p className="text-[10px] text-zinc-700 italic px-1">Nothing found.</p>}
+        {filtered.map(an => (
+          <div key={an.id} className="group/ar flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
+            <span className="text-[10px] truncate text-zinc-500 group-hover/ar:text-zinc-300 transition-colors min-w-0">{an.subject}</span>
+            <button
+              onClick={() => onUnarchiveNote(an.id)}
+              title="Unarchive"
+              className="opacity-0 group-hover/ar:opacity-100 transition-opacity text-[9px] text-zinc-500 hover:text-[#F5A030] shrink-0"
+            >↩ Unarchive</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface SidebarProps {
   notes: NoteData[]
@@ -15,8 +107,9 @@ interface SidebarProps {
   user: any
   sidebarWidth: number
   isDragging?: boolean
-  onAddNote: (folderId: number | null) => void
-  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard") => void
+  unlockedIds: Set<string>
+  onAddNote: (folderId?: number | null) => void
+  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard" | "vault") => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
   onRenameNote: (id: string, currentName: string) => void
@@ -36,14 +129,22 @@ interface SidebarProps {
   onReorderBookmarks: (b: any[]) => void
   onDeleteBookmark: (id: string) => void
   onRenameBookmark: (id: string, current: string) => void
+  trashNotes: NoteData[]
+  onRestoreNote: (id: string) => void
+  onPermanentlyDeleteNote: (id: string) => void
+  archivedNotes?: NoteData[]
+  onArchiveNote?: (id: string) => void
+  onUnarchiveNote?: (id: string) => void
 }
 
 export const Sidebar = memo(function Sidebar({
-  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging,
+  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds,
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
+  trashNotes, onRestoreNote, onPermanentlyDeleteNote,
+  archivedNotes = [], onArchiveNote, onUnarchiveNote,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
@@ -60,12 +161,23 @@ export const Sidebar = memo(function Sidebar({
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  useEffect(() => {
+    const handler = () => {
+      setNewMenuOpen(null)
+      setNoteMenuId(null)
+      setBookmarkMenuId(null)
+      setIconPicker(null)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
   const startHold = useCallback((id: string) => {
     setHoldingId(id)
     setHoldProgress(0)
     const start = Date.now()
     holdIntervalRef.current = setInterval(() => {
-      const p = Math.min((Date.now() - start) / 1800, 1)
+      const p = Math.min((Date.now() - start) / 800, 1)
       setHoldProgress(p)
       if (p >= 1) {
         clearInterval(holdIntervalRef.current!)
@@ -92,9 +204,9 @@ export const Sidebar = memo(function Sidebar({
     setHoldProgress(0)
   }, [])
 
-  const topLevelNotes = notes.filter(n => n.folderId === null && !n.parentId)
-  const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid && !n.parentId)
-  const childNotes = (parentId: string) => notes.filter(n => n.parentId === parentId)
+  const topLevelNotes = notes.filter(n => n.folderId === null && !n.parentId && !n.archived)
+  const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid && !n.parentId && !n.archived)
+  const childNotes = (parentId: string) => notes.filter(n => n.parentId === parentId && !n.archived)
 
   const isDescendant = (ancestorId: string, candidateId: string): boolean => {
     const children = notes.filter(n => n.parentId === ancestorId)
@@ -157,8 +269,14 @@ export const Sidebar = memo(function Sidebar({
     <div key={n.id}>
       <div
         role="button"
-        draggable
-        onDragStart={() => onSetDraggedNoteId(n.id)}
+        draggable={renamingNoteId !== n.id}
+        onDragStart={(e) => {
+          if (renamingNoteId === n.id) {
+            e.preventDefault()
+            return
+          }
+          onSetDraggedNoteId(n.id)
+        }}
         onDragEnd={() => { onSetDraggedNoteId(null); setNestTargetId(null) }}
         onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (draggedNoteId !== n.id) setNestTargetId(n.id) }}
         onDragLeave={() => setNestTargetId(t => t === n.id ? null : t)}
@@ -203,21 +321,34 @@ export const Sidebar = memo(function Sidebar({
               style={{ width: 14, height: 18, objectFit: "cover" }}
             />
           )}
+          
+          <div className="w-px h-3 bg-zinc-500/30 dark:bg-zinc-700/50 shrink-0 mx-0.5" />
+          
           {/* Note type indicator */}
           {n.noteType === "flashcard" && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Flashcard">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Flashcard">
               <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" style={{ strokeDasharray: "2,2" }}/>
               <line x1="6" y1="12" x2="18" y2="12" style={{ strokeDasharray: "2,2" }}/>
             </svg>
           )}
           {n.noteType === "singlepage" && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Single Page">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Single Page">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" style={{ strokeDasharray: "2,2" }}/>
               <polyline points="14 2 14 8 20 8" style={{ strokeDasharray: "2,2" }}/>
             </svg>
           )}
+          {n.noteType === "vault" && (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Vault">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              {unlockedIds.has(n.id) ? (
+                <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+              ) : (
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              )}
+            </svg>
+          )}
           {(!n.noteType || n.noteType === "notebook") && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Notebook">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Notebook">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" style={{ strokeDasharray: "2,2" }}/>
               <path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" style={{ strokeDasharray: "2,2" }}/>
             </svg>
@@ -271,9 +402,9 @@ export const Sidebar = memo(function Sidebar({
               setMenuPos({ x: rect.right + 4, y: rect.top })
             }}
             title="More options"
-            className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700"
+            className={`w-5 h-5 flex items-center justify-center rounded transition-opacity ${noteMenuId === n.id ? "opacity-100 bg-zinc-700 text-white" : "opacity-0 group-hover:opacity-100 hover:bg-zinc-700 text-zinc-400 hover:text-white"}`}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#71717a" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="12" cy="5" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="12" cy="19" r="2.5" />
             </svg>
           </button>
@@ -296,7 +427,7 @@ export const Sidebar = memo(function Sidebar({
 
       {noteMenuId && menuPos && (
         <div
-          className="fixed z-[1000] min-w-max rounded-lg shadow-lg border border-zinc-700 bg-zinc-900 overflow-hidden"
+          className="fixed z-[1000] min-w-max rounded shadow-lg border border-zinc-700 bg-zinc-800 overflow-hidden"
           style={{ left: menuPos.x, top: menuPos.y }}
           onMouseLeave={() => setNoteMenuId(null)}
         >
@@ -308,7 +439,7 @@ export const Sidebar = memo(function Sidebar({
               if (note) setRenameValue(note.subject)
               setNoteMenuId(null)
             }}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200"
+            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
           >
             Rename
           </button>
@@ -318,7 +449,7 @@ export const Sidebar = memo(function Sidebar({
               onSelectNote(noteMenuId)
               setNoteMenuId(null)
             }}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200 border-t border-zinc-700"
+            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
           >
             Open
           </button>
@@ -328,9 +459,19 @@ export const Sidebar = memo(function Sidebar({
               if (noteMenuId) onChangeNoteIcon(noteMenuId, "📄")
               setNoteMenuId(null)
             }}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-zinc-200 border-t border-zinc-700"
+            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
           >
             Change icon
+          </button>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              if (noteMenuId) onArchiveNote?.(noteMenuId)
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
+          >
+            Archive
           </button>
           <button
             onClick={e => {
@@ -338,7 +479,7 @@ export const Sidebar = memo(function Sidebar({
               onDeleteNote(noteMenuId)
               setNoteMenuId(null)
             }}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-red-900/30 transition-colors text-red-400 border-t border-zinc-700"
+            className="w-full text-left px-3 py-1.5 text-[10px] text-red-500 hover:bg-red-900/30 transition-colors whitespace-nowrap"
           >
             Delete
           </button>
@@ -383,16 +524,24 @@ export const Sidebar = memo(function Sidebar({
                 </button>
                 */}
               </div>
-              <div className="flex gap-1 relative">
-                <div className="relative group">
-                  <button className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ New</button>
-                  <div className="hidden group-hover:flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
-                    <button onClick={() => { onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">📓 Notebook</button>
-                    <button onClick={() => { onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">📄 Single Page</button>
-                    <button onClick={() => { onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors">🃏 Flashcard Set</button>
-                  </div>
+              <div className="flex items-center gap-1.5 relative">
+                <div className="relative flex items-center">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
+                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-white bg-zinc-800" : "text-zinc-500 hover:text-white hover:bg-zinc-800"}`}
+                  >
+                    + New
+                  </button>
+                  {newMenuOpen === "ROOT" && (
+                    <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
+                      <button onClick={() => { onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
+                      <button onClick={() => { onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
+                      <button onClick={() => { onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
+                      <button onClick={() => { onAddTypedNote(null, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                    </div>
+                  )}
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-0.5 rounded transition-colors">+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5">+ Folder</button>
               </div>
             </div>
 
@@ -414,13 +563,21 @@ export const Sidebar = memo(function Sidebar({
                 {f.open && (
                   <div className="pl-5 space-y-0.5">
                     {notesInFolder(f.id).map(n => renderNote(n, 12))}
-                    <div className="relative group inline-block">
-                      <button className="text-[11px] text-zinc-600 hover:text-white px-3 py-0.5 block">+ New</button>
-                      <div className="hidden group-hover:flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
-                        <button onClick={() => { onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
-                        <button onClick={() => { onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
-                        <button onClick={() => { onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
-                      </div>
+                    <div className="relative inline-block">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === String(f.id) ? null : String(f.id)) }} 
+                        className={`text-[11px] px-3 py-0.5 block rounded transition-colors ${newMenuOpen === String(f.id) ? "text-white bg-zinc-800" : "text-zinc-600 hover:text-white hover:bg-zinc-800"}`}
+                      >
+                        + New
+                      </button>
+                      {newMenuOpen === String(f.id) && (
+                        <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
+                          <button onClick={() => { onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
+                          <button onClick={() => { onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
+                          <button onClick={() => { onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
+                          <button onClick={() => { onAddTypedNote(f.id, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -460,19 +617,19 @@ export const Sidebar = memo(function Sidebar({
                   </button>
                   {bookmarkMenuId === b.id && (
                     <div
-                      className="absolute right-2 top-7 z-50 w-36 bg-[#1c1c1f] border border-white/10 rounded-md shadow-xl overflow-hidden"
+                      className="absolute right-2 top-7 z-50 min-w-max rounded shadow-lg border border-zinc-700 bg-zinc-800 overflow-hidden"
                       onMouseLeave={() => setBookmarkMenuId(null)}
                     >
                       <button
                         onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); onRenameBookmark(b.id, b.noteTitle) }}
-                        className="w-full text-left px-3 py-2 text-[11px] text-zinc-300 hover:bg-white/10 flex items-center gap-2 transition-colors"
+                        className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white flex items-center gap-2 transition-colors whitespace-nowrap"
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                         Rename
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); onDeleteBookmark(b.id) }}
-                        className="w-full text-left px-3 py-2 text-[11px] text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                        className="w-full text-left px-3 py-1.5 text-[10px] text-red-500 hover:bg-red-900/30 flex items-center gap-2 transition-colors whitespace-nowrap"
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg>
                         Delete
@@ -521,6 +678,23 @@ export const Sidebar = memo(function Sidebar({
             <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
           </button>
         </div>
+
+        {/* Archive Section */}
+        {archivedNotes.length > 0 && (
+          <ArchiveSection
+            archivedNotes={archivedNotes}
+            onUnarchiveNote={onUnarchiveNote ?? (() => {})}
+          />
+        )}
+
+        {/* Trash Bin Section */}
+        {trashNotes.length > 0 && (
+          <TrashSection
+            trashNotes={trashNotes}
+            onRestoreNote={onRestoreNote}
+            onPermanentlyDeleteNote={onPermanentlyDeleteNote}
+          />
+        )}
       </div>
     </>
   )

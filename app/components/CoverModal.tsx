@@ -2,8 +2,9 @@
 
 import { useCallback, useRef, useEffect, useState } from "react"
 import { useImageUpload } from "@/app/hooks/use-image-upload"
-import { ImagePlus, Trash2, X } from "lucide-react"
-import Image from "next/image"
+import { ImagePlus, Trash2, X, Pencil, Eraser, RotateCcw, Upload, Image as ImageIcon } from "lucide-react"
+import NextImage from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface CoverModalProps {
   existingCover?: string
@@ -28,15 +29,17 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
   const [tab, setTab] = useState<"import" | "draw">("import")
   const [isDragging, setIsDragging] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [drawColor, setDrawColor] = useState("#000000")
+  const [drawColor, setDrawColor] = useState("#F5A030")
   const [tool, setTool] = useState<"pen" | "eraser">("pen")
   const isDrawingRef = useRef(false)
+
+  const pulpOrange = "#F5A030"
 
   useEffect(() => {
     if (tab === "draw" && canvasRef.current) {
       const canvas = canvasRef.current
       const ctx = canvas.getContext("2d")!
-      ctx.fillStyle = "white"
+      ctx.fillStyle = "#18181b" // zinc-900 (dark canvas)
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       if (existingCover && existingCover.startsWith("data:image")) {
         const img = new (window as any).Image()
@@ -46,22 +49,9 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
     }
   }, [tab, existingCover])
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation() }
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false) }
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -94,12 +84,13 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
     } else if (type === "move" && isDrawingRef.current) {
       if (tool === "eraser") {
         ctx.globalCompositeOperation = "destination-out"
-        ctx.clearRect(x - 8, y - 8, 16, 16)
+        ctx.arc(x, y, 10, 0, Math.PI * 2)
+        ctx.fill()
         ctx.globalCompositeOperation = "source-over"
       } else {
         ctx.lineTo(x, y)
         ctx.strokeStyle = drawColor
-        ctx.lineWidth = 2
+        ctx.lineWidth = 3
         ctx.lineCap = "round"
         ctx.lineJoin = "round"
         ctx.stroke()
@@ -114,207 +105,176 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext("2d")!
-    ctx.fillStyle = "white"
+    ctx.fillStyle = "#18181b"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        className="relative flex flex-col gap-5 rounded-2xl p-6 shadow-2xl"
-        style={{
-          width: 520,
-          background: "rgba(255,255,255,0.97)",
-          border: "1px solid rgba(0,0,0,0.08)",
-          animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)",
-        }}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-xl overflow-hidden"
       >
-        {/* Header Tabs */}
-        <div className="flex items-start justify-between">
-          <div className="flex gap-4 border-b border-gray-200">
+        {/* Header */}
+        <div className="px-8 pt-8 pb-4 flex items-center justify-between border-b border-white/5">
+          <div className="flex gap-6">
             <button
               onClick={() => setTab("import")}
-              className={cn("pb-2 text-base font-semibold transition-colors", tab === "import" ? "border-b-2 border-gray-900 text-gray-900" : "border-b-2 border-transparent text-gray-400 hover:text-gray-600")}
+              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "import" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
+              {tab === "import" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Import
             </button>
             <button
               onClick={() => setTab("draw")}
-              className={cn("pb-2 text-base font-semibold transition-colors", tab === "draw" ? "border-b-2 border-gray-900 text-gray-900" : "border-b-2 border-transparent text-gray-400 hover:text-gray-600")}
+              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "draw" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
+              {tab === "draw" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Draw
             </button>
           </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-700/50 transition-colors">
+            <X className="h-4 w-4 text-zinc-500" />
+          </button>
+        </div>
+
+        <div className="p-8">
+          {tab === "import" ? (
+            <div className="flex flex-col gap-6">
+              <div className="space-y-1">
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>Notebook Cover</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Supported formats: PNG, JPG, WebP</p>
+              </div>
+
+              {!previewUrl ? (
+                <div
+                  onClick={handleThumbnailClick}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "flex h-72 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed transition-all",
+                    isDragging
+                      ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
+                      : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
+                  )}
+                >
+                  <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg border border-zinc-700">
+                    <Upload className="h-6 w-6 text-zinc-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-300">Click to upload cover</p>
+                    <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">or drag and drop here</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative group">
+                  <div className="relative h-72 overflow-hidden rounded-2xl border border-zinc-700 group shadow-2xl">
+                    <NextImage
+                      src={previewUrl}
+                      alt="Cover Preview"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button
+                        onClick={handleThumbnailClick}
+                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all border border-white/20"
+                      >
+                        <ImageIcon className="h-4 w-4 text-white" />
+                      </button>
+                      <button
+                        onClick={handleRemove}
+                        className="w-10 h-10 rounded-xl bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 hover:scale-110 transition-all border border-red-400/20 shadow-lg shadow-red-500/20"
+                      >
+                        <Trash2 className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-[10px] text-zinc-500 text-center uppercase tracking-widest">{fileName ?? "Selected Cover"}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1.5 p-1 bg-zinc-900/50 rounded-xl border border-zinc-700">
+                  <button
+                    onClick={() => setTool("pen")}
+                    className={cn("p-2 rounded-lg transition-all", tool === "pen" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-300")}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setTool("eraser")}
+                    className={cn("p-2 rounded-lg transition-all", tool === "eraser" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-300")}
+                  >
+                    <Eraser className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex gap-2 items-center px-4 py-1.5 bg-zinc-900/50 rounded-xl border border-zinc-700">
+                  {["#F5A030", "#EF4444", "#3B82F6", "#10B981", "#FFFFFF"].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setDrawColor(c)}
+                      className={cn("w-5 h-5 rounded-full border-2 transition-all", drawColor === c ? "border-white scale-125 shadow-lg" : "border-transparent opacity-60 hover:opacity-100")}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+
+                <button onClick={clearCanvas} className="p-2 rounded-lg hover:bg-zinc-700/50 text-zinc-500 hover:text-zinc-300 transition-colors">
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </div>
+
+              <canvas
+                ref={canvasRef}
+                width={800}
+                height={600}
+                onPointerDown={(e) => handleCanvasPointer(e, "down")}
+                onPointerMove={(e) => handleCanvasPointer(e, "move")}
+                onPointerUp={(e) => handleCanvasPointer(e, "up")}
+                className="w-full h-[288px] rounded-2xl border border-zinc-700 bg-zinc-900 shadow-inner cursor-crosshair touch-none"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 pb-8 flex flex-col gap-3">
           <button
-            onClick={onClose}
-            className="ml-4 flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+            disabled={tab === "import" ? !previewUrl : false}
+            onClick={() => {
+              if (tab === "import" && previewUrl) onConfirm(previewUrl)
+              else if (tab === "draw" && canvasRef.current) onConfirm(canvasRef.current.toDataURL("image/png"))
+            }}
+            className="w-full py-4 rounded-xl text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
           >
-            <X className="h-4 w-4 text-gray-500" />
+            Apply Cover Decoration
+          </button>
+          <button onClick={onClose} className="w-full py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] hover:text-zinc-300 transition-all">
+            Cancel
           </button>
         </div>
 
         {/* Hidden file input */}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-        />
-
-        {tab === "import" ? (
-          <>
-            <p className="text-xs text-gray-400 -mt-2">Supported formats: PNG, JPG, GIF, WebP</p>
-            {!previewUrl ? (
-              <div
-                onClick={handleThumbnailClick}
-                onDragOver={handleDragOver}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={cn(
-                  "flex h-80 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed transition-colors",
-                  isDragging
-                    ? "border-orange-400 bg-orange-50"
-                    : "border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300"
-                )}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-                  <ImagePlus className="h-5 w-5 text-gray-400" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700">Click to select</p>
-                  <p className="text-xs text-gray-400">or drag and drop here</p>
-                </div>
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="group relative h-80 overflow-hidden rounded-xl border border-gray-200">
-                  <Image
-                    src={previewUrl}
-                    alt="Cover Preview"
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="520px"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={handleThumbnailClick}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/90 shadow hover:bg-white transition-colors"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    </button>
-                    <button
-                      onClick={handleRemove}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500 shadow hover:bg-red-600 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4 text-white" />
-                    </button>
-                  </div>
-                </div>
-                {fileName && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
-                    <span className="truncate">{fileName}</span>
-                    <button
-                      onClick={handleRemove}
-                      className="ml-auto flex h-5 w-5 items-center justify-center rounded-full hover:bg-gray-100"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {/* Drawing toolbar */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex gap-1 border border-gray-200 rounded-lg p-1">
-                <button
-                  onClick={() => setTool("pen")}
-                  className={cn("px-3 py-1 rounded text-sm font-medium transition-colors", tool === "pen" ? "bg-gray-200 text-gray-900" : "text-gray-600 hover:bg-gray-100")}
-                >
-                  Pen
-                </button>
-                <button
-                  onClick={() => setTool("eraser")}
-                  className={cn("px-3 py-1 rounded text-sm font-medium transition-colors", tool === "eraser" ? "bg-gray-200 text-gray-900" : "text-gray-600 hover:bg-gray-100")}
-                >
-                  Eraser
-                </button>
-              </div>
-
-              {tool === "pen" && (
-                <div className="flex gap-2 items-center">
-                  <span className="text-xs text-gray-500">Color:</span>
-                  <div className="flex gap-1">
-                    {["#000000", "#ff0000", "#0000ff", "#00aa00", "#FFA500"].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setDrawColor(color)}
-                        className={cn(
-                          "w-6 h-6 rounded-full border-2 transition-all",
-                          drawColor === color ? "border-gray-400 scale-110" : "border-gray-300"
-                        )}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={clearCanvas}
-                className="ml-auto px-3 py-1 rounded text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200 transition-colors"
-              >
-                Clear
-              </button>
-            </div>
-
-            {/* Canvas */}
-            <canvas
-              ref={canvasRef}
-              width={300}
-              height={400}
-              onPointerDown={(e) => handleCanvasPointer(e, "down")}
-              onPointerMove={(e) => handleCanvasPointer(e, "move")}
-              onPointerUp={(e) => handleCanvasPointer(e, "up")}
-              className="w-full border border-gray-200 rounded-lg bg-white cursor-crosshair"
-              style={{ maxHeight: "400px" }}
-            />
-          </div>
-        )}
-
-        {/* Footer Buttons */}
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={tab === "import" ? !previewUrl : false}
-            onClick={() => {
-              if (tab === "import" && previewUrl) {
-                onConfirm(previewUrl)
-              } else if (tab === "draw" && canvasRef.current) {
-                onConfirm(canvasRef.current.toDataURL("image/png"))
-              }
-            }}
-            className="rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: (tab === "import" ? previewUrl : true) ? "linear-gradient(135deg, #e8701a, #c04a08)" : undefined, backgroundColor: (tab === "import" ? previewUrl : true) ? undefined : "#d1d5db" }}
-          >
-            Set Cover
-          </button>
-        </div>
-      </div>
+        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+      </motion.div>
     </div>
   )
 }

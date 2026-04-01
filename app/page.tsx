@@ -12,7 +12,6 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
-import { DrawingToolbar } from "@/app/components/DrawingToolbar"
 import { OrchardView } from "@/app/components/OrchardView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
@@ -747,6 +746,7 @@ export default function NoteApp() {
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
+  const unlockedVaults = useRef<Set<string>>(new Set())
 
   // ─── Pulp Grove Gamification State ───
   const [sunshine, setSunshine] = useState(1000) // Main currency: Earned by time spent (1 per 30s)
@@ -814,6 +814,8 @@ export default function NoteApp() {
   const [wordCountVisible, setWordCountVisible] = useState(true)
   const [focusMode, setFocusMode] = useState(false)
   const [baseFontSize, setBaseFontSize] = useState<"small" | "medium" | "large">("medium")
+  const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false)
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
@@ -901,7 +903,7 @@ export default function NoteApp() {
 
   // Dialog helpers
   const openPrompt = useCallback((title: string, defaultValue: string, placeholder: string, confirmLabel: string, onConfirm: (v: string) => void) => setDialog({ type: "prompt", title, defaultValue, placeholder, confirmLabel, onConfirm }), [])
-  const openConfirm = useCallback((title: string, message: string, confirmLabel: string, danger: boolean, onConfirm: () => void) => setDialog({ type: "confirm", title, message, confirmLabel, danger, onConfirm }), [])
+  const openConfirm = useCallback((title: string, message: string, onConfirm: (checked?: boolean) => void, confirmLabel?: string, danger?: boolean, showCheckbox?: boolean, checkboxLabel?: string) => setDialog({ type: "confirm", title, message, onConfirm, confirmLabel, danger, showCheckbox, checkboxLabel }), [])
   const openAlert = useCallback((title: string, message?: string) => setDialog({ type: "alert", title, message }), [])
 
   // Hooks
@@ -1366,12 +1368,14 @@ export default function NoteApp() {
       if (s.wordCountVisible !== undefined) setWordCountVisible(s.wordCountVisible)
       if (s.focusMode !== undefined) setFocusMode(s.focusMode)
       if (s.baseFontSize) setBaseFontSize(s.baseFontSize)
+      if (s.trashNotes) setTrashNotes(s.trashNotes)
+      if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
     })
   }, [user])
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize }
+    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
 
     if (!user) return
@@ -1383,7 +1387,7 @@ export default function NoteApp() {
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, user])
+  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation, user])
 
   // Cloud autosave
   useEffect(() => {
@@ -1457,7 +1461,7 @@ export default function NoteApp() {
 
   // Note/folder actions
   const addNote = (folderId: number | null = null) =>
-    openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
+    openPrompt("Name your notebook", "New Notebook", "Notebook name…", "Create", name => {
       if (!name.trim()) return
       const id = uid()
       const newNote = { id, subject: name.trim(), pages: [""], folderId, boxes: {} }
@@ -1465,19 +1469,44 @@ export default function NoteApp() {
       setActiveTabId(id); setCurrentPageIdx(0)
     })
 
-  const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) =>
-    openPrompt("Name your note", "New Note", "Note name…", "Create", name => {
-      if (!name.trim()) return
+  const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
+    let title = "New Notebook"
+    let placeholder = "Notebook name…"
+    let promptTitle = "Name your notebook"
+    if (noteType === "singlepage") { title = "New Page"; placeholder = "Page name…"; promptTitle = "Name your page" }
+    else if (noteType === "flashcard") { title = "New Deck"; placeholder = "Deck name…"; promptTitle = "Name your deck" }
+    else if (noteType === "vault") { title = "New Vault"; placeholder = "Vault name…"; promptTitle = "Name your vault" }
+    
+    const finishCreate = (name: string, pwd?: string) => {
       const id = uid()
-      const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType }
+      const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType, password: pwd }
       const newNote: NoteData = noteType === "flashcard"
         ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "" }] }
         : noteType === "singlepage"
         ? { ...baseNote, pages: [""], icon: "📄" }
+        : noteType === "vault"
+        ? { ...baseNote, pages: [""], icon: "🔐" }
         : { ...baseNote, pages: [""] }
+        
+      if (noteType === "vault") unlockedVaults.current.add(id)
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
+    }
+
+    openPrompt(promptTitle, title, placeholder, "Create", name => {
+      if (!name.trim()) return
+      if (noteType === "vault") {
+        setTimeout(() => {
+          openPrompt("Set Password", "Vault Password", "Enter a password...", "Create", pwd => {
+            if (!pwd) { openAlert("Error", "Password is required for a vault."); return }
+            finishCreate(name, pwd)
+          })
+        }, 150)
+      } else {
+        finishCreate(name)
+      }
     })
+  }
 
   const AI_ACTIONS = [
     { id: "quiz", label: "Quiz me" },
@@ -1557,14 +1586,54 @@ export default function NoteApp() {
       if (newName.trim()) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName.trim() } : n))
     })
 
-  const deleteNote = async (id: string) => {
-    setNotes(prev => prev.filter(n => n.id !== id))
-    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id)?.id ?? null)
-    if (user) await supabase.from("notes").delete().eq("id", id)
+  const deleteNote = (id: string) => {
+    const note = notes.find(n => n.id === id)
+    if (!note) return
+    setNotes(ns => ns.filter(n => n.id !== id))
+    setTrashNotes(ts => [...ts, { ...note, deletedAt: new Date().toISOString() }])
+    if (activeTabId === id) setActiveTabId(null)
+    if (user) supabase.from("notes").delete().eq("id", id)
   }
 
+  const restoreNote = (id: string) => {
+    const note = trashNotes.find(n => n.id === id)
+    if (!note) return
+    setTrashNotes(ts => ts.filter(n => n.id !== id))
+    setNotes(ns => [...ns, { ...note, deletedAt: undefined }])
+  }
+
+  const permanentlyDeleteNote = (id: string) => {
+    setTrashNotes(ts => ts.filter(n => n.id !== id))
+  }
+
+  const archiveNote = (id: string) => {
+    if (activeTabId === id) setActiveTabId(null)
+    setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: true } : n))
+  }
+
+  const unarchiveNote = (id: string) => {
+    setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: false } : n))
+  }
+
+  const archivedNotes = notes.filter(n => n.archived)
+
+  // Periodic cleanup of trash older than 30 days
+  useEffect(() => {
+    const cleanup = () => {
+      const now = Date.now()
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+      setTrashNotes(ts => ts.filter(tn => {
+        if (!tn.deletedAt) return true
+        return (now - new Date(tn.deletedAt).getTime()) < thirtyDaysMs
+      }))
+    }
+    const timer = setInterval(cleanup, 1000 * 60 * 60) // Check every hour
+    cleanup()
+    return () => clearInterval(timer)
+  }, [])
+
   const clearPage = () =>
-    openConfirm("Clear this page?", "All content on this page will be deleted. This cannot be undone.", "Clear", true, () => {
+    openConfirm("Clear this page?", "All content on this page will be deleted. This cannot be undone.", () => {
       if (editorRef.current) editorRef.current.innerHTML = ""
       setNotes(prev => prev.map(n => {
         if (n.id !== activeTabId) return n
@@ -1575,7 +1644,7 @@ export default function NoteApp() {
     })
 
   const insertCornell = () =>
-    openConfirm("Apply Cornell Layout?", "This will clear everything currently on this page.", "Apply", true, () => {
+    openConfirm("Apply Cornell Layout?", "This will clear everything currently on this page.", () => {
       const topH = 150
       const botH = 800
       const leftW = 280
@@ -1614,7 +1683,7 @@ export default function NoteApp() {
   const toggleFolder = (id: number) => setFolders(prev => prev.map(f => f.id === id ? { ...f, open: !f.open } : f))
   const renameFolder = (id: number, name: string) => setFolders(prev => prev.map(f => f.id === id ? { ...f, name } : f))
   const deleteFolder = (id: number) =>
-    openConfirm("Delete folder?", "Notes inside will be moved to root.", "Delete", true, () => {
+    openConfirm("Delete folder?", "Notes inside will be moved to root.", () => {
       setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: null } : n))
       setFolders(prev => prev.filter(f => f.id !== id))
     })
@@ -1690,9 +1759,30 @@ export default function NoteApp() {
         onAddNote={addNote}
         onAddTypedNote={addTypedNote}
         onAddFolder={addFolder}
-        onSelectNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
+        onSelectNote={id => {
+          const n = notes.find(x => x.id === id)
+          if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
+            openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
+              if (pwd === (n.password || "")) {
+                unlockedVaults.current.add(id)
+                editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+              } else {
+                openAlert("Access Denied", "Incorrect password.")
+              }
+            })
+            return
+          }
+          editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+        }}
         onRenameNote={renameNote}
         onDeleteNote={deleteNote}
+        trashNotes={trashNotes}
+        onRestoreNote={restoreNote}
+        onPermanentlyDeleteNote={permanentlyDeleteNote}
+        archivedNotes={archivedNotes}
+        onArchiveNote={archiveNote}
+        onUnarchiveNote={unarchiveNote}
+        unlockedIds={unlockedVaults.current}
         onToggleFolder={toggleFolder}
         onRenameFolder={renameFolder}
         onDeleteFolder={deleteFolder}
@@ -1818,6 +1908,14 @@ export default function NoteApp() {
               allCompacted={allCompacted}
               onCompactAll={handleCompactAll}
               onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
+              isVault={activeNote?.noteType === "vault"}
+              isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
+              onLock={() => {
+                if (activeNote) {
+                  unlockedVaults.current.delete(activeNote.id)
+                  setNotes(prev => [...prev])
+                }
+              }}
               onDownload={() => {
                 if (!activeNote) return
                 const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
@@ -1833,15 +1931,6 @@ export default function NoteApp() {
               isSidebarDragging={isSidebarDragging}
               sunshine={sunshine}
               gems={gems}
-            />
-            <DrawingToolbar
-              isOpen={showDrawToolbar}
-              onClose={() => setShowDrawToolbar(false)}
-              activeTool={activeTool}
-              onToolChange={setActiveTool}
-              onClearDrawing={drawing.clearCanvas}
-              onImageUpload={handleImageUpload}
-              onImproveDrawing={drawing.improveDrawing}
             />
           </div>
         )}
@@ -1904,109 +1993,142 @@ export default function NoteApp() {
                         }
                       }}
                     >
-
-                      <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
-                      {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
-
-                      {/* Render custom user-drawn lines */}
-                      {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (
-                        <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
-                      ))}
-
-                      {/* Cover display on first page */}
-                      {activeNote.cover && currentPageIdx === 0 && (
-                        <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
-                          <img src={activeNote.cover} style={{ width: "100%", display: "block" }} alt="Notebook Cover" />
+                      {activeNote.noteType === "vault" && !unlockedVaults.current.has(activeNote.id) ? (
+                        <div className="absolute inset-0 z-[60] bg-zinc-900/5 backdrop-blur-[1px] flex flex-col items-center justify-start pt-60 p-10 select-none pointer-events-none">
+                          <div className="bg-white/90 dark:bg-zinc-900/90 p-10 rounded-3xl shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col items-center gap-5 text-center anim-fade-in pointer-events-auto" style={{ filter: 'url(#handwritten-jitter-subtle)' }}>
+                            <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Vault Locked</h3>
+                              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                const n = notes.find(x => x.id === activeNote.id)
+                                if (n) {
+                                  openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
+                                    if (pwd === (n.password || "")) {
+                                      unlockedVaults.current.add(n.id)
+                                      setNotes(prev => [...prev])
+                                    } else {
+                                      openAlert("Access Denied", "Incorrect password.")
+                                    }
+                                  })
+                                }
+                              }}
+                              className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
+                            >
+                              Unlock Now
+                            </button>
+                          </div>
                         </div>
-                      )}
+                       ) : (
+                         <>
+                           <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
+                           {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
 
-                      <div
-                        ref={editorRef}
-                        className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
-                        style={{ fontFamily: `"${editorFont}", Georgia, serif`, fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18 }}
-                      />
+                           {/* Render custom user-drawn lines */}
+                           {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (
+                             <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
+                           ))}
 
-                      <style>{`
-                        #editor-paper [contenteditable] {
-                          color: #1a1a1a !important;
-                          caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
-                          opacity: 1 !important;
-                        }
-                        @keyframes box-ripple {
-                          0%   { inset: 0px;   opacity: 0.9; }
-                          100% { inset: -22px; opacity: 0; }
-                        }
-                        @keyframes box-ripple-2 {
-                          0%   { inset: 0px;   opacity: 0.45; }
-                          100% { inset: -36px; opacity: 0; }
-                        }
-                        #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-                        #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
-                        #editor-paper li { margin-bottom: 0.15em !important; }
-                      `}</style>
+                           {/* Cover display on first page */}
+                           {activeNote.cover && currentPageIdx === 0 && (
+                             <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+                               <img src={activeNote.cover} style={{ width: "100%", display: "block" }} alt="Notebook Cover" />
+                             </div>
+                           )}
 
-                      {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
-                      <div
-                        ref={boxes.selectionRectRef}
-                        style={{
-                          display: "none",
-                          position: "absolute",
-                          left: 0, top: 0, width: 0, height: 0,
-                          backgroundColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.06)",
-                          border: `1px solid ${theme === "dark" ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.2)"}`,
-                          boxShadow: "none",
-                          borderRadius: "1px",
-                          pointerEvents: "none",
-                          zIndex: 100,
-                        }}
-                      />
+                           <div
+                             ref={editorRef}
+                             className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
+                             style={{ fontFamily: `"${editorFont}", Georgia, serif`, fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18 }}
+                           />
 
-                      {/* Drawing canvas overlay */}
-                      <canvas
-                        ref={canvasRef}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "100%",
-                          pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
-                          cursor: drawing.getCursor(),
-                          zIndex: activeTool === 'select' ? 10 : 45,
-                          touchAction: "none",
-                        }}
-                        onPointerDown={drawing.onPointerDown}
-                        onPointerMove={drawing.onPointerMove}
-                        onPointerUp={drawing.onPointerUp}
-                        onPointerCancel={drawing.onPointerUp}
-                      />
+                           <style>{`
+                             #editor-paper [contenteditable] {
+                               color: #1a1a1a !important;
+                               caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
+                               opacity: 1 !important;
+                             }
+                             @keyframes box-ripple {
+                               0%   { inset: 0px;   opacity: 0.9; }
+                               100% { inset: -22px; opacity: 0; }
+                             }
+                             @keyframes box-ripple-2 {
+                               0%   { inset: 0px;   opacity: 0.45; }
+                               100% { inset: -36px; opacity: 0; }
+                             }
+                             #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+                             #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
+                             #editor-paper li { margin-bottom: 0.15em !important; }
+                           `}</style>
 
-                      {(activeNote.boxes[currentPageIdx] || []).map(box => (
-                        <BoxItem
-                          key={box.id}
-                          box={box}
-                          isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
-                          selectedCount={boxes.selectedBoxIdsRef.current.size}
-                          loadingBoxId={boxes.loadingBoxId}
-                          accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
-                          theme={theme}
-                          startDrag={boxes.startDrag}
-                          startResize={boxes.startResize}
-                          deleteBox={boxes.deleteBox}
-                          updateBox={boxes.updateBox}
-                          updateBoxContent={boxes.updateBoxContent}
-                          setSelectedBoxIds={boxes.setSelectedBoxIds}
-                          onKeyDown={handleEditorKeyDown}
-                          onInput={handleEditorInput}
-                          onRewrite={boxes.rewriteBox}
-                          onImageGen={boxes.generateSketch}
-                          formattingOpen={toolbarFormattingOpen}
-                          setFormattingOpen={setToolbarFormattingOpen}
-                          aiOpen={toolbarAiOpen}
-                          setAiOpen={setToolbarAiOpen}
-                          onDragStart={() => setIsAnyBoxDragging(true)}
-                          onDragEnd={() => setIsAnyBoxDragging(false)}
-                        />
-                      ))}
+                           {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
+                           <div
+                             ref={boxes.selectionRectRef}
+                             style={{
+                               display: "none",
+                               position: "absolute",
+                               left: 0, top: 0, width: 0, height: 0,
+                               backgroundColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.06)",
+                               border: `1px solid ${theme === "dark" ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.2)"}`,
+                               boxShadow: "none",
+                               borderRadius: "1px",
+                               pointerEvents: "none",
+                               zIndex: 100,
+                             }}
+                           />
+
+                           {/* Drawing canvas overlay */}
+                           <canvas
+                             ref={canvasRef}
+                             style={{
+                               position: "absolute",
+                               inset: 0,
+                               width: "100%",
+                               height: "100%",
+                               pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
+                               cursor: drawing.getCursor(),
+                               zIndex: activeTool === 'select' ? 10 : 45,
+                               touchAction: "none",
+                             }}
+                             onPointerDown={drawing.onPointerDown}
+                             onPointerMove={drawing.onPointerMove}
+                             onPointerUp={drawing.onPointerUp}
+                             onPointerCancel={drawing.onPointerUp}
+                           />
+
+                           {(activeNote.boxes[currentPageIdx] || []).map(box => (
+                             <BoxItem
+                               key={box.id}
+                               box={box}
+                               isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
+                               selectedCount={boxes.selectedBoxIdsRef.current.size}
+                               loadingBoxId={boxes.loadingBoxId}
+                               accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
+                               theme={theme}
+                               startDrag={boxes.startDrag}
+                               startResize={boxes.startResize}
+                               deleteBox={boxes.deleteBox}
+                               updateBox={boxes.updateBox}
+                               updateBoxContent={boxes.updateBoxContent}
+                               setSelectedBoxIds={boxes.setSelectedBoxIds}
+                               onKeyDown={handleEditorKeyDown}
+                               onInput={handleEditorInput}
+                               onRewrite={boxes.rewriteBox}
+                               onImageGen={boxes.generateSketch}
+                               formattingOpen={toolbarFormattingOpen}
+                               setFormattingOpen={setToolbarFormattingOpen}
+                               aiOpen={toolbarAiOpen}
+                               setAiOpen={setToolbarAiOpen}
+                               onDragStart={() => setIsAnyBoxDragging(true)}
+                               onDragEnd={() => setIsAnyBoxDragging(false)}
+                             />
+                           ))}
+                         </>
+                       )}
 
                       {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
                       <div
@@ -2174,7 +2296,6 @@ export default function NoteApp() {
           onClose={() => setAiMenu(null)}
           onSubmit={async (prompt: string, selectedText?: string) => {
             setAiMenu(null)
-            setAiResult({ title: "AI Response", result: "", loading: true })
 
             try {
               const response = await fetch("/api/ai", {
@@ -2185,11 +2306,17 @@ export default function NoteApp() {
 
               if (!response.ok) throw new Error("AI request failed")
               const data = await response.json()
+              const result = data.result || ""
 
-              setAiResult({ title: "AI Response", result: data.result || "", loading: false })
+              // Insert inline: replace selected text or insert at cursor
+              if (selectedText) {
+                editor.execCmd("insertText", result)
+              } else {
+                editor.insertHTML(result)
+              }
             } catch (error) {
               console.error("AI error:", error)
-              setAiResult({ title: "AI Response", result: "Error processing request", loading: false })
+              openAlert("AI Error", "Failed to process request. Check console for details.")
             }
           }}
         />
@@ -2246,11 +2373,33 @@ export default function NoteApp() {
           )}
           <button
             onClick={() => setAiQuickMenuOpen(v => !v)}
-            className="w-10 h-10 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center transition-all"
-            title="AI Quick Actions"
+            className="w-11 h-11 rounded-full bg-orange-500 hover:bg-orange-600 shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+            title="Antigravity AI"
           >
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Antennae */}
+              <motion.line 
+                x1="12" y1="9" x2="12" y2="4" 
+                stroke="white" strokeWidth="1.5" strokeLinecap="round" 
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.circle 
+                cx="12" cy="3" r="1.5" fill="white" 
+                animate={{ x: [0, 1, -1, 0], y: [0, -0.5, 0.5, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              
+              {/* Face (Orange Body) */}
+              <circle cx="12" cy="15" r="7.5" fill="white" fillOpacity="0.1" stroke="white" strokeWidth="1.5" />
+              <circle cx="12" cy="15" r="5.5" fill="white" />
+              
+              {/* Eyes */}
+              <circle cx="9.5" cy="14.5" r="0.8" fill="#f97316" />
+              <circle cx="14.5" cy="14.5" r="0.8" fill="#f97316" />
+              
+              {/* Smile */}
+              <path d="M10.5 16.5C11 17.2 13 17.2 13.5 16.5" stroke="#f97316" strokeWidth="1" strokeLinecap="round" />
             </svg>
           </button>
         </div>

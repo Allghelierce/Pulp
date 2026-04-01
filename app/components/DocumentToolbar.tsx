@@ -1,4 +1,5 @@
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShareButton } from "@/components/ui/share-button"
 import { Link as LinkIcon } from "lucide-react"
@@ -46,10 +47,31 @@ interface DocumentToolbarProps {
   isSidebarDragging: boolean
   sunshine: number
   gems: number
+  isVault?: boolean
+  isUnlocked?: boolean
+  onLock?: () => void
 }
 
 
 const GOLD = "#D4AF37"
+
+/** Renders a flexible twine that bows based on a spring-driven offset value */
+function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }) {
+  const [b, setB] = useState(0)
+  useEffect(() => {
+    const unsub = bow.on("change", setB)
+    return unsub
+  }, [bow])
+  // Quadratic bezier: start top-center (1,0), control mid (1+bow, 71), end (1,142)
+  const d1 = `M1 0 Q${1 + b} 71 1 142`
+  const d2 = `M1 0 Q${1 + b * 0.7} 71 1 142`
+  return (
+    <svg width="16" height="142" viewBox="-7 0 16 142" style={{ overflow: "visible", flexShrink: 0, display: "block" }}>
+      <path d={d1} stroke="#f1f1f1" strokeWidth="0.8" fill="none" strokeDasharray="2 1.5" />
+      <path d={d2} stroke="#d47c2a" strokeWidth="0.8" fill="none" strokeDasharray="1.5 2" strokeDashoffset="1.5" />
+    </svg>
+  )
+}
 
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx,
@@ -62,10 +84,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  sunshine, gems
+  sunshine, gems, isVault, isUnlocked, onLock
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnFont: React.CSSProperties = { fontFamily: 'var(--font-playfair), "Playfair Display", Georgia, serif', letterSpacing: '0.01em' }
 
   const activeStyle = (active: boolean): React.CSSProperties => active
     ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
@@ -86,6 +109,60 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     if (!leftToolsRef.current) return
   }, [])
 
+  // --- Physics pendulum: flexible string with realistic random swing ---
+  const angle = useMotionValue(0)
+  const springAngle = useSpring(angle, {
+    stiffness: 80,    // softer = slower, more pendulum-like
+    damping: 6,       // low damping = more oscillation
+    mass: 0.8,
+  })
+  // Second spring lags behind the main angle — simulates string flex
+  const lagAngle = useSpring(angle, {
+    stiffness: 30,
+    damping: 5,
+    mass: 1.2,
+  })
+  // Convert lag to a pixel offset for the SVG bezier midpoint
+  const stringBow = useTransform(lagAngle, v => v * 0.7) // pixels of lateral bow
+
+  const idleSway = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isPulling = useRef(false)
+
+  const scheduleIdleSway = useCallback(() => {
+    // Cancel any existing pending sway before scheduling a new one
+    if (idleSway.current) clearTimeout(idleSway.current)
+    const delay = 3500 + Math.random() * 4000   // 3.5–7.5s between gentle sways
+    idleSway.current = setTimeout(() => {
+      // Very subtle nudge — just enough to look alive, not noticeable
+      const mag = 0.5 + Math.random() * 1.2
+      const dir = Math.random() > 0.5 ? 1 : -1
+      angle.set(mag * dir)
+      scheduleIdleSway()
+    }, delay)
+  }, [angle])
+
+  useEffect(() => {
+    scheduleIdleSway()
+    return () => { if (idleSway.current) clearTimeout(idleSway.current) }
+  }, [scheduleIdleSway])
+
+  const handlePull = (e: React.MouseEvent) => {
+    e.preventDefault()
+    // Cancel any queued idle sway that might fire unexpectedly after this click
+    if (idleSway.current) clearTimeout(idleSway.current)
+    isPulling.current = true
+    const dir = Math.random() > 0.5 ? 1 : -1
+    const mag = 7 + Math.random() * 6
+    angle.set(mag * dir)
+    setTimeout(() => {
+      isPulling.current = false
+      angle.set(0)
+      // Restart idle sway from a clean slate after the swing settles
+      scheduleIdleSway()
+    }, 80)
+    onStartSidebarDrag(e.clientX)
+  }
+
   return (
     <div
       id="document-toolbar"
@@ -94,70 +171,70 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     >
       
       <div className="flex items-center gap-3 relative z-10" ref={leftToolsRef}>
-        <button
+        {/* Physics Pendulum — entire assembly rotates from top pivot */}
+        <motion.button
           title="Toggle Sidebar"
-          onMouseDown={e => { e.preventDefault(); onStartSidebarDrag(e.clientX) }}
-          className="absolute top-0 left-[14px] z-50 flex flex-col items-center outline-none cursor-grab active:cursor-grabbing group h-0"
+          onMouseDown={handlePull}
+          className="absolute select-none outline-none"
           style={{
-            width: 32,
+            rotate: springAngle,
             transformOrigin: "top center",
-            animation: isSidebarDragging ? "bulb-pull 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), leaf-sway 5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite" : "leaf-sway 18s cubic-bezier(0.34, 1.56, 0.64, 1) infinite"
+            top: -56, // pivot is above the toolbar top edge
+            left: 14,
+            width: 32,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            cursor: "grab",
           }}
+          whileTap={{ scaleX: 1.15, scaleY: 0.88, transition: { type: "spring", stiffness: 600, damping: 12 } }}
         >
-          {/* Extended Botanical Twine - Starting from negative top to hit the screen's very upper edge */}
-          <svg width="2" height="142" viewBox="0 0 2 142" className="overflow-visible" style={{ marginTop: -48 }}>
-            <path d="M1 0 L1 142" stroke="#f1f1f1" strokeWidth="0.8" strokeDasharray="2 1.5" />
-            <path d="M1 0 L1 142" stroke="#d47c2a" strokeWidth="0.8" strokeDasharray="1.5 2" strokeDashoffset="1.5" />
-          </svg>
+          {/* Twine — bezier cord that tracks the lag of the swing */}
+          <FlexTwine bow={stringBow} />
 
-          {/* Delicate Hollow Silver Keychain Ring (6px) - Centered Alignment */}
-          <div className="relative flex flex-col items-center" style={{ filter: "url(#handwritten-jitter-subtle)", marginTop: -2 }}>
+          {/* Ring */}
+          <div style={{
+            width: 6, height: 6, marginTop: -2,
+            borderRadius: "50%",
+            border: "1.2px solid #a1a1aa",
+            background: "transparent",
+            boxShadow: "0.5px 0.5px 1px rgba(0,0,0,0.2)",
+            flexShrink: 0,
+          }} />
+
+          {/* Orange slice */}
+          <div className="relative mt-[-4px] z-10" style={{ flexShrink: 0 }}>
             <div style={{
-              width: 6, height: 6,
-              borderRadius: "50%",
-              border: "1.2px solid #a1a1aa",
-              background: "transparent",
-              boxShadow: "0.5px 0.5px 1px rgba(0,0,0,0.2)",
+              width: 28, height: 16,
+              borderRadius: "0 0 28px 28px",
+              background: "linear-gradient(to bottom, #8b4513, #a64d1a)",
+              border: "1px solid #5c2d0b",
+              boxShadow: "0 6px 12px rgba(0,0,0,0.4), inset 0 -1.5px 3px rgba(0,0,0,0.5)",
+              overflow: "hidden",
               position: "relative",
-              zIndex: 20
-            }} />
-
-            {/* Small Hand-Drawn Half-Circle Orange Slice (28px width) */}
-            <div className="relative mt-[-4px] z-10">
+            }}>
               <div style={{
-                width: 28, height: 16,
-                borderRadius: "0 0 28px 28px",
-                background: "linear-gradient(to bottom, #8b4513, #a64d1a)",
-                border: "1px solid #5c2d0b",
-                boxShadow: "0 6px 12px rgba(0,0,0,0.4), inset 0 -1.5px 3px rgba(0,0,0,0.5)",
-                overflow: "hidden",
-                position: "relative"
+                position: "absolute", bottom: 1, left: 1.5, right: 1.5, top: 0,
+                borderRadius: "0 0 25px 25px",
+                background: "radial-gradient(ellipse at center top, rgba(232, 134, 42, 0.9), rgba(166, 77, 26, 0.8))",
+                display: "flex", alignItems: "flex-end", justifyContent: "center",
               }}>
-                <div style={{
-                  position: "absolute", bottom: 1, left: 1.5, right: 1.5, top: 0,
-                  borderRadius: "0 0 25px 25px",
-                  background: "radial-gradient(ellipse at center top, rgba(232, 134, 42, 0.9), rgba(166, 77, 26, 0.8))",
-                  backdropFilter: "blur(0.3px)",
-                  display: "flex", alignItems: "flex-end", justifyContent: "center"
-                }}>
-                  <svg width="24" height="14" viewBox="0 0 100 50" style={{ opacity: 0.5 }}>
-                    {[30, 60, 90, 120, 150].map(deg => (
-                      <line key={deg} x1="50" y1="0" x2={50 + Math.cos((deg * Math.PI) / 180) * 50} y2={Math.sin((deg * Math.PI) / 180) * 50} stroke="#fce7c0" strokeWidth="3.5" strokeLinecap="round" />
-                    ))}
-                    <circle cx="50" cy="0" r="10" fill="#fce7c0" />
-                  </svg>
-                </div>
+                <svg width="24" height="14" viewBox="0 0 100 50" style={{ opacity: 0.5 }}>
+                  {[30, 60, 90, 120, 150].map(deg => (
+                    <line key={deg} x1="50" y1="0" x2={50 + Math.cos((deg * Math.PI) / 180) * 50} y2={Math.sin((deg * Math.PI) / 180) * 50} stroke="#fce7c0" strokeWidth="3.5" strokeLinecap="round" />
+                  ))}
+                  <circle cx="50" cy="0" r="10" fill="#fce7c0" />
+                </svg>
               </div>
-              
-              <div style={{
-                position: "absolute", inset: 0,
-                borderRadius: "0 0 28px 28px",
-                background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%)",
-                pointerEvents: "none"
-              }} />
             </div>
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "0 0 28px 28px",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.12) 100%)",
+              pointerEvents: "none",
+            }} />
           </div>
-        </button>
+        </motion.button>
 
         <div className="w-14 shrink-0" />
 
@@ -168,7 +245,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
           title="Page grid"
           className={btnBase}
-          style={activeStyle(gridView)}
+          style={{ ...activeStyle(gridView), ...btnFont }}
         >
           Grid View
         </button>
@@ -179,7 +256,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             onMouseDown={e => { e.preventDefault(); setAlignOpen(!alignOpen) }}
             title="Align options"
             className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
-            style={alignOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}}
+            style={{ ...(alignOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
           >
             Align
             <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
@@ -190,34 +267,49 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
               >
                 Horizontal Snap
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
               >
                 Vertical Distribute
-              </button>
-              <div className={`h-px my-1 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-200"}`} />
-              <button
-                onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode); setAlignOpen(false) }}
-                className={`w-full flex items-center gap-1.5 text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-              >
-                <svg width="8" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.6"><line x1="12" y1="3" x2="12" y2="21" /></svg>
-                Insert Divider
               </button>
             </div>
           )}
         </div>
 
-        <div className="w-px h-5 bg-zinc-200 shrink-0" />
+        {isVault && (
+          <button
+            onClick={onLock}
+            className={`${btnBase} flex items-center gap-1.5`}
+            title={isUnlocked ? "Lock Vault" : "Unlock Vault"}
+            style={btnFont}
+          >
+            {isUnlocked ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                Lock Vault
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Unlock
+              </>
+            )}
+          </button>
+        )}
+
+
 
         {/* Draw toolbar toggle */}
         <button
           onClick={onToggleDrawToolbar}
           className={`${btnBase} flex items-center gap-1.5`}
-          style={activeStyle(showDrawToolbar)}
+          style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
         >
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
           Draw
@@ -228,7 +320,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onClick={() => setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky')}
             className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap`}
-            style={activeTool === 'sticky' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}}
+            style={{ ...(activeTool === 'sticky' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}), ...btnFont }}
             title="Add Sticky Note"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'sticky' ? stickyColor : "currentColor"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -237,7 +329,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </svg>
             Sticky
           </button>
-          <div className="w-px bg-zinc-200 self-stretch" />
           <div className="flex items-center gap-1 px-2">
             {[
               ['Yellow', '#fef08a'],
@@ -259,7 +350,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <button
           onClick={() => setActiveTool(activeTool === 'hr' ? 'select' : 'hr')}
           className={`${btnBase} flex items-center gap-1.5`}
-          style={activeTool === 'hr' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}}
+          style={{ ...(activeTool === 'hr' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}), ...btnFont }}
           title="Add Horizontal Line"
         >
           <svg width="13" height="9" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'hr' ? 'currentColor' : '#a1a1aa'} strokeWidth="3" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /></svg>
@@ -270,7 +361,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <button
           onClick={onCompactAll}
           className={`${btnBase} flex items-center gap-1.5`}
-          style={activeStyle(allCompacted)}
+          style={{ ...activeStyle(allCompacted), ...btnFont }}
           title={allCompacted ? "Expand All" : "Collapse All"}
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: allCompacted ? 'rotate(0deg)' : 'rotate(90deg)' }}>
@@ -281,20 +372,20 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
 
-        <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer">
+        <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer" style={btnFont}>
           {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </div>
 
       {/* Currencies Display - Centered */}
-      <div className="flex items-center gap-2 px-2.5 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
-        <div className="flex items-center gap-1">
-          <span className="text-[8px] leading-none">☀️</span>
+      <div className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+        <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-default" title="Sunshine (Earned by active time)">
+          <span className="text-[10px] leading-none">☀️</span>
           <span>{sunshine}</span>
         </div>
-        <div className="w-px h-3 bg-zinc-300/40" />
-        <div className="flex items-center gap-1">
-          <span className="text-[8px] leading-none">💎</span>
+        <div className="w-px h-3 bg-zinc-400/30" />
+        <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-default" title="Gems (Purchased or rare)">
+          <span className="text-[10px] leading-none">💎</span>
           <span>{gems}</span>
         </div>
       </div>

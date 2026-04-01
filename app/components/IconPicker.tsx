@@ -83,10 +83,10 @@ export function IconPicker({ x, y, onSelect, onClose }: IconPickerProps) {
       style={{
         position: "fixed", left, top, zIndex: 9999,
         width: PICKER_W,
-        background: "#18181b",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 10,
-        boxShadow: "0 8px 40px rgba(0,0,0,0.55)",
+        background: "#27272a", // zinc-800
+        border: "1px solid #3f3f46", // zinc-700
+        borderRadius: 6,
+        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",

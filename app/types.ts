@@ -14,12 +14,15 @@ export interface NoteData {
   parentId?: string;
   icon?: string;
   cover?: string;
-  noteType?: "notebook" | "singlepage" | "flashcard";
+  noteType?: "notebook" | "singlepage" | "flashcard" | "vault";
+  password?: string;
   flashcards?: FlashcardItem[];
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   hlines?: { [pageIdx: number]: number[] };
   drawings?: { [pageIdx: number]: DrawingPath[] };
+  deletedAt?: string;
+  archived?: boolean;
 }
 export interface DrawingPath {
   id: string;
@@ -34,5 +37,5 @@ export interface Bookmark { id: string; noteId: string; pageIdx: number; noteTit
 
 export type DialogConfig =
   | { type: "prompt"; title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; onConfirm: (val: string) => void }
-  | { type: "confirm"; title: string; message?: string; confirmLabel?: string; danger?: boolean; onConfirm: () => void }
+  | { type: "confirm"; title: string; message?: string; confirmLabel?: string; danger?: boolean; onConfirm: (checkboxChecked?: boolean) => void; showCheckbox?: boolean; checkboxLabel?: string }
   | { type: "alert"; title: string; message?: string }

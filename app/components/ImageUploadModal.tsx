@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react"
 import { useImageUpload } from "@/app/hooks/use-image-upload"
-import { ImagePlus, Upload, Trash2, X } from "lucide-react"
+import { ImagePlus, Upload, Trash2, X, Link as LinkIcon, Globe } from "lucide-react"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ImageUploadModalProps {
   onConfirm: (htmlOrUrl: string, isHtml: boolean) => void
@@ -28,15 +29,11 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
   const [linkUrl, setLinkUrl] = useState("")
   const [isDragging, setIsDragging] = useState(false)
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); e.stopPropagation()
-  }
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(true)
-  }
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(false)
-  }
+  const pulpOrange = "#F5A030"
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation() }
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false) }
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -48,176 +45,6 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
       }
     },
     [handleFileChange],
-  )
-
-  return (
-    // Backdrop
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      {/* Card */}
-      <div
-        className="relative flex flex-col gap-5 rounded-2xl p-6 shadow-2xl"
-        style={{
-          width: 420,
-          background: "rgba(255,255,255,0.97)",
-          border: "1px solid rgba(0,0,0,0.08)",
-          animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)",
-        }}
-      >
-        {/* Header Tabs */}
-        <div className="flex items-start justify-between">
-          <div className="flex gap-4 border-b border-gray-200">
-            <button
-              onClick={() => setTab("upload")}
-              className={cn("pb-2 text-base font-semibold transition-colors", tab === "upload" ? "border-b-2 border-gray-900 text-gray-900" : "border-b-2 border-transparent text-gray-400 hover:text-gray-600")}
-            >
-              Upload
-            </button>
-            <button
-              onClick={() => setTab("link")}
-              className={cn("pb-2 text-base font-semibold transition-colors", tab === "link" ? "border-b-2 border-gray-900 text-gray-900" : "border-b-2 border-transparent text-gray-400 hover:text-gray-600")}
-            >
-              Link
-            </button>
-          </div>
-          <button
-            onClick={onClose}
-            className="ml-4 flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-gray-100"
-          >
-            <X className="h-4 w-4 text-gray-500" />
-          </button>
-        </div>
-
-        {/* Hidden file input */}
-        <input
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-        />
-
-        {tab === "upload" ? (
-          <>
-            <p className="text-xs text-gray-400 -mt-2">Supported formats: Images, Videos, GIFs</p>
-            {/* Drop zone or Preview */}
-            {!previewUrl ? (
-              <div
-                onClick={handleThumbnailClick}
-                onDragOver={handleDragOver}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={cn(
-                  "flex h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed transition-colors",
-                  isDragging
-                    ? "border-orange-400 bg-orange-50"
-                    : "border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300"
-                )}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-                  <ImagePlus className="h-5 w-5 text-gray-400" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700">Click to select</p>
-                  <p className="text-xs text-gray-400">or drag and drop here</p>
-                </div>
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="group relative h-52 overflow-hidden rounded-xl border border-gray-200">
-                  {fileName?.match(/\.(mp4|webm|ogg|mov)$/i) || previewUrl.startsWith("data:video") || previewUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                    <video src={previewUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop />
-                  ) : (
-                    <Image
-                      src={previewUrl}
-                      alt="Preview"
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="420px"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={handleThumbnailClick}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/90 shadow hover:bg-white transition-colors"
-                    >
-                      <Upload className="h-4 w-4 text-gray-700" />
-                    </button>
-                    <button
-                      onClick={handleRemove}
-                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500 shadow hover:bg-red-600 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4 text-white" />
-                    </button>
-                  </div>
-                </div>
-                {fileName && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
-                    <span className="truncate">{fileName}</span>
-                    <button
-                      onClick={handleRemove}
-                      className="ml-auto flex h-5 w-5 items-center justify-center rounded-full hover:bg-gray-100"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col gap-3 py-4 border border-transparent">
-            <input
-              type="text"
-              autoFocus
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="Paste URL (Image, Video, YouTube...)"
-              className="w-full text-sm p-3 rounded-lg border border-gray-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all shadow-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && linkUrl.trim()) {
-                  triggerLinkEmbed()
-                }
-              }}
-            />
-          </div>
-        )}
-
-        {/* Footer Buttons */}
-        <div className="flex justify-end gap-2 pt-1">
-          <button
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={tab === "upload" ? !previewUrl : !linkUrl.trim()}
-            onClick={() => { 
-              if (tab === "upload" && previewUrl) { 
-                const isVideo = (fileName && fileName.match(/\.(mp4|webm|ogg|mov)$/i)) || previewUrl.startsWith("data:video") || previewUrl.match(/\.(mp4|webm|ogg|mov)$/i)
-                const html = isVideo 
-                  ? `<video src="${previewUrl}" controls style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0"></video><br/>`
-                  : `<img src="${previewUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Uploaded image" /><br/>`
-                onConfirm(html, true)
-                onClose() 
-              } else if (tab === "link" && linkUrl.trim()) {
-                triggerLinkEmbed()
-              }
-            }}
-            className="rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: (tab === "upload" ? previewUrl : linkUrl.trim()) ? "linear-gradient(135deg, #e8701a, #c04a08)" : undefined, backgroundColor: (tab === "upload" ? previewUrl : linkUrl.trim()) ? undefined : "#d1d5db" }}
-          >
-            Insert
-          </button>
-        </div>
-      </div>
-    </div>
   )
 
   function triggerLinkEmbed() {
@@ -242,4 +69,158 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
     onConfirm(html, true)
     onClose()
   }
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/75 backdrop-blur-md"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-sm overflow-hidden"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-orange-500/20 to-transparent" />
+
+        <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+          <div className="flex gap-6">
+            <button
+              onClick={() => setTab("upload")}
+              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+            >
+              {tab === "upload" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              Upload
+            </button>
+            <button
+              onClick={() => setTab("link")}
+              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "link" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+            >
+              {tab === "link" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
+              Embed
+            </button>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-700/50 transition-colors">
+            <X className="h-4 w-4 text-zinc-500" />
+          </button>
+        </div>
+
+        <div className="p-8">
+          {tab === "upload" ? (
+            <div className="flex flex-col gap-6">
+              <div className="space-y-1">
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>Insert Media</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Photos, GIFs, or short videos.</p>
+              </div>
+
+              {!previewUrl ? (
+                <div
+                  onClick={handleThumbnailClick}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed transition-all",
+                    isDragging
+                      ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
+                      : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
+                  )}
+                >
+                  <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg border border-zinc-700">
+                    <Upload className="h-5 w-5 text-zinc-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-300">Choose File</p>
+                    <p className="text-[9px] text-zinc-500 mt-1 uppercase tracking-widest">or drop here</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative group">
+                  <div className="relative h-48 overflow-hidden rounded-2xl border border-zinc-700 group shadow-2xl">
+                    {fileName?.match(/\.(mp4|webm|ogg|mov)$/i) || previewUrl.startsWith("data:video") ? (
+                      <video src={previewUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop />
+                    ) : (
+                      <Image
+                        src={previewUrl}
+                        alt="Preview"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button
+                        onClick={handleThumbnailClick}
+                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all border border-white/20"
+                      >
+                        <Upload className="h-4 w-4 text-white" />
+                      </button>
+                      <button
+                        onClick={handleRemove}
+                        className="w-10 h-10 rounded-xl bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 transition-all border border-red-400/20"
+                      >
+                        <Trash2 className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div className="space-y-1">
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>External Link</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">YouTube, Vimeo, or direct image URL.</p>
+              </div>
+
+              <div className="relative">
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="Paste URL here..."
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
+                  onKeyDown={e => e.key === "Enter" && triggerLinkEmbed()}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 pb-8 flex flex-col gap-3">
+          <button
+            disabled={tab === "upload" ? !previewUrl : !linkUrl.trim()}
+            onClick={() => {
+              if (tab === "upload" && previewUrl) {
+                const isVideo = (fileName && fileName.match(/\.(mp4|webm|ogg|mov)$/i)) || previewUrl.startsWith("data:video")
+                const html = isVideo 
+                  ? `<video src="${previewUrl}" controls style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0"></video><br/>`
+                  : `<img src="${previewUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`
+                onConfirm(html, true)
+                onClose()
+              } else {
+                triggerLinkEmbed()
+              }
+            }}
+            className="w-full py-4 rounded-xl text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
+          >
+            Insert Selection
+          </button>
+        </div>
+
+        {/* Hidden file input */}
+        <input type="file" accept="image/*,video/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+      </motion.div>
+    </div>
+  )
 }
