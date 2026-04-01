@@ -1852,7 +1852,8 @@ export default function NoteApp() {
       {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      {!gridView && <Sidebar
+      {!gridView && <div style={{ display: gridView ? 'none' : 'flex' }}>
+      <Sidebar
         notes={notes}
         folders={folders}
         activeTabId={activeTabId}
@@ -1909,10 +1910,12 @@ export default function NoteApp() {
           })
         }}
         onUnlockDev={handleUnlockDev}
-      />}
+      />
+      </div>
+      }
 
       {/* Sidebar edge resize handle */}
-      <div
+      {!gridView && <div
         onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
         style={{
           position: "absolute", top: 0, bottom: 0,
@@ -1920,7 +1923,7 @@ export default function NoteApp() {
           cursor: "ew-resize", zIndex: 40,
           transition: isSidebarDragging ? "none" : "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
-      />
+      />}
 
       {currentView === "shelf" && (
         <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
