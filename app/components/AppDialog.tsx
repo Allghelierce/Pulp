@@ -45,7 +45,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
         {/* Header Decor */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-orange-500/30 to-transparent" />
 
-        <div className="px-8 pt-10 pb-8 flex flex-col items-center text-center">
+        <div className="px-8 py-6 flex flex-col items-center text-center">
           {/* Icon/Visual feedback based on type */}
           {config.type === "prompt" && (
             <svg className="w-7 h-7 mb-6 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -111,8 +111,8 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
           <div className="flex flex-col w-full gap-3">
             <button
               onClick={confirm}
-              className="w-full py-3.5 rounded-xl text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] hover:brightness-110"
-              style={{ backgroundColor: btnColor, boxShadow: `0 8px 24px -6px ${btnColor}44` }}
+              className="w-full py-3.5 rounded-xl text-white text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] hover:brightness-110"
+              style={{ backgroundColor: btnColor, boxShadow: `0 8px 24px -6px ${btnColor}44`, fontFamily: '"EB Garamond", serif' }}
             >
               {config.type === "prompt"  ? (config.confirmLabel ?? "Confirm") :
                config.type === "confirm" ? (config.confirmLabel ?? "Confirm Selection") : "Understood"}
@@ -120,7 +120,8 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
             {config.type !== "alert" && (
               <button 
                 onClick={onClose} 
-                className="w-full py-3 rounded-xl text-[10px] font-bold text-zinc-500 uppercase tracking-[0.22em] hover:bg-zinc-700/30 transition-all"
+                className="w-full py-3 rounded-xl text-[11px] font-bold text-zinc-500 uppercase tracking-[0.22em] hover:bg-zinc-700/30 transition-all"
+                style={{ fontFamily: '"EB Garamond", serif' }}
               >
                 Cancel
               </button>

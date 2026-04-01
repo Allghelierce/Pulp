@@ -619,12 +619,6 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         <div className="border-t border-white/5 px-3 py-2 shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          {!user && (
-            <button onClick={() => window.location.href = "/login"} className="w-full mb-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] group shadow-sm">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              <span className="text-[10px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
-            </button>
-          )}
           <button onClick={onOpenSettings} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
             <span className="text-[13px] shrink-0">⚙️</span>
             <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>

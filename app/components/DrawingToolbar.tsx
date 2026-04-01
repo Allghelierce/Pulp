@@ -54,32 +54,31 @@ export const DrawingToolbar = memo(function DrawingToolbar({
       />
 
       <motion.div
-        initial={{ y: -12, opacity: 0 }}
+        initial={{ opacity: 0 }}
         animate={{
-          y: isOpen ? 0 : -12,
           opacity: isOpen ? 1 : 0,
         }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
         className="absolute top-full left-0 right-0 z-40 bg-white border-b border-zinc-200 shadow-[0_4px_16px_rgba(0,0,0,0.08)] pointer-events-none"
         style={{
           pointerEvents: isOpen ? "auto" : "none",
         }}
       >
-        <div className="flex items-center gap-0.5 px-3 py-2 overflow-x-auto">
+        <div className="flex items-center gap-0.5 px-3 py-1 overflow-x-auto">
           {/* Drawing tools */}
           {tools.map((tool) => (
             <button
               key={tool.id}
               onClick={() => onToolChange(tool.id)}
               title={tool.label}
-              className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md transition-all cursor-pointer ${
+              className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md transition-all cursor-pointer ${
                 activeTool === tool.id
                   ? "bg-orange-500/20 text-orange-600"
                   : "text-zinc-600 hover:bg-zinc-100"
               }`}
             >
               <svg
-                className="w-4 h-4"
+                className="w-3.5 h-3.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -96,10 +95,10 @@ export const DrawingToolbar = memo(function DrawingToolbar({
           <button
             onClick={() => fileInputRef.current?.click()}
             title="Insert image"
-            className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 transition-all cursor-pointer"
+            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 transition-all cursor-pointer"
           >
             <svg
-              className="w-4 h-4"
+              className="w-3.5 h-3.5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -118,10 +117,10 @@ export const DrawingToolbar = memo(function DrawingToolbar({
             <button
               onClick={onImproveDrawing}
               title="Smooth and improve drawing"
-              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md text-zinc-600 hover:bg-amber-100 transition-all cursor-pointer"
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-zinc-600 hover:bg-amber-100 transition-all cursor-pointer"
             >
               <svg
-                className="w-4 h-4"
+                className="w-3.5 h-3.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -148,14 +147,14 @@ export const DrawingToolbar = memo(function DrawingToolbar({
               }
             }}
             title={activeTool === "eraser" ? "Clear all drawings" : "Eraser"}
-            className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md transition-all cursor-pointer ${
+            className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md transition-all cursor-pointer ${
               activeTool === "eraser"
                 ? "bg-red-500/20 text-red-600"
                 : "text-zinc-600 hover:bg-zinc-100"
             }`}
           >
             <svg
-              className="w-4 h-4"
+              className="w-3.5 h-3.5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -173,10 +172,10 @@ export const DrawingToolbar = memo(function DrawingToolbar({
           <button
             onClick={onClose}
             title="Close toolbar"
-            className="ml-auto flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 transition-all cursor-pointer"
+            className="ml-auto flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 transition-all cursor-pointer"
           >
             <svg
-              className="w-4 h-4"
+              className="w-3.5 h-3.5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

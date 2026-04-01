@@ -24,10 +24,11 @@ import { FlashcardView } from "@/app/components/FlashcardView"
 import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
-import { TimerPanel } from "@/app/components/TimerPanel"
+import { TimerSidebarPanel } from "@/app/components/TimerSidebarPanel"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
+import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
 
 function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme: "light" | "dark"; onNavigate: (idx: number) => void
@@ -871,7 +872,7 @@ export default function NoteApp() {
   const [spellCheck, setSpellCheck] = useState(true)
   const [editorFont, setEditorFont] = useState("Caveat")
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
-  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("lined")
+  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("stenopad")
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [showBinding, setShowBinding] = useState(true)
   const [reduceMotion, setReduceMotion] = useState(false)
@@ -1361,9 +1362,29 @@ export default function NoteApp() {
     return () => window.removeEventListener('resize', checkViewport)
   }, [])
 
-  // Global AI shortcut (\ to open command bar when not focused)
+  // Global keyboard shortcuts (Ctrl+N, Ctrl+K, \)
   useEffect(() => {
     const handleGlobalKey = (e: KeyboardEvent) => {
+      const isCmd = e.ctrlKey
+
+      // Cmd/Ctrl+N - Create new note
+      if (isCmd && e.key === 'n') {
+        e.preventDefault()
+        addNote(null)
+        return
+      }
+
+      // Cmd/Ctrl+K - Search
+      if (isCmd && e.key === 'k') {
+        e.preventDefault()
+        setSlashMenu(null)
+        // Focus search or trigger search UI
+        const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement
+        if (searchInput) searchInput.focus()
+        return
+      }
+
+      // \ - AI editing command
       if (e.key === "\\") {
         const active = document.activeElement as HTMLElement | null
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
@@ -1581,6 +1602,13 @@ export default function NoteApp() {
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
     }, "📓")
+
+  const addFirstNotebook = () => {
+    const id = uid()
+    const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: {} }
+    setNotes(prev => [...prev, newNote])
+    setActiveTabId(id); setCurrentPageIdx(0)
+  }
 
   const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
     let title = "New Notebook"
@@ -1936,26 +1964,20 @@ export default function NoteApp() {
           }}
           onUnlockDev={handleUnlockDev}
         />
-        {timerOpen && (
-          <div className="absolute inset-0 z-[100] bg-[#09090b]">
-            <TimerPanel
-              isOpen={timerOpen}
-              onClose={() => setTimerOpen(false)}
-              theme={theme}
-              accent={accent}
-              elapsed={timerElapsed}
-              total={timerTotal}
-              running={timerRunning}
-              done={timerDone}
-              preset={timerPreset}
-              onSetRunning={setTimerRunning}
-              onSetElapsed={setTimerElapsed}
-              onSetTotal={setTimerTotal}
-              onSetPreset={setTimerPreset}
-              onSetDone={setTimerDone}
-            />
-          </div>
-        )}
+        <TimerSidebarPanel
+          isOpen={timerOpen}
+          onClose={() => setTimerOpen(false)}
+          elapsed={timerElapsed}
+          total={timerTotal}
+          running={timerRunning}
+          done={timerDone}
+          preset={timerPreset}
+          onSetRunning={setTimerRunning}
+          onSetElapsed={setTimerElapsed}
+          onSetTotal={setTimerTotal}
+          onSetPreset={setTimerPreset}
+          onSetDone={setTimerDone}
+        />
 
       </div>
       }
@@ -1986,7 +2008,7 @@ export default function NoteApp() {
 
 
         {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
-        {(() => {
+        {notes.filter(n => !n.archived).length > 0 && activeNote && (() => {
           const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
           const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
           return (
@@ -2196,49 +2218,71 @@ export default function NoteApp() {
             </div>
           )}
           {notes.filter(n => !n.archived).length === 0 ? (
-            <main className="flex-1 flex items-center justify-center px-4" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
-              <div className="text-center max-w-md">
-                {/* Decorative Element */}
-                <div className="mb-8 flex justify-center">
-                  <div style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: "50%",
-                    background: `${accent}15`,
-                    border: `2px solid ${accent}30`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "40px"
-                  }}>
-                    📝
-                  </div>
-                </div>
-
+            <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
+              <div className="text-center max-w-md overflow-hidden">
                 {/* Heading */}
-                <h1 className="text-3xl font-bold mb-2" style={{ color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Start Writing</h1>
-                <p className="text-sm mb-8" style={{ color: theme === "dark" ? "#a1a1a1" : "#666" }}>Create your first note and begin capturing your ideas</p>
+                <h1 className="text-4xl font-medium tracking-tight mb-8" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                 {/* Primary Button */}
-                <button
-                  onClick={() => addNote(null)}
-                  className="w-full py-3 rounded-lg font-medium mb-3 transition-all hover:shadow-lg active:scale-95"
-                  style={{
-                    backgroundColor: accent,
-                    color: "#fff"
-                  }}
-                >
-                  Create Your First Note
-                </button>
+                <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
 
                 {/* Quick Tips */}
                 <div className="mt-8 pt-6" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
-                  <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>✨ Quick Tips</p>
-                  <ul className="text-xs space-y-2" style={{ color: theme === "dark" ? "#999" : "#777" }}>
-                    <li>📋 Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>Cmd+N</code> to create notes</li>
-                    <li>🔍 Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>Cmd+K</code> to search</li>
-                    <li>✂️ Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace" }}>\</code> for AI editing</li>
+                  <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
+                  <ul className="text-xs space-y-2 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
+                    <li className="flex items-center gap-2">📝 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+N</code> to create notes</li>
+                    <li className="flex items-center gap-2">🔍 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+K</code> to search</li>
+                    <li className="flex items-center gap-2">🤖 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>\</code> for AI editing</li>
                   </ul>
+                </div>
+
+                {/* Theme Toggle */}
+                <div className="mt-6 flex items-center justify-center">
+                  <div
+                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
+                    style={{
+                      backgroundColor: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                      border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"}`,
+                      width: 72,
+                      height: 32,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "light" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" strokeWidth="2" stroke="currentColor" />
+                        <line x1="12" y1="21" x2="12" y2="23" strokeWidth="2" stroke="currentColor" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" strokeWidth="2" stroke="currentColor" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" strokeWidth="2" stroke="currentColor" />
+                        <line x1="1" y1="12" x2="3" y2="12" strokeWidth="2" stroke="currentColor" />
+                        <line x1="21" y1="12" x2="23" y2="12" strokeWidth="2" stroke="currentColor" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" strokeWidth="2" stroke="currentColor" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth="2" stroke="currentColor" />
+                      </svg>
+                    </div>
+                    <motion.div
+                      animate={{ x: theme === "dark" ? 20 : 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+                        position: "absolute",
+                        left: 2,
+                        zIndex: 0
+                      }}
+                    />
+                    <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </main>
@@ -2331,9 +2375,23 @@ export default function NoteApp() {
                            {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
 
                            {/* Render custom user-drawn lines */}
-                           {(activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => (
-                             <div key={idx} className="absolute top-0 bottom-0 w-[1.5px] z-20 pointer-events-none" style={{ left: lx, backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", borderLeft: `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }} />
-                           ))}
+                           {(() => {
+                             // Use lineSelectionVersion to force re-render on line selection change
+                             boxes.lineSelectionVersion
+                             return (activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => {
+                               const isSelected = boxes.selectedLineRef.current === lx
+                               return (
+                                 <div key={idx} className="absolute top-0 bottom-0 z-20 pointer-events-none transition-all" style={{
+                                   left: lx,
+                                   width: isSelected ? "3px" : "1.5px",
+                                   backgroundColor: isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                                   borderLeft: isSelected ? `2px solid ${accent}` : `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                   opacity: isSelected ? 1 : 0.6,
+                                   boxShadow: isSelected ? `0 0 12px ${accent}33` : undefined
+                                 }} />
+                               )
+                             })
+                           })()}
 
                            {/* Cover display on first page */}
                            {activeNote.cover && currentPageIdx === 0 && (
@@ -2659,6 +2717,17 @@ export default function NoteApp() {
             }
           }}
         />
+      )}
+
+      {/* Sign In to Sync - Bottom Right */}
+      {!user && (
+        <button
+          onClick={() => window.location.href = "/login"}
+          className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] shadow-lg hover:shadow-xl z-40"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
+        </button>
       )}
 
     </div>

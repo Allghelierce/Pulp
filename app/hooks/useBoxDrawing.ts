@@ -30,6 +30,8 @@ export function useBoxDrawing({
   // Selection is only in a ref. A cheap counter triggers box-list re-renders.
   const selectedBoxIdsRef = useRef<Set<string>>(new Set())
   const [selectionVersion, setSelectionVersion] = useState(0)
+  const selectedLineRef = useRef<number | null>(null)
+  const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
   const aligningRef = useRef(false)
 
@@ -60,14 +62,14 @@ export function useBoxDrawing({
   useEffect(() => { notesRef.current = notes }, [notes])
   useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor } }, [sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor])
 
-  // Keyboard shortcuts — delete selected boxes, select all
+  // Keyboard shortcuts — delete selected boxes/lines, select all
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
       if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
 
       // Ctrl/Cmd+A — select all boxes on current page
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      if (e.ctrlKey && e.key === 'a') {
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const allIds = new Set((notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []).map(b => b.id))
@@ -78,6 +80,22 @@ export function useBoxDrawing({
       }
 
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
+
+      // Delete selected line
+      if (selectedLineRef.current !== null) {
+        e.preventDefault()
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const lineX = selectedLineRef.current
+        setNotes(prev => prev.map(n => n.id !== tid ? n : {
+          ...n, lines: { ...n.lines, [pidx]: (n.lines?.[pidx] || []).filter(x => x !== lineX) }
+        }))
+        selectedLineRef.current = null
+        setLineSelectionVersion(c => c + 1)
+        return
+      }
+
+      // Delete selected boxes
       const ids = selectedBoxIdsRef.current
       if (ids.size === 0) return
       e.preventDefault()
@@ -393,11 +411,13 @@ export function useBoxDrawing({
     const target = e.target as HTMLElement
     const isEditable = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
     if (!isEditable) e.preventDefault()
+
+    const r = paperRef.current.getBoundingClientRect()
+    const x = (e.clientX - r.left) / Number(zoomRef.current)
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+
     if (sketchRef.current.drawLineMode) {
-      const r = paperRef.current.getBoundingClientRect()
-      const x = (e.clientX - r.left) / Number(zoomRef.current)
-      const tid = activeTabIdRef.current
-      const pidx = currentPageIdxRef.current
       if (tid) {
         setNotes(prev => prev.map(n => n.id === tid ? { ...n, lines: { ...(n.lines || {}), [pidx]: [...(n.lines?.[pidx] || []), x] } } : n))
       }
@@ -405,11 +425,22 @@ export function useBoxDrawing({
       return
     }
 
-    const tid = activeTabIdRef.current
-    const pidx = currentPageIdxRef.current
+    // Check if clicking near an existing line (within 8px)
     const currentTab = notesRef.current.find(n => n.id === tid)
-    const boxes = currentTab?.boxes[pidx] || []
+    const lines = currentTab?.lines?.[pidx] || []
+    for (const lineX of lines) {
+      if (Math.abs(x - lineX) < 8) {
+        selectedLineRef.current = lineX
+        setLineSelectionVersion(c => c + 1)
+        return
+      }
+    }
 
+    // No line clicked, clear line selection and start box selection
+    selectedLineRef.current = null
+    setLineSelectionVersion(c => c + 1)
+
+    const boxes = currentTab?.boxes[pidx] || []
     selectionRef.current = { sx: e.clientX, sy: e.clientY, active: false, pendingSelected: new Set(), cachedBoxes: boxes }
     addListeners()
   }, [addListeners, setDrawLineMode, setNotes])
@@ -533,7 +564,8 @@ export function useBoxDrawing({
 
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
+    lineSelectionVersion, selectedLineRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
     autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox])
 }

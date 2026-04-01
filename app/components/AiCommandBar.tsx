@@ -41,7 +41,7 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-start justify-center pt-[15vh] bg-black/5 backdrop-blur-[2px] animate-fade-in">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-[4px] animate-fade-in">
       <div 
         ref={containerRef}
         className="w-full max-w-[600px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden anim-slide-up"
@@ -51,17 +51,19 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
           <div className="flex items-center justify-center w-8 h-8 mr-3 text-orange-600/80">
             <Sparkles className="w-5 h-5" />
           </div>
-          <input
-            ref={inputRef}
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ask AI to write, edit, or generate..."
-            className="flex-1 bg-transparent border-none outline-none text-[15px] dark:text-zinc-100 placeholder-zinc-400"
-          />
+            <input
+              ref={inputRef}
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Ask AI to write, edit, or generate..."
+              className="flex-1 bg-transparent border-none outline-none text-[17px] dark:text-zinc-100 placeholder-zinc-500 italic"
+              style={{ fontFamily: '"EB Garamond", serif' }}
+            />
           <div className="flex items-center gap-2 ml-3">
-            <div className="flex items-center gap-1 px-1.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] text-zinc-400 font-medium">
-              <Command className="w-3 h-3" />
+            <div className="flex items-center gap-1 px-1.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[9px] text-zinc-400 font-black uppercase tracking-tighter">
+              <span>Ctrl</span>
+              <span className="opacity-40">+</span>
               <span>Enter</span>
             </div>
             <button 

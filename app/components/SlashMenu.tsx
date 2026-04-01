@@ -233,6 +233,10 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
         top,
         zIndex: 10000,
         background: isLight ? "rgba(255,255,255,0.95)" : "rgba(20,20,22,0.92)",
+        backgroundImage: isLight
+          ? "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)"
+          : "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
         backdropFilter: "blur(32px) saturate(140%)",
         WebkitBackdropFilter: "blur(32px) saturate(140%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
@@ -275,14 +279,12 @@ function makeColumns(num: number): string {
 }
 
 function makeTOC(): string {
-  const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1,[contenteditable]:not([data-box-style]) h2,[contenteditable]:not([data-box-style]) h3"))
-  if (headers.length === 0) return `<div style="padding:8px;color:#999;font-size:12px;font-style:italic">No headings found.</div><br/>`
+  const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1"))
+  if (headers.length === 0) return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:16px;margin:8px 0;background:#fafafa"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:#5a4a3a;margin-bottom:12px">Table of Contents</div><div style="color:#999;font-size:13px;font-style:italic">none</div></div><br/>`
   const items = headers.map(h => {
-    const level = parseInt(h.tagName[1])
-    const indent = (level - 1) * 16
-    return `<div style="padding:2px 0 2px ${indent}px;font-size:${14 - level}px;color:#374151">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+    return `<div style="padding:6px 0;font-family:'Caveat',cursive;font-size:16px;color:#374151">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
   }).join("")
-  return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:12px 16px;margin:8px 0;background:#fafafa"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;margin-bottom:8px">Table of Contents</div>${items}</div><br/>`
+  return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:16px;margin:8px 0;background:#fafafa"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:#5a4a3a;margin-bottom:12px">Table of Contents</div>${items}</div><br/>`
 }
 
 const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:'Courier New',monospace;background:#1e1e2e"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#16161e;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:10px;color:#6c7086;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#cdd6f4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#cdd6f4;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
@@ -293,11 +295,11 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
   const [hover, setHover] = useState<[number, number]>([0, 0])
   const ROWS = 6, COLS = 8
   return (
-    <div style={{ padding: 12 }}>
+    <div style={{ padding: 12 }} onMouseLeave={() => setHover([0, 0])}>
       <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginBottom: 8, textAlign: "center" }}>
         {hover[0] > 0 ? `${hover[1]} × ${hover[0]} table` : "Select table size"}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 18px)`, gap: 2 }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 20px)`, gap: 3, justifyContent: "flex-start" }}>
         {Array.from({ length: ROWS * COLS }, (_, i) => {
           const r = Math.floor(i / COLS) + 1
           const c = (i % COLS) + 1
@@ -306,10 +308,9 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
             <div
               key={i}
               onMouseEnter={() => setHover([r, c])}
-              onMouseLeave={() => setHover([0, 0])}
               onClick={() => { onInsert(makeTable(r, c), c); onClose() }}
               style={{
-                width: 18, height: 18, borderRadius: 2, cursor: "pointer",
+                width: 20, height: 20, borderRadius: 2, cursor: "pointer",
                 background: active ? "rgba(184,94,34,0.5)" : "rgba(184,94,34,0.15)",
                 border: active ? "1.5px solid rgba(184,94,34,0.8)" : "1px solid rgba(184,94,34,0.3)",
                 transition: "all 0.05s",
@@ -481,7 +482,7 @@ function BookmarkInput({ onInsert, onClose, mode }: { onInsert: (html: string) =
         onChange={e => setUrl(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter") handleFetch(); if (e.key === "Escape") onClose() }}
         placeholder="Paste a URL..."
-        style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box", marginBottom: 8, background: isLight ? "#fff" : "#1a1a2e", color: isLight ? "#111" : "#eee" }}
+        style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box", marginBottom: 8, background: isLight ? "#fff" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee" }}
       />
       {error && <div style={{ fontSize: 10.5, color: "#ef4444", marginBottom: 6 }}>{error}</div>}
       <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? "#d4a87a" : "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>

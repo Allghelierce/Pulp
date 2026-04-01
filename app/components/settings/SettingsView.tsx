@@ -803,16 +803,32 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                       features: [
                         { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
                         { name: "100 AI Sketches / month", description: "Generate images with AI prompts", included: true },
+                        { name: "5,000 AI Tokens / month", description: "For text generation & rewrites", included: true },
                         { name: "1 GB Cloud Storage", description: "Sync notes across devices", included: true },
                         { name: "Basic Page Styles", description: "Lined, dotgrid, and plain paper", included: true },
-                        { name: "Priority Support", description: "Fast-track email & chat support", included: false },
                         { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: false },
                       ],
                     },
                     {
-                      name: "Pro",
+                      name: "Creator",
                       price: { monthly: 6, yearly: 54 },
-                      description: "For power users who want it all",
+                      description: "For AI-powered creators",
+                      buttonLabel: "Upgrade to Creator",
+                      icon: <Sparkles className="w-5 h-5" style={{ color: "#f59e0b" }} />,
+                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
+                      features: [
+                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
+                        { name: "500 AI Sketches / month", description: "10x more generative drawings", included: true },
+                        { name: "50,000 AI Tokens / month", description: "Powerful text generation & analysis", included: true },
+                        { name: "5 GB Cloud Storage", description: "More space for all your creations", included: true },
+                        { name: "All Page Styles", description: "Including stenopad and custom layouts", included: true },
+                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: true },
+                      ],
+                    },
+                    {
+                      name: "Pro",
+                      price: { monthly: 12, yearly: 108 },
+                      description: "Ultimate AI + productivity suite",
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
                       icon: <Sparkles className="w-5 h-5" style={{ color: "#3b82f6" }} />,
@@ -820,10 +836,10 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                       features: [
                         { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
                         { name: "Unlimited AI Sketches", description: "No monthly cap on AI generations", included: true },
-                        { name: "10 GB Cloud Storage", description: "Ample space for all your notes", included: true },
+                        { name: "500,000 AI Tokens / month", description: "Unlimited-like token allowance", included: true },
+                        { name: "50 GB Cloud Storage", description: "Ample space for all your work", included: true },
                         { name: "All Page Styles", description: "Including stenopad and custom layouts", included: true },
                         { name: "Priority Support", description: "Fast-track email & chat support", included: true },
-                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: true },
                       ],
                     },
                   ]}
@@ -934,11 +950,11 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
       
       // Captured modifiers
       let parts = []
-      if (e.metaKey || e.ctrlKey) parts.push("cmd")
+      if (e.ctrlKey) parts.push("ctrl")
       if (e.altKey) parts.push("alt")
       if (e.shiftKey) parts.push("shift")
       
-      const isModifierOnly = ["Meta", "Control", "Alt", "Shift"].includes(e.key)
+      const isModifierOnly = ["Control", "Alt", "Shift"].includes(e.key)
       
       if (!isModifierOnly) {
         parts.push(e.key.toLowerCase())
@@ -957,7 +973,7 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
         onClick={() => setIsRecording(true)}
         className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
       >
-        {isRecording ? "Press keys..." : currentKey.toUpperCase().replace("+", " + ")}
+        {isRecording ? "Press keys..." : currentKey.toUpperCase().replace("+", " + ").replace("CMD", "CTRL")}
       </button>
     </div>
   )
