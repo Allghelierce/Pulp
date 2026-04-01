@@ -870,6 +870,8 @@ export default function NoteApp() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
   const [autoSave, setAutoSave] = useState(true)
   const [spellCheck, setSpellCheck] = useState(true)
+  const [autoCorrect, setAutoCorrect] = useState(true)
+  const [autoCapitalize, setAutoCapitalize] = useState(true)
   const [editorFont, setEditorFont] = useState("Caveat")
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
   const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("stenopad")
@@ -1442,6 +1444,8 @@ export default function NoteApp() {
         if (s.theme) setTheme(s.theme)
         if (s.autoSave !== undefined) setAutoSave(s.autoSave)
         if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
+        if (s.autoCorrect !== undefined) setAutoCorrect(s.autoCorrect)
+        if (s.autoCapitalize !== undefined) setAutoCapitalize(s.autoCapitalize)
         if (s.editorFont) setEditorFont(s.editorFont)
         if (s.lineSpacing) setLineSpacing(s.lineSpacing)
         if (s.paperStyle) setPaperStyle(s.paperStyle)
@@ -1469,6 +1473,8 @@ export default function NoteApp() {
       if (s.theme) setTheme(s.theme)
       if (s.autoSave !== undefined) setAutoSave(s.autoSave)
       if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
+      if (s.autoCorrect !== undefined) setAutoCorrect(s.autoCorrect)
+      if (s.autoCapitalize !== undefined) setAutoCapitalize(s.autoCapitalize)
       if (s.editorFont) setEditorFont(s.editorFont)
       if (s.lineSpacing) setLineSpacing(s.lineSpacing)
       if (s.paperStyle) setPaperStyle(s.paperStyle)
@@ -1489,7 +1495,7 @@ export default function NoteApp() {
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation }
+    const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
 
     if (!user) return
@@ -1501,7 +1507,7 @@ export default function NoteApp() {
       if (error) console.error("Settings save failed:", error.message, error.code)
     }, 1000)
     return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation, user])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation, user])
 
   // Cloud autosave
   useEffect(() => {
@@ -1905,11 +1911,18 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} socials={socials} setSocials={setSocials} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} autoCorrect={autoCorrect} setAutoCorrect={setAutoCorrect} autoCapitalize={autoCapitalize} setAutoCapitalize={setAutoCapitalize} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} socials={socials} setSocials={setSocials} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      {!gridView && !gardenView && <div style={{ display: gridView || gardenView ? 'none' : 'flex' }}>
-        <Sidebar
+      {!gridView && !gardenView && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          style={{ display: gridView || gardenView ? 'none' : 'flex' }}
+        >
+          <Sidebar
           notes={notes}
           folders={folders}
           activeTabId={activeTabId}
@@ -1972,15 +1985,15 @@ export default function NoteApp() {
           running={timerRunning}
           done={timerDone}
           preset={timerPreset}
+          theme={theme}
           onSetRunning={setTimerRunning}
           onSetElapsed={setTimerElapsed}
           onSetTotal={setTimerTotal}
           onSetPreset={setTimerPreset}
           onSetDone={setTimerDone}
         />
-
-      </div>
-      }
+        </motion.div>
+      )}
 
       {/* Sidebar edge resize handle */}
       {!gridView && !gardenView && <div
@@ -2301,7 +2314,7 @@ export default function NoteApp() {
               />
             </main>
           ) : (
-            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable", paddingRight: timerOpen ? "calc(2rem + 320px)" : "2rem" }}>
               <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "relative" }}>
@@ -2404,6 +2417,9 @@ export default function NoteApp() {
                              ref={editorRef}
                              className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
                              style={{ fontFamily: `"${editorFont}", Georgia, serif`, fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18 }}
+                             spellCheck={spellCheck}
+                             autoCorrect={autoCorrect ? "on" : "off"}
+                             autoCapitalize={autoCapitalize ? "on" : "off"}
                            />
 
                            <style>{`

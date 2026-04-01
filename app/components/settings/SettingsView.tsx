@@ -43,7 +43,7 @@ export const ACCENT_COLORS = [
 // ── Main settings modal ────────────────────────────────────────────────────
 
 export function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
-  autoSave, setAutoSave, spellCheck, setSpellCheck, editorFont, setEditorFont,
+  autoSave, setAutoSave, spellCheck, setSpellCheck, autoCorrect, setAutoCorrect, autoCapitalize, setAutoCapitalize, editorFont, setEditorFont,
   lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
   reduceMotion, setReduceMotion, reduceVisuals, setReduceVisuals, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
@@ -64,6 +64,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   setTheme: (t: "light" | "dark") => void
   autoSave: boolean; setAutoSave: (v: boolean) => void
   spellCheck: boolean; setSpellCheck: (v: boolean) => void
+  autoCorrect: boolean; setAutoCorrect: (v: boolean) => void
+  autoCapitalize: boolean; setAutoCapitalize: (v: boolean) => void
   editorFont: string; setEditorFont: (v: string) => void
   lineSpacing: "compact" | "normal" | "relaxed"; setLineSpacing: (v: "compact" | "normal" | "relaxed") => void
   paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad") => void
@@ -467,6 +469,18 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   isDark={isDark}
                   description="Underline possible misspellings while typing"
                   control={<SettingToggle checked={spellCheck} onChange={setSpellCheck} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Auto-correct"
+                  isDark={isDark}
+                  description="Fix common spelling mistakes automatically"
+                  control={<SettingToggle checked={autoCorrect} onChange={setAutoCorrect} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Auto-capitalize"
+                  isDark={isDark}
+                  description="Automatically capitalize sentences"
+                  control={<SettingToggle checked={autoCapitalize} onChange={setAutoCapitalize} isDark={isDark} />}
                 />
               </SettingSection>
 
