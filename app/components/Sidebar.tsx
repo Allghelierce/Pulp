@@ -536,7 +536,7 @@ export const Sidebar = memo(function Sidebar({
             {topLevelNotes.map(n => renderNote(n, 12))}
             {folders.map(f => (
               <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => onDropNote(e, f.id)}>
-                <div className="flex items-center gap-1.5 px-6 py-1.5 cursor-pointer hover:bg-zinc-900/60 group uppercase" onClick={() => onToggleFolder(f.id)}>
+                <div className="flex items-center gap-1.5 px-6 py-1.5 cursor-pointer hover:bg-zinc-900/60 group" onClick={() => onToggleFolder(f.id)}>
                   <span className="text-[10px] text-zinc-600">{f.open ? "▾" : "▸"}</span>
                   {renamingFolder === f.id ? (
                     <input autoFocus className="flex-1 bg-white/10 text-white text-xs rounded px-1.5 outline-none min-w-0" defaultValue={f.name} onBlur={e => { onRenameFolder(f.id, e.target.value); onSetRenamingFolder(null) }} onKeyDown={e => { if (e.key === "Enter") { onRenameFolder(f.id, (e.target as HTMLInputElement).value); onSetRenamingFolder(null) } }} onClick={e => e.stopPropagation()} />
