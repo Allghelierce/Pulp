@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 
 interface Plant {
@@ -12,22 +12,19 @@ interface Plant {
   rarity?: "common" | "rare" | "legendary"
 }
 
-const generatePlants = (): Plant[] => {
-  const flowers: Plant[] = [
-    { id: "f1", type: "flower", x: 15, y: 30, color: "#ec4899", size: 1, rarity: "common" },
-    { id: "f2", type: "flower", x: 25, y: 45, color: "#f97316", size: 0.8, rarity: "common" },
-    { id: "f3", type: "flower", x: 35, y: 20, color: "#a855f7", size: 1.2, rarity: "rare" },
-    { id: "f4", type: "flower", x: 10, y: 60, color: "#06b6d4", size: 0.9, rarity: "common" },
-    { id: "f5", type: "flower", x: 80, y: 25, color: "#f43f5e", size: 1, rarity: "common" },
-    { id: "f6", type: "flower", x: 70, y: 50, color: "#facc15", size: 1.1, rarity: "rare" },
-    { id: "f7", type: "flower", x: 85, y: 65, color: "#06b6d4", size: 0.8, rarity: "common" },
-    { id: "s1", type: "shrub", x: 20, y: 75, color: "#22c55e", size: 1.3, rarity: "common" },
-    { id: "s2", type: "shrub", x: 75, y: 80, color: "#22c55e", size: 1.2, rarity: "common" },
-    { id: "t1", type: "tree", x: 15, y: 15, color: "#84cc16", size: 1.5, rarity: "rare" },
-    { id: "t2", type: "tree", x: 82, y: 10, color: "#84cc16", size: 1.4, rarity: "rare" },
-  ]
-  return flowers
-}
+const PLANTS: Plant[] = [
+  { id: "f1", type: "flower", x: 15, y: 30, color: "#ec4899", size: 1, rarity: "common" },
+  { id: "f2", type: "flower", x: 25, y: 45, color: "#f97316", size: 0.8, rarity: "common" },
+  { id: "f3", type: "flower", x: 35, y: 20, color: "#a855f7", size: 1.2, rarity: "rare" },
+  { id: "f4", type: "flower", x: 10, y: 60, color: "#06b6d4", size: 0.9, rarity: "common" },
+  { id: "f5", type: "flower", x: 80, y: 25, color: "#f43f5e", size: 1, rarity: "common" },
+  { id: "f6", type: "flower", x: 70, y: 50, color: "#facc15", size: 1.1, rarity: "rare" },
+  { id: "f7", type: "flower", x: 85, y: 65, color: "#06b6d4", size: 0.8, rarity: "common" },
+  { id: "s1", type: "shrub", x: 20, y: 75, color: "#22c55e", size: 1.3, rarity: "common" },
+  { id: "s2", type: "shrub", x: 75, y: 80, color: "#22c55e", size: 1.2, rarity: "common" },
+  { id: "t1", type: "tree", x: 15, y: 15, color: "#84cc16", size: 1.5, rarity: "rare" },
+  { id: "t2", type: "tree", x: 82, y: 10, color: "#84cc16", size: 1.4, rarity: "rare" },
+]
 
 function Flower({ plant, onClick }: { plant: Plant; onClick: () => void }) {
   return (
@@ -136,7 +133,6 @@ function OrangeTree() {
 }
 
 export function GardenView() {
-  const plants = generatePlants()
   const [selectedPlant, setSelectedPlant] = useState<string | null>(null)
   const [hoveredPlant, setHoveredPlant] = useState<string | null>(null)
 
@@ -177,7 +173,7 @@ export function GardenView() {
         </g>
 
         {/* Surrounding plants */}
-        {plants.map((plant) => (
+        {PLANTS.map((plant) => (
           <motion.g
             key={plant.id}
             transform={`translate(${plant.x}, ${plant.y}) scale(${plant.size})`}

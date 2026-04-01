@@ -50,23 +50,6 @@ ctrl+k ctrl+m    Modal/Terminal
 
 ---
 
-## Obsidian-Style Shortcuts (NEW!)
-
-Familiar Obsidian commands now work in Claude Code:
-
-```
-OBSIDIAN MAPPING
-├─ cmd+shift+f    Global Search (like Obsidian search)
-├─ cmd+shift+l    Toggle Todos (like Obsidian lists)
-├─ cmd+shift+o    Show Transcript (like Obsidian outline)
-├─ cmd+k          Search History (like Obsidian link insert)
-└─ cmd+shift+c    Command Search (alt global search)
-```
-
-**For Windows/Linux**: Replace `cmd` with `alt` (e.g., `alt+shift+f`)
-
----
-
 ## Platform Shortcuts
 
 ### macOS (cmd = meta)

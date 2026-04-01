@@ -13,6 +13,22 @@ import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
+const TAB_DESCRIPTIONS: Record<string, string> = {
+  general: "Manage your account and application preferences",
+  appearance: "Customize accent colors, themes, and layouts",
+  typography: "Fine-tune your writing aesthetics",
+  interface: "Customize the Pulp application shell",
+  editor: "Configure your writing environment",
+  ai: "Optimize your intelligence partner",
+  blocker: "Restrict distractions during focus sessions",
+  achievements: "Track your progress and claim rewards",
+  socials: "Connect your social media profiles",
+  data: "Manage your local data and backups",
+  shortcuts: "Master Pulp with keyboard acceleration",
+  subscription: "Manage your plan and billing",
+  danger: "Irreversible and destructive actions",
+}
+
 export const SETTINGS_TABS = [
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
@@ -129,12 +145,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   const [deletePassword, setDeletePassword] = useState("")
   const isDark = theme === "dark"
 
+  const groups = Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
+    name: g, tabs: SETTINGS_TABS.filter(t => t.group === g),
+  }))
   const visibleGroups = searchQuery
     ? [{ name: "Results", tabs: SETTINGS_TABS.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase())) }]
-    : Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
-      name: g,
-      tabs: SETTINGS_TABS.filter(t => t.group === g),
-    }))
+    : groups
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
@@ -193,19 +209,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
             <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-              {activeTab === "general" && "Manage your account and application preferences"}
-              {activeTab === "appearance" && "Customize accent colors, themes, and layouts"}
-              {activeTab === "typography" && "Fine-tune your writing aesthetics"}
-              {activeTab === "interface" && "Customize the Pulp application shell"}
-              {activeTab === "editor" && "Configure your writing environment"}
-              {activeTab === "ai" && "Optimize your intelligence partner"}
-              {activeTab === "blocker" && "Restrict distractions during focus sessions"}
-              {activeTab === "achievements" && "Track your progress and claim rewards"}
-              {activeTab === "socials" && "Connect your social media profiles"}
-              {activeTab === "data" && "Manage your local data and backups"}
-              {activeTab === "shortcuts" && "Master Pulp with keyboard acceleration"}
-              {activeTab === "subscription" && "Manage your plan and billing"}
-              {activeTab === "danger" && "Irreversible and destructive actions"}
+              {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
 

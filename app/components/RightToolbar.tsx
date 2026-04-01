@@ -26,16 +26,24 @@ export const RightToolbar = memo(function RightToolbar({
   setSketchMode, setSketchPrompt, openAlert, clearPage, autoAlign, insertCornell,
   drawLineMode, setDrawLineMode,
 }: RightToolbarProps) {
+  const isDark = theme === "dark"
+
+  const btnStyle = (active: boolean, variant: "normal" | "gold" | "danger" = "normal"): React.CSSProperties => {
+    const base: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }
+    if (variant === "gold") return { ...base, backgroundColor: isDark ? "#D4AF3715" : "#D4AF3720", color: "#D4AF37" }
+    if (variant === "danger") return { ...base, backgroundColor: "#FEE2E2", color: "#DC2626" }
+    return { ...base, ...(active ? { backgroundColor: accent, color: "white" } : { backgroundColor: isDark ? "#3A3A3C" : "#D0D0D4", color: isDark ? "#A1A1AA" : "#52525b" }) }
+  }
+
   return (
     <div style={{ position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)", zIndex: 40, display: "flex", alignItems: "center" }}>
-      {/* Toggle arrow */}
       <button
         onClick={() => setRightSidebarOpen(v => !v)}
         style={{
-          background: theme === "dark" ? "rgba(44,44,46,0.80)" : "rgba(215,215,220,0.80)",
+          background: isDark ? "rgba(44,44,46,0.80)" : "rgba(215,215,220,0.80)",
           border: "none", cursor: "pointer", padding: "5px 3px",
           borderRadius: "6px 0 0 6px",
-          color: theme === "dark" ? "#A1A1AA" : "#71717a",
+          color: isDark ? "#A1A1AA" : "#71717a",
           fontSize: 13, lineHeight: 1,
           boxShadow: "-1px 0 4px rgba(0,0,0,0.08)",
           backdropFilter: "blur(8px)",
@@ -44,38 +52,24 @@ export const RightToolbar = memo(function RightToolbar({
         {rightSidebarOpen ? "›" : "‹"}
       </button>
 
-      {/* Panel */}
-      <div style={{
-        width: rightSidebarOpen ? 44 : 0,
-        overflow: "hidden",
-        transition: "width 0.25s ease",
-      }}>
+      <div style={{ width: rightSidebarOpen ? 44 : 0, overflow: "hidden", transition: "width 0.25s ease" }}>
         <div style={{
-          width: 44,
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-          padding: "12px 0",
-          borderRadius: "0 8px 8px 0",
-          background: theme === "dark"
+          width: 44, display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          padding: "12px 0", borderRadius: "0 8px 8px 0",
+          background: isDark
             ? "linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px) 0 0/12px 12px, rgba(38,38,40,0.82)"
             : "linear-gradient(rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, linear-gradient(90deg,rgba(0,0,0,0.022) 1px,transparent 1px) 0 0/12px 12px, rgba(225,225,230,0.82)",
           boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)",
           backdropFilter: "blur(12px)",
         }}>
-          {/* Grid */}
           <button
             onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
-            title="Page grid"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              ...(gridView ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
-            }}
+            title="Page grid" style={btnStyle(gridView)}
           >
             <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></svg>
             <span style={{ fontSize: 7, fontWeight: 600 }}>Grid</span>
           </button>
 
-          {/* Sketch */}
           <button
             onMouseDown={e => {
               e.preventDefault()
@@ -83,26 +77,15 @@ export const RightToolbar = memo(function RightToolbar({
               if (!selection) { openAlert("Select text first", "Highlight some text in the editor before drawing a sketch box."); return }
               setSketchPrompt(selection); setSketchMode(true)
             }}
-            title="AI Sketch"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              ...(sketchMode ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
-            }}
+            title="AI Sketch" style={btnStyle(sketchMode)}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             <span style={{ fontSize: 7, fontWeight: 600 }}>Sketch</span>
           </button>
 
-          {/* Vertical Line Tool */}
           <button
             onMouseDown={e => { e.preventDefault(); setDrawLineMode(!drawLineMode) }}
-            title="Draw Vertical Line"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              ...(drawLineMode ? { backgroundColor: accent, color: "white" } : { backgroundColor: theme === "dark" ? "#3A3A3C" : "#D0D0D4", color: theme === "dark" ? "#A1A1AA" : "#52525b" })
-            }}
+            title="Draw Vertical Line" style={btnStyle(drawLineMode)}
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="3" x2="12" y2="21"/></svg>
             <span style={{ fontSize: 7, fontWeight: 600 }}>Line</span>
@@ -110,52 +93,21 @@ export const RightToolbar = memo(function RightToolbar({
 
           <div style={{ height: 4 }} />
 
-          {/* AI Align */}
-          <button
-            onMouseDown={e => { e.preventDefault(); autoAlign() }}
-            title="Auto Align"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              backgroundColor: theme === "dark" ? "#D4AF3715" : "#D4AF3720", color: "#D4AF37",
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M4 12h10M4 18h14" />
-            </svg>
+          <button onMouseDown={e => { e.preventDefault(); autoAlign() }} title="Auto Align" style={btnStyle(false, "gold")}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h14" /></svg>
             <span style={{ fontSize: 7, fontWeight: 700 }}>Align</span>
           </button>
 
           <div style={{ height: 4 }} />
 
-          {/* Cornell Notes */}
-          <button
-            onMouseDown={e => { e.preventDefault(); insertCornell() }}
-            title="Cornell Layout"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              backgroundColor: theme === "dark" ? "#D4AF3715" : "#D4AF3720", color: "#D4AF37",
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M4 18h16M9 6v12" />
-            </svg>
+          <button onMouseDown={e => { e.preventDefault(); insertCornell() }} title="Cornell Layout" style={btnStyle(false, "gold")}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 18h16M9 6v12" /></svg>
             <span style={{ fontSize: 6, fontWeight: 700 }}>Cornell</span>
           </button>
 
           <div style={{ height: 4 }} />
 
-          {/* Trash */}
-          <button
-            onMouseDown={e => { e.preventDefault(); clearPage() }}
-            title="Clear page"
-            style={{
-              width: 32, height: 32, borderRadius: 8, border: "none", cursor: "pointer",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-              backgroundColor: "#FEE2E2", color: "#DC2626",
-            }}
-          >
+          <button onMouseDown={e => { e.preventDefault(); clearPage() }} title="Clear page" style={btnStyle(false, "danger")}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/>
               <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2H8a2 2 0 01-2-2L5 6"/>

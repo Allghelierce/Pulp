@@ -12,7 +12,6 @@ interface TimerTreeGrowthProps {
 
 export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: TimerTreeGrowthProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number | null>(null)
 
   const progress = total > 0 ? Math.min(1, elapsed / total) : 0
   const isDark = theme === "dark"
@@ -28,7 +27,6 @@ export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: Time
     const height = canvas.height
 
     // Clear canvas
-    ctx.fillStyle = isDark ? "rgba(15, 15, 18, 0)" : "rgba(253, 250, 247, 0)"
     ctx.clearRect(0, 0, width, height)
 
     // Draw tree based on progress
@@ -112,42 +110,6 @@ export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: Time
         ctx.beginPath()
         ctx.arc(centerX + 25, baseY - 70, 30 * foliageProgress, 0, Math.PI * 2)
         ctx.fill()
-      }
-
-      // Oranges at the base of the tree - appear as progress increases
-      if (progress > 0.3) {
-        const groundOranges = [
-          { x: centerX - 12, y: baseY + 4, p: 0.3 },
-          { x: centerX + 15, y: baseY + 2, p: 0.5 },
-          { x: centerX + 2, y: baseY + 6, p: 0.7 },
-        ]
-
-        groundOranges.forEach(o => {
-          if (progress > o.p) {
-            const p = Math.min(1, (progress - o.p) / 0.1)
-            const size = 5 * p
-            
-            // Small stem pointing up
-            ctx.strokeStyle = `hsl(25, 40%, ${isDark ? 30 : 25}%)`
-            ctx.lineWidth = 1.2
-            ctx.beginPath()
-            ctx.moveTo(o.x, o.y - size)
-            ctx.lineTo(o.x + 1, o.y - size - 3)
-            ctx.stroke()
-
-            // Orange fruit
-            ctx.fillStyle = `hsl(25, 90%, ${isDark ? 55 : 50}%)`
-            ctx.beginPath()
-            ctx.arc(o.x, o.y, size, 0, Math.PI * 2)
-            ctx.fill()
-            
-            // Highlight
-            ctx.fillStyle = "rgba(255,255,255,0.2)"
-            ctx.beginPath()
-            ctx.arc(o.x - size/3, o.y - size/3, size/4, 0, Math.PI * 2)
-            ctx.fill()
-          }
-        })
       }
     }
   }, [progress, isDark])

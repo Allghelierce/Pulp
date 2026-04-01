@@ -7,7 +7,10 @@
       "Skill(keybindings-help)",
       "Skill(keybindings-help:*)",
       "Bash(grep -rn \"import.*supabase\\\\|from.*supabase\" /Users/trisn999/handwritten-notes/app --include=*.tsx --include=*.ts)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(ls -la /Users/trisn999/handwritten-notes/OBSIDIAN* /Users/trisn999/handwritten-notes/SHORTCUTS*)",
+      "Read(//Users/trisn999/handwritten-notes/**)",
+      "Bash(/Users/trisn999/handwritten-notes/SECURITY_SUMMARY.txt:*)"
     ],
     "additionalDirectories": [
       "/Users/trisn999/.claude"
