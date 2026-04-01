@@ -47,6 +47,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
   language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
+  headingFont, setHeadingFont,
   shortcuts, setShortcuts, achievements, onClaimAchievement,
 }: {
   user: any
@@ -72,6 +73,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   wordCountVisible: boolean; setWordCountVisible: (v: boolean) => void
   focusMode: boolean; setFocusMode: (v: boolean) => void
   baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
+  headingFont: string; setHeadingFont: (v: string) => void
   shortcuts: { ai: string; slash: string; sidebar: string; newNote: string; search: string }
   setShortcuts: (s: any) => void
   achievements: Achievement[]
@@ -338,11 +340,15 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   isDark={isDark}
                   description="Used for large titles and notebook covers"
                   control={
-                    <select className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}>
-                      <option>Playfair Display</option>
-                      <option>EB Garamond</option>
-                      <option>Italiana</option>
-                      <option>Bodoni</option>
+                    <select 
+                      value={headingFont}
+                      onChange={e => setHeadingFont(e.target.value)}
+                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
+                    >
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="EB Garamond">EB Garamond</option>
+                      <option value="Italiana">Italiana</option>
+                      <option value="Bodoni">Bodoni</option>
                     </select>
                   }
                 />
@@ -466,7 +472,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             {/* ── Achievements ── */}
             {activeTab === "achievements" && (<>
               <div className="px-5 py-4 grid gap-3">
-                {achievements.map(a => {
+                {achievements.map((a: Achievement) => {
                   const isClaimable = a.completed && !a.claimed
                   const isClaimed = a.claimed
                   const progress = a.goal ? Math.min(100, Math.floor(((a.progress || 0) / a.goal) * 100)) : (a.completed ? 100 : 0)
@@ -477,6 +483,15 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                       className={`relative overflow-hidden rounded-xl border p-4 transition-all ${isDark ? (isClaimable ? "bg-orange-500/10 border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]" : "bg-zinc-900 border-zinc-800") : (isClaimable ? "bg-orange-50 border-orange-100 shadow-[0_4px_12px_rgba(249,115,22,0.1)]" : "bg-white border-zinc-200 shadow-sm")}`}
                     >
                       <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-colors ${
+                          isClaimable
+                            ? isDark ? "bg-orange-500/20" : "bg-orange-100/60"
+                            : isClaimed
+                            ? isDark ? "bg-green-500/20" : "bg-green-100/40"
+                            : isDark ? "bg-zinc-800" : "bg-zinc-100/80"
+                        }`}>
+                          {a.icon}
+                        </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className={`text-[13px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{a.title}</h4>
@@ -538,6 +553,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                  <div className="flex flex-col gap-2 p-5">
                    <button className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm"}`}>
                      Export Binder as JSON
+                   </button>
+                   <button 
+                     onClick={() => { if (confirm("Clear all local storage? This cannot be undone.")) { localStorage.clear(); window.location.reload(); } }}
+                     className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all ${isDark ? "bg-red-900/20 border-red-900/30 hover:bg-red-900/30 text-red-400" : "bg-red-50 border-red-100 hover:bg-red-100/50 text-red-600 shadow-sm"}`}
+                   >
+                     Clear Local Cache
                    </button>
                  </div>
                </SettingSection>
@@ -739,9 +760,18 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
       e.preventDefault()
       e.stopPropagation()
       if (e.key === "Escape") { setIsRecording(false); return }
-      // We only want single character keys or specialized ones
-      if (e.key.length === 1 || ["Enter", "Tab", "Escape", "Backspace"].includes(e.key)) {
-        onUpdate(id, e.key)
+      
+      // Captured modifiers
+      let parts = []
+      if (e.metaKey || e.ctrlKey) parts.push("cmd")
+      if (e.altKey) parts.push("alt")
+      if (e.shiftKey) parts.push("shift")
+      
+      const isModifierOnly = ["Meta", "Control", "Alt", "Shift"].includes(e.key)
+      
+      if (!isModifierOnly) {
+        parts.push(e.key.toLowerCase())
+        onUpdate(id, parts.join("+"))
         setIsRecording(false)
       }
     }
@@ -756,7 +786,7 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
         onClick={() => setIsRecording(true)}
         className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
       >
-        {isRecording ? "Press key..." : currentKey.toUpperCase()}
+        {isRecording ? "Press keys..." : currentKey.toUpperCase().replace("+", " + ")}
       </button>
     </div>
   )

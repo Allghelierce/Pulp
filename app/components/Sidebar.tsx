@@ -55,36 +55,29 @@ function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
   archivedNotes: NoteData[]
   onUnarchiveNote: (id: string) => void
 }) {
-  const [query, setQuery] = useState("")
-  const filtered = archivedNotes.filter(n => n.subject.toLowerCase().includes(query.toLowerCase()))
-
   return (
     <div className="border-t border-white/5 bg-zinc-950/40 z-10 shrink-0 flex flex-col px-4 py-2 gap-1.5" style={{ height: 120 }}>
-      {/* Header: small archive icon + label + inline search */}
+      {/* Header: simplified archive icon + label */}
       <div className="flex items-center gap-1.5 shrink-0 h-4">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
           <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
         </svg>
         <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Archive</span>
         <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({archivedNotes.length})</span>
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search…"
-          className="ml-auto bg-zinc-900/60 border border-white/8 rounded-full px-2 py-0.5 text-[9px] outline-none text-zinc-300 placeholder:text-zinc-700 focus:border-zinc-600 transition-colors w-24"
-        />
       </div>
       {/* Scrollable list */}
       <div className="overflow-y-auto flex-1 space-y-0.5 pr-0.5" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
-        {filtered.length === 0 && <p className="text-[10px] text-zinc-700 italic px-1">Nothing found.</p>}
-        {filtered.map(an => (
+        {archivedNotes.length === 0 && <p className="text-[10px] text-zinc-800 italic px-1">Archive is empty.</p>}
+        {archivedNotes.map(an => (
           <div key={an.id} className="group/ar flex items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/5 transition-colors">
-            <span className="text-[10px] truncate text-zinc-500 group-hover/ar:text-zinc-300 transition-colors min-w-0">{an.subject}</span>
+            <span className="text-[10px] truncate text-zinc-600 group-hover/ar:text-zinc-400 transition-colors min-w-0">{an.subject || "Untitled"}</span>
             <button
               onClick={() => onUnarchiveNote(an.id)}
               title="Unarchive"
-              className="opacity-0 group-hover/ar:opacity-100 transition-opacity text-[9px] text-zinc-500 hover:text-[#F5A030] shrink-0"
-            >↩ Unarchive</button>
+              className="opacity-0 group-hover/ar:opacity-100 transition-opacity text-[10px] text-zinc-500 hover:text-[#F5A030] shrink-0"
+            >
+              Restore
+            </button>
           </div>
         ))}
       </div>

@@ -141,21 +141,21 @@ function Submenu({
       ref={ref}
       style={{
         position: "fixed",
-        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 4,
+        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 8,
         top,
         zIndex: 10000,
-        minWidth: 170,
-        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(14,14,16,0.96)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 5,
+        minWidth: 180,
+        background: isLight ? "rgba(255,255,255,0.92)" : "rgba(22,22,24,0.88)",
+        backdropFilter: "blur(32px) saturate(140%)",
+        WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 12,
         boxShadow: isLight
-          ? "0 8px 32px -8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)"
-          : "0 16px 48px -8px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)",
-        padding: "4px 0",
-        animation: "slide-up-fade 0.15s cubic-bezier(0.16,1,0.3,1)",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          ? "0 12px 40px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.02)"
+          : "0 24px 64px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)",
+        padding: "5px 0",
+        animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
       {options.map((opt) => (
@@ -164,23 +164,31 @@ function Submenu({
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); opt.action(); onSelect(() => { }); onClose() }}
           style={{
             padding: "6px 12px",
+            margin: "0 5px",
+            borderRadius: 7,
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 10,
             cursor: "pointer",
             fontSize: 11.5,
             fontWeight: 500,
-            color: isLight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.88)",
-            transition: "background 0.08s",
+            color: isLight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.85)",
+            transition: "all 0.1s ease",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.07)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.05)"
+            e.currentTarget.style.color = isLight ? "#000" : "#fff"
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "transparent"
+            e.currentTarget.style.color = isLight ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.85)"
+          }}
         >
           {opt.swatch && (
             <div style={{
-              width: 12, height: 12, borderRadius: 3, flexShrink: 0,
+              width: 13, height: 13, borderRadius: 4, flexShrink: 0,
               background: opt.swatch,
-              border: opt.swatch === "transparent" ? "1px solid #ccc" : `1px solid ${opt.swatch}88`,
+              border: opt.swatch === "transparent" ? "1px solid rgba(150,150,150,0.4)" : `1px solid ${opt.swatch}88`,
               backgroundImage: opt.swatch === "transparent"
                 ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='2' height='2' fill='%23ccc'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%23ccc'/%3E%3C/svg%3E")`
                 : undefined,
@@ -221,19 +229,20 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       ref={ref}
       style={{
         position: "fixed",
-        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 4,
+        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 8,
         top,
         zIndex: 10000,
-        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(14,14,16,0.96)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 5,
+        background: isLight ? "rgba(255,255,255,0.95)" : "rgba(20,20,22,0.92)",
+        backdropFilter: "blur(32px) saturate(140%)",
+        WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 14,
         boxShadow: isLight
-          ? "0 8px 32px -8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)"
-          : "0 16px 48px -8px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06)",
-        animation: "slide-up-fade 0.15s cubic-bezier(0.16,1,0.3,1)",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          ? "0 16px 48px -12px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.02)"
+          : "0 24px 64px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)",
+        animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+        overflow: "hidden",
       }}
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
       onClick={(e) => e.stopPropagation()}
@@ -817,8 +826,13 @@ export const SlashMenu = memo(function SlashMenu({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
+    const resizer = () => onClose()
     document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
+    window.addEventListener("resize", resizer)
+    return () => {
+      document.removeEventListener("mousedown", handler)
+      window.removeEventListener("resize", resizer)
+    }
   }, [onClose])
 
   const groups: { label: string; items: SlashItem[] }[] = []
@@ -828,8 +842,12 @@ export const SlashMenu = memo(function SlashMenu({
     else groups.push({ label: item.group, items: [item] })
   }
 
-  const menuHeight = Math.min(filtered.length * 32 + 60, 320)
-  const adjustedY = y + menuHeight > window.innerHeight - 20 ? y - menuHeight - 24 : y
+  const menuHeight = filtered.length * 32 + (groups.length * 20) + 12
+  const finalHeight = Math.min(menuHeight, 340)
+  const adjustedY = y + finalHeight > window.innerHeight - 20 ? y - finalHeight - 24 : y
+  
+  // Ensure menu doesn't go off right side
+  const adjustedX = x + 220 > window.innerWidth - 20 ? window.innerWidth - 240 : Math.max(8, x)
 
   const isLight = mode === "/"
 
@@ -837,44 +855,56 @@ export const SlashMenu = memo(function SlashMenu({
     <div
       ref={ref}
       onMouseLeave={() => setActiveIdx(null)}
+      className="slash-menu-root"
       style={{
-        position: "fixed", left: Math.max(8, x), top: adjustedY, zIndex: 9999,
-        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(12,12,14,0.95)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 5,
-        width: 220,
+        position: "fixed", 
+        left: adjustedX, 
+        top: adjustedY, 
+        zIndex: 9999,
+        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
+        backdropFilter: "blur(40px) saturate(150%)",
+        WebkitBackdropFilter: "blur(40px) saturate(150%)",
+        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 14,
+        width: 230,
         boxShadow: isLight
-          ? "0 8px 32px -8px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.04)"
-          : "0 20px 60px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.05)",
-        animation: "slide-up-fade 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
+          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
+        animation: "slash-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         overflow: "hidden",
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes slash-pop {
+          from { opacity: 0; transform: translateY(8px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .slash-item-active { background: ${isLight ? "rgba(184,94,34,0.08)" : "rgba(184,94,34,0.12)"} !important; }
+      ` }} />
       <div
         className="hide-scroll"
         onScroll={() => setOpenSubmenuId(null)}
-        style={{ maxHeight: 320, overflowY: "auto", overscrollBehavior: "contain" }}
+        style={{ maxHeight: 340, overflowY: "auto", overscrollBehavior: "contain" }}
       >
-        <style dangerouslySetInnerHTML={{ __html: `.hide-scroll::-webkit-scrollbar { display: none; } .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }` }} />
-        <div style={{ padding: "4px 0" }}>
+        <div style={{ padding: "6px 0" }}>
           {filtered.length === 0 ? (
-            <div style={{ padding: "8px 12px", fontSize: 11, color: isLight ? "#a1a1aa" : "#52525b" }}>No results</div>
+            <div style={{ padding: "12px 16px", fontSize: 11, color: isLight ? "#a1a1aa" : "#52525b", textAlign: "center" }}>No results matching "{filter}"</div>
           ) : (
             groups.map((group, gIdx) => (
               <div key={group.label}>
                 {gIdx > 0 && (
-                  <div style={{ height: 1, margin: "3px 10px", background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)" }} />
+                  <div style={{ height: 1, margin: "4px 8px", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }} />
                 )}
                 <div style={{
-                  padding: "6px 12px 2px",
+                  padding: "8px 14px 4px",
                   fontSize: 9,
-                  fontWeight: 700,
-                  color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.28)",
+                  fontWeight: 800,
+                  color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)",
                   textTransform: "uppercase",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.15em",
                 }}>
                   {group.label}
                 </div>
@@ -883,7 +913,7 @@ export const SlashMenu = memo(function SlashMenu({
                   const isActive = activeIdx === actualIdx
                   const hasSubmenu = !!item.subOptions?.length || !!item.customContent
                   const submenuOpen = openSubmenuId === item.id
-
+ 
                   return (
                     <div
                       key={item.id}
@@ -898,6 +928,11 @@ export const SlashMenu = memo(function SlashMenu({
                       onMouseLeave={() => {
                         if (hasSubmenu) setOpenSubmenuId(null)
                       }}
+                      onMouseDown={(e) => {
+                        // Prevent focus loss from editor
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
                       onClick={(e) => {
                         if (!hasSubmenu) {
                           e.stopPropagation()
@@ -905,25 +940,26 @@ export const SlashMenu = memo(function SlashMenu({
                         }
                       }}
                       style={{
-                        padding: "5px 10px",
+                        padding: "6px 14px",
                         display: "flex",
                         alignItems: "center",
-                        gap: 8,
+                        gap: 10,
                         cursor: "pointer",
                         background: isActive
-                          ? (isLight ? "rgba(184,94,34,0.06)" : "rgba(184,94,34,0.1)")
+                          ? (isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.06)")
                           : "transparent",
-                        transition: "background 0.08s ease",
+                        transition: "all 0.1s ease",
                         userSelect: "none",
                       }}
+                      className={isActive ? "slash-item-active" : ""}
                     >
                       <OIcon isActive={isActive} mode={mode}>{item.icon}</OIcon>
-
+ 
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: 500,
-                          color: isLight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.88)",
+                          color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.92)",
                           lineHeight: "1.2",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -932,26 +968,28 @@ export const SlashMenu = memo(function SlashMenu({
                           {item.label}
                         </div>
                       </div>
-
+ 
                       {/* Right side: either submenu chevron OR shortcut */}
                       {hasSubmenu ? (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)"} strokeWidth="2.5" strokeLinecap="round">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"} strokeWidth="3" strokeLinecap="round">
                           <polyline points="9 18 15 12 9 6" />
                         </svg>
                       ) : item.shortcut ? (
                         <div style={{
-                          fontSize: 9.5,
-                          padding: "1px 5px",
-                          borderRadius: 4,
-                          background: isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.06)",
-                          color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.3)",
-                          fontFamily: "monospace",
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "1.5px 6px",
+                          borderRadius: 6,
+                          background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)",
+                          color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
+                          fontFamily: "var(--font-sf-mono), monospace",
+                          opacity: isActive ? 1 : 0.6,
                           flexShrink: 0,
                         }}>
-                          {item.shortcut}
+                          {item.shortcut.replace("⌘", "⌘ ")}
                         </div>
                       ) : null}
-
+ 
                       {/* Render submenu flyout inline (portalled visually via fixed positioning) */}
                       {submenuOpen && item.subOptions && (
                         <Submenu

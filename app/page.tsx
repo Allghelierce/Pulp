@@ -756,11 +756,11 @@ export default function NoteApp() {
   const [grove, setGrove] = useState<any[]>([]) // Your planted trees
   const [lastCharCount, setLastCharCount] = useState(0)
   const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'caught_in_the_act', title: 'Caught in the Act!', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'novice_writer', title: 'Novice Writer', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
-    { id: 'binder_buddy', title: 'Binder Buddy', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
-    { id: 'archivist', title: 'The Archivist', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'night_owl', title: 'Night Owl', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
+    { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
+    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
+    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
   ])
 
   // Restore Grove from LocalStorage
@@ -854,6 +854,7 @@ export default function NoteApp() {
   const [defaultSort, setDefaultSort] = useState("modified")
   const [wordCountVisible, setWordCountVisible] = useState(true)
   const [focusMode, setFocusMode] = useState(false)
+  const [headingFont, setHeadingFont] = useState("Playfair Display")
   const [baseFontSize, setBaseFontSize] = useState<"small" | "medium" | "large">("medium")
   const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
   const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false)
@@ -1126,7 +1127,19 @@ export default function NoteApp() {
       }
       return
     }
-    if (e.key === shortcuts.ai) {
+    const isMeta = e.metaKey || e.ctrlKey
+    const isAlt = e.altKey
+    const isShift = e.shiftKey
+    const modParts = []
+    if (isMeta) modParts.push("cmd")
+    if (isAlt) modParts.push("alt")
+    if (isShift) modParts.push("shift")
+    if (!["Meta", "Control", "Alt", "Shift", "Escape"].includes(e.key)) {
+      modParts.push(e.key.toLowerCase())
+    }
+    const eventKeyStr = modParts.join("+")
+
+    if (eventKeyStr === shortcuts.ai) {
       e.preventDefault()
       const sel = window.getSelection()
       const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
@@ -1818,7 +1831,7 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
@@ -2006,6 +2019,9 @@ export default function NoteApp() {
               isSidebarDragging={isSidebarDragging}
               sunshine={sunshine}
               gems={gems}
+              sidebarOpen={sidebarWidth > 40}
+              onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
+              onTimerOpen={() => setTimerOpen(!timerOpen)}
             />
           </div>
         )}
@@ -2420,11 +2436,6 @@ export default function NoteApp() {
         )}
       </div>
 
-      {wordCountVisible && !gridView && currentView === "editor" && (
-        <div className={`fixed bottom-6 right-6 px-3 py-1.5 rounded-full shadow-sm text-[11px] font-medium z-40 backdrop-blur-md pointer-events-none transition-all ${theme === "dark" ? "bg-zinc-800/80 text-zinc-400 border border-zinc-700/50" : "bg-white/80 text-zinc-500 border border-zinc-200/50"}`}>
-          {wordCount} {wordCount === 1 ? 'word' : 'words'}
-        </div>
-      )}
 
       {slashMenu && (
         <SlashMenu

@@ -36,6 +36,7 @@ export interface FolderData { id: number; name: string; open: boolean }
 export interface Achievement {
   id: string
   title: string
+  icon: string
   description: string
   reward: number
   rewardType: 'gems' | 'sunshine'
