@@ -17,7 +17,7 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
       "Authorization": `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "mixtral-8x7b-32768",
+      model: "llama-3.1-8b-instant",
       max_tokens: 512,
       temperature: 0.7,
       messages: [
@@ -36,7 +36,7 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
   if (!response.ok) {
     const errorText = await response.text()
     console.error("Groq error response:", errorText)
-    throw new Error(`Groq API error: ${response.status} ${response.statusText}`)
+    throw new Error(`Groq API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
   const data = await response.json()
