@@ -1,5 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react"
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
+import { memo, useEffect, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShareButton } from "@/components/ui/share-button"
 import { Link as LinkIcon } from "lucide-react"
@@ -58,24 +57,6 @@ interface DocumentToolbarProps {
 
 const GOLD = "#D4AF37"
 
-/** Renders a flexible twine that bows based on a spring-driven offset value */
-function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }) {
-  const [b, setB] = useState(0)
-  useEffect(() => {
-    const unsub = bow.on("change", setB)
-    return unsub
-  }, [bow])
-  // Quadratic bezier: start top-center (1,0), control mid (1+bow, 71), end (1,142)
-  const d1 = `M1 0 Q${1 + b} 71 1 142`
-  const d2 = `M1 0 Q${1 + b * 0.7} 71 1 142`
-  return (
-    <svg width="16" height="142" viewBox="-7 0 16 142" style={{ overflow: "visible", flexShrink: 0, display: "block" }}>
-      <path d={d1} stroke="#f1f1f1" strokeWidth="0.8" fill="none" strokeDasharray="2 1.5" />
-      <path d={d2} stroke="#d47c2a" strokeWidth="0.8" fill="none" strokeDasharray="1.5 2" strokeDashoffset="1.5" />
-    </svg>
-  )
-}
-
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx,
   setZoom, setCarouselIdx, setGridView, setDrawLineMode,
@@ -112,42 +93,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   useEffect(() => {
     if (!leftToolsRef.current) return
   }, [])
-
-  // --- Physics pendulum: flexible string with realistic random swing ---
-  const angle = useMotionValue(0)
-  const springAngle = useSpring(angle, {
-    stiffness: 80,    // softer = slower, more pendulum-like
-    damping: 6,       // low damping = more oscillation
-    mass: 0.8,
-  })
-  // Second spring lags behind the main angle — simulates string flex
-  const lagAngle = useSpring(angle, {
-    stiffness: 30,
-    damping: 5,
-    mass: 1.2,
-  })
-  // Convert lag to a pixel offset for the SVG bezier midpoint
-  const stringBow = useTransform(lagAngle, v => v * 0.7) // pixels of lateral bow
-
-  const idleSway = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const scheduleIdleSway = useCallback(() => {
-    // Cancel any existing pending sway before scheduling a new one
-    if (idleSway.current) clearTimeout(idleSway.current)
-    const delay = 3500 + Math.random() * 4000   // 3.5–7.5s between gentle sways
-    idleSway.current = setTimeout(() => {
-      // Very subtle nudge — just enough to look alive, not noticeable
-      const mag = 0.5 + Math.random() * 1.2
-      const dir = Math.random() > 0.5 ? 1 : -1
-      angle.set(mag * dir)
-      scheduleIdleSway()
-    }, delay)
-  }, [angle])
-
-  useEffect(() => {
-    scheduleIdleSway()
-    return () => { if (idleSway.current) clearTimeout(idleSway.current) }
-  }, [scheduleIdleSway])
 
   return (
     <div
@@ -322,8 +267,22 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         </div>
       </div>
 
-      {/* Right: Share + Hanging Orange Timer */}
+      {/* Right: Timer + Share */}
       <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
+        <button
+          onClick={onTimerOpen}
+          title="Focus Timer"
+          className="h-[28px] flex items-center gap-1.5 px-2.5 rounded-[6px] border border-[#e4e4e7]/60 hover:border-[#d4d4d8] hover:bg-[#f9f9f9] bg-white transition-all active:scale-95"
+          style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#b85e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="1" />
+            <path d="M12 1v6m0 6v6" />
+            <path d="M4.22 4.22l4.24 4.24m0 5.08l4.24 4.24M19.78 4.22l-4.24 4.24m0 5.08l-4.24 4.24" />
+          </svg>
+          <span className="text-[13.5px]" style={{ color: '#b85e22' }}>Timer</span>
+        </button>
+
         <ShareButton
           links={[
             { icon: XIcon, onClick: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, "_blank"), label: "Share on X" },
@@ -338,71 +297,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Share
         </ShareButton>
 
-        {/* Physics Pendulum Hanging Orange Timer Button */}
-        <motion.button
-          onClick={onTimerOpen}
-          title="Focus Timer"
-          className="absolute select-none outline-none"
-          style={{
-            rotate: springAngle,
-            transformOrigin: "top center",
-            top: 12,
-            right: 16,
-            width: 32,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            cursor: "pointer",
-            zIndex: 40,
-          }}
-          whileTap={{ scaleX: 1.15, scaleY: 0.88, transition: { type: "spring", stiffness: 600, damping: 12 } }}
-        >
-          {/* Twine — bezier cord that tracks the lag of the swing */}
-          <FlexTwine bow={stringBow} />
-
-          {/* Ring */}
-          <div style={{
-            width: 6, height: 6, marginTop: -2,
-            borderRadius: "50%",
-            border: "1.2px solid #a1a1aa",
-            background: "transparent",
-            boxShadow: "0.5px 0.5px 1px rgba(0,0,0,0.2)",
-            flexShrink: 0,
-          }} />
-
-          {/* Orange slice */}
-          <div className="relative mt-[-4px] z-10" style={{ flexShrink: 0 }}>
-            <div style={{
-              width: 28, height: 16,
-              borderRadius: "0 0 28px 28px",
-              background: "linear-gradient(to bottom, #8b4513, #a64d1a)",
-              border: "1px solid #5c2d0b",
-              boxShadow: "0 6px 12px rgba(0,0,0,0.4), inset 0 -1.5px 3px rgba(0,0,0,0.5)",
-              overflow: "hidden",
-              position: "relative",
-            }}>
-              <div style={{
-                position: "absolute", bottom: 1, left: 1.5, right: 1.5, top: 0,
-                borderRadius: "0 0 25px 25px",
-                background: "radial-gradient(ellipse at center top, rgba(232, 134, 42, 0.9), rgba(166, 77, 26, 0.8))",
-                display: "flex", alignItems: "flex-end", justifyContent: "center",
-              }}>
-                <svg width="24" height="14" viewBox="0 0 100 50" style={{ opacity: 0.5 }}>
-                  {[30, 60, 90, 120, 150].map(deg => (
-                    <line key={deg} x1="50" y1="0" x2={50 + Math.cos((deg * Math.PI) / 180) * 50} y2={Math.sin((deg * Math.PI) / 180) * 50} stroke="#fce7c0" strokeWidth="3.5" strokeLinecap="round" />
-                  ))}
-                  <circle cx="50" cy="0" r="10" fill="#fce7c0" />
-                </svg>
-              </div>
-            </div>
-            <div style={{
-              position: "absolute", inset: 0,
-              borderRadius: "0 0 28px 28px",
-              background: "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.12) 100%)",
-              pointerEvents: "none",
-            }} />
-          </div>
-        </motion.button>
       </div>
     </div>
   )

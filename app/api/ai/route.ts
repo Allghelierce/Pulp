@@ -17,7 +17,7 @@ async function callGroq(prompt: string, context?: string): Promise<string> {
       "Authorization": `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "mixtral-8x7b-32768",
+      model: "llama2-70b-4096",
       max_tokens: 512,
       temperature: 0.7,
       messages: [

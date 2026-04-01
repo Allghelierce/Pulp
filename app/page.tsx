@@ -12,6 +12,7 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
+import { HangingOrange } from "@/app/components/HangingOrange"
 import { OrchardView } from "@/app/components/OrchardView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
@@ -2432,7 +2433,10 @@ export default function NoteApp() {
         </div>
 
         {notes.length > 0 && !gridView && (
-          <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
+          <>
+            <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
+            <HangingOrange onClick={() => setTimerOpen(!timerOpen)} />
+          </>
         )}
       </div>
 
@@ -2495,9 +2499,17 @@ export default function NoteApp() {
                 body: JSON.stringify({ prompt, text: selectedText || "" })
               })
 
-              if (!response.ok) throw new Error("AI request failed")
               const data = await response.json()
+
+              if (!response.ok) {
+                const errorMsg = data.error || `Request failed with status ${response.status}`
+                throw new Error(errorMsg)
+              }
+
               const result = data.result || ""
+              if (!result) {
+                throw new Error("No response from AI")
+              }
 
               // Insert inline: replace selected text or insert at cursor
               if (selectedText) {
@@ -2506,8 +2518,9 @@ export default function NoteApp() {
                 editor.insertHTML(result)
               }
             } catch (error) {
-              console.error("AI error:", error)
-              openAlert("AI Error", "Failed to process request. Check console for details.")
+              const errorMsg = error instanceof Error ? error.message : "Unknown error"
+              console.error("AI error:", errorMsg)
+              openAlert("AI Error", errorMsg)
             }
           }}
         />
