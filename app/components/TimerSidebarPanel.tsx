@@ -2,6 +2,7 @@
 import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { HangingOrange } from "./HangingOrange"
+import { ShiningText } from "./ui/shining-text"
 
 const QUOTES = [
   "Every moment is a fresh beginning.",
@@ -188,24 +189,26 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               <div className="flex flex-col items-center">
                 {/* Timer at top - always same size */}
                 <div className="text-center mb-6 relative z-10">
-                  <div className="text-5xl tracking-tight" style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700, color: theme === "dark" ? "rgba(255,255,255,0.9)" : "rgba(120,53,15,0.8)" }}>
-                    {String(minutes).padStart(2, "0")}<span style={{ color: theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(120,53,15,0.6)" }}>:{String(seconds).padStart(2, "0")}</span>
+                  <div className="text-5xl tracking-tight" style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700 }}>
+                    <span style={{ color: running ? "#EA8C55" : theme === "dark" ? "rgba(255,255,255,0.9)" : "rgba(120,53,15,0.8)" }}>{String(minutes).padStart(2, "0")}</span><span style={{ color: theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(120,53,15,0.6)" }}>:{String(seconds).padStart(2, "0")}</span>
                   </div>
-                  <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.5)" }}>
-                    {running ? "session active" : "remaining"}
+                  <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif' }}>
+                    {running ? (
+                      <ShiningText text="session active" className="text-xs font-light tracking-wider" gradientColor="red" />
+                    ) : (
+                      <span style={{ color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.5)" }}>
+                        remaining
+                      </span>
+                    )}
                   </p>
                 </div>
 
-                {!running && (
-                  <>
-                    {/* Label */}
-                    <div className="text-center mb-6 relative z-10">
-                      <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(234,112,12,0.7)" }}>
-                        focus
-                      </span>
-                    </div>
-                  </>
-                )}
+                {/* Label - always reserve space */}
+                <div className="text-center mb-6 relative z-10" style={{ visibility: running ? "hidden" : "visible" }}>
+                  <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(234,112,12,0.7)" }}>
+                    focus
+                  </span>
+                </div>
 
                 {/* Tree with circle animation */}
                 <div className="relative w-56 h-56 mx-auto mb-8">
@@ -350,8 +353,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
               {/* Bottom Section */}
               <div className="flex flex-col">
-                {/* Controls */}
-              <div className="flex flex-col items-center gap-3 relative z-10">
+                {/* Controls - positioned at bottom */}
+              <div className="flex flex-col items-center gap-3 relative z-10 mt-auto">
                 <button
                   onClick={handleMainButton}
                   className="w-full transition-all py-3 shadow-sm"
@@ -381,22 +384,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   {done ? "Take Reward" : running ? "Give Up" : "Start Session"}
                 </button>
               </div>
-
-                {!running && (
-                  <div
-                    className="mt-8 pt-6 flex justify-between items-center opacity-70 relative z-10"
-                    style={{ borderTop: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(255,140,85,0.2)"}` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.6)" }}>
-                        stage: {stage.toLowerCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm" style={{ fontFamily: '"Caveat", cursive', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(120,53,15,0.7)" }}>
-                      {percent}% growth
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </motion.div>
