@@ -50,35 +50,69 @@ function getGrowthStage(progress: number): { stage: string; percent: number } {
   }
 }
 
-function TreeVisualization({ progress }: { progress: number }) {
-  return (
-    <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: "visible" }}>
+function TreeVisualization({ progress, running, elapsed, total }: { progress: number; running: boolean; elapsed: number; total: number }) {
+  // Calculate draw progress (30 minutes per tree, from 0 to 1 for each tree)
+  const totalSeconds = total
+  const elapsedSeconds = elapsed
+  const secondsPerTree = 30 * 60
+  const treeProgress = (elapsedSeconds % secondsPerTree) / secondsPerTree
+  const numCompleteTrees = Math.floor(elapsedSeconds / secondsPerTree)
+
+  // Clip height: grows from bottom (100) to top (0) as progress increases
+  // When not running, show full tree (clipHeight = 0). When running, animate from 100 to 0
+  const clipHeight = running ? 100 * (1 - treeProgress) : 0
+
+  const renderTree = (offset: number) => (
+    <g key={`tree-${offset}`} transform={`translate(0, ${offset * 120})`}>
       <defs>
-        <radialGradient id="leafGrad" cx="50%" cy="50%" r="50%">
+        <clipPath id={`treeClip-${offset}`}>
+          <rect x="0" y={clipHeight} width="100" height={100 - clipHeight} />
+        </clipPath>
+        <radialGradient id={`leafGrad-${offset}`} cx="50%" cy="50%" r="50%">
           <stop offset="0%" style={{ stopColor: "#386641" }} />
           <stop offset="100%" style={{ stopColor: "#1B3022" }} />
         </radialGradient>
       </defs>
 
-      {/* Trunk */}
-      <path d="M50 90 L50 40 Q50 30 55 25" stroke="#8B6F47" strokeWidth="4" strokeLinecap="round" />
-      <path d="M50 65 Q45 60 40 62" stroke="#8B6F47" strokeWidth="3" strokeLinecap="round" />
-      <path d="M50 55 Q55 50 60 52" stroke="#8B6F47" strokeWidth="2.5" strokeLinecap="round" />
+      <g clipPath={`url(#treeClip-${offset})`}>
+        {/* Trunk */}
+        <path d="M50 90 L50 40 Q50 30 55 25" stroke="#8B6F47" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50 65 Q45 60 40 62" stroke="#8B6F47" strokeWidth="3" strokeLinecap="round" />
+        <path d="M50 55 Q55 50 60 52" stroke="#8B6F47" strokeWidth="2.5" strokeLinecap="round" />
 
-      {/* Foliage with opacity based on progress */}
-      <g id="foliage-group" opacity={Math.min(0.5 + progress, 1)}>
-        <motion.circle cx="50" cy="35" r="15" fill="url(#leafGrad)" opacity={0.95} animate={{ r: [15, 16, 15] }} transition={{ duration: 2, repeat: Infinity }} />
-        <circle cx="38" cy="45" r="12" fill="url(#leafGrad)" opacity={0.9} />
-        <circle cx="62" cy="45" r="12" fill="url(#leafGrad)" opacity={0.9} />
-        <circle cx="50" cy="50" r="14" fill="url(#leafGrad)" opacity={0.85} />
+        {/* Foliage */}
+        <motion.circle cx="50" cy="35" r="15" fill={`url(#leafGrad-${offset})`} opacity={1} animate={{ r: [15, 16, 15] }} transition={{ duration: 2, repeat: Infinity }} />
+        <circle cx="38" cy="45" r="12" fill={`url(#leafGrad-${offset})`} opacity={1} />
+        <circle cx="62" cy="45" r="12" fill={`url(#leafGrad-${offset})`} opacity={1} />
+        <circle cx="50" cy="50" r="14" fill={`url(#leafGrad-${offset})`} opacity={0.95} />
 
-        {/* Orange Fruits */}
-        <circle cx="42" cy="35" r="2.5" fill="#EA8C55" opacity={Math.min(progress * 2, 1)} />
-        <circle cx="58" cy="40" r="2.5" fill="#EA8C55" opacity={Math.min(progress * 2, 1)} />
-        <circle cx="52" cy="52" r="2.5" fill="#EA8C55" opacity={Math.min(Math.max(progress - 0.3, 0) * 2, 1)} />
-        <circle cx="35" cy="48" r="2.5" fill="#EA8C55" opacity={Math.min(Math.max(progress - 0.5, 0) * 2, 1)} />
-        <circle cx="65" cy="48" r="2.5" fill="#EA8C55" opacity={Math.min(Math.max(progress - 0.7, 0) * 2, 1)} />
+        {/* Orange Fruits - all visible by default */}
+        <circle cx="42" cy="35" r="2.5" fill="#EA8C55" opacity={1} />
+        <circle cx="58" cy="40" r="2.5" fill="#EA8C55" opacity={1} />
+        <circle cx="52" cy="52" r="2.5" fill="#EA8C55" opacity={1} />
+        <circle cx="35" cy="48" r="2.5" fill="#EA8C55" opacity={1} />
+        <circle cx="65" cy="48" r="2.5" fill="#EA8C55" opacity={1} />
+
+        {/* Orange Fruits - tiny decorative ones */}
+        <circle cx="45" cy="50" r="1.2" fill="#EA8C55" opacity={0.8} />
+        <circle cx="55" cy="48" r="1.2" fill="#EA8C55" opacity={0.8} />
+        <circle cx="48" cy="42" r="1" fill="#EA8C55" opacity={0.7} />
+        <circle cx="52" cy="38" r="1" fill="#EA8C55" opacity={0.7} />
+        <circle cx="40" cy="40" r="1" fill="#EA8C55" opacity={0.7} />
+        <circle cx="60" cy="35" r="1.2" fill="#EA8C55" opacity={0.8} />
+        <circle cx="38" cy="55" r="1" fill="#EA8C55" opacity={0.6} />
+        <circle cx="62" cy="55" r="1" fill="#EA8C55" opacity={0.6} />
       </g>
+    </g>
+  )
+
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: "visible" }}>
+      {/* Render active tree being drawn */}
+      {renderTree(0)}
+
+      {/* Render completed trees above */}
+      {Array.from({ length: numCompleteTrees }).map((_, i) => renderTree(-(i + 1)))}
     </svg>
   )
 }
@@ -240,7 +274,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
                   {/* Tree inside circle */}
                   <div className="absolute inset-0 flex items-center justify-center p-6">
-                    <TreeVisualization progress={progress} />
+                    <TreeVisualization progress={progress} running={running} elapsed={elapsed} total={total} />
                   </div>
                 </div>
 

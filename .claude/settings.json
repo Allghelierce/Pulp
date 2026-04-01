@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(grep -rn \"process\\\\.env\\\\|NEXT_PUBLIC\" /Users/trisn999/handwritten-notes/lib /Users/trisn999/handwritten-notes/app --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn \"toString\\\\|valueOf\\\\|constructor\" /Users/trisn999/handwritten-notes/app/api --include=*.ts)",
+      "Skill(keybindings-help)",
+      "Skill(keybindings-help:*)",
+      "Bash(grep -rn \"import.*supabase\\\\|from.*supabase\" /Users/trisn999/handwritten-notes/app --include=*.tsx --include=*.ts)",
+      "Bash(git reset:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/trisn999/.claude"
     ]
   }
 }

@@ -4,6 +4,7 @@ import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
 import { BackgroundPlus } from "@/components/ui/background-plus"
+import type { Bookmark, User } from "@/app/types"
 
 // ─── Archive Panel ────────────────────────────────────────────────────────────
 function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
@@ -47,7 +48,7 @@ interface SidebarProps {
   accent: string
   draggedNoteId: string | null
   renamingFolder: number | null
-  user: any
+  user: User | null
   sidebarWidth: number
   isDragging?: boolean
   unlockedIds: Set<string>
@@ -68,9 +69,9 @@ interface SidebarProps {
   onOpenSettings: () => void
   onUnlockDev: () => void
   onGoToShelf: () => void
-  bookmarks: any[]
-  onJumpToBookmark: (b: any) => void
-  onReorderBookmarks: (b: any[]) => void
+  bookmarks: Bookmark[]
+  onJumpToBookmark: (b: Bookmark) => void
+  onReorderBookmarks: (b: Bookmark[]) => void
   onDeleteBookmark: (id: string) => void
   onRenameBookmark: (id: string, current: string) => void
   archivedNotes?: NoteData[]
@@ -255,11 +256,12 @@ export const Sidebar = memo(function Sidebar({
             {n.icon ?? "📄"}
           </span>
           {n.cover && (
-            <img
-              src={n.cover}
-              alt="Cover"
-              className="shrink-0 rounded"
-              style={{ width: 14, height: 18, objectFit: "cover" }}
+            <div
+              style={{
+                width: 14, height: 18, borderRadius: 2, overflow: "hidden", pointerEvents: "none",
+                backgroundImage: `url(${n.cover})`, backgroundSize: "cover", backgroundPosition: "center",
+                flexShrink: 0
+              }}
             />
           )}
           
@@ -544,7 +546,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-6 pt-4 border-t border-white/5">
             <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-6 mb-2" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
             {bookmarks && bookmarks.length > 0 ? (
-              bookmarks.map((b: any, idx) => (
+              bookmarks.map((b: Bookmark, idx: number) => (
                 <div
                   key={b.id}
                   draggable
@@ -600,7 +602,7 @@ export const Sidebar = memo(function Sidebar({
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
                 n.pages.some(p => p.includes(`data-backlink-id="${activeTabId}"`)) ||
-                Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some((b: any) => b.content.includes(`data-backlink-id="${activeTabId}"`)))
+                Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some(b => b.content.includes(`data-backlink-id="${activeTabId}"`)))
               )) : []
               if (bls.length === 0) return <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
               return bls.map(b => (

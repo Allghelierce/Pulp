@@ -73,19 +73,16 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
     }, 50)
   }, [faceIndex, faceScaleMotion])
 
-  const nudge = useCallback(() => {
-    const mag = 0.3 + Math.random() * 0.5
-    const dir = Math.random() > 0.5 ? 1 : -1
-    angle.set(mag * dir)
-
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(nudge, 2500 + Math.random() * 3500)
-  }, [angle])
-
   useEffect(() => {
-    nudge()
+    const runNudge = () => {
+      const mag = 0.3 + Math.random() * 0.5
+      const dir = Math.random() > 0.5 ? 1 : -1
+      angle.set(mag * dir)
+      timerRef.current = setTimeout(runNudge, 2500 + Math.random() * 3500)
+    }
+    runNudge()
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [nudge])
+  }, [angle])
 
   return (
     <motion.div

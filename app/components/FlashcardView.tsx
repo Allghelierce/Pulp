@@ -16,7 +16,8 @@ interface FlashcardViewProps {
 
 // SM-2 Spaced Repetition Algorithm
 const calculateNextReview = (quality: number, card: FlashcardItem): FlashcardItem => {
-  let { interval, easeFactor, repetitions } = card
+  const { easeFactor } = card
+  let { interval, repetitions } = card
   const now = Date.now()
 
   // Quality: 0-5, where 0=again, 1-2=hard, 3-4=good, 5=easy
@@ -58,6 +59,11 @@ export function FlashcardView({
   const [sessionCards, setSessionCards] = useState<string[]>([]) // cards due for review
   const [studiedCards, setStudiedCards] = useState<Set<string>>(new Set())
   const [feedback, setFeedback] = useState<{ show: boolean; type: "again" | "hard" | "good" | "easy" } | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   const bgColor = theme === "dark" ? "bg-[#0f0f12]" : "bg-[#fdfcf9]"
   const cardBg = theme === "dark" ? "bg-zinc-900/50" : "bg-white"
@@ -82,9 +88,8 @@ export function FlashcardView({
 
   // Get cards due for review (for study mode)
   const dueCards = useMemo(() => {
-    const now = Date.now()
     return cards.filter(c => c.nextReviewDate <= now)
-  }, [cards])
+  }, [cards, now])
 
   // Handle study mode toggle
   const handleStudyToggle = (enable: boolean) => {

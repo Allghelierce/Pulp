@@ -47,8 +47,10 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
   const currentPageIdxRef = useRef(currentPageIdx)
   // Keep refs in sync so the debounced callback always captures current values
   // without needing them in the useCallback dependency array.
-  activeTabIdRef.current = activeTabId
-  currentPageIdxRef.current = currentPageIdx
+  useEffect(() => {
+    activeTabIdRef.current = activeTabId
+    currentPageIdxRef.current = currentPageIdx
+  }, [activeTabId, currentPageIdx])
 
   const commitToState = useCallback(() => {
     const content = editorRef.current?.innerHTML || ""
@@ -222,6 +224,46 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     const sel = window.getSelection()
     if (!sel || !sel.rangeCount) return
     const range = sel.getRangeAt(0)
+
+    // ─── Obsidian-style keyboard shortcuts ───────────────────────
+    const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+    const isBold = (isMac && e.metaKey && e.key === 'b') || (!isMac && e.ctrlKey && e.key === 'b')
+    const isItalic = (isMac && e.metaKey && e.key === 'i') || (!isMac && e.ctrlKey && e.key === 'i')
+    const isUnderline = (isMac && e.metaKey && e.key === 'u') || (!isMac && e.ctrlKey && e.key === 'u')
+    const isStrikethrough = (isMac && e.metaKey && e.shiftKey && e.key === 'x') || (!isMac && e.ctrlKey && e.shiftKey && e.key === 'x')
+    const isCodeBlock = (isMac && e.metaKey && e.shiftKey && e.key === 'e') || (!isMac && e.ctrlKey && e.shiftKey && e.key === 'e')
+
+    if (isBold) {
+      e.preventDefault()
+      saveSelection()
+      document.execCommand('bold', false)
+      return
+    }
+    if (isItalic) {
+      e.preventDefault()
+      saveSelection()
+      document.execCommand('italic', false)
+      return
+    }
+    if (isUnderline) {
+      e.preventDefault()
+      saveSelection()
+      document.execCommand('underline', false)
+      return
+    }
+    if (isStrikethrough) {
+      e.preventDefault()
+      saveSelection()
+      document.execCommand('strikeThrough', false)
+      return
+    }
+    if (isCodeBlock) {
+      e.preventDefault()
+      saveSelection()
+      insertHTML('<pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-family:monospace;overflow-x:auto"><code>code here</code></pre><br/>')
+      return
+    }
+    // ──────────────────────────────────────────────────────────────
 
     // Handwritten Erase Effect
     if (e.key === "Backspace" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {

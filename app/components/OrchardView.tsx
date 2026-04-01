@@ -285,7 +285,7 @@ export const OrchardView = memo(function OrchardView({
             transition={{ delay: 0.6 }}
             className={`text-center py-6 border-t ${theme === 'dark' ? 'border-zinc-700/50' : 'border-orange-200/50'}`}
           >
-            <p className="text-sm opacity-60 italic">"An orchard is grown with patience and nurtured by persistence."</p>
+            <p className="text-sm opacity-60 italic">&quot;An orchard is grown with patience and nurtured by persistence.&quot;</p>
           </motion.div>
         </div>
       </motion.div>

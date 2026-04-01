@@ -48,37 +48,45 @@ const SketchFilter = () => (
 )
 
 // ── Orchard Helper Components ────────────────────────────────────────────────
-function OrchardTree({ x, y, delay, scale = 1, isDark, progress }: { x: number, y: number, delay: number, scale?: number, isDark: boolean, progress: number }) {
-  const isGrown = progress > 0.5
+function OrchardTree({ x, y, delay, isDark, progress }: { x: number, y: number, delay: number, isDark: boolean, progress: number }) {
+  const isGrown = progress > 0.4
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 0.15, scale: scale }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 0.2, y: 0 }}
       transition={{ delay, duration: 2 }}
       style={{ left: `${x}%`, top: `${y}%` }}
-      className="absolute flex flex-col items-center pointer-events-none"
+      className="absolute pointer-events-none"
     >
-       <div className={`w-8 h-8 rounded-full ${isGrown ? "bg-emerald-600/40" : "bg-emerald-500/20"} border border-emerald-600/10`} />
-       <div className={`w-1 h-3 ${isDark ? "bg-amber-900/20" : "bg-amber-900/10"} -mt-1`} />
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className={isDark ? "text-emerald-900/40" : "text-emerald-800/20"}>
+          {/* Subtle grass/field botanical shapes */}
+          <path d="M12 22C12 22 10 16 14 12" />
+          {isGrown && (
+            <>
+              <path d="M12 22C12 22 14 18 10 15" />
+              <circle cx="14" cy="11" r="1.5" className={isDark ? "fill-orange-500/20" : "fill-orange-400/10"} stroke="none" />
+            </>
+          )}
+       </svg>
     </motion.div>
   )
 }
 
-function FocusOrchard({ isDark, progress }: { isDark: boolean, progress: number }) {
-  const trees = useRef([
-    { x: 10, y: 15, delay: 0.2, scale: 0.8 },
-    { x: 90, y: 10, delay: 0.5, scale: 1.1 },
-    { x: 5, y: 80, delay: 0.8, scale: 0.9 },
-    { x: 95, y: 85, delay: 1.1, scale: 1.2 },
-    { x: 20, y: 5, delay: 1.4, scale: 0.7 },
-    { x: 80, y: 92, delay: 1.7, scale: 1.0 },
-    { x: 5, y: 40, delay: 0.4, scale: 1.4 },
-    { x: 95, y: 55, delay: 0.9, scale: 0.6 },
-  ])
+const ORCHARD_TREES = [
+  { x: 10, y: 15, delay: 0.2, scale: 0.8 },
+  { x: 90, y: 10, delay: 0.5, scale: 1.1 },
+  { x: 5, y: 80, delay: 0.8, scale: 0.9 },
+  { x: 95, y: 85, delay: 1.1, scale: 1.2 },
+  { x: 20, y: 5, delay: 1.4, scale: 0.7 },
+  { x: 80, y: 92, delay: 1.7, scale: 1.0 },
+  { x: 5, y: 40, delay: 0.4, scale: 1.4 },
+  { x: 95, y: 55, delay: 0.9, scale: 0.6 },
+]
 
+function FocusOrchard({ isDark, progress }: { isDark: boolean, progress: number }) {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      {trees.current.map((t, i) => (
+      {ORCHARD_TREES.map((t, i) => (
         <OrchardTree key={i} {...t} isDark={isDark} progress={progress} />
       ))}
     </div>
@@ -193,6 +201,7 @@ export const TimerPanel = memo(function TimerPanel({
   onSetRunning, onSetElapsed, onSetTotal, onSetPreset, onSetDone
 }: TimerPanelProps) {
   const [currentQuote, setCurrentQuote] = useState(FOCUS_QUOTES[0])
+  const [confirmGiveUp, setConfirmGiveUp] = useState(false)
   const [isStopwatch, setIsStopwatch] = useState(false)
   const isDark = theme === "dark"
 
@@ -245,8 +254,6 @@ export const TimerPanel = memo(function TimerPanel({
                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(234,88,12,0.15)_0%,_transparent_75%)]" 
             />
-            
-            <FocusOrchard isDark={isDark} progress={progress} />
           </div>
 
           <div className="relative z-10 flex flex-col items-center w-full text-center px-6">
@@ -269,7 +276,7 @@ export const TimerPanel = memo(function TimerPanel({
                 {timeText}
               </motion.div>
 
-              <div className="relative">
+              <div className="relative min-h-[300px] flex items-center justify-center">
                 <TimerTreeGrowth elapsed={elapsed} total={total} running={running} theme={theme} accent={accent} />
               </div>
             </div>
@@ -316,7 +323,41 @@ export const TimerPanel = memo(function TimerPanel({
                   )}
                </div>
                
-               <div className="flex flex-col items-center gap-4 w-full">
+                <div className="flex flex-col items-center gap-4 w-full relative">
+                  <AnimatePresence>
+                    {confirmGiveUp && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                        className="absolute bottom-full mb-2 bg-zinc-900 border border-zinc-800 rounded-lg py-3 px-4 shadow-xl z-50 flex flex-col items-center gap-2 min-w-[140px]"
+                      >
+                        <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider whitespace-nowrap">Are you sure?</span>
+                        <div className="flex gap-4">
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              onSetRunning(false); 
+                              onSetElapsed(0); 
+                              onSetDone(false); 
+                              setConfirmGiveUp(false);
+                              onClose(); 
+                            }}
+                            className="text-[9px] text-red-500 font-black uppercase hover:underline"
+                          >
+                            Yes
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setConfirmGiveUp(false); }}
+                            className="text-[9px] text-zinc-500 font-black uppercase hover:underline"
+                          >
+                            No
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <button
                     onClick={() => onSetRunning(!running)} disabled={done}
                     className="w-full relative overflow-hidden group py-3.5 rounded-xl transition-all bg-[#ea580c]"
@@ -333,10 +374,10 @@ export const TimerPanel = memo(function TimerPanel({
                   </button>
 
                   <button 
-                    onClick={() => { onSetRunning(false); onSetElapsed(0); onSetDone(false); onClose() }} 
-                    className="text-[9px] font-black uppercase tracking-[0.3em] transition-all opacity-40 hover:opacity-100 hover:text-red-500 py-2"
+                    onClick={() => setConfirmGiveUp(true)} 
+                    className="text-[9px] font-black uppercase tracking-[0.3em] transition-all opacity-40 hover:opacity-100 hover:text-red-500 hover:underline py-2"
                   >
-                    Abandon
+                    Give Up
                   </button>
                </div>
             </div>

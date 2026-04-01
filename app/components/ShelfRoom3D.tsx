@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useState, Suspense } from "react"
+import { useRef, useState, Suspense, useEffect } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Text, RoundedBox } from "@react-three/drei"
 import * as THREE from "three"
@@ -36,12 +36,14 @@ function CameraRig({ viewIdx }: { viewIdx: number }) {
   const { camera } = useThree()
   const lookTarget = useRef(new THREE.Vector3(0, 0.6, -4))
   const initialized = useRef(false)
-  if (!initialized.current) {
-    camera.position.copy(VIEWS[1].pos)
-    lookTarget.current.copy(VIEWS[1].look)
-    camera.lookAt(lookTarget.current)
-    initialized.current = true
-  }
+  useEffect(() => {
+    if (!initialized.current) {
+      camera.position.copy(VIEWS[1].pos)
+      lookTarget.current.copy(VIEWS[1].look)
+      camera.lookAt(lookTarget.current)
+      initialized.current = true
+    }
+  }, [camera])
   useFrame((_, delta) => {
     const s = Math.min(delta * 3.5, 1)
     camera.position.lerp(VIEWS[viewIdx].pos, s)
@@ -113,9 +115,10 @@ function Bracket({ x, y, z, rotY = 0 }: { x: number; y: number; z: number; rotY?
 }
 
 // ── Books on a shelf ────────────────────────────────────────────────────────
-function ShelfBooks({ notes, y, xStart, xEnd, z, rotY, noteOffset }: {
+function ShelfBooks({ notes, y, xStart, xEnd, z, rotY, noteOffset, onOpenNote }: {
   notes: NoteData[]; y: number; xStart: number; xEnd: number
   z: number; rotY: number; noteOffset: number
+  onOpenNote: (id: string) => void
 }) {
   const BW = 0.115, gap = 0.016, depth = 0.27, pad = 0.08
   const els: React.ReactElement[] = []
@@ -134,7 +137,7 @@ function ShelfBooks({ notes, y, xStart, xEnd, z, rotY, noteOffset }: {
     els.push(<Book key={notes[i].id}
       x={bx} y={y + 0.025 + bH / 2} z={bz} rotY={rotY}
       w={BW} h={bH} d={depth} color={color}
-      label={notes[i].subject || "Note"} onClick={() => {}} />)
+      label={notes[i].subject || "Note"} onClick={() => onOpenNote(notes[i].id)} />)
     cx += BW + gap + sr(seed) * 0.006
   }
   return <>{els}</>
@@ -498,6 +501,7 @@ function FrontWall({ notes, onOpenNote }: { notes: NoteData[]; onOpenNote: (id: 
               notes={notes.slice(i * perShelf, (i + 1) * perShelf)}
               y={y} xStart={cfg.xStart} xEnd={cfg.xEnd} z={-3.82}
               rotY={0} noteOffset={i * perShelf}
+              onOpenNote={onOpenNote}
             />
           </group>
         )

@@ -2,7 +2,10 @@ import { useState, useEffect, useRef, memo, useMemo } from "react"
 import { createPortal } from "react-dom"
 import { format } from "date-fns"
 import katex from "katex"
-import { DatetimePicker } from "@/components/ui/datetime-picker"// ─── Types ─────────────────────────────────────────────────────────────────────
+import { DatetimePicker } from "@/components/ui/datetime-picker"
+import type { TextBox } from "@/app/types"
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface SubOption {
   label: string
@@ -37,8 +40,8 @@ interface SlashMenuProps {
   insertBacklink: () => void
   onInsertImage?: () => void
   mode: "@" | "/"
-  box?: any
-  onUpdateBox?: (id: string, updates: any) => void
+  box?: TextBox
+  onUpdateBox?: (id: string, updates: Partial<TextBox>) => void
 }
 
 // ─── Shared icon style ──────────────────────────────────────────────────────
@@ -114,16 +117,15 @@ function Submenu({
   parentRef: React.RefObject<HTMLDivElement | null>
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [top, setTop] = useState(0)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
-    // Position submenu aligned with parent row
     if (parentRef.current && ref.current) {
       const pr = parentRef.current.getBoundingClientRect()
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      setTop(t)
+      setCoords({ top: t, left: pr.right + 8 })
     }
     const handler = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
@@ -141,8 +143,8 @@ function Submenu({
       ref={ref}
       style={{
         position: "fixed",
-        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 8,
-        top,
+        left: coords.left,
+        top: coords.top,
         zIndex: 10000,
         minWidth: 180,
         background: isLight ? "rgba(255,255,255,0.92)" : "rgba(22,22,24,0.88)",
@@ -208,7 +210,7 @@ function Submenu({
 
 function CustomMenuFlyout({ children, parentRef, mode }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/" }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [top, setTop] = useState(0)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
     if (parentRef.current && ref.current) {
@@ -216,7 +218,7 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      setTop(t)
+      setCoords({ top: t, left: pr.right + 8 })
     }
   }, [parentRef, children])
 
@@ -229,8 +231,8 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       ref={ref}
       style={{
         position: "fixed",
-        left: (parentRef.current?.getBoundingClientRect().right ?? 0) + 8,
-        top,
+        left: coords.left,
+        top: coords.top,
         zIndex: 10000,
         background: isLight ? "rgba(255,255,255,0.95)" : "rgba(20,20,22,0.92)",
         backgroundImage: isLight
@@ -499,13 +501,18 @@ export const SlashMenu = memo(function SlashMenu({
   toggleScript: _toggleScript, insertBacklink, onInsertImage, mode, box, onUpdateBox
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
+  const [prevFilter, setPrevFilter] = useState(filter)
+  if (filter !== prevFilter) {
+    setPrevFilter(filter)
+    setActiveIdx(0)
+  }
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLDivElement>(null)
   const submenuRowRef = useRef<HTMLDivElement | null>(null)
 
   // ── @ menu items ──────────────────────────────────────────────────────────
-  const allItems: SlashItem[] = [
+  const allItems: SlashItem[] = useMemo(() => [
     {
       id: "bold", label: "Bold", shortcut: "⌘B", group: "Typography",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>,
@@ -618,7 +625,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "media", label: "Image / Video / GIF", group: "Media",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
-      action: () => {},
+      action: () => { },
       customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} />
     },
     {
@@ -632,15 +639,15 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "date-custom", label: "Custom Date", group: "Accessories",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
-      action: () => {}, 
+      action: () => { },
       customContent: <CustomDateWrapper onInsert={(str) => {
         onSelect(() => insertHTML(`<span>${str}</span>`))
       }} onClose={onClose} mode={mode} />
     },
     {
       id: "table", label: "Table", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>,
-      action: () => {},
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>,
+      action: () => { },
       customContent: <TableGridPicker onInsert={(html, cols) => {
         onSelect(() => {
           insertHTML(html)
@@ -655,13 +662,13 @@ export const SlashMenu = memo(function SlashMenu({
     },
     {
       id: "equation", label: "Equation", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9"/></svg>,
-      action: () => {},
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9" /></svg>,
+      action: () => { },
       customContent: <EquationInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} />
     },
     {
       id: "columns", label: "Columns", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>,
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>,
       action: () => onSelect(() => {
         insertHTML(makeColumns(2))
         if (box && onUpdateBox && (box.w || 0) < 280) onUpdateBox(box.id, { w: 280 })
@@ -674,24 +681,24 @@ export const SlashMenu = memo(function SlashMenu({
     },
     {
       id: "toc", label: "Table of Contents", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/></svg>,
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6" /><line x1="6" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" /></svg>,
       action: () => onSelect(() => insertHTML(makeTOC()))
     },
     {
       id: "code", label: "Code Block", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
       action: () => onSelect(() => insertHTML(CODE_BLOCK_HTML))
     },
     {
       id: "bookmark", label: "Web Bookmark", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
-      action: () => {},
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>,
+      action: () => { },
       customContent: <BookmarkInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} mode={mode} />
     },
-  ]
+  ], [execCmd, insertHTML, accent, insertBacklink, onInsertImage, onSelect, onClose, mode, box, onUpdateBox])
 
   // ── / menu items ──────────────────────────────────────────────────────────
-  const settingsItems: SlashItem[] = box ? [
+  const settingsItems: SlashItem[] = useMemo(() => box ? [
     {
       id: "heading", label: "Heading level", group: "Typography",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 12h12M6 20V4M18 20V4" /></svg>,
@@ -758,15 +765,15 @@ export const SlashMenu = memo(function SlashMenu({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
             {[
               "transparent",
-              "rgba(239,68,68,0.15)",   
-              "rgba(249,115,22,0.15)",  
-              "rgba(234,179,8,0.15)",   
-              "rgba(34,197,94,0.15)",   
-              "rgba(14,165,233,0.15)",  
-              "rgba(59,130,246,0.15)",  
-              "rgba(168,85,247,0.15)",  
-              "rgba(236,72,153,0.15)",  
-              "rgba(156,163,175,0.15)"  
+              "rgba(239,68,68,0.15)",
+              "rgba(249,115,22,0.15)",
+              "rgba(234,179,8,0.15)",
+              "rgba(34,197,94,0.15)",
+              "rgba(14,165,233,0.15)",
+              "rgba(59,130,246,0.15)",
+              "rgba(168,85,247,0.15)",
+              "rgba(236,72,153,0.15)",
+              "rgba(156,163,175,0.15)"
             ].map(c => (
               <button
                 key={c}
@@ -785,19 +792,18 @@ export const SlashMenu = memo(function SlashMenu({
         </div>
       )
     },
-  ] : []
+  ] : [], [box, onUpdateBox])
   
   const combinedItems = box ? [...allItems, ...settingsItems] : allItems
 
-  const itemsToDisplay = isSelectionMode
+  const itemsToDisplay = useMemo(() => isSelectionMode
       ? combinedItems.filter(item => item.group === "Typography" || item.group === "Reference")
-      : combinedItems
+      : combinedItems, [combinedItems, isSelectionMode])
 
-  const filtered = filter
+  const filtered = useMemo(() => filter
     ? itemsToDisplay.filter(item => item.label.toLowerCase().includes(filter.toLowerCase()))
-    : itemsToDisplay
+    : itemsToDisplay, [filter, itemsToDisplay])
 
-  useEffect(() => { setActiveIdx(0) }, [filter])
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: "nearest" })
@@ -836,12 +842,15 @@ export const SlashMenu = memo(function SlashMenu({
     }
   }, [onClose])
 
-  const groups: { label: string; items: SlashItem[] }[] = []
-  for (const item of filtered) {
-    const existing = groups.find(g => g.label === item.group)
-    if (existing) existing.items.push(item)
-    else groups.push({ label: item.group, items: [item] })
-  }
+  const groups = useMemo(() => {
+    const g: { label: string; items: SlashItem[] }[] = []
+    for (const item of filtered) {
+      const existing = g.find(ex => ex.label === item.group)
+      if (existing) existing.items.push(item)
+      else g.push({ label: item.group, items: [item] })
+    }
+    return g
+  }, [filtered])
 
   const menuHeight = filtered.length * 32 + (groups.length * 20) + 12
   const finalHeight = Math.min(menuHeight, 340)

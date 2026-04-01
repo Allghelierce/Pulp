@@ -59,3 +59,26 @@ export type DialogConfig =
   | { type: "prompt"; title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; icon?: string; onConfirm: (val: string) => void }
   | { type: "confirm"; title: string; message?: string; confirmLabel?: string; danger?: boolean; onConfirm: (checkboxChecked?: boolean) => void; showCheckbox?: boolean; checkboxLabel?: string }
   | { type: "alert"; title: string; message?: string }
+export interface Tree {
+  id: number
+  type: "navel" | "blood" | "clementine" | "spoiled"
+  stage: number
+  progress: number
+  plantedAt: number
+}
+
+export interface SlashMenuState {
+  x: number
+  y: number
+  filter: string
+  type: "editor" | "textarea"
+  mode: "@" | "/"
+  target?: HTMLElement
+  isSelectionMode?: boolean
+}
+
+export interface User {
+  id: string
+  email?: string
+  // ... other supabase user fields if needed
+}

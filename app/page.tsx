@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
-import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement } from "@/app/types"
+import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
@@ -697,7 +697,7 @@ export default function NoteApp() {
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
   const [currentPageIdx, setCurrentPageIdx] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
 
   // UI state
@@ -766,7 +766,7 @@ export default function NoteApp() {
   // ─── Pulp Grove Gamification State ───
   const [sunshine, setSunshine] = useState(1000) // Main currency: Earned by time spent (1 per 30s)
   const [gems, setGems] = useState(5)   // Secondary: Earned by writing (1 per 500 chars)
-  const [grove, setGrove] = useState<any[]>([]) // Your planted trees
+  const [grove, setGrove] = useState<Tree[]>([]) // Your planted trees
   const [lastCharCount, setLastCharCount] = useState(0)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
@@ -823,9 +823,8 @@ export default function NoteApp() {
     })
   }, [])
 
-  // Timer logic
   useEffect(() => {
-    let interval: any
+    let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
       interval = setInterval(() => {
         setTimerElapsed(prev => {
@@ -992,7 +991,7 @@ export default function NoteApp() {
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
 
   // Slash (@ and /) menu
-  const [slashMenu, setSlashMenu] = useState<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
+  const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
@@ -1153,7 +1152,7 @@ export default function NoteApp() {
     editor.handleEditorKeyDown(e)
 
     if (e.key === "Escape") {
-      const isBox = (e.currentTarget as any) !== editorRef.current
+      const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
       if (isBox) {
         (e.currentTarget as HTMLElement).blur()
         boxes.setSelectedBoxIds(new Set())
@@ -1198,7 +1197,7 @@ export default function NoteApp() {
     if (e.key === shortcuts.slash || e.key === "@") {
       const sel = window.getSelection()
       if (!sel || sel.rangeCount === 0) return
-      const isBox = (e.currentTarget as any) !== editorRef.current
+      const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
       const isSelectionMode = !sel.isCollapsed
 
       // For boxes: store cursor position before any DOM changes
@@ -1224,7 +1223,7 @@ export default function NoteApp() {
           isSelectionMode: true
         }
         slashMenuRef.current = m
-        setSlashMenu(m as any)
+        setSlashMenu(m)
         return
       }
 
@@ -1258,7 +1257,7 @@ export default function NoteApp() {
       }
 
       // Sync content if in editor
-      if ((e.currentTarget as any) === editorRef.current) {
+      if ((e.currentTarget as HTMLElement) === editorRef.current) {
         editor.syncContent()
       }
 
@@ -1280,12 +1279,12 @@ export default function NoteApp() {
         target: e.currentTarget as HTMLElement
       }
       slashMenuRef.current = m
-      setSlashMenu(m as any)
+      setSlashMenu(m)
     }
   }, [editor.handleEditorKeyDown, closeSlashMenu])
 
   const handleEditorInput = useCallback((e: React.FormEvent<HTMLElement>) => {
-    if ((e.currentTarget as any) === editorRef.current) {
+    if ((e.currentTarget as HTMLElement) === editorRef.current) {
       editor.syncContent()
     }
 
@@ -2624,14 +2623,10 @@ export default function NoteApp() {
 
       {slashMenu && (
         <SlashMenu
-          x={slashMenu.x}
-          y={slashMenu.y}
-          filter={slashMenu.filter}
+          {...slashMenu}
           accent={accent}
-          mode={slashMenu.mode}
           box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
           onUpdateBox={boxes.updateBox}
-          isSelectionMode={slashMenu.isSelectionMode}
           onSelect={executeSlashItem}
           onClose={closeSlashMenu}
           execCmd={editor.execCmd}

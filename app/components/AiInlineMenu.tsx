@@ -89,7 +89,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 36, maxHeight: 160 })
 
   // Focus on mount
-  useEffect(() => { textareaRef.current?.focus() }, [])
+  useEffect(() => { textareaRef.current?.focus() }, [textareaRef])
 
   // Click-outside & Escape
   useEffect(() => {
@@ -166,7 +166,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
             overflow: "hidden",
             display: "-webkit-box",
             WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical" as any,
+            WebkitBoxOrient: "vertical" as const,
             borderLeft: "2px solid #b85e22",
             paddingLeft: 8,
           }}>
