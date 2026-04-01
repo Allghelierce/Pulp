@@ -258,30 +258,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       <div className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
         <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-default" title="Sunshine (Earned by active time)">
           <span className="text-[10px] leading-none">☀️</span>
-          <span>{sunshine}</span>
+          <span>{sunshine >= 999999 ? "∞" : sunshine}</span>
         </div>
         <div className="w-px h-3 bg-zinc-400/30" />
         <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-default" title="Gems (Purchased or rare)">
           <span className="text-[10px] leading-none">💎</span>
-          <span>{gems}</span>
+          <span>{gems >= 999999 ? "∞" : gems}</span>
         </div>
       </div>
 
-      {/* Right: Timer + Share */}
-      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
-        <button
-          onClick={onTimerOpen}
-          title="Focus Timer"
-          className="h-[28px] flex items-center gap-1.5 px-2.5 rounded-[6px] border border-[#e4e4e7]/60 hover:border-[#d4d4d8] hover:bg-[#f9f9f9] bg-white transition-all active:scale-95"
-          style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
-        >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#b85e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="1" />
-            <path d="M12 1v6m0 6v6" />
-            <path d="M4.22 4.22l4.24 4.24m0 5.08l4.24 4.24M19.78 4.22l-4.24 4.24m0 5.08l-4.24 4.24" />
-          </svg>
-          <span className="text-[13.5px]" style={{ color: '#b85e22' }}>Timer</span>
-        </button>
+      {/* Right: Share */}
+      <div className="flex items-center gap-3 shrink-0 pl-2 pr-[92px]" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
 
         <ShareButton
           links={[

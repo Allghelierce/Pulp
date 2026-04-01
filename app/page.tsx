@@ -857,6 +857,7 @@ export default function NoteApp() {
   const [focusMode, setFocusMode] = useState(false)
   const [headingFont, setHeadingFont] = useState("Playfair Display")
   const [baseFontSize, setBaseFontSize] = useState<"small" | "medium" | "large">("medium")
+  const [devMode, setDevMode] = useState(false)
   const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
   const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false)
 
@@ -1832,7 +1833,7 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       <Sidebar
@@ -2018,8 +2019,8 @@ export default function NoteApp() {
               onStartSidebarDrag={startSidebarDrag}
               sidebarWidth={sidebarWidth}
               isSidebarDragging={isSidebarDragging}
-              sunshine={sunshine}
-              gems={gems}
+              sunshine={devMode ? 999999 : sunshine}
+              gems={devMode ? 999999 : gems}
               sidebarOpen={sidebarWidth > 40}
               onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
               onTimerOpen={() => setTimerOpen(!timerOpen)}

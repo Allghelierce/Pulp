@@ -49,6 +49,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   focusMode, setFocusMode, baseFontSize, setBaseFontSize,
   headingFont, setHeadingFont,
   shortcuts, setShortcuts, achievements, onClaimAchievement,
+  devMode, setDevMode,
 }: {
   user: any
   onClose: () => void
@@ -78,6 +79,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   setShortcuts: (s: any) => void
   achievements: Achievement[]
   onClaimAchievement: (id: string) => void
+  devMode: boolean; setDevMode: (v: boolean) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -560,6 +562,18 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                    >
                      Clear Local Cache
                    </button>
+                 </div>
+               </SettingSection>
+
+               <SettingSection title="Developer" isDark={isDark}>
+                 <SettingRow
+                   title="Developer Authority"
+                   isDark={isDark}
+                   description="Grant infinite Sunshine and Gems for testing"
+                   control={<SettingToggle checked={devMode} onChange={setDevMode} isDark={isDark} />}
+                 />
+                 <div className="px-5 pb-3">
+                   <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} italic`}>Note: Infinite balances won't affect stored achievement progress.</p>
                  </div>
                </SettingSection>
             </>)}

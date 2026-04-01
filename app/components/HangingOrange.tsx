@@ -25,30 +25,30 @@ function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }
 export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick: () => void }) {
   const angle = useMotionValue(0)
   
-  // High-inertia pendulum spring
+  // Faster, snappier pendulum spring
   const springAngle = useSpring(angle, {
-    stiffness: 40,
-    damping: 4,
-    mass: 1.5,
+    stiffness: 150,
+    damping: 8,
+    mass: 0.6,
   })
 
   // String lag (flex)
   const lagAngle = useSpring(angle, {
-    stiffness: 20,
-    damping: 3,
-    mass: 2,
+    stiffness: 120,
+    damping: 7,
+    mass: 0.7,
   })
 
   const stringBow = useTransform(lagAngle, v => v * 0.8)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const nudge = useCallback(() => {
-    const mag = 1 + Math.random() * 3
+    const mag = 0.4 + Math.random() * 0.6
     const dir = Math.random() > 0.5 ? 1 : -1
     angle.set(mag * dir)
-    
+
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(nudge, 4000 + Math.random() * 6000)
+    timerRef.current = setTimeout(nudge, 800 + Math.random() * 700)
   }, [angle])
 
   useEffect(() => {
@@ -59,8 +59,8 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
   return (
     <motion.div
       onClick={(e) => {
-        // High-energy pull animation
-        angle.set(angle.get() + (Math.random() > 0.5 ? 15 : -15))
+        // Controlled pull animation
+        angle.set(angle.get() + (Math.random() > 0.5 ? 6 : -6))
         // Small delay to let the click feel "physical"
         setTimeout(onClick, 100)
       }}
@@ -109,7 +109,7 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
           rotate: "15deg",
           boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
         }} />
-        
+
         {/* Shine */}
         <div style={{
           position: "absolute", top: 5, left: 6,
@@ -118,9 +118,6 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
           borderRadius: "50%",
           rotate: "-45deg"
         }} />
-
-        {/* Timer Icon or Dot */}
-        <div style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(0,0,0,0.15)" }} />
       </div>
     </motion.div>
   )
