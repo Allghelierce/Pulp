@@ -186,61 +186,63 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             >
               {/* Top Section */}
               <div className="flex flex-col items-center">
+                {/* Timer at top - always same size */}
+                <div className="text-center mb-6 relative z-10">
+                  <div className="text-5xl tracking-tight" style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700, color: theme === "dark" ? "rgba(255,255,255,0.9)" : "rgba(120,53,15,0.8)" }}>
+                    {String(minutes).padStart(2, "0")}<span style={{ color: theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(120,53,15,0.6)" }}>:{String(seconds).padStart(2, "0")}</span>
+                  </div>
+                  <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.5)" }}>
+                    {running ? "session active" : "remaining"}
+                  </p>
+                </div>
+
                 {!running && (
                   <>
                     {/* Label */}
-                    <div className="text-center mb-8 relative z-10">
+                    <div className="text-center mb-6 relative z-10">
                       <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(234,112,12,0.7)" }}>
                         focus
                       </span>
                     </div>
-
-                    {/* Timer Circle */}
-                    <div className="relative w-56 h-56 mx-auto mb-10 mt-8">
-                    {/* SVG Progress Ring */}
-                    <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-                      <defs>
-                        <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#D4A574" />
-                          <stop offset="100%" stopColor="#EA8C55" />
-                        </linearGradient>
-                      </defs>
-                      {/* Background circle */}
-                      <circle cx="100" cy="100" r="92" fill="transparent" stroke={theme === "dark" ? "rgba(255,255,255,0.1)" : "#E8DCC8"} strokeWidth="2" />
-                      {/* Progress circle */}
-                      <motion.circle
-                        cx="100"
-                        cy="100"
-                        r="92"
-                        fill="transparent"
-                        stroke="url(#timerGradient)"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 92}
-                        strokeDashoffset={2 * Math.PI * 92 * (1 - progress)}
-                        animate={{ strokeDashoffset: 2 * Math.PI * 92 * (1 - progress) }}
-                        transition={{ duration: 1, ease: "linear" }}
-                      />
-                    </svg>
-
-                    {/* Tree inside circle */}
-                    <div className="absolute inset-0 flex items-center justify-center p-6">
-                      <TreeVisualization progress={progress} />
-                    </div>
-                  </div>
                   </>
                 )}
 
-              {running && (
-                <>
-                  {/* Tree in center when running */}
-                  <div className="relative w-48 h-48 mx-auto mb-6">
-                    <div className="flex items-center justify-center h-full">
-                      <TreeVisualization progress={progress} />
-                    </div>
-                  </div>
+                {/* Tree with circle animation */}
+                <div className="relative w-56 h-56 mx-auto mb-8">
+                  {/* SVG Progress Ring - always visible */}
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                    <defs>
+                      <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#D4A574" />
+                        <stop offset="100%" stopColor="#EA8C55" />
+                      </linearGradient>
+                    </defs>
+                    {/* Background circle */}
+                    <circle cx="100" cy="100" r="92" fill="transparent" stroke={theme === "dark" ? "rgba(255,255,255,0.1)" : "#E8DCC8"} strokeWidth="2" />
+                    {/* Progress circle */}
+                    <motion.circle
+                      cx="100"
+                      cy="100"
+                      r="92"
+                      fill="transparent"
+                      stroke="url(#timerGradient)"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 92}
+                      strokeDashoffset={2 * Math.PI * 92 * (1 - progress)}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 92 * (1 - progress) }}
+                      transition={{ duration: 1, ease: "linear" }}
+                    />
+                  </svg>
 
-                  {/* Rotating Quote with fade animation */}
+                  {/* Tree inside circle */}
+                  <div className="absolute inset-0 flex items-center justify-center p-6">
+                    <TreeVisualization progress={progress} />
+                  </div>
+                </div>
+
+                {/* Rotating Quote - only when running */}
+                {running && (
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={quoteIndex}
@@ -255,18 +257,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       </p>
                     </motion.div>
                   </AnimatePresence>
-                </>
-              )}
-
-              {/* Time Display - When not running show small, when running show large */}
-              <div className="text-center mb-8 relative z-10">
-                <div className={running ? "text-4xl" : "text-5xl"} style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700, color: theme === "dark" ? "rgba(255,255,255,0.9)" : "rgba(120,53,15,0.8)" }}>
-                  {String(minutes).padStart(2, "0")}<span style={{ color: theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(120,53,15,0.6)" }}>:{String(seconds).padStart(2, "0")}</span>
-                </div>
-                <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.5)" }}>
-                  {running ? "session active" : "remaining"}
-                </p>
-              </div>
+                )}
 
                 {!running && (
                   <>
