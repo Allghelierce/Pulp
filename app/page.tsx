@@ -1059,13 +1059,6 @@ export default function NoteApp() {
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
-  const [shortcuts, setShortcuts] = useState({
-    ai: "\\",
-    slash: "/",
-    sidebar: "\\", // meta + \
-    newNote: "n", // meta + n
-    search: "k", // meta + k
-  })
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
   const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
