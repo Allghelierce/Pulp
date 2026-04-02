@@ -751,9 +751,6 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [blockedSites, setBlockedSites] = useState<string[]>([])
-  const [blockedApps, setBlockedApps] = useState<string[]>([])
-  const [isDevUnlocked, setIsDevUnlocked] = useState(false)
   const [socials, setSocials] = useState<{ twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }>({})
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
@@ -914,30 +911,45 @@ export default function NoteApp() {
 
 
   // Settings
-  const [accent, setAccent] = useState("#600b2779")
-  const [theme, setTheme] = useState<"light" | "dark">("light")
-  const [autoSave, setAutoSave] = useState(true)
-  const [spellCheck, setSpellCheck] = useState(true)
-  const [autoCorrect, setAutoCorrect] = useState(true)
-  const [autoCapitalize, setAutoCapitalize] = useState(true)
-  const [editorFont, setEditorFont] = useState("Caveat")
-  const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal")
-  const [paperStyle, setPaperStyle] = useState<"lined" | "dotgrid" | "plain" | "stenopad">("stenopad")
+  const [settings, setSettings] = useState<any>({
+    accent: "#600b27",
+    theme: "light",
+    autoSave: true,
+    spellCheck: true,
+    autoCorrect: true,
+    autoCapitalize: true,
+    editorFont: "EB Garamond",
+    headingFont: "Playfair Display",
+    lineSpacing: "normal",
+    paperStyle: "lined",
+    showBinding: true,
+    reduceMotion: false,
+    reduceVisuals: false,
+    sidebarOnStart: true,
+    bgEffect: true,
+    smearEffect: true,
+    handwrittenEffect: true,
+    language: "english",
+    defaultSort: "modified",
+    wordCountVisible: true,
+    focusMode: false,
+    baseFontSize: "medium",
+    shortcuts: { ai: "ctrl+j", slash: "/" },
+    blockedSites: [],
+    blockedApps: [],
+    devMode: false,
+    isDevUnlocked: false
+  })
+  
+  const updateSettings = (updates: any) => setSettings((prev: any) => ({ ...prev, ...updates }))
+
+  const {
+    accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
+    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, 
+    smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
+    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked 
+  } = settings
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [showBinding, setShowBinding] = useState(true)
-  const [reduceMotion, setReduceMotion] = useState(false)
-  const [reduceVisuals, setReduceVisuals] = useState(false)
-  const [sidebarOnStart, setSidebarOnStart] = useState(true)
-  const [bgEffect, setBgEffect] = useState(true)
-  const [smearEffect, setSmearEffect] = useState(true)
-  const [handwrittenEffect, setHandwrittenEffect] = useState(true)
-  const [language, setLanguage] = useState("english")
-  const [defaultSort, setDefaultSort] = useState("modified")
-  const [wordCountVisible, setWordCountVisible] = useState(true)
-  const [focusMode, setFocusMode] = useState(false)
-  const [headingFont, setHeadingFont] = useState("Playfair Display")
-  const [baseFontSize, setBaseFontSize] = useState<"small" | "medium" | "large">("medium")
-  const [devMode, setDevMode] = useState(false)
   const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
   const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false)
 
@@ -1444,8 +1456,8 @@ export default function NoteApp() {
         setShowAiCommandBar(true)
       }
 
-      // Cmd/Ctrl+T - Toggle Timer
-      if (isCmd && e.key === 't') {
+      // Cmd+Option+T (Mac) / Ctrl+Alt+T (Windows) - Toggle Timer
+      if (isCmd && e.altKey && e.key === 't') {
         e.preventDefault()
         setTimerOpen(!timerOpen)
       }
@@ -1494,25 +1506,7 @@ export default function NoteApp() {
     if (saved) {
       try {
         const s = JSON.parse(saved)
-        if (s.accent) setAccent(s.accent)
-        if (s.theme) setTheme(s.theme)
-        if (s.autoSave !== undefined) setAutoSave(s.autoSave)
-        if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
-        if (s.autoCorrect !== undefined) setAutoCorrect(s.autoCorrect)
-        if (s.autoCapitalize !== undefined) setAutoCapitalize(s.autoCapitalize)
-        if (s.editorFont) setEditorFont(s.editorFont)
-        if (s.lineSpacing) setLineSpacing(s.lineSpacing)
-        if (s.paperStyle) setPaperStyle(s.paperStyle)
-        if (s.showBinding !== undefined) setShowBinding(s.showBinding)
-        if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
-        if (s.reduceVisuals !== undefined) setReduceVisuals(s.reduceVisuals)
-        if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
-        if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
-        if (s.language) setLanguage(s.language)
-        if (s.defaultSort) setDefaultSort(s.defaultSort)
-        if (s.wordCountVisible !== undefined) setWordCountVisible(s.wordCountVisible)
-        if (s.focusMode !== undefined) setFocusMode(s.focusMode)
-        if (s.baseFontSize) setBaseFontSize(s.baseFontSize)
+        updateSettings(s)
       } catch (e) { console.error("Local settings load failed:", e) }
     }
   }, [])
@@ -1523,25 +1517,7 @@ export default function NoteApp() {
     supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
       if (!data?.settings) return
       const s = data.settings
-      if (s.accent) setAccent(s.accent)
-      if (s.theme) setTheme(s.theme)
-      if (s.autoSave !== undefined) setAutoSave(s.autoSave)
-      if (s.spellCheck !== undefined) setSpellCheck(s.spellCheck)
-      if (s.autoCorrect !== undefined) setAutoCorrect(s.autoCorrect)
-      if (s.autoCapitalize !== undefined) setAutoCapitalize(s.autoCapitalize)
-      if (s.editorFont) setEditorFont(s.editorFont)
-      if (s.lineSpacing) setLineSpacing(s.lineSpacing)
-      if (s.paperStyle) setPaperStyle(s.paperStyle)
-      if (s.showBinding !== undefined) setShowBinding(s.showBinding)
-      if (s.reduceMotion !== undefined) setReduceMotion(s.reduceMotion)
-      if (s.reduceVisuals !== undefined) setReduceVisuals(s.reduceVisuals)
-      if (s.sidebarOnStart !== undefined) setSidebarOnStart(s.sidebarOnStart)
-      if (s.bgEffect !== undefined) setBgEffect(s.bgEffect)
-      if (s.language) setLanguage(s.language)
-      if (s.defaultSort) setDefaultSort(s.defaultSort)
-      if (s.wordCountVisible !== undefined) setWordCountVisible(s.wordCountVisible)
-      if (s.focusMode !== undefined) setFocusMode(s.focusMode)
-      if (s.baseFontSize) setBaseFontSize(s.baseFontSize)
+      updateSettings(s)
       if (s.trashNotes) setTrashNotes(s.trashNotes)
       if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
     })
@@ -1965,7 +1941,19 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} autoCorrect={autoCorrect} setAutoCorrect={setAutoCorrect} autoCapitalize={autoCapitalize} setAutoCapitalize={setAutoCapitalize} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} />}
+      {showSettings && (
+        <SettingsView 
+          user={user} 
+          onClose={() => setShowSettings(false)} 
+          config={{ ...settings, accentColor: accent }} 
+          onUpdateConfig={updates => updateSettings({ ...updates, accent: updates.accentColor || accent })}
+          achievements={achievements} 
+          onClaimAchievement={claimAchievement} 
+          trashNotes={trashNotes} 
+          onRestoreNote={restoreNote} 
+          onPermanentlyDeleteNote={permanentlyDeleteNote} 
+        />
+      )}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
       {/* Floating Sidebar Toggle Button */}
