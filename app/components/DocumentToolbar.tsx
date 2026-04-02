@@ -12,7 +12,6 @@ interface DocumentToolbarProps {
   zoom: string
   theme: "light" | "dark"
   gridView: boolean
-  gardenView: boolean
   sketchMode: boolean
   drawLineMode: boolean
   currentPageIdx: number
@@ -20,7 +19,6 @@ interface DocumentToolbarProps {
   setZoom: (v: string) => void
   setCarouselIdx: (idx: number) => void
   setGridView: (fn: (v: boolean) => boolean) => void
-  setGardenView: (fn: (v: boolean) => boolean) => void
   setSketchMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
   setDrawLineMode: (v: boolean) => void
@@ -61,8 +59,8 @@ interface DocumentToolbarProps {
 const GOLD = "#D4AF37"
 
 export const DocumentToolbar = memo(function DocumentToolbar({
-  zoom, gridView, gardenView, drawLineMode, currentPageIdx,
-  setZoom, setCarouselIdx, setGridView, setGardenView, setDrawLineMode,
+  zoom, gridView, drawLineMode, currentPageIdx,
+  setZoom, setCarouselIdx, setGridView, setDrawLineMode,
   openAlert, clearPage, autoAlign, verticalAlign,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
@@ -134,21 +132,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             <rect x="3" y="14" width="7" height="7" />
           </svg>
           <span>Grid</span>
-        </button>
-
-        {/* Garden */}
-        <button
-          onMouseDown={e => { e.preventDefault(); setGardenView(v => !v) }}
-          title="Garden"
-          className={`${btnBase} flex items-center gap-1.5`}
-          style={{ ...activeStyle(gardenView), ...btnFont }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <path d="M12 2l2 4h4l-3 3 1 4-4-3-4 3 1-4-3-3h4l2-4z" />
-            <circle cx="6" cy="18" r="2" />
-            <circle cx="18" cy="18" r="2" />
-          </svg>
-          <span>Garden</span>
         </button>
 
         {/* Align Dropdown */}
@@ -275,6 +258,22 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </svg>
           Compact
         </button>
+
+        {/* Timer */}
+        {onTimerOpen && (
+          <button
+            onClick={onTimerOpen}
+            className={`${btnBase} flex items-center gap-1.5`}
+            title="Open Timer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l3 2"></path>
+              <path d="M7 4h10"></path>
+            </svg>
+            Timer
+          </button>
+        )}
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
 
