@@ -220,13 +220,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 {/* Timer at top - always same size */}
                 <div className="text-center mb-6 relative z-10">
                   <div className="text-5xl tracking-tight" style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700 }}>
-                    <span style={{ color: running ? "#EA8C55" : theme === "dark" ? "rgba(255,255,255,0.9)" : "rgba(120,53,15,0.8)" }}>{String(minutes).padStart(2, "0")}</span><span style={{ color: theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(120,53,15,0.6)" }}>:{String(seconds).padStart(2, "0")}</span>
+                    <span style={{ color: running ? "#EA8C55" : theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.9)" }}>{String(minutes).padStart(2, "0")}</span><span style={{ color: running ? "rgba(234,140,85,0.7)" : theme === "dark" ? "#f59e0b" : "rgba(120,53,15,0.7)" }}>:{String(seconds).padStart(2, "0")}</span>
                   </div>
                   <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif' }}>
                     {running ? (
                       <ShiningText text="session active" className="text-xs font-light tracking-wider" gradientColor="red" />
                     ) : (
-                      <span style={{ color: theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(120,53,15,0.5)" }}>
+                      <span style={{ color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.7)" }}>
                         remaining
                       </span>
                     )}
@@ -235,7 +235,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
                 {/* Label - always reserve space */}
                 <div className="text-center mb-6 relative z-10" style={{ visibility: running ? "hidden" : "visible" }}>
-                  <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(234,112,12,0.7)" }}>
+                  <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(234,112,12,0.9)" }}>
                     focus
                   </span>
                 </div>
@@ -285,7 +285,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       transition={{ duration: 0.8 }}
                       className="text-center mb-6 px-4"
                     >
-                      <p className="text-sm italic" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.7)" : "rgba(120,53,15,0.7)", lineHeight: "1.5" }}>
+                      <p className="text-sm italic" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.85)", lineHeight: "1.5" }}>
                         "{QUOTES[quoteIndex]}"
                       </p>
                     </motion.div>
@@ -378,7 +378,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </div>
 
                     {/* Reward Estimate */}
-                    <div className="text-center text-xs mt-4 py-2 px-4 rounded" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(120,53,15,0.6)", backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(120,53,15,0.05)" }}>
+                    <div className="text-center text-xs mt-4 py-2 px-4 rounded" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.8)", backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(120,53,15,0.05)" }}>
                       <p>Complete for{' '}
                         <span style={{ color: "#fbbf24", fontWeight: 600 }}>
                           {total === 15 * 60 ? "+2" : total === 25 * 60 ? "+5" : "+3"} ☀️
