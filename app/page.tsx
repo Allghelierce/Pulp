@@ -13,7 +13,6 @@ import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
-import { OrchardView } from "@/app/components/OrchardView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
@@ -24,7 +23,6 @@ import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
 import { TimerSidebarPanel } from "@/app/components/TimerSidebarPanel"
-import { RightSidebar } from "@/app/components/RightSidebar"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -755,7 +753,6 @@ export default function NoteApp() {
   const [socials, setSocials] = useState<{ twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }>({})
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
-  const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [timerOpen, setTimerOpen] = useState(false)
   const [timerElapsed, setTimerElapsed] = useState(0)
@@ -771,7 +768,6 @@ export default function NoteApp() {
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
 
   // ─── Pulp Grove Gamification State ───
@@ -1412,7 +1408,7 @@ export default function NoteApp() {
   useEffect(() => {
     const checkViewport = () => {
       const isNarrow = window.innerWidth < 1000
-      setWordCountVisible(!isNarrow)
+      updateSettings({ wordCountVisible: !isNarrow })
     }
     checkViewport()
     window.addEventListener('resize', checkViewport)
@@ -1923,7 +1919,7 @@ export default function NoteApp() {
   if (isLoading) return <PulpLoadingScreen />
 
   const handleUnlockDev = () => {
-    setIsDevUnlocked(true)
+    updateSettings({ isDevUnlocked: true })
   }
 
   const handleOpenShop = () => {
@@ -1979,38 +1975,6 @@ export default function NoteApp() {
         </motion.button>
       )}
 
-      {/* Floating Right Sidebar Toggle (Grove) */}
-      {!gridView && (
-        <motion.button
-          onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-          className="fixed z-[50] rounded-full shadow-lg transition-all hover:scale-110"
-          style={{
-            top: 260,
-            right: 12,
-            width: 44,
-            height: 44,
-            background: theme === "dark" ? "rgba(24,24,27,0.9)" : "rgba(255,140,85,0.95)",
-            border: `1.5px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(184,94,34,0.2)"}`,
-            color: "white",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backdropFilter: "blur(8px)",
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          title={rightSidebarOpen ? "Close Grove" : "Open Grove"}
-        >
-          {/* Botanical/Grove Icon */}
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L12 12" />
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
-            <path d="M12 12L16 8" />
-            <path d="M12 12L8 8" />
-          </svg>
-        </motion.button>
-      )}
 
       {!gridView && sidebarWidth > 40 && (
         <motion.div
@@ -2257,108 +2221,14 @@ export default function NoteApp() {
               onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
               onTimerOpen={() => setTimerOpen(!timerOpen)}
               onOpenShop={handleOpenShop}
+              onAiMenuToggle={() => setAiQuickMenuOpen(v => !v)}
+              aiQuickMenuOpen={aiQuickMenuOpen}
+              aiExpression={aiExpression}
             />
           </div>
         )}
 
         <div className="flex-1 flex overflow-hidden relative">
-          {/* AI Quick-Action Button — Aligned vertically with hanging orange */}
-          {currentView === "editor" && activeNote && activeNote.noteType !== "flashcard" && (
-            <div className="absolute bottom-6 z-50 pointer-events-none" style={{ left: 60, transform: 'translateX(-50%)' }}>
-               <div className="relative pointer-events-auto">
-                {aiQuickMenuOpen && (
-                  <div className="absolute bottom-12 left-0 flex flex-col items-stretch mb-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg overflow-hidden pb-1">
-                    <div className="px-3.5 py-2.5 w-full border-b border-zinc-700/80 bg-zinc-900/40 mb-1">
-                      <span className="text-[10.5px] text-zinc-400 font-medium whitespace-nowrap">
-                        Tip: Use <kbd className="font-mono bg-zinc-700/80 text-zinc-300 px-1.5 py-[1px] rounded-[3px] mx-0.5">\</kbd> to open AI
-                      </span>
-                    </div>
-                    {AI_ACTIONS.map(action => (
-                      <button
-                        key={action.id}
-                        onClick={() => handleAiAction(action.id)}
-                        className="px-4 py-1.5 text-[13px] text-zinc-200 hover:bg-zinc-700 transition-colors text-left whitespace-nowrap w-full"
-                      >
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <button
-                  onClick={() => {
-                    if (aiExpression !== "normal") {
-                      // Achievement!
-                      openAlert("Caught in the Act!", "You caught Antigravity making a face! You've earned 10 gems for your sharp eye. ✨")
-                      setGems(prev => prev + 10)
-                      setAiExpression("normal")
-                    }
-                    setAiQuickMenuOpen(v => !v)
-                  }}
-                  className="w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-                  style={{ backgroundColor: accent }}
-                  title="Antigravity AI"
-                >
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Antennae */}
-                    <motion.line 
-                      x1="12" y1="9" x2="12" y2="4" 
-                      stroke="white" strokeWidth="1.5" strokeLinecap="round" 
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <motion.circle 
-                      cx="12" cy="3" r="1.5" fill="white" 
-                      animate={{ x: [0, 1, -1, 0], y: [0, -0.5, 0.5, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    
-                    {/* Face (Orange Body) */}
-                    <circle cx="12" cy="15" r="7.5" fill="white" fillOpacity="0.1" stroke="white" strokeWidth="1.5" />
-                    <circle cx="12" cy="15" r="5.5" fill="white" />
-                    
-                    {/* Eyes */}
-                    {aiExpression === "normal" && (
-                      <>
-                        <circle cx="9.5" cy="14.5" r="0.8" fill={accent} />
-                        <circle cx="14.5" cy="14.5" r="0.8" fill={accent} />
-                      </>
-                    )}
-                    {aiExpression === "wink" && (
-                      <>
-                        <path d="M8.5 14.5C9 14 10 14 10.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
-                        <circle cx="14.5" cy="14.5" r="0.8" fill={accent} />
-                      </>
-                    )}
-                    {aiExpression === "sleepy" && (
-                      <>
-                        <path d="M8.5 14.5L10.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
-                        <path d="M13.5 14.5L15.5 14.5" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
-                      </>
-                    )}
-                    {aiExpression === "heart" && (
-                      <>
-                        <path d="M8.5 14.5C9 13.5 10.5 13.5 11 14.5L9.5 16L8.5 14.5Z" fill="#ef4444" />
-                        <path d="M13.5 14.5C14 13.5 15.5 13.5 16 14.5L14.5 16L13.5 14.5Z" fill="#ef4444" />
-                      </>
-                    )}
-                    {aiExpression === "surprised" && (
-                      <>
-                        <circle cx="9.5" cy="14.5" r="1.1" stroke={accent} strokeWidth="0.8" />
-                        <circle cx="14.5" cy="14.5" r="1.1" stroke={accent} strokeWidth="0.8" />
-                      </>
-                    )}
-                    
-                    {/* Mouth/Expression */}
-                    {aiExpression === "surprised" ? (
-                      <circle cx="12" cy="17.5" r="1" fill={accent} />
-                    ) : (
-                      <path d="M10.5 16.5C11 17.2 13 17.2 13.5 16.5" stroke={accent} strokeWidth="1" strokeLinecap="round" />
-                    )}
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
           {notes.filter(n => !n.archived).length === 0 ? (
             <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
               <div className="text-center max-w-md overflow-hidden">
@@ -2381,7 +2251,7 @@ export default function NoteApp() {
                 {/* Theme Toggle */}
                 <div className="mt-6 flex items-center justify-center">
                   <div
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    onClick={() => updateSettings({ theme: theme === "light" ? "dark" : "light" })}
                     className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
                     style={{
                       backgroundColor: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
@@ -2643,20 +2513,9 @@ export default function NoteApp() {
                                onDragEnd={() => setIsAnyBoxDragging(false)}
                              />
                            ))}
-
-                           <RightSidebar 
-                             isOpen={rightSidebarOpen} 
-                             onClose={() => setRightSidebarOpen(false)} 
-                             theme={theme} 
-                             accent={accent}
-                             sunshine={sunshine}
-                             gems={gems}
-                             grove={grove}
-                             setSunshine={setSunshine}
-                             setGems={setGems}
-                             setGrove={setGrove}
-                           />
                          </>
+                       )}
+
                        )}
 
                       {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
@@ -2749,20 +2608,6 @@ export default function NoteApp() {
               </div>
             </main>
           )}
-
-          <OrchardView
-            isOpen={contentSidebarOpen}
-            onClose={() => setContentSidebarOpen(false)}
-            theme={theme}
-            accent={accent}
-            sunshine={sunshine}
-            gems={gems}
-            grove={grove}
-            setSunshine={setSunshine}
-            setGems={setGems}
-            setGrove={setGrove}
-          />
-
 
         </div>
 
