@@ -18,15 +18,27 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
   }
 
   return (
-    <div className={`rounded-lg p-4 ${isDark ? "bg-zinc-900/50" : "bg-white"} border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+    <div
+      className={`rounded-lg p-4 ${isDark ? "bg-zinc-900/50" : "bg-white"} border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}
+      style={{
+        filter: "url(#handwritten-jitter-subtle)",
+        transform: `rotate(${Math.random() * 0.3 - 0.15}deg)`,
+      }}
+    >
       <div className="space-y-3">
         {/* Sketches limit */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+            <label
+              className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              style={{ transform: `rotate(${Math.random() * 0.5 - 0.25}deg)` }}
+            >
               AI Sketches
             </label>
-            <span className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+            <span
+              className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
+              style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
+            >
               {limits.sketchesRemaining === Infinity ? "∞" : Math.floor(limits.sketchesRemaining)} remaining
             </span>
           </div>
@@ -46,10 +58,16 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
         {/* Token limit */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+            <label
+              className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              style={{ transform: `rotate(${Math.random() * 0.5 - 0.25}deg)` }}
+            >
               AI Tokens
             </label>
-            <span className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+            <span
+              className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
+              style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
+            >
               {limits.tokensRemaining.toLocaleString()} remaining
             </span>
           </div>
@@ -65,12 +83,24 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
         </div>
 
         {/* Tier badge */}
-        <div className="flex items-center gap-2 pt-2 border-t" style={{ borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
+        <div
+          className="flex items-center gap-2 pt-2 border-t"
+          style={{
+            borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+            transform: `rotate(${Math.random() * 0.2 - 0.1}deg)`,
+          }}
+        >
           <div
             className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: accent }}
+            style={{
+              backgroundColor: accent,
+              transform: `scale(${0.9 + Math.random() * 0.2}) rotate(${Math.random() * 5 - 2.5}deg)`,
+            }}
           />
-          <span className={`text-xs font-semibold capitalize ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+          <span
+            className={`text-xs font-semibold capitalize ${isDark ? "text-zinc-400" : "text-zinc-600"}`}
+            style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
+          >
             {usage.tier} tier
           </span>
         </div>

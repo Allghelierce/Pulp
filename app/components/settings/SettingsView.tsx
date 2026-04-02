@@ -22,7 +22,6 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
   ai: "Optimize your intelligence partner",
   blocker: "Restrict distractions during focus sessions",
   achievements: "Track your progress and claim rewards",
-  socials: "Connect your social media profiles",
   data: "Manage your local data and backups",
   shortcuts: "Master Pulp with keyboard acceleration",
   subscription: "Manage your plan and billing",
@@ -32,17 +31,16 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
 export const SETTINGS_TABS = [
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
-  { id: "typography", label: "Typography", group: "App" },
   { id: "interface", label: "Interface", group: "App" },
+  { id: "achievements", label: "Achievements", group: "App" },
+  { id: "typography", label: "Typography", group: "Writing" },
   { id: "editor", label: "Editor", group: "Writing" },
   { id: "ai", label: "AI Kai", group: "Writing" },
   { id: "blocker", label: "Focus Blocker", group: "Writing" },
-  { id: "achievements", label: "Achievements", group: "App" },
-  { id: "socials", label: "Socials", group: "App" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
-  { id: "subscription", label: "Pro", group: "Premium" },
   { id: "danger", label: "Danger Zone", group: "Advanced" },
+  { id: "subscription", label: "Pro", group: "Premium" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
@@ -96,7 +94,6 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   devMode, setDevMode, isDevUnlocked,
   blockedSites, setBlockedSites, blockedApps, setBlockedApps,
   trashNotes, onRestoreNote, onPermanentlyDeleteNote,
-  socials, setSocials,
 }: {
   user: { email?: string } | null
   onClose: () => void
@@ -135,8 +132,6 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
   trashNotes: NoteData[]
   onRestoreNote: (id: string) => void
   onPermanentlyDeleteNote: (id: string) => void
-  socials: { twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }
-  setSocials: (v: { twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }) => void
 }) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
@@ -633,64 +628,6 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   )
                 })}
               </div>
-            </>)}
-
-            {/* ── Socials ── */}
-            {activeTab === "socials" && (<>
-              <SettingSection title="Social Media Links" isDark={isDark}>
-                <div className="flex flex-col gap-4 px-5 py-4">
-                  <div>
-                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Twitter</label>
-                    <input
-                      type="text"
-                      value={socials.twitter || ""}
-                      onChange={(e) => setSocials({ ...socials, twitter: e.target.value })}
-                      placeholder="@username or profile URL"
-                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Instagram</label>
-                    <input
-                      type="text"
-                      value={socials.instagram || ""}
-                      onChange={(e) => setSocials({ ...socials, instagram: e.target.value })}
-                      placeholder="@username or profile URL"
-                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>GitHub</label>
-                    <input
-                      type="text"
-                      value={socials.github || ""}
-                      onChange={(e) => setSocials({ ...socials, github: e.target.value })}
-                      placeholder="username or profile URL"
-                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>LinkedIn</label>
-                    <input
-                      type="text"
-                      value={socials.linkedin || ""}
-                      onChange={(e) => setSocials({ ...socials, linkedin: e.target.value })}
-                      placeholder="profile URL"
-                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Website</label>
-                    <input
-                      type="text"
-                      value={socials.website || ""}
-                      onChange={(e) => setSocials({ ...socials, website: e.target.value })}
-                      placeholder="https://yoursite.com"
-                      className={`w-full px-3 py-2 rounded-lg border text-[12px] transition-all focus:outline-none focus:ring-2 ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-orange-500/50 focus:ring-orange-500/20" : "bg-white border-zinc-200 text-zinc-900 focus:border-orange-500/50 focus:ring-orange-500/20"}`}
-                    />
-                  </div>
-                </div>
-              </SettingSection>
             </>)}
 
             {/* ── Data ── */}

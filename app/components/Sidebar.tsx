@@ -101,6 +101,8 @@ export const Sidebar = memo(function Sidebar({
   const [newMenuOpen, setNewMenuOpen] = useState<string | null>(null)
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
   const [devClicks, setDevClicks] = useState(0)
+  const [hideBookmarks, setHideBookmarks] = useState(false)
+  const [hideBacklinks, setHideBacklinks] = useState(false)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -544,9 +546,22 @@ export const Sidebar = memo(function Sidebar({
 
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-6 mb-2" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
-            {bookmarks && bookmarks.length > 0 ? (
-              bookmarks.map((b: Bookmark, idx: number) => (
+            <div className="flex items-center justify-between px-6 mb-2">
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
+              <button
+                onClick={() => setHideBookmarks(!hideBookmarks)}
+                className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                title={hideBookmarks ? "Show bookmarks" : "Hide bookmarks"}
+              >
+                {hideBookmarks ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                )}
+              </button>
+            </div>
+            {!hideBookmarks && bookmarks && bookmarks.length > 0 ? (
+              bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
                 <div
                   key={b.id}
                   draggable
@@ -598,8 +613,21 @@ export const Sidebar = memo(function Sidebar({
           </div>
           {/* Backlinks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-6 mb-2" style={{ fontFamily: 'var(--font-italiana)' }}>Backlinks</p>
-            {(() => {
+            <div className="flex items-center justify-between px-6 mb-2">
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Backlinks</p>
+              <button
+                onClick={() => setHideBacklinks(!hideBacklinks)}
+                className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                title={hideBacklinks ? "Show backlinks" : "Hide backlinks"}
+              >
+                {hideBacklinks ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                )}
+              </button>
+            </div>
+            {!hideBacklinks && (() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
                 n.pages.some(p => p.includes(`data-backlink-id="${activeTabId}"`)) ||
                 Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some(b => b.content.includes(`data-backlink-id="${activeTabId}"`)))

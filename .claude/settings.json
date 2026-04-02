@@ -10,7 +10,8 @@
       "Bash(git reset:*)",
       "Bash(ls -la /Users/trisn999/handwritten-notes/OBSIDIAN* /Users/trisn999/handwritten-notes/SHORTCUTS*)",
       "Read(//Users/trisn999/handwritten-notes/**)",
-      "Bash(/Users/trisn999/handwritten-notes/SECURITY_SUMMARY.txt:*)"
+      "Bash(/Users/trisn999/handwritten-notes/SECURITY_SUMMARY.txt:*)",
+      "WebFetch(domain:windscribe.com)"
     ],
     "additionalDirectories": [
       "/Users/trisn999/.claude"

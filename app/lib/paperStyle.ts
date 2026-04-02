@@ -3,12 +3,13 @@ type PaperStyle = "lined" | "dotgrid" | "plain" | "stenopad"
 
 export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isDark = false, preview = false) {
   const lh = ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
-  const lineColor = preview ? "#e4e4e7" : "#C2D3E8"
   
   const backgroundColor =
     paperStyle === "stenopad" ? "#F5EDB8" :
             preview ? "#ffffff" : "#FDFCF9"
 
+  const lineColor = preview ? "#e4e4e7" : "#C2D3E8"
+  
   const dotR = preview ? "1px" : "1.5px"
 
   const backgroundImage = paperStyle === "plain" ? "none"

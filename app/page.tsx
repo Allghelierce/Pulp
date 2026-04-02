@@ -14,7 +14,6 @@ import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
 import { OrchardView } from "@/app/components/OrchardView"
-import { GardenView } from "@/app/components/GardenView"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { ShelfView } from "@/app/components/ShelfView"
@@ -98,6 +97,14 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
       <filter id="handwritten-jitter-subtle" colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
         <feTurbulence type="fractalNoise" baseFrequency="0.05 0.03" numOctaves="2" result="noise" />
         <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <filter id="pen-ink" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04 0.07" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="wobble" />
+        <feGaussianBlur in="wobble" stdDeviation="0.15" result="blur" />
+        <feComponentTransfer in="blur">
+          <feFuncA type="gamma" amplitude="1.1" exponent="1.2" />
+        </feComponentTransfer>
       </filter>
     </svg>
   </>)
@@ -196,7 +203,7 @@ const BoxItem = memo(function BoxItem({
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
         border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
-        color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : "#1a1a1a",
+        color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
@@ -324,6 +331,7 @@ const BoxItem = memo(function BoxItem({
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
             onKeyDown={onKeyDown}
             onInput={onInput}
+            theme={theme}
           />
         )}
       </div>
@@ -615,7 +623,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 interface BoxTextareaProps {
   id: string; content: string; textAlign?: string
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
-  isSticky?: boolean
+  isSticky?: boolean; theme: "light" | "dark"
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -623,7 +631,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, onUpdate, onFocus, onKeyDown, onInput
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, onUpdate, onFocus, onKeyDown, onInput
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -649,8 +657,10 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedWeight = BOX_HEADING_WEIGHTS[styleKey]
-  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Caveat', cursive")
+  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Indie Flower', cursive")
+  const inkColor = isMarginStyle
+    ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
+    : "#1a1a1a"
 
   return (
     <div
@@ -677,8 +687,9 @@ const BoxTextarea = memo(function BoxTextarea({
         width: "100%", outline: "none",
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
-        fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: resolvedWeight,
-        lineHeight: 1.45, color: isMarginStyle ? "rgba(0,0,0,0.32)" : "#1a1a1a", cursor: "text",
+        fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
+        lineHeight: 1.45, color: inkColor, cursor: "text",
+        letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-1.2deg) skewX(-2deg)" : undefined,
         transformOrigin: "top left",
@@ -686,6 +697,7 @@ const BoxTextarea = memo(function BoxTextarea({
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
         overflow: isSticky ? "hidden" : "visible",
         backgroundColor: "transparent",
+        filter: "url(#pen-ink)",
       }}
     />
   )
@@ -731,7 +743,6 @@ export default function NoteApp() {
     window.addEventListener("mouseup", onUp)
   }, [sidebarWidth])
   const [gridView, setGridView] = useState(false)
-  const [gardenView, setGardenView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
@@ -747,6 +758,7 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [contentSidebarOpen, setContentSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [timerOpen, setTimerOpen] = useState(false)
   const [timerElapsed, setTimerElapsed] = useState(0)
   const [timerTotal, setTimerTotal] = useState(25 * 60)
@@ -786,6 +798,31 @@ export default function NoteApp() {
       setGrove(data.grove || [])
       if (data.achievements) setAchievements(data.achievements)
     }
+
+    // Restore Timer Session
+    const savedTimer = localStorage.getItem('pulp-timer')
+    if (savedTimer) {
+      const t = JSON.parse(savedTimer)
+      setTimerTotal(t.total ?? 25 * 60)
+      setTimerPreset(t.preset ?? "focus")
+      setTimerDone(t.done ?? false)
+      
+      if (t.running && !t.done) {
+        const elapsedSinceLast = Math.floor((Date.now() - t.timestamp) / 1000)
+        const totalElapsed = t.elapsed + elapsedSinceLast
+        if (totalElapsed >= (t.total ?? 25 * 60)) {
+          setTimerElapsed(t.total ?? 25 * 60)
+          setTimerRunning(false)
+          setTimerDone(true)
+        } else {
+          setTimerElapsed(totalElapsed)
+          setTimerRunning(true)
+        }
+      } else {
+        setTimerElapsed(t.elapsed ?? 0)
+        setTimerRunning(false)
+      }
+    }
     
     // Night Owl Check
     const hour = new Date().getHours()
@@ -798,6 +835,18 @@ export default function NoteApp() {
   useEffect(() => {
     localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove, achievements }))
   }, [sunshine, gems, grove, achievements])
+
+  // Persist Timer
+  useEffect(() => {
+    localStorage.setItem('pulp-timer', JSON.stringify({
+      elapsed: timerElapsed,
+      total: timerTotal,
+      running: timerRunning,
+      done: timerDone,
+      preset: timerPreset,
+      timestamp: Date.now()
+    }))
+  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset])
 
   const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
     setAchievements(prev => prev.map(a => {
@@ -1910,16 +1959,44 @@ export default function NoteApp() {
   return (
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} autoCorrect={autoCorrect} setAutoCorrect={setAutoCorrect} autoCapitalize={autoCapitalize} setAutoCapitalize={setAutoCapitalize} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} socials={socials} setSocials={setSocials} />}
+      {showSettings && <SettingsView user={user} onClose={() => setShowSettings(false)} accentColor={accent} setAccentColor={setAccent} theme={theme} setTheme={setTheme} autoSave={autoSave} setAutoSave={setAutoSave} spellCheck={spellCheck} setSpellCheck={setSpellCheck} autoCorrect={autoCorrect} setAutoCorrect={setAutoCorrect} autoCapitalize={autoCapitalize} setAutoCapitalize={setAutoCapitalize} editorFont={editorFont} setEditorFont={setEditorFont} lineSpacing={lineSpacing} setLineSpacing={setLineSpacing} paperStyle={paperStyle} setPaperStyle={setPaperStyle} showBinding={showBinding} setShowBinding={setShowBinding} reduceMotion={reduceMotion} setReduceMotion={setReduceMotion} reduceVisuals={reduceVisuals} setReduceVisuals={setReduceVisuals} sidebarOnStart={sidebarOnStart} setSidebarOnStart={setSidebarOnStart} bgEffect={bgEffect} setBgEffect={setBgEffect} smearEffect={smearEffect} setSmearEffect={setSmearEffect} handwrittenEffect={handwrittenEffect} setHandwrittenEffect={setHandwrittenEffect} language={language} setLanguage={setLanguage} defaultSort={defaultSort} setDefaultSort={setDefaultSort} wordCountVisible={wordCountVisible} setWordCountVisible={setWordCountVisible} focusMode={focusMode} setFocusMode={setFocusMode} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} headingFont={headingFont} setHeadingFont={setHeadingFont} shortcuts={shortcuts} setShortcuts={setShortcuts} achievements={achievements} onClaimAchievement={claimAchievement} devMode={devMode} setDevMode={setDevMode} isDevUnlocked={isDevUnlocked} blockedSites={blockedSites} setBlockedSites={setBlockedSites} blockedApps={blockedApps} setBlockedApps={setBlockedApps} trashNotes={trashNotes} onRestoreNote={restoreNote} onPermanentlyDeleteNote={permanentlyDeleteNote} />}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      {!gridView && !gardenView && (
+      {/* Floating Sidebar Toggle Button */}
+      {!gridView && (
+        <motion.button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed z-[50] rounded-full shadow-lg transition-all hover:scale-110"
+          style={{
+            top: 200,
+            left: 12,
+            width: 40,
+            height: 40,
+            background: theme === "dark" ? "rgba(24,24,27,0.9)" : "rgba(255,255,255,0.95)",
+            border: `1.5px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+            color: accent,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 20,
+            backdropFilter: "blur(8px)",
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+        >
+          {sidebarOpen ? "‹" : "›"}
+        </motion.button>
+      )}
+
+      {!gridView && sidebarOpen && (
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-          style={{ display: gridView || gardenView ? 'none' : 'flex' }}
+          transition={{ duration: 0.25 }}
+          style={{ display: gridView ? 'none' : 'flex', position: 'relative', marginTop: 100 }}
         >
           <Sidebar
           notes={notes}
@@ -1929,7 +2006,7 @@ export default function NoteApp() {
           draggedNoteId={draggedNoteId}
           renamingFolder={renamingFolder}
           user={user}
-          sidebarWidth={sidebarWidth}
+          sidebarWidth={200}
           isDragging={isSidebarDragging}
           onAddNote={addNote}
           onAddTypedNote={addTypedNote}
@@ -1994,16 +2071,7 @@ export default function NoteApp() {
         </motion.div>
       )}
 
-      {/* Sidebar edge resize handle */}
-      {!gridView && !gardenView && <div
-        onMouseDown={e => { e.preventDefault(); startSidebarDrag(e.clientX) }}
-        style={{
-          position: "absolute", top: 0, bottom: 0,
-          left: sidebarWidth - 3, width: 6,
-          cursor: "ew-resize", zIndex: 40,
-          transition: isSidebarDragging ? "none" : "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
-      />}
+      {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
 
       {currentView === "shelf" && (
         <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
@@ -2075,8 +2143,6 @@ export default function NoteApp() {
               setZoom={setZoom}
               gridView={gridView}
               setGridView={setGridView}
-              gardenView={gardenView}
-              setGardenView={setGardenView}
               setCarouselIdx={setCarouselIdx}
               sketchMode={sketchMode}
               setSketchMode={setSketchMode}
@@ -2298,8 +2364,6 @@ export default function NoteApp() {
                 </div>
               </div>
             </main>
-          ) : gardenView ? (
-            <GardenView />
           ) : gridView ? (
             <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
           ) : activeNote?.noteType === "flashcard" ? (
@@ -2313,13 +2377,13 @@ export default function NoteApp() {
               />
             </main>
           ) : (
-            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable", paddingRight: timerOpen ? "calc(2rem + 320px)" : "2rem" }}>
+            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", paddingRight: timerOpen ? "calc(2rem + 320px)" : "2rem" }}>
               <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "relative" }}>
-                    <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#f0e9e0", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.12)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#e8e0d4", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.10)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#dfd6c8", borderRadius: 2, zIndex: -1 }} />
+                    <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
+                    <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#FAFAFA", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)" }} />
+                    <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#F8F8F8", borderRadius: 2, zIndex: -1 }} />
 
                     <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
@@ -2415,7 +2479,14 @@ export default function NoteApp() {
                            <div
                              ref={editorRef}
                              className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
-                             style={{ fontFamily: `"${editorFont}", Georgia, serif`, fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18 }}
+                             style={{
+                               fontFamily: `"${editorFont}", "Indie Flower", Georgia, serif`,
+                               fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
+                               filter: "url(#handwritten-jitter-subtle)",
+                               fontWeight: 400,
+                               letterSpacing: "0.1px",
+                               lineHeight: 1.8,
+                             }}
                              spellCheck={spellCheck}
                              autoCorrect={autoCorrect ? "on" : "off"}
                              autoCapitalize={autoCapitalize ? "on" : "off"}
@@ -2426,6 +2497,12 @@ export default function NoteApp() {
                                color: #1a1a1a !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
+                               font-family: "${editorFont}", "Indie Flower", "Caveat", cursive, Georgia, serif !important;
+                               font-weight: 500 !important;
+                               letter-spacing: 0.1px !important;
+                               line-height: 1.8 !important;
+                               text-rendering: optimizeLegibility !important;
+                               filter: url(#pen-ink) !important;
                              }
                              @keyframes box-ripple {
                                0%   { inset: 0px;   opacity: 0.9; }
@@ -2615,7 +2692,7 @@ export default function NoteApp() {
         {notes.filter(n => !n.archived).length > 0 && !gridView && (
           <>
             <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
-            <HangingOrange onClick={() => setTimerOpen(!timerOpen)} />
+            <HangingOrange onClick={() => {/* Opens garden page (coming soon) */}} />
           </>
         )}
       </div>

@@ -6,11 +6,18 @@ The tier system has three pricing tiers with different AI feature limits:
 
 ### Tier Pricing & Limits
 
-| Tier | Price | AI Sketches | AI Tokens | Storage |
-|------|-------|------------|-----------|---------|
-| Free | $0 | 100/mo | 5,000/mo | 1 GB |
-| Creator | $6/mo | 500/mo | 50,000/mo | 5 GB |
-| Pro | $12/mo | Unlimited | 500,000/mo | 50 GB |
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│  FREE              │  CREATOR            │  PRO                              │
+│  $0/month          │  $6/month           │  $12/month                        │
+│  ────────────────  │  ──────────────────  │  ──────────────────              │
+│  100 sketches/mo   │  500 sketches/mo    │  Unlimited sketches              │
+│  5K tokens/mo      │  50K tokens/mo      │  500K tokens/mo                  │
+│  1 GB storage      │  5 GB storage       │  50 GB storage                   │
+│                                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ## Integration Guide
 
@@ -118,10 +125,11 @@ import { getRemainingLimits } from "@/app/lib/tierLimits"
 
 const { sketchesRemaining, tokensRemaining } = getRemainingLimits(usage)
 
+const tierLimits = { free: 100, creator: 500, pro: Infinity }
 if (sketchesRemaining === 0) {
   openAlert(
     "Sketch Limit Reached",
-    `You've used all ${usage.tier === "free" ? 100 : 500} sketches for this month. Upgrade to Creator or Pro for more!`
+    `You've used all ${tierLimits[usage.tier]} sketches this month. Upgrade to Creator ($6) or Pro ($12) for more!`
   )
 }
 ```

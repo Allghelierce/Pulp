@@ -253,12 +253,18 @@ export const OrchardView = memo(function OrchardView({
                               opacity="0.9"
                             />
                           )}
-                          {/* Fruit (None if spoiled) */}
+                          {/* Gathered Fruit at the base (for stage >= 3) */}
                           {tree.stage >= 3 && tree.type !== 'spoiled' && (
                             <g>
-                              <circle cx="8" cy="8" r="2" fill="#f97316" />
-                              <circle cx="16" cy="10" r="2" fill="#f97316" />
-                              <circle cx="12" cy="6" r="1.5" fill="#f97316" />
+                              {/* Orange 1 */}
+                              <line x1="9" y1="20.5" x2="9" y2="22" stroke="#5c2d0b" strokeWidth="0.5" />
+                              <circle cx="9" cy="22" r="1.5" fill="#f97316" />
+                              {/* Orange 2 */}
+                              <line x1="15" y1="20.5" x2="15" y2="22" stroke="#5c2d0b" strokeWidth="0.5" />
+                              <circle cx="15" cy="22" r="1.4" fill="#f97316" />
+                              {/* Orange 3 */}
+                              <line x1="12" y1="21.5" x2="12" y2="23" stroke="#5c2d0b" strokeWidth="0.5" />
+                              <circle cx="12" cy="23" r="1.3" fill="#f97316" />
                             </g>
                           )}
                         </svg>

@@ -94,21 +94,44 @@ export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: Time
     // Crown/foliage - appears at 60% progress
     if (progress > 0.6) {
       const foliageProgress = Math.min(1, (progress - 0.6) / 0.4)
-      ctx.fillStyle = `hsla(100, 60%, ${isDark ? 50 : 45}%, ${0.3 * foliageProgress})`
-      const radius = 45 * foliageProgress
+      const cx = centerX
+      const cy = baseY - 75
+
+      // Draw an organic, jagged canopy using a closed path (no circles)
+      const spread = 55 * foliageProgress
+      const height = 60 * foliageProgress
+
+      ctx.fillStyle = `hsla(120, 45%, ${isDark ? 28 : 38}%, ${0.55 * foliageProgress})`
+      ctx.strokeStyle = `hsla(120, 40%, ${isDark ? 25 : 32}%, ${0.3 * foliageProgress})`
+      ctx.lineWidth = 1.2
+
       ctx.beginPath()
-      ctx.arc(centerX, baseY - 80, radius, 0, Math.PI * 2)
+      ctx.moveTo(cx, cy - height)                          // top point
+      ctx.lineTo(cx + spread * 0.35, cy - height * 0.55)  // upper right
+      ctx.lineTo(cx + spread * 0.6, cy - height * 0.3)    // mid right
+      ctx.lineTo(cx + spread * 0.8, cy - height * 0.1)    // lower right notch
+      ctx.lineTo(cx + spread * 0.55, cy + height * 0.15)  // bottom right
+      ctx.lineTo(cx, cy + height * 0.2)                   // bottom center
+      ctx.lineTo(cx - spread * 0.55, cy + height * 0.15)  // bottom left
+      ctx.lineTo(cx - spread * 0.8, cy - height * 0.1)    // lower left notch
+      ctx.lineTo(cx - spread * 0.6, cy - height * 0.3)    // mid left
+      ctx.lineTo(cx - spread * 0.35, cy - height * 0.55)  // upper left
+      ctx.closePath()
       ctx.fill()
+      ctx.stroke()
 
-      // Additional foliage circles
-      if (foliageProgress > 0.3) {
-        ctx.fillStyle = `hsla(100, 55%, ${isDark ? 55 : 48}%, ${0.25 * foliageProgress})`
+      // Inner highlight layer for depth
+      if (foliageProgress > 0.5) {
+        const innerP = (foliageProgress - 0.5) / 0.5
+        ctx.fillStyle = `hsla(130, 50%, ${isDark ? 35 : 45}%, ${0.2 * innerP})`
         ctx.beginPath()
-        ctx.arc(centerX - 25, baseY - 70, 30 * foliageProgress, 0, Math.PI * 2)
-        ctx.fill()
-
-        ctx.beginPath()
-        ctx.arc(centerX + 25, baseY - 70, 30 * foliageProgress, 0, Math.PI * 2)
+        ctx.moveTo(cx, cy - height * 0.8)
+        ctx.lineTo(cx + spread * 0.25, cy - height * 0.4)
+        ctx.lineTo(cx + spread * 0.4, cy)
+        ctx.lineTo(cx, cy + height * 0.05)
+        ctx.lineTo(cx - spread * 0.4, cy)
+        ctx.lineTo(cx - spread * 0.25, cy - height * 0.4)
+        ctx.closePath()
         ctx.fill()
       }
     }

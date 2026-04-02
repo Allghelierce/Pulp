@@ -265,109 +265,11 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     }
     // ──────────────────────────────────────────────────────────────
 
-    // Handwritten Erase Effect
-    if (e.key === "Backspace" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
-      if (!range.collapsed) {
-        e.preventDefault()
-        
-        const paper = document.getElementById("editor-paper")
-        const rect = range.getBoundingClientRect()
-        if (paper && rect.width > 0) {
-          let zoom = 1
-          const zoomWrapper = document.querySelector('.max-w-5xl.shrink-0') as HTMLElement
-          if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
-          
-          const paperRect = paper.getBoundingClientRect()
-          const ghost = document.createElement("div")
-          ghost.className = "erased"
-          ghost.style.position = "absolute"
-          ghost.style.left = ((rect.left - paperRect.left) / zoom) + "px"
-          ghost.style.top = ((rect.top - paperRect.top) / zoom) + "px"
-          ghost.style.width = (rect.width / zoom) + "px"
-          ghost.style.height = (rect.height / zoom) + "px"
-          ghost.style.overflow = "hidden"
-          
-          let parent = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer.parentElement : range.startContainer as HTMLElement
-          if (parent) {
-            const comp = window.getComputedStyle(parent)
-            ghost.style.fontFamily = comp.fontFamily
-            ghost.style.fontSize = comp.fontSize
-            ghost.style.fontWeight = comp.fontWeight
-            ghost.style.lineHeight = comp.lineHeight
-            ghost.style.color = comp.color
-          }
-          ghost.appendChild(range.cloneContents())
-          ghost.onanimationend = () => ghost.remove()
-          
-          let layer = document.getElementById("ghost-layer")
-          if (!layer) {
-            layer = document.createElement("div")
-            layer.id = "ghost-layer"
-            layer.style.position = "absolute"
-            layer.style.inset = "0"
-            layer.style.pointerEvents = "none"
-            layer.style.zIndex = "40"
-            paper.appendChild(layer)
-          }
-          layer.appendChild(ghost)
-        }
-        
-        range.deleteContents()
-        syncContent()
-        return
-      } else if (range.startContainer.nodeType === Node.TEXT_NODE && range.startOffset > 0) {
-        e.preventDefault()
-        const textNode = range.startContainer as Text
-        const offset = range.startOffset
-        
-        const charRange = document.createRange()
-        charRange.setStart(textNode, offset - 1)
-        charRange.setEnd(textNode, offset)
-        const rect = charRange.getBoundingClientRect()
-        
-        const paper = document.getElementById("editor-paper")
-        if (paper && rect.width > 0) {
-          let zoom = 1
-          const zoomWrapper = document.querySelector('.max-w-5xl.shrink-0') as HTMLElement
-          if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
-          
-          const paperRect = paper.getBoundingClientRect()
-          const ghost = document.createElement("span")
-          ghost.className = "erased"
-          ghost.style.position = "absolute"
-          ghost.style.left = ((rect.left - paperRect.left) / zoom) + "px"
-          ghost.style.top = ((rect.top - paperRect.top) / zoom) + "px"
-          
-          if (textNode.parentElement) {
-            const comp = window.getComputedStyle(textNode.parentElement)
-            ghost.style.fontFamily = comp.fontFamily
-            ghost.style.fontSize = comp.fontSize
-            ghost.style.fontWeight = comp.fontWeight
-            ghost.style.lineHeight = comp.lineHeight
-            ghost.style.color = comp.color
-            ghost.style.letterSpacing = comp.letterSpacing
-          }
-          
-          ghost.textContent = textNode.textContent?.charAt(offset - 1) || ""
-          ghost.onanimationend = () => ghost.remove()
-          
-          let layer = document.getElementById("ghost-layer")
-          if (!layer) {
-            layer = document.createElement("div")
-            layer.id = "ghost-layer"
-            layer.style.position = "absolute"
-            layer.style.inset = "0"
-            layer.style.pointerEvents = "none"
-            layer.style.zIndex = "40"
-            paper.appendChild(layer)
-          }
-          layer.appendChild(ghost)
-        }
-        
-        textNode.deleteData(offset - 1, 1)
-        syncContent()
-        return
-      }
+    // Let browser handle backspace normally - custom animation was causing bugs with rapid deletions
+    // Just track that we need to sync content after deletion
+    if (e.key === "Backspace") {
+      // Allow natural browser deletion, but sync content after
+      setTimeout(() => syncContent(), 0)
     }
 
     // Blockquote handling

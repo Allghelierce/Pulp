@@ -166,11 +166,15 @@ export const RightSidebar = memo(function RightSidebar({
                                 fill={TREE_TYPES[tree.type as keyof typeof TREE_TYPES].color} 
                                 opacity="0.8" 
                               />
-                              {/* Fruit (Only at stage 4) */}
+                              {/* Gathered Fruit at the base (for stage >= 3) */}
                               {tree.stage >= 3 && (
                                 <g>
-                                  <circle cx="9" cy="10" r="1.5" fill="#f97316" />
-                                  <circle cx="15" cy="13" r="1.5" fill="#f97316" />
+                                  {/* Orange 1 */}
+                                  <line x1="10" y1="21.5" x2="10" y2="22.5" stroke="#5c2d0b" strokeWidth="0.4" />
+                                  <circle cx="10" cy="22.5" r="1.2" fill="#f97316" />
+                                  {/* Orange 2 */}
+                                  <line x1="14" y1="21.5" x2="14" y2="22.5" stroke="#5c2d0b" strokeWidth="0.4" />
+                                  <circle cx="14" cy="22.5" r="1.1" fill="#f97316" />
                                 </g>
                               )}
                            </svg>
