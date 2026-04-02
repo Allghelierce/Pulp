@@ -1443,6 +1443,12 @@ export default function NoteApp() {
         e.preventDefault()
         setShowAiCommandBar(true)
       }
+
+      // Cmd/Ctrl+T - Toggle Timer
+      if (isCmd && e.key === 't') {
+        e.preventDefault()
+        setTimerOpen(!timerOpen)
+      }
     }
     window.addEventListener("keydown", handleGlobalKey)
     return () => window.removeEventListener("keydown", handleGlobalKey)
@@ -1965,7 +1971,7 @@ export default function NoteApp() {
       {/* Floating Sidebar Toggle Button */}
       {!gridView && (
         <motion.button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
           className="fixed z-[50] rounded-full shadow-lg transition-all hover:scale-110"
           style={{
             top: 200,
@@ -1984,13 +1990,13 @@ export default function NoteApp() {
           }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          title={sidebarWidth > 40 ? "Hide sidebar" : "Show sidebar"}
         >
-          {sidebarOpen ? "‹" : "›"}
+          {sidebarWidth > 40 ? "‹" : "›"}
         </motion.button>
       )}
 
-      {!gridView && sidebarOpen && (
+      {!gridView && sidebarWidth > 40 && (
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -2086,6 +2092,40 @@ export default function NoteApp() {
 
       <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
+        {/* ── Timer toggle button (always visible) ── */}
+        <button
+          onClick={() => setTimerOpen(!timerOpen)}
+          title={`Toggle Timer (Cmd/Ctrl+T)`}
+          style={{
+            position: "fixed",
+            top: 16,
+            right: 16,
+            width: 40,
+            height: 40,
+            zIndex: 35,
+            backgroundColor: timerOpen ? "#EA8C55" : (theme === "dark" ? "rgba(44,44,46,0.8)" : "rgba(215,215,220,0.8)"),
+            border: "1px solid " + (timerOpen ? "#EA8C55" : (theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)")),
+            borderRadius: 8,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: timerOpen ? "white" : (theme === "dark" ? "#a1a1aa" : "#71717a"),
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = timerOpen ? "#EA8C55" : (theme === "dark" ? "rgba(44,44,46,1)" : "rgba(215,215,220,1)");
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = timerOpen ? "#EA8C55" : (theme === "dark" ? "rgba(44,44,46,0.8)" : "rgba(215,215,220,0.8)");
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="13" r="8"></circle>
+            <path d="M12 9v4l3 2"></path>
+            <path d="M7 4h10"></path>
+          </svg>
+        </button>
 
         {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
         {notes.filter(n => !n.archived).length > 0 && activeNote && (() => {
