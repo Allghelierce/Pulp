@@ -467,7 +467,7 @@ export const Sidebar = memo(function Sidebar({
           <input placeholder="Search…" className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-visible py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
+        <div className="flex-1 overflow-y-auto overflow-x-visible px-0 py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
           {/* Binder Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
