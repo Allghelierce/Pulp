@@ -24,6 +24,7 @@ import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
 import { TimerSidebarPanel } from "@/app/components/TimerSidebarPanel"
+import { RightSidebar } from "@/app/components/RightSidebar"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -770,6 +771,7 @@ export default function NoteApp() {
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
 
   // ─── Pulp Grove Gamification State ───
@@ -1984,6 +1986,39 @@ export default function NoteApp() {
         </motion.button>
       )}
 
+      {/* Floating Right Sidebar Toggle (Grove) */}
+      {!gridView && (
+        <motion.button
+          onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+          className="fixed z-[50] rounded-full shadow-lg transition-all hover:scale-110"
+          style={{
+            top: 260,
+            right: 12,
+            width: 44,
+            height: 44,
+            background: theme === "dark" ? "rgba(24,24,27,0.9)" : "rgba(255,140,85,0.95)",
+            border: `1.5px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(184,94,34,0.2)"}`,
+            color: "white",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(8px)",
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          title={rightSidebarOpen ? "Close Grove" : "Open Grove"}
+        >
+          {/* Botanical/Grove Icon */}
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L12 12" />
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+            <path d="M12 12L16 8" />
+            <path d="M12 12L8 8" />
+          </svg>
+        </motion.button>
+      )}
+
       {!gridView && sidebarWidth > 40 && (
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -2062,6 +2097,48 @@ export default function NoteApp() {
           onSetPreset={setTimerPreset}
           onSetDone={setTimerDone}
         />
+
+        {/* Timer Toggle Icon */}
+        {!timerOpen && (
+          <button
+            onClick={() => setTimerOpen(true)}
+            title="Open Timer (Cmd+Option+T)"
+            style={{
+              position: "fixed",
+              right: 16,
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: 24,
+              height: 24,
+              zIndex: 30,
+              backgroundColor: "transparent",
+              border: "1.5px solid " + (theme === "dark" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"),
+              borderRadius: 4,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+              transition: "all 0.2s ease",
+              padding: 0,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)";
+              e.currentTarget.style.color = theme === "dark" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = theme === "dark" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)";
+              e.currentTarget.style.color = theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)";
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l3 2"></path>
+              <path d="M7 4h10"></path>
+            </svg>
+          </button>
+        )}
+
         </motion.div>
       )}
 
@@ -2573,6 +2650,19 @@ export default function NoteApp() {
                                onDragEnd={() => setIsAnyBoxDragging(false)}
                              />
                            ))}
+
+                           <RightSidebar 
+                             isOpen={rightSidebarOpen} 
+                             onClose={() => setRightSidebarOpen(false)} 
+                             theme={theme} 
+                             accent={accent}
+                             sunshine={sunshine}
+                             gems={gems}
+                             grove={grove}
+                             setSunshine={setSunshine}
+                             setGems={setGems}
+                             setGrove={setGrove}
+                           />
                          </>
                        )}
 
