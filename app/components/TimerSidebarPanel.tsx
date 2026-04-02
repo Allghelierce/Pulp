@@ -86,22 +86,18 @@ function TreeVisualization({ progress, running, elapsed, total }: { progress: nu
         <circle cx="62" cy="45" r="12" fill={`url(#leafGrad-${offset})`} opacity={1} />
         <circle cx="50" cy="50" r="14" fill={`url(#leafGrad-${offset})`} opacity={0.95} />
 
-        {/* Orange Fruits - all visible by default */}
-        <circle cx="42" cy="35" r="2.5" fill="#EA8C55" opacity={1} />
-        <circle cx="58" cy="40" r="2.5" fill="#EA8C55" opacity={1} />
-        <circle cx="52" cy="52" r="2.5" fill="#EA8C55" opacity={1} />
-        <circle cx="35" cy="48" r="2.5" fill="#EA8C55" opacity={1} />
-        <circle cx="65" cy="48" r="2.5" fill="#EA8C55" opacity={1} />
-
-        {/* Orange Fruits - tiny decorative ones */}
-        <circle cx="45" cy="50" r="1.2" fill="#EA8C55" opacity={0.8} />
-        <circle cx="55" cy="48" r="1.2" fill="#EA8C55" opacity={0.8} />
-        <circle cx="48" cy="42" r="1" fill="#EA8C55" opacity={0.7} />
-        <circle cx="52" cy="38" r="1" fill="#EA8C55" opacity={0.7} />
-        <circle cx="40" cy="40" r="1" fill="#EA8C55" opacity={0.7} />
-        <circle cx="60" cy="35" r="1.2" fill="#EA8C55" opacity={0.8} />
-        <circle cx="38" cy="55" r="1" fill="#EA8C55" opacity={0.6} />
-        <circle cx="62" cy="55" r="1" fill="#EA8C55" opacity={0.6} />
+        {/* Gathered Fruit at the base */}
+        <g>
+          {/* Orange 1 */}
+          <line x1="42" y1="88" x2="42" y2="91" stroke="#8B6F47" strokeWidth="0.5" />
+          <circle cx="42" cy="91" r="1.5" fill="#EA8C55" />
+          {/* Orange 2 */}
+          <line x1="58" y1="88" x2="58" y2="90" stroke="#8B6F47" strokeWidth="0.5" />
+          <circle cx="58" cy="90" r="1.4" fill="#EA8C55" />
+          {/* Orange 3 */}
+          <line x1="50" y1="91" x2="50" y2="93" stroke="#8B6F47" strokeWidth="0.5" />
+          <circle cx="50" cy="93" r="1.3" fill="#EA8C55" />
+        </g>
       </g>
     </g>
   )
@@ -344,17 +340,25 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         >
                           {/* Progress Indicator */}
                           <motion.div
-                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full"
+                            className="absolute top-1/2 -translate-y-1/2 rounded-full shadow-lg"
                             style={{
+                              width: '20px',
+                              height: '20px',
+                              marginLeft: '-10px',
                               backgroundColor: "#EA8C55",
-                              left: `${((total / 60 - 5) / 175) * 100}%`
+                              left: `${((total / 60 - 5) / 175) * 100}%`,
+                              boxShadow: '0 0 12px rgba(234, 140, 85, 0.8), 0 0 24px rgba(234, 140, 85, 0.4)',
+                              border: '2px solid rgba(255,255,255,0.8)',
+                              zIndex: 10,
+                              cursor: 'grab',
+                              transition: 'box-shadow 0.2s ease'
                             }}
                           />
                           {/* Filled Track */}
                           <div
                             className="absolute top-0 left-0 h-full rounded-full"
                             style={{
-                              backgroundColor: "#D4A574",
+                              backgroundColor: theme === "dark" ? "rgba(212, 165, 116, 0.15)" : "rgba(212, 165, 116, 0.2)",
                               width: `${((total / 60 - 5) / 175) * 100}%`
                             }}
                           />
