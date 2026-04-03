@@ -12,7 +12,10 @@
       "Read(//Users/trisn999/handwritten-notes/**)",
       "Bash(/Users/trisn999/handwritten-notes/SECURITY_SUMMARY.txt:*)",
       "WebFetch(domain:windscribe.com)",
-      "Bash(pkill -f \"npm run dev\")"
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(grep -r \"sparkle\\\\|magic\\\\|wand\\\\|✨\\\\|AI\" app/components/*.tsx)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(grep -r \"slash-menu\\\\|slash-pop\" /Users/trisn999/handwritten-notes --include=*.css --include=*.scss)"
     ],
     "additionalDirectories": [
       "/Users/trisn999/.claude"

@@ -46,6 +46,7 @@ interface DocumentToolbarProps {
   isSidebarDragging: boolean
   sunshine: number
   gems: number
+  onOpenAiMenu: (x: number, y: number, selectedText?: string) => void
   isVault?: boolean
   isUnlocked?: boolean
   onLock?: () => void
@@ -70,7 +71,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -82,14 +83,23 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
   const leftToolsRef = useRef<HTMLDivElement>(null)
   const alignRef = useRef<HTMLDivElement>(null)
+  const drawRef = useRef<HTMLDivElement>(null)
   const [alignOpen, setAlignOpen] = useState(false)
-  
+  const [drawOpen, setDrawOpen] = useState(false)
+
   useEffect(() => {
     if (!alignOpen) return
     const handler = (e: MouseEvent) => { if (!alignRef.current?.contains(e.target as Node)) setAlignOpen(false) }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [alignOpen])
+
+  useEffect(() => {
+    if (!drawOpen) return
+    const handler = (e: MouseEvent) => { if (!drawRef.current?.contains(e.target as Node)) setDrawOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [drawOpen])
 
   useEffect(() => {
     if (!leftToolsRef.current) return
@@ -194,15 +204,76 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
 
 
-        {/* Draw toolbar toggle */}
+        {/* AI Button */}
         <button
-          onClick={onToggleDrawToolbar}
+          onClick={() => {
+            const sel = window.getSelection()
+            const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
+            let x = 200, y = 200
+            if (sel && sel.rangeCount > 0) {
+              const rect = sel.getRangeAt(0).getBoundingClientRect()
+              x = rect.left
+              y = rect.top - 12
+            }
+            onOpenAiMenu(x, y, selectedText)
+          }}
+          title="AI Assistant (Cmd+\\)"
           className={`${btnBase} flex items-center gap-1.5`}
-          style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
+          style={btnFont}
         >
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
-          Draw
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1z" />
+            <path d="M4.929 4.929a1 1 0 0 1 1.414 0l1.414 1.414a1 1 0 0 1-1.414 1.414L4.929 6.343a1 1 0 0 1 0-1.414z" />
+            <path d="M2 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1z" />
+            <path d="M4.929 19.071a1 1 0 0 1 0-1.414l1.414-1.414a1 1 0 1 1 1.414 1.414l-1.414 1.414a1 1 0 0 1-1.414 0z" />
+            <path d="M12 21a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1z" />
+            <path d="M18.071 19.071a1 1 0 1 1 1.414-1.414l1.414 1.414a1 1 0 0 1-1.414 1.414l-1.414-1.414z" />
+            <path d="M21 12a1 1 0 0 1-1 1h-2a1 1 0 1 1 0-2h2a1 1 0 0 1 1 1z" />
+            <path d="M19.071 4.929a1 1 0 1 1-1.414 1.414l-1.414-1.414a1 1 0 0 1 1.414-1.414l1.414 1.414z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          AI
         </button>
+
+        {/* Draw dropdown */}
+        <div ref={drawRef} className="relative flex shrink-0">
+          <button
+            onMouseDown={e => { e.preventDefault(); setDrawOpen(!drawOpen) }}
+            title="Draw options"
+            className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
+            style={{ ...(drawOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
+            <span>Draw</span>
+            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
+          </button>
+
+          {drawOpen && (
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[150px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+              <button
+                onMouseDown={e => { e.preventDefault(); onToggleDrawToolbar(); setDrawOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Pen Tool
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); setDrawOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Shape Tool
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); setDrawOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Eraser
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Sticky Note Tool */}
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">

@@ -22,7 +22,7 @@ import { FlashcardView } from "@/app/components/FlashcardView"
 import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
-import { TimerSidebarPanel } from "@/app/components/TimerSidebarPanel"
+import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -694,27 +694,31 @@ const BoxTextarea = memo(function BoxTextarea({
         if (!e.defaultPrevented) e.stopPropagation()
       }}
       onInput={e => {
-        // Move cursor out of erased spans so user can continue typing/deleting
-        if (ref.current) {
-          const sel = window.getSelection()
-          if (sel && sel.rangeCount > 0) {
-            const range = sel.getRangeAt(0)
-            let node: Node | null = range.commonAncestorContainer
-            while (node) {
-              if (node.nodeType === Node.ELEMENT_NODE && (node as Element).className === 'erased') {
-                range.setStartAfter(node)
-                range.collapse(true)
-                sel.removeAllRanges()
-                sel.addRange(range)
-                break
-              }
-              node = node.parentNode
-            }
-          }
-        }
-
         onInput(e)
         clearTimeout(timerRef.current)
+
+        // Defer cursor management so holding backspace works for continuous deletion
+        setTimeout(() => {
+          // Move cursor out of erased spans so user can continue typing/deleting
+          if (ref.current) {
+            const sel = window.getSelection()
+            if (sel && sel.rangeCount > 0) {
+              const range = sel.getRangeAt(0)
+              let node: Node | null = range.commonAncestorContainer
+              while (node) {
+                if (node.nodeType === Node.ELEMENT_NODE && (node as Element).className === 'erased') {
+                  range.setStartAfter(node)
+                  range.collapse(true)
+                  sel.removeAllRanges()
+                  sel.addRange(range)
+                  break
+                }
+                node = node.parentNode
+              }
+            }
+          }
+        }, 50)
+
         timerRef.current = setTimeout(syncState, 500)
       }}
       onMouseDown={e => e.stopPropagation()}
@@ -795,12 +799,9 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [timerOpen, setTimerOpen] = useState(false)
-  const [timerElapsed, setTimerElapsed] = useState(0)
-  const [timerTotal, setTimerTotal] = useState(25 * 60)
-  const [timerRunning, setTimerRunning] = useState(false)
-  const [timerDone, setTimerDone] = useState(false)
-  const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">("focus")
+  const [sunshine, setSunshine] = useState(1000)
+  const [gems, setGems] = useState(5)
+  const [timerOpen, setTimerOpen] = useState(false) // Still need this for layout padding sync
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -810,18 +811,12 @@ export default function NoteApp() {
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
 
-  // ─── Pulp Grove Gamification State ───
-  const [sunshine, setSunshine] = useState(1000) // Main currency: Earned by time spent (1 per 30s)
-  const [gems, setGems] = useState(5)   // Secondary: Earned by writing (1 per 500 chars)
-  const [grove, setGrove] = useState<Tree[]>([]) // Your planted trees
-  const [lastCharCount, setLastCharCount] = useState(0)
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
-    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
-    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
-  ])
+  // Earn Gems via writing
+  const totalChars = useMemo(() => {
+    const activeNote = notes.find(n => n.id === activeTabId)
+    if (!activeNote) return 0
+    return Object.values(activeNote.boxes).flat().reduce((acc, b) => acc + (b.content ? b.content.length : 0), 0)
+  }, [notes, activeTabId])
 
   // Restore Grove from LocalStorage
   useEffect(() => {
@@ -830,123 +825,14 @@ export default function NoteApp() {
       const data = JSON.parse(saved)
       setSunshine(data.sunshine ?? 1000)
       setGems(data.gems ?? 5)
-      setGrove(data.grove || [])
-      if (data.achievements) setAchievements(data.achievements)
-    }
-
-    // Restore Timer Session
-    const savedTimer = localStorage.getItem('pulp-timer')
-    if (savedTimer) {
-      const t = JSON.parse(savedTimer)
-      setTimerTotal(t.total ?? 25 * 60)
-      setTimerPreset(t.preset ?? "focus")
-      setTimerDone(t.done ?? false)
-      
-      if (t.running && !t.done) {
-        const elapsedSinceLast = Math.floor((Date.now() - t.timestamp) / 1000)
-        const totalElapsed = t.elapsed + elapsedSinceLast
-        if (totalElapsed >= (t.total ?? 25 * 60)) {
-          setTimerElapsed(t.total ?? 25 * 60)
-          setTimerRunning(false)
-          setTimerDone(true)
-        } else {
-          setTimerElapsed(totalElapsed)
-          setTimerRunning(true)
-        }
-      } else {
-        setTimerElapsed(t.elapsed ?? 0)
-        setTimerRunning(false)
-      }
     }
     
     // Night Owl Check
     const hour = new Date().getHours()
     if (hour >= 23 || hour <= 4) {
-      setAchievements(prev => prev.map(a => a.id === 'night_owl' ? { ...a, completed: true } : a))
+      // Achievement check can be moved to VitalitySystem if needed, but keeping it simple for now
     }
   }, [])
-
-  // Persist Grove
-  useEffect(() => {
-    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove, achievements }))
-  }, [sunshine, gems, grove, achievements])
-
-  // Persist Timer
-  useEffect(() => {
-    localStorage.setItem('pulp-timer', JSON.stringify({
-      elapsed: timerElapsed,
-      total: timerTotal,
-      running: timerRunning,
-      done: timerDone,
-      preset: timerPreset,
-      timestamp: Date.now()
-    }))
-  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset])
-
-  const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
-    setAchievements(prev => prev.map(a => {
-      if (a.id !== id || a.completed) return a
-      const updated = update ? { ...a, ...update(a) } : { ...a, completed: true }
-      // Progress behavior
-      if (updated.goal !== undefined && (updated.progress || 0) >= updated.goal) {
-        updated.completed = true
-      }
-      return updated
-    }))
-  }, [])
-
-  const claimAchievement = useCallback((id: string) => {
-    setAchievements(prev => {
-      const target = prev.find(x => x.id === id)
-      if (!target || !target.completed || target.claimed) return prev
-      
-      if (target.rewardType === 'gems') setGems(g => g + target.reward)
-      else setSunshine(s => s + target.reward)
-      
-      return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
-    })
-  }, [])
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>
-    if (timerRunning && !timerDone) {
-      interval = setInterval(() => {
-        setTimerElapsed(prev => {
-          if (prev >= timerTotal) {
-            setTimerRunning(false)
-            setTimerDone(true)
-            return timerTotal
-          }
-          return prev + 1
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [timerRunning, timerDone, timerTotal])
-
-  // Earn Sunshine over time (1 every 30 seconds of activity)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSunshine(s => s + 1)
-    }, 30000)
-    return () => clearInterval(timer)
-  }, [])
-
-  // Earn Gems via writing
-  const totalChars = useMemo(() => {
-    const activeNote = notes.find(n => n.id === activeTabId)
-    if (!activeNote) return 0
-    return Object.values(activeNote.boxes).flat().reduce((acc, b) => acc + (b.content ? b.content.length : 0), 0)
-  }, [notes, activeTabId])
-
-  useEffect(() => {
-    if (totalChars > lastCharCount + 500) {
-      setGems(n => n + Math.floor((totalChars - lastCharCount) / 500))
-      setLastCharCount(totalChars)
-      checkAchievement('novice_writer', a => ({ progress: totalChars }))
-    }
-  }, [totalChars, lastCharCount, checkAchievement])
-
 
   // Settings
   const [settings, setSettings] = useState<any>({
@@ -1969,6 +1855,8 @@ export default function NoteApp() {
 
 
   return (
+    <>
+
     <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
       {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
       {showSettings && (
@@ -2004,7 +1892,7 @@ export default function NoteApp() {
           draggedNoteId={draggedNoteId}
           renamingFolder={renamingFolder}
           user={user}
-          sidebarWidth={200}
+          sidebarWidth={sidebarWidth}
           isDragging={isSidebarDragging}
           onAddNote={addNote}
           onAddTypedNote={addTypedNote}
@@ -2052,6 +1940,18 @@ export default function NoteApp() {
           onUnlockDev={handleUnlockDev}
         />
 
+        {/* Sidebar edge resize handle */}
+        <div
+          onMouseDown={(e) => startSidebarDrag(e.clientX)}
+          style={{
+            width: 6,
+            cursor: 'col-resize',
+            backgroundColor: 'transparent',
+            position: 'relative',
+            userSelect: 'none',
+          }}
+          className="hover:bg-white/10 transition-colors"
+        />
         </motion.div>
       )}
 
@@ -2177,6 +2077,7 @@ export default function NoteApp() {
               onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
               onTimerOpen={() => setTimerOpen(!timerOpen)}
               onOpenShop={handleOpenShop}
+              onOpenAiMenu={(x, y, selectedText) => setAiMenu({ x, y, selectedText })}
             />
           </div>
         )}
@@ -2422,9 +2323,9 @@ export default function NoteApp() {
                                display: "none",
                                position: "absolute",
                                left: 0, top: 0, width: 0, height: 0,
-                               backgroundColor: `${accent}18`,
-                               border: `1.5px dashed ${accent}`,
-                               boxShadow: `0 0 20px -5px ${accent}44`,
+                               backgroundColor: "rgba(0, 119, 255, 0.12)",
+                               border: "1.5px solid rgba(0, 119, 255, 0.45)",
+                               boxShadow: "0 0 25px -5px rgba(0, 119, 255, 0.3)",
                                borderRadius: "4px",
                                pointerEvents: "none",
                                zIndex: 10000,
@@ -2702,72 +2603,16 @@ export default function NoteApp() {
         </button>
       )}
 
-      <TimerSidebarPanel
-        isOpen={timerOpen}
-        onClose={() => setTimerOpen(false)}
-        elapsed={timerElapsed}
-        total={timerTotal}
-        running={timerRunning}
-        done={timerDone}
-        preset={timerPreset}
-        theme={theme}
-        onSetRunning={setTimerRunning}
-        onSetElapsed={setTimerElapsed}
-        onSetTotal={setTimerTotal}
-        onSetPreset={setTimerPreset}
-        onSetDone={setTimerDone}
-      />
-
-      {/* Timer Toggle Icon */}
-      {!timerOpen && (
-        <motion.button
-          onClick={() => setTimerOpen(true)}
-          title="Open Timer (Cmd+Shift+T)"
-          whileHover={{ scale: 1.15, x: -5 }}
-          whileTap={{ scale: 0.9 }}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          style={{
-            position: "fixed",
-            right: 24,
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: 52,
-            height: 52,
-            zIndex: 99999,
-            backgroundColor: theme === "dark" ? "rgba(30,30,35,0.95)" : accent,
-            border: theme === "dark" ? `2px solid ${accent}` : "2px solid white",
-            borderRadius: 16,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: theme === "dark" ? accent : "white",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            boxShadow: `0 8px 24px ${accent}44`,
-            backdropFilter: "blur(12px)",
-            padding: 0,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = `0 0 30px ${accent}66`;
-            e.currentTarget.style.transform = "translateY(-50%) scale(1.15)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = `0 8px 24px ${accent}44`;
-            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
-          }}
-        >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
-            </svg>
-          </motion.div>
-        </motion.button>
-      )}
     </div>
+
+    <VitalitySystem 
+      theme={theme} 
+      accent={accent} 
+      totalChars={totalChars}
+      onSunshineUpdate={setSunshine}
+      onGemsUpdate={setGems}
+      onTimerToggle={setTimerOpen}
+    />
+    </>
   )
 }

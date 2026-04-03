@@ -725,10 +725,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="space-y-0.5">
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-1">
                   <h3 className={`text-[15px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
-                  <p className={`text-[12px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Unlimited AI, more storage, and priority support</p>
+                  <p className={`text-[12px] opacity-60 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Unlimited AI, more storage, and priority support</p>
                 </div>
 
                 <PricingSection
@@ -736,88 +736,53 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   accentColor={accentColor}
                   tiers={[
                     {
-                      name: "Free",
-                      price: { monthly: 0, yearly: 0 },
-                      description: "For individuals getting started",
-                      buttonLabel: "Current Plan",
-                      buttonDisabled: true,
-                      icon: <Zap className="w-5 h-5 text-zinc-500" />,
-                      features: [
-                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
-                        { name: "100 AI Sketches / month", description: "Generate images with AI prompts", included: true },
-                        { name: "5,000 AI Tokens / month", description: "For text generation & rewrites", included: true },
-                        { name: "1 GB Cloud Storage", description: "Sync notes across devices", included: true },
-                        { name: "Basic Page Styles", description: "Lined, dotgrid, and plain paper", included: true },
-                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: false },
-                      ],
-                    },
-                    {
                       name: "Creator",
-                      price: { monthly: 6, yearly: 54 },
-                      description: "For AI-powered creators",
+                      price: { monthly: 8, yearly: 72 },
+                      description: "For AI-powered writers",
                       buttonLabel: "Upgrade to Creator",
                       icon: <Sparkles className="w-5 h-5" style={{ color: "#f59e0b" }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
-                        { name: "500 AI Sketches / month", description: "10x more generative drawings", included: true },
+                        { name: "500 AI Images / month", description: "Generative sketches for your notes", included: true },
                         { name: "50,000 AI Tokens / month", description: "Powerful text generation & analysis", included: true },
-                        { name: "5 GB Cloud Storage", description: "More space for all your creations", included: true },
-                        { name: "All Page Styles", description: "Including stenopad and custom layouts", included: true },
-                        { name: "Advanced Export", description: "PDF, Markdown, and HTML export", included: true },
+                        { name: "5 GB Cloud Storage", description: "Sync across all devices", included: true },
+                        { name: "All Page Styles", description: "Lined, grid, plain, and more", included: true },
                       ],
                     },
                     {
                       name: "Pro",
-                      price: { monthly: 12, yearly: 108 },
-                      description: "Ultimate AI + productivity suite",
+                      price: { monthly: 16, yearly: 144 },
+                      description: "Ultimate intelligence suite",
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
-                      icon: <Sparkles className="w-5 h-5" style={{ color: "#3b82f6" }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
-                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
-                        { name: "Unlimited AI Sketches", description: "No monthly cap on AI generations", included: true },
-                        { name: "500,000 AI Tokens / month", description: "Unlimited-like token allowance", included: true },
-                        { name: "50 GB Cloud Storage", description: "Ample space for all your work", included: true },
-                        { name: "All Page Styles", description: "Including stenopad and custom layouts", included: true },
-                        { name: "Priority Support", description: "Fast-track email & chat support", included: true },
+                        { name: "Everything in Creator", description: "All features from the Creator plan", included: true },
+                        { name: "Unlimited AI Images", description: "No monthly cap on sketches", included: true },
+                        { name: "500,000 AI Tokens / month", description: "Large context window power", included: true },
+                        { name: "50 GB Cloud Storage", description: "Ample space for your media", included: true },
+                        { name: "Priority Support", description: "Fast-track email & chat", included: true },
                       ],
                     },
                   ]}
                 />
-                <div className={`mt-8 grid grid-cols-1 md:grid-cols-2 gap-4`}>
-                  {[
-                    { id: "pulp_pro", name: "Pulp Pro", price: "$4/mo", features: ["Unlimited Notes", "AI Intelligence", "50GB Cloud"], current: !isPremium },
-                    { id: "pulp_studio", name: "Pulp Studio", price: "$12/mo", features: ["Everything in Pro", "Custom Branding", "API Access"], current: false }
-                  ].map(plan => (
-                    <div key={plan.id} className={`p-5 rounded-2xl border transition-all hover:scale-[1.02] ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200 shadow-sm"}`}>
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className={`text-[14px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{plan.name}</h4>
-                          <p className={`text-[18px] font-black ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>{plan.price}</p>
-                        </div>
-                        {plan.current && (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter bg-orange-500 text-white">Recommended</span>
-                        )}
-                      </div>
-                      <ul className="space-y-2 mb-6">
-                        {plan.features.map(f => (
-                          <li key={f} className={`text-[11.5px] flex items-center gap-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                      <button 
-                        className={`w-full py-2.5 rounded-xl text-[12px] font-bold transition-all ${isDark ? "bg-zinc-100 text-zinc-900 hover:bg-white" : "bg-zinc-900 text-white hover:bg-black"} active:scale-95`}
-                      >
-                        {plan.current ? "Upgrade Now" : "Coming Soon"}
-                      </button>
-                    </div>
-                  ))}
-                </div>
 
+                <div className={`p-6 rounded-2xl border transition-all ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200/80 shadow-sm"}`}>
+                  <div className="flex items-center gap-5">
+                    <div className="w-11 h-11 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 shadow-sm">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className={`text-[13.5px] font-bold tracking-tight ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Enterprise & Education</h4>
+                      <p className={`text-[11.5px] mt-0.5 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Need Pulp for your entire team or classroom? Contact us for custom volume licensing.</p>
+                    </div>
+                    <button className={`px-5 py-2.5 rounded-xl ${isDark ? "bg-zinc-800 text-zinc-100 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"} text-[11px] font-bold uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-[0.98]`}>
+                      Contact Sales
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
