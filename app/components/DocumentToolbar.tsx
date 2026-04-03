@@ -259,22 +259,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Compact
         </button>
 
-        {/* Timer */}
-        {onTimerOpen && (
-          <button
-            onClick={onTimerOpen}
-            className={`${btnBase} flex items-center gap-1.5`}
-            title="Open Timer"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="13" r="8"></circle>
-              <path d="M12 9v4l3 2"></path>
-              <path d="M7 4h10"></path>
-            </svg>
-            Timer
-          </button>
-        )}
-
         <div className="w-px h-5 bg-zinc-200 shrink-0" />
 
         <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer" style={btnFont}>

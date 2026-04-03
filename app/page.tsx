@@ -634,10 +634,12 @@ const BoxTextarea = memo(function BoxTextarea({
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
+  const prevContentRef = useRef<string>('')
 
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== content) {
       ref.current.innerHTML = content
+      prevContentRef.current = content
     }
   }, [content])
 
@@ -668,10 +670,49 @@ const BoxTextarea = memo(function BoxTextarea({
       suppressContentEditableWarning
       data-box-style={styleKey}
       onKeyDown={e => {
-        onKeyDown(e)
+        // Erase animation for selected text deletion only
+        if ((e.key === 'Backspace' || e.key === 'Delete') && ref.current && !e.defaultPrevented) {
+          const sel = window.getSelection()
+          if (sel && sel.toString()) {
+            // Selected text - show erase animation
+            e.preventDefault()
+            const range = sel.getRangeAt(0)
+            const contents = range.extractContents()
+            const span = document.createElement('span')
+            span.className = 'erased'
+            span.style.pointerEvents = 'none'
+            span.style.userSelect = 'none'
+            span.appendChild(contents)
+            range.insertNode(span)
+            setTimeout(() => { span.remove(); syncState() }, 6100)
+          }
+        }
+        // Call parent handler
+        if (!e.defaultPrevented) {
+          onKeyDown(e)
+        }
         if (!e.defaultPrevented) e.stopPropagation()
       }}
       onInput={e => {
+        // Move cursor out of erased spans so user can continue typing/deleting
+        if (ref.current) {
+          const sel = window.getSelection()
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0)
+            let node: Node | null = range.commonAncestorContainer
+            while (node) {
+              if (node.nodeType === Node.ELEMENT_NODE && (node as Element).className === 'erased') {
+                range.setStartAfter(node)
+                range.collapse(true)
+                sel.removeAllRanges()
+                sel.addRange(range)
+                break
+              }
+              node = node.parentNode
+            }
+          }
+        }
+
         onInput(e)
         clearTimeout(timerRef.current)
         timerRef.current = setTimeout(syncState, 500)
@@ -764,7 +805,6 @@ export default function NoteApp() {
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
-  const [aiQuickMenuOpen, setAiQuickMenuOpen] = useState(false)
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
@@ -1692,7 +1732,6 @@ export default function NoteApp() {
   ]
 
   const handleAiAction = useCallback(async (action: string) => {
-    setAiQuickMenuOpen(false)
     const pageText = editorRef.current?.innerText?.trim() || ""
     if (!pageText) { openAlert("Nothing to process", "Add some text to your note first."); return }
     const actionLabel = AI_ACTIONS.find(a => a.id === action)?.label || action
@@ -1947,33 +1986,6 @@ export default function NoteApp() {
       )}
       <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
-      {/* Floating Sidebar Toggle Button */}
-      {!gridView && (
-        <motion.button
-          onClick={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
-          className="fixed z-[50] rounded-full shadow-lg transition-all hover:scale-110"
-          style={{
-            top: 200,
-            left: 12,
-            width: 40,
-            height: 40,
-            background: theme === "dark" ? "rgba(24,24,27,0.9)" : "rgba(255,255,255,0.95)",
-            border: `1.5px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-            color: accent,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 20,
-            backdropFilter: "blur(8px)",
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          title={sidebarWidth > 40 ? "Hide sidebar" : "Show sidebar"}
-        >
-          {sidebarWidth > 40 ? "‹" : "›"}
-        </motion.button>
-      )}
 
 
       {!gridView && sidebarWidth > 40 && (
@@ -1982,7 +1994,7 @@ export default function NoteApp() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.25 }}
-          style={{ display: gridView ? 'none' : 'flex', position: 'relative', marginTop: 100 }}
+          style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%' }}
         >
           <Sidebar
           notes={notes}
@@ -2039,62 +2051,6 @@ export default function NoteApp() {
           }}
           onUnlockDev={handleUnlockDev}
         />
-        <TimerSidebarPanel
-          isOpen={timerOpen}
-          onClose={() => setTimerOpen(false)}
-          elapsed={timerElapsed}
-          total={timerTotal}
-          running={timerRunning}
-          done={timerDone}
-          preset={timerPreset}
-          theme={theme}
-          onSetRunning={setTimerRunning}
-          onSetElapsed={setTimerElapsed}
-          onSetTotal={setTimerTotal}
-          onSetPreset={setTimerPreset}
-          onSetDone={setTimerDone}
-        />
-
-        {/* Timer Toggle Icon */}
-        {!timerOpen && (
-          <button
-            onClick={() => setTimerOpen(true)}
-            title="Open Timer (Cmd+Option+T)"
-            style={{
-              position: "fixed",
-              right: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: 24,
-              height: 24,
-              zIndex: 30,
-              backgroundColor: "transparent",
-              border: "1.5px solid " + (theme === "dark" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"),
-              borderRadius: 4,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
-              transition: "all 0.2s ease",
-              padding: 0,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = theme === "dark" ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)";
-              e.currentTarget.style.color = theme === "dark" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.6)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = theme === "dark" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)";
-              e.currentTarget.style.color = theme === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)";
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="13" r="8"></circle>
-              <path d="M12 9v4l3 2"></path>
-              <path d="M7 4h10"></path>
-            </svg>
-          </button>
-        )}
 
         </motion.div>
       )}
@@ -2221,9 +2177,6 @@ export default function NoteApp() {
               onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
               onTimerOpen={() => setTimerOpen(!timerOpen)}
               onOpenShop={handleOpenShop}
-              onAiMenuToggle={() => setAiQuickMenuOpen(v => !v)}
-              aiQuickMenuOpen={aiQuickMenuOpen}
-              aiExpression={aiExpression}
             />
           </div>
         )}
@@ -2436,7 +2389,18 @@ export default function NoteApp() {
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
                                text-rendering: optimizeLegibility !important;
-                               filter: url(#pen-ink) !important;
+                               filter: ${handwrittenEffect ? 'url(#handwritten-jitter)' : 'none'} !important;
+                             }
+                             .erased {
+                               text-decoration: line-through;
+                               text-decoration-thickness: 1.5pt;
+                               text-decoration-color: rgba(0,0,0,0.6);
+                               pointer-events: none;
+                               user-select: none;
+                               display: inline-block;
+                               animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1);
+                               vertical-align: baseline;
+                               white-space: pre;
                              }
                              @keyframes box-ripple {
                                0%   { inset: 0px;   opacity: 0.9; }
@@ -2458,12 +2422,12 @@ export default function NoteApp() {
                                display: "none",
                                position: "absolute",
                                left: 0, top: 0, width: 0, height: 0,
-                               backgroundColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.06)",
-                               border: `1px solid ${theme === "dark" ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.2)"}`,
-                               boxShadow: "none",
-                               borderRadius: "1px",
+                               backgroundColor: `${accent}18`,
+                               border: `1.5px dashed ${accent}`,
+                               boxShadow: `0 0 20px -5px ${accent}44`,
+                               borderRadius: "4px",
                                pointerEvents: "none",
-                               zIndex: 100,
+                               zIndex: 10000,
                              }}
                            />
 
@@ -2514,8 +2478,6 @@ export default function NoteApp() {
                              />
                            ))}
                          </>
-                       )}
-
                        )}
 
                       {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
@@ -2740,6 +2702,72 @@ export default function NoteApp() {
         </button>
       )}
 
+      <TimerSidebarPanel
+        isOpen={timerOpen}
+        onClose={() => setTimerOpen(false)}
+        elapsed={timerElapsed}
+        total={timerTotal}
+        running={timerRunning}
+        done={timerDone}
+        preset={timerPreset}
+        theme={theme}
+        onSetRunning={setTimerRunning}
+        onSetElapsed={setTimerElapsed}
+        onSetTotal={setTimerTotal}
+        onSetPreset={setTimerPreset}
+        onSetDone={setTimerDone}
+      />
+
+      {/* Timer Toggle Icon */}
+      {!timerOpen && (
+        <motion.button
+          onClick={() => setTimerOpen(true)}
+          title="Open Timer (Cmd+Shift+T)"
+          whileHover={{ scale: 1.15, x: -5 }}
+          whileTap={{ scale: 0.9 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          style={{
+            position: "fixed",
+            right: 24,
+            top: "50%",
+            transform: "translateY(-50%)",
+            width: 52,
+            height: 52,
+            zIndex: 99999,
+            backgroundColor: theme === "dark" ? "rgba(30,30,35,0.95)" : accent,
+            border: theme === "dark" ? `2px solid ${accent}` : "2px solid white",
+            borderRadius: 16,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: theme === "dark" ? accent : "white",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            boxShadow: `0 8px 24px ${accent}44`,
+            backdropFilter: "blur(12px)",
+            padding: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 0 30px ${accent}66`;
+            e.currentTarget.style.transform = "translateY(-50%) scale(1.15)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = `0 8px 24px ${accent}44`;
+            e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+          }}
+        >
+          <motion.div
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v6l4 2"></path>
+            </svg>
+          </motion.div>
+        </motion.button>
+      )}
     </div>
   )
 }

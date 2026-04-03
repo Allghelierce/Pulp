@@ -118,6 +118,7 @@ function Submenu({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (parentRef.current && ref.current) {
@@ -127,11 +128,34 @@ function Submenu({
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
       setCoords({ top: t, left: pr.right + 8 })
     }
-    const handler = (e: MouseEvent) => {
+    const handleMouseDown = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
     }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
+    const handleMouseMove = (e: MouseEvent) => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
+      if (!ref.current || !parentRef.current) return
+      const submenuRect = ref.current.getBoundingClientRect()
+      const parentRect = parentRef.current.getBoundingClientRect()
+      const x = e.clientX
+      const y = e.clientY
+      const gap = 20
+      const inSubmenu = x >= submenuRect.left && x <= submenuRect.right && y >= submenuRect.top && y <= submenuRect.bottom
+      const inParent = x >= parentRect.left && x <= parentRect.right && y >= parentRect.top && y <= parentRect.bottom
+      const inGap = x >= parentRect.right && x <= submenuRect.left + gap && y >= Math.min(parentRect.top, submenuRect.top) && y <= Math.max(parentRect.bottom, submenuRect.bottom)
+      if (!inSubmenu && !inParent && !inGap) {
+        closeTimeoutRef.current = setTimeout(() => onClose(), 100)
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    document.addEventListener("mousemove", handleMouseMove)
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown)
+      document.removeEventListener("mousemove", handleMouseMove)
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    }
   }, [onClose, parentRef])
 
   const isLight = mode === "/"
@@ -147,15 +171,15 @@ function Submenu({
         top: coords.top,
         zIndex: 10000,
         minWidth: 180,
-        background: isLight ? "rgba(255,255,255,0.92)" : "rgba(22,22,24,0.88)",
-        backdropFilter: "blur(32px) saturate(140%)",
-        WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
+        backdropFilter: "blur(40px) saturate(150%)",
+        WebkitBackdropFilter: "blur(40px) saturate(150%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 12,
+        borderRadius: 14,
         boxShadow: isLight
-          ? "0 12px 40px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.02)"
-          : "0 24px 64px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)",
-        padding: "5px 0",
+          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
+          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
+        padding: "6px 0",
         animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
@@ -234,18 +258,14 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
         left: coords.left,
         top: coords.top,
         zIndex: 10000,
-        background: isLight ? "rgba(255,255,255,0.95)" : "rgba(20,20,22,0.92)",
-        backgroundImage: isLight
-          ? "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)"
-          : "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-        backgroundSize: "20px 20px",
-        backdropFilter: "blur(32px) saturate(140%)",
-        WebkitBackdropFilter: "blur(32px) saturate(140%)",
+        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
+        backdropFilter: "blur(40px) saturate(150%)",
+        WebkitBackdropFilter: "blur(40px) saturate(150%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
         boxShadow: isLight
-          ? "0 16px 48px -12px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.02)"
-          : "0 24px 64px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)",
+          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
+          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
         animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
         overflow: "hidden",
@@ -295,13 +315,13 @@ const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" st
 
 function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols: number) => void; onClose: () => void }) {
   const [hover, setHover] = useState<[number, number]>([0, 0])
-  const ROWS = 6, COLS = 8
+  const ROWS = 5, COLS = 5
   return (
     <div style={{ padding: 12 }} onMouseLeave={() => setHover([0, 0])}>
       <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginBottom: 8, textAlign: "center" }}>
         {hover[0] > 0 ? `${hover[1]} × ${hover[0]} table` : "Select table size"}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 20px)`, gap: 3, justifyContent: "flex-start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 20px)`, gap: 3, justifyContent: "center" }}>
         {Array.from({ length: ROWS * COLS }, (_, i) => {
           const r = Math.floor(i / COLS) + 1
           const c = (i % COLS) + 1
@@ -610,7 +630,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "quote", label: "Blockquote", shortcut: ">", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
-      action: () => insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)
+      action: () => insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#666;font-style:italic;background:#f5f5f5;border-radius:0 8px 8px 0" contenteditable="true">Quote…</blockquote><br/>`)
     },
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
@@ -924,6 +944,7 @@ export const SlashMenu = memo(function SlashMenu({
                   const hasSubmenu = !!item.subOptions?.length || !!item.customContent
                   const submenuOpen = openSubmenuId === item.id
  
+
                   return (
                     <div
                       key={item.id}
@@ -936,7 +957,8 @@ export const SlashMenu = memo(function SlashMenu({
                         if (hasSubmenu) setOpenSubmenuId(item.id)
                       }}
                       onMouseLeave={() => {
-                        if (hasSubmenu) setOpenSubmenuId(null)
+                        // Don't close immediately; let the Submenu component handle closing
+                        // via its pointer tracking to prevent closing when cursor moves to the gap
                       }}
                       onMouseDown={(e) => {
                         // Prevent focus loss from editor

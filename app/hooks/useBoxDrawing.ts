@@ -446,8 +446,35 @@ export function useBoxDrawing({
   }, [addListeners, setDrawLineMode, setNotes])
 
   const deleteBox = useCallback((id: string) => {
-    updateBoxes(bs => bs.filter(b => b.id !== id))
-    setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
+    // Apply erase animation before removing
+    const element = document.getElementById(`box-${id}`)
+    if (element) {
+      element.style.pointerEvents = 'none'
+      element.style.opacity = '0.6'
+      element.style.filter = 'blur(0.4px)'
+      element.style.transform = 'translateY(0.5px) rotate(-1deg)'
+
+      setTimeout(() => {
+        element.style.opacity = '0.45'
+        element.style.filter = 'blur(1.5px)'
+        element.style.transform = 'translateY(1px) rotate(-1.5deg)'
+      }, 100)
+
+      setTimeout(() => {
+        element.style.opacity = '0'
+        element.style.filter = 'blur(4px)'
+        element.style.transform = 'translateY(2px) rotate(-2deg)'
+        element.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 1, 1)'
+      }, 150)
+
+      setTimeout(() => {
+        updateBoxes(bs => bs.filter(b => b.id !== id))
+        setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
+      }, 600)
+    } else {
+      updateBoxes(bs => bs.filter(b => b.id !== id))
+      setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
+    }
   }, [setSelectedBoxIds, updateBoxes])
 
   const updateBoxContent = useCallback((id: string, text: string) => updateBoxes(bs => bs.map(b => b.id === id ? { ...b, content: text } : b)), [updateBoxes])

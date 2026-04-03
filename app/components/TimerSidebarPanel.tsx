@@ -196,18 +196,19 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-0 right-0 bottom-0 w-80 z-50 shadow-2xl flex flex-col user-select-none"
+            className="fixed top-[28vh] right-0 bottom-0 w-80 z-50 shadow-2xl flex flex-col select-none rounded-tl-[3rem] overflow-hidden"
             style={{
               fontFamily: '"Caveat", cursive',
               backgroundColor: theme === "dark" ? "#0f0f12" : "#FBF7F3",
               backgroundImage: theme === "dark"
                 ? "linear-gradient(to bottom, #0f0f12, #1a1a1e)"
                 : "linear-gradient(to bottom, #FBF7F3, #F3EDE6)",
-              borderLeft: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(255,140,85,0.2)"}`
+              borderLeft: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(255,140,85,0.2)"}`,
+              userSelect: 'none'
             }}
           >
             <div
-              className="flex-1 backdrop-blur-sm p-8 border-b overflow-y-auto flex flex-col justify-between"
+              className="flex-1 backdrop-blur-sm p-6 border-b overflow-y-auto flex flex-col justify-between"
               style={{
                 backgroundImage: theme === "dark"
                   ? "linear-gradient(to bottom, rgba(15,15,18,0.95), rgba(15,15,18,0.85))"
@@ -218,11 +219,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Top Section */}
               <div className="flex flex-col items-center">
                 {/* Timer at top - always same size */}
-                <div className="text-center mb-6 relative z-10">
+                <div className="text-center mb-3 relative z-10">
                   <div className="text-5xl tracking-tight" style={{ fontFamily: '"EB Garamond", serif', fontWeight: 700 }}>
                     <span style={{ color: running ? "#EA8C55" : theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.9)" }}>{String(minutes).padStart(2, "0")}</span><span style={{ color: running ? "rgba(234,140,85,0.7)" : theme === "dark" ? "#f59e0b" : "rgba(120,53,15,0.7)" }}>:{String(seconds).padStart(2, "0")}</span>
                   </div>
-                  <p className="text-xs font-light mt-2 tracking-wider" style={{ fontFamily: '"EB Garamond", serif' }}>
+                  <p className="text-xs font-light mt-1 tracking-wider" style={{ fontFamily: '"EB Garamond", serif' }}>
                     {running ? (
                       <ShiningText text="session active" className="text-xs font-light tracking-wider" gradientColor="red" />
                     ) : (
@@ -234,14 +235,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </div>
 
                 {/* Label - always reserve space */}
-                <div className="text-center mb-6 relative z-10" style={{ visibility: running ? "hidden" : "visible" }}>
+                <div className="text-center mb-4 relative z-10" style={{ visibility: running ? "hidden" : "visible" }}>
                   <span className="font-light tracking-wider text-sm block" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(234,112,12,0.9)" }}>
                     focus
                   </span>
                 </div>
 
                 {/* Tree with circle animation */}
-                <div className="relative w-56 h-56 mx-auto mb-8">
+                <div className="relative w-48 h-48 mx-auto mb-4">
                   {/* SVG Progress Ring - always visible */}
                   <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 200 200">
                     <defs>
@@ -285,7 +286,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       transition={{ duration: 0.8 }}
                       className="text-center mb-6 px-4"
                     >
-                      <p className="text-sm italic" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.85)", lineHeight: "1.5" }}>
+                      <p className="text-sm italic" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.85)", lineHeight: "1.4" }}>
                         "{QUOTES[quoteIndex]}"
                       </p>
                     </motion.div>
@@ -293,9 +294,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 )}
 
                 {!running && (
-                  <>
+                  <div className="w-full">
                     {/* Duration Slider */}
-                    <div className="mb-8 px-4 mt-6 w-full">
+                    <div className="mb-4 px-4 mt-2 w-full">
                       <div className="flex flex-col gap-4">
                         {/* Slider Track */}
                         <div
@@ -378,21 +379,21 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </div>
 
                     {/* Reward Estimate */}
-                    <div className="text-center text-xs mt-4 py-2 px-4 rounded" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.8)", backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(120,53,15,0.05)" }}>
+                    <div className="text-center text-xs mt-2 py-2 px-4 rounded" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fbbf24" : "rgba(120,53,15,0.85)", backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(120,53,15,0.05)" }}>
                       <p>Complete for{' '}
                         <span style={{ color: "#fbbf24", fontWeight: 600 }}>
                           {total === 15 * 60 ? "+2" : total === 25 * 60 ? "+5" : "+3"} ☀️
                         </span>
                       </p>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
 
               {/* Bottom Section */}
               <div className="flex flex-col">
                 {/* Controls - positioned at bottom */}
-              <div className="flex flex-col items-center gap-3 relative z-10 mt-auto">
+              <div className="flex flex-col items-center gap-2 relative z-10 mt-auto">
                 <button
                   onClick={handleMainButton}
                   className="w-full transition-all py-3 shadow-sm"

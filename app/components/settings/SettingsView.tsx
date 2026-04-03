@@ -29,18 +29,18 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
 }
 
 export const SETTINGS_TABS = [
-  { id: "general", label: "General", group: "App" },
-  { id: "appearance", label: "Appearance", group: "App" },
-  { id: "interface", label: "Interface", group: "App" },
-  { id: "achievements", label: "Achievements", group: "App" },
-  { id: "typography", label: "Typography", group: "Writing" },
-  { id: "editor", label: "Editor", group: "Writing" },
-  { id: "ai", label: "AI Kai", group: "Writing" },
-  { id: "blocker", label: "Focus Blocker", group: "Writing" },
-  { id: "data", label: "Data & Storage", group: "Advanced" },
-  { id: "shortcuts", label: "Shortcuts", group: "Advanced" },
-  { id: "danger", label: "Danger Zone", group: "Advanced" },
-  { id: "subscription", label: "Pro", group: "Premium" },
+  { id: "general", label: "General", group: "App", icon: "⚙️" },
+  { id: "appearance", label: "Appearance", group: "App", icon: "🎨" },
+  { id: "interface", label: "Interface", group: "App", icon: "🖥️" },
+  { id: "achievements", label: "Achievements", group: "App", icon: "🏆" },
+  { id: "typography", label: "Typography", group: "Writing", icon: "✒️" },
+  { id: "editor", label: "Editor", group: "Writing", icon: "✍️" },
+  { id: "ai", label: "AI Kai", group: "Writing", icon: "🤖" },
+  { id: "blocker", label: "Focus Blocker", group: "Writing", icon: "🛡️" },
+  { id: "data", label: "Data & Storage", group: "Advanced", icon: "💾" },
+  { id: "shortcuts", label: "Shortcuts", group: "Advanced", icon: "⌨️" },
+  { id: "danger", label: "Danger Zone", group: "Advanced", icon: "⚠️" },
+  { id: "subscription", label: "Pro", group: "Premium", icon: "✦ " },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
@@ -82,57 +82,38 @@ function SegmentedControl({ options, value, onChange, isDark }: {
 
 // ── Main settings modal ────────────────────────────────────────────────────
 
-export function SettingsView({ user, onClose, accentColor, setAccentColor, theme, setTheme,
-  autoSave, setAutoSave, spellCheck, setSpellCheck, autoCorrect, setAutoCorrect, autoCapitalize, setAutoCapitalize, editorFont, setEditorFont,
-  lineSpacing, setLineSpacing, paperStyle, setPaperStyle, showBinding, setShowBinding,
-  reduceMotion, setReduceMotion, reduceVisuals, setReduceVisuals, sidebarOnStart, setSidebarOnStart, bgEffect, setBgEffect,
-  smearEffect, setSmearEffect, handwrittenEffect, setHandwrittenEffect,
-  language, setLanguage, defaultSort, setDefaultSort, wordCountVisible, setWordCountVisible,
-  focusMode, setFocusMode, baseFontSize, setBaseFontSize,
-  headingFont, setHeadingFont,
-  shortcuts, setShortcuts, achievements, onClaimAchievement,
-  devMode, setDevMode, isDevUnlocked,
-  blockedSites, setBlockedSites, blockedApps, setBlockedApps,
-  trashNotes, onRestoreNote, onPermanentlyDeleteNote,
-}: {
+export interface PulpConfig {
+  accentColor: string; theme: "light" | "dark"
+  autoSave: boolean; spellCheck: boolean; autoCorrect: boolean; autoCapitalize: boolean
+  editorFont: string; headingFont: string
+  lineSpacing: "compact" | "normal" | "relaxed"; paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"
+  showBinding: boolean; reduceMotion: boolean; reduceVisuals: boolean; sidebarOnStart: boolean
+  bgEffect: boolean; smearEffect: boolean; handwrittenEffect: boolean
+  language: string; defaultSort: string; wordCountVisible: boolean
+  focusMode: boolean; baseFontSize: "small" | "medium" | "large"
+  shortcuts: Record<string, string>
+  blockedSites: string[]; blockedApps: string[]
+  devMode: boolean; isDevUnlocked: boolean
+}
+
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
   user: { email?: string } | null
   onClose: () => void
-  accentColor: string
-  setAccentColor: (color: string) => void
-  theme: "light" | "dark"
-  setTheme: (t: "light" | "dark") => void
-  autoSave: boolean; setAutoSave: (v: boolean) => void
-  spellCheck: boolean; setSpellCheck: (v: boolean) => void
-  autoCorrect: boolean; setAutoCorrect: (v: boolean) => void
-  autoCapitalize: boolean; setAutoCapitalize: (v: boolean) => void
-  editorFont: string; setEditorFont: (v: string) => void
-  lineSpacing: "compact" | "normal" | "relaxed"; setLineSpacing: (v: "compact" | "normal" | "relaxed") => void
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"; setPaperStyle: (v: "lined" | "dotgrid" | "plain" | "stenopad") => void
-  showBinding: boolean; setShowBinding: (v: boolean) => void
-  reduceMotion: boolean; setReduceMotion: (v: boolean) => void
-  reduceVisuals: boolean; setReduceVisuals: (v: boolean) => void
-  sidebarOnStart: boolean; setSidebarOnStart: (v: boolean) => void
-  bgEffect: boolean; setBgEffect: (v: boolean) => void
-  smearEffect: boolean; setSmearEffect: (v: boolean) => void
-  handwrittenEffect: boolean; setHandwrittenEffect: (v: boolean) => void
-  language: string; setLanguage: (v: string) => void
-  defaultSort: string; setDefaultSort: (v: string) => void
-  wordCountVisible: boolean; setWordCountVisible: (v: boolean) => void
-  focusMode: boolean; setFocusMode: (v: boolean) => void
-  baseFontSize: "small" | "medium" | "large"; setBaseFontSize: (v: "small" | "medium" | "large") => void
-  headingFont: string; setHeadingFont: (v: string) => void
-  shortcuts: { ai: string; slash: string; sidebar: string; newNote: string; search: string }
-  setShortcuts: (s: { ai: string; slash: string; sidebar: string; newNote: string; search: string }) => void
+  config: PulpConfig
+  onUpdateConfig: (updates: Partial<PulpConfig>) => void
   achievements: Achievement[]
   onClaimAchievement: (id: string) => void
-  devMode: boolean; setDevMode: (v: boolean) => void
-  isDevUnlocked: boolean
-  blockedSites: string[]; setBlockedSites: (v: string[]) => void
-  blockedApps: string[]; setBlockedApps: (v: string[]) => void
   trashNotes: NoteData[]
   onRestoreNote: (id: string) => void
   onPermanentlyDeleteNote: (id: string) => void
 }) {
+  const { 
+    accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
+    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, 
+    smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
+    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked 
+  } = config
+  const isPremium = user?.email?.includes("pro") || false
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
@@ -185,7 +166,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                             : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                       }`}
                     >
-                      {isPremium ? "✦ " : ""}{tab.label}
+                      <span className="mr-2 text-[14px]">{tab.icon}</span>
+                      {tab.label}
                     </button>
                   )
                 })}
@@ -261,7 +243,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={
                     <select
                       value={language}
-                      onChange={e => setLanguage(e.target.value)}
+                      onChange={e => onUpdateConfig({ language: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
                     >
                       <option value="english">English (US)</option>
@@ -280,7 +262,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={
                     <select
                       value={defaultSort}
-                      onChange={e => setDefaultSort(e.target.value)}
+                      onChange={e => onUpdateConfig({ defaultSort: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
                     >
                       <option value="modified">Date Modified</option>
@@ -313,19 +295,19 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Color scheme"
                   isDark={isDark}
                   description="Choose how Pulp looks to you"
-                  control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => setTheme(v as "light" | "dark")} isDark={isDark} />}
+                  control={<SegmentedControl options={[["light", "Light"], ["dark", "Dark"]]} value={theme} onChange={v => onUpdateConfig({ theme: v as "light" | "dark" })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Reduce motion"
                   isDark={isDark}
                   description="Minimize animations and transitions across the app"
-                  control={<SettingToggle checked={reduceMotion} onChange={setReduceMotion} isDark={isDark} />}
+                  control={<SettingToggle checked={reduceMotion} onChange={v => onUpdateConfig({ reduceMotion: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Reduce visuals"
                   isDark={isDark}
                   description="Disable pulsating effects, glows, and background animations"
-                  control={<SettingToggle checked={reduceVisuals} onChange={setReduceVisuals} isDark={isDark} />}
+                  control={<SettingToggle checked={reduceVisuals} onChange={v => onUpdateConfig({ reduceVisuals: v })} isDark={isDark} />}
                 />
               </SettingSection>
               <SettingSection title="Effects" isDark={isDark}>
@@ -333,14 +315,9 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Background texture"
                   isDark={isDark}
                   description="Show a subtle noise texture on the app background"
-                  control={<SettingToggle checked={bgEffect} onChange={setBgEffect} isDark={isDark} />}
+                  control={<SettingToggle checked={bgEffect} onChange={v => onUpdateConfig({ bgEffect: v })} isDark={isDark} />}
                 />
-                <SettingRow
-                  title="Handwritten feel"
-                  isDark={isDark}
-                  description="Apply handwritten styling and imperfections to the editor"
-                  control={<SettingToggle checked={handwrittenEffect} onChange={setHandwrittenEffect} isDark={isDark} />}
-                />
+                {/* Moved to Paper & Page section for better relevance */}
               </SettingSection>
 
               <SettingSection title="Personalization" isDark={isDark}>
@@ -350,7 +327,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     {ACCENT_COLORS.map(({ hex, name }) => (
                       <button
                         key={hex}
-                        onClick={() => setAccentColor(hex)}
+                        onClick={() => onUpdateConfig({ accentColor: hex })}
                         title={name}
                         className="group flex flex-col items-center gap-1.5"
                       >
@@ -376,7 +353,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={
                     <select 
                       value={headingFont}
-                      onChange={e => setHeadingFont(e.target.value)}
+                      onChange={e => onUpdateConfig({ headingFont: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
                     >
                       <option value="Playfair Display">Playfair Display</option>
@@ -393,7 +370,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   control={
                     <select 
                       value={editorFont}
-                      onChange={e => setEditorFont(e.target.value)}
+                      onChange={e => onUpdateConfig({ editorFont: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
                     >
                       <option value="EB Garamond">EB Garamond</option>
@@ -408,12 +385,12 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Base Font Size"
                   isDark={isDark}
-                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={(v: string) => setBaseFontSize(v as "small" | "medium" | "large")} isDark={isDark} />}
+                  control={<SegmentedControl options={[["small", "Small"], ["medium", "Medium"], ["large", "Large"]]} value={baseFontSize} onChange={(v: string) => onUpdateConfig({ baseFontSize: v as "small" | "medium" | "large" })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Line Spacing"
                   isDark={isDark}
-                  control={<SegmentedControl options={[["compact", "Comp"], ["normal", "Norm"], ["relaxed", "Relax"]]} value={lineSpacing} onChange={(v: string) => setLineSpacing(v as "compact" | "normal" | "relaxed")} isDark={isDark} />}
+                  control={<SegmentedControl options={[["compact", "Comp"], ["normal", "Norm"], ["relaxed", "Relax"]]} value={lineSpacing} onChange={(v: string) => onUpdateConfig({ lineSpacing: v as "compact" | "normal" | "relaxed" })} isDark={isDark} />}
                 />
               </SettingSection>
 
@@ -422,25 +399,25 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Page style"
                   isDark={isDark}
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={(v: string) => setPaperStyle(v as "lined" | "dotgrid" | "plain" | "stenopad")} isDark={isDark} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={(v: string) => onUpdateConfig({ paperStyle: v as "lined" | "dotgrid" | "plain" | "stenopad" })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Show spiral binding"
                   isDark={isDark}
                   description="Display the decorative binding on the left edge"
-                  control={<SettingToggle checked={showBinding} onChange={setShowBinding} isDark={isDark} />}
+                  control={<SettingToggle checked={showBinding} onChange={v => onUpdateConfig({ showBinding: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Smear effect"
                   isDark={isDark}
                   description="Show a subtle ink smear shadow along the left margin"
-                  control={<SettingToggle checked={smearEffect} onChange={setSmearEffect} isDark={isDark} />}
+                  control={<SettingToggle checked={smearEffect} onChange={v => onUpdateConfig({ smearEffect: v })} isDark={isDark} />}
                 />
                 <SettingRow
-                  title="Handwritten effect"
+                  title="Ink-ink Filter"
                   isDark={isDark}
-                  description="Apply a slight wobble filter to text for a hand-drawn look"
-                  control={<SettingToggle checked={handwrittenEffect} onChange={setHandwrittenEffect} isDark={isDark} />}
+                  description="Simulate organic pen-on-paper bleed and wobble using SVG filters"
+                  control={<SettingToggle checked={handwrittenEffect} onChange={v => onUpdateConfig({ handwrittenEffect: v })} isDark={isDark} />}
                 />
               </SettingSection>
             </>)}
@@ -451,7 +428,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                 <SettingRow
                   title="Show sidebar on launch"
                   isDark={isDark}
-                  control={<SettingToggle checked={sidebarOnStart} onChange={setSidebarOnStart} isDark={isDark} />}
+                  control={<SettingToggle checked={sidebarOnStart} onChange={v => onUpdateConfig({ sidebarOnStart: v })} isDark={isDark} />}
                 />
               </SettingSection>
               <SettingSection title="Toolbars" isDark={isDark}>
@@ -459,7 +436,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Status bar"
                   isDark={isDark}
                   description="Show word count and stats in the bottom-right"
-                  control={<SettingToggle checked={wordCountVisible} onChange={setWordCountVisible} isDark={isDark} />}
+                  control={<SettingToggle checked={wordCountVisible} onChange={v => onUpdateConfig({ wordCountVisible: v })} isDark={isDark} />}
                 />
               </SettingSection>
             </>)}
@@ -471,25 +448,25 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Auto-save"
                   isDark={isDark}
                   description="Sync changes to the cloud every 2 seconds"
-                  control={<SettingToggle checked={autoSave} onChange={setAutoSave} isDark={isDark} />}
+                  control={<SettingToggle checked={autoSave} onChange={v => onUpdateConfig({ autoSave: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Spell check"
                   isDark={isDark}
                   description="Underline possible misspellings while typing"
-                  control={<SettingToggle checked={spellCheck} onChange={setSpellCheck} isDark={isDark} />}
+                  control={<SettingToggle checked={spellCheck} onChange={v => onUpdateConfig({ spellCheck: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Auto-correct"
                   isDark={isDark}
                   description="Fix common spelling mistakes automatically"
-                  control={<SettingToggle checked={autoCorrect} onChange={setAutoCorrect} isDark={isDark} />}
+                  control={<SettingToggle checked={autoCorrect} onChange={v => onUpdateConfig({ autoCorrect: v })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Auto-capitalize"
                   isDark={isDark}
                   description="Automatically capitalize sentences"
-                  control={<SettingToggle checked={autoCapitalize} onChange={setAutoCapitalize} isDark={isDark} />}
+                  control={<SettingToggle checked={autoCapitalize} onChange={v => onUpdateConfig({ autoCapitalize: v })} isDark={isDark} />}
                 />
               </SettingSection>
 
@@ -498,7 +475,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                   title="Focus mode"
                   isDark={isDark}
                   description="Dim interface elements when typing to minimize distractions"
-                  control={<SettingToggle checked={focusMode} onChange={setFocusMode} isDark={isDark} />}
+                  control={<SettingToggle checked={focusMode} onChange={v => onUpdateConfig({ focusMode: v })} isDark={isDark} />}
                 />
               </SettingSection>
             </>)}
@@ -538,7 +515,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                  <BlockList 
                    placeholder="e.g. twitter.com, reddit.com" 
                    items={blockedSites} 
-                   onChange={setBlockedSites} 
+                   onChange={v => onUpdateConfig({ blockedSites: v })} 
                    isDark={isDark} 
                    description="Enter domains to restrict during focus"
                  />
@@ -548,7 +525,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                  <BlockList 
                    placeholder="e.g. Discord, Slack, Steam" 
                    items={blockedApps} 
-                   onChange={setBlockedApps} 
+                   onChange={v => onUpdateConfig({ blockedApps: v })} 
                    isDark={isDark} 
                    description="Executable names to close when focus begins"
                  />
@@ -691,7 +668,7 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                      }
                      isDark={isDark}
                      description="Grant infinite Sunshine and Gems for testing"
-                     control={<SettingToggle checked={devMode} onChange={setDevMode} isDark={isDark} />}
+                     control={<SettingToggle checked={devMode} onChange={v => onUpdateConfig({ devMode: v })} isDark={isDark} />}
                    />
                    <div className="px-5 pb-3">
                      <p className={`text-[10px] ${isDark ? "text-zinc-500" : "text-zinc-400"} italic`}>Note: Infinite balances won't affect stored achievement progress.</p>
@@ -704,8 +681,8 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             {activeTab === "shortcuts" && (<>
               <SettingSection title="Global Shortcuts" isDark={isDark}>
                 <div className="flex flex-col gap-0.5 px-3 py-2">
-                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => setShortcuts({ ...shortcuts, [id]: k })} />
-                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => setShortcuts({ ...shortcuts, [id]: k })} />
+                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   
                   <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
                     <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>New Note</span>
@@ -809,6 +786,37 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
                     },
                   ]}
                 />
+                <div className={`mt-8 grid grid-cols-1 md:grid-cols-2 gap-4`}>
+                  {[
+                    { id: "pulp_pro", name: "Pulp Pro", price: "$4/mo", features: ["Unlimited Notes", "AI Intelligence", "50GB Cloud"], current: !isPremium },
+                    { id: "pulp_studio", name: "Pulp Studio", price: "$12/mo", features: ["Everything in Pro", "Custom Branding", "API Access"], current: false }
+                  ].map(plan => (
+                    <div key={plan.id} className={`p-5 rounded-2xl border transition-all hover:scale-[1.02] ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200 shadow-sm"}`}>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className={`text-[14px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{plan.name}</h4>
+                          <p className={`text-[18px] font-black ${isDark ? "text-zinc-200" : "text-zinc-900"}`}>{plan.price}</p>
+                        </div>
+                        {plan.current && (
+                          <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter bg-orange-500 text-white">Recommended</span>
+                        )}
+                      </div>
+                      <ul className="space-y-2 mb-6">
+                        {plan.features.map(f => (
+                          <li key={f} className={`text-[11.5px] flex items-center gap-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <button 
+                        className={`w-full py-2.5 rounded-xl text-[12px] font-bold transition-all ${isDark ? "bg-zinc-100 text-zinc-900 hover:bg-white" : "bg-zinc-900 text-white hover:bg-black"} active:scale-95`}
+                      >
+                        {plan.current ? "Upgrade Now" : "Coming Soon"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
 
               </div>
             )}
@@ -818,9 +826,9 @@ export function SettingsView({ user, onClose, accentColor, setAccentColor, theme
             <p className={`text-[11px] ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Changes save automatically</p>
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-xl text-[12.5px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.97] shadow-md"
+              className="px-6 py-2 rounded-xl text-[12.5px] font-bold text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
               style={{ backgroundColor: accentColor }}
-            >Done</button>
+            >Save changes</button>
           </div>
         </div>
       </div>
