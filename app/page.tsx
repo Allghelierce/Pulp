@@ -23,6 +23,8 @@ import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
+import { OrchardView } from "@/app/components/OrchardView"
+import { BoutiqueView } from "@/app/components/BoutiqueView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -243,10 +245,10 @@ const BoxItem = memo(function BoxItem({
               window.addEventListener('mousemove', onMove)
               window.addEventListener('mouseup', onUp)
             }}
-            style={{ 
-              width: 17, height: 17, borderRadius: "50%", 
-              background: "rgba(0,0,0,0.08)", cursor: "grab", 
-              display: "flex", alignItems: "center", justifyContent: "center", 
+            style={{
+              width: 17, height: 17, borderRadius: "50%",
+              background: "rgba(0,0,0,0.08)", cursor: "grab",
+              display: "flex", alignItems: "center", justifyContent: "center",
               color: "rgba(0,0,0,0.5)", flexShrink: 0,
               filter: "url(#handwritten-jitter-subtle)"
             }}
@@ -261,11 +263,11 @@ const BoxItem = memo(function BoxItem({
           <button
             onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
             className="hover:scale-110 active:scale-95 transition-transform"
-            style={{ 
-              width: 17, height: 17, borderRadius: "50%", 
-              background: "rgba(0,0,0,0.08)", border: "none", 
-              cursor: "pointer", fontSize: 13, 
-              display: "flex", alignItems: "center", justifyContent: "center", 
+            style={{
+              width: 17, height: 17, borderRadius: "50%",
+              background: "rgba(0,0,0,0.08)", border: "none",
+              cursor: "pointer", fontSize: 13,
+              display: "flex", alignItems: "center", justifyContent: "center",
               lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0,
               fontFamily: '"Caveat", cursive', fontWeight: 600,
               filter: "url(#handwritten-jitter-subtle)"
@@ -276,12 +278,12 @@ const BoxItem = memo(function BoxItem({
         <button
           onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
           className="hover:scale-110 active:scale-95 transition-transform"
-          style={{ 
-            position: "absolute", top: 10, right: 8, 
-            background: "rgba(0,0,0,0.08)", border: "none", 
-            cursor: "pointer", fontSize: 13, width: 17, height: 17, 
-            display: "flex", alignItems: "center", justifyContent: "center", 
-            borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)", 
+          style={{
+            position: "absolute", top: 10, right: 8,
+            background: "rgba(0,0,0,0.08)", border: "none",
+            cursor: "pointer", fontSize: 13, width: 17, height: 17,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)",
             zIndex: 120, fontFamily: '"Caveat", cursive', fontWeight: 600,
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
@@ -425,7 +427,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   // Handlers
   const highlightColors = ["transparent", "rgba(239,68,68,0.15)", "rgba(249,115,22,0.15)", "rgba(234,179,8,0.15)", "rgba(34,197,94,0.15)", "rgba(14,165,233,0.15)", "rgba(59,130,246,0.15)", "rgba(168,85,247,0.15)", "rgba(236,72,153,0.15)", "rgba(156,163,175,0.15)"]
   const textColors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#52525b", "#d4d4d8"]
-  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {e.stopPropagation()}, [])
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => { e.stopPropagation() }, [])
 
   const applyInlineCSS = useCallback((css: string): boolean => {
     const sel = window.getSelection()
@@ -801,7 +803,7 @@ export default function NoteApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sunshine, setSunshine] = useState(1000)
   const [gems, setGems] = useState(5)
-  const [timerOpen, setTimerOpen] = useState(false) // Still need this for layout padding sync
+  const [timerOpen, setTimerOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -810,6 +812,27 @@ export default function NoteApp() {
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
+  const [grove, setGrove] = useState<Tree[]>([])
+  const [orchardOpen, setOrchardOpen] = useState(false)
+  const [shopOpen, setShopOpen] = useState(false)
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
+    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
+    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
+  ])
+
+  // Refs to allow Page to communicate achievement events to VitalitySystem
+  const checkAchievementRef = useRef<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>(null)
+  const claimAchievementRef = useRef<((id: string) => void) | null>(null)
+
+  const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
+    checkAchievementRef.current?.(id, update)
+  }, [])
+  const claimAchievement = useCallback((id: string) => {
+    claimAchievementRef.current?.(id)
+  }, [])
 
   // Earn Gems via writing
   const totalChars = useMemo(() => {
@@ -817,6 +840,7 @@ export default function NoteApp() {
     if (!activeNote) return 0
     return Object.values(activeNote.boxes).flat().reduce((acc, b) => acc + (b.content ? b.content.length : 0), 0)
   }, [notes, activeTabId])
+
 
   // Restore Grove from LocalStorage
   useEffect(() => {
@@ -826,7 +850,7 @@ export default function NoteApp() {
       setSunshine(data.sunshine ?? 1000)
       setGems(data.gems ?? 5)
     }
-    
+
     // Night Owl Check
     const hour = new Date().getHours()
     if (hour >= 23 || hour <= 4) {
@@ -864,14 +888,14 @@ export default function NoteApp() {
     devMode: false,
     isDevUnlocked: false
   })
-  
+
   const updateSettings = (updates: any) => setSettings((prev: any) => ({ ...prev, ...updates }))
 
   const {
     accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
-    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, 
+    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked 
+    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
   } = settings
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
@@ -978,7 +1002,7 @@ export default function NoteApp() {
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
-  const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string } | null>(null)
+  const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
@@ -1482,14 +1506,14 @@ export default function NoteApp() {
     const expressions: Array<typeof aiExpression> = ["wink", "sleepy", "heart", "surprised"]
     const scheduleNext = () => {
       // Random delay: 1–3 hours (3,600,000 – 10,800,000 ms)
-      const delay = 3600000 + Math.random() * 7200000 
+      const delay = 3600000 + Math.random() * 7200000
       return setTimeout(() => {
         const next = expressions[Math.floor(Math.random() * expressions.length)]
         setAiExpression(next)
-        
+
         // Reset to normal after 5-8 seconds
         setTimeout(() => setAiExpression("normal"), 5000 + Math.random() * 3000)
-        
+
         scheduleNext() // Loop
       }, delay)
     }
@@ -1528,18 +1552,24 @@ export default function NoteApp() {
   // Only hydrates from cloud if localStorage has no data (local always wins)
   useEffect(() => {
     const fetchNotes = async () => {
-      const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) { setUser(null); setIsLoading(false); return }
-      setUser(u)
-      const hasLocal = !!localStorage.getItem("pulp-notes")
-      if (!hasLocal) {
-        const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
-        if (!error && data?.length) {
-          setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined })))
-          if (!activeTabId) setActiveTabId(data[0].id)
+      try {
+        const { data: { user: u } } = await supabase.auth.getUser()
+        if (!u) { setUser(null); return }
+        setUser(u)
+        const hasLocal = !!localStorage.getItem("pulp-notes")
+        if (!hasLocal) {
+          const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
+          if (!error && data?.length) {
+            setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined })))
+            if (!activeTabId) setActiveTabId(data[0].id)
+          }
         }
+      } catch (err) {
+        console.error("[Pulp] Failed to fetch notes from Supabase, falling back to local:", err)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     fetchNotes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1569,25 +1599,25 @@ export default function NoteApp() {
     let promptTitle = "Name your notebook"
     let icon = "📓"
 
-    if (noteType === "singlepage") { 
+    if (noteType === "singlepage") {
       title = "New Page"; placeholder = "Page name…"; promptTitle = "Name your page"; icon = "📄"
-    } else if (noteType === "flashcard") { 
+    } else if (noteType === "flashcard") {
       title = "New Deck"; placeholder = "Deck name…"; promptTitle = "Name your deck"; icon = "🃏"
-    } else if (noteType === "vault") { 
+    } else if (noteType === "vault") {
       title = "New Vault"; placeholder = "Vault name…"; promptTitle = "Name your vault"; icon = "🔐"
     }
-    
+
     const finishCreate = (name: string, pwd?: string) => {
       const id = uid()
       const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType, password: pwd }
       const newNote: NoteData = noteType === "flashcard"
         ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "", interval: 1, easeFactor: 2.5, repetitions: 0, nextReviewDate: Date.now() }] }
         : noteType === "singlepage"
-        ? { ...baseNote, pages: [""], icon: "📄" }
-        : noteType === "vault"
-        ? { ...baseNote, pages: [""], icon: "🔐" }
-        : { ...baseNote, pages: [""] }
-        
+          ? { ...baseNote, pages: [""], icon: "📄" }
+          : noteType === "vault"
+            ? { ...baseNote, pages: [""], icon: "🔐" }
+            : { ...baseNote, pages: [""] }
+
       if (noteType === "vault") unlockedVaults.current.add(id)
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
@@ -1848,7 +1878,7 @@ export default function NoteApp() {
   }
 
   const handleOpenShop = () => {
-    openAlert("Coming Soon", "The Pulp Boutique is currently in development.")
+    setShopOpen(true)
   }
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
@@ -1857,430 +1887,432 @@ export default function NoteApp() {
   return (
     <>
 
-    <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
-      {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-      {showSettings && (
-        <SettingsView 
-          user={user} 
-          onClose={() => setShowSettings(false)} 
-          config={{ ...settings, accentColor: accent }} 
-          onUpdateConfig={updates => updateSettings({ ...updates, accent: updates.accentColor || accent })}
-          achievements={achievements} 
-          onClaimAchievement={claimAchievement} 
-          trashNotes={trashNotes} 
-          onRestoreNote={restoreNote} 
-          onPermanentlyDeleteNote={permanentlyDeleteNote} 
-        />
-      )}
-      <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
-
-
-
-      {!gridView && sidebarWidth > 40 && (
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.25 }}
-          style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%' }}
-        >
-          <Sidebar
-          notes={notes}
-          folders={folders}
-          activeTabId={activeTabId}
-          accent={accent}
-          draggedNoteId={draggedNoteId}
-          renamingFolder={renamingFolder}
-          user={user}
-          sidebarWidth={sidebarWidth}
-          isDragging={isSidebarDragging}
-          onAddNote={addNote}
-          onAddTypedNote={addTypedNote}
-          onAddFolder={addFolder}
-          onSelectNote={id => {
-            const n = notes.find(x => x.id === id)
-            if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
-              openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
-                if (pwd === (n.password || "")) {
-                  unlockedVaults.current.add(id)
-                  editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
-                } else {
-                  openAlert("Access Denied", "Incorrect password.")
-                }
-              })
-              return
-            }
-            editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
-          }}
-          onRenameNote={renameNote}
-          onDeleteNote={deleteNote}
-          archivedNotes={archivedNotes}
-          onArchiveNote={archiveNote}
-          onUnarchiveNote={unarchiveNote}
-          unlockedIds={unlockedVaults.current}
-          onToggleFolder={toggleFolder}
-          onRenameFolder={renameFolder}
-          onDeleteFolder={deleteFolder}
-          onSetRenamingFolder={setRenamingFolder}
-          onSetDraggedNoteId={setDraggedNoteId}
-          onDropNote={handleDropNote}
-          onOpenSettings={() => setShowSettings(true)}
-          onSetNoteParent={setNoteParent}
-          onChangeNoteIcon={changeNoteIcon}
-          onGoToShelf={() => setCurrentView("shelf")}
-          bookmarks={bookmarks}
-          onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
-          onReorderBookmarks={(newB) => setBookmarks(newB)}
-          onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
-          onRenameBookmark={(id, current) => {
-            openPrompt("Rename Bookmark", current, "Enter new title...", "Rename", (val: string) => {
-              if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
-            })
-          }}
-          onUnlockDev={handleUnlockDev}
-        />
-
-        {/* Sidebar edge resize handle */}
-        <div
-          onMouseDown={(e) => startSidebarDrag(e.clientX)}
-          style={{
-            width: 6,
-            cursor: 'col-resize',
-            backgroundColor: 'transparent',
-            position: 'relative',
-            userSelect: 'none',
-          }}
-          className="hover:bg-white/10 transition-colors"
-        />
-        </motion.div>
-      )}
-
-      {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
-
-      {currentView === "shelf" && (
-        <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
-          <ShelfView
-            notes={notes}
-            onOpenNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
-            onCreateNote={() => { addNote(null); setCurrentView("editor") }}
-            theme={theme}
+      <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
+        {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
+        {showSettings && (
+          <SettingsView
+            user={user}
+            onClose={() => setShowSettings(false)}
+            config={{ ...settings, accentColor: accent }}
+            onUpdateConfig={updates => updateSettings({ ...updates, accent: updates.accentColor || accent })}
+            achievements={achievements}
+            onClaimAchievement={claimAchievement}
+            trashNotes={trashNotes}
+            onRestoreNote={restoreNote}
+            onPermanentlyDeleteNote={permanentlyDeleteNote}
           />
-        </div>
-      )}
-
-      <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
+        )}
+        <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
 
-        {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
-        {notes.filter(n => !n.archived).length > 0 && activeNote && (() => {
-          const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
-          const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
-          return (
-            <motion.div
-              onClick={() => {
-                const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
-                if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
-                else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
-              }}
-              animate={{ scaleY: isBookmarked ? 1 : 0.6, opacity: isBookmarked ? 1 : 0.45 }}
-              whileHover={{ scaleY: 1, opacity: 1 }}
-              whileTap={{ scaleY: 0.9 }}
-              transition={{ type: "spring", stiffness: 420, damping: 30 }}
-              style={{
-                position: "absolute",
-                top: 48,
-                left: 104,
-                width: 14,
-                zIndex: 30,
-                cursor: "pointer",
-                transformOrigin: "top",
-                filter: isBookmarked ? "drop-shadow(0 4px 8px rgba(225,29,72,0.5))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-              }}
-            >
-              <div style={{
-                width: "100%",
-                height: 52,
-                backgroundColor: ribbonColor,
-                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 88%, 0% 100%)",
-                position: "relative",
-              }}>
-                <div style={{ position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: 5 }}>
-                  {[0,1,2].map(i => (
-                    <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", backgroundColor: isBookmarked ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.18)" }} />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )
-        })()}
 
-        {notes.filter(n => !n.archived).length > 0 && (
-          <div className="relative">
-            <DocumentToolbar
-              activeTool={activeTool}
-              setActiveTool={setActiveTool}
-              stickyColor={stickyColor}
-              setStickyColor={setStickyColor}
+        {!gridView && sidebarWidth > 40 && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25 }}
+            style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%' }}
+          >
+            <Sidebar
+              notes={notes}
+              folders={folders}
+              activeTabId={activeTabId}
               accent={accent}
-              theme={theme}
-              zoom={zoom}
-              setZoom={setZoom}
-              gridView={gridView}
-              setGridView={setGridView}
-              setCarouselIdx={setCarouselIdx}
-              sketchMode={sketchMode}
-              setSketchMode={setSketchMode}
-              setSketchPrompt={setSketchPrompt}
-              drawLineMode={drawLineMode}
-              setDrawLineMode={setDrawLineMode}
-
-              currentPageIdx={currentPageIdx}
-              saveSelection={editor.saveSelection}
-              insertTable={editor.insertTable}
-              insertColumns={editor.insertColumns}
-              openAlert={openAlert}
-              clearPage={clearPage}
-              autoAlign={boxes.autoAlign}
-              verticalAlign={boxes.verticalAlign}
-              insertCornell={insertCornell}
-              showDrawToolbar={showDrawToolbar}
-              onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
-              rightSidebarOpen={timerOpen}
-              setRightSidebarOpen={setTimerOpen}
-              allCompacted={allCompacted}
-              onCompactAll={handleCompactAll}
-              onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
-              isVault={activeNote?.noteType === "vault"}
-              isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
-              onLock={() => {
-                if (activeNote) {
-                  unlockedVaults.current.delete(activeNote.id)
-                  setNotes(prev => [...prev])
-                }
-              }}
-              onDownload={() => {
-                if (!activeNote) return
-                const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = `${activeNote.subject || "note"}.json`
-                a.click()
-                URL.revokeObjectURL(url)
-              }}
-              onStartSidebarDrag={startSidebarDrag}
+              draggedNoteId={draggedNoteId}
+              renamingFolder={renamingFolder}
+              user={user}
               sidebarWidth={sidebarWidth}
-              isSidebarDragging={isSidebarDragging}
-              sunshine={devMode ? 999999 : sunshine}
-              gems={devMode ? 999999 : gems}
-              sidebarOpen={sidebarWidth > 40}
-              onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
-              onTimerOpen={() => setTimerOpen(!timerOpen)}
-              onOpenShop={handleOpenShop}
-              onOpenAiMenu={(x, y, selectedText) => setAiMenu({ x, y, selectedText })}
+              isDragging={isSidebarDragging}
+              onAddNote={addNote}
+              onAddTypedNote={addTypedNote}
+              onAddFolder={addFolder}
+              onSelectNote={id => {
+                const n = notes.find(x => x.id === id)
+                if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
+                  openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
+                    if (pwd === (n.password || "")) {
+                      unlockedVaults.current.add(id)
+                      editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+                    } else {
+                      openAlert("Access Denied", "Incorrect password.")
+                    }
+                  })
+                  return
+                }
+                editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
+              }}
+              onRenameNote={renameNote}
+              onDeleteNote={deleteNote}
+              archivedNotes={archivedNotes}
+              onArchiveNote={archiveNote}
+              onUnarchiveNote={unarchiveNote}
+              unlockedIds={unlockedVaults.current}
+              onToggleFolder={toggleFolder}
+              onRenameFolder={renameFolder}
+              onDeleteFolder={deleteFolder}
+              onSetRenamingFolder={setRenamingFolder}
+              onSetDraggedNoteId={setDraggedNoteId}
+              onDropNote={handleDropNote}
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenTimer={() => setTimerOpen(t => !t)}
+              timerOpen={timerOpen}
+              onSetNoteParent={setNoteParent}
+              onChangeNoteIcon={changeNoteIcon}
+              onGoToShelf={() => setCurrentView("shelf")}
+              bookmarks={bookmarks}
+              onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
+              onReorderBookmarks={(newB) => setBookmarks(newB)}
+              onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
+              onRenameBookmark={(id, current) => {
+                openPrompt("Rename Bookmark", current, "Enter new title...", "Rename", (val: string) => {
+                  if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, noteTitle: val } : b))
+                })
+              }}
+              onUnlockDev={handleUnlockDev}
+            />
+
+            {/* Sidebar edge resize handle */}
+            <div
+              onMouseDown={(e) => startSidebarDrag(e.clientX)}
+              style={{
+                width: 6,
+                cursor: 'col-resize',
+                backgroundColor: 'transparent',
+                position: 'relative',
+                userSelect: 'none',
+              }}
+              className="hover:bg-white/10 transition-colors"
+            />
+          </motion.div>
+        )}
+
+        {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
+
+        {currentView === "shelf" && (
+          <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
+            <ShelfView
+              notes={notes}
+              onOpenNote={id => { editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor") }}
+              onCreateNote={() => { addNote(null); setCurrentView("editor") }}
+              theme={theme}
             />
           </div>
         )}
 
-        <div className="flex-1 flex overflow-hidden relative">
-          {notes.filter(n => !n.archived).length === 0 ? (
-            <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
-              <div className="text-center max-w-md overflow-hidden">
-                {/* Heading */}
-                <h1 className="text-4xl font-medium tracking-tight mb-8" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+        <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
-                {/* Primary Button */}
-                <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
 
-                {/* Quick Tips */}
-                <div className="mt-8 pt-6" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
-                  <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
-                  <ul className="text-xs space-y-2 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
-                    <li className="flex items-center gap-2">📝 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+N</code> to create notes</li>
-                    <li className="flex items-center gap-2">🔍 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+K</code> to search</li>
-                    <li className="flex items-center gap-2">🤖 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>\</code> for AI editing</li>
-                  </ul>
+          {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
+          {notes.filter(n => !n.archived).length > 0 && activeNote && (() => {
+            const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+            const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
+            return (
+              <motion.div
+                onClick={() => {
+                  const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+                  if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
+                  else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
+                }}
+                animate={{ scaleY: isBookmarked ? 1 : 0.6, opacity: isBookmarked ? 1 : 0.45 }}
+                whileHover={{ scaleY: 1, opacity: 1 }}
+                whileTap={{ scaleY: 0.9 }}
+                transition={{ type: "spring", stiffness: 420, damping: 30 }}
+                style={{
+                  position: "absolute",
+                  top: 48,
+                  left: 104,
+                  width: 14,
+                  zIndex: 30,
+                  cursor: "pointer",
+                  transformOrigin: "top",
+                  filter: isBookmarked ? "drop-shadow(0 4px 8px rgba(225,29,72,0.5))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+                }}
+              >
+                <div style={{
+                  width: "100%",
+                  height: 52,
+                  backgroundColor: ribbonColor,
+                  clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 50% 88%, 0% 100%)",
+                  position: "relative",
+                }}>
+                  <div style={{ position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", gap: 5 }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", backgroundColor: isBookmarked ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.18)" }} />
+                    ))}
+                  </div>
                 </div>
+              </motion.div>
+            )
+          })()}
 
-                {/* Theme Toggle */}
-                <div className="mt-6 flex items-center justify-center">
-                  <div
-                    onClick={() => updateSettings({ theme: theme === "light" ? "dark" : "light" })}
-                    className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
-                    style={{
-                      backgroundColor: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                      border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"}`,
-                      width: 72,
-                      height: 32,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
-                  >
-                    <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "light" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <circle cx="12" cy="12" r="5" />
-                        <line x1="12" y1="1" x2="12" y2="3" strokeWidth="2" stroke="currentColor" />
-                        <line x1="12" y1="21" x2="12" y2="23" strokeWidth="2" stroke="currentColor" />
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" strokeWidth="2" stroke="currentColor" />
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" strokeWidth="2" stroke="currentColor" />
-                        <line x1="1" y1="12" x2="3" y2="12" strokeWidth="2" stroke="currentColor" />
-                        <line x1="21" y1="12" x2="23" y2="12" strokeWidth="2" stroke="currentColor" />
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" strokeWidth="2" stroke="currentColor" />
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth="2" stroke="currentColor" />
-                      </svg>
-                    </div>
-                    <motion.div
-                      animate={{ x: theme === "dark" ? 20 : 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          {notes.filter(n => !n.archived).length > 0 && (
+            <div className="relative">
+              <DocumentToolbar
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+                stickyColor={stickyColor}
+                setStickyColor={setStickyColor}
+                accent={accent}
+                theme={theme}
+                zoom={zoom}
+                setZoom={setZoom}
+                gridView={gridView}
+                setGridView={setGridView}
+                setCarouselIdx={setCarouselIdx}
+                sketchMode={sketchMode}
+                setSketchMode={setSketchMode}
+                setSketchPrompt={setSketchPrompt}
+                drawLineMode={drawLineMode}
+                setDrawLineMode={setDrawLineMode}
+
+                currentPageIdx={currentPageIdx}
+                saveSelection={editor.saveSelection}
+                insertTable={editor.insertTable}
+                insertColumns={editor.insertColumns}
+                openAlert={openAlert}
+                clearPage={clearPage}
+                autoAlign={boxes.autoAlign}
+                verticalAlign={boxes.verticalAlign}
+                insertCornell={insertCornell}
+                showDrawToolbar={showDrawToolbar}
+                onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
+                rightSidebarOpen={timerOpen}
+                setRightSidebarOpen={setTimerOpen}
+                allCompacted={allCompacted}
+                onCompactAll={handleCompactAll}
+                onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
+                isVault={activeNote?.noteType === "vault"}
+                isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
+                onLock={() => {
+                  if (activeNote) {
+                    unlockedVaults.current.delete(activeNote.id)
+                    setNotes(prev => [...prev])
+                  }
+                }}
+                onDownload={() => {
+                  if (!activeNote) return
+                  const blob = new Blob([JSON.stringify(activeNote, null, 2)], { type: "application/json" })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = `${activeNote.subject || "note"}.json`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+                onStartSidebarDrag={startSidebarDrag}
+                sidebarWidth={sidebarWidth}
+                isSidebarDragging={isSidebarDragging}
+                sunshine={devMode ? 999999 : sunshine}
+                gems={devMode ? 999999 : gems}
+                sidebarOpen={sidebarWidth > 40}
+                onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
+                onTimerOpen={() => setTimerOpen(!timerOpen)}
+                onOpenShop={handleOpenShop}
+                onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 flex overflow-hidden relative">
+            {notes.filter(n => !n.archived).length === 0 ? (
+              <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
+                <div className="text-center max-w-md overflow-hidden">
+                  {/* Heading */}
+                  <h1 className="text-4xl font-medium tracking-tight mb-8" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+
+                  {/* Primary Button */}
+                  <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
+
+                  {/* Quick Tips */}
+                  <div className="mt-8 pt-6" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
+                    <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
+                    <ul className="text-xs space-y-2 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
+                      <li className="flex items-center gap-2">📝 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+N</code> to create notes</li>
+                      <li className="flex items-center gap-2">🔍 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+K</code> to search</li>
+                      <li className="flex items-center gap-2">🤖 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>\</code> for AI editing</li>
+                    </ul>
+                  </div>
+
+                  {/* Theme Toggle */}
+                  <div className="mt-6 flex items-center justify-center">
+                    <div
+                      onClick={() => updateSettings({ theme: theme === "light" ? "dark" : "light" })}
+                      className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
                       style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
-                        position: "absolute",
-                        left: 2,
-                        zIndex: 0
+                        backgroundColor: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"}`,
+                        width: 72,
+                        height: 32,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
                       }}
-                    />
-                    <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                      </svg>
+                    >
+                      <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "light" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <circle cx="12" cy="12" r="5" />
+                          <line x1="12" y1="1" x2="12" y2="3" strokeWidth="2" stroke="currentColor" />
+                          <line x1="12" y1="21" x2="12" y2="23" strokeWidth="2" stroke="currentColor" />
+                          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" strokeWidth="2" stroke="currentColor" />
+                          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" strokeWidth="2" stroke="currentColor" />
+                          <line x1="1" y1="12" x2="3" y2="12" strokeWidth="2" stroke="currentColor" />
+                          <line x1="21" y1="12" x2="23" y2="12" strokeWidth="2" stroke="currentColor" />
+                          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" strokeWidth="2" stroke="currentColor" />
+                          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth="2" stroke="currentColor" />
+                        </svg>
+                      </div>
+                      <motion.div
+                        animate={{ x: theme === "dark" ? 20 : 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+                          position: "absolute",
+                          left: 2,
+                          zIndex: 0
+                        }}
+                      />
+                      <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </main>
-          ) : gridView ? (
-            <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
-          ) : activeNote?.noteType === "flashcard" ? (
-            <main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
-              <FlashcardView
-                cards={activeNote.flashcards || []}
-                onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? {...n, flashcards: cards} : n))}
-                noteTitle={activeNote.subject}
-                theme={theme}
-                accent={accent}
-              />
-            </main>
-          ) : (
-            <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", paddingRight: timerOpen ? "calc(2rem + 320px)" : "2rem" }}>
-              <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
-                <div style={{ position: "relative" }}>
+              </main>
+            ) : gridView ? (
+              <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
+            ) : activeNote?.noteType === "flashcard" ? (
+              <main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+                <FlashcardView
+                  cards={activeNote.flashcards || []}
+                  onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? { ...n, flashcards: cards } : n))}
+                  noteTitle={activeNote.subject}
+                  theme={theme}
+                  accent={accent}
+                />
+              </main>
+            ) : (
+              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
+                <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
-                    <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#FAFAFA", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)" }} />
-                    <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#F8F8F8", borderRadius: 2, zIndex: -1 }} />
+                    <div style={{ position: "relative" }}>
+                      <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
+                      <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#FAFAFA", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)" }} />
+                      <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#F8F8F8", borderRadius: 2, zIndex: -1 }} />
 
-                    <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
+                      <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                    <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
-                      onMouseDown={e => {
-                        if (activeTool === 'sticky' || activeTool === 'hr') {
-                          // Handled by onClick below to ensure clean single-click placement
-                          return
-                        }
-                        if (activeTool !== 'select' && activeTool !== 'text') return
-                        const target = e.target as HTMLElement
-                        const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
-                        if (boxEl) {
-                          const boxId = boxEl.id.replace('box-', '')
-                          const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
-                          if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
-                          // Empty box — treat click as paper click so it gets replaced
-                        }
-                        boxes.onPaperMouseDown(e)
-                      }}
-                      onClick={e => {
-                        const target = e.target as HTMLElement
-                        if (target.closest('[id^="box-"]')) return
-                        if (activeTool === 'sticky') {
-                          placeStickyNote(e)
-                        } else if (activeTool === 'hr') {
-                          placeHorizontalLine(e)
-                        }
-                      }}
-                    >
-                      {activeNote.noteType === "vault" && !unlockedVaults.current.has(activeNote.id) ? (
-                        <div className="absolute inset-0 z-[60] bg-zinc-900/5 backdrop-blur-[1px] flex flex-col items-center justify-start pt-60 p-10 select-none pointer-events-none">
-                          <div className="bg-white/90 dark:bg-zinc-900/90 p-10 rounded-3xl shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col items-center gap-5 text-center anim-fade-in pointer-events-auto" style={{ filter: 'url(#handwritten-jitter-subtle)' }}>
-                            <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                        onMouseDown={e => {
+                          if (activeTool === 'sticky' || activeTool === 'hr') {
+                            // Handled by onClick below to ensure clean single-click placement
+                            return
+                          }
+                          if (activeTool !== 'select' && activeTool !== 'text') return
+                          const target = e.target as HTMLElement
+                          const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
+                          if (boxEl) {
+                            const boxId = boxEl.id.replace('box-', '')
+                            const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
+                            if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
+                            // Empty box — treat click as paper click so it gets replaced
+                          }
+                          boxes.onPaperMouseDown(e)
+                        }}
+                        onClick={e => {
+                          const target = e.target as HTMLElement
+                          if (target.closest('[id^="box-"]')) return
+                          if (activeTool === 'sticky') {
+                            placeStickyNote(e)
+                          } else if (activeTool === 'hr') {
+                            placeHorizontalLine(e)
+                          }
+                        }}
+                      >
+                        {activeNote.noteType === "vault" && !unlockedVaults.current.has(activeNote.id) ? (
+                          <div className="absolute inset-0 z-[60] bg-zinc-900/5 backdrop-blur-[1px] flex flex-col items-center justify-start pt-60 p-10 select-none pointer-events-none">
+                            <div className="bg-white/90 dark:bg-zinc-900/90 p-10 rounded-3xl shadow-2xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col items-center gap-5 text-center anim-fade-in pointer-events-auto" style={{ filter: 'url(#handwritten-jitter-subtle)' }}>
+                              <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Vault Locked</h3>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const n = notes.find(x => x.id === activeNote.id)
+                                  if (n) {
+                                    openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
+                                      if (pwd === (n.password || "")) {
+                                        unlockedVaults.current.add(n.id)
+                                        setNotes(prev => [...prev])
+                                      } else {
+                                        openAlert("Access Denied", "Incorrect password.")
+                                      }
+                                    })
+                                  }
+                                }}
+                                className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
+                              >
+                                Unlock Now
+                              </button>
                             </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Vault Locked</h3>
-                              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
-                            </div>
-                            <button 
-                              onClick={() => {
-                                const n = notes.find(x => x.id === activeNote.id)
-                                if (n) {
-                                  openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
-                                    if (pwd === (n.password || "")) {
-                                      unlockedVaults.current.add(n.id)
-                                      setNotes(prev => [...prev])
-                                    } else {
-                                      openAlert("Access Denied", "Incorrect password.")
-                                    }
-                                  })
-                                }
-                              }}
-                              className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
-                            >
-                              Unlock Now
-                            </button>
                           </div>
-                        </div>
-                       ) : (
-                         <>
-                           <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
-                           {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
+                        ) : (
+                          <>
+                            <div className="absolute left-28 top-0 bottom-0 w-[1px] z-20 pointer-events-none" style={{ backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)" }} />
+                            {smearEffect && <div className="absolute top-0 left-0 bottom-0 pointer-events-none" style={{ width: 220, background: "linear-gradient(to right, rgba(0,0,0,0.065) 0%, rgba(0,0,0,0.018) 50%, transparent 100%)", zIndex: 21 }} />}
 
-                           {/* Render custom user-drawn lines */}
-                           {(() => {
-                             // Use lineSelectionVersion to force re-render on line selection change
-                             boxes.lineSelectionVersion
-                             return (activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => {
-                               const isSelected = boxes.selectedLineRef.current === lx
-                               return (
-                                 <div key={idx} className="absolute top-0 bottom-0 z-20 pointer-events-none transition-all" style={{
-                                   left: lx,
-                                   width: isSelected ? "3px" : "1.5px",
-                                   backgroundColor: isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
-                                   borderLeft: isSelected ? `2px solid ${accent}` : `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                                   opacity: isSelected ? 1 : 0.6,
-                                   boxShadow: isSelected ? `0 0 12px ${accent}33` : undefined
-                                 }} />
-                               )
-                             })
-                           })()}
+                            {/* Render custom user-drawn lines */}
+                            {(() => {
+                              // Use lineSelectionVersion to force re-render on line selection change
+                              boxes.lineSelectionVersion
+                              return (activeNote.lines?.[currentPageIdx] || []).map((lx, idx) => {
+                                const isSelected = boxes.selectedLineRef.current === lx
+                                return (
+                                  <div key={idx} className="absolute top-0 bottom-0 z-20 pointer-events-none transition-all" style={{
+                                    left: lx,
+                                    width: isSelected ? "3px" : "1.5px",
+                                    backgroundColor: isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)"),
+                                    borderLeft: isSelected ? `2px solid ${accent}` : `1px dashed ${theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                                    opacity: isSelected ? 1 : 0.6,
+                                    boxShadow: isSelected ? `0 0 12px ${accent}33` : undefined
+                                  }} />
+                                )
+                              })
+                            })()}
 
-                           {/* Cover display on first page */}
-                           {activeNote.cover && currentPageIdx === 0 && (
-                             <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
-                               <img src={activeNote.cover} style={{ width: "100%", display: "block" }} alt="Notebook Cover" />
-                             </div>
-                           )}
+                            {/* Cover display on first page */}
+                            {activeNote.cover && currentPageIdx === 0 && (
+                              <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+                                <img src={activeNote.cover} style={{ width: "100%", display: "block" }} alt="Notebook Cover" />
+                              </div>
+                            )}
 
-                           <div
-                             ref={editorRef}
-                             className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
-                             style={{
-                               fontFamily: `"${editorFont}", "Indie Flower", Georgia, serif`,
-                               fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
-                               filter: "url(#handwritten-jitter-subtle)",
-                               fontWeight: 400,
-                               letterSpacing: "0.1px",
-                               lineHeight: 1.8,
-                             }}
-                             spellCheck={spellCheck}
-                             autoCorrect={autoCorrect ? "on" : "off"}
-                             autoCapitalize={autoCapitalize ? "on" : "off"}
-                           />
+                            <div
+                              ref={editorRef}
+                              className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
+                              style={{
+                                fontFamily: `"${editorFont}", "Indie Flower", Georgia, serif`,
+                                fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
+                                filter: "url(#handwritten-jitter-subtle)",
+                                fontWeight: 400,
+                                letterSpacing: "0.1px",
+                                lineHeight: 1.8,
+                              }}
+                              spellCheck={spellCheck}
+                              autoCorrect={autoCorrect ? "on" : "off"}
+                              autoCapitalize={autoCapitalize ? "on" : "off"}
+                            />
 
-                           <style>{`
+                            <style>{`
                              #editor-paper [contenteditable] {
                                color: #1a1a1a !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
@@ -2316,303 +2348,357 @@ export default function NoteApp() {
                              #editor-paper li { margin-bottom: 0.15em !important; }
                            `}</style>
 
-                           {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
-                           <div
-                             ref={boxes.selectionRectRef}
-                             style={{
-                               display: "none",
-                               position: "absolute",
-                               left: 0, top: 0, width: 0, height: 0,
-                               backgroundColor: "rgba(0, 119, 255, 0.12)",
-                               border: "1.5px solid rgba(0, 119, 255, 0.45)",
-                               boxShadow: "0 0 25px -5px rgba(0, 119, 255, 0.3)",
-                               borderRadius: "4px",
-                               pointerEvents: "none",
-                               zIndex: 10000,
-                             }}
-                           />
+                            {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
+                            <div
+                              ref={boxes.selectionRectRef}
+                              style={{
+                                display: "none",
+                                position: "absolute",
+                                left: 0, top: 0, width: 0, height: 0,
+                                backgroundColor: "rgba(0, 119, 255, 0.12)",
+                                border: "1.5px solid rgba(0, 119, 255, 0.45)",
+                                boxShadow: "0 0 25px -5px rgba(0, 119, 255, 0.3)",
+                                borderRadius: "4px",
+                                pointerEvents: "none",
+                                zIndex: 10000,
+                              }}
+                            />
 
-                           {/* Drawing canvas overlay */}
-                           <canvas
-                             ref={canvasRef}
-                             style={{
-                               position: "absolute",
-                               inset: 0,
-                               width: "100%",
-                               height: "100%",
-                               pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
-                               cursor: drawing.getCursor(),
-                               zIndex: activeTool === 'select' ? 10 : 45,
-                               touchAction: "none",
-                             }}
-                             onPointerDown={drawing.onPointerDown}
-                             onPointerMove={drawing.onPointerMove}
-                             onPointerUp={drawing.onPointerUp}
-                             onPointerCancel={drawing.onPointerUp}
-                           />
+                            {/* Drawing canvas overlay */}
+                            <canvas
+                              ref={canvasRef}
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                width: "100%",
+                                height: "100%",
+                                pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
+                                cursor: drawing.getCursor(),
+                                zIndex: activeTool === 'select' ? 10 : 45,
+                                touchAction: "none",
+                              }}
+                              onPointerDown={drawing.onPointerDown}
+                              onPointerMove={drawing.onPointerMove}
+                              onPointerUp={drawing.onPointerUp}
+                              onPointerCancel={drawing.onPointerUp}
+                            />
 
-                           {(activeNote.boxes[currentPageIdx] || []).map(box => (
-                             <BoxItem
-                               key={box.id}
-                               box={box}
-                               isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
-                               selectedCount={boxes.selectedBoxIdsRef.current.size}
-                               loadingBoxId={boxes.loadingBoxId}
-                               accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
-                               theme={theme}
-                               startDrag={boxes.startDrag}
-                               startResize={boxes.startResize}
-                               deleteBox={boxes.deleteBox}
-                               updateBox={boxes.updateBox}
-                               updateBoxContent={boxes.updateBoxContent}
-                               setSelectedBoxIds={boxes.setSelectedBoxIds}
-                               onKeyDown={handleEditorKeyDown}
-                               onInput={handleEditorInput}
-                               onRewrite={boxes.rewriteBox}
-                               onImageGen={boxes.generateSketch}
-                               formattingOpen={toolbarFormattingOpen}
-                               setFormattingOpen={setToolbarFormattingOpen}
-                               aiOpen={toolbarAiOpen}
-                               setAiOpen={setToolbarAiOpen}
-                               onDragStart={() => setIsAnyBoxDragging(true)}
-                               onDragEnd={() => setIsAnyBoxDragging(false)}
-                             />
-                           ))}
-                         </>
-                       )}
+                            {(activeNote.boxes[currentPageIdx] || []).map(box => (
+                              <BoxItem
+                                key={box.id}
+                                box={box}
+                                isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
+                                selectedCount={boxes.selectedBoxIdsRef.current.size}
+                                loadingBoxId={boxes.loadingBoxId}
+                                accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
+                                theme={theme}
+                                startDrag={boxes.startDrag}
+                                startResize={boxes.startResize}
+                                deleteBox={boxes.deleteBox}
+                                updateBox={boxes.updateBox}
+                                updateBoxContent={boxes.updateBoxContent}
+                                setSelectedBoxIds={boxes.setSelectedBoxIds}
+                                onKeyDown={handleEditorKeyDown}
+                                onInput={handleEditorInput}
+                                onRewrite={boxes.rewriteBox}
+                                onImageGen={boxes.generateSketch}
+                                formattingOpen={toolbarFormattingOpen}
+                                setFormattingOpen={setToolbarFormattingOpen}
+                                aiOpen={toolbarAiOpen}
+                                setAiOpen={setToolbarAiOpen}
+                                onDragStart={() => setIsAnyBoxDragging(true)}
+                                onDragEnd={() => setIsAnyBoxDragging(false)}
+                              />
+                            ))}
+                          </>
+                        )}
 
-                      {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
-                      <div
-                        className="absolute top-0 right-0 z-50 no-print select-none"
-                        style={{ padding: "32px 20px 48px 60px" }}
-                        onMouseDown={e => e.stopPropagation()}
-                        onPointerDown={e => e.stopPropagation()}
-                        onClick={e => e.stopPropagation()}
-                      >
+                        {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
                         <div
-                          className="flex items-center gap-0.5"
+                          className="absolute top-0 right-0 z-50 no-print select-none"
+                          style={{ padding: "32px 20px 48px 60px" }}
                           onMouseDown={e => e.stopPropagation()}
                           onPointerDown={e => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
                         >
-                          {/* Skip to first */}
-                          <button
-                            disabled={currentPageIdx === 0}
-                            onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
-                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                            title="First Page"
+                          <div
+                            className="flex items-center gap-0.5"
+                            onMouseDown={e => e.stopPropagation()}
+                            onPointerDown={e => e.stopPropagation()}
                           >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8"/><path d="m11 20-4-8 4-8"/></svg>
-                          </button>
-                          {/* Previous */}
-                          <button
-                            disabled={currentPageIdx === 0}
-                            onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                            title="Previous Page"
-                          >
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
-                          </button>
-                          <PageNumberInput
-                            currentPageIdx={currentPageIdx}
-                            totalPages={activeNote.pages.length}
-                            theme={theme}
-                            onNavigate={(idx: number) => { editor.flushSync(); setCurrentPageIdx(idx) }}
-                          />
-                          {/* Next */}
-                          <button
-                            onClick={() => {
-                              editor.flushSync();
-                              if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
-                              else {
-                                const np = [...activeNote.pages, ""];
-                                setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
-                                setCurrentPageIdx(activeNote.pages.length)
-                              }
-                            }}
-                            className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                            title="Next Page / Add Page"
-                          >
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
-                          </button>
-                          {/* Skip to last */}
-                          <button
-                            disabled={currentPageIdx === activeNote.pages.length - 1}
-                            onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
-                            className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                            title="Last Page"
-                          >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8"/><path d="m13 20 4-8-4-8"/></svg>
-                          </button>
-                        </div>{/* end inner flex */}
+                            {/* Skip to first */}
+                            <button
+                              disabled={currentPageIdx === 0}
+                              onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              title="First Page"
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8" /><path d="m11 20-4-8 4-8" /></svg>
+                            </button>
+                            {/* Previous */}
+                            <button
+                              disabled={currentPageIdx === 0}
+                              onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              title="Previous Page"
+                            >
+                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
+                            </button>
+                            <PageNumberInput
+                              currentPageIdx={currentPageIdx}
+                              totalPages={activeNote.pages.length}
+                              theme={theme}
+                              onNavigate={(idx: number) => { editor.flushSync(); setCurrentPageIdx(idx) }}
+                            />
+                            {/* Next */}
+                            <button
+                              onClick={() => {
+                                editor.flushSync();
+                                if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
+                                else {
+                                  const np = [...activeNote.pages, ""];
+                                  setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
+                                  setCurrentPageIdx(activeNote.pages.length)
+                                }
+                              }}
+                              className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
+                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              title="Next Page / Add Page"
+                            >
+                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
+                            </button>
+                            {/* Skip to last */}
+                            <button
+                              disabled={currentPageIdx === activeNote.pages.length - 1}
+                              onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              title="Last Page"
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8" /><path d="m13 20 4-8-4-8" /></svg>
+                            </button>
+                          </div>{/* end inner flex */}
 
-                        {/* Cover button — subtle, top-right corner */}
-                        <button
-                          onClick={() => setShowCoverModal(true)}
-                          className="absolute top-4 right-4 p-1.5 opacity-0 hover:opacity-100 transition-opacity rounded-md hover:bg-black/5"
-                          style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                          title={activeNote?.cover ? "Edit cover" : "Add cover"}
-                        >
-                          {activeNote?.cover ? (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.6"><path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><circle cx="8.5" cy="8.5" r="1.5" fill="white"/><path d="M21 15l-5-5L5 21" stroke="white" strokeWidth="2" fill="none"/></svg>
-                          ) : (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20"/></svg>
-                          )}
-                        </button>
-                      </div>{/* end deadzone */}
+                          {/* Cover button — subtle, top-right corner */}
+                          <button
+                            onClick={() => setShowCoverModal(true)}
+                            className="absolute top-4 right-4 p-1.5 opacity-0 hover:opacity-100 transition-opacity rounded-md hover:bg-black/5"
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                            title={activeNote?.cover ? "Edit cover" : "Add cover"}
+                          >
+                            {activeNote?.cover ? (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.6"><path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /><circle cx="8.5" cy="8.5" r="1.5" fill="white" /><path d="M21 15l-5-5L5 21" stroke="white" strokeWidth="2" fill="none" /></svg>
+                            ) : (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" /></svg>
+                            )}
+                          </button>
+                        </div>{/* end deadzone */}
 
+                      </div>
                     </div>
+                    <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
                   </div>
-                  <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
                 </div>
-              </div>
-            </main>
-          )}
+              </main>
+            )}
 
+          </div>
+
+          {notes.filter(n => !n.archived).length > 0 && !gridView && (
+            <>
+              <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
+              <HangingOrange onClick={() => setOrchardOpen(true)} />
+            </>
+          )}
         </div>
 
-        {notes.filter(n => !n.archived).length > 0 && !gridView && (
-          <>
-            <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
-            <HangingOrange onClick={() => {/* Opens garden page (coming soon) */}} />
-          </>
+
+        {slashMenu && (
+          <SlashMenu
+            {...slashMenu}
+            accent={accent}
+            box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
+            onUpdateBox={boxes.updateBox}
+            onSelect={executeSlashItem}
+            onClose={closeSlashMenu}
+            execCmd={editor.execCmd}
+            insertHTML={editor.insertHTML}
+            toggleScript={editor.toggleScript}
+            insertBacklink={insertBacklink}
+            onInsertImage={() => { closeSlashMenu(); setShowImageModal(true) }}
+          />
         )}
+
+        {showImageModal && (
+          <ImageUploadModal
+            onConfirm={(htmlOrUrl, isHtml) => {
+              if (isHtml) {
+                editor.insertHTML(htmlOrUrl)
+              } else {
+                editor.insertHTML(`<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`)
+              }
+            }}
+            onClose={() => setShowImageModal(false)}
+          />
+        )}
+
+        {showCoverModal && (
+          <CoverModal
+            existingCover={activeNote?.cover}
+            onConfirm={setCover}
+            onClose={() => setShowCoverModal(false)}
+          />
+        )}
+
+        {aiMenu && (
+          <AiInlineMenu
+            x={aiMenu.x}
+            y={aiMenu.y}
+            selectedText={aiMenu.selectedText}
+            initialPrompt={aiMenu.initialPrompt}
+            isDark={theme === "dark"}
+            onClose={() => setAiMenu(null)}
+            onSubmit={async (prompt: string, selectedText?: string) => {
+              setAiMenu(null)
+
+              try {
+                const response = await fetch("/api/ai", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ prompt, text: selectedText || "" })
+                })
+
+                const data = await response.json()
+
+                if (!response.ok) {
+                  const errorMsg = data.error || `Request failed with status ${response.status}`
+                  throw new Error(errorMsg)
+                }
+
+                const result = data.result || ""
+                if (!result) {
+                  throw new Error("No response from AI")
+                }
+
+                // Insert inline: replace selected text or insert at cursor
+                if (selectedText) {
+                  editor.execCmd("insertText", result)
+                } else {
+                  editor.insertHTML(result)
+                }
+              } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : "Unknown error"
+                console.error("AI error:", errorMsg)
+                openAlert("AI Error", errorMsg)
+              }
+            }}
+          />
+        )}
+
+        {aiResult && (
+          <AiResultModal
+            title={aiResult.title}
+            result={aiResult.result}
+            loading={aiResult.loading}
+            onClose={() => setAiResult(null)}
+            onInsert={text => { editor.insertHTML(`<p>${text}</p>`); setAiResult(null) }}
+          />
+        )}
+
+        {showAiCommandBar && (
+          <AiCommandBar
+            onClose={() => setShowAiCommandBar(false)}
+            onSubmit={async (prompt) => {
+              setShowAiCommandBar(false)
+              setAiResult({ title: "AI Generation", result: "", loading: true })
+              try {
+                const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action: "generate", text: prompt }) })
+                if (!res.ok) throw new Error("API error")
+                const data = await res.json()
+                setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
+              } catch {
+                setAiResult(null); openAlert("AI Error", "Could not process your request.")
+              }
+            }}
+          />
+        )}
+
+        {/* Sign In to Sync - Bottom Right */}
+        {!user && (
+          <button
+            onClick={() => window.location.href = "/login"}
+            className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] shadow-lg hover:shadow-xl z-40"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
+            <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
+          </button>
+        )}
+
       </div>
 
+      <OrchardView
+        isOpen={orchardOpen}
+        onClose={() => setOrchardOpen(false)}
+        theme={theme}
+        accent={accent}
+        sunshine={sunshine}
+        gems={gems}
+        grove={grove}
+        setSunshine={setSunshine}
+        setGems={setGems}
+        setGrove={setGrove}
+      />
 
-      {slashMenu && (
-        <SlashMenu
-          {...slashMenu}
-          accent={accent}
-          box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
-          onUpdateBox={boxes.updateBox}
-          onSelect={executeSlashItem}
-          onClose={closeSlashMenu}
-          execCmd={editor.execCmd}
-          insertHTML={editor.insertHTML}
-          toggleScript={editor.toggleScript}
-          insertBacklink={insertBacklink}
-          onInsertImage={() => { closeSlashMenu(); setShowImageModal(true) }}
-        />
-      )}
+      <BoutiqueView
+        isOpen={shopOpen}
+        onClose={() => setShopOpen(false)}
+        theme={theme}
+        accent={accent}
+        sunshine={sunshine}
+        gems={gems}
+        setSunshine={setSunshine}
+        setGems={setGems}
+        setGrove={setGrove}
+      />
 
-      {showImageModal && (
-        <ImageUploadModal
-          onConfirm={(htmlOrUrl, isHtml) => {
-            if (isHtml) {
-              editor.insertHTML(htmlOrUrl)
-            } else {
-              editor.insertHTML(`<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`)
-            }
-          }}
-          onClose={() => setShowImageModal(false)}
-        />
-      )}
+      <VitalitySystem
+        theme={theme}
+        totalChars={totalChars}
+        sidebarWidth={sidebarWidth}
+        timerOpen={timerOpen}
+        onSetTimerOpen={setTimerOpen}
+        sunshine={sunshine}
+        gems={gems}
+        grove={grove}
+        setSunshine={setSunshine}
+        setGems={setGems}
+        setGrove={setGrove}
+        checkAchievementRef={checkAchievementRef}
+        claimAchievementRef={claimAchievementRef}
+      />
 
-      {showCoverModal && (
-        <CoverModal
-          existingCover={activeNote?.cover}
-          onConfirm={setCover}
-          onClose={() => setShowCoverModal(false)}
-        />
-      )}
-
-      {aiMenu && (
-        <AiInlineMenu
-          x={aiMenu.x}
-          y={aiMenu.y}
-          selectedText={aiMenu.selectedText}
-          isDark={theme === "dark"}
-          onClose={() => setAiMenu(null)}
-          onSubmit={async (prompt: string, selectedText?: string) => {
-            setAiMenu(null)
-
-            try {
-              const response = await fetch("/api/ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt, text: selectedText || "" })
-              })
-
-              const data = await response.json()
-
-              if (!response.ok) {
-                const errorMsg = data.error || `Request failed with status ${response.status}`
-                throw new Error(errorMsg)
-              }
-
-              const result = data.result || ""
-              if (!result) {
-                throw new Error("No response from AI")
-              }
-
-              // Insert inline: replace selected text or insert at cursor
-              if (selectedText) {
-                editor.execCmd("insertText", result)
-              } else {
-                editor.insertHTML(result)
-              }
-            } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : "Unknown error"
-              console.error("AI error:", errorMsg)
-              openAlert("AI Error", errorMsg)
-            }
-          }}
-        />
-      )}
-
-      {aiResult && (
-        <AiResultModal
-          title={aiResult.title}
-          result={aiResult.result}
-          loading={aiResult.loading}
-          onClose={() => setAiResult(null)}
-          onInsert={text => { editor.insertHTML(`<p>${text}</p>`); setAiResult(null) }}
-        />
-      )}
-
-      {showAiCommandBar && (
-        <AiCommandBar
-          onClose={() => setShowAiCommandBar(false)}
-          onSubmit={async (prompt) => {
-            setShowAiCommandBar(false)
-            setAiResult({ title: "AI Generation", result: "", loading: true })
-            try {
-              const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action: "generate", text: prompt }) })
-              if (!res.ok) throw new Error("API error")
-              const data = await res.json()
-              setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
-            } catch {
-              setAiResult(null); openAlert("AI Error", "Could not process your request.")
-            }
-          }}
-        />
-      )}
-
-      {/* Sign In to Sync - Bottom Right */}
-      {!user && (
+      {/* Persistent timer toggle — visible even when the sidebar is collapsed */}
+      {sidebarWidth <= 40 && (
         <button
-          onClick={() => window.location.href = "/login"}
-          className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] shadow-lg hover:shadow-xl z-40"
+          onClick={() => setTimerOpen(!timerOpen)}
+          title="Focus timer  (⌘⌥T)"
+          className="fixed bottom-3 left-3 z-[60] w-8 h-8 flex items-center justify-center rounded-md transition-colors"
+          style={{
+            backgroundColor: theme === "dark" ? "rgba(20,20,22,0.85)" : "rgba(255,255,255,0.9)",
+            border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+            color: timerOpen ? "#e4e4e7" : "#71717a",
+            backdropFilter: "blur(12px)",
+          }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-          <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l2 2" />
+            <path d="M9 2h6" />
+          </svg>
         </button>
       )}
-
-    </div>
-
-    <VitalitySystem 
-      theme={theme} 
-      accent={accent} 
-      totalChars={totalChars}
-      onSunshineUpdate={setSunshine}
-      onGemsUpdate={setGems}
-      onTimerToggle={setTimerOpen}
-    />
     </>
   )
 }

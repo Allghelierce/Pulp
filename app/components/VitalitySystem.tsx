@@ -1,36 +1,43 @@
 "use client"
-import { useState, useRef, useEffect, memo, useCallback } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef, memo, useCallback } from "react"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, Tree } from "@/app/types"
 
 interface VitalitySystemProps {
   theme: "light" | "dark"
-  accent: string
   totalChars: number
-  onSunshineUpdate: (sunshine: number) => void
-  onGemsUpdate: (gems: number) => void
-  onTimerToggle: (open: boolean) => void
-  checkAchievementRef: React.MutableRefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
-  claimAchievementRef: React.MutableRefObject<((id: string) => void) | null>
+  sidebarWidth: number
+  timerOpen: boolean
+  onSetTimerOpen: (open: boolean) => void
+  sunshine: number
+  gems: number
+  grove: Tree[]
+  setSunshine: React.Dispatch<React.SetStateAction<number>>
+  setGems: React.Dispatch<React.SetStateAction<number>>
+  setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
+  checkAchievementRef: React.RefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
+  claimAchievementRef: React.RefObject<((id: string) => void) | null>
 }
 
-export const VitalitySystem = memo(function VitalitySystem({ 
-  theme, accent, totalChars, onSunshineUpdate, onGemsUpdate, onTimerToggle, checkAchievementRef, claimAchievementRef 
+export const VitalitySystem = memo(function VitalitySystem({
+  theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
+  sunshine, gems, grove, setSunshine, setGems, setGrove,
+  checkAchievementRef, claimAchievementRef,
 }: VitalitySystemProps) {
-  
+
   // ─── Timer State ───
-  const [timerOpen, setTimerOpen] = useState(false)
   const [timerElapsed, setTimerElapsed] = useState(0)
   const [timerTotal, setTimerTotal] = useState(25 * 60)
   const [timerRunning, setTimerRunning] = useState(false)
   const [timerDone, setTimerDone] = useState(false)
   const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">("focus")
+  const [waterDeadline, setWaterDeadline] = useState<number | null>(null)
+  const [treeDead, setTreeDead] = useState(false)
 
-  // ─── Gamification State ───
-  const [sunshine, setSunshine] = useState(1000)
-  const [gems, setGems] = useState(5)
-  const [grove, setGrove] = useState<Tree[]>([])
+  const WATER_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
+  const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
+
+  // ─── Achievements State ───
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
     { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
@@ -39,35 +46,35 @@ export const VitalitySystem = memo(function VitalitySystem({
     { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
   ])
   const [lastCharCount, setLastCharCount] = useState(0)
+  const hydratedRef = useRef(false)
 
-  // Sync timer open state to parent for layout
-  useEffect(() => {
-    onTimerToggle(timerOpen)
-  }, [timerOpen, onTimerToggle])
-
-  // Hydration
+  // Hydration — runs once on mount before persistence is allowed to write
   useEffect(() => {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       const data = JSON.parse(saved)
-      setSunshine(data.sunshine ?? 1000)
-      setGems(data.gems ?? 5)
-      setGrove(data.grove || [])
       if (data.achievements) setAchievements(data.achievements)
     }
 
-    const savedTimer = localStorage.getItem('pulp-timer')
+    // Active timer lives in sessionStorage so closing the tab forfeits the session
+    const savedTimer = sessionStorage.getItem('pulp-timer')
     if (savedTimer) {
       const t = JSON.parse(savedTimer)
       setTimerTotal(t.total ?? 25 * 60)
       setTimerPreset(t.preset ?? "focus")
       setTimerDone(t.done ?? false)
+      setWaterDeadline(t.waterDeadline ?? null)
       if (t.running && !t.done) {
         const elapsedSinceLast = Math.floor((Date.now() - t.timestamp) / 1000)
         const totalElapsed = (t.elapsed || 0) + elapsedSinceLast
-        if (totalElapsed >= (t.total ?? 25 * 60)) {
-          setTimerElapsed(t.total ?? 25 * 60)
+        const totalCap = t.total ?? 25 * 60
+        if (totalElapsed >= totalCap) {
+          setTimerElapsed(totalCap)
           setTimerDone(true)
+        } else if (t.waterDeadline && Date.now() > t.waterDeadline) {
+          // Missed the watering window while tab was reloading
+          setTimerElapsed(totalElapsed)
+          setTreeDead(true)
         } else {
           setTimerElapsed(totalElapsed)
           setTimerRunning(true)
@@ -76,31 +83,39 @@ export const VitalitySystem = memo(function VitalitySystem({
         setTimerElapsed(t.elapsed ?? 0)
       }
     }
+    hydratedRef.current = true
   }, [])
 
-  // Persistence
+  // Persistence — gated by hydratedRef so the initial render doesn't overwrite saved state
   useEffect(() => {
+    if (!hydratedRef.current) return
     localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove, achievements }))
-    onSunshineUpdate(sunshine)
-    onGemsUpdate(gems)
-  }, [sunshine, gems, grove, achievements, onSunshineUpdate, onGemsUpdate])
+  }, [sunshine, gems, grove, achievements])
 
   useEffect(() => {
-    localStorage.setItem('pulp-timer', JSON.stringify({
+    if (!hydratedRef.current) return
+    sessionStorage.setItem('pulp-timer', JSON.stringify({
       elapsed: timerElapsed,
       total: timerTotal,
       running: timerRunning,
       done: timerDone,
       preset: timerPreset,
+      waterDeadline,
       timestamp: Date.now()
     }))
-  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset])
+  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline])
 
-  // Intervals
+  // Timer tick — advances elapsed and checks the water deadline each second
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
       interval = setInterval(() => {
+        // Watering check first — if missed, kill the tree and stop the session
+        if (waterDeadline && Date.now() > waterDeadline) {
+          setTimerRunning(false)
+          setTreeDead(true)
+          return
+        }
         setTimerElapsed(prev => {
           if (prev >= timerTotal) {
             setTimerRunning(false)
@@ -112,14 +127,58 @@ export const VitalitySystem = memo(function VitalitySystem({
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [timerRunning, timerDone, timerTotal])
+  }, [timerRunning, timerDone, timerTotal, waterDeadline])
 
+  // Session control handlers passed down to the panel
+  const startSession = useCallback(() => {
+    setTimerElapsed(0)
+    setTimerDone(false)
+    setTreeDead(false)
+    setTimerRunning(true)
+    if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
+      setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
+    } else {
+      setWaterDeadline(null)
+    }
+  }, [timerTotal])
+
+  const giveUp = useCallback(() => {
+    setTimerRunning(false)
+    setTimerElapsed(0)
+    setTimerDone(false)
+    setTreeDead(false)
+    setWaterDeadline(null)
+  }, [])
+
+  const waterTree = useCallback(() => {
+    if (!timerRunning || treeDead) return
+    setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
+  }, [timerRunning, treeDead])
+
+  const claimReward = useCallback(() => {
+    if (!timerDone || treeDead) return
+    const reward = timerTotal === 15 * 60 ? 2 : timerTotal === 25 * 60 ? 5 : 3
+    setSunshine(s => s + reward)
+    setTimerElapsed(0)
+    setTimerDone(false)
+    setTreeDead(false)
+    setWaterDeadline(null)
+  }, [timerDone, treeDead, timerTotal, setSunshine])
+
+  const dismissDeadTree = useCallback(() => {
+    setTimerElapsed(0)
+    setTimerDone(false)
+    setTreeDead(false)
+    setWaterDeadline(null)
+  }, [])
+
+  // Passive sunshine gain
   useEffect(() => {
     const timer = setInterval(() => {
       setSunshine(s => s + 1)
     }, 30000)
     return () => clearInterval(timer)
-  }, [])
+  }, [setSunshine])
 
   // Achievement Methods
   const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
@@ -141,7 +200,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       else setSunshine(s => s + target.reward)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [])
+  }, [setGems, setSunshine])
 
   // Expose methods via refs
   useEffect(() => {
@@ -149,77 +208,48 @@ export const VitalitySystem = memo(function VitalitySystem({
     claimAchievementRef.current = claimAchievement
   }, [checkAchievement, claimAchievement, checkAchievementRef, claimAchievementRef])
 
-  // Char count tracking (gems per 500 chars)
+  // Char count tracking & Tree Growth
   useEffect(() => {
-    if (totalChars > lastCharCount + 500) {
-      const earned = Math.floor((totalChars - lastCharCount) / 500)
-      setGems(n => n + earned)
-      setLastCharCount(totalChars)
-      checkAchievement('novice_writer', a => ({ progress: totalChars }))
+    if (totalChars > lastCharCount) {
+      const diff = totalChars - lastCharCount
+      if (diff >= 100) {
+        setGrove(prev => prev.map(tree => {
+          if (tree.type === 'spoiled' || tree.stage >= 4) return tree
+          const newProgress = (tree.progress || 0) + (diff / 100) * 5
+          const newStage = Math.min(4, Math.floor(newProgress / 25))
+          return { ...tree, progress: newProgress, stage: newStage }
+        }))
+        setLastCharCount(totalChars)
+      }
+
+      if (totalChars > lastCharCount + 500) {
+        const earned = Math.floor((totalChars - lastCharCount) / 500)
+        setGems(g => g + earned)
+        checkAchievement('novice_writer', () => ({ progress: totalChars }))
+      }
     }
-  }, [totalChars, lastCharCount, checkAchievement])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems])
 
   return (
-    <>
-      <TimerSidebarPanel
-        isOpen={timerOpen}
-        onClose={() => setTimerOpen(false)}
-        elapsed={timerElapsed}
-        total={timerTotal}
-        running={timerRunning}
-        done={timerDone}
-        preset={timerPreset}
-        theme={theme}
-        onSetRunning={setTimerRunning}
-        onSetElapsed={setTimerElapsed}
-        onSetTotal={setTimerTotal}
-        onSetPreset={setTimerPreset}
-        onSetDone={setTimerDone}
-      />
-
-      <motion.button
-        onClick={() => setTimerOpen(true)}
-        title="Focus Sanctuary"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ 
-          opacity: timerOpen ? 0 : 1, 
-          x: timerOpen ? 40 : 0,
-          pointerEvents: timerOpen ? "none" : "auto" 
-        }}
-        whileHover={{ scale: 1.1, x: -5 }}
-        whileTap={{ scale: 0.9 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        style={{
-          position: "fixed",
-          right: 24,
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: 56,
-          height: 56,
-          zIndex: 2147483647,
-          backgroundColor: theme === "dark" ? "#18181b" : accent,
-          border: "2.5px solid white",
-          borderRadius: 18,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          boxShadow: `0 10px 40px ${accent}66`,
-          backdropFilter: "blur(12px)",
-          padding: 0,
-        }}
-      >
-        <motion.div
-          animate={{ rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 6v6l4 2"></path>
-          </svg>
-        </motion.div>
-      </motion.button>
-    </>
+    <TimerSidebarPanel
+      isOpen={timerOpen}
+      onClose={() => onSetTimerOpen(false)}
+      elapsed={timerElapsed}
+      total={timerTotal}
+      running={timerRunning}
+      done={timerDone}
+      preset={timerPreset}
+      theme={theme}
+      sidebarWidth={sidebarWidth}
+      waterDeadline={waterDeadline}
+      treeDead={treeDead}
+      onSetTotal={setTimerTotal}
+      onSetPreset={setTimerPreset}
+      onStart={startSession}
+      onGiveUp={giveUp}
+      onWater={waterTree}
+      onClaim={claimReward}
+      onDismissDead={dismissDeadTree}
+    />
   )
 })

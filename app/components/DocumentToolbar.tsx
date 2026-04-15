@@ -46,7 +46,7 @@ interface DocumentToolbarProps {
   isSidebarDragging: boolean
   sunshine: number
   gems: number
-  onOpenAiMenu: (x: number, y: number, selectedText?: string) => void
+  onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
   isVault?: boolean
   isUnlocked?: boolean
   onLock?: () => void
@@ -58,6 +58,34 @@ interface DocumentToolbarProps {
 
 
 const GOLD = "#D4AF37"
+
+const AiMascotIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="14" fill="url(#orange-grad)" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
+    <defs>
+      <radialGradient id="orange-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.2 11.2) rotate(90) scale(22.4)">
+        <stop stopColor="#fb923c" />
+        <stop offset="1" stopColor="#ea580c" />
+      </radialGradient>
+    </defs>
+    {/* Eyes */}
+    <circle cx="11" cy="14" r="1.5" fill="rgba(0,0,0,0.7)" />
+    <circle cx="21" cy="14" r="1.5" fill="rgba(0,0,0,0.7)" />
+    {/* Mouth */}
+    <path d="M 12 21 Q 16 24 20 21" stroke="rgba(0,0,0,0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+    {/* Leaf */}
+    <path d="M 16 2 L 20 0 Q 22 2 20 4 L 16 2 Z" fill="#166534" />
+  </svg>
+)
+
+const COMMON_PROMPTS = [
+  { label: "Summarize", prompt: "Summarize this clearly" },
+  { label: "Make shorter", prompt: "Summarize this into a concise point" },
+  { label: "Fix Grammar", prompt: "Fix grammar and spelling" },
+  { label: "Expand", prompt: "Expand this with more detail" },
+  { label: "Explain simply", prompt: "Explain this in very simple terms" },
+  { label: "Rewrite", prompt: "Rewrite this more professionally" },
+]
 
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx,
@@ -94,12 +122,22 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => document.removeEventListener("mousedown", handler)
   }, [alignOpen])
 
+  const [aiOpen, setAiOpen] = useState(false)
+  const aiRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!drawOpen) return
     const handler = (e: MouseEvent) => { if (!drawRef.current?.contains(e.target as Node)) setDrawOpen(false) }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [drawOpen])
+
+  useEffect(() => {
+    if (!aiOpen) return
+    const handler = (e: MouseEvent) => { if (!aiRef.current?.contains(e.target as Node)) setAiOpen(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [aiOpen])
 
   useEffect(() => {
     if (!leftToolsRef.current) return
@@ -204,76 +242,63 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
 
 
-        {/* AI Button */}
-        <button
-          onClick={() => {
-            const sel = window.getSelection()
-            const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
-            let x = 200, y = 200
-            if (sel && sel.rangeCount > 0) {
-              const rect = sel.getRangeAt(0).getBoundingClientRect()
-              x = rect.left
-              y = rect.top - 12
-            }
-            onOpenAiMenu(x, y, selectedText)
-          }}
-          title="AI Assistant (Cmd+\\)"
-          className={`${btnBase} flex items-center gap-1.5`}
-          style={btnFont}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1z" />
-            <path d="M4.929 4.929a1 1 0 0 1 1.414 0l1.414 1.414a1 1 0 0 1-1.414 1.414L4.929 6.343a1 1 0 0 1 0-1.414z" />
-            <path d="M2 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1z" />
-            <path d="M4.929 19.071a1 1 0 0 1 0-1.414l1.414-1.414a1 1 0 1 1 1.414 1.414l-1.414 1.414a1 1 0 0 1-1.414 0z" />
-            <path d="M12 21a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1z" />
-            <path d="M18.071 19.071a1 1 0 1 1 1.414-1.414l1.414 1.414a1 1 0 0 1-1.414 1.414l-1.414-1.414z" />
-            <path d="M21 12a1 1 0 0 1-1 1h-2a1 1 0 1 1 0-2h2a1 1 0 0 1 1 1z" />
-            <path d="M19.071 4.929a1 1 0 1 1-1.414 1.414l-1.414-1.414a1 1 0 0 1 1.414-1.414l1.414 1.414z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          AI
-        </button>
-
-        {/* Draw dropdown */}
-        <div ref={drawRef} className="relative flex shrink-0">
+        {/* AI Button with Dropdown */}
+        <div ref={aiRef} className="relative flex shrink-0">
           <button
-            onMouseDown={e => { e.preventDefault(); setDrawOpen(!drawOpen) }}
-            title="Draw options"
-            className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
-            style={{ ...(drawOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
+            onMouseDown={e => { e.preventDefault(); setAiOpen(!aiOpen) }}
+            title="Quick Prompts"
+            className={`${btnBase} flex items-center gap-1.5`}
+            style={{ ...(aiOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
           >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
-            <span>Draw</span>
-            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
+            <AiMascotIcon size={14} />
+            <span>Quick Prompts</span>
+            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5, marginLeft: 2 }}><path d="M0 0l5 6 5-6z" /></svg>
           </button>
 
-          {drawOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[150px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+          {aiOpen && (
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+              <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
+              {COMMON_PROMPTS.map((item, idx) => (
+                <button
+                  key={idx}
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    const sel = window.getSelection()
+                    const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
+                    const rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : { left: 400, top: 400 }
+                    onOpenAiMenu(rect.left, rect.top - 12, selectedText, item.prompt)
+                    // We could potentially pass the prompt directly to the AI here, 
+                    // but for now opening the menu with the prompt is a good start if we have a way to pass it.
+                    // Or let's just use it to open the prompt bar.
+                    setAiOpen(false)
+                  }}
+                  className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                  style={btnFont}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="h-px bg-zinc-200/50 my-1 mx-1" />
               <button
-                onMouseDown={e => { e.preventDefault(); onToggleDrawToolbar(); setDrawOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                onMouseDown={e => { e.preventDefault(); onOpenAiMenu(200, 200); setAiOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
                 style={btnFont}
               >
-                Pen Tool
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); setDrawOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                Shape Tool
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); setDrawOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                Eraser
+                Custom Prompt...
               </button>
             </div>
           )}
         </div>
+
+        {/* Draw toolbar toggle */}
+        <button
+          onClick={onToggleDrawToolbar}
+          className={`${btnBase} flex items-center gap-1.5`}
+          style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
+          Draw
+        </button>
 
         {/* Sticky Note Tool */}
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">

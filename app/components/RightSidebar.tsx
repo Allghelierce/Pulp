@@ -1,6 +1,8 @@
 "use client"
 import { memo, useState } from "react"
 
+import { TREE_TYPES } from "@/app/constants"
+
 interface RightSidebarProps {
   isOpen: boolean
   onClose: () => void
@@ -21,10 +23,14 @@ export const RightSidebar = memo(function RightSidebar({
   const [sunshineTooltip, setSunshineTooltip] = useState(false)
   const [gemsTooltip, setGemsTooltip] = useState(false)
 
-  const plantSeed = (type: 'navel' | 'blood' | 'clementine') => {
-    const cost = 10
-    if (sunshine < cost) return
-    setSunshine(s => s - cost)
+  const plantSeed = (type: keyof typeof TREE_TYPES) => {
+    const typeInfo = TREE_TYPES[type]
+    const hasFunds = typeInfo.currency === 'sunshine' ? sunshine >= typeInfo.cost : gems >= typeInfo.cost
+    if (!hasFunds) return
+    
+    if (typeInfo.currency === 'sunshine') setSunshine(s => s - typeInfo.cost)
+    else setGems(g => g - typeInfo.cost)
+
     setGrove(g => [...g.slice(0, 8), { 
       id: Date.now(), 
       type, 
@@ -32,12 +38,6 @@ export const RightSidebar = memo(function RightSidebar({
       progress: 0,
       plantedAt: Date.now() 
     }].slice(0, 9))
-  }
-
-  const TREE_TYPES = {
-    navel: { name: 'Navel Orange', color: '#b85e22', bg: 'rgba(184, 94, 34, 0.1)' },
-    blood: { name: 'Blood Orange', color: '#800000', bg: 'rgba(128, 0, 0, 0.1)' },
-    clementine: { name: 'Clementine', color: '#ff8c00', bg: 'rgba(255, 140, 0, 0.1)' }
   }
 
   return (
@@ -113,22 +113,23 @@ export const RightSidebar = memo(function RightSidebar({
           {/* Seed Variety Selection */}
           <section className="space-y-4">
              <h3 className="text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-400 text-center">Nursery Shop</h3>
-             <div className="flex justify-between gap-2 px-2">
+             <div className="flex flex-wrap justify-center gap-4 px-2">
                 {(Object.keys(TREE_TYPES) as Array<keyof typeof TREE_TYPES>).map(type => (
                   <button 
                     key={type}
                     onClick={() => plantSeed(type)}
-                    disabled={sunshine < 10}
+                    disabled={TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost}
                     className="flex flex-col items-center group disabled:opacity-30"
                   >
                     <div 
-                      className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-dashed border-zinc-200 group-hover:border-zinc-300 transition-all mb-1"
+                      className="w-11 h-11 rounded-xl flex items-center justify-center border-2 border-dashed border-zinc-200 group-hover:border-zinc-300 transition-all mb-1 overflow-hidden relative"
                       style={{ backgroundColor: TREE_TYPES[type].bg }}
                     >
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: TREE_TYPES[type].color }} />
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: TREE_TYPES[type].color }} />
+                      {TREE_TYPES[type].rare && <div className="absolute top-0 right-0 p-0.5 text-[6px]">✨</div>}
                     </div>
                     <span className="text-[8px] font-bold text-zinc-500">{TREE_TYPES[type].name.split(' ')[0]}</span>
-                    <span className="text-[7px] text-zinc-400">10 Sun</span>
+                    <span className="text-[7px] text-zinc-400">{TREE_TYPES[type].cost} {TREE_TYPES[type].currency === 'sunshine' ? 'Sun' : 'Gem'}</span>
                   </button>
                 ))}
              </div>
@@ -154,31 +155,9 @@ export const RightSidebar = memo(function RightSidebar({
                     ) : (
                       <div className="flex flex-col items-center">
                         {/* Tree Stages Visual */}
-                        <div className="relative mb-1">
-                           {/* Simple Procedural Tree SVG */}
-                           <svg width="32" height="32" viewBox="0 0 24 24" className="overflow-visible">
-                              {/* Trunk */}
-                              <rect x="11" y="16" width="2" height="6" fill="#5c2d0b" rx="0.5" />
-                              {/* Leaves (Stage based scaling) */}
-                              <circle 
-                                cx="12" cy="12" 
-                                r={4 + (tree.stage * 1.5)} 
-                                fill={TREE_TYPES[tree.type as keyof typeof TREE_TYPES].color} 
-                                opacity="0.8" 
-                              />
-                              {/* Gathered Fruit at the base (for stage >= 3) */}
-                              {tree.stage >= 3 && (
-                                <g>
-                                  {/* Orange 1 */}
-                                  <line x1="10" y1="21.5" x2="10" y2="22.5" stroke="#5c2d0b" strokeWidth="0.4" />
-                                  <circle cx="10" cy="22.5" r="1.2" fill="#f97316" />
-                                  {/* Orange 2 */}
-                                  <line x1="14" y1="21.5" x2="14" y2="22.5" stroke="#5c2d0b" strokeWidth="0.4" />
-                                  <circle cx="14" cy="22.5" r="1.1" fill="#f97316" />
-                                </g>
-                              )}
-                           </svg>
-                        </div>
+                           <div className="overflow-visible">
+                              <PlantIcon type={tree.type} size={32} stage={tree.stage} />
+                           </div>
                         <div className="w-full px-2 h-0.5 bg-zinc-100 rounded-full overflow-hidden">
                            <div className="h-full bg-emerald-400" style={{ width: '40%' }} />
                         </div>

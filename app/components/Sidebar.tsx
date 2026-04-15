@@ -67,6 +67,8 @@ interface SidebarProps {
   onSetNoteParent: (id: string, parentId: string | undefined) => void
   onChangeNoteIcon: (id: string, icon: string) => void
   onOpenSettings: () => void
+  onOpenTimer?: () => void
+  timerOpen?: boolean
   onUnlockDev: () => void
   onGoToShelf: () => void
   bookmarks: Bookmark[]
@@ -83,7 +85,7 @@ export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds,
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
-  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onUnlockDev, onGoToShelf,
+  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote,
 }: SidebarProps) {
@@ -648,11 +650,25 @@ export const Sidebar = memo(function Sidebar({
           </div>
         </div>
 
-        <div className="border-t border-white/5 px-3 py-2 shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          <button onClick={onOpenSettings} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
+        <div className="border-t border-white/5 px-3 py-2 shrink-0 z-10 relative bg-[#110d0e] flex items-center gap-1" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+          <button onClick={onOpenSettings} className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
             <span className="text-[13px] shrink-0">⚙️</span>
             <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
           </button>
+          {onOpenTimer && (
+            <button
+              onClick={onOpenTimer}
+              title="Focus timer  (⌘⌥T)"
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-zinc-800/70"
+              style={{ color: timerOpen ? "#e4e4e7" : "#71717a" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l2 2" />
+                <path d="M9 2h6" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Archive Section */}

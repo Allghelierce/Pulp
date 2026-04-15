@@ -75,15 +75,16 @@ interface AiInlineMenuProps {
   x: number
   y: number
   selectedText?: string
+  initialPrompt?: string
   isDark: boolean
   onClose: () => void
   onSubmit: (prompt: string, selectedText?: string) => void | Promise<void>
 }
 
 export const AiInlineMenu = memo(function AiInlineMenu({
-  x, y, selectedText, isDark, onClose, onSubmit
+  x, y, selectedText, initialPrompt, isDark, onClose, onSubmit
 }: AiInlineMenuProps) {
-  const [value, setValue] = useState("")
+  const [value, setValue] = useState(initialPrompt || "")
   const [loading, setLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 36, maxHeight: 160 })
@@ -104,6 +105,13 @@ export const AiInlineMenu = memo(function AiInlineMenu({
       document.removeEventListener("keydown", onKey)
     }
   }, [onClose])
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setValue(initialPrompt)
+      setTimeout(() => adjustHeight(true), 0)
+    }
+  }, [initialPrompt, adjustHeight])
 
   // Adjust position so menu doesn't overflow viewport
   const menuWidth = 340

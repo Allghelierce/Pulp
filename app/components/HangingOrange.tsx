@@ -103,8 +103,10 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
         transformOrigin: "top center",
         rotate: springAngle,
       }}
-      whileHover={{ y: 2 }}
-      whileTap={{ y: 12, scaleX: 1.03, scaleY: 0.97 }}
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      whileHover={{ y: 4 }}
+      whileTap={{ y: 40, scaleX: 1.05, scaleY: 0.95, transition: { type: "spring", stiffness: 300, damping: 20 } }}
     >
       <FlexTwine bow={stringBow} />
       

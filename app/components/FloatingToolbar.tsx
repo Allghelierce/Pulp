@@ -11,6 +11,9 @@ export const FloatingToolbar = memo(function FloatingToolbar({ accent, activeToo
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [bounds, setBounds] = useState({ left: 350, right: 350 })
+  const [strokeColor, setStrokeColor] = useState("#000000")
+  const [fillColor, setFillColor] = useState("transparent")
+  const [lineWidth, setLineWidth] = useState(2)
 
   useEffect(() => {
     if (!isVisible) return
@@ -85,54 +88,57 @@ export const FloatingToolbar = memo(function FloatingToolbar({ accent, activeToo
       <style dangerouslySetInnerHTML={{ __html: hideScrollbar }} />
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
 
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar" style={{ minWidth: 0 }}>
-        <button onMouseDown={e => { e.preventDefault(); onToolChange('pan') }} className={styles.btn} style={getBtnStyle(activeTool === 'pan')} title="Pan (Space)">
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v4M14 11V4a2 2 0 0 0-4 0v6M10 11V5a2 2 0 0 0-4 0v9M6 14v-2a2 2 0 0 0-4 0v5a7 7 0 0 0 7 7h3a6 6 0 0 0 6-6v-7a2 2 0 0 0-4 0"/></svg>
-        </button>
-
-        <button onMouseDown={e => { e.preventDefault(); onToolChange('select') }} className={styles.btn} style={getBtnStyle(activeTool === 'select')} title="Selection (V)">
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
-        </button>
-
-        <div className="w-px h-6 mx-0.5 bg-zinc-200/60 shrink-0" />
-
-        {[
-          { id: 'rect', icon: <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>, title: "Rectangle (R)" },
-          { id: 'diamond', icon: <path d="M12 2l10 10-10 10L2 12 12 2z"/>, title: "Diamond" },
-          { id: 'circle', icon: <circle cx="12" cy="12" r="10"/>, title: "Circle (O)" },
-          { id: 'arrow', icon: <><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></>, title: "Arrow (A)" },
-          { id: 'line', icon: <path d="M5 12h14"/>, title: "Line (L)" },
-        ].map(tool => (
-          <button key={tool.id} onMouseDown={e => { e.preventDefault(); onToolChange(tool.id) }} className={styles.btn} style={getBtnStyle(activeTool === tool.id)} title={tool.title}>
-            <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{tool.icon}</svg>
-          </button>
-        ))}
-
-        <div className="w-px h-6 mx-0.5 bg-zinc-200/60 shrink-0" />
-
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar" style={{ minWidth: 0 }}>
+        {/* Pen Tool */}
         <button onMouseDown={e => { e.preventDefault(); onToolChange('pen') }} className={styles.btn} style={getBtnStyle(activeTool === 'pen')} title="Pen (P)">
           <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         </button>
 
-        <button onMouseDown={e => { e.preventDefault(); onToolChange('text') }} className={styles.btn} style={getBtnStyle(activeTool === 'text')} title="Text Box (T)">
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m4 20 8-16 8 16"/><path d="M8 12h8"/></svg>
-        </button>
-
-        <button onMouseDown={e => { e.preventDefault(); fileInputRef.current?.click() }} className={styles.btn} style={getBtnStyle(activeTool === 'image')} title="Insert Image">
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </button>
-      </div>
-
-      <div className="flex items-center gap-1 shrink-0 pl-2 border-l border-zinc-200/60">
-        <button onMouseDown={e => { e.preventDefault(); if (activeTool === 'eraser') { onClearDrawing(); } else { onToolChange('eraser') } }} className={`${styles.btn} w-[38px] px-0 shadow-none border-transparent bg-transparent hover:bg-red-50`} style={getBtnStyle(activeTool === 'eraser')} title={activeTool === 'eraser' ? "Click again to clear all drawings" : "Eraser (E or 0)"}>
+        {/* Eraser Tool */}
+        <button onMouseDown={e => { e.preventDefault(); if (activeTool === 'eraser') { onClearDrawing(); } else { onToolChange('eraser') } }} className={styles.btn} style={getBtnStyle(activeTool === 'eraser')} title={activeTool === 'eraser' ? "Click again to clear all drawings" : "Eraser (E)"}>
           <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke={activeTool === 'eraser' ? '#ef4444' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
         </button>
-        
-        <button onMouseDown={e => { e.preventDefault(); onToolChange('shapes') }} className={`${styles.btn} w-[38px] px-0 shadow-none border-transparent bg-transparent`} style={getBtnStyle(activeTool === 'shapes')} title="Shapes Library">
-          <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3l4 7H8z"/><rect x="4" y="14" width="6" height="6" rx="1"/><circle cx="17" cy="17" r="3"/>
-          </svg>
-        </button>
+
+        <div className="w-px h-6 mx-0.5 bg-zinc-200/60 shrink-0" />
+
+        {/* Stroke Color */}
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-medium text-zinc-600">Stroke:</label>
+          <input
+            type="color"
+            value={strokeColor}
+            onChange={e => setStrokeColor(e.target.value)}
+            className={`w-7 h-7 rounded cursor-pointer border border-zinc-200 shadow-sm hover:shadow-md transition-shadow`}
+            title="Stroke color"
+          />
+        </div>
+
+        {/* Fill Color */}
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-medium text-zinc-600">Fill:</label>
+          <input
+            type="color"
+            value={fillColor === 'transparent' ? '#ffffff' : fillColor}
+            onChange={e => setFillColor(e.target.value)}
+            className={`w-7 h-7 rounded cursor-pointer border border-zinc-200 shadow-sm hover:shadow-md transition-shadow`}
+            title="Fill color"
+          />
+        </div>
+
+        {/* Line Width */}
+        <div className="flex items-center gap-1.5">
+          <label className="text-[11px] font-medium text-zinc-600">Width:</label>
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={lineWidth}
+            onChange={e => setLineWidth(Number(e.target.value))}
+            className="w-20 h-1 rounded cursor-pointer"
+            title="Line width"
+          />
+          <span className="text-[10px] text-zinc-500 min-w-[20px]">{lineWidth}px</span>
+        </div>
       </div>
     </div>
   )

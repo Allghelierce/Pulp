@@ -46,17 +46,20 @@ interface SlashMenuProps {
 
 // ─── Shared icon style ──────────────────────────────────────────────────────
 
-const ORANGE = "#b85e22"
-
-function OIcon({ children, isActive, mode }: { children: React.ReactNode; isActive: boolean; mode: "@" | "/" }) {
+function OIcon({ children, isActive, mode, accent }: { children: React.ReactNode; isActive: boolean; mode: "@" | "/"; accent: string }) {
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : "184,94,34"
+  }
+  const rgb = hexToRgb(accent)
   return (
     <div style={{
       width: 24, height: 24, borderRadius: 6, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: isActive
-        ? (mode === "/" ? "rgba(184,94,34,0.12)" : "rgba(184,94,34,0.18)")
+        ? (mode === "/" ? `rgba(${rgb},0.12)` : `rgba(${rgb},0.18)`)
         : "transparent",
-      color: ORANGE,
+      color: accent,
       transition: "background 0.1s ease",
     }}>
       {children}
@@ -66,7 +69,7 @@ function OIcon({ children, isActive, mode }: { children: React.ReactNode; isActi
 
 // ─── Custom Date Wrapper ────────────────────────────────────────────────────────
 
-function CustomDateWrapper({ onInsert, onClose, mode }: { onInsert: (str: string) => void, onClose: () => void, mode: "@" | "/" }) {
+function CustomDateWrapper({ onInsert, onClose, mode, accent }: { onInsert: (str: string) => void, onClose: () => void, mode: "@" | "/", accent: string }) {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [showTime, setShowTime] = useState(false)
   const isLight = mode === "/"
@@ -94,7 +97,7 @@ function CustomDateWrapper({ onInsert, onClose, mode }: { onInsert: (str: string
             onClose()
           }}
           style={{
-            background: "#b85e22", color: "white", padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500, cursor: "pointer",
+            background: accent, color: "white", padding: "4px 10px", borderRadius: 4, fontSize: 11, fontWeight: 500, cursor: "pointer",
             border: "none"
           }}
         >
@@ -172,8 +175,8 @@ function Submenu({
         zIndex: 10000,
         minWidth: 180,
         background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(40px) saturate(150%)",
-        WebkitBackdropFilter: "blur(40px) saturate(150%)",
+        backdropFilter: "blur(20px) saturate(120%)",
+        WebkitBackdropFilter: "blur(20px) saturate(120%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
         boxShadow: isLight
@@ -259,8 +262,8 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
         top: coords.top,
         zIndex: 10000,
         background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(40px) saturate(150%)",
-        WebkitBackdropFilter: "blur(40px) saturate(150%)",
+        backdropFilter: "blur(20px) saturate(120%)",
+        WebkitBackdropFilter: "blur(20px) saturate(120%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
         boxShadow: isLight
@@ -300,13 +303,20 @@ function makeColumns(num: number): string {
   return `<div contenteditable="false" style="display:flex;gap:4px;margin:12px 0">${cols}</div><br/>`
 }
 
-function makeTOC(): string {
+function makeTOC(mode: "@" | "/"): string {
+  const isLight = mode === "/"
   const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1"))
-  if (headers.length === 0) return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:16px;margin:8px 0;background:#fafafa"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:#5a4a3a;margin-bottom:12px">Table of Contents</div><div style="color:#999;font-size:13px;font-style:italic">none</div></div><br/>`
+  const bgColor = isLight ? "#fafafa" : "rgba(255,255,255,0.05)"
+  const textColor = isLight ? "#374151" : "#a1a1aa"
+  const titleColor = isLight ? "#5a4a3a" : "#e4e4e7"
+  const noneColor = isLight ? "#999" : "#6b7280"
+  const borderColor = isLight ? "#e4e4e7" : "rgba(255,255,255,0.1)"
+
+  if (headers.length === 0) return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div><div style="color:${noneColor};font-size:13px;font-style:italic">none</div></div><br/>`
   const items = headers.map(h => {
-    return `<div style="padding:6px 0;font-family:'Caveat',cursive;font-size:16px;color:#374151">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+    return `<div style="padding:6px 0;font-family:'Caveat',cursive;font-size:16px;color:${textColor}">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
   }).join("")
-  return `<div contenteditable="false" style="border:1px solid #e4e4e7;border-radius:6px;padding:16px;margin:8px 0;background:#fafafa"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:#5a4a3a;margin-bottom:12px">Table of Contents</div>${items}</div><br/>`
+  return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div>${items}</div><br/>`
 }
 
 const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:'Courier New',monospace;background:#1e1e2e"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#16161e;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:10px;color:#6c7086;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#cdd6f4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#cdd6f4;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
@@ -319,7 +329,7 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
   return (
     <div style={{ padding: 12 }} onMouseLeave={() => setHover([0, 0])}>
       <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginBottom: 8, textAlign: "center" }}>
-        {hover[0] > 0 ? `${hover[1]} × ${hover[0]} table` : "Select table size"}
+        {hover[0] > 0 ? `${hover[0]} × ${hover[1]} table` : "Select table size"}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 20px)`, gap: 3, justifyContent: "center" }}>
         {Array.from({ length: ROWS * COLS }, (_, i) => {
@@ -347,7 +357,7 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
 
 // ─── Media Input ──────────────────────────────────────────────────────────────
 
-function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) => void; onUpload?: () => void; onClose: () => void }) {
+function MediaInput({ onInsert, onUpload, onClose, accent }: { onInsert: (html: string) => void; onUpload?: () => void; onClose: () => void; accent: string }) {
   const [tab, setTab] = useState<"upload" | "link">("upload")
   const [url, setUrl] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -359,7 +369,8 @@ function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) 
     const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
     const vmMatch = url.match(/vimeo\.com\/(\d+)/)
     const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i)
-    
+    const isVideo = url.match(/\.(mp4|webm|ogg|mov|mkv|flv|avi|wmv)(\?.*)?$/i)
+
     let html = ""
     if (ytMatch) {
       const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`
@@ -369,8 +380,10 @@ function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) 
       html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${embedUrl}" style="width:100%;height:100%;border:none" allowfullscreen></iframe></div><br/>`
     } else if (isImage) {
       html = `<img src="${url.trim()}" style="max-width:100%;margin:8px 0;border-radius:8px;display:block" /><br/>`
-    } else {
+    } else if (isVideo) {
       html = `<video src="${url.trim()}" controls style="max-width:100%;margin:8px 0;border-radius:8px;display:block"></video><br/>`
+    } else {
+      html = `<a href="${url.trim()}" target="_blank" style="color:#b85e22;text-decoration:underline">${url.trim()}</a><br/>`
     }
     onInsert(html)
     onClose()
@@ -409,7 +422,7 @@ function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) 
             placeholder="Paste Link (Image, Video, YouTube)"
             style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box" }}
           />
-          <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: accent, color: "white", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
             Embed Link
           </button>
         </div>
@@ -420,7 +433,7 @@ function MediaInput({ onInsert, onUpload, onClose }: { onInsert: (html: string) 
 
 // ─── Equation Input ───────────────────────────────────────────────────────────
 
-function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void; onClose: () => void }) {
+function EquationInput({ onInsert, onClose, accent }: { onInsert: (html: string) => void; onClose: () => void; accent: string }) {
   const [latex, setLatex] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => { setTimeout(() => textareaRef.current?.focus(), 50) }, [])
@@ -430,7 +443,7 @@ function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void
     try {
       return katex.renderToString(latex, { throwOnError: false, displayMode: true })
     } catch {
-      return latex.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      return `<div style="color:#ef4444;font-size:12px;padding:8px;background:rgba(239,68,68,0.1);border-radius:4px;border:1px solid rgba(239,68,68,0.3)">Invalid LaTeX syntax</div>`
     }
   }, [latex])
 
@@ -456,7 +469,7 @@ function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void
       {latex.trim() && (
         <div style={{ padding: "8px 10px", background: "#fdfdfd", border: "1px solid #e4e4e7", borderRadius: 4, marginBottom: 8, color: "#1a1a2e", overflowX: "auto" }} dangerouslySetInnerHTML={{ __html: renderedLatex }} />
       )}
-      <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
+      <button onClick={handleInsert} style={{ width: "100%", padding: "5px 0", background: accent, color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>
         Insert (⌘↵)
       </button>
     </div>
@@ -465,7 +478,7 @@ function EquationInput({ onInsert, onClose }: { onInsert: (html: string) => void
 
 // ─── Bookmark Input ───────────────────────────────────────────────────────────
 
-function BookmarkInput({ onInsert, onClose, mode }: { onInsert: (html: string) => void; onClose: () => void; mode: "@" | "/" }) {
+function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: string) => void; onClose: () => void; mode: "@" | "/"; accent: string }) {
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -486,7 +499,13 @@ function BookmarkInput({ onInsert, onClose, mode }: { onInsert: (html: string) =
       const safeDesc = (description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       const safeDomain = (domain || url).replace(/</g, "&lt;").replace(/>/g, "&gt;")
       const imgHtml = image ? `<img src="${image}" style="width:72px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" />` : ""
-      const html = `<div contenteditable="false" onclick="window.open('${safeUrl}','_blank')" style="display:flex;gap:12px;border:1px solid #e4e4e7;border-radius:8px;padding:12px 14px;margin:8px 0;background:#fafafa;max-width:480px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#111;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safeTitle}</div><div style="font-size:11px;color:#666;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${safeDesc}</div><div style="font-size:10px;color:#9ca3af">${safeDomain}</div></div>${imgHtml}</div><br/>`
+      const isLight = mode === "/"
+      const bgColor = isLight ? "#fafafa" : "rgba(255,255,255,0.05)"
+      const borderColor = isLight ? "#e4e4e7" : "rgba(255,255,255,0.1)"
+      const titleColor = isLight ? "#111" : "#e4e4e7"
+      const descColor = isLight ? "#666" : "#a1a1aa"
+      const domainColor = isLight ? "#9ca3af" : "#6b7280"
+      const html = `<div contenteditable="false" onclick="window.open('${safeUrl}','_blank')" style="display:flex;gap:12px;border:1px solid ${borderColor};border-radius:8px;padding:12px 14px;margin:8px 0;background:${bgColor};max-width:480px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:${titleColor};margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safeTitle}</div><div style="font-size:11px;color:${descColor};margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${safeDesc}</div><div style="font-size:10px;color:${domainColor}">${safeDomain}</div></div>${imgHtml}</div><br/>`
       onInsert(html)
       onClose()
     } catch {
@@ -496,7 +515,7 @@ function BookmarkInput({ onInsert, onClose, mode }: { onInsert: (html: string) =
   }
 
   return (
-    <div style={{ padding: 12, width: 260 }}>
+    <div style={{ padding: 12, width: 340 }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)", marginBottom: 8 }}>Web Bookmark</div>
       <input
         ref={inputRef}
@@ -630,7 +649,20 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "quote", label: "Blockquote", shortcut: ">", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
-      action: () => insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#666;font-style:italic;background:#f5f5f5;border-radius:0 8px 8px 0" contenteditable="true">Quote…</blockquote><br/>`)
+      action: () => {
+        const isLight = mode === "/"
+        const html = `<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:${isLight ? '#666' : '#aaa'};font-style:italic;background:${isLight ? '#f5f5f5' : 'rgba(255,255,255,0.08)'};border-radius:0 8px 8px 0" contenteditable="true" id="quote-focus">Quote…</blockquote><br/>`
+        insertHTML(html)
+        setTimeout(() => {
+          const el = document.getElementById("quote-focus")
+          if (el) {
+            const range = document.createRange(); range.setStart(el, 0); range.collapse(true)
+            const sel = window.getSelection(); sel?.removeAllRanges(); sel?.addRange(range)
+            el.removeAttribute("id")
+            el.focus()
+          }
+        }, 0)
+      }
     },
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
@@ -646,7 +678,7 @@ export const SlashMenu = memo(function SlashMenu({
       id: "media", label: "Image / Video / GIF", group: "Media",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
       action: () => { },
-      customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} />
+      customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} accent={accent} />
     },
     {
       id: "date", label: "Today's Date", shortcut: "today", group: "Accessories",
@@ -662,7 +694,7 @@ export const SlashMenu = memo(function SlashMenu({
       action: () => { },
       customContent: <CustomDateWrapper onInsert={(str) => {
         onSelect(() => insertHTML(`<span>${str}</span>`))
-      }} onClose={onClose} mode={mode} />
+      }} onClose={onClose} mode={mode} accent={accent} />
     },
     {
       id: "table", label: "Table", group: "Blocks",
@@ -684,7 +716,7 @@ export const SlashMenu = memo(function SlashMenu({
       id: "equation", label: "Equation", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9" /></svg>,
       action: () => { },
-      customContent: <EquationInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} />
+      customContent: <EquationInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} accent={accent} />
     },
     {
       id: "columns", label: "Columns", group: "Blocks",
@@ -702,7 +734,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "toc", label: "Table of Contents", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6" /><line x1="6" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" /></svg>,
-      action: () => onSelect(() => insertHTML(makeTOC()))
+      action: () => onSelect(() => insertHTML(makeTOC(mode)))
     },
     {
       id: "code", label: "Code Block", group: "Blocks",
@@ -713,7 +745,7 @@ export const SlashMenu = memo(function SlashMenu({
       id: "bookmark", label: "Web Bookmark", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>,
       action: () => { },
-      customContent: <BookmarkInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} mode={mode} />
+      customContent: <BookmarkInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} mode={mode} accent={accent} />
     },
   ], [execCmd, insertHTML, accent, insertBacklink, onInsertImage, onSelect, onClose, mode, box, onUpdateBox])
 
@@ -886,17 +918,19 @@ export const SlashMenu = memo(function SlashMenu({
       ref={ref}
       onMouseLeave={() => setActiveIdx(null)}
       className="slash-menu-root"
+      role="menu"
+      aria-label={mode === "/" ? "Insert content menu" : "Insert reference menu"}
       style={{
         position: "fixed", 
         left: adjustedX, 
         top: adjustedY, 
         zIndex: 9999,
         background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(40px) saturate(150%)",
-        WebkitBackdropFilter: "blur(40px) saturate(150%)",
+        backdropFilter: "blur(20px) saturate(120%)",
+        WebkitBackdropFilter: "blur(20px) saturate(120%)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
-        width: 230,
+        width: 260,
         boxShadow: isLight
           ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
           : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
@@ -929,7 +963,7 @@ export const SlashMenu = memo(function SlashMenu({
                   <div style={{ height: 1, margin: "4px 8px", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }} />
                 )}
                 <div style={{
-                  padding: "8px 14px 4px",
+                  padding: "8px 14px 6px",
                   fontSize: 9,
                   fontWeight: 800,
                   color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)",
@@ -948,6 +982,9 @@ export const SlashMenu = memo(function SlashMenu({
                   return (
                     <div
                       key={item.id}
+                      role="menuitem"
+                      tabIndex={isActive ? 0 : -1}
+                      aria-label={item.label + (item.shortcut ? ` (${item.shortcut})` : "")}
                       ref={el => {
                         if (isActive) (activeRef as any).current = el
                         if (submenuOpen) (submenuRowRef as any).current = el
@@ -980,12 +1017,15 @@ export const SlashMenu = memo(function SlashMenu({
                         background: isActive
                           ? (isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.06)")
                           : "transparent",
+                        outline: isActive ? `1.5px solid ${accent}` : "none",
+                        outlineOffset: "-1.5px",
                         transition: "all 0.1s ease",
                         userSelect: "none",
+                        borderRadius: 4,
                       }}
                       className={isActive ? "slash-item-active" : ""}
                     >
-                      <OIcon isActive={isActive} mode={mode}>{item.icon}</OIcon>
+                      <OIcon isActive={isActive} mode={mode} accent={accent}>{item.icon}</OIcon>
  
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
@@ -1012,10 +1052,10 @@ export const SlashMenu = memo(function SlashMenu({
                           fontWeight: 700,
                           padding: "1.5px 6px",
                           borderRadius: 6,
-                          background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)",
-                          color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
+                          background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.12)",
+                          color: isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.65)",
                           fontFamily: "var(--font-sf-mono), monospace",
-                          opacity: isActive ? 1 : 0.6,
+                          opacity: isActive ? 1 : 0.8,
                           flexShrink: 0,
                         }}>
                           {item.shortcut.replace("⌘", "⌘ ")}

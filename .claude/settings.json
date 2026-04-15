@@ -15,7 +15,9 @@
       "Bash(pkill -f \"npm run dev\")",
       "Bash(grep -r \"sparkle\\\\|magic\\\\|wand\\\\|✨\\\\|AI\" app/components/*.tsx)",
       "Bash(pkill -f \"next dev\")",
-      "Bash(grep -r \"slash-menu\\\\|slash-pop\" /Users/trisn999/handwritten-notes --include=*.css --include=*.scss)"
+      "Bash(grep -r \"slash-menu\\\\|slash-pop\" /Users/trisn999/handwritten-notes --include=*.css --include=*.scss)",
+      "Bash(find /Users/trisn999/handwritten-notes -type f \\\\\\(-name *.test.ts -o -name *.test.tsx -o -name *.spec.ts -o -name jest.config.js -o -name vitest.config.ts \\\\\\))",
+      "Bash(/tmp/audit_analysis.md:*)"
     ],
     "additionalDirectories": [
       "/Users/trisn999/.claude"
