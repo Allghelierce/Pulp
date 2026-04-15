@@ -2,6 +2,7 @@
 import { memo, useState } from "react"
 
 import { TREE_TYPES } from "@/app/constants"
+import { PlantIcon } from "./PlantIcon"
 
 interface RightSidebarProps {
   isOpen: boolean

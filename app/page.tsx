@@ -760,7 +760,7 @@ export default function NoteApp() {
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
-  const [sidebarWidth, setSidebarWidth] = useState(256)
+  const [sidebarWidth, setSidebarWidth] = useState(0)
   const [isSidebarDragging, setIsSidebarDragging] = useState(false)
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
@@ -813,15 +813,22 @@ export default function NoteApp() {
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
   const [grove, setGrove] = useState<Tree[]>([])
+  const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
-    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
-    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
+    { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 5, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'dedicated_writer', title: 'Dedicated Writer', icon: '✍️', description: 'Type 5,000 characters by hand — pasting large chunks won\'t count.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5000 },
+    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create 5 folders to organise your work.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 5 },
+    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Archive 10 notes without looking back.', reward: 40, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 10 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after midnight when the rest of the world sleeps.', reward: 20, rewardType: 'sunshine', completed: false, claimed: false },
+    { id: 'early_bird', title: 'Early Bird', icon: '🐦', description: 'Open Pulp before 7 AM and get a head start on your day.', reward: 20, rewardType: 'sunshine', completed: false, claimed: false },
+    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 25-minute focus session without giving up.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false },
+    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 5 focus sessions of any length.', reward: 100, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
+    { id: 'daily_return', title: 'Daily Return', icon: '📅', description: 'Open Pulp 3 days in a row — keep the streak alive.', reward: 75, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
+    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 2 hours of total focus time across sessions.', reward: 200, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 7200 },
   ])
+  const [lastCharCount, setLastCharCount] = useState(0)
 
   // Refs to allow Page to communicate achievement events to VitalitySystem
   const checkAchievementRef = useRef<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>(null)
@@ -844,24 +851,40 @@ export default function NoteApp() {
 
   // Restore Grove from LocalStorage
   useEffect(() => {
+    const hour = new Date().getHours()
+    const isNightOwl = hour >= 23 || hour <= 4
+    const isEarlyBird = hour >= 5 && hour <= 6
+
+    const applyTimeChecks = (list: Achievement[]) =>
+      list.map((a: Achievement) => {
+        if (a.completed) return a
+        if (a.id === 'night_owl' && isNightOwl) return { ...a, completed: true }
+        if (a.id === 'early_bird' && isEarlyBird) return { ...a, completed: true }
+        return a
+      })
+
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       const data = JSON.parse(saved)
       setSunshine(data.sunshine ?? 1000)
       setGems(data.gems ?? 5)
-    }
-
-    // Night Owl Check
-    const hour = new Date().getHours()
-    if (hour >= 23 || hour <= 4) {
-      // Achievement check can be moved to VitalitySystem if needed, but keeping it simple for now
+      if (data.inventory) setInventory(data.inventory)
+      if (data.grove) setGrove(data.grove)
+      if (data.lastCharCount) setLastCharCount(data.lastCharCount)
+      if (data.achievements) {
+        setAchievements(applyTimeChecks(data.achievements))
+      } else {
+        setAchievements(prev => applyTimeChecks(prev))
+      }
+    } else {
+      setAchievements(prev => applyTimeChecks(prev))
     }
   }, [])
 
   // Settings
   const [settings, setSettings] = useState<any>({
-    accent: "#600b27",
-    theme: "light",
+    accent: "#4a081e",
+    theme: "dark",
     autoSave: true,
     spellCheck: true,
     autoCorrect: true,
@@ -869,11 +892,11 @@ export default function NoteApp() {
     editorFont: "EB Garamond",
     headingFont: "Playfair Display",
     lineSpacing: "normal",
-    paperStyle: "lined",
-    showBinding: true,
+    paperStyle: "stenopad",
+    showBinding: false,
     reduceMotion: false,
     reduceVisuals: false,
-    sidebarOnStart: true,
+    sidebarOnStart: false,
     bgEffect: true,
     smearEffect: true,
     handwrittenEffect: true,
@@ -1468,17 +1491,12 @@ export default function NoteApp() {
   useEffect(() => {
     const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation])
 
-    if (!user) return
-    const timer = setTimeout(async () => {
-      const { error } = await supabase.from("user_settings").upsert({
-        user_id: user.id,
-        settings
-      })
-      if (error) console.error("Settings save failed:", error.message, error.code)
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation, user])
+  // Save Grove & Inventory to localStorage
+  useEffect(() => {
+    localStorage.setItem("pulp-grove", JSON.stringify({ sunshine, gems, grove, inventory, achievements, lastCharCount }))
+  }, [sunshine, gems, grove, inventory, achievements, lastCharCount])
 
   // Cloud autosave
   useEffect(() => {
@@ -1533,6 +1551,10 @@ export default function NoteApp() {
       if (parsed.length > 0) {
         const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
         setActiveTabId(lastId)
+        // Open sidebar for returning users — respect their sidebarOnStart pref
+        const savedSettings = localStorage.getItem("pulp-settings")
+        const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
+        if (sidebarPref !== false) setSidebarWidth(256)
       }
     }
     if (savedFolders) setFolders(JSON.parse(savedFolders))
@@ -1584,6 +1606,7 @@ export default function NoteApp() {
       const newNote = { id, subject: finalName, pages: [""], folderId, boxes: {} }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
+      checkAchievement('first_note')
     }, "📓")
 
   const addFirstNotebook = () => {
@@ -1591,6 +1614,7 @@ export default function NoteApp() {
     const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: {} }
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
+    checkAchievement('first_note')
   }
 
   const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
@@ -1621,6 +1645,7 @@ export default function NoteApp() {
       if (noteType === "vault") unlockedVaults.current.add(id)
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
+      checkAchievement('first_note')
     }
 
     openPrompt(promptTitle, title, placeholder, "Create", name => {
@@ -1955,7 +1980,7 @@ export default function NoteApp() {
               onSetDraggedNoteId={setDraggedNoteId}
               onDropNote={handleDropNote}
               onOpenSettings={() => setShowSettings(true)}
-              onOpenTimer={() => setTimerOpen(t => !t)}
+              onOpenTimer={() => { if (notes.filter(n => !n.archived).length > 0) setTimerOpen(t => !t) }}
               timerOpen={timerOpen}
               onSetNoteParent={setNoteParent}
               onChangeNoteIcon={changeNoteIcon}
@@ -2646,8 +2671,10 @@ export default function NoteApp() {
         sunshine={sunshine}
         gems={gems}
         grove={grove}
+        inventory={inventory}
         setSunshine={setSunshine}
         setGems={setGems}
+        setInventory={setInventory}
         setGrove={setGrove}
       />
 
@@ -2658,8 +2685,10 @@ export default function NoteApp() {
         accent={accent}
         sunshine={sunshine}
         gems={gems}
+        inventory={inventory}
         setSunshine={setSunshine}
         setGems={setGems}
+        setInventory={setInventory}
         setGrove={setGrove}
       />
 
@@ -2672,15 +2701,19 @@ export default function NoteApp() {
         sunshine={sunshine}
         gems={gems}
         grove={grove}
+        achievements={achievements}
         setSunshine={setSunshine}
         setGems={setGems}
         setGrove={setGrove}
+        setAchievements={setAchievements}
+        lastCharCount={lastCharCount}
+        setLastCharCount={setLastCharCount}
         checkAchievementRef={checkAchievementRef}
         claimAchievementRef={claimAchievementRef}
       />
 
       {/* Persistent timer toggle — visible even when the sidebar is collapsed */}
-      {sidebarWidth <= 40 && (
+      {sidebarWidth <= 40 && notes.filter(n => !n.archived).length > 0 && (
         <button
           onClick={() => setTimerOpen(!timerOpen)}
           title="Focus timer  (⌘⌥T)"

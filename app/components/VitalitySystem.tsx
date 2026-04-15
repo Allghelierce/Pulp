@@ -12,16 +12,21 @@ interface VitalitySystemProps {
   sunshine: number
   gems: number
   grove: Tree[]
+  achievements: Achievement[]
   setSunshine: React.Dispatch<React.SetStateAction<number>>
   setGems: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
+  setAchievements: React.Dispatch<React.SetStateAction<Achievement[]>>
+  lastCharCount: number
+  setLastCharCount: React.Dispatch<React.SetStateAction<number>>
   checkAchievementRef: React.RefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  sunshine, gems, grove, setSunshine, setGems, setGrove,
+  sunshine, gems, grove, achievements, setSunshine, setGems, setGrove, setAchievements,
+  lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
 }: VitalitySystemProps) {
 
@@ -34,29 +39,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [waterDeadline, setWaterDeadline] = useState<number | null>(null)
   const [treeDead, setTreeDead] = useState(false)
 
-  const WATER_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
+  const WATER_INTERVAL_MS = 8 * 60 * 1000 // 8 minutes (so 10-min sessions need watering at 8 min)
   const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
 
-  // ─── Achievements State ───
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'caught_in_the_act', title: 'Caught in the Act!', icon: '🎭', description: 'Catch Antigravity making a secret expression.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'novice_writer', title: 'Novice Writer', icon: '✍️', description: 'Write 1,000 characters in your notebook.', reward: 20, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 1000 },
-    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create your first 3 folders.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
-    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Move 5 notes to the archive.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after 11 PM.', reward: 25, rewardType: 'sunshine', completed: false, claimed: false },
-  ])
-  const [lastCharCount, setLastCharCount] = useState(0)
-  const hydratedRef = useRef(false)
-
-  // Hydration — runs once on mount before persistence is allowed to write
+  // Hydration — runs once on mount for session-only data
   useEffect(() => {
-    const saved = localStorage.getItem('pulp-grove')
-    if (saved) {
-      const data = JSON.parse(saved)
-      if (data.achievements) setAchievements(data.achievements)
-    }
-
-    // Active timer lives in sessionStorage so closing the tab forfeits the session
     const savedTimer = sessionStorage.getItem('pulp-timer')
     if (savedTimer) {
       const t = JSON.parse(savedTimer)
@@ -72,7 +59,6 @@ export const VitalitySystem = memo(function VitalitySystem({
           setTimerElapsed(totalCap)
           setTimerDone(true)
         } else if (t.waterDeadline && Date.now() > t.waterDeadline) {
-          // Missed the watering window while tab was reloading
           setTimerElapsed(totalElapsed)
           setTreeDead(true)
         } else {
@@ -83,17 +69,9 @@ export const VitalitySystem = memo(function VitalitySystem({
         setTimerElapsed(t.elapsed ?? 0)
       }
     }
-    hydratedRef.current = true
   }, [])
 
-  // Persistence — gated by hydratedRef so the initial render doesn't overwrite saved state
   useEffect(() => {
-    if (!hydratedRef.current) return
-    localStorage.setItem('pulp-grove', JSON.stringify({ sunshine, gems, grove, achievements }))
-  }, [sunshine, gems, grove, achievements])
-
-  useEffect(() => {
-    if (!hydratedRef.current) return
     sessionStorage.setItem('pulp-timer', JSON.stringify({
       elapsed: timerElapsed,
       total: timerTotal,
@@ -105,12 +83,11 @@ export const VitalitySystem = memo(function VitalitySystem({
     }))
   }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline])
 
-  // Timer tick — advances elapsed and checks the water deadline each second
+  // Timer tick
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
       interval = setInterval(() => {
-        // Watering check first — if missed, kill the tree and stop the session
         if (waterDeadline && Date.now() > waterDeadline) {
           setTimerRunning(false)
           setTreeDead(true)
@@ -129,7 +106,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     return () => clearInterval(interval)
   }, [timerRunning, timerDone, timerTotal, waterDeadline])
 
-  // Session control handlers passed down to the panel
   const startSession = useCallback(() => {
     setTimerElapsed(0)
     setTimerDone(false)
@@ -155,15 +131,35 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
   }, [timerRunning, treeDead])
 
+  // Achievement Methods — defined before claimReward which depends on them
+  const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
+    setAchievements(prev => prev.map(a => {
+      if (a.id !== id || a.completed) return a
+      const updated = update ? { ...a, ...update(a) } : { ...a, completed: true }
+      if (updated.goal !== undefined && (updated.progress || 0) >= updated.goal) {
+        updated.completed = true
+      }
+      return updated
+    }))
+  }, [setAchievements])
+
   const claimReward = useCallback(() => {
     if (!timerDone || treeDead) return
     const reward = timerTotal === 15 * 60 ? 2 : timerTotal === 25 * 60 ? 5 : 3
     setSunshine(s => s + reward)
+
+    // Iron Will — count completed sessions
+    checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
+    // Focus Champion — complete a 25-minute session
+    if (timerTotal >= 25 * 60) checkAchievement('focus_champion')
+    // Time Lord — accumulate 2 hours (7200 s) of focus time
+    checkAchievement('time_lord', a => ({ progress: Math.min(7200, (a.progress || 0) + timerTotal) }))
+
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, setSunshine])
+  }, [timerDone, treeDead, timerTotal, setSunshine, checkAchievement])
 
   const dismissDeadTree = useCallback(() => {
     setTimerElapsed(0)
@@ -180,18 +176,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     return () => clearInterval(timer)
   }, [setSunshine])
 
-  // Achievement Methods
-  const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
-    setAchievements(prev => prev.map(a => {
-      if (a.id !== id || a.completed) return a
-      const updated = update ? { ...a, ...update(a) } : { ...a, completed: true }
-      if (updated.goal !== undefined && (updated.progress || 0) >= updated.goal) {
-        updated.completed = true
-      }
-      return updated
-    }))
-  }, [])
-
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
@@ -200,15 +184,38 @@ export const VitalitySystem = memo(function VitalitySystem({
       else setSunshine(s => s + target.reward)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setSunshine])
+  }, [setGems, setSunshine, setAchievements])
 
-  // Expose methods via refs
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
     claimAchievementRef.current = claimAchievement
   }, [checkAchievement, claimAchievement, checkAchievementRef, claimAchievementRef])
 
-  // Char count tracking & Tree Growth
+  // Daily streak — runs once on mount
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const raw = localStorage.getItem('pulp-streak')
+    const { lastOpenDate = null, streak = 0 } = raw ? JSON.parse(raw) : {}
+    if (lastOpenDate === today) return
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const newStreak = lastOpenDate === yesterday ? streak + 1 : 1
+    localStorage.setItem('pulp-streak', JSON.stringify({ lastOpenDate: today, streak: newStreak }))
+    setAchievements(prev => prev.map(a => {
+      if (a.id !== 'daily_return' || a.completed) return a
+      const p = Math.min(3, newStreak)
+      return { ...a, progress: p, completed: p >= 3 }
+    }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Leave-page warning when timer is running (focus blocker)
+  useEffect(() => {
+    if (!timerRunning) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [timerRunning])
+
+  // Char count tracking & Collection Growth
   useEffect(() => {
     if (totalChars > lastCharCount) {
       const diff = totalChars - lastCharCount
@@ -220,15 +227,17 @@ export const VitalitySystem = memo(function VitalitySystem({
           return { ...tree, progress: newProgress, stage: newStage }
         }))
         setLastCharCount(totalChars)
+        // Cap contribution per update to 30 chars — prevents paste abuse
+        const typedDiff = Math.min(diff, 30)
+        checkAchievement('dedicated_writer', a => ({ progress: Math.min(5000, (a.progress || 0) + typedDiff) }))
       }
 
       if (totalChars > lastCharCount + 500) {
         const earned = Math.floor((totalChars - lastCharCount) / 500)
         setGems(g => g + earned)
-        checkAchievement('novice_writer', () => ({ progress: totalChars }))
       }
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setLastCharCount])
 
   return (
     <TimerSidebarPanel

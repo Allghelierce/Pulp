@@ -103,3 +103,74 @@ details.toggle-block summary:focus {
   text-decoration: line-through;
   opacity: 0.45;
 }
+/* ── Rarity Effects ────────────────────────────────────────── */
+
+/* PREMIUM: Golden Shimmer */
+.rarity-premium {
+  position: relative;
+  filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4));
+  animation: premium-pulse 3s ease-in-out infinite;
+}
+
+/* CHROMA: Rainbow Cycling */
+.rarity-chroma {
+  filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
+  animation: chroma-hue 4s linear infinite, chroma-float 3s ease-in-out infinite;
+}
+
+/* EXTINCT: Celestial Void */
+.rarity-extinct {
+  filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2) brightness(1.1);
+  animation: extinct-chaos 5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes premium-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4)); }
+  50% { transform: scale(1.03); filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.6)); }
+}
+
+@keyframes chroma-hue {
+  0% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(0deg); }
+  100% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(360deg); }
+}
+
+@keyframes chroma-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-3px) rotate(1deg); }
+  66% { transform: translateY(1px) rotate(-1deg); }
+}
+
+@keyframes extinct-chaos {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2);
+  }
+  25% { transform: scale(1.05) rotate(0.5deg); }
+  50% { 
+    transform: scale(0.98) rotate(-0.5deg); 
+    filter: drop-shadow(0 0 35px rgba(99, 102, 241, 0.8)) contrast(1.4) saturate(1.5);
+  }
+  75% { transform: scale(1.02) rotate(0.2deg); }
+}
+
+/* Sparkle Effect for High Tiers */
+.sparkle-container {
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.sparkle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: sparkle-float 2s linear infinite;
+}
+
+@keyframes sparkle-float {
+  0% { transform: scale(0) translateY(0); opacity: 1; }
+  100% { transform: scale(1) translateY(-20px); opacity: 0; }
+}

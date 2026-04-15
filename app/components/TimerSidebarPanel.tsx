@@ -128,12 +128,19 @@ function TreeVisualization({ progress }: { progress: number; running: boolean; e
   )
 }
 
+const QUICK_PRESETS = [5, 10, 15, 25]
+
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onWater, onClaim, onDismissDead,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
+  const [confirmGiveUp, setConfirmGiveUp] = useState(false)
+
+  useEffect(() => {
+    if (!running || done || treeDead) setConfirmGiveUp(false)
+  }, [running, done, treeDead])
 
   // Tick once a second so the water countdown stays fresh
   useEffect(() => {
@@ -168,7 +175,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const handleMainButton = () => {
     if (treeDead) onDismissDead()
     else if (done) onClaim()
-    else if (running) onGiveUp()
+    else if (running) setConfirmGiveUp(true)
     else onStart()
   }
 
@@ -376,6 +383,27 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
+                  {/* Quick preset chips */}
+                  <div className="flex gap-1.5 mb-3 justify-center">
+                    {QUICK_PRESETS.map(mins => {
+                      const active = total === mins * 60
+                      return (
+                        <button
+                          key={mins}
+                          onClick={() => onSetTotal(mins * 60)}
+                          className="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all"
+                          style={{
+                            backgroundColor: active ? mainColor : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"),
+                            color: active ? "#fff" : subtleColor,
+                            border: `1px solid ${active ? mainColor : borderColor}`,
+                            fontFamily: 'Inter, system-ui, sans-serif',
+                          }}
+                        >
+                          {mins}m
+                        </button>
+                      )
+                    })}
+                  </div>
                   <div
                     className="relative h-1 rounded-full cursor-grab active:cursor-grabbing mb-1.5"
                     style={{ backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
@@ -428,23 +456,55 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             {/* Main button */}
             <div className="mt-3">
-              <button
-                onClick={handleMainButton}
-                className="w-full py-2 rounded-[6px] transition-colors text-[11px] font-semibold"
-                style={{
-                  fontFamily: serifFont,
-                  letterSpacing: '0.01em',
-                  backgroundColor: treeDead || (running && !done)
-                    ? "rgba(239,68,68,0.1)"
-                    : done
-                      ? `${mainColor}1a`
-                      : isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5",
-                  color: treeDead || (running && !done) ? "#ef4444" : done ? mainColor : textColor,
-                  border: `1px solid ${treeDead || (running && !done) ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
-                }}
-              >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : running ? "Give Up" : "Start Session"}
-              </button>
+              {confirmGiveUp ? (
+                <div
+                  className="w-full rounded-[6px] px-3 py-2.5 flex flex-col items-center gap-2"
+                  style={{
+                    backgroundColor: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.25)",
+                    fontFamily: serifFont,
+                  }}
+                >
+                  <span className="text-[10px] tracking-[0.08em]" style={{ color: "#ef4444" }}>
+                    Abandon this session?
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => { onGiveUp(); setConfirmGiveUp(false) }}
+                      className="text-[9px] font-black uppercase tracking-[0.2em] hover:underline"
+                      style={{ color: "#ef4444" }}
+                    >
+                      Yes, give up
+                    </button>
+                    <span style={{ color: subtleColor }}>·</span>
+                    <button
+                      onClick={() => setConfirmGiveUp(false)}
+                      className="text-[9px] font-black uppercase tracking-[0.2em] hover:underline"
+                      style={{ color: dimColor }}
+                    >
+                      Keep going
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={handleMainButton}
+                  className="w-full py-2 rounded-[6px] transition-colors text-[11px] font-semibold"
+                  style={{
+                    fontFamily: serifFont,
+                    letterSpacing: '0.01em',
+                    backgroundColor: treeDead || (running && !done)
+                      ? "rgba(239,68,68,0.1)"
+                      : done
+                        ? `${mainColor}1a`
+                        : isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5",
+                    color: treeDead || (running && !done) ? "#ef4444" : done ? mainColor : textColor,
+                    border: `1px solid ${treeDead || (running && !done) ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
+                  }}
+                >
+                  {treeDead ? "Try Again" : done ? "Claim Reward" : running ? "Give Up" : "Start Session"}
+                </button>
+              )}
             </div>
           </div>
         </motion.div>

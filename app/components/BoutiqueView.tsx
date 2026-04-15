@@ -11,8 +11,10 @@ interface BoutiqueViewProps {
   accent: string
   sunshine: number
   gems: number
+  inventory: string[]
   setSunshine: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
+  setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
 }
 
@@ -22,20 +24,21 @@ const RARITY_COLORS: Record<string, string> = {
   common: 'bg-zinc-100 text-zinc-500',
   uncommon: 'bg-emerald-100 text-emerald-600',
   rare: 'bg-blue-100 text-blue-600',
-  'true rare': 'bg-amber-100 text-amber-600',
-  premium: 'bg-pink-100 text-pink-600',
-  chroma: 'bg-purple-500 text-white',
-  extinct: 'bg-black text-white',
-  limited: 'bg-red-500 text-white'
+  'true rare': 'bg-violet-100 text-violet-600',
+  premium: 'bg-amber-400 text-white shadow-[0_0_10px_rgba(251,191,36,0.5)]',
+  chroma: 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-[0_0_12px_rgba(168,85,247,0.5)]',
+  extinct: 'bg-zinc-950 text-white shadow-[0_0_15px_rgba(0,0,0,0.8)] border border-zinc-800',
+  limited: 'bg-orange-500 text-white'
 }
 
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
-  sunshine, gems, setSunshine, setGems, setGrove
+  sunshine, gems, inventory, setSunshine, setGems, setInventory, setGrove
 }: BoutiqueViewProps) {
 
-  const [activeTab, setActiveTab] = useState<'shop' | 'catalog'>('shop')
+  const [activeTab, setActiveTab] = useState<'shop' | 'catalog' | 'inventory'>('shop')
   const [dailySeeds, setDailySeeds] = useState<string[]>([])
+  const [shopStock, setShopStock] = useState<Record<string, number>>({})
 
   useEffect(() => {
     if (!isOpen) return
@@ -43,10 +46,20 @@ export const BoutiqueView = memo(function BoutiqueView({
     const now = new Date()
     const todayStr = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
 
+    const getStockValue = () => {
+      const r = Math.random() * 100
+      if (r < 2) return 7      // 2% chance for 7
+      if (r < 7) return 3      // 5% chance for 3
+      if (r < 27) return 2     // 20% chance for 2
+      return 1                 // Default 1
+    }
+
     if (lastReset !== todayStr) {
       const allTypes = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled')
       const selected: string[] = []
+      const newStock: Record<string, number> = {}
       
+      // Daily Selection
       for (let i = 0; i < 3; i++) {
         const weightedTypes = allTypes.filter(t => !selected.includes(t))
         if (weightedTypes.length === 0) break
@@ -63,18 +76,34 @@ export const BoutiqueView = memo(function BoutiqueView({
           }
         }
         selected.push(picked)
+        newStock[picked] = getStockValue()
       }
+
+      // Nursery Selection
+      Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === 'common' && t !== 'spoiled').forEach(t => {
+        newStock[t] = getStockValue()
+      })
       
       setDailySeeds(selected)
+      setShopStock(newStock)
       localStorage.setItem('pulp_last_shop_reset', todayStr)
       localStorage.setItem('pulp_daily_seeds', JSON.stringify(selected))
+      localStorage.setItem('pulp_shop_stock', JSON.stringify(newStock))
     } else {
-      const saved = localStorage.getItem('pulp_daily_seeds')
-      if (saved) setDailySeeds(JSON.parse(saved))
+      const savedSeeds = localStorage.getItem('pulp_daily_seeds')
+      const savedStock = localStorage.getItem('pulp_shop_stock')
+      if (savedSeeds) setDailySeeds(JSON.parse(savedSeeds))
+      if (savedStock) setShopStock(JSON.parse(savedStock))
     }
   }, [isOpen])
 
-  const plantSeed = (type: string) => {
+  const buySeed = (type: string) => {
+    if ((shopStock[type] || 0) <= 0) return
+    if (inventory.length >= 40) {
+      alert("Inventory is full (max 40 seeds)!")
+      return
+    }
+
     const typeInfo = TREE_TYPES[type]
     const hasFunds = typeInfo.currency === 'sunshine' ? sunshine >= typeInfo.cost : gems >= typeInfo.cost
     if (!hasFunds) return
@@ -82,14 +111,17 @@ export const BoutiqueView = memo(function BoutiqueView({
     if (typeInfo.currency === 'sunshine') setSunshine(s => s - typeInfo.cost)
     else setGems(g => g - typeInfo.cost)
 
-    setGrove(g => [...g.slice(0, 8), {
-      id: Date.now(),
-      type,
-      stage: 0,
-      progress: 0,
-      plantedAt: Date.now()
-    }].slice(0, 9))
-    onClose()
+    // Update stock
+    const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
+    setShopStock(nextStock)
+    localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
+
+    // Add to inventory
+    setInventory(inv => [...inv, type])
+  }
+
+  const discardSeed = (index: number) => {
+    setInventory(inv => inv.filter((_, i) => i !== index))
   }
 
   if (!isOpen) return null
@@ -126,6 +158,16 @@ export const BoutiqueView = memo(function BoutiqueView({
                 Today's Boutique
               </button>
               <button 
+                onClick={() => setActiveTab('inventory')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeTab === 'inventory' 
+                    ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-white' 
+                    : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+                }`}
+              >
+                Inventory ({inventory.length}/40)
+              </button>
+              <button 
                 onClick={() => setActiveTab('catalog')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   activeTab === 'catalog' 
@@ -133,7 +175,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
               >
-                Master Catalog
+                Catalog
               </button>
             </div>
           </div>
@@ -154,11 +196,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                   {dailySeeds.map(type => (
                     <button
                       key={type}
-                      onClick={() => plantSeed(type)}
-                      disabled={TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost}
+                      onClick={() => buySeed(type)}
+                      disabled={(shopStock[type] || 0) <= 0 || (TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost)}
                       className={`flex items-center gap-6 p-6 rounded-2xl border transition-all text-left relative overflow-hidden group ${
-                        (TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost)
-                          ? 'opacity-40 cursor-not-allowed'
+                        (shopStock[type] || 0) <= 0
+                          ? 'opacity-60 grayscale bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
+                          : (TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost)
+                          ? 'opacity-40 cursor-not-allowed border-zinc-200 dark:border-zinc-800'
                           : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm'
                       }`}
                     >
@@ -170,7 +214,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                       </div>
                       <div className="flex-1">
                         <span className="block text-lg font-bold text-zinc-900 dark:text-zinc-100">{TREE_TYPES[type].name}</span>
-                        <p className="text-xs text-zinc-500 mt-1">A rare prospect for your collection.</p>
+                        {(shopStock[type] || 0) <= 0 ? (
+                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 block">OUT OF STOCK</span>
+                        ) : (
+                          <div className="flex flex-col gap-1 mt-1">
+                            <p className="text-xs text-zinc-500">A rare prospect for your collection.</p>
+                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{shopStock[type]} in stock</span>
+                          </div>
+                        )}
                         <div className={`inline-flex mt-3 px-3 py-1 rounded-lg font-bold text-xs ${
                           TREE_TYPES[type].currency === 'gems' ? 'bg-purple-500/10 text-purple-600' : 'bg-orange-500/10 text-orange-600'
                         }`}>
@@ -188,10 +239,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                   {Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === 'common' && t !== 'spoiled').map(type => (
                     <button
                       key={type}
-                      onClick={() => plantSeed(type)}
-                      disabled={sunshine < TREE_TYPES[type].cost}
+                      onClick={() => buySeed(type)}
+                      disabled={(shopStock[type] || 0) <= 0 || sunshine < TREE_TYPES[type].cost}
                       className={`flex flex-col p-5 rounded-2xl border transition-all text-left relative group ${
-                        sunshine < TREE_TYPES[type].cost
+                        (shopStock[type] || 0) <= 0
+                          ? 'opacity-60 grayscale bg-zinc-50 dark:bg-zinc-900'
+                          : sunshine < TREE_TYPES[type].cost
                           ? 'opacity-40 cursor-not-allowed'
                           : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer border-zinc-200 dark:border-zinc-800'
                       }`}
@@ -200,13 +253,61 @@ export const BoutiqueView = memo(function BoutiqueView({
                         <PlantIcon type={type} size={28} />
                       </div>
                       <span className="font-bold text-sm">{TREE_TYPES[type].name}</span>
-                      <div className="flex items-center gap-1 mt-2 font-bold text-xs text-zinc-500">
-                        {TREE_TYPES[type].cost} ☀️
-                      </div>
+                      {(shopStock[type] || 0) <= 0 ? (
+                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1 block">OUT OF STOCK</span>
+                      ) : (
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center gap-1 font-bold text-xs text-zinc-500">
+                            {TREE_TYPES[type].cost} ☀️
+                          </div>
+                          <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{shopStock[type]} left</span>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
               </section>
+            </div>
+          ) : activeTab === 'inventory' ? (
+            <div className="p-8 space-y-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Your Seed Storage</h2>
+                <span className="text-[10px] font-bold text-zinc-400">{inventory.length}/40 Seeds</span>
+              </div>
+              
+              {inventory.length === 0 ? (
+                <div className="py-20 text-center space-y-4">
+                  <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto opacity-40">
+                    ☀️
+                  </div>
+                  <p className="text-sm text-zinc-400 font-medium">Your inventory is currently empty.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {inventory.map((type, idx) => (
+                    <div
+                      key={`${type}-${idx}`}
+                      className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/30 group"
+                    >
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-dashed border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-visible">
+                        <PlantIcon type={type} size={28} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="block font-bold text-sm truncate">{TREE_TYPES[type].name}</span>
+                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm ${RARITY_COLORS[TREE_TYPES[type].rarity]}`}>
+                          {TREE_TYPES[type].rarity}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={() => discardSeed(idx)}
+                        className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-8 space-y-12">

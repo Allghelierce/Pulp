@@ -11,8 +11,16 @@ export function PlantIcon({ type, size = 40, stage = 0 }: { type: string, size?:
   const isOval = ['kumquat', 'gold_kumquat'].includes(type)
   const isExotic = ['buddha', 'starfruit', 'rainbow'].includes(type)
 
+  const rarityClass = typeInfo.rarity === 'premium' 
+    ? 'rarity-premium' 
+    : typeInfo.rarity === 'chroma' 
+    ? 'rarity-chroma' 
+    : typeInfo.rarity === 'extinct' 
+    ? 'rarity-extinct' 
+    : ''
+
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className="overflow-visible">
+    <svg width={size} height={size} viewBox="0 0 24 24" className={`overflow-visible ${rarityClass}`}>
       {/* Dynamic Gradients for Chroma/Rainbow */}
       {type === 'rainbow' && (
         <defs>
@@ -59,6 +67,24 @@ export function PlantIcon({ type, size = 40, stage = 0 }: { type: string, size?:
              fill={type === 'rainbow' ? 'url(#rainbow-grad)' : typeInfo.color} 
              opacity="0.9" 
            />
+        )}
+
+        {/* Extra particles for top tiers */}
+        {(typeInfo.rarity === 'extinct' || typeInfo.rarity === 'chroma') && (
+          <g>
+            <circle cx="8" cy="8" r="0.5" fill="white">
+              <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="cy" values="8;6" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="16" cy="7" r="0.6" fill="white">
+              <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" begin="0.5s" />
+              <animate attributeName="cy" values="7;4" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="12" cy="5" r="0.4" fill="white">
+              <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="cy" values="5;2" dur="3s" repeatCount="indefinite" />
+            </circle>
+          </g>
         )}
       </g>
     </svg>

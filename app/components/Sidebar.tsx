@@ -455,15 +455,7 @@ export const Sidebar = memo(function Sidebar({
             }}
             className="relative flex items-center gap-2.5 mb-5 cursor-default select-none active:scale-[0.98] transition-transform"
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="14" cy="14" r="13" fill="#B8661A" />
-              <circle cx="14" cy="14" r="11" fill="#F5A030" />
-              <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
-              <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
-              <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
-              <circle cx="14" cy="14" r="1.8" fill="#B8661A" fillOpacity="0.75" />
-              <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
-            </svg>
+            <img src="/logo.svg" alt="Pulp Logo" width="28" height="28" />
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
           <input placeholder="Search…" className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
