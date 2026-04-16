@@ -9,7 +9,10 @@ interface AnimatedCreateButtonProps {
   theme: "light" | "dark"
 }
 
+const ORANGE = "#ea580c"
+
 export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateButtonProps) {
+  const color = ORANGE
   return (
     <motion.button
       onClick={onClick}
@@ -22,7 +25,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
       <motion.div
         className="absolute left-0 right-0 rounded-lg"
         style={{
-          backgroundColor: accent,
+          backgroundColor: color,
           opacity: 0.25,
           height: "48px",
           bottom: "-4px",
@@ -39,7 +42,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
       <motion.div
         className="absolute left-0 right-0 rounded-lg"
         style={{
-          backgroundColor: accent,
+          backgroundColor: color,
           opacity: 0.55,
           height: "48px",
           bottom: "-2px",
@@ -56,7 +59,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
       <motion.div
         className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 text-white font-medium overflow-hidden"
         style={{
-          backgroundColor: accent,
+          backgroundColor: color,
           zIndex: 2,
           height: "48px"
         }}

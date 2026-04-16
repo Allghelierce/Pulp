@@ -128,8 +128,6 @@ function TreeVisualization({ progress }: { progress: number; running: boolean; e
   )
 }
 
-const QUICK_PRESETS = [5, 10, 15, 25]
-
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onWater, onClaim, onDismissDead,
@@ -217,7 +215,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             left: sidebarWidth + 10,
             bottom: 12,
             width: 260,
-            maxHeight: "calc(100vh - 80px)",
+            maxHeight: "calc(100vh - 20px)",
             backgroundColor: bgColor,
             backdropFilter: "blur(18px)",
             WebkitBackdropFilter: "blur(18px)",
@@ -383,27 +381,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
-                  {/* Quick preset chips */}
-                  <div className="flex gap-1.5 mb-3 justify-center">
-                    {QUICK_PRESETS.map(mins => {
-                      const active = total === mins * 60
-                      return (
-                        <button
-                          key={mins}
-                          onClick={() => onSetTotal(mins * 60)}
-                          className="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all"
-                          style={{
-                            backgroundColor: active ? mainColor : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"),
-                            color: active ? "#fff" : subtleColor,
-                            border: `1px solid ${active ? mainColor : borderColor}`,
-                            fontFamily: 'Inter, system-ui, sans-serif',
-                          }}
-                        >
-                          {mins}m
-                        </button>
-                      )
-                    })}
-                  </div>
                   <div
                     className="relative h-1 rounded-full cursor-grab active:cursor-grabbing mb-1.5"
                     style={{ backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
@@ -436,26 +413,15 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <span>180m</span>
                   </div>
 
-                  <div
-                    className="text-[10px] text-center mt-3 py-1.5 px-2 rounded-[6px]"
-                    style={{
-                      color: dimColor,
-                      backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
-                      border: `1px solid ${borderColor}`,
-                      fontFamily: serifFont,
-                    }}
-                  >
-                    Complete for{' '}
-                    <span style={{ color: mainColor, fontWeight: 600 }}>
-                      +{total === 15 * 60 ? 2 : total === 25 * 60 ? 5 : 3} ☀
-                    </span>
-                  </div>
+                  <p className="text-center mt-2 text-[11px]" style={{ color: mainColor, fontFamily: serifFont, fontWeight: 600 }}>
+                    +{Math.max(1, Math.round(total / 300))} ☀
+                  </p>
                 </div>
               )}
             </div>
 
             {/* Main button */}
-            <div className="mt-3">
+            <div className="mt-7">
               {confirmGiveUp ? (
                 <div
                   className="w-full rounded-[6px] px-3 py-2.5 flex flex-col items-center gap-2"

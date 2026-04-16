@@ -130,7 +130,7 @@ export const Sidebar = memo(function Sidebar({
         holdIntervalRef.current = null
         setHoldingId(null)
         setHoldProgress(0)
-        
+
         // Mass delete if this note is part of the multi-selection
         if (multiSelectedIds.has(id)) {
           multiSelectedIds.forEach(selectedId => {
@@ -268,20 +268,20 @@ export const Sidebar = memo(function Sidebar({
               }}
             />
           )}
-          
+
           <div className="w-px h-3 bg-zinc-500/30 dark:bg-zinc-700/50 shrink-0 mx-0.5" />
-          
+
           {/* Note type indicator */}
           {n.noteType === "flashcard" && (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Flashcard">
-              <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" style={{ strokeDasharray: "2,2" }}/>
-              <line x1="6" y1="12" x2="18" y2="12" style={{ strokeDasharray: "2,2" }}/>
+              <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" style={{ strokeDasharray: "2,2" }} />
+              <line x1="6" y1="12" x2="18" y2="12" style={{ strokeDasharray: "2,2" }} />
             </svg>
           )}
           {n.noteType === "singlepage" && (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Single Page">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" style={{ strokeDasharray: "2,2" }}/>
-              <polyline points="14 2 14 8 20 8" style={{ strokeDasharray: "2,2" }}/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" style={{ strokeDasharray: "2,2" }} />
+              <polyline points="14 2 14 8 20 8" style={{ strokeDasharray: "2,2" }} />
             </svg>
           )}
           {n.noteType === "vault" && (
@@ -296,8 +296,8 @@ export const Sidebar = memo(function Sidebar({
           )}
           {(!n.noteType || n.noteType === "notebook") && (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Notebook">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" style={{ strokeDasharray: "2,2" }}/>
-              <path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" style={{ strokeDasharray: "2,2" }}/>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" style={{ strokeDasharray: "2,2" }} />
+              <path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" style={{ strokeDasharray: "2,2" }} />
             </svg>
           )}
           {renamingNoteId === n.id ? (
@@ -321,7 +321,7 @@ export const Sidebar = memo(function Sidebar({
             >{n.subject}</span>
           )}
         </span>
-        
+
         <div className="flex items-center shrink-0 ml-1.5 gap-0.5">
           {/* Hold-to-delete button */}
           <button
@@ -443,7 +443,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
 
         <div className="relative p-4 border-b border-white/5 shrink-0 overflow-hidden z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          <div 
+          <div
             onClick={() => {
               const count = devClicks + 1
               if (count >= 7) {
@@ -455,7 +455,15 @@ export const Sidebar = memo(function Sidebar({
             }}
             className="relative flex items-center gap-2.5 mb-5 cursor-default select-none active:scale-[0.98] transition-transform"
           >
-            <img src="/logo.svg" alt="Pulp Logo" width="28" height="28" />
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="14" cy="14" r="13" fill="#B8661A" />
+              <circle cx="14" cy="14" r="11" fill="#F5A030" />
+              <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
+              <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
+              <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" strokeWidth="1.1" strokeOpacity="0.55" />
+              <circle cx="14" cy="14" r="1.8" fill="#B8661A" fillOpacity="0.75" />
+              <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
+            </svg>
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
           <input placeholder="Search…" className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
@@ -476,7 +484,7 @@ export const Sidebar = memo(function Sidebar({
               </div>
               <div className="flex items-center gap-1.5 relative">
                 <div className="relative flex items-center">
-                  <button 
+                  <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
                     className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-white bg-zinc-800" : "text-zinc-500 hover:text-white hover:bg-zinc-800"}`}
                   >
@@ -514,8 +522,8 @@ export const Sidebar = memo(function Sidebar({
                   <div className="pl-5 space-y-0.5">
                     {notesInFolder(f.id).map(n => renderNote(n, 12))}
                     <div className="relative inline-block">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === String(f.id) ? null : String(f.id)) }} 
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === String(f.id) ? null : String(f.id)) }}
                         className={`text-[11px] px-3 py-0.5 block rounded transition-colors ${newMenuOpen === String(f.id) ? "text-white bg-zinc-800" : "text-zinc-600 hover:text-white hover:bg-zinc-800"}`}
                       >
                         + New
@@ -667,7 +675,7 @@ export const Sidebar = memo(function Sidebar({
         {archivedNotes.length > 0 && (
           <ArchiveSection
             archivedNotes={archivedNotes}
-            onUnarchiveNote={onUnarchiveNote ?? (() => {})}
+            onUnarchiveNote={onUnarchiveNote ?? (() => { })}
           />
         )}
 

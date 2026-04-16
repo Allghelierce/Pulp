@@ -41,11 +41,11 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-[4px] animate-fade-in">
-      <div 
+    <div className="fixed inset-x-0 bottom-10 z-[10000] flex justify-center px-6 pointer-events-none animate-fade-in">
+      <div
         ref={containerRef}
-        className="w-full max-w-[600px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden anim-slide-up"
-        style={{ borderRadius: 5 }}
+        className="w-full max-w-[560px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden anim-slide-up pointer-events-auto"
+        style={{ borderRadius: 8 }}
       >
         <form onSubmit={handleSubmit} className="relative flex items-center p-4">
           <div className="flex items-center justify-center w-8 h-8 mr-3 text-orange-600/80">

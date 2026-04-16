@@ -145,7 +145,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   const claimReward = useCallback(() => {
     if (!timerDone || treeDead) return
-    const reward = timerTotal === 15 * 60 ? 2 : timerTotal === 25 * 60 ? 5 : 3
+    const reward = Math.max(1, Math.round(timerTotal / 300))
     setSunshine(s => s + reward)
 
     // Iron Will — count completed sessions

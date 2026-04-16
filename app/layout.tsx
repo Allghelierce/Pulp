@@ -16,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+        <link rel="icon" href="/pulp_logo.svg" type="image/svg+xml" />
       </head>
       <body className={`${inter.variable} ${hand.variable} ${caveat.variable} ${indie.variable} ${mono.variable} ${playfair.variable} ${italiana.variable} ${dancing.variable} antialiased`}>
 

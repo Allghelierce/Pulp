@@ -262,14 +262,24 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 <button
                   key={idx}
                   onMouseDown={e => {
-                    e.preventDefault()
                     const sel = window.getSelection()
                     const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
-                    const rect = sel && sel.rangeCount > 0 ? sel.getRangeAt(0).getBoundingClientRect() : { left: 400, top: 400 }
-                    onOpenAiMenu(rect.left, rect.top - 12, selectedText, item.prompt)
-                    // We could potentially pass the prompt directly to the AI here, 
-                    // but for now opening the menu with the prompt is a good start if we have a way to pass it.
-                    // Or let's just use it to open the prompt bar.
+                    
+                    let x = 400
+                    let y = 400
+
+                    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+                      const rect = sel.getRangeAt(0).getBoundingClientRect()
+                      x = rect.left
+                      y = rect.top - 12
+                    } else {
+                      // Fallback to button position
+                      const btnRect = e.currentTarget.getBoundingClientRect()
+                      x = btnRect.left
+                      y = btnRect.bottom + 8
+                    }
+
+                    onOpenAiMenu(x, y, selectedText, item.prompt)
                     setAiOpen(false)
                   }}
                   className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
@@ -280,7 +290,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               ))}
               <div className="h-px bg-zinc-200/50 my-1 mx-1" />
               <button
-                onMouseDown={e => { e.preventDefault(); onOpenAiMenu(200, 200); setAiOpen(false) }}
+                onMouseDown={e => { 
+                  e.preventDefault()
+                  const btnRect = e.currentTarget.getBoundingClientRect()
+                  onOpenAiMenu(btnRect.left, btnRect.bottom + 8)
+                  setAiOpen(false) 
+                }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
                 style={btnFont}
               >

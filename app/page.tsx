@@ -672,21 +672,104 @@ const BoxTextarea = memo(function BoxTextarea({
       suppressContentEditableWarning
       data-box-style={styleKey}
       onKeyDown={e => {
-        // Erase animation for selected text deletion only
+        // Erase animation — applies to both selection and single-char backspace.
+        // Ghosts live in #editor-paper as absolutely-positioned overlays so the
+        // actual text is deleted immediately (no cursor traps, safe under rapid deletion).
         if ((e.key === 'Backspace' || e.key === 'Delete') && ref.current && !e.defaultPrevented) {
           const sel = window.getSelection()
-          if (sel && sel.toString()) {
-            // Selected text - show erase animation
-            e.preventDefault()
+          if (sel && sel.rangeCount > 0) {
             const range = sel.getRangeAt(0)
-            const contents = range.extractContents()
-            const span = document.createElement('span')
-            span.className = 'erased'
-            span.style.pointerEvents = 'none'
-            span.style.userSelect = 'none'
-            span.appendChild(contents)
-            range.insertNode(span)
-            setTimeout(() => { span.remove(); syncState() }, 6100)
+
+            let ghostRect: DOMRect | null = null
+            let ghostText = ''
+            let didDelete = false
+
+            if (!range.collapsed) {
+              ghostRect = range.getBoundingClientRect()
+              ghostText = range.toString()
+              if (ghostRect.width > 0 && ghostText) {
+                e.preventDefault()
+                range.deleteContents()
+                didDelete = true
+              }
+            } else if (
+              e.key === 'Backspace' &&
+              range.startContainer.nodeType === Node.TEXT_NODE &&
+              range.startOffset > 0
+            ) {
+              const textNode = range.startContainer as Text
+              const charRange = document.createRange()
+              charRange.setStart(textNode, range.startOffset - 1)
+              charRange.setEnd(textNode, range.startOffset)
+              ghostRect = charRange.getBoundingClientRect()
+              ghostText = textNode.data.charAt(range.startOffset - 1)
+              if (ghostRect.width > 0 && ghostText) {
+                e.preventDefault()
+                textNode.deleteData(range.startOffset - 1, 1)
+                didDelete = true
+              }
+            } else if (
+              e.key === 'Delete' &&
+              range.startContainer.nodeType === Node.TEXT_NODE &&
+              range.startOffset < (range.startContainer as Text).data.length
+            ) {
+              const textNode = range.startContainer as Text
+              const charRange = document.createRange()
+              charRange.setStart(textNode, range.startOffset)
+              charRange.setEnd(textNode, range.startOffset + 1)
+              ghostRect = charRange.getBoundingClientRect()
+              ghostText = textNode.data.charAt(range.startOffset)
+              if (ghostRect.width > 0 && ghostText) {
+                e.preventDefault()
+                textNode.deleteData(range.startOffset, 1)
+                didDelete = true
+              }
+            }
+
+            if (didDelete && ghostRect) {
+              const paper = document.getElementById('editor-paper')
+              if (paper) {
+                let zoom = 1
+                const zoomWrapper = document.querySelector('.max-w-5xl.shrink-0') as HTMLElement | null
+                if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
+
+                let layer = document.getElementById('ghost-layer')
+                if (!layer) {
+                  layer = document.createElement('div')
+                  layer.id = 'ghost-layer'
+                  layer.style.position = 'absolute'
+                  layer.style.inset = '0'
+                  layer.style.pointerEvents = 'none'
+                  layer.style.zIndex = '40'
+                  paper.appendChild(layer)
+                }
+
+                const paperRect = paper.getBoundingClientRect()
+                const ghost = document.createElement('span')
+                ghost.className = 'erased'
+                ghost.textContent = ghostText
+                ghost.style.position = 'absolute'
+                ghost.style.left = ((ghostRect.left - paperRect.left) / zoom) + 'px'
+                ghost.style.top = ((ghostRect.top - paperRect.top) / zoom) + 'px'
+                ghost.style.width = (ghostRect.width / zoom) + 'px'
+                ghost.style.height = (ghostRect.height / zoom) + 'px'
+                ghost.style.overflow = 'hidden'
+
+                const comp = window.getComputedStyle(ref.current)
+                ghost.style.fontFamily = comp.fontFamily
+                ghost.style.fontSize = comp.fontSize
+                ghost.style.fontWeight = comp.fontWeight
+                ghost.style.lineHeight = comp.lineHeight
+                ghost.style.color = comp.color
+                ghost.style.letterSpacing = comp.letterSpacing
+
+                const cleanup = () => ghost.remove()
+                ghost.addEventListener('animationend', cleanup)
+                setTimeout(cleanup, 6500)
+                layer.appendChild(ghost)
+              }
+              syncState()
+            }
           }
         }
         // Call parent handler
@@ -698,29 +781,6 @@ const BoxTextarea = memo(function BoxTextarea({
       onInput={e => {
         onInput(e)
         clearTimeout(timerRef.current)
-
-        // Defer cursor management so holding backspace works for continuous deletion
-        setTimeout(() => {
-          // Move cursor out of erased spans so user can continue typing/deleting
-          if (ref.current) {
-            const sel = window.getSelection()
-            if (sel && sel.rangeCount > 0) {
-              const range = sel.getRangeAt(0)
-              let node: Node | null = range.commonAncestorContainer
-              while (node) {
-                if (node.nodeType === Node.ELEMENT_NODE && (node as Element).className === 'erased') {
-                  range.setStartAfter(node)
-                  range.collapse(true)
-                  sel.removeAllRanges()
-                  sel.addRange(range)
-                  break
-                }
-                node = node.parentNode
-              }
-            }
-          }
-        }, 50)
-
         timerRef.current = setTimeout(syncState, 500)
       }}
       onMouseDown={e => e.stopPropagation()}
@@ -2144,15 +2204,15 @@ export default function NoteApp() {
               <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
                 <div className="text-center max-w-md overflow-hidden">
                   {/* Heading */}
-                  <h1 className="text-4xl font-medium tracking-tight mb-8" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+                  <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                   {/* Primary Button */}
                   <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
 
                   {/* Quick Tips */}
-                  <div className="mt-8 pt-6" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
-                    <p className="text-xs font-medium mb-3" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
-                    <ul className="text-xs space-y-2 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
+                  <div className="mt-5 pt-4" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
+                    <p className="text-xs font-medium mb-2" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
+                    <ul className="text-xs space-y-1.5 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
                       <li className="flex items-center gap-2">📝 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+N</code> to create notes</li>
                       <li className="flex items-center gap-2">🔍 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+K</code> to search</li>
                       <li className="flex items-center gap-2">🤖 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>\</code> for AI editing</li>
@@ -2160,7 +2220,7 @@ export default function NoteApp() {
                   </div>
 
                   {/* Theme Toggle */}
-                  <div className="mt-6 flex items-center justify-center">
+                  <div className="mt-4 flex items-center justify-center">
                     <div
                       onClick={() => updateSettings({ theme: theme === "light" ? "dark" : "light" })}
                       className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
