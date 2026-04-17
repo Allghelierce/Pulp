@@ -129,7 +129,10 @@ function Submenu({
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      setCoords({ top: t, left: pr.right + 8 })
+      let l = pr.right + 8
+      if (l + rh.width > window.innerWidth - 8) l = pr.left - rh.width - 8
+      if (l < 8) l = 8
+      setCoords({ top: t, left: l })
     }
     const handleMouseDown = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
@@ -235,7 +238,7 @@ function Submenu({
 
 // ─── Custom Flyout Wrapper ──────────────────────────────────────────────────
 
-function CustomMenuFlyout({ children, parentRef, mode }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/" }) {
+function CustomMenuFlyout({ children, parentRef, mode, onClose }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/", onClose?: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
 
@@ -245,9 +248,18 @@ function CustomMenuFlyout({ children, parentRef, mode }: { children: React.React
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      setCoords({ top: t, left: pr.right + 8 })
+      let l = pr.right + 8
+      if (l + rh.width > window.innerWidth - 8) l = pr.left - rh.width - 8
+      if (l < 8) l = 8
+      setCoords({ top: t, left: l })
     }
-  }, [parentRef, children])
+    if (!onClose) return
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    return () => document.removeEventListener("mousedown", handleMouseDown)
+  }, [parentRef, children, onClose])
 
   const isLight = mode === "/"
 
@@ -305,7 +317,7 @@ function makeColumns(num: number): string {
 
 function makeTOC(mode: "@" | "/"): string {
   const isLight = mode === "/"
-  const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1"))
+  const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1, [contenteditable]:not([data-box-style]) h2, [contenteditable]:not([data-box-style]) h3"))
   const bgColor = isLight ? "#fafafa" : "rgba(255,255,255,0.05)"
   const textColor = isLight ? "#374151" : "#a1a1aa"
   const titleColor = isLight ? "#5a4a3a" : "#e4e4e7"
@@ -314,7 +326,10 @@ function makeTOC(mode: "@" | "/"): string {
 
   if (headers.length === 0) return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div><div style="color:${noneColor};font-size:13px;font-style:italic">none</div></div><br/>`
   const items = headers.map(h => {
-    return `<div style="padding:6px 0;font-family:'Caveat',cursive;font-size:16px;color:${textColor}">${(h.textContent || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+    const tag = h.tagName.toLowerCase()
+    const indent = tag === "h2" ? "padding-left:16px;" : tag === "h3" ? "padding-left:32px;" : ""
+    const size = tag === "h1" ? "16px" : tag === "h2" ? "14px" : "13px"
+    return `<div style="padding:6px 0;${indent}font-family:'Caveat',cursive;font-size:${size};color:${textColor}">${(h.textContent || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
   }).join("")
   return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div>${items}</div><br/>`
 }
@@ -323,9 +338,14 @@ const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" st
 
 // ─── Table Grid Picker ──────────────────────────────────────────────────────
 
-function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols: number) => void; onClose: () => void }) {
+function TableGridPicker({ onInsert, onClose, accent }: { onInsert: (html: string, cols: number) => void; onClose: () => void; accent: string }) {
   const [hover, setHover] = useState<[number, number]>([0, 0])
   const ROWS = 5, COLS = 5
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : "184,94,34"
+  }
+  const rgb = hexToRgb(accent)
   return (
     <div style={{ padding: 12 }} onMouseLeave={() => setHover([0, 0])}>
       <div style={{ fontSize: 11, color: "rgba(0,0,0,0.5)", marginBottom: 8, textAlign: "center" }}>
@@ -343,8 +363,8 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
               onClick={() => { onInsert(makeTable(r, c), c); onClose() }}
               style={{
                 width: 20, height: 20, borderRadius: 2, cursor: "pointer",
-                background: active ? "rgba(184,94,34,0.5)" : "rgba(184,94,34,0.15)",
-                border: active ? "1.5px solid rgba(184,94,34,0.8)" : "1px solid rgba(184,94,34,0.3)",
+                background: active ? `rgba(${rgb},0.5)` : `rgba(${rgb},0.15)`,
+                border: active ? `1.5px solid rgba(${rgb},0.8)` : `1px solid rgba(${rgb},0.3)`,
                 transition: "all 0.05s",
               }}
             />
@@ -357,33 +377,37 @@ function TableGridPicker({ onInsert, onClose }: { onInsert: (html: string, cols:
 
 // ─── Media Input ──────────────────────────────────────────────────────────────
 
-function MediaInput({ onInsert, onUpload, onClose, accent }: { onInsert: (html: string) => void; onUpload?: () => void; onClose: () => void; accent: string }) {
+function MediaInput({ onInsert, onUpload, onClose, accent, mode }: { onInsert: (html: string) => void; onUpload?: () => void; onClose: () => void; accent: string; mode: "@" | "/" }) {
   const [tab, setTab] = useState<"upload" | "link">("upload")
   const [url, setUrl] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
-  
+  const isLight = mode === "/"
+
   useEffect(() => { if (tab === "link") setTimeout(() => inputRef.current?.focus(), 50) }, [tab])
 
   const handleInsert = () => {
     if (!url.trim()) return
+    const sanitizeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const sanitizeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
     const vmMatch = url.match(/vimeo\.com\/(\d+)/)
     const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp)(\?.*)?$/i)
     const isVideo = url.match(/\.(mp4|webm|ogg|mov|mkv|flv|avi|wmv)(\?.*)?$/i)
+    const safeUrl = sanitizeAttr(url.trim())
 
     let html = ""
     if (ytMatch) {
-      const embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`
-      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${embedUrl}" style="width:100%;height:100%;border:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div><br/>`
+      const embedUrl = `https://www.youtube.com/embed/${encodeURIComponent(ytMatch[1])}`
+      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${sanitizeAttr(embedUrl)}" style="width:100%;height:100%;border:none" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div><br/>`
     } else if (vmMatch) {
-      const embedUrl = `https://player.vimeo.com/video/${vmMatch[1]}`
-      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${embedUrl}" style="width:100%;height:100%;border:none" allowfullscreen></iframe></div><br/>`
+      const embedUrl = `https://player.vimeo.com/video/${encodeURIComponent(vmMatch[1])}`
+      html = `<div contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:560px"><iframe src="${sanitizeAttr(embedUrl)}" style="width:100%;height:100%;border:none" allowfullscreen></iframe></div><br/>`
     } else if (isImage) {
-      html = `<img src="${url.trim()}" style="max-width:100%;margin:8px 0;border-radius:8px;display:block" /><br/>`
+      html = `<img src="${safeUrl}" style="max-width:100%;margin:8px 0;border-radius:8px;display:block" /><br/>`
     } else if (isVideo) {
-      html = `<video src="${url.trim()}" controls style="max-width:100%;margin:8px 0;border-radius:8px;display:block"></video><br/>`
+      html = `<video src="${safeUrl}" controls style="max-width:100%;margin:8px 0;border-radius:8px;display:block"></video><br/>`
     } else {
-      html = `<a href="${url.trim()}" target="_blank" style="color:#b85e22;text-decoration:underline">${url.trim()}</a><br/>`
+      html = `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:${accent};text-decoration:underline">${sanitizeText(url.trim())}</a><br/>`
     }
     onInsert(html)
     onClose()
@@ -391,24 +415,24 @@ function MediaInput({ onInsert, onUpload, onClose, accent }: { onInsert: (html: 
 
   return (
     <div style={{ padding: 12, width: 280 }}>
-      <div style={{ display: "flex", gap: 16, borderBottom: "1px solid rgba(0,0,0,0.1)", marginBottom: 12 }}>
-        <button 
-          onClick={() => setTab("upload")} 
-          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "upload" ? 600 : 400, color: tab === "upload" ? "#111" : "#777", borderBottom: tab === "upload" ? "2px solid #111" : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
+      <div style={{ display: "flex", gap: 16, borderBottom: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.1)", marginBottom: 12 }}>
+        <button
+          onClick={() => setTab("upload")}
+          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "upload" ? 600 : 400, color: tab === "upload" ? (isLight ? "#111" : "#eee") : (isLight ? "#777" : "#888"), borderBottom: tab === "upload" ? `2px solid ${isLight ? "#111" : "#eee"}` : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
         >Upload</button>
-        <button 
-          onClick={() => setTab("link")} 
-          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "link" ? 600 : 400, color: tab === "link" ? "#111" : "#777", borderBottom: tab === "link" ? "2px solid #111" : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
+        <button
+          onClick={() => setTab("link")}
+          style={{ background: "none", border: "none", padding: "0 0 6px 0", fontSize: 13, fontWeight: tab === "link" ? 600 : 400, color: tab === "link" ? (isLight ? "#111" : "#eee") : (isLight ? "#777" : "#888"), borderBottom: tab === "link" ? `2px solid ${isLight ? "#111" : "#eee"}` : "2px solid transparent", cursor: "pointer", transform: "translateY(1px)" }}
         >Link</button>
       </div>
 
       {tab === "upload" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <button onClick={() => { onUpload?.(); onClose(); }} style={{ width: "100%", padding: "8px 0", background: "white", color: "#111", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 4, fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          <button onClick={() => { onUpload?.(); onClose(); }} style={{ width: "100%", padding: "8px 0", background: isLight ? "white" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee", border: isLight ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(255,255,255,0.15)", borderRadius: 4, fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Choose File
           </button>
-          <div style={{ fontSize: 10, color: "#888", textAlign: "center", fontStyle: "italic", marginTop: 2 }}>Accepts Images, Videos & GIFs</div>
+          <div style={{ fontSize: 10, color: isLight ? "#888" : "#777", textAlign: "center", fontStyle: "italic", marginTop: 2 }}>Accepts Images, Videos & GIFs</div>
         </div>
       )}
 
@@ -420,7 +444,7 @@ function MediaInput({ onInsert, onUpload, onClose, accent }: { onInsert: (html: 
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleInsert(); if (e.key === "Escape") onClose() }}
             placeholder="Paste Link (Image, Video, YouTube)"
-            style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box" }}
+            style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: isLight ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(255,255,255,0.15)", outline: "none", boxSizing: "border-box", background: isLight ? "#fff" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee" }}
           />
           <button onClick={handleInsert} style={{ width: "100%", padding: "6px 0", background: accent, color: "white", border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
             Embed Link
@@ -494,18 +518,21 @@ function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: s
       const data = await res.json()
       if (data.error) { setError(data.error); setLoading(false); return }
       const { title, description, image, domain } = data
-      const safeUrl = url.trim().replace(/'/g, "\\'")
-      const safeTitle = (title || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      const safeDesc = (description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      const safeDomain = (domain || url).replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      const imgHtml = image ? `<img src="${image}" style="width:72px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" />` : ""
+      const sanitizeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const sanitizeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      const safeUrl = sanitizeAttr(url.trim())
+      const safeTitle = sanitizeHtml(title || "")
+      const safeDesc = sanitizeHtml(description || "")
+      const safeDomain = sanitizeHtml(domain || url)
+      const safeImgSrc = image ? sanitizeAttr(image) : ""
+      const imgHtml = safeImgSrc ? `<img src="${safeImgSrc}" style="width:72px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0" />` : ""
       const isLight = mode === "/"
       const bgColor = isLight ? "#fafafa" : "rgba(255,255,255,0.05)"
       const borderColor = isLight ? "#e4e4e7" : "rgba(255,255,255,0.1)"
       const titleColor = isLight ? "#111" : "#e4e4e7"
       const descColor = isLight ? "#666" : "#a1a1aa"
       const domainColor = isLight ? "#9ca3af" : "#6b7280"
-      const html = `<div contenteditable="false" onclick="window.open('${safeUrl}','_blank')" style="display:flex;gap:12px;border:1px solid ${borderColor};border-radius:8px;padding:12px 14px;margin:8px 0;background:${bgColor};max-width:480px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:${titleColor};margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safeTitle}</div><div style="font-size:11px;color:${descColor};margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${safeDesc}</div><div style="font-size:10px;color:${domainColor}">${safeDomain}</div></div>${imgHtml}</div><br/>`
+      const html = `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" contenteditable="false" style="display:flex;gap:12px;border:1px solid ${borderColor};border-radius:8px;padding:12px 14px;margin:8px 0;background:${bgColor};max-width:480px;cursor:pointer;text-decoration:none;color:inherit"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:${titleColor};margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safeTitle}</div><div style="font-size:11px;color:${descColor};margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${safeDesc}</div><div style="font-size:10px;color:${domainColor}">${safeDomain}</div></div>${imgHtml}</a><br/>`
       onInsert(html)
       onClose()
     } catch {
@@ -526,7 +553,7 @@ function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: s
         style={{ width: "100%", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box", marginBottom: 8, background: isLight ? "#fff" : "rgba(255,255,255,0.08)", color: isLight ? "#111" : "#eee" }}
       />
       {error && <div style={{ fontSize: 10.5, color: "#ef4444", marginBottom: 6 }}>{error}</div>}
-      <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? "#d4a87a" : "#b85e22", color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
+      <button onClick={handleFetch} disabled={loading} style={{ width: "100%", padding: "5px 0", background: loading ? `${accent}88` : accent, color: "white", border: "none", borderRadius: 4, fontSize: 11.5, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
         {loading ? "Fetching…" : "Fetch & Insert"}
       </button>
     </div>
@@ -678,7 +705,7 @@ export const SlashMenu = memo(function SlashMenu({
       id: "media", label: "Image / Video / GIF", group: "Media",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>,
       action: () => { },
-      customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} accent={accent} />
+      customContent: <MediaInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onUpload={() => onInsertImage?.()} onClose={onClose} accent={accent} mode={mode} />
     },
     {
       id: "date", label: "Today's Date", shortcut: "today", group: "Accessories",
@@ -700,7 +727,7 @@ export const SlashMenu = memo(function SlashMenu({
       id: "table", label: "Table", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>,
       action: () => { },
-      customContent: <TableGridPicker onInsert={(html, cols) => {
+      customContent: <TableGridPicker accent={accent} onInsert={(html, cols) => {
         onSelect(() => {
           insertHTML(html)
           if (box && onUpdateBox) {
@@ -1074,7 +1101,7 @@ export const SlashMenu = memo(function SlashMenu({
                       )}
                       
                       {submenuOpen && item.customContent && (
-                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode}>
+                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode} onClose={() => setOpenSubmenuId(null)}>
                           {item.customContent}
                         </CustomMenuFlyout>
                       )}

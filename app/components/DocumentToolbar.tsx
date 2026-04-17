@@ -28,6 +28,9 @@ interface DocumentToolbarProps {
   clearPage: () => void
   autoAlign: () => void
   verticalAlign: () => void
+  centerStack: () => void
+  twoColumnGrid: () => void
+  distributeEvenly: () => void
   insertCornell: () => void
   showDrawToolbar: boolean
   onToggleDrawToolbar: () => void
@@ -90,7 +93,8 @@ const COMMON_PROMPTS = [
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx,
   setZoom, setCarouselIdx, setGridView, setDrawLineMode,
-  openAlert, clearPage, autoAlign, verticalAlign,
+  openAlert, clearPage, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly,
+  insertCornell, insertColumns,
   showDrawToolbar, onToggleDrawToolbar,
   rightSidebarOpen, setRightSidebarOpen,
   allCompacted, onCompactAll, onInsertHR,

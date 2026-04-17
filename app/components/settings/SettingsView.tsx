@@ -14,32 +14,22 @@ import type { Achievement, NoteData } from "@/app/types"
 // ── Settings tabs config ───────────────────────────────────────────────────
 
 const TAB_DESCRIPTIONS: Record<string, string> = {
-  general: "Manage your account and application preferences",
-  appearance: "Customize accent colors, themes, and layouts",
-  typography: "Fine-tune your writing aesthetics",
-  interface: "Customize the Pulp application shell",
-  editor: "Configure your writing environment",
-  ai: "Optimize your intelligence partner",
-  blocker: "Restrict distractions during focus sessions",
+  general: "Account, shortcuts, and application preferences",
+  appearance: "Theme, interface, and visual customization",
   achievements: "Track your progress and claim rewards",
-  data: "Manage your local data and backups",
-  shortcuts: "Master Pulp with keyboard acceleration",
+  typography: "Fine-tune your writing aesthetics",
+  editor: "Writing tools, focus mode, and distraction blocking",
+  data: "Storage, exports, and account management",
   subscription: "Manage your plan and billing",
-  danger: "Irreversible and destructive actions",
 }
 
 export const SETTINGS_TABS = [
   { id: "general", label: "General", group: "App", icon: "⚙️" },
   { id: "appearance", label: "Appearance", group: "App", icon: "🎨" },
-  { id: "interface", label: "Interface", group: "App", icon: "🖥️" },
   { id: "achievements", label: "Achievements", group: "App", icon: "🏆" },
   { id: "typography", label: "Typography", group: "Writing", icon: "✒️" },
   { id: "editor", label: "Editor", group: "Writing", icon: "✍️" },
-  { id: "ai", label: "AI Kai", group: "Writing", icon: "🤖" },
-  { id: "blocker", label: "Focus Blocker", group: "Writing", icon: "🛡️" },
   { id: "data", label: "Data & Storage", group: "Advanced", icon: "💾" },
-  { id: "shortcuts", label: "Shortcuts", group: "Advanced", icon: "⌨️" },
-  { id: "danger", label: "Danger Zone", group: "Advanced", icon: "⚠️" },
   { id: "subscription", label: "Pro", group: "Premium", icon: "✦ " },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
@@ -235,26 +225,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 )}
               </SettingSection>
 
-              <SettingSection title="System" isDark={isDark}>
-                <SettingRow
-                  title="Language"
-                  isDark={isDark}
-                  description="Choose the language for the user interface"
-                  control={
-                    <select
-                      value={language}
-                      onChange={e => onUpdateConfig({ language: e.target.value })}
-                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
-                    >
-                      <option value="english">English (US)</option>
-                      <option value="spanish">Español</option>
-                      <option value="french">Français</option>
-                      <option value="german">Deutsch</option>
-                      <option value="japanese">日本語</option>
-                      <option value="chinese">中文</option>
-                    </select>
-                  }
-                />
+              <SettingSection title="Preferences" isDark={isDark}>
                 <SettingRow
                   title="Default Sort Order"
                   isDark={isDark}
@@ -273,18 +244,23 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 />
               </SettingSection>
 
+              <SettingSection title="Shortcuts" isDark={isDark}>
+                <div className="flex flex-col gap-0.5 px-3 py-2">
+                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
+                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>New Note</span>
+                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ N</kbd>
+                  </div>
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
+                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Toggle Sidebar</span>
+                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ \</kbd>
+                  </div>
+                </div>
+              </SettingSection>
+
               <SettingSection title="About" isDark={isDark}>
-                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0</span>} />
-                <SettingRow title="Build" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>2026.03</span>} />
-                <SettingRow
-                  title="Check for updates"
-                  isDark={isDark}
-                  control={
-                    <button className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}>
-                      Check
-                    </button>
-                  }
-                />
+                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0 (2026.03)</span>} />
               </SettingSection>
             </>)}
 
@@ -340,6 +316,20 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     ))}
                   </div>
                 </div>
+              </SettingSection>
+
+              <SettingSection title="Interface" isDark={isDark}>
+                <SettingRow
+                  title="Show sidebar on launch"
+                  isDark={isDark}
+                  control={<SettingToggle checked={sidebarOnStart} onChange={v => onUpdateConfig({ sidebarOnStart: v })} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Status bar"
+                  isDark={isDark}
+                  description="Show word count and stats in the bottom-right"
+                  control={<SettingToggle checked={wordCountVisible} onChange={v => onUpdateConfig({ wordCountVisible: v })} isDark={isDark} />}
+                />
               </SettingSection>
             </>)}
 
@@ -422,24 +412,6 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               </SettingSection>
             </>)}
 
-            {/* ── Interface ── */}
-            {activeTab === "interface" && (<>
-               <SettingSection title="Sidebar" isDark={isDark}>
-                <SettingRow
-                  title="Show sidebar on launch"
-                  isDark={isDark}
-                  control={<SettingToggle checked={sidebarOnStart} onChange={v => onUpdateConfig({ sidebarOnStart: v })} isDark={isDark} />}
-                />
-              </SettingSection>
-              <SettingSection title="Toolbars" isDark={isDark}>
-                <SettingRow
-                  title="Status bar"
-                  isDark={isDark}
-                  description="Show word count and stats in the bottom-right"
-                  control={<SettingToggle checked={wordCountVisible} onChange={v => onUpdateConfig({ wordCountVisible: v })} isDark={isDark} />}
-                />
-              </SettingSection>
-            </>)}
 
             {/* ── Editor ── */}
             {activeTab === "editor" && (<>
@@ -470,7 +442,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 />
               </SettingSection>
 
-              <SettingSection title="Reading & Focus" isDark={isDark}>
+              <SettingSection title="Focus" isDark={isDark}>
                 <SettingRow
                   title="Focus mode"
                   isDark={isDark}
@@ -478,56 +450,26 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   control={<SettingToggle checked={focusMode} onChange={v => onUpdateConfig({ focusMode: v })} isDark={isDark} />}
                 />
               </SettingSection>
-            </>)}
 
-            {/* ── AI ── */}
-            {activeTab === "ai" && (<>
-              <SettingSection title="Kai Intelligence" isDark={isDark}>
-                <SettingRow
-                  title="Inline suggestions"
-                  isDark={isDark}
-                  description="Kai predicts your next words as you write"
-                  control={<SettingToggle checked={true} onChange={() => {}} isDark={isDark} />}
-                />
-              </SettingSection>
-            </>)}
-
-            {/* ── Focus Blocker ── */}
-            {activeTab === "blocker" && (<>
-              <SettingSection title="Session Protection" isDark={isDark}>
-                 <div className="px-5 py-4 pb-6">
+              <SettingSection title="Focus Blocker" isDark={isDark}>
+                 <div className="px-5 py-4 pb-2">
                     <p className={`text-[12px] leading-relaxed mb-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-                      When active, Pulp will attempt to restrict access to these distractions while your Focus Timer is running.
+                      Restrict access to distractions while your Focus Timer is running.
                     </p>
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                      <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center shrink-0">
-                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      </div>
-                      <div className="min-w-0">
-                         <p className="text-[11px] font-bold text-[#ea580c] uppercase tracking-widest">Protective Aura</p>
-                         <p className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Requires "Automation" permissions on macOS to monitor browsers.</p>
-                      </div>
-                    </div>
                  </div>
-              </SettingSection>
-
-              <SettingSection title="Blocked Websites" isDark={isDark}>
-                 <BlockList 
-                   placeholder="e.g. twitter.com, reddit.com" 
-                   items={blockedSites} 
-                   onChange={v => onUpdateConfig({ blockedSites: v })} 
-                   isDark={isDark} 
-                   description="Enter domains to restrict during focus"
+                 <BlockList
+                   placeholder="e.g. twitter.com, reddit.com"
+                   items={blockedSites}
+                   onChange={v => onUpdateConfig({ blockedSites: v })}
+                   isDark={isDark}
+                   description="Blocked websites"
                  />
-              </SettingSection>
-
-              <SettingSection title="Blocked Applications" isDark={isDark}>
-                 <BlockList 
-                   placeholder="e.g. Discord, Slack, Steam" 
-                   items={blockedApps} 
-                   onChange={v => onUpdateConfig({ blockedApps: v })} 
-                   isDark={isDark} 
-                   description="Executable names to close when focus begins"
+                 <BlockList
+                   placeholder="e.g. Discord, Slack, Steam"
+                   items={blockedApps}
+                   onChange={v => onUpdateConfig({ blockedApps: v })}
+                   isDark={isDark}
+                   description="Blocked applications"
                  />
               </SettingSection>
             </>)}
@@ -675,31 +617,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                    </div>
                  </SettingSection>
                )}
-            </>)}
 
-            {/* ── Shortcuts ── */}
-            {activeTab === "shortcuts" && (<>
-              <SettingSection title="Global Shortcuts" isDark={isDark}>
-                <div className="flex flex-col gap-0.5 px-3 py-2">
-                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
-                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
-                  
-                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
-                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>New Note</span>
-                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ N</kbd>
-                  </div>
-                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
-                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Toggle Sidebar</span>
-                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ \</kbd>
-                  </div>
-                </div>
-              </SettingSection>
-            </>)}
-
-
-            {/* ── Danger Zone ── */}
-            {activeTab === "danger" && (<>
-              <SettingSection title="Danger Zone" isDark={isDark}>
+               <SettingSection title="Danger Zone" isDark={isDark}>
                 <SettingRow
                   title="Delete all notes"
                   isDark={isDark}

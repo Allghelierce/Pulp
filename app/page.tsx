@@ -86,25 +86,23 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.6; filter: blur(0.4px); transform: translateY(0.5px) rotate(-1deg); } 15% { opacity: 0.45; filter: blur(1.5px); transform: translateY(1px) rotate(-1.5deg); } 100% { opacity: 0; filter: blur(4px); transform: translateY(2px) rotate(-2deg); } } .erased { text-decoration: line-through; text-decoration-thickness: 1.5pt; text-decoration-color: rgba(0,0,0,0.6); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.7; filter: blur(0); mask-image: linear-gradient(to right, transparent 0%, black 0%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 0%); } 30% { opacity: 0.5; filter: blur(0.3px); mask-image: linear-gradient(to right, transparent 40%, rgba(0,0,0,0.3) 50%, black 60%); -webkit-mask-image: linear-gradient(to right, transparent 40%, rgba(0,0,0,0.3) 50%, black 60%); } 70% { opacity: 0.25; filter: blur(0.6px); mask-image: linear-gradient(to right, transparent 80%, rgba(0,0,0,0.2) 90%, black 100%); -webkit-mask-image: linear-gradient(to right, transparent 80%, rgba(0,0,0,0.2) 90%, black 100%); } 100% { opacity: 0; filter: blur(1px); mask-image: linear-gradient(to right, transparent 100%, black 100%); -webkit-mask-image: linear-gradient(to right, transparent 100%, black 100%); } } .erased { text-decoration: line-through; text-decoration-thickness: 1pt; text-decoration-color: rgba(0,0,0,0.35); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
-      <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.08 0.05" numOctaves="3" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" result="wobble" />
-        <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" result="noise2" />
-        <feDisplacementMap in="wobble" in2="noise2" scale="2" xChannelSelector="R" yChannelSelector="G" />
+      <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035 0.025" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
       </filter>
-      <filter id="handwritten-jitter-subtle" colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.03" numOctaves="2" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G" />
+      <filter id="handwritten-jitter-subtle" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04 0.025" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.0" xChannelSelector="R" yChannelSelector="G" />
       </filter>
-      <filter id="pen-ink" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.04 0.07" numOctaves="3" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="wobble" />
-        <feGaussianBlur in="wobble" stdDeviation="0.15" result="blur" />
+      <filter id="pen-ink" colorInterpolationFilters="sRGB" x="-3%" y="-3%" width="106%" height="106%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03 0.05" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.8" xChannelSelector="R" yChannelSelector="G" result="wobble" />
+        <feGaussianBlur in="wobble" stdDeviation="0.1" result="blur" />
         <feComponentTransfer in="blur">
-          <feFuncA type="gamma" amplitude="1.1" exponent="1.2" />
+          <feFuncA type="gamma" amplitude="1.05" exponent="1.1" />
         </feComponentTransfer>
       </filter>
     </svg>
@@ -797,7 +795,7 @@ const BoxTextarea = memo(function BoxTextarea({
         lineHeight: 1.45, color: inkColor, cursor: "text",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
-        transform: isMarginStyle ? "rotate(-1.2deg) skewX(-2deg)" : undefined,
+        transform: isMarginStyle ? "rotate(-0.5deg) skewX(-0.8deg)" : undefined,
         transformOrigin: "top left",
         WebkitFontSmoothing: isMarginStyle ? ("antialiased" as any) : undefined,
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
@@ -1008,7 +1006,7 @@ export default function NoteApp() {
     const newBox: TextBoxType = {
       id,
       x: 64, y: y - 4, w: width, h: 8,
-      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="4" viewBox="0 0 100 4" preserveAspectRatio="none" style="filter:url(#handwritten-jitter);overflow:visible;"><line x1="0" y1="2" x2="100" y2="2" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" /></svg></div>`,
+      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="4" viewBox="0 0 100 4" preserveAspectRatio="none" style="filter:url(#pen-ink);overflow:visible;"><line x1="0" y1="2" x2="100" y2="2" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" /></svg></div>`,
       boxHeadingStyle: 'default'
     }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
@@ -1027,7 +1025,7 @@ export default function NoteApp() {
     const x = (e.clientX - r.left) / scale
     const y = (e.clientY - r.top) / scale
     const id = uid()
-    const rotation = parseFloat((Math.random() * 4 - 2).toFixed(1))
+    const rotation = parseFloat((Math.random() * 1.6 - 0.8).toFixed(1))
     const newBox: TextBoxType = {
       id,
       x: x - 150, y: y - 150, w: 300, h: 300,
@@ -1102,15 +1100,33 @@ export default function NoteApp() {
     setSlashMenu(null)
   }, [])
 
+  useEffect(() => {
+    const handleBlur = () => {
+      if (slashMenuRef.current) closeSlashMenu()
+    }
+    window.addEventListener("blur", handleBlur)
+    return () => {
+      window.removeEventListener("blur", handleBlur)
+      if (slashFilterSpanRef.current) {
+        slashFilterSpanRef.current.remove()
+        slashFilterSpanRef.current = null
+      }
+    }
+  }, [closeSlashMenu])
+
   const handleCompactAll = useCallback(() => {
     const allDetails = Array.from(
       document.querySelectorAll('details.toggle-block')
     ) as HTMLDetailsElement[]
+    if (allDetails.length === 0) {
+      openAlert("No toggles", "There are no toggle blocks on this page.")
+      return
+    }
     const anyOpen = allDetails.some(d => d.open)
     allDetails.forEach(d => { d.open = !anyOpen })
     setAllCompacted(anyOpen)
     editor.syncContent()
-  }, [editor])
+  }, [editor, openAlert])
 
 
   const executeSlashItem = useCallback((action: () => void) => {
@@ -1118,12 +1134,11 @@ export default function NoteApp() {
     const anchor = slashAnchorRef.current
     const filter = m?.filter ?? ""
 
-    if (!m?.isSelectionMode) {
+    if (!m?.isSelectionMode && m?.mode === "@") {
       if (m?.type === "textarea" && anchor) {
         try {
           const textNode = anchor.node as Text
           if (textNode.nodeType === Node.TEXT_NODE) {
-            // Delete "@" plus ghost span (filter chars were not typed into the box)
             const r = document.createRange()
             r.setStart(textNode, anchor.offset)
             if (slashFilterSpanRef.current?.isConnected) {
@@ -1162,7 +1177,31 @@ export default function NoteApp() {
   }, [closeSlashMenu, editorRef, editor])
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
-    // Intercept typing while @ menu is open in a box (non-selection mode)
+    // "/" mode: no anchor character in DOM, filter fully managed here (both editor and box)
+    if (slashMenuRef.current?.mode === "/" && !slashMenuRef.current?.isSelectionMode) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
+        closeSlashMenu()
+      } else if (e.key === "Backspace") {
+        e.preventDefault()
+        const f = slashMenuRef.current.filter ?? ""
+        if (f.length > 0) {
+          const newFilter = f.slice(0, -1)
+          const updated = { ...slashMenuRef.current, filter: newFilter }
+          slashMenuRef.current = updated
+          setSlashMenu(updated)
+        } else {
+          closeSlashMenu()
+        }
+        return
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        const newFilter = (slashMenuRef.current.filter ?? "") + e.key
+        const updated = { ...slashMenuRef.current, filter: newFilter }
+        slashMenuRef.current = updated
+        setSlashMenu(updated)
+        return
+      }
+    }
     if (slashMenuRef.current?.type === "textarea" && slashMenuRef.current?.mode === "@" && !slashMenuRef.current?.isSelectionMode) {
       if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
         closeSlashMenu()
@@ -1237,6 +1276,11 @@ export default function NoteApp() {
     editor.handleEditorKeyDown(e)
 
     if (e.key === "Escape") {
+      if (slashMenuRef.current) {
+        closeSlashMenu()
+        e.preventDefault()
+        return
+      }
       const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
       if (isBox) {
         (e.currentTarget as HTMLElement).blur()
@@ -1284,6 +1328,7 @@ export default function NoteApp() {
       if (!sel || sel.rangeCount === 0) return
       const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
       const isSelectionMode = !sel.isCollapsed
+      const menuMode = e.key === "@" ? ("@" as const) : ("/" as const)
 
       // For boxes: store cursor position before any DOM changes
       if (isBox) {
@@ -1303,7 +1348,7 @@ export default function NoteApp() {
           y: rect.bottom + 14,
           filter: "",
           type: isBox ? ("textarea" as const) : ("editor" as const),
-          mode: "@" as const,
+          mode: menuMode,
           target: e.currentTarget as HTMLElement,
           isSelectionMode: true
         }
@@ -1314,36 +1359,33 @@ export default function NoteApp() {
 
       e.preventDefault()
 
-      // Insert @ character at cursor position
-      const range = sel.getRangeAt(0)
-      const textNode = range.startContainer.nodeType === Node.TEXT_NODE
-        ? (range.startContainer as Text)
-        : null
+      if (menuMode === "@") {
+        // Insert @ character at cursor position for reference mode
+        const range = sel.getRangeAt(0)
+        const textNode = range.startContainer.nodeType === Node.TEXT_NODE
+          ? (range.startContainer as Text)
+          : null
 
-      if (textNode) {
-        // Insert @ into existing text node
-        textNode.insertData(range.startOffset, "@")
-        range.setStart(textNode, range.startOffset + 1)
-        range.collapse(true)
-        sel.removeAllRanges()
-        sel.addRange(range)
-        // Update anchor to point to the correct position
-        slashAnchorRef.current = { node: textNode, offset: range.startOffset - 1 }
-      } else {
-        // Create new text node for @
-        const newText = document.createTextNode("@")
-        range.insertNode(newText)
-        range.setStart(newText, 1)
-        range.collapse(true)
-        sel.removeAllRanges()
-        sel.addRange(range)
-        // Update anchor to point to the new text node
-        slashAnchorRef.current = { node: newText, offset: 0 }
-      }
+        if (textNode) {
+          textNode.insertData(range.startOffset, "@")
+          range.setStart(textNode, range.startOffset + 1)
+          range.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(range)
+          slashAnchorRef.current = { node: textNode, offset: range.startOffset - 1 }
+        } else {
+          const newText = document.createTextNode("@")
+          range.insertNode(newText)
+          range.setStart(newText, 1)
+          range.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(range)
+          slashAnchorRef.current = { node: newText, offset: 0 }
+        }
 
-      // Sync content if in editor
-      if ((e.currentTarget as HTMLElement) === editorRef.current) {
-        editor.syncContent()
+        if ((e.currentTarget as HTMLElement) === editorRef.current) {
+          editor.syncContent()
+        }
       }
 
       // Measure menu position
@@ -1360,7 +1402,7 @@ export default function NoteApp() {
         y: rect.bottom + 14,
         filter: "",
         type: isBox ? ("textarea" as const) : ("editor" as const),
-        mode: "@" as const,
+        mode: menuMode,
         target: e.currentTarget as HTMLElement
       }
       slashMenuRef.current = m
@@ -1380,8 +1422,10 @@ export default function NoteApp() {
     const range = sel.getRangeAt(0)
     const node = range.startContainer
 
-    // Box menu: "@" is now printed; filter chars are intercepted in keydown (not typed)
+    // Box menu: filter chars are intercepted in keydown (not typed)
     if (slashMenuRef.current.type === "textarea") {
+      // "/" mode: filter is fully managed by keydown intercept; ignore input events
+      if (slashMenuRef.current.mode === "/") return
       // Ghost span exists: filter is managed via keydown intercept; ignore input events
       if (slashFilterSpanRef.current) return
       const anchor = slashAnchorRef.current
@@ -1411,6 +1455,9 @@ export default function NoteApp() {
       return
     }
 
+    // "/" mode in editor: no anchor character, filter managed by keydown
+    if (slashMenuRef.current.mode === "/") return
+
     // Main editor: search for @ before cursor
     if (node.nodeType !== Node.TEXT_NODE) { closeSlashMenu(); return }
     const textNode = node as Text
@@ -1420,10 +1467,11 @@ export default function NoteApp() {
     if (lastIdx === -1) { closeSlashMenu(); return }
     const filter = textBefore.slice(lastIdx + 1)
     if (filter.includes(" ")) { closeSlashMenu(); return }
+    if (!slashMenuRef.current) { closeSlashMenu(); return }
     slashAnchorRef.current = { node: textNode, offset: lastIdx }
-    const updated = { ...slashMenuRef.current, filter }
+    const updated: SlashMenuState = { ...slashMenuRef.current, filter }
     slashMenuRef.current = updated
-    setSlashMenu(updated as any)
+    setSlashMenu(updated)
   }, [editor.syncContent, closeSlashMenu])
 
   // Keyboard shortcuts for tools
@@ -2159,6 +2207,9 @@ export default function NoteApp() {
                 clearPage={clearPage}
                 autoAlign={boxes.autoAlign}
                 verticalAlign={boxes.verticalAlign}
+                centerStack={boxes.centerStack}
+                twoColumnGrid={boxes.twoColumnGrid}
+                distributeEvenly={boxes.distributeEvenly}
                 insertCornell={insertCornell}
                 showDrawToolbar={showDrawToolbar}
                 onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
@@ -2411,22 +2462,22 @@ export default function NoteApp() {
                              }
                              .erased {
                                text-decoration: line-through;
-                               text-decoration-thickness: 1.5pt;
-                               text-decoration-color: rgba(0,0,0,0.6);
+                               text-decoration-thickness: 1pt;
+                               text-decoration-color: rgba(0,0,0,0.35);
                                pointer-events: none;
                                user-select: none;
                                display: inline-block;
-                               animation: erase-fade 6s forwards cubic-bezier(0.4, 0, 1, 1);
+                               animation: erase-fade 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1);
                                vertical-align: baseline;
                                white-space: pre;
                              }
                              @keyframes box-ripple {
-                               0%   { inset: 0px;   opacity: 0.9; }
-                               100% { inset: -22px; opacity: 0; }
+                               0%   { inset: 0px;   opacity: 0.6; }
+                               100% { inset: -10px; opacity: 0; }
                              }
                              @keyframes box-ripple-2 {
-                               0%   { inset: 0px;   opacity: 0.45; }
-                               100% { inset: -36px; opacity: 0; }
+                               0%   { inset: 0px;   opacity: 0.25; }
+                               100% { inset: -18px; opacity: 0; }
                              }
                              #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
                              #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }

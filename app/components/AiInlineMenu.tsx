@@ -97,12 +97,12 @@ export const AiInlineMenu = memo(function AiInlineMenu({
     const onMouseDown = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) onClose()
     }
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose() } }
     document.addEventListener("mousedown", onMouseDown)
-    document.addEventListener("keydown", onKey)
+    document.addEventListener("keydown", onKey, true)
     return () => {
       document.removeEventListener("mousedown", onMouseDown)
-      document.removeEventListener("keydown", onKey)
+      document.removeEventListener("keydown", onKey, true)
     }
   }, [onClose])
 

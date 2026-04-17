@@ -277,15 +277,30 @@ export function useBoxDrawing({
             setSelectedBoxIds(new Set([id]))
             setActiveTool('select')
             
-            setTimeout(() => {
+            const focusStickyBox = (retryCount = 0) => {
               const node = document.getElementById(`box-${id}`)
               if (node) {
-                node.animate([
-                  { transform: 'scale(1.2) rotate(5deg)', opacity: 0 },
-                  { transform: 'scale(1) rotate(0deg)', opacity: 1 }
-                ], { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+                if (retryCount === 0) { // Only animate on first successful find
+                  node.animate([
+                    { transform: 'scale(1.2) rotate(5deg)', opacity: 0 },
+                    { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+                  ], { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+                }
+                const targetNode = node.querySelector<HTMLElement>('[contenteditable]')
+                if (targetNode) {
+                  targetNode.focus()
+                  const range = document.createRange()
+                  range.selectNodeContents(targetNode)
+                  range.collapse(false)
+                  const sel = window.getSelection()
+                  sel?.removeAllRanges()
+                  sel?.addRange(range)
+                }
+              } else if (retryCount < 10) {
+                setTimeout(() => focusStickyBox(retryCount + 1), 10)
               }
-            }, 0)
+            }
+            focusStickyBox()
           }
           return
         }
@@ -301,7 +316,7 @@ export function useBoxDrawing({
             ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor), newBox] }
           }))
           setSelectedBoxIds(new Set([id]))
-          requestAnimationFrame(() => {
+          const focusNewBox = (retryCount = 0) => {
             const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
             if (targetNode) {
               targetNode.focus()
@@ -311,8 +326,11 @@ export function useBoxDrawing({
               const sel = window.getSelection()
               sel?.removeAllRanges()
               sel?.addRange(range)
+            } else if (retryCount < 10) {
+              setTimeout(() => focusNewBox(retryCount + 1), 10)
             }
-          })
+          }
+          focusNewBox()
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')
@@ -446,31 +464,40 @@ export function useBoxDrawing({
   }, [addListeners, setDrawLineMode, setNotes])
 
   const deleteBox = useCallback((id: string) => {
-    // Apply erase animation before removing
     const element = document.getElementById(`box-${id}`)
     if (element) {
       element.style.pointerEvents = 'none'
-      element.style.opacity = '0.6'
-      element.style.filter = 'blur(0.4px)'
-      element.style.transform = 'translateY(0.5px) rotate(-1deg)'
+      element.style.transition = 'none'
+
+      const dust = document.createElement('div')
+      dust.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:999;overflow:hidden;`
+      for (let i = 0; i < 6; i++) {
+        const p = document.createElement('div')
+        const x = 20 + Math.random() * 60
+        const y = 20 + Math.random() * 60
+        const size = 2 + Math.random() * 3
+        p.style.cssText = `position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;border-radius:50%;background:rgba(180,170,160,0.5);opacity:0;animation:eraser-particle 0.6s ${i * 0.04}s ease-out forwards;`
+        dust.appendChild(p)
+      }
+      element.style.position === '' && (element.style.position = 'relative')
+      element.appendChild(dust)
+
+      const sheet = document.createElement('style')
+      sheet.textContent = `@keyframes eraser-particle{0%{opacity:0.7;transform:scale(1) translate(0,0)}100%{opacity:0;transform:scale(0.3) translate(${Math.random()>0.5?'':'-'}${8+Math.random()*12}px,-${6+Math.random()*10}px)}}`
+      document.head.appendChild(sheet)
+
+      element.animate([
+        { clipPath: 'inset(0 0 0 0)', opacity: 1, filter: 'blur(0px)' },
+        { clipPath: 'inset(0 0 0 30%)', opacity: 0.7, filter: 'blur(0.3px)', offset: 0.3 },
+        { clipPath: 'inset(0 0 0 70%)', opacity: 0.4, filter: 'blur(0.5px)', offset: 0.7 },
+        { clipPath: 'inset(0 0 0 100%)', opacity: 0, filter: 'blur(1px)' },
+      ], { duration: 450, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' })
 
       setTimeout(() => {
-        element.style.opacity = '0.45'
-        element.style.filter = 'blur(1.5px)'
-        element.style.transform = 'translateY(1px) rotate(-1.5deg)'
-      }, 100)
-
-      setTimeout(() => {
-        element.style.opacity = '0'
-        element.style.filter = 'blur(4px)'
-        element.style.transform = 'translateY(2px) rotate(-2deg)'
-        element.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 1, 1)'
-      }, 150)
-
-      setTimeout(() => {
+        sheet.remove()
         updateBoxes(bs => bs.filter(b => b.id !== id))
         setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
-      }, 600)
+      }, 500)
     } else {
       updateBoxes(bs => bs.filter(b => b.id !== id))
       setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
@@ -485,7 +512,11 @@ export function useBoxDrawing({
     try {
       updateBoxes(bs => {
         if (bs.length === 0) return bs
-        const sorted = [...bs].sort((a, b) => a.y - b.y)
+        const selectedIds = selectedBoxIdsRef.current
+        const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+        if (toAlign.length === 0) return bs
+
+        const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
         const rows: TextBox[][] = []
         let currentRow: TextBox[] = [sorted[0]]
 
@@ -503,15 +534,16 @@ export function useBoxDrawing({
 
         let currentY = Math.max(sorted[0].y, 60)
         const standardMarginX = 128
-        const newBoxes: TextBox[] = []
+        const alignedBoxesMap = new Map()
 
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
-        const lines = [112, ...(currentNote?.lines?.[pidx] || [])].sort((a, b) => a - b)
+        const noteLines = currentNote?.lines?.[pidx] || []
+        const lines = [112, ...noteLines].sort((a, b) => a - b)
 
         for (const row of rows) {
-          row.sort((a, b) => a.x - b.x)
+          row.sort((a, b) => a.x - b.x || a.y - b.y)
           let currentX = standardMarginX
           let maxH = 0
           for (let i = 0; i < row.length; i++) {
@@ -531,13 +563,13 @@ export function useBoxDrawing({
               }
             }
             snappedX = Math.max(snappedX, currentX)
-            newBoxes.push({ ...rowBox, x: snappedX, y: currentY })
-            currentX = snappedX + rowBox.w + 48
-            maxH = Math.max(maxH, rowBox.h)
+            alignedBoxesMap.set(rowBox.id, { ...rowBox, x: snappedX, y: currentY })
+            currentX = snappedX + (rowBox.w || 300) + 48
+            maxH = Math.max(maxH, rowBox.h || 40)
           }
           currentY += maxH + 24
         }
-        return newBoxes
+        return bs.map(b => alignedBoxesMap.get(b.id) || b)
       })
     } finally {
       aligningRef.current = false
@@ -580,6 +612,89 @@ export function useBoxDrawing({
     }
   }, [updateBoxes])
 
+  const centerStack = useCallback(() => {
+    if (aligningRef.current) return
+    aligningRef.current = true
+    try {
+      updateBoxes(bs => {
+        const selectedIds = selectedBoxIdsRef.current
+        const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+        if (toAlign.length === 0) return bs
+
+        const paper = paperRef.current
+        const paperW = paper ? paper.clientWidth : 800
+        const sorted = [...toAlign].sort((a, b) => a.y - b.y)
+
+        let currentY = Math.max(sorted[0].y, 60)
+        const map = new Map()
+        for (const box of sorted) {
+          const cx = (paperW - box.w) / 2
+          map.set(box.id, { ...box, x: Math.max(40, cx), y: currentY })
+          currentY += (box.h || 40) + 20
+        }
+        return bs.map(b => map.get(b.id) || b)
+      })
+    } finally { aligningRef.current = false }
+  }, [updateBoxes])
+
+  const twoColumnGrid = useCallback(() => {
+    if (aligningRef.current) return
+    aligningRef.current = true
+    try {
+      updateBoxes(bs => {
+        const selectedIds = selectedBoxIdsRef.current
+        const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+        if (toAlign.length === 0) return bs
+
+        const paper = paperRef.current
+        const paperW = paper ? paper.clientWidth : 800
+        const margin = 80
+        const gap = 32
+        const colW = (paperW - margin * 2 - gap) / 2
+        const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
+
+        const map = new Map()
+        let leftY = 60, rightY = 60
+        for (let i = 0; i < sorted.length; i++) {
+          const box = sorted[i]
+          const isLeft = leftY <= rightY
+          const x = isLeft ? margin : margin + colW + gap
+          const y = isLeft ? leftY : rightY
+          map.set(box.id, { ...box, x, y, w: colW })
+          if (isLeft) leftY += (box.h || 40) + 20
+          else rightY += (box.h || 40) + 20
+        }
+        return bs.map(b => map.get(b.id) || b)
+      })
+    } finally { aligningRef.current = false }
+  }, [updateBoxes])
+
+  const distributeEvenly = useCallback(() => {
+    if (aligningRef.current) return
+    aligningRef.current = true
+    try {
+      updateBoxes(bs => {
+        const selectedIds = selectedBoxIdsRef.current
+        const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
+        if (toAlign.length < 2) return bs
+
+        const sorted = [...toAlign].sort((a, b) => a.y - b.y)
+        const firstY = sorted[0].y
+        const totalH = sorted.reduce((sum, b) => sum + (b.h || 40), 0)
+        const availH = Math.max(totalH + (sorted.length - 1) * 24, 800)
+        const gap = (availH - totalH) / (sorted.length - 1)
+
+        const map = new Map()
+        let currentY = firstY
+        for (const box of sorted) {
+          map.set(box.id, { ...box, y: currentY })
+          currentY += (box.h || 40) + gap
+        }
+        return bs.map(b => map.get(b.id) || b)
+      })
+    } finally { aligningRef.current = false }
+  }, [updateBoxes])
+
   const selectBox = useCallback((id: string) => { pruneEmpty(); setSelectedBoxIds(new Set([id])) }, [pruneEmpty, setSelectedBoxIds])
 
   const setBoxAlignment = useCallback((align: "left" | "center" | "right") => {
@@ -593,6 +708,6 @@ export function useBoxDrawing({
     selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
-    autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, setBoxAlignment, generateSketch, rewriteBox])
+    autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
 }
