@@ -86,12 +86,28 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; } @keyframes erase-fade { 0% { opacity: 0.7; filter: blur(0); mask-image: linear-gradient(to right, transparent 0%, black 0%); -webkit-mask-image: linear-gradient(to right, transparent 0%, black 0%); } 30% { opacity: 0.5; filter: blur(0.3px); mask-image: linear-gradient(to right, transparent 40%, rgba(0,0,0,0.3) 50%, black 60%); -webkit-mask-image: linear-gradient(to right, transparent 40%, rgba(0,0,0,0.3) 50%, black 60%); } 70% { opacity: 0.25; filter: blur(0.6px); mask-image: linear-gradient(to right, transparent 80%, rgba(0,0,0,0.2) 90%, black 100%); -webkit-mask-image: linear-gradient(to right, transparent 80%, rgba(0,0,0,0.2) 90%, black 100%); } 100% { opacity: 0; filter: blur(1px); mask-image: linear-gradient(to right, transparent 100%, black 100%); -webkit-mask-image: linear-gradient(to right, transparent 100%, black 100%); } } .erased { text-decoration: line-through; text-decoration-thickness: 1pt; text-decoration-color: rgba(0,0,0,0.35); pointer-events: none; user-select: none; display: inline-block; animation: erase-fade 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1); vertical-align: baseline; white-space: pre; } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-fade {
+                               0% { opacity: 0.7; transform: scale(1); filter: blur(0); }
+                               100% { opacity: 0; transform: scale(0.9); filter: blur(1.5px); }
+                             }
+                             .erased {
+                               display: block;
+                               animation: erase-fade 0.5s forwards ease-out;
+                               pointer-events: none;
+                               user-select: none;
+                               white-space: pre;
+                               margin: 0 !important;
+                               padding: 0 !important;
+                               text-align: center;
+                               display: flex;
+                               align-items: center;
+                               justify-content: center;
+                             } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
     <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
       <filter id="handwritten-jitter" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
         <feTurbulence type="fractalNoise" baseFrequency="0.035 0.025" numOctaves="2" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
       </filter>
       <filter id="handwritten-jitter-subtle" colorInterpolationFilters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
         <feTurbulence type="fractalNoise" baseFrequency="0.04 0.025" numOctaves="2" result="noise" />
@@ -99,11 +115,15 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
       </filter>
       <filter id="pen-ink" colorInterpolationFilters="sRGB" x="-3%" y="-3%" width="106%" height="106%">
         <feTurbulence type="fractalNoise" baseFrequency="0.03 0.05" numOctaves="2" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.8" xChannelSelector="R" yChannelSelector="G" result="wobble" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.4" xChannelSelector="R" yChannelSelector="G" result="wobble" />
         <feGaussianBlur in="wobble" stdDeviation="0.1" result="blur" />
         <feComponentTransfer in="blur">
           <feFuncA type="gamma" amplitude="1.05" exponent="1.1" />
         </feComponentTransfer>
+      </filter>
+      <filter id="hand-rule" colorInterpolationFilters="sRGB" x="-2%" y="-30%" width="104%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.015 0.08" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
       </filter>
     </svg>
   </>)
@@ -147,7 +167,7 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 const BoxItem = memo(function BoxItem({
-  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme,
+  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme, handwrittenEffect,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
@@ -166,7 +186,7 @@ const BoxItem = memo(function BoxItem({
   onImageGen: (text: string, id: string) => void
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
-  onDragStart: () => void; onDragEnd: () => void
+  onDragStart: () => void; onDragEnd: () => void; handwrittenEffect: boolean
 }) {
   const [localDragging, setLocalDragging] = useState(false)
   const resizeHandles: [string, React.CSSProperties][] = [
@@ -331,6 +351,7 @@ const BoxItem = memo(function BoxItem({
             onKeyDown={onKeyDown}
             onInput={onInput}
             theme={theme}
+            handwrittenEffect={handwrittenEffect}
           />
         )}
       </div>
@@ -620,9 +641,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 })
 
 interface BoxTextareaProps {
-  id: string; content: string; textAlign?: string
+  id: string; content: string; textAlign?: "left" | "center" | "right" | "justify"
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
-  isSticky?: boolean; theme: "light" | "dark"
+  isSticky?: boolean; theme: "light" | "dark"; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -630,7 +651,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, onUpdate, onFocus, onKeyDown, onInput
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -801,7 +822,7 @@ const BoxTextarea = memo(function BoxTextarea({
         textAlign: (textAlign || "left") as any, wordWrap: "break-word",
         overflow: isSticky ? "hidden" : "visible",
         backgroundColor: "transparent",
-        filter: "url(#pen-ink)",
+        filter: handwrittenEffect ? "url(#handwritten-jitter)" : "none",
       }}
     />
   )
@@ -876,15 +897,15 @@ export default function NoteApp() {
   const [shopOpen, setShopOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 5, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'dedicated_writer', title: 'Dedicated Writer', icon: '✍️', description: 'Type 5,000 characters by hand — pasting large chunks won\'t count.', reward: 30, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5000 },
-    { id: 'binder_buddy', title: 'Binder Buddy', icon: '📁', description: 'Create 5 folders to organise your work.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Archive 10 notes without looking back.', reward: 40, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 10 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp after midnight when the rest of the world sleeps.', reward: 20, rewardType: 'sunshine', completed: false, claimed: false },
-    { id: 'early_bird', title: 'Early Bird', icon: '🐦', description: 'Open Pulp before 7 AM and get a head start on your day.', reward: 20, rewardType: 'sunshine', completed: false, claimed: false },
-    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 25-minute focus session without giving up.', reward: 50, rewardType: 'sunshine', completed: false, claimed: false },
-    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 5 focus sessions of any length.', reward: 100, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 5 },
-    { id: 'daily_return', title: 'Daily Return', icon: '📅', description: 'Open Pulp 3 days in a row — keep the streak alive.', reward: 75, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 3 },
-    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 2 hours of total focus time across sessions.', reward: 200, rewardType: 'sunshine', completed: false, claimed: false, progress: 0, goal: 7200 },
+    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
+    { id: 'binder_buddy', title: 'Librarian', icon: '📚', description: 'Create 20 folders to organise your work.', reward: 8, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 20 },
+    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Archive 50 notes without looking back.', reward: 10, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between midnight and 4 AM.', reward: 5, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 10, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 15, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
+    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 14 days in a row — no breaks.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 14 },
+    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 15, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 36000 },
+    { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 15, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 7200 },
   ])
   const [lastCharCount, setLastCharCount] = useState(0)
 
@@ -910,14 +931,12 @@ export default function NoteApp() {
   // Restore Grove from LocalStorage
   useEffect(() => {
     const hour = new Date().getHours()
-    const isNightOwl = hour >= 23 || hour <= 4
-    const isEarlyBird = hour >= 5 && hour <= 6
+    const isNightOwl = hour >= 0 && hour <= 4
 
     const applyTimeChecks = (list: Achievement[]) =>
       list.map((a: Achievement) => {
         if (a.completed) return a
         if (a.id === 'night_owl' && isNightOwl) return { ...a, completed: true }
-        if (a.id === 'early_bird' && isEarlyBird) return { ...a, completed: true }
         return a
       })
 
@@ -1006,7 +1025,7 @@ export default function NoteApp() {
     const newBox: TextBoxType = {
       id,
       x: 64, y: y - 4, w: width, h: 8,
-      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="4" viewBox="0 0 100 4" preserveAspectRatio="none" style="filter:url(#pen-ink);overflow:visible;"><line x1="0" y1="2" x2="100" y2="2" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" /></svg></div>`,
+      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none" style="filter:url(#hand-rule);overflow:visible;"><line x1="0" y1="3" x2="100" y2="3" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" /></svg></div>`,
       boxHeadingStyle: 'default'
     }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
@@ -1086,6 +1105,7 @@ export default function NoteApp() {
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
+  const [isTextActive, setIsTextActive] = useState(false)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
   const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
@@ -1113,6 +1133,116 @@ export default function NoteApp() {
       }
     }
   }, [closeSlashMenu])
+
+  useEffect(() => {
+    const update = () => {
+      const el = document.activeElement as HTMLElement | null
+      const inEditor = el === editorRef.current
+      const inBox = !!el?.closest?.('[id^="box-"]')?.querySelector('[contenteditable="true"]')
+      const hasSelectedBoxes = boxes.selectedBoxIdsRef.current.size > 0
+      setIsTextActive(inEditor || inBox || hasSelectedBoxes)
+    }
+    update()
+    document.addEventListener("focusin", update)
+    document.addEventListener("focusout", update)
+    document.addEventListener("mouseup", update)
+    return () => {
+      document.removeEventListener("focusin", update)
+      document.removeEventListener("focusout", update)
+      document.removeEventListener("mouseup", update)
+    }
+  }, [boxes.selectedBoxIdsRef, boxes.selectionVersion])
+
+  const handleQuickPrompt = useCallback(async (prompt: string, buttonRect: DOMRect) => {
+    const selectedIds = Array.from(boxes.selectedBoxIdsRef.current)
+    const sel = window.getSelection()
+    const highlightedText = sel && !sel.isCollapsed ? sel.toString().trim() : ""
+
+    const getBoxContent = (id: string): string => {
+      const el = document.getElementById(`box-${id}`)
+      const contentEl = el?.querySelector('[contenteditable="true"]') as HTMLElement | null
+      return contentEl?.innerText?.trim() || ""
+    }
+
+    const isInEditor = document.activeElement === editorRef.current
+    let targetBoxIds: string[] = []
+    let contextText = ""
+    let targetText = ""
+
+    if (isInEditor) {
+      const fullText = editorRef.current?.innerText?.trim() || ""
+      if (highlightedText) {
+        targetText = highlightedText
+        contextText = fullText
+      } else {
+        targetText = fullText
+      }
+    } else if (selectedIds.length > 0) {
+      const boxTexts = selectedIds.map(id => ({ id, text: getBoxContent(id) })).filter(b => b.text)
+      targetBoxIds = boxTexts.map(b => b.id)
+      const allText = boxTexts.map(b => b.text).join("\n\n")
+      if (highlightedText) {
+        targetText = highlightedText
+        contextText = allText
+      } else {
+        targetText = allText
+      }
+    } else {
+      return
+    }
+
+    if (!targetText) return
+
+    try {
+      const apiText = contextText
+        ? `[HIGHLIGHTED TEXT TO MODIFY]:\n${targetText}\n\n[SURROUNDING CONTEXT - do not modify, use for understanding only]:\n${contextText}`
+        : targetText
+
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, text: apiText })
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || `Request failed with status ${response.status}`)
+      const result = data.result || ""
+      if (!result) throw new Error("No response from AI")
+
+      if (isInEditor) {
+        if (highlightedText) {
+          editor.restoreSelection()
+          editor.execCmd("insertText", result)
+        } else {
+          editorRef.current!.innerText = ""
+          editor.insertHTML(result)
+        }
+        editor.syncContent()
+      } else if (targetBoxIds.length === 1 && highlightedText) {
+        editor.restoreSelection()
+        editor.execCmd("insertText", result)
+        const boxEl = document.getElementById(`box-${targetBoxIds[0]}`)
+        const contentEl = boxEl?.querySelector('[contenteditable="true"]') as HTMLElement | null
+        if (contentEl) {
+          boxes.updateBoxContent(targetBoxIds[0], contentEl.innerHTML)
+        }
+      } else if (targetBoxIds.length > 0) {
+        const lines = result.split(/\n{2,}/)
+        targetBoxIds.forEach((id, i) => {
+          const boxEl = document.getElementById(`box-${id}`)
+          const contentEl = boxEl?.querySelector('[contenteditable="true"]') as HTMLElement | null
+          if (contentEl) {
+            const newContent = lines[i] !== undefined ? lines[i] : (lines.length === 1 ? result : "")
+            contentEl.innerText = newContent
+            boxes.updateBoxContent(id, contentEl.innerHTML)
+          }
+        })
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error"
+      console.error("AI error:", errorMsg)
+      openAlert("AI Error", errorMsg)
+    }
+  }, [boxes, editor, openAlert])
 
   const handleCompactAll = useCallback(() => {
     const allDetails = Array.from(
@@ -2246,6 +2376,8 @@ export default function NoteApp() {
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
                 onOpenShop={handleOpenShop}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
+                onQuickPrompt={handleQuickPrompt}
+                isTextActive={isTextActive}
               />
             </div>
           )}
@@ -2458,18 +2590,7 @@ export default function NoteApp() {
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
                                text-rendering: optimizeLegibility !important;
-                               filter: ${handwrittenEffect ? 'url(#handwritten-jitter)' : 'none'} !important;
-                             }
-                             .erased {
-                               text-decoration: line-through;
-                               text-decoration-thickness: 1pt;
-                               text-decoration-color: rgba(0,0,0,0.35);
-                               pointer-events: none;
-                               user-select: none;
-                               display: inline-block;
-                               animation: erase-fade 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1);
-                               vertical-align: baseline;
-                               white-space: pre;
+                               
                              }
                              @keyframes box-ripple {
                                0%   { inset: 0px;   opacity: 0.6; }
@@ -2544,6 +2665,7 @@ export default function NoteApp() {
                                 setAiOpen={setToolbarAiOpen}
                                 onDragStart={() => setIsAnyBoxDragging(true)}
                                 onDragEnd={() => setIsAnyBoxDragging(false)}
+                                 handwrittenEffect={handwrittenEffect}
                               />
                             ))}
                           </>

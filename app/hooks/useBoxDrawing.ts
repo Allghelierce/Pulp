@@ -66,7 +66,18 @@ export function useBoxDrawing({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return
+      
+      // Allow deletion logic for contentEditable elements if they are empty or visual-only (like horizontal lines)
+      if (target.isContentEditable) {
+        if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+        
+        const plainText = target.innerText.trim();
+        
+        // If there is ANY text content, let the browser/editor handle it normally.
+        // We only allow this global delete to trigger for truly empty or visual/SVG-only boxes.
+        if (plainText !== "") return;
+      }
 
       // Ctrl/Cmd+A — select all boxes on current page
       if (e.ctrlKey && e.key === 'a') {

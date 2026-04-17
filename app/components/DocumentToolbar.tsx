@@ -50,6 +50,8 @@ interface DocumentToolbarProps {
   sunshine: number
   gems: number
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
+  onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
+  isTextActive: boolean
   isVault?: boolean
   isUnlocked?: boolean
   onLock?: () => void
@@ -103,7 +105,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu, onQuickPrompt, isTextActive
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -204,20 +206,65 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {alignOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[130px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Align Boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Horizontally
+                Horizontal Flow
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Vertically
+                Vertical Stack
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); centerStack(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Center Stack
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); twoColumnGrid(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Two Columns
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); distributeEvenly(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Distribute Evenly
+              </button>
+              <div className={`mx-1.5 my-1 border-t ${theme === "dark" ? "border-zinc-700" : "border-zinc-100"}`} />
+              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Page Layouts</div>
+              <button
+                onMouseDown={e => { e.preventDefault(); insertCornell(); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                Cornell Notes
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); insertColumns(2); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                2-Column Layout
+              </button>
+              <button
+                onMouseDown={e => { e.preventDefault(); insertColumns(3); setAlignOpen(false) }}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                style={btnFont}
+              >
+                3-Column Layout
               </button>
             </div>
           )}
@@ -249,10 +296,14 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {/* AI Button with Dropdown */}
         <div ref={aiRef} className="relative flex shrink-0">
           <button
-            onMouseDown={e => { e.preventDefault(); setAiOpen(!aiOpen) }}
-            title="Quick Prompts"
+            onMouseDown={e => { e.preventDefault(); if (isTextActive) setAiOpen(!aiOpen) }}
+            title={isTextActive ? "Quick Prompts" : "Click on a text box first"}
             className={`${btnBase} flex items-center gap-1.5`}
-            style={{ ...(aiOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
+            style={{
+              ...(aiOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}),
+              ...btnFont,
+              ...(!isTextActive ? { opacity: 0.4, cursor: "default" } : {}),
+            }}
           >
             <AiMascotIcon size={14} />
             <span>Quick Prompts</span>
@@ -266,24 +317,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 <button
                   key={idx}
                   onMouseDown={e => {
-                    const sel = window.getSelection()
-                    const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined
-                    
-                    let x = 400
-                    let y = 400
-
-                    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-                      const rect = sel.getRangeAt(0).getBoundingClientRect()
-                      x = rect.left
-                      y = rect.top - 12
-                    } else {
-                      // Fallback to button position
-                      const btnRect = e.currentTarget.getBoundingClientRect()
-                      x = btnRect.left
-                      y = btnRect.bottom + 8
-                    }
-
-                    onOpenAiMenu(x, y, selectedText, item.prompt)
+                    e.preventDefault()
+                    const btnRect = e.currentTarget.getBoundingClientRect()
+                    onQuickPrompt(item.prompt, btnRect)
                     setAiOpen(false)
                   }}
                   className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
@@ -294,11 +330,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               ))}
               <div className="h-px bg-zinc-200/50 my-1 mx-1" />
               <button
-                onMouseDown={e => { 
+                onMouseDown={e => {
                   e.preventDefault()
                   const btnRect = e.currentTarget.getBoundingClientRect()
                   onOpenAiMenu(btnRect.left, btnRect.bottom + 8)
-                  setAiOpen(false) 
+                  setAiOpen(false)
                 }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
                 style={btnFont}

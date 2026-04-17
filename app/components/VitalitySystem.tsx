@@ -30,6 +30,16 @@ export const VitalitySystem = memo(function VitalitySystem({
   checkAchievementRef, claimAchievementRef,
 }: VitalitySystemProps) {
 
+  // ─── Marathon tracking (2h continuous session) ───
+  const sessionStartRef = useRef(Date.now())
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+      checkAchievementRef.current?.('marathon', a => ({ progress: Math.min(7200, elapsed) }))
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [checkAchievementRef])
+
   // ─── Timer State ───
   const [timerElapsed, setTimerElapsed] = useState(0)
   const [timerTotal, setTimerTotal] = useState(25 * 60)
@@ -150,10 +160,10 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     // Iron Will — count completed sessions
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
-    // Focus Champion — complete a 25-minute session
-    if (timerTotal >= 25 * 60) checkAchievement('focus_champion')
-    // Time Lord — accumulate 2 hours (7200 s) of focus time
-    checkAchievement('time_lord', a => ({ progress: Math.min(7200, (a.progress || 0) + timerTotal) }))
+    // Focus Champion — complete a 50-minute session
+    if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
+    // Time Lord — accumulate 10 hours (36000 s) of focus time
+    checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
     setTimerElapsed(0)
     setTimerDone(false)
@@ -229,7 +239,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         setLastCharCount(totalChars)
         // Cap contribution per update to 30 chars — prevents paste abuse
         const typedDiff = Math.min(diff, 30)
-        checkAchievement('dedicated_writer', a => ({ progress: Math.min(5000, (a.progress || 0) + typedDiff) }))
+        checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
       }
 
       if (totalChars > lastCharCount + 500) {
