@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { flushSync } from "react-dom"
 import { uid } from "@/app/lib/uid"
 import type { TextBox, NoteData } from "@/app/types"
 
@@ -20,15 +21,17 @@ interface UseBoxDrawingOptions {
   activeTool: string
   setActiveTool: (v: string) => void
   stickyColor: string
+  onError?: (title: string, message: string) => void
 }
 
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
   sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode,
-  activeTool, setActiveTool, stickyColor
+  activeTool, setActiveTool, stickyColor, onError
 }: UseBoxDrawingOptions) {
   // Selection is only in a ref. A cheap counter triggers box-list re-renders.
   const selectedBoxIdsRef = useRef<Set<string>>(new Set())
+  const selectedDrawingIdsRef = useRef<Set<string>>(new Set())
   const [selectionVersion, setSelectionVersion] = useState(0)
   const selectedLineRef = useRef<number | null>(null)
   const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
@@ -57,8 +60,17 @@ export function useBoxDrawing({
 
   useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { accentRef.current = accent }, [accent])
-  useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
-  useEffect(() => { currentPageIdxRef.current = currentPageIdx }, [currentPageIdx])
+  useEffect(() => {
+    activeTabIdRef.current = activeTabId
+    setSelectedBoxIds(new Set())
+    selectedDrawingIdsRef.current = new Set()
+  }, [activeTabId, setSelectedBoxIds])
+
+  useEffect(() => {
+    currentPageIdxRef.current = currentPageIdx
+    setSelectedBoxIds(new Set())
+    selectedDrawingIdsRef.current = new Set()
+  }, [currentPageIdx, setSelectedBoxIds])
   useEffect(() => { notesRef.current = notes }, [notes])
   useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor } }, [sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor])
 
@@ -66,27 +78,45 @@ export function useBoxDrawing({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return
-      
-      // Allow deletion logic for contentEditable elements if they are empty or visual-only (like horizontal lines)
-      if (target.isContentEditable) {
-        if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-        
-        const plainText = target.innerText.trim();
-        
-        // If there is ANY text content, let the browser/editor handle it normally.
-        // We only allow this global delete to trigger for truly empty or visual/SVG-only boxes.
-        if (plainText !== "") return;
-      }
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable) return
 
       // Ctrl/Cmd+A — select all boxes on current page
-      if (e.ctrlKey && e.key === 'a') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const allIds = new Set((notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []).map(b => b.id))
         if (allIds.size === 0) return
         e.preventDefault()
         setSelectedBoxIds(allIds)
+        return
+      }
+
+      // Arrow keys — snap selected boxes
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        const ids = selectedBoxIdsRef.current
+        if (ids.size === 0) return
+        e.preventDefault()
+        const snap = e.shiftKey ? 100 : 20
+        const dx = e.key === 'ArrowLeft' ? -snap : e.key === 'ArrowRight' ? snap : 0
+        const dy = e.key === 'ArrowUp' ? -snap : e.key === 'ArrowDown' ? snap : 0
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        setNotes(prev => prev.map(n => {
+          if (n.id !== tid) return n
+          const boxes = (n.boxes[pidx] || []).map(b => {
+            if (!ids.has(b.id)) return b
+            const newX = Math.max(0, Math.round((b.x + dx) / snap) * snap)
+            const newY = Math.max(0, Math.round((b.y + dy) / snap) * snap)
+            const isTopLeft = newX < 80 && newY < 80
+            const otherBoxes = (n.boxes[pidx] || []).filter(ob => ob.id !== b.id)
+            const nothingAtTopLeft = !otherBoxes.some(ob => ob.x < 80 && ob.y < 80)
+            if (isTopLeft && nothingAtTopLeft && b.boxHeadingStyle !== 'h1') {
+              return { ...b, x: newX, y: newY, boxHeadingStyle: 'h1' as const }
+            }
+            return { ...b, x: newX, y: newY }
+          })
+          return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }
+        }))
         return
       }
 
@@ -106,17 +136,29 @@ export function useBoxDrawing({
         return
       }
 
-      // Delete selected boxes
+      // Delete selected boxes and drawings
       const ids = selectedBoxIdsRef.current
-      if (ids.size === 0) return
+      const drawIds = selectedDrawingIdsRef.current
+      if (ids.size === 0 && drawIds.size === 0) return
       e.preventDefault()
       const toDelete = Array.from(ids)
+      const toDeleteDrawings = Array.from(drawIds)
       const tid = activeTabIdRef.current
       const pidx = currentPageIdxRef.current
-      setNotes(prev => prev.map(n => n.id !== tid ? n : {
-        ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => !toDelete.includes(b.id)) }
+      setNotes(prev => prev.map(n => {
+        if (n.id !== tid) return n
+        const updated: Partial<NoteData> = {}
+        if (toDelete.length > 0) {
+          updated.boxes = { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => !toDelete.includes(b.id)) }
+        }
+        if (toDeleteDrawings.length > 0) {
+          const drawings = n.drawings || {}
+          updated.drawings = { ...drawings, [pidx]: (drawings[pidx] || []).filter(d => !toDeleteDrawings.includes(d.id)) }
+        }
+        return { ...n, ...updated }
       }))
       setSelectedBoxIds(new Set())
+      selectedDrawingIdsRef.current = new Set()
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
@@ -178,6 +220,23 @@ export function useBoxDrawing({
               if (hit) newPending.add(b.id)
             }
             selectionRef.current.pendingSelected = newPending
+
+            const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
+            const drawings = note?.drawings?.[currentPageIdxRef.current] || []
+            const pendingDrawings = new Set<string>()
+            for (const d of drawings) {
+              if (!d.points || d.points.length === 0) continue
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+              for (const p of d.points) {
+                if (p.x < minX) minX = p.x
+                if (p.y < minY) minY = p.y
+                if (p.x > maxX) maxX = p.x
+                if (p.y > maxY) maxY = p.y
+              }
+              const hit = minX < rectX + rectW && maxX > rectX && minY < rectY + rectH && maxY > rectY
+              if (hit) pendingDrawings.add(d.id)
+            }
+            selectedDrawingIdsRef.current = pendingDrawings
           }
         }
         return
@@ -220,12 +279,14 @@ export function useBoxDrawing({
       const res = await fetch('/api/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: prompt.trim() }) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      if (!data.url) { console.warn('No image URL', data); return }
+      if (!data.url) { onError?.("Sketch Error", "No image was generated. Try a different prompt."); return }
       setNotes(prev => prev.map(n => n.id !== activeTabIdRef.current ? n : {
         ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: (n.boxes[currentPageIdxRef.current] || []).map(b => b.id === boxId ? { ...b, content: data.url } : b) }
       }))
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error"
       console.error('Sketch failed:', err)
+      onError?.("Sketch Error", `Failed to generate sketch: ${msg}`)
     } finally {
       setLoadingBoxId(null)
     }
@@ -243,7 +304,9 @@ export function useBoxDrawing({
         ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: (n.boxes[currentPageIdxRef.current] || []).map(b => b.id === boxId ? { ...b, content: data.rewritten } : b) }
       }))
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error"
       console.error('Rewrite failed:', err)
+      onError?.("Rewrite Error", `Failed to rewrite text: ${msg}`)
     } finally {
       setLoadingBoxId(null)
     }
@@ -274,44 +337,38 @@ export function useBoxDrawing({
             const x = (sx - r.left) / scale
             const y = (sy - r.top) / scale
             const id = uid()
-            const newBox: TextBox = { 
-              id, x: x - 100, y: y - 100, w: 200, h: 200, content: '', 
-              boxHighlightColor: stickyColor, 
-              boxFontFamily: '"Bilbo", cursive', 
+            const newBox: TextBox = {
+              id, x: x - 100, y: y - 100, w: 200, h: 200, content: '',
+              boxHighlightColor: stickyColor,
+              boxFontFamily: '"Bilbo", cursive',
               boxFontSize: 24,
               boxOutlineWidth: 0,
-              boxRotation: 2, // Slight tilt
+              boxRotation: 2,
             }
-            setNotes(prev => prev.map(n => n.id !== tid ? n : {
-              ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []), newBox] }
-            }))
-            setSelectedBoxIds(new Set([id]))
-            setActiveTool('select')
-            
-            const focusStickyBox = (retryCount = 0) => {
-              const node = document.getElementById(`box-${id}`)
-              if (node) {
-                if (retryCount === 0) { // Only animate on first successful find
-                  node.animate([
-                    { transform: 'scale(1.2) rotate(5deg)', opacity: 0 },
-                    { transform: 'scale(1) rotate(0deg)', opacity: 1 }
-                  ], { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
-                }
-                const targetNode = node.querySelector<HTMLElement>('[contenteditable]')
-                if (targetNode) {
-                  targetNode.focus()
-                  const range = document.createRange()
-                  range.selectNodeContents(targetNode)
-                  range.collapse(false)
-                  const sel = window.getSelection()
-                  sel?.removeAllRanges()
-                  sel?.addRange(range)
-                }
-              } else if (retryCount < 10) {
-                setTimeout(() => focusStickyBox(retryCount + 1), 10)
+            flushSync(() => {
+              setNotes(prev => prev.map(n => n.id !== tid ? n : {
+                ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []), newBox] }
+              }))
+              setSelectedBoxIds(new Set([id]))
+              setActiveTool('select')
+            })
+            const node = document.getElementById(`box-${id}`)
+            if (node) {
+              node.animate([
+                { transform: 'scale(1.2) rotate(5deg)', opacity: 0 },
+                { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+              ], { duration: 300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+              const targetNode = node.querySelector<HTMLElement>('[contenteditable]')
+              if (targetNode) {
+                targetNode.focus()
+                const range = document.createRange()
+                range.selectNodeContents(targetNode)
+                range.collapse(false)
+                const sel = window.getSelection()
+                sel?.removeAllRanges()
+                sel?.addRange(range)
               }
             }
-            focusStickyBox()
           }
           return
         }
@@ -323,25 +380,22 @@ export function useBoxDrawing({
           const y = (sy - r.top) / scale
           const id = uid()
           const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 300, h: 32, content: '' }
-          setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor), newBox] }
-          }))
-          setSelectedBoxIds(new Set([id]))
-          const focusNewBox = (retryCount = 0) => {
-            const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
-            if (targetNode) {
-              targetNode.focus()
-              const range = document.createRange()
-              range.selectNodeContents(targetNode)
-              range.collapse(false)
-              const sel = window.getSelection()
-              sel?.removeAllRanges()
-              sel?.addRange(range)
-            } else if (retryCount < 10) {
-              setTimeout(() => focusNewBox(retryCount + 1), 10)
-            }
+          flushSync(() => {
+            setNotes(prev => prev.map(n => n.id !== tid ? n : {
+              ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor), newBox] }
+            }))
+            setSelectedBoxIds(new Set([id]))
+          })
+          const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
+          if (targetNode) {
+            targetNode.focus()
+            const range = document.createRange()
+            range.selectNodeContents(targetNode)
+            range.collapse(false)
+            const sel = window.getSelection()
+            sel?.removeAllRanges()
+            sel?.addRange(range)
           }
-          focusNewBox()
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')
@@ -480,6 +534,13 @@ export function useBoxDrawing({
       element.style.pointerEvents = 'none'
       element.style.transition = 'none'
 
+      if (!document.getElementById('eraser-particle-style')) {
+        const sheet = document.createElement('style')
+        sheet.id = 'eraser-particle-style'
+        sheet.textContent = `@keyframes eraser-particle{0%{opacity:0.7;transform:scale(1) translate(0,0)}100%{opacity:0;transform:scale(0.3) translate(8px,-8px)}}`
+        document.head.appendChild(sheet)
+      }
+
       const dust = document.createElement('div')
       dust.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:999;overflow:hidden;`
       for (let i = 0; i < 6; i++) {
@@ -493,10 +554,6 @@ export function useBoxDrawing({
       element.style.position === '' && (element.style.position = 'relative')
       element.appendChild(dust)
 
-      const sheet = document.createElement('style')
-      sheet.textContent = `@keyframes eraser-particle{0%{opacity:0.7;transform:scale(1) translate(0,0)}100%{opacity:0;transform:scale(0.3) translate(${Math.random()>0.5?'':'-'}${8+Math.random()*12}px,-${6+Math.random()*10}px)}}`
-      document.head.appendChild(sheet)
-
       element.animate([
         { clipPath: 'inset(0 0 0 0)', opacity: 1, filter: 'blur(0px)' },
         { clipPath: 'inset(0 0 0 30%)', opacity: 0.7, filter: 'blur(0.3px)', offset: 0.3 },
@@ -505,7 +562,6 @@ export function useBoxDrawing({
       ], { duration: 450, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' })
 
       setTimeout(() => {
-        sheet.remove()
         updateBoxes(bs => bs.filter(b => b.id !== id))
         setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
       }, 500)
@@ -598,22 +654,15 @@ export function useBoxDrawing({
 
         const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
 
-        const tid = activeTabIdRef.current
-        const pidx = currentPageIdxRef.current
-        const currentNote = tid ? notesRef.current.find(n => n.id === tid) : null
-        const noteLines = currentNote?.lines?.[pidx] || []
-        const lines = [112, ...noteLines].sort((a, b) => a - b)
-
-        // Start Y from the first box's Y or 80
-        let tempY = Math.max(sorted[0].y, 80)
-        // Align to the first margin line (usually 112 + 32 = 144)
-        const baseMarginX = (lines[0] || 112) + 32
+        // Preserve the X of the topmost box
+        const targetX = sorted[0].x
+        let tempY = sorted[0].y
 
         const alignedBoxesMap = new Map()
         for (const box of sorted) {
           const height = box.h || 40
-          alignedBoxesMap.set(box.id, { ...box, x: baseMarginX, y: tempY })
-          tempY += height + 16 // Consistent gap
+          alignedBoxesMap.set(box.id, { ...box, x: targetX, y: tempY })
+          tempY += height + 20 // Standard gap
         }
 
         return bs.map(b => alignedBoxesMap.get(b.id) || b)
@@ -687,19 +736,18 @@ export function useBoxDrawing({
       updateBoxes(bs => {
         const selectedIds = selectedBoxIdsRef.current
         const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
-        if (toAlign.length < 2) return bs
+        if (toAlign.length < 3) return bs // Need at least 3 to distribute intermediate ones
 
         const sorted = [...toAlign].sort((a, b) => a.y - b.y)
-        const firstY = sorted[0].y
-        const totalH = sorted.reduce((sum, b) => sum + (b.h || 40), 0)
-        const availH = Math.max(totalH + (sorted.length - 1) * 24, 800)
-        const gap = (availH - totalH) / (sorted.length - 1)
+        const first = sorted[0]
+        const last = sorted[sorted.length - 1]
+        
+        const totalGap = (last.y - first.y)
+        const step = totalGap / (sorted.length - 1)
 
         const map = new Map()
-        let currentY = firstY
-        for (const box of sorted) {
-          map.set(box.id, { ...box, y: currentY })
-          currentY += (box.h || 40) + gap
+        for (let i = 0; i < sorted.length; i++) {
+          map.set(sorted[i].id, { ...sorted[i], y: first.y + i * step })
         }
         return bs.map(b => map.get(b.id) || b)
       })
@@ -716,7 +764,7 @@ export function useBoxDrawing({
     updateBoxes(bs => bs.map(b => b.id === id ? { ...b, ...updates } : b)), [updateBoxes])
 
   return useMemo(() => ({
-    selectionVersion, selectedBoxIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
+    selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox

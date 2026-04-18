@@ -18,13 +18,12 @@ export function sanitizeHTML(html: string): string {
   // Remove event handlers and dangerous attributes
   const allElements = temp.querySelectorAll("*")
   allElements.forEach(el => {
-    // Remove all event handlers
     Array.from(el.attributes).forEach(attr => {
-      if (attr.name.startsWith("on")) {
+      if (attr.name.toLowerCase().startsWith("on")) {
         el.removeAttribute(attr.name)
       }
-      // Remove javascript: protocol
-      if (attr.value.includes("javascript:")) {
+      const val = attr.value.replace(/[\s\u0000-\u001f]/g, '').toLowerCase()
+      if (val.includes("javascript:") || val.includes("vbscript:") || val.includes("data:text/html")) {
         el.removeAttribute(attr.name)
       }
     })

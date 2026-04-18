@@ -21,7 +21,7 @@ export interface NoteData {
   parentId?: string;
   icon?: string;
   cover?: string;
-  noteType?: "notebook" | "singlepage" | "flashcard" | "vault";
+  noteType?: "notebook" | "singlepage" | "flashcard" | "vault" | "cornell";
   password?: string;
   flashcards?: FlashcardItem[];
   boxes: BoxesMap;
@@ -35,6 +35,9 @@ export interface DrawingPath {
   id: string;
   tool: string;
   color: string;
+  fill?: string;
+  opacity?: number;
+  dash?: boolean;
   points: { x: number; y: number }[];
   width: number;
 }

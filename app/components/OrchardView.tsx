@@ -1,5 +1,5 @@
 "use client"
-import { memo, useState } from "react"
+import { memo, useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
@@ -25,6 +25,17 @@ export const OrchardView = memo(function OrchardView({
 }: OrchardViewProps) {
 
   const [plantingPlot, setPlantingPlot] = useState<number | null>(null)
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (plantingPlot !== null) setPlantingPlot(null)
+        else onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [plantingPlot, onClose])
 
   const plantFromInventory = (seedType: string, seedIdx: number, plotIdx: number) => {
     // Remove from inventory
@@ -261,17 +272,27 @@ export const OrchardView = memo(function OrchardView({
               </button>
 
               <button
-                onClick={() => setGems(g => g - 30)}
-                disabled={gems < 30}
+                onClick={() => {
+                  const spoiledIdx = grove.findIndex(t => t && t.type === 'spoiled')
+                  if (spoiledIdx === -1) return
+                  setGems(g => g - 5)
+                  setGrove(prev => {
+                    const next = [...prev]
+                    const original = next[spoiledIdx]
+                    next[spoiledIdx] = { ...original, type: 'navel', stage: 0, progress: 0 }
+                    return next
+                  })
+                }}
+                disabled={gems < 5 || !grove.some(t => t && t.type === 'spoiled')}
                 className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left group ${
-                  gems < 30 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 active:scale-95'
+                  gems < 5 || !grove.some(t => t && t.type === 'spoiled') ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 active:scale-95'
                 } ${theme === 'dark' ? 'bg-zinc-900/20 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}
               >
-                <div className="w-11 h-11 rounded-lg bg-purple-500/5 flex items-center justify-center text-xl border border-purple-500/10 group-hover:drop-shadow-[0_0_8px_#a855f766] transition-all">🧿</div>
+                <div className="w-11 h-11 rounded-lg bg-purple-500/5 flex items-center justify-center text-xl border border-purple-500/10 group-hover:drop-shadow-[0_0_8px_#a855f766] transition-all">✨</div>
                 <div className="flex-1">
-                  <span className="block text-sm font-bold text-purple-600">Warding Totem</span>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">24h Protection</p>
-                  <span className="block mt-1 font-bold text-xs text-purple-600">30 💎</span>
+                  <span className="block text-sm font-bold text-purple-600">Revival Elixir</span>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">Revive a spoiled plant</p>
+                  <span className="block mt-1 font-bold text-xs text-purple-600">5 💎</span>
                 </div>
               </button>
             </div>

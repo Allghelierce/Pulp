@@ -377,7 +377,7 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     }
     if (before === "*" || before === "-") tryConvert("insertUnorderedList")
     else if (/^\d+[\.\)]$/.test(before)) tryConvert("insertOrderedList")
-  }, [editorRef])
+  }, [editorRef, syncContent, saveSelection, insertHTML])
 
   // Capture-phase listener: fires BEFORE browser processes <summary> default
   // behavior (toggling details open/closed), so we can fully control Enter/Backspace
@@ -444,7 +444,7 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
 
     document.addEventListener('keydown', handler, true)
     return () => document.removeEventListener('keydown', handler, true)
-  }, []) // savedRange/editorRef are refs, commitToState is stable
+  }, [editorRef, commitToState])
 
   return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent, flushSync }
 }

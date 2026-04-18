@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 
 // Validate URL to prevent SSRF attacks
 function isValidURL(urlString: string): boolean {
@@ -41,10 +42,14 @@ function isValidURL(urlString: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  const key = getRateLimitKey(req)
+  if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 30 })) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+  }
+
   const url = req.nextUrl.searchParams.get("url")
   if (!url) return NextResponse.json({ error: "Missing url" }, { status: 400 })
 
-  // Validate URL before fetching
   if (!isValidURL(url)) {
     return NextResponse.json({ error: "Invalid URL" }, { status: 400 })
   }

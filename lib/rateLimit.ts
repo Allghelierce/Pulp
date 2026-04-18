@@ -14,11 +14,21 @@ export function getRateLimitKey(req: Request): string {
   return ip
 }
 
+let lastCleanup = Date.now()
+
 export function checkRateLimit(key: string, options: RateLimitOptions = {}): boolean {
-  const windowMs = options.windowMs ?? 60 * 1000 // 1 minute default
+  const windowMs = options.windowMs ?? 60 * 1000
   const maxRequests = options.maxRequests ?? 10
 
   const now = Date.now()
+
+  if (now - lastCleanup > 5 * 60 * 1000) {
+    for (const [k, v] of rateLimitStore) {
+      if (now > v.resetTime) rateLimitStore.delete(k)
+    }
+    lastCleanup = now
+  }
+
   const record = rateLimitStore.get(key)
 
   if (!record || now > record.resetTime) {

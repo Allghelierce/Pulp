@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulp
 
-## Getting Started
+A note-taking app with rich formatting, AI tools, flashcards, and a built-in productivity system — available on web and desktop.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Keyboard Shortcuts
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Action | Shortcut |
+|---|---|
+| New note | `Ctrl/Cmd + N` |
+| Save | `Ctrl/Cmd + S` |
+| Slash menu | `/` |
+| AI menu | `@` |
+| Bold | `Ctrl/Cmd + B` |
+| Italic | `Ctrl/Cmd + I` |
+| Underline | `Ctrl/Cmd + U` |
+| Undo | `Ctrl/Cmd + Z` |
+| Redo | `Ctrl/Cmd + Shift + Z` |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Notes
+- **Multiple note types** — notebooks, single pages, flashcards, Cornell notes, and encrypted vaults
+- **Rich text editing** — headings, lists, tables, code blocks, LaTeX math, and inline images
+- **Slash commands** — type `/` to access formatting, media, and AI tools without leaving the keyboard
+- **Drawing** — freehand sketching, shapes, and annotations directly on pages
+- **Folders and organization** — nested folders, icons, covers, bookmarks, and a trash/archive system
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### AI
+- **Rewrite and summarize** — highlight text and use AI to rewrite, expand, simplify, or translate
+- **Notebook chat** — ask questions about your notes in a conversational interface
+- **AI command bar** — run custom prompts on selected text
 
-## Learn More
+### Flashcards
+- **Spaced repetition** — SM-2 algorithm schedules reviews based on how well you know each card
+- **Create from notes** — turn your notes into flashcard decks
 
-To learn more about Next.js, take a look at the following resources:
+### Productivity
+- **Focus timer** — Pomodoro-style timer with focus, short break, and long break presets
+- **Vitality system** — earn sunshine and gems as you write and complete focus sessions
+- **Orchard** — grow and collect trees using earned currency, with rarities from Common to Extinct
+- **Achievements** — unlock milestones like writing streaks and marathon sessions
+- **Boutique** — spend currency on cosmetic items and themes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Customization
+- **Themes** — light and dark mode with accent color options
+- **Paper styles** — lined, grid, dot grid, or blank
+- **Fonts** — multiple font families and sizes per text box
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework** — Next.js (App Router)
+- **Language** — TypeScript
+- **Styling** — Tailwind CSS
+- **Database & Auth** — Supabase
+- **AI** — Groq, Hugging Face
+- **Desktop** — Electron
+- **Deployment** — Vercel

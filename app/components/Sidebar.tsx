@@ -53,7 +53,7 @@ interface SidebarProps {
   isDragging?: boolean
   unlockedIds: Set<string>
   onAddNote: (folderId?: number | null) => void
-  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard" | "vault") => void
+  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard" | "vault" | "cornell") => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
   onRenameNote: (id: string, currentName: string) => void
@@ -493,9 +493,9 @@ export const Sidebar = memo(function Sidebar({
                   {newMenuOpen === "ROOT" && (
                     <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
                       <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
-                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
                       <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
                       <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                      <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(null, "cornell"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📋 Cornell Notes</button>
                     </div>
                   )}
                 </div>
@@ -531,9 +531,9 @@ export const Sidebar = memo(function Sidebar({
                       {newMenuOpen === String(f.id) && (
                         <div className="flex flex-col absolute left-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-50 min-w-max overflow-hidden">
                           <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "notebook"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📓 Notebook</button>
-                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "singlepage"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📄 Single Page</button>
                           <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "flashcard"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🃏 Flashcard Set</button>
                           <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "vault"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">🔐 Vault Note</button>
+                          <button onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onAddTypedNote(f.id, "cornell"); setNewMenuOpen(null) }} className="px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white text-left transition-colors whitespace-nowrap">📋 Cornell Notes</button>
                         </div>
                       )}
                     </div>
@@ -660,7 +660,7 @@ export const Sidebar = memo(function Sidebar({
               onClick={onOpenTimer}
               title="Focus timer  (⌘⌥T)"
               className="shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-zinc-800/70"
-              style={{ color: timerOpen ? "#e4e4e7" : "#71717a" }}
+              style={{ color: timerOpen ? "#fb923c" : "#f97316" }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="13" r="8" />

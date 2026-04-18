@@ -155,7 +155,8 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   const claimReward = useCallback(() => {
     if (!timerDone || treeDead) return
-    const reward = Math.max(1, Math.round(timerTotal / 300))
+    const minutes = timerTotal / 60
+    const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
     setSunshine(s => s + reward)
 
     // Iron Will — count completed sessions
@@ -182,7 +183,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   useEffect(() => {
     const timer = setInterval(() => {
       setSunshine(s => s + 1)
-    }, 30000)
+    }, 120000)
     return () => clearInterval(timer)
   }, [setSunshine])
 
@@ -230,7 +231,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (totalChars > lastCharCount) {
       const diff = totalChars - lastCharCount
       if (diff >= 100) {
-        setGrove(prev => prev.map(tree => {
+        setGrove(prev => prev.filter(Boolean).map(tree => {
           if (tree.type === 'spoiled' || tree.stage >= 4) return tree
           const newProgress = (tree.progress || 0) + (diff / 100) * 5
           const newStage = Math.min(4, Math.floor(newProgress / 25))

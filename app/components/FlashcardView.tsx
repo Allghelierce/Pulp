@@ -102,7 +102,7 @@ export function FlashcardView({
     } else {
       // End session
       if (studiedCards.size > 0 && onStudyComplete) {
-        const sunshineEarned = studiedCards.size * 5
+        const sunshineEarned = studiedCards.size * 2
         onStudyComplete(studiedCards.size, sunshineEarned)
       }
     }
@@ -115,15 +115,15 @@ export function FlashcardView({
   const cardCount = displayCards.length
 
   const goToPrev = () => {
-    setCurrentIdx(Math.max(0, currentIdx - 1))
+    setCurrentIdx(prev => Math.max(0, prev - 1))
     setIsFlipped(false)
   }
 
   const goToNext = () => {
     if (isStudyMode && currentCard) {
-      setStudiedCards(new Set([...studiedCards, currentCard.id]))
+      setStudiedCards(prev => new Set([...prev, currentCard.id]))
     }
-    setCurrentIdx(Math.min(cardCount - 1, currentIdx + 1))
+    setCurrentIdx(prev => Math.min(cardCount - 1, prev + 1))
     setIsFlipped(false)
   }
 
@@ -138,12 +138,12 @@ export function FlashcardView({
     )
     onChange(updated)
 
-    setStudiedCards(new Set([...studiedCards, currentCard.id]))
+    setStudiedCards(prev => new Set([...prev, currentCard.id]))
 
-    // Auto-advance after brief feedback
     setTimeout(() => {
       setFeedback(null)
-      goToNext()
+      setCurrentIdx(prev => Math.min(cardCount - 1, prev + 1))
+      setIsFlipped(false)
     }, 600)
   }
 

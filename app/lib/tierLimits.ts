@@ -61,10 +61,10 @@ export function canGenerateSketch(usage: UserUsage): boolean {
  */
 export function canUseTokens(usage: UserUsage, tokensNeeded: number): { allowed: boolean; remaining: number } {
   const limits = TIER_LIMITS[usage.tier]
-  const remaining = limits.aiTokens - usage.aiTokensUsed
+  const remaining = Math.max(0, limits.aiTokens - usage.aiTokensUsed)
   return {
     allowed: remaining >= tokensNeeded,
-    remaining: Math.max(0, remaining - tokensNeeded),
+    remaining,
   }
 }
 

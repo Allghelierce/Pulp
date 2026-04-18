@@ -36,6 +36,14 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
   const pulpOrange = "#F5A030"
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handleEsc)
+    return () => window.removeEventListener("keydown", handleEsc)
+  }, [onClose])
+
+  useEffect(() => {
     if (tab === "draw" && canvasRef.current) {
       const canvas = canvasRef.current
       const ctx = canvas.getContext("2d")!

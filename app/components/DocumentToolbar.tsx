@@ -52,6 +52,7 @@ interface DocumentToolbarProps {
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
   onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
   isTextActive: boolean
+  onOpenChat: () => void
   isVault?: boolean
   isUnlocked?: boolean
   onLock?: () => void
@@ -84,12 +85,12 @@ const AiMascotIcon = ({ size = 16 }: { size?: number }) => (
 )
 
 const COMMON_PROMPTS = [
-  { label: "Summarize", prompt: "Summarize this clearly" },
-  { label: "Make shorter", prompt: "Summarize this into a concise point" },
-  { label: "Fix Grammar", prompt: "Fix grammar and spelling" },
-  { label: "Expand", prompt: "Expand this with more detail" },
-  { label: "Explain simply", prompt: "Explain this in very simple terms" },
-  { label: "Rewrite", prompt: "Rewrite this more professionally" },
+  { label: "Summarize", prompt: "Summarize this as short bullet points. Use a bullet character (•) for each point. Output only the bullet points." },
+  { label: "Make shorter", prompt: "Condense this into fewer words while keeping the meaning. Output only the shortened text." },
+  { label: "Fix Grammar", prompt: "Fix grammar and spelling errors. Output only the corrected text." },
+  { label: "Expand", prompt: "Expand this with more detail and explanation. Output only the expanded text." },
+  { label: "Explain simply", prompt: "Rewrite this in very simple, easy-to-understand language. Output only the simplified text." },
+  { label: "Rewrite", prompt: "Rewrite this more professionally and clearly. Output only the rewritten text." },
 ]
 
 export const DocumentToolbar = memo(function DocumentToolbar({
@@ -105,7 +106,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu, onQuickPrompt, isTextActive
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat
 }: DocumentToolbarProps) {
 
   const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -152,7 +153,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   return (
     <div
       id="document-toolbar"
-      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-20 shrink-0 justify-between relative"
+      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
       style={{ transform: "translateZ(0)" }}
     >
       
@@ -206,65 +207,58 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {alignOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
-              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Align Boxes</div>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Horizontal Flow
+                Snap to Grid
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Vertical Stack
+                Stack Vertically
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); centerStack(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Center Stack
+                Center on Page
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); twoColumnGrid(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Two Columns
+                Two-Column Grid
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); distributeEvenly(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                Distribute Evenly
+                Distribute Top Edges
               </button>
               <div className={`mx-1.5 my-1 border-t ${theme === "dark" ? "border-zinc-700" : "border-zinc-100"}`} />
-              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Page Layouts</div>
-              <button
-                onMouseDown={e => { e.preventDefault(); insertCornell(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                Cornell Notes
-              </button>
+              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Text Editor Layout</div>
               <button
                 onMouseDown={e => { e.preventDefault(); insertColumns(2); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                2-Column Layout
+                Insert 2 Columns
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); insertColumns(3); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                3-Column Layout
+                Insert 3 Columns
               </button>
             </div>
           )}
@@ -344,6 +338,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           )}
         </div>
+
+        {/* Quiz / Chat button */}
+        <button
+          onClick={onOpenChat}
+          title="Chat with your notebook"
+          className={`${btnBase} flex items-center gap-1.5`}
+          style={btnFont}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Quiz Me
+        </button>
 
         {/* Draw toolbar toggle */}
         <button

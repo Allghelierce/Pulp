@@ -22,6 +22,7 @@ import { FlashcardView } from "@/app/components/FlashcardView"
 import { AiResultModal } from "@/app/components/AiResultModal"
 import { AiInlineMenu } from "@/app/components/AiInlineMenu"
 import { AiCommandBar } from "@/app/components/AiCommandBar"
+import { NotebookChat } from "@/app/components/NotebookChat"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { OrchardView } from "@/app/components/OrchardView"
 import { BoutiqueView } from "@/app/components/BoutiqueView"
@@ -87,19 +88,19 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
     <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-fade {
-                               0% { opacity: 0.7; transform: scale(1); filter: blur(0); }
-                               100% { opacity: 0; transform: scale(0.9); filter: blur(1.5px); }
+                               0% { opacity: 0.6; transform: scale(1) translateY(0); filter: blur(0); }
+                               40% { opacity: 0.3; transform: scale(0.85) translateY(-3px); filter: blur(0.5px); }
+                               100% { opacity: 0; transform: scale(0.4) translateY(-8px); filter: blur(2.5px); }
                              }
                              .erased {
-                               display: block;
-                               animation: erase-fade 0.5s forwards ease-out;
+                               display: flex;
+                               animation: erase-fade 0.35s forwards cubic-bezier(0.4, 0, 0.2, 1);
                                pointer-events: none;
                                user-select: none;
                                white-space: pre;
                                margin: 0 !important;
                                padding: 0 !important;
                                text-align: center;
-                               display: flex;
                                align-items: center;
                                justify-content: center;
                              } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
@@ -314,7 +315,13 @@ const BoxItem = memo(function BoxItem({
       {/* Drag handle — hidden for sticky (whole surface is draggable) */}
       {isSelected && !isSticky && (
         <div
-          onMouseDown={e => startDrag(e, box)}
+          onMouseDown={e => {
+            const ce = (e.currentTarget.parentElement as HTMLElement)?.querySelector<HTMLElement>('[contenteditable]')
+            if (ce) { ce.blur() }
+            if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+            setSelectedBoxIds(new Set([box.id]))
+            startDrag(e, box)
+          }}
           style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           <div style={{ width: 14, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
@@ -784,7 +791,7 @@ const BoxTextarea = memo(function BoxTextarea({
 
                 const cleanup = () => ghost.remove()
                 ghost.addEventListener('animationend', cleanup)
-                setTimeout(cleanup, 6500)
+                setTimeout(cleanup, 500)
                 layer.appendChild(ghost)
               }
               syncState()
@@ -839,7 +846,11 @@ export default function NoteApp() {
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
-  const [sidebarWidth, setSidebarWidth] = useState(0)
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    if (typeof window === "undefined") return 0
+    const saved = localStorage.getItem("pulp-sidebar-width")
+    return saved !== null ? Number(saved) : 0
+  })
   const [isSidebarDragging, setIsSidebarDragging] = useState(false)
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
@@ -880,14 +891,16 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sunshine, setSunshine] = useState(1000)
-  const [gems, setGems] = useState(5)
+  const [sunshine, setSunshine] = useState(50)
+  const [gems, setGems] = useState(3)
+  const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
+  const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
@@ -943,10 +956,11 @@ export default function NoteApp() {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       const data = JSON.parse(saved)
-      setSunshine(data.sunshine ?? 1000)
-      setGems(data.gems ?? 5)
+      setSunshine(data.sunshine ?? 50)
+      setGems(data.gems ?? 3)
       if (data.inventory) setInventory(data.inventory)
       if (data.grove) setGrove(data.grove)
+      if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
       if (data.achievements) {
         setAchievements(applyTimeChecks(data.achievements))
@@ -1003,6 +1017,11 @@ export default function NoteApp() {
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
+  const [strokeColor, setStrokeColor] = useState('#000000')
+  const [fillColor, setFillColor] = useState('transparent')
+  const [lineWidth, setLineWidth] = useState(1)
+  const [drawOpacity, setDrawOpacity] = useState(1)
+  const [drawDash, setDrawDash] = useState(false)
 
   const setCover = useCallback((dataUrl: string) => {
     setNotes(ns => ns.map(n => n.id === activeTabId ? { ...n, cover: dataUrl } : n))
@@ -1095,34 +1114,57 @@ export default function NoteApp() {
   const boxes = useBoxDrawing({
     activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
     sketchMode, sketchPrompt, setSketchMode, setSketchPrompt,
-    drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor
+    drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor,
+    onError: openAlert
   })
-  const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes })
+  const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes, strokeColor, fillColor, lineWidth, opacity: drawOpacity, dash: drawDash })
 
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
+  const [showNotebookChat, setShowNotebookChat] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
   const [isTextActive, setIsTextActive] = useState(false)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
   const slashAnchorRef = useRef<{ node: Node; offset: number } | null>(null)
   const slashFilterSpanRef = useRef<HTMLSpanElement | null>(null)
 
-  const closeSlashMenu = useCallback(() => {
+  const dismissSlashMenu = useCallback((deleteAtSign: boolean) => {
+    const m = slashMenuRef.current
+    const anchor = slashAnchorRef.current
     if (slashFilterSpanRef.current) {
       slashFilterSpanRef.current.remove()
       slashFilterSpanRef.current = null
+    }
+    if (deleteAtSign && m?.mode === "@" && anchor && !m?.isSelectionMode) {
+      try {
+        const textNode = anchor.node as Text
+        if (textNode.nodeType === Node.TEXT_NODE && textNode.isConnected) {
+          const filter = m.filter ?? ""
+          const end = m.type === "editor"
+            ? Math.min(anchor.offset + 1 + filter.length, textNode.length)
+            : Math.min(anchor.offset + 1, textNode.length)
+          const r = document.createRange()
+          r.setStart(textNode, anchor.offset)
+          r.setEnd(textNode, end)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(r)
+          document.execCommand("delete")
+        }
+      } catch { /* node may have been detached */ }
     }
     slashMenuRef.current = null
     slashAnchorRef.current = null
     setSlashMenu(null)
   }, [])
+  const closeSlashMenu = useCallback(() => dismissSlashMenu(false), [dismissSlashMenu])
 
   useEffect(() => {
     const handleBlur = () => {
-      if (slashMenuRef.current) closeSlashMenu()
+      if (slashMenuRef.current) dismissSlashMenu(true)
     }
     window.addEventListener("blur", handleBlur)
     return () => {
@@ -1132,7 +1174,7 @@ export default function NoteApp() {
         slashFilterSpanRef.current = null
       }
     }
-  }, [closeSlashMenu])
+  }, [dismissSlashMenu])
 
   useEffect(() => {
     const update = () => {
@@ -1224,6 +1266,10 @@ export default function NoteApp() {
         const contentEl = boxEl?.querySelector('[contenteditable="true"]') as HTMLElement | null
         if (contentEl) {
           boxes.updateBoxContent(targetBoxIds[0], contentEl.innerHTML)
+          requestAnimationFrame(() => {
+            const fitH = contentEl.scrollHeight + 32
+            boxes.updateBox(targetBoxIds[0], { h: fitH })
+          })
         }
       } else if (targetBoxIds.length > 0) {
         const lines = result.split(/\n{2,}/)
@@ -1234,6 +1280,10 @@ export default function NoteApp() {
             const newContent = lines[i] !== undefined ? lines[i] : (lines.length === 1 ? result : "")
             contentEl.innerText = newContent
             boxes.updateBoxContent(id, contentEl.innerHTML)
+            requestAnimationFrame(() => {
+              const fitH = contentEl.scrollHeight + 32
+              boxes.updateBox(id, { h: fitH })
+            })
           }
         })
       }
@@ -1407,7 +1457,7 @@ export default function NoteApp() {
 
     if (e.key === "Escape") {
       if (slashMenuRef.current) {
-        closeSlashMenu()
+        dismissSlashMenu(true)
         e.preventDefault()
         return
       }
@@ -1648,6 +1698,17 @@ export default function NoteApp() {
         return
       }
 
+      // Escape - exit draw mode
+      if (e.key === 'Escape') {
+        setShowDrawToolbar(prev => {
+          if (prev) {
+            setActiveTool('select')
+            return false
+          }
+          return prev
+        })
+      }
+
       // \ - AI editing command
       if (e.key === "\\") {
         const active = document.activeElement as HTMLElement | null
@@ -1731,9 +1792,13 @@ export default function NoteApp() {
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation])
 
+  useEffect(() => {
+    localStorage.setItem("pulp-sidebar-width", String(sidebarWidth))
+  }, [sidebarWidth])
+
   // Save Grove & Inventory to localStorage
   useEffect(() => {
-    localStorage.setItem("pulp-grove", JSON.stringify({ sunshine, gems, grove, inventory, achievements, lastCharCount }))
+    localStorage.setItem("pulp-grove", JSON.stringify({ sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics }))
   }, [sunshine, gems, grove, inventory, achievements, lastCharCount])
 
   // Cloud autosave
@@ -1789,10 +1854,14 @@ export default function NoteApp() {
       if (parsed.length > 0) {
         const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
         setActiveTabId(lastId)
-        // Open sidebar for returning users — respect their sidebarOnStart pref
-        const savedSettings = localStorage.getItem("pulp-settings")
-        const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
-        if (sidebarPref !== false) setSidebarWidth(256)
+        const savedSidebarWidth = localStorage.getItem("pulp-sidebar-width")
+        if (savedSidebarWidth !== null) {
+          setSidebarWidth(Number(savedSidebarWidth))
+        } else {
+          const savedSettings = localStorage.getItem("pulp-settings")
+          const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
+          if (sidebarPref !== false) setSidebarWidth(256)
+        }
       }
     }
     if (savedFolders) setFolders(JSON.parse(savedFolders))
@@ -1852,6 +1921,7 @@ export default function NoteApp() {
     const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: {} }
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
+    setSidebarOpen(true)
     checkAchievement('first_note')
   }
 
@@ -1902,21 +1972,51 @@ export default function NoteApp() {
     }, icon)
   }
 
-  const AI_ACTIONS = [
-    { id: "quiz", label: "Quiz me" },
-    { id: "summarize", label: "Summarize" },
-    { id: "explain", label: "Explain" },
-    { id: "outline", label: "Outline" },
-    { id: "improve", label: "Improve writing" },
+  const AI_ACTIONS: { id: string; label: string; prompt: string }[] = [
+    { id: "quiz", label: "Quiz me", prompt: "Generate exactly 5 quiz questions with answers based on this text. Format each as:\nQ: [question]\nA: [short answer]\n\nOutput only the Q/A pairs, nothing else." },
+    { id: "summarize", label: "Summarize", prompt: "Summarize this text in 2-3 concise sentences." },
+    { id: "explain", label: "Explain", prompt: "Explain the key concepts in this text in simple terms." },
+    { id: "outline", label: "Outline", prompt: "Create a brief bullet-point outline of this text." },
+    { id: "improve", label: "Improve writing", prompt: "Improve the clarity and flow of this text. Return only the improved version." },
   ]
 
   const handleAiAction = useCallback(async (action: string) => {
     const pageText = editorRef.current?.innerText?.trim() || ""
     if (!pageText) { openAlert("Nothing to process", "Add some text to your note first."); return }
-    const actionLabel = AI_ACTIONS.find(a => a.id === action)?.label || action
+    const actionDef = AI_ACTIONS.find(a => a.id === action)
+    const actionLabel = actionDef?.label || action
+    const prompt = actionDef?.prompt || action
+
+    if (action === "quiz") {
+      setQuizState({ questions: [], current: 0, revealed: false, loading: true })
+      try {
+        const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
+        if (!res.ok) throw new Error("API error")
+        const data = await res.json()
+        const raw = data.result || ""
+        const pairs: { q: string; a: string }[] = []
+        const qBlocks = raw.split(/\n?Q:\s*/i).filter((s: string) => s.trim())
+        for (const block of qBlocks) {
+          const parts = block.split(/\n?A:\s*/i)
+          if (parts.length >= 2) {
+            pairs.push({ q: parts[0].trim(), a: parts.slice(1).join("A: ").trim() })
+          }
+        }
+        if (pairs.length === 0) {
+          setQuizState(null)
+          openAlert("Quiz Error", "Could not generate quiz questions from this text.")
+          return
+        }
+        setQuizState({ questions: pairs, current: 0, revealed: false, loading: false })
+      } catch {
+        setQuizState(null); openAlert("AI Error", "Could not process your request.")
+      }
+      return
+    }
+
     setAiResult({ title: actionLabel, result: "", loading: true })
     try {
-      const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action, text: pageText }) })
+      const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
       if (!res.ok) throw new Error("API error")
       const data = await res.json()
       setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
@@ -2342,7 +2442,15 @@ export default function NoteApp() {
                 distributeEvenly={boxes.distributeEvenly}
                 insertCornell={insertCornell}
                 showDrawToolbar={showDrawToolbar}
-                onToggleDrawToolbar={() => setShowDrawToolbar(!showDrawToolbar)}
+                onToggleDrawToolbar={() => {
+                  const next = !showDrawToolbar
+                  setShowDrawToolbar(next)
+                  if (next) {
+                    setActiveTool('pen')
+                  } else {
+                    setActiveTool('select')
+                  }
+                }}
                 rightSidebarOpen={timerOpen}
                 setRightSidebarOpen={setTimerOpen}
                 allCompacted={allCompacted}
@@ -2378,6 +2486,7 @@ export default function NoteApp() {
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
                 isTextActive={isTextActive}
+                onOpenChat={() => setShowNotebookChat(v => !v)}
               />
             </div>
           )}
@@ -2431,6 +2540,7 @@ export default function NoteApp() {
                         </svg>
                       </div>
                       <motion.div
+                        initial={false}
                         animate={{ x: theme === "dark" ? 20 : 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         style={{
@@ -2466,7 +2576,7 @@ export default function NoteApp() {
               </main>
             ) : (
               <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
-                <div style={{ zoom: zoom, transformOrigin: "top center", contain: "layout style", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
+                <div style={{ zoom: zoom, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "relative" }}>
                       <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
@@ -2476,7 +2586,7 @@ export default function NoteApp() {
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", contain: "layout style", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                         onMouseDown={e => {
                           if (activeTool === 'sticky' || activeTool === 'hr') {
                             // Handled by onClick below to ensure clean single-click placement
@@ -2626,12 +2736,13 @@ export default function NoteApp() {
                               ref={canvasRef}
                               style={{
                                 position: "absolute",
-                                inset: 0,
+                                left: 0,
+                                top: 0,
                                 width: "100%",
                                 height: "100%",
-                                pointerEvents: activeTool === 'select' || activeTool === 'pan' || activeTool === 'text' ? 'none' : 'all',
+                                pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hline'].includes(activeTool) ? 'all' : 'none',
                                 cursor: drawing.getCursor(),
-                                zIndex: activeTool === 'select' ? 10 : 45,
+                                zIndex: showDrawToolbar ? 200 : 5,
                                 touchAction: "none",
                               }}
                               onPointerDown={drawing.onPointerDown}
@@ -2766,7 +2877,19 @@ export default function NoteApp() {
 
           {notes.filter(n => !n.archived).length > 0 && !gridView && (
             <>
-              <FloatingToolbar accent={accent} activeTool={activeTool} onToolChange={setActiveTool} onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar} />
+              <FloatingToolbar
+                accent={accent} activeTool={activeTool} onToolChange={setActiveTool}
+                onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar}
+                strokeColor={strokeColor} onStrokeColorChange={setStrokeColor}
+                fillColor={fillColor} onFillColorChange={setFillColor}
+                lineWidth={lineWidth} onLineWidthChange={setLineWidth}
+                opacity={drawOpacity} onOpacityChange={setDrawOpacity}
+                dash={drawDash} onDashChange={setDrawDash}
+                onUndo={drawing.undo} onRedo={drawing.redo}
+                canUndo={drawing.canUndo} canRedo={drawing.canRedo}
+                onImproveDrawing={drawing.improveDrawing}
+                onClose={() => { setShowDrawToolbar(false); setActiveTool('select') }}
+              />
               <HangingOrange onClick={() => setOrchardOpen(true)} />
             </>
           )}
@@ -2777,15 +2900,16 @@ export default function NoteApp() {
           <SlashMenu
             {...slashMenu}
             accent={accent}
+            theme={theme}
             box={slashMenu.target?.closest('[id^="box-"]') ? activeNote.boxes[currentPageIdx]?.find(b => b.id === slashMenu.target?.closest('[id^="box-"]')?.id.replace("box-", "")) : undefined}
             onUpdateBox={boxes.updateBox}
             onSelect={executeSlashItem}
-            onClose={closeSlashMenu}
+            onClose={() => dismissSlashMenu(true)}
             execCmd={editor.execCmd}
             insertHTML={editor.insertHTML}
             toggleScript={editor.toggleScript}
             insertBacklink={insertBacklink}
-            onInsertImage={() => { closeSlashMenu(); setShowImageModal(true) }}
+            onInsertImage={() => { dismissSlashMenu(true); setShowImageModal(true) }}
           />
         )}
 
@@ -2844,7 +2968,8 @@ export default function NoteApp() {
                 if (selectedText) {
                   editor.execCmd("insertText", result)
                 } else {
-                  editor.insertHTML(result)
+                  const escaped = result.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+                  editor.insertHTML(escaped)
                 }
               } catch (error) {
                 const errorMsg = error instanceof Error ? error.message : "Unknown error"
@@ -2865,6 +2990,99 @@ export default function NoteApp() {
           />
         )}
 
+        {quizState && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
+            onMouseDown={(e) => { if (e.target === e.currentTarget) setQuizState(null) }}
+          >
+            <div
+              className="relative flex flex-col gap-5 rounded-2xl p-7 shadow-2xl"
+              style={{
+                width: "90%", maxWidth: 520,
+                background: "rgba(255,255,255,0.97)",
+                border: "1px solid rgba(0,0,0,0.08)",
+                animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)",
+              }}
+            >
+              {quizState.loading ? (
+                <div className="flex items-center justify-center h-48">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-8 h-8 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                    <span className="text-xs text-gray-500">Generating quiz...</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-semibold text-gray-900">Quiz</span>
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {quizState.current + 1} / {quizState.questions.length}
+                      </span>
+                    </div>
+                    <button onClick={() => setQuizState(null)} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+
+                  <div className="rounded-xl bg-gray-50 border border-gray-200 p-5">
+                    <p className="text-[15px] font-medium text-gray-800 leading-relaxed">
+                      {quizState.questions[quizState.current]?.q}
+                    </p>
+                  </div>
+
+                  {quizState.revealed ? (
+                    <div className="rounded-xl border border-green-200 bg-green-50 p-4" style={{ animation: "slide-up-fade 0.15s ease" }}>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1.5">Answer</div>
+                      <p className="text-sm text-green-900 leading-relaxed">{quizState.questions[quizState.current]?.a}</p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setQuizState(prev => prev ? { ...prev, revealed: true } : null)}
+                      className="w-full rounded-xl py-3 text-sm font-semibold transition-all"
+                      style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                    >
+                      Reveal Answer
+                    </button>
+                  )}
+
+                  {quizState.revealed && (
+                    <div className="flex gap-2">
+                      {quizState.current < quizState.questions.length - 1 ? (
+                        <button
+                          onClick={() => setQuizState(prev => prev ? { ...prev, current: prev.current + 1, revealed: false } : null)}
+                          className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
+                          style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                        >
+                          Next Question
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setQuizState(null)}
+                          className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
+                          style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-center gap-1.5">
+                    {quizState.questions.map((_, i) => (
+                      <div key={i} className="rounded-full transition-all" style={{
+                        width: i === quizState.current ? 16 : 6, height: 6,
+                        background: i === quizState.current ? "#e8701a" : i < quizState.current ? "#c4956a" : "#e5e7eb",
+                      }} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {showAiCommandBar && (
           <AiCommandBar
             onClose={() => setShowAiCommandBar(false)}
@@ -2872,14 +3090,23 @@ export default function NoteApp() {
               setShowAiCommandBar(false)
               setAiResult({ title: "AI Generation", result: "", loading: true })
               try {
-                const res = await fetch("/api/ai", { method: "POST", body: JSON.stringify({ action: "generate", text: prompt }) })
-                if (!res.ok) throw new Error("API error")
+                const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) })
+                if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Request failed") }
                 const data = await res.json()
                 setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
               } catch {
                 setAiResult(null); openAlert("AI Error", "Could not process your request.")
               }
             }}
+          />
+        )}
+
+        {showNotebookChat && activeNote && (
+          <NotebookChat
+            note={activeNote}
+            theme={theme}
+            accent={accent}
+            onClose={() => setShowNotebookChat(false)}
           />
         )}
 
@@ -2923,6 +3150,9 @@ export default function NoteApp() {
         setGems={setGems}
         setInventory={setInventory}
         setGrove={setGrove}
+        unlockedCosmetics={unlockedCosmetics}
+        setUnlockedCosmetics={setUnlockedCosmetics}
+        onUpdateConfig={updateSettings}
       />
 
       <VitalitySystem

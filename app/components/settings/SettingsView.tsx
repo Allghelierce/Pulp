@@ -81,6 +81,7 @@ export interface PulpConfig {
   bgEffect: boolean; smearEffect: boolean; handwrittenEffect: boolean
   language: string; defaultSort: string; wordCountVisible: boolean
   focusMode: boolean; baseFontSize: "small" | "medium" | "large"
+  pageLayout: "paginated" | "scroll"
   shortcuts: Record<string, string>
   blockedSites: string[]; blockedApps: string[]
   devMode: boolean; isDevUnlocked: boolean
@@ -99,17 +100,25 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
-    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, 
+    lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked 
+    pageLayout, shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
   } = config
+  const isDark = theme === "dark"
   const isPremium = user?.email?.includes("pro") || false
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
   const [deleteUsername, setDeleteUsername] = useState("")
   const [deletePassword, setDeletePassword] = useState("")
-  const isDark = theme === "dark"
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handleEsc)
+    return () => window.removeEventListener("keydown", handleEsc)
+  }, [onClose])
 
   const groups = Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
     name: g, tabs: SETTINGS_TABS.filter(t => t.group === g),
@@ -439,6 +448,22 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   isDark={isDark}
                   description="Automatically capitalize sentences"
                   control={<SettingToggle checked={autoCapitalize} onChange={v => onUpdateConfig({ autoCapitalize: v })} isDark={isDark} />}
+                />
+              </SettingSection>
+
+              <SettingSection title="Layout" isDark={isDark}>
+                <SettingRow
+                  title="Page layout"
+                  isDark={isDark}
+                  description="Paginated shows one page at a time. Scroll mode stacks all pages vertically like a document."
+                  control={
+                    <SegmentedControl
+                      options={[["paginated", "Paginated"], ["scroll", "Scroll"]]}
+                      value={pageLayout || "paginated"}
+                      onChange={v => onUpdateConfig({ pageLayout: v as "paginated" | "scroll" })}
+                      isDark={isDark}
+                    />
+                  }
                 />
               </SettingSection>
 

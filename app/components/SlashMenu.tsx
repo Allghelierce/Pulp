@@ -40,6 +40,7 @@ interface SlashMenuProps {
   insertBacklink: () => void
   onInsertImage?: () => void
   mode: "@" | "/"
+  theme?: "light" | "dark"
   box?: TextBox
   onUpdateBox?: (id: string, updates: Partial<TextBox>) => void
 }
@@ -111,12 +112,13 @@ function CustomDateWrapper({ onInsert, onClose, mode, accent }: { onInsert: (str
 // ─── Submenu flyout ────────────────────────────────────────────────────────────
 
 function Submenu({
-  options, onSelect, onClose, mode, parentRef,
+  options, onSelect, onClose, mode, parentRef, theme,
 }: {
   options: SubOption[]
   onSelect: (action: () => void) => void
   onClose: () => void
   mode: "@" | "/"
+  theme?: "light" | "dark"
   parentRef: React.RefObject<HTMLDivElement | null>
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -164,7 +166,7 @@ function Submenu({
     }
   }, [onClose, parentRef])
 
-  const isLight = mode === "/"
+  const isLight = theme ? theme === "light" : mode === "/"
 
   if (typeof document === "undefined") return null
 
@@ -238,7 +240,7 @@ function Submenu({
 
 // ─── Custom Flyout Wrapper ──────────────────────────────────────────────────
 
-function CustomMenuFlyout({ children, parentRef, mode, onClose }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/", onClose?: () => void }) {
+function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/", theme?: "light" | "dark", onClose?: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const [coords, setCoords] = useState({ top: 0, left: 0 })
 
@@ -261,7 +263,7 @@ function CustomMenuFlyout({ children, parentRef, mode, onClose }: { children: Re
     return () => document.removeEventListener("mousedown", handleMouseDown)
   }, [parentRef, children, onClose])
 
-  const isLight = mode === "/"
+  const isLight = theme ? theme === "light" : mode === "/"
 
   if (typeof document === "undefined") return null
 
@@ -564,7 +566,7 @@ function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: s
 
 export const SlashMenu = memo(function SlashMenu({
   x, y, filter, accent, isSelectionMode, onSelect, onClose, execCmd, insertHTML,
-  toggleScript: _toggleScript, insertBacklink, onInsertImage, mode, box, onUpdateBox
+  toggleScript: _toggleScript, insertBacklink, onInsertImage, mode, theme, box, onUpdateBox
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const [prevFilter, setPrevFilter] = useState(filter)
@@ -891,20 +893,23 @@ export const SlashMenu = memo(function SlashMenu({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (openSubmenuId) { if (e.key === "Escape") { e.stopPropagation(); setOpenSubmenuId(null) }; return }
-      if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min((i ?? -1) + 1, filtered.length - 1)) }
-      else if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max((i ?? -1) - 1, 0)) }
-      else if (e.key === "Enter") {
-        e.preventDefault(); e.stopPropagation(); 
-        if (activeIdx !== null && filtered[activeIdx]) {
-          const item = filtered[activeIdx];
-          if (item.subOptions || item.customContent) {
-            setOpenSubmenuId(item.id)
-          } else {
-            onSelect(item.action)
+      if (filtered.length > 0) {
+        if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min((i ?? -1) + 1, filtered.length - 1)); return }
+        if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max((i ?? -1) - 1, 0)); return }
+        if (e.key === "Enter") {
+          e.preventDefault(); e.stopPropagation()
+          if (activeIdx !== null && filtered[activeIdx]) {
+            const item = filtered[activeIdx]
+            if (item.subOptions || item.customContent) {
+              setOpenSubmenuId(item.id)
+            } else {
+              onSelect(item.action)
+            }
           }
+          return
         }
       }
-      else if (e.key === "Escape" || e.key === "Tab") { if (filtered.length > 0) e.stopPropagation(); onClose() }
+      if (e.key === "Escape" || e.key === "Tab") { e.stopPropagation(); onClose() }
     }
     document.addEventListener("keydown", handler, true)
     return () => document.removeEventListener("keydown", handler, true)
@@ -938,7 +943,7 @@ export const SlashMenu = memo(function SlashMenu({
   // Ensure menu doesn't go off right side
   const adjustedX = x + 220 > window.innerWidth - 20 ? window.innerWidth - 240 : Math.max(8, x)
 
-  const isLight = mode === "/"
+  const isLight = theme ? theme === "light" : mode === "/"
 
   return (
     <div
@@ -973,7 +978,7 @@ export const SlashMenu = memo(function SlashMenu({
         }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        .slash-item-active { background: ${isLight ? "rgba(184,94,34,0.08)" : "rgba(184,94,34,0.12)"} !important; }
+        .slash-item-active { background: ${isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"} !important; }
       ` }} />
       <div
         className="hide-scroll"
@@ -1096,12 +1101,13 @@ export const SlashMenu = memo(function SlashMenu({
                           onSelect={onSelect}
                           onClose={() => setOpenSubmenuId(null)}
                           mode={mode}
+                          theme={theme}
                           parentRef={submenuRowRef}
                         />
                       )}
-                      
+
                       {submenuOpen && item.customContent && (
-                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode} onClose={() => setOpenSubmenuId(null)}>
+                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode} theme={theme} onClose={() => setOpenSubmenuId(null)}>
                           {item.customContent}
                         </CustomMenuFlyout>
                       )}

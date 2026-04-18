@@ -24,6 +24,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Text exceeds maximum length of ${MAX_TEXT_LENGTH}` }, { status: 400 })
     }
 
+    if (!process.env.HUGGINGFACE_API_TOKEN) {
+      return NextResponse.json({ error: "Rewrite service not configured" }, { status: 503 })
+    }
+
     const response = await fetch("https://api-inference.huggingface.co/models/google/gemma-2-2b-it", {
       headers: {
         Authorization: `Bearer ${process.env.HUGGINGFACE_API_TOKEN}`,
