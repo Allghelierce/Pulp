@@ -58,10 +58,10 @@ function OIcon({ children, isActive, mode, accent }: { children: React.ReactNode
       width: 24, height: 24, borderRadius: 6, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: isActive
-        ? (mode === "/" ? `rgba(${rgb},0.12)` : `rgba(${rgb},0.18)`)
+        ? `rgba(${rgb},0.15)`
         : "transparent",
-      color: accent,
-      transition: "background 0.1s ease",
+      color: isActive ? "rgba(150,150,150,1)" : "rgba(150,150,150,0.6)",
+      transition: "all 0.1s ease",
     }}>
       {children}
     </div>
@@ -317,23 +317,54 @@ function makeColumns(num: number): string {
   return `<div contenteditable="false" style="display:flex;gap:4px;margin:12px 0">${cols}</div><br/>`
 }
 
-function makeTOC(mode: "@" | "/"): string {
+function makeTOC(mode: "@" | "/", accent: string): string {
   const isLight = mode === "/"
   const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1, [contenteditable]:not([data-box-style]) h2, [contenteditable]:not([data-box-style]) h3"))
-  const bgColor = isLight ? "#fafafa" : "rgba(255,255,255,0.05)"
-  const textColor = isLight ? "#374151" : "#a1a1aa"
-  const titleColor = isLight ? "#5a4a3a" : "#e4e4e7"
-  const noneColor = isLight ? "#999" : "#6b7280"
-  const borderColor = isLight ? "#e4e4e7" : "rgba(255,255,255,0.1)"
 
-  if (headers.length === 0) return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div><div style="color:${noneColor};font-size:13px;font-style:italic">none</div></div><br/>`
-  const items = headers.map(h => {
+  const bgColor = isLight ? "rgba(250,248,244,0.6)" : "rgba(255,255,255,0.03)"
+  const textColor = isLight ? "#1a1a1a" : "#a1a1aa"
+  const titleColor = isLight ? "#111111" : "#d4d4d8"
+  const mutedColor = isLight ? "#9a8a7a" : "#52525b"
+  const borderColor = isLight ? "#e8e0d4" : "rgba(255,255,255,0.08)"
+  const ruleColor = isLight ? "#e8e0d4" : "rgba(255,255,255,0.06)"
+  const dotColor = isLight ? accent : accent
+  const hoverBg = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.03)"
+  const numberColor = isLight ? "#b8a898" : "#52525b"
+
+  const wrapperStyle = [
+    `contenteditable="false"`,
+    `style="border-left:3px solid ${accent};border-radius:2px 8px 8px 2px;padding:20px 24px;margin:16px 0;background:${bgColor};filter:url(#handwritten-jitter-subtle)"`,
+  ].join(" ")
+
+  const titleStyle = `style="font-family:'Caveat',cursive;font-size:22px;font-weight:700;color:${titleColor};margin-bottom:4px;letter-spacing:0.3px"`
+  const subtitleStyle = `style="font-size:11px;color:${mutedColor};margin-bottom:14px;font-family:inherit;letter-spacing:0.5px;text-transform:uppercase"`
+  const ruleStyle = `style="height:1px;background:${ruleColor};margin:0 0 12px 0"`
+
+  if (headers.length === 0) {
+    return `<div ${wrapperStyle}><div ${titleStyle}>Table of Contents</div><div ${subtitleStyle}>${headers.length} sections</div><div ${ruleStyle}></div><div style="color:${mutedColor};font-size:13px;font-style:italic;font-family:'Caveat',cursive;padding:8px 0">No headings found</div></div><br/>`
+  }
+
+  let h1Count = 0
+  const items = headers.map((h, i) => {
     const tag = h.tagName.toLowerCase()
-    const indent = tag === "h2" ? "padding-left:16px;" : tag === "h3" ? "padding-left:32px;" : ""
-    const size = tag === "h1" ? "16px" : tag === "h2" ? "14px" : "13px"
-    return `<div style="padding:6px 0;${indent}font-family:'Caveat',cursive;font-size:${size};color:${textColor}">${(h.textContent || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+    const text = (h.textContent || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    if (tag === "h1") h1Count++
+
+    if (tag === "h1") {
+      const num = String(h1Count).padStart(2, "0")
+      return `<div style="display:flex;align-items:baseline;gap:10px;padding:7px 4px;margin:2px 0;border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="font-family:'Caveat',cursive;font-size:13px;color:${numberColor};min-width:20px;font-weight:600">${num}</span><span style="font-family:'Caveat',cursive;font-size:17px;font-weight:600;color:${textColor}">${text}</span></div>`
+    }
+
+    const isH2 = tag === "h2"
+    const indent = isH2 ? "36px" : "52px"
+    const size = isH2 ? "14.5px" : "13px"
+    const weight = isH2 ? "500" : "400"
+    const itemColor = isH2 ? textColor : mutedColor
+
+    return `<div style="display:flex;align-items:baseline;gap:8px;padding:4px 4px 4px ${indent};border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="width:5px;height:5px;min-width:5px;border-radius:50%;background:${isH2 ? dotColor : mutedColor};opacity:${isH2 ? '0.5' : '0.3'};margin-top:1px"></span><span style="font-family:'Caveat',cursive;font-size:${size};font-weight:${weight};color:${itemColor}">${text}</span></div>`
   }).join("")
-  return `<div contenteditable="false" style="border:1px solid ${borderColor};border-radius:6px;padding:16px;margin:8px 0;background:${bgColor}"><div style="font-family:'Caveat',cursive;font-size:20px;font-weight:700;color:${titleColor};margin-bottom:12px">Table of Contents</div>${items}</div><br/>`
+
+  return `<div ${wrapperStyle}><div ${titleStyle}>Table of Contents</div><div ${subtitleStyle}>${headers.length} section${headers.length !== 1 ? "s" : ""}</div><div ${ruleStyle}></div>${items}</div><br/>`
 }
 
 const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:'Courier New',monospace;background:#1e1e2e"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#16161e;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:10px;color:#6c7086;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#cdd6f4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#cdd6f4;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
@@ -763,7 +794,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "toc", label: "Table of Contents", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6" /><line x1="6" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" /></svg>,
-      action: () => onSelect(() => insertHTML(makeTOC(mode)))
+      action: () => onSelect(() => insertHTML(makeTOC(mode, accent)))
     },
     {
       id: "code", label: "Code Block", group: "Blocks",
@@ -918,10 +949,13 @@ export const SlashMenu = memo(function SlashMenu({
   useEffect(() => {
     const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
     const resizer = () => onClose()
-    document.addEventListener("mousedown", handler)
+    const focusHandler = (e: FocusEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
+    document.addEventListener("mousedown", handler, true)
+    document.addEventListener("focusin", focusHandler)
     window.addEventListener("resize", resizer)
     return () => {
-      document.removeEventListener("mousedown", handler)
+      document.removeEventListener("mousedown", handler, true)
+      document.removeEventListener("focusin", focusHandler)
       window.removeEventListener("resize", resizer)
     }
   }, [onClose])
@@ -1049,8 +1083,7 @@ export const SlashMenu = memo(function SlashMenu({
                         background: isActive
                           ? (isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.06)")
                           : "transparent",
-                        outline: isActive ? `1.5px solid ${accent}` : "none",
-                        outlineOffset: "-1.5px",
+                        outline: "none",
                         transition: "all 0.1s ease",
                         userSelect: "none",
                         borderRadius: 4,

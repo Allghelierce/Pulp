@@ -64,7 +64,7 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
   // Called on every onInput — schedules a debounced state sync
   const syncContent = useCallback(() => {
     clearTimeout(syncTimer.current)
-    syncTimer.current = setTimeout(commitToState, 500)
+    syncTimer.current = setTimeout(commitToState, 150)
   }, [commitToState])
 
   // Call this before page/tab navigation to immediately commit pending edits
@@ -113,9 +113,9 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     const editor = editorRef.current
     if (!editor || !savedRange.current) return
     const headingStyles: Record<string, { fontSize: string; fontWeight: string; margin: string }> = {
-      h1: { fontSize: "3rem", fontWeight: "800", margin: "1.25rem 0" },
-      h2: { fontSize: "2.25rem", fontWeight: "700", margin: "1rem 0" },
-      h3: { fontSize: "1.75rem", fontWeight: "700", margin: "0.75rem 0" },
+      h1: { fontSize: "2.75rem", fontWeight: "800", margin: "1.25rem 0" },
+      h2: { fontSize: "1.75rem", fontWeight: "700", margin: "1rem 0" },
+      h3: { fontSize: "1.35rem", fontWeight: "700", margin: "0.75rem 0" },
     }
     restoreSelection()
     document.execCommand("formatBlock", false, tag === "default" ? "p" : tag)

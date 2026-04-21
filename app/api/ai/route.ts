@@ -74,9 +74,13 @@ CRITICAL RULES:
   })
 
   if (!response.ok) {
-    // Don't leak error details
-    console.error("Groq error:", response.status)
-    throw new Error("Failed to process request")
+    let detail = ""
+    try { const body = await response.json(); detail = body?.error?.message || JSON.stringify(body) } catch {}
+    console.error("Groq error:", response.status, detail)
+    if (response.status === 401) throw new Error("AI API key is invalid or expired")
+    if (response.status === 429) throw new Error("AI rate limit reached — try again in a moment")
+    if (response.status === 413 || detail.includes("too long")) throw new Error("Input is too long for the AI model")
+    throw new Error(`AI service error (${response.status})`)
   }
 
   const data = await response.json()
@@ -114,8 +118,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ result })
   } catch (error) {
     console.error("AI API error:", error)
+    const message = error instanceof Error ? error.message : "Failed to process request"
     return NextResponse.json(
-      { error: "Failed to process request" },
+      { error: message },
       { status: 500 }
     )
   }

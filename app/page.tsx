@@ -87,7 +87,7 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-fade {
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-fade {
                                0% { opacity: 0.6; transform: scale(1) translateY(0); filter: blur(0); }
                                40% { opacity: 0.3; transform: scale(0.85) translateY(-3px); filter: blur(0.5px); }
                                100% { opacity: 0; transform: scale(0.4) translateY(-8px); filter: blur(2.5px); }
@@ -366,7 +366,7 @@ const BoxItem = memo(function BoxItem({
   )
 })
 
-const BOX_HEADING_SIZES: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 20, margin: 26 }
+const BOX_HEADING_SIZES: Record<string, number> = { h1: 42, h2: 28, h3: 22, default: 20, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
   { value: "'Caveat', cursive", label: "Handwritten" },
@@ -544,20 +544,14 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 
           {open === "style" && (
             <div style={dropdownBase}>
-              {BOX_STYLES.map(s => {
-                const sizeMap: Record<string, number> = { h1: 28, h2: 22, h3: 18, default: 18, margin: 26 }
-                const weightMap: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
-                const css = s.value === "margin"
-                  ? `font-family: 'Shadows Into Light', cursive; font-size: 26px; font-style: italic`
-                  : `font-size: ${sizeMap[s.value]}px; font-weight: ${weightMap[s.value]}`
-                return (
+              {BOX_STYLES.map(s => (
                   <button key={s.value} style={optionBtn(styleKey === s.value)} onMouseDown={e => {
                     e.preventDefault()
-                    if (!applyInlineCSS(css)) onUpdateBox(box.id, { boxHeadingStyle: s.value as any })
+                    onUpdateBox(box.id, { boxHeadingStyle: s.value as any, boxFontSize: undefined })
                     setOpen(null)
                   }}>{s.label}</button>
                 )
-              })}
+              )}
             </div>
           )}
           {open === "font" && (
@@ -807,7 +801,7 @@ const BoxTextarea = memo(function BoxTextarea({
       onInput={e => {
         onInput(e)
         clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(syncState, 500)
+        timerRef.current = setTimeout(syncState, 150)
       }}
       onMouseDown={e => e.stopPropagation()}
       onFocus={() => { onFocus() }}
@@ -843,6 +837,11 @@ export default function NoteApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
+
+  const notesRef = useRef(notes)
+  const activeTabIdRef = useRef(activeTabId)
+  useEffect(() => { notesRef.current = notes }, [notes])
+  useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
@@ -1724,6 +1723,20 @@ export default function NoteApp() {
         e.preventDefault()
         setTimerOpen(!timerOpen)
       }
+
+      // Option+ArrowLeft / Option+ArrowRight - Switch pages
+      if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault()
+        editor.flushSync()
+        if (e.key === 'ArrowLeft') {
+          setCurrentPageIdx(p => Math.max(0, p - 1))
+        } else {
+          setCurrentPageIdx(p => {
+            const max = (notesRef.current.find(n => n.id === activeTabIdRef.current)?.pages.length ?? 1) - 1
+            return Math.min(max, p + 1)
+          })
+        }
+      }
     }
     window.addEventListener("keydown", handleGlobalKey)
     return () => window.removeEventListener("keydown", handleGlobalKey)
@@ -2409,7 +2422,7 @@ export default function NoteApp() {
             )
           })()}
 
-          {notes.filter(n => !n.archived).length > 0 && (
+          {!showSettings && notes.filter(n => !n.archived).length > 0 && (
             <div className="relative">
               <DocumentToolbar
                 activeTool={activeTool}
@@ -2586,7 +2599,7 @@ export default function NoteApp() {
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1300px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                         onMouseDown={e => {
                           if (activeTool === 'sticky' || activeTool === 'hr') {
                             // Handled by onClick below to ensure clean single-click placement
@@ -2875,7 +2888,7 @@ export default function NoteApp() {
 
           </div>
 
-          {notes.filter(n => !n.archived).length > 0 && !gridView && (
+          {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <>
               <FloatingToolbar
                 accent={accent} activeTool={activeTool} onToolChange={setActiveTool}

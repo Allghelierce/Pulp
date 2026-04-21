@@ -1,6 +1,6 @@
 # Pulp
 
-A note-taking app with rich formatting, AI tools, flashcards, and a built-in productivity system — available on web and desktop.
+pulp — a hyperproductive, gamified notes app where productivity earns you currency. built with an AI-powered all-in-one editor to make writing feel like a game, not a chore. capture ideas at lightspeed and watch your workspace grow into a flourishing digital garden. launching soon on next.js, typescript, supabase, & electron.
 
 ## Features
 
