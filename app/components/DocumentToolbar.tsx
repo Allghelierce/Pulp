@@ -109,12 +109,14 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat
 }: DocumentToolbarProps) {
 
-  const btnBase = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnBaseActive = "text-[12px] font-medium border rounded-[5px] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }
 
-  const activeStyle = (active: boolean): React.CSSProperties => active
-    ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" }
-    : {}
+  const NEON_ORANGE = "#f97316"
+  const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 8px rgba(249,115,22,0.5), 0 0 2px rgba(249,115,22,0.3)`, borderColor: "rgba(249,115,22,0.3)", backgroundColor: "rgba(249,115,22,0.04)" }
+  const btn = (active: boolean) => active ? btnBaseActive : btnBaseInactive
+  const activeStyle = (active: boolean): React.CSSProperties => active ? neonStyle : {}
 
   const leftToolsRef = useRef<HTMLDivElement>(null)
   const alignRef = useRef<HTMLDivElement>(null)
@@ -177,7 +179,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <button
           onMouseDown={e => { e.preventDefault(); setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
           title="Page grid"
-          className={`${btnBase} flex items-center gap-1.5`}
+          className={`${btn(gridView)} flex items-center gap-1.5`}
           style={{ ...activeStyle(gridView), ...btnFont }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -194,8 +196,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onMouseDown={e => { e.preventDefault(); setAlignOpen(!alignOpen) }}
             title="Align options"
-            className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 active:scale-[0.97]"
-            style={{ ...(alignOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}), ...btnFont }}
+            className={`${btn(alignOpen)} flex items-center gap-1.5`}
+            style={{ ...(alignOpen ? neonStyle : {}), ...btnFont }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6" strokeWidth="2" opacity="0.8" />
@@ -244,22 +246,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               >
                 Distribute Top Edges
               </button>
-              <div className={`mx-1.5 my-1 border-t ${theme === "dark" ? "border-zinc-700" : "border-zinc-100"}`} />
-              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Text Editor Layout</div>
-              <button
-                onMouseDown={e => { e.preventDefault(); insertColumns(2); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                Insert 2 Columns
-              </button>
-              <button
-                onMouseDown={e => { e.preventDefault(); insertColumns(3); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                Insert 3 Columns
-              </button>
             </div>
           )}
         </div>
@@ -267,7 +253,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {isVault && (
           <button
             onClick={onLock}
-            className={`${btnBase} flex items-center gap-1.5`}
+            className={`${btn(false)} flex items-center gap-1.5`}
             title={isUnlocked ? "Lock Vault" : "Unlock Vault"}
             style={btnFont}
           >
@@ -292,9 +278,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onMouseDown={e => { e.preventDefault(); if (isTextActive) setAiOpen(!aiOpen) }}
             title={isTextActive ? "Quick Prompts" : "Click on a text box first"}
-            className={`${btnBase} flex items-center gap-1.5`}
+            className={`${btn(aiOpen)} flex items-center gap-1.5`}
             style={{
-              ...(aiOpen ? { backgroundColor: "#f4f4f5", borderColor: "#d4d4d8", color: "#18181b" } : {}),
+              ...(aiOpen ? neonStyle : {}),
               ...btnFont,
               ...(!isTextActive ? { opacity: 0.4, cursor: "default" } : {}),
             }}
@@ -343,7 +329,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <button
           onClick={onOpenChat}
           title="Chat with your notebook"
-          className={`${btnBase} flex items-center gap-1.5`}
+          className={`${btn(false)} flex items-center gap-1.5`}
           style={btnFont}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -353,7 +339,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {/* Draw toolbar toggle */}
         <button
           onClick={onToggleDrawToolbar}
-          className={`${btnBase} flex items-center gap-1.5`}
+          className={`${btn(showDrawToolbar)} flex items-center gap-1.5`}
           style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
         >
           <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
@@ -364,8 +350,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         <div className="flex shrink-0 border border-zinc-200 rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <button
             onClick={() => setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky')}
-            className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer whitespace-nowrap`}
-            style={{ ...(activeTool === 'sticky' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}), ...btnFont }}
+            className={`flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 ${activeTool === 'sticky' ? '' : 'text-zinc-700 hover:bg-zinc-100'} transition-colors cursor-pointer whitespace-nowrap`}
+            style={{ ...(activeTool === 'sticky' ? neonStyle : {}), ...btnFont }}
             title="Add Sticky Note"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'sticky' ? stickyColor : "currentColor"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -394,8 +380,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {/* HR Tool */}
         <button
           onClick={() => setActiveTool(activeTool === 'hr' ? 'select' : 'hr')}
-          className={`${btnBase} flex items-center gap-1.5`}
-          style={{ ...(activeTool === 'hr' ? { backgroundColor: '#f4f4f5', color: '#18181b' } : {}), ...btnFont }}
+          className={`${btn(activeTool === 'hr')} flex items-center gap-1.5`}
+          style={{ ...(activeTool === 'hr' ? neonStyle : {}), ...btnFont }}
           title="Add Horizontal Line"
         >
           <svg width="13" height="9" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'hr' ? 'currentColor' : '#a1a1aa'} strokeWidth="3" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12" /></svg>
@@ -405,7 +391,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {/* Compact All */}
         <button
           onClick={onCompactAll}
-          className={`${btnBase} flex items-center gap-1.5`}
+          className={`${btn(allCompacted)} flex items-center gap-1.5`}
           style={{ ...activeStyle(allCompacted), ...btnFont }}
           title={allCompacted ? "Expand All" : "Collapse All"}
         >

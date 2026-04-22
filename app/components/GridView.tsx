@@ -9,7 +9,7 @@ interface GridViewProps {
   activeTabId: string | null
   carouselIdx: number
   lineSpacing: "compact" | "normal" | "relaxed"
-  paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"
+  paperStyle: "lined" | "dotgrid" | "plain" | "steno"
   theme: "light" | "dark"
   editorFont: string
   accent: string

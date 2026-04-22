@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocked — Pulp Focus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'EB Garamond', Georgia, serif;
+      background: #f5f3f1;
+      color: #1a1a1a;
+      text-align: center;
+      overflow: hidden;
+    }
+    .container {
+      max-width: 400px;
+      padding: 48px 32px;
+    }
+    .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .site {
+      font-size: 14px;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 10px 28px;
+      border-radius: 10px;
+      background: #1a1a1a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+    .back:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m4.93 4.93 14.14 14.14"/>
+      </svg>
+    </div>
+    <h1>Stay focused.</h1>
+    <div class="site" id="site"></div>
+    <p>This site is blocked during your focus session. Get back to writing.</p>
+    <button class="back" onclick="history.back()">Go Back</button>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search)
+    const site = params.get("site")
+    if (site) document.getElementById("site").textContent = site
+  </script>
+</body>
+</html>

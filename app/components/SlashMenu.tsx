@@ -321,50 +321,48 @@ function makeTOC(mode: "@" | "/", accent: string): string {
   const isLight = mode === "/"
   const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1, [contenteditable]:not([data-box-style]) h2, [contenteditable]:not([data-box-style]) h3"))
 
-  const bgColor = isLight ? "rgba(250,248,244,0.6)" : "rgba(255,255,255,0.03)"
+  const bgColor = isLight ? "rgba(250,248,244,0.5)" : "rgba(255,255,255,0.03)"
   const textColor = isLight ? "#1a1a1a" : "#a1a1aa"
-  const titleColor = isLight ? "#111111" : "#d4d4d8"
+  const titleColor = isLight ? "#1a1a1a" : "#d4d4d8"
   const mutedColor = isLight ? "#9a8a7a" : "#52525b"
-  const borderColor = isLight ? "#e8e0d4" : "rgba(255,255,255,0.08)"
   const ruleColor = isLight ? "#e8e0d4" : "rgba(255,255,255,0.06)"
-  const dotColor = isLight ? accent : accent
   const hoverBg = isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.03)"
   const numberColor = isLight ? "#b8a898" : "#52525b"
+  const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
 
-  const wrapperStyle = [
-    `contenteditable="false"`,
-    `style="border-left:3px solid ${accent};border-radius:2px 8px 8px 2px;padding:20px 24px;margin:16px 0;background:${bgColor};filter:url(#handwritten-jitter-subtle)"`,
-  ].join(" ")
+  const wrapperStyle = `contenteditable="false" style="border-left:3px solid ${accentSolid};border-radius:2px 8px 8px 2px;padding:20px 24px;margin:16px 0;background:${bgColor};filter:url(#handwritten-jitter-subtle)"`
 
-  const titleStyle = `style="font-family:'Caveat',cursive;font-size:22px;font-weight:700;color:${titleColor};margin-bottom:4px;letter-spacing:0.3px"`
-  const subtitleStyle = `style="font-size:11px;color:${mutedColor};margin-bottom:14px;font-family:inherit;letter-spacing:0.5px;text-transform:uppercase"`
+  const titleStyle = `style="font-family:inherit;font-size:1.35rem;font-weight:700;color:${titleColor};margin-bottom:4px;letter-spacing:0.3px"`
+  const subtitleStyle = `style="font-size:0.65rem;color:${mutedColor};margin-bottom:14px;font-family:inherit;letter-spacing:0.5px;text-transform:uppercase"`
   const ruleStyle = `style="height:1px;background:${ruleColor};margin:0 0 12px 0"`
 
   if (headers.length === 0) {
-    return `<div ${wrapperStyle}><div ${titleStyle}>Table of Contents</div><div ${subtitleStyle}>${headers.length} sections</div><div ${ruleStyle}></div><div style="color:${mutedColor};font-size:13px;font-style:italic;font-family:'Caveat',cursive;padding:8px 0">No headings found</div></div><br/>`
+    return `<div ${wrapperStyle}><div ${titleStyle}>Contents</div><div ${subtitleStyle}>0 sections</div><div ${ruleStyle}></div><div style="color:${mutedColor};font-size:inherit;font-style:italic;font-family:inherit;padding:8px 0">No headings found</div></div><br/>`
   }
 
   let h1Count = 0
-  const items = headers.map((h, i) => {
+  const items = headers.map(h => {
     const tag = h.tagName.toLowerCase()
     const text = (h.textContent || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     if (tag === "h1") h1Count++
 
     if (tag === "h1") {
       const num = String(h1Count).padStart(2, "0")
-      return `<div style="display:flex;align-items:baseline;gap:10px;padding:7px 4px;margin:2px 0;border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="font-family:'Caveat',cursive;font-size:13px;color:${numberColor};min-width:20px;font-weight:600">${num}</span><span style="font-family:'Caveat',cursive;font-size:17px;font-weight:600;color:${textColor}">${text}</span></div>`
+      return `<div style="display:flex;align-items:baseline;gap:10px;padding:7px 4px;margin:2px 0;border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="font-family:inherit;font-size:0.75rem;color:${numberColor};min-width:20px;font-weight:600">${num}</span><span style="font-family:inherit;font-size:1.05rem;font-weight:600;color:${textColor}">${text}</span></div>`
     }
 
     const isH2 = tag === "h2"
     const indent = isH2 ? "36px" : "52px"
-    const size = isH2 ? "14.5px" : "13px"
+    const size = isH2 ? "0.9rem" : "0.8rem"
     const weight = isH2 ? "500" : "400"
     const itemColor = isH2 ? textColor : mutedColor
+    const dotBg = isH2 ? accentSolid : mutedColor
+    const dotOpacity = isH2 ? "0.5" : "0.3"
 
-    return `<div style="display:flex;align-items:baseline;gap:8px;padding:4px 4px 4px ${indent};border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="width:5px;height:5px;min-width:5px;border-radius:50%;background:${isH2 ? dotColor : mutedColor};opacity:${isH2 ? '0.5' : '0.3'};margin-top:1px"></span><span style="font-family:'Caveat',cursive;font-size:${size};font-weight:${weight};color:${itemColor}">${text}</span></div>`
+    return `<div style="display:flex;align-items:baseline;gap:8px;padding:4px 4px 4px ${indent};border-radius:4px;cursor:default" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'"><span style="width:5px;height:5px;min-width:5px;border-radius:50%;background:${dotBg};opacity:${dotOpacity};margin-top:1px"></span><span style="font-family:inherit;font-size:${size};font-weight:${weight};color:${itemColor}">${text}</span></div>`
   }).join("")
 
-  return `<div ${wrapperStyle}><div ${titleStyle}>Table of Contents</div><div ${subtitleStyle}>${headers.length} section${headers.length !== 1 ? "s" : ""}</div><div ${ruleStyle}></div>${items}</div><br/>`
+  return `<div ${wrapperStyle}><div ${titleStyle}>Contents</div><div ${subtitleStyle}>${headers.length} section${headers.length !== 1 ? "s" : ""}</div><div ${ruleStyle}></div>${items}</div><br/>`
 }
 
 const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:'Courier New',monospace;background:#1e1e2e"><div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#16161e;border-bottom:1px solid rgba(255,255,255,0.08)"><span style="font-size:10px;color:#6c7086;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#cdd6f4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#cdd6f4;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
@@ -777,19 +775,6 @@ export const SlashMenu = memo(function SlashMenu({
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9" /></svg>,
       action: () => { },
       customContent: <EquationInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} accent={accent} />
-    },
-    {
-      id: "columns", label: "Columns", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>,
-      action: () => onSelect(() => {
-        insertHTML(makeColumns(2))
-        if (box && onUpdateBox && (box.w || 0) < 280) onUpdateBox(box.id, { w: 280 })
-      }),
-      subOptions: [
-        { label: "2 Columns", action: () => onSelect(() => { insertHTML(makeColumns(2)); if (box && onUpdateBox && (box.w || 0) < 280) onUpdateBox(box.id, { w: 280 }) }) },
-        { label: "3 Columns", action: () => onSelect(() => { insertHTML(makeColumns(3)); if (box && onUpdateBox && (box.w || 0) < 400) onUpdateBox(box.id, { w: 400 }) }) },
-        { label: "4 Columns", action: () => onSelect(() => { insertHTML(makeColumns(4)); if (box && onUpdateBox && (box.w || 0) < 520) onUpdateBox(box.id, { w: 520 }) }) },
-      ]
     },
     {
       id: "toc", label: "Table of Contents", group: "Blocks",

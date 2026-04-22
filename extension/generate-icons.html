@@ -1,0 +1,23 @@
+<!-- Open this file in a browser, right-click each canvas, and "Save Image As" icon48.png / icon128.png -->
+<canvas id="c48" width="48" height="48"></canvas>
+<canvas id="c128" width="128" height="128"></canvas>
+<script>
+function draw(id, size) {
+  const c = document.getElementById(id).getContext('2d');
+  const r = size * 0.2;
+  const m = size * 0.1;
+  // Rounded rect background
+  c.beginPath();
+  c.roundRect(m, m, size - m*2, size - m*2, r);
+  c.fillStyle = '#1a1a1a';
+  c.fill();
+  // "P" letter
+  c.fillStyle = '#f5f3f1';
+  c.font = `bold ${size * 0.5}px Georgia, serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('P', size/2, size/2 + size*0.02);
+}
+draw('c48', 48);
+draw('c128', 128);
+</script>

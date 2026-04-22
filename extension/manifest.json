@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Pulp Focus",
+  "version": "1.0.0",
+  "description": "Block distracting websites while writing in Pulp",
+  "permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:*/*", "https://*.vercel.app/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

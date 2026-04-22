@@ -710,6 +710,7 @@ const BoxTextarea = memo(function BoxTextarea({
               if (ghostRect.width > 0 && ghostText) {
                 e.preventDefault()
                 range.deleteContents()
+                sel.collapseToStart()
                 didDelete = true
               }
             } else if (
@@ -725,7 +726,13 @@ const BoxTextarea = memo(function BoxTextarea({
               ghostText = textNode.data.charAt(range.startOffset - 1)
               if (ghostRect.width > 0 && ghostText) {
                 e.preventDefault()
-                textNode.deleteData(range.startOffset - 1, 1)
+                const newOffset = range.startOffset - 1
+                textNode.deleteData(newOffset, 1)
+                const r = document.createRange()
+                r.setStart(textNode, newOffset)
+                r.collapse(true)
+                sel.removeAllRanges()
+                sel.addRange(r)
                 didDelete = true
               }
             } else if (
@@ -741,7 +748,13 @@ const BoxTextarea = memo(function BoxTextarea({
               ghostText = textNode.data.charAt(range.startOffset)
               if (ghostRect.width > 0 && ghostText) {
                 e.preventDefault()
-                textNode.deleteData(range.startOffset, 1)
+                const pos = range.startOffset
+                textNode.deleteData(pos, 1)
+                const r = document.createRange()
+                r.setStart(textNode, pos)
+                r.collapse(true)
+                sel.removeAllRanges()
+                sel.addRange(r)
                 didDelete = true
               }
             }
@@ -982,7 +995,7 @@ export default function NoteApp() {
     editorFont: "EB Garamond",
     headingFont: "Playfair Display",
     lineSpacing: "normal",
-    paperStyle: "stenopad",
+    paperStyle: "steno",
     showBinding: false,
     reduceMotion: false,
     reduceVisuals: false,
@@ -1065,11 +1078,11 @@ export default function NoteApp() {
     const rotation = parseFloat((Math.random() * 1.6 - 0.8).toFixed(1))
     const newBox: TextBoxType = {
       id,
-      x: x - 150, y: y - 150, w: 300, h: 300,
+      x: x - 100, y: y - 100, w: 200, h: 200,
       content: '',
       boxHighlightColor: stickyColor,
       boxFontFamily: '"Bilbo", cursive',
-      boxFontSize: 24,
+      boxFontSize: 16,
       boxOutlineWidth: 0,
       boxRotation: rotation,
     }
@@ -1738,8 +1751,8 @@ export default function NoteApp() {
         }
       }
     }
-    window.addEventListener("keydown", handleGlobalKey)
-    return () => window.removeEventListener("keydown", handleGlobalKey)
+    window.addEventListener("keydown", handleGlobalKey, true)
+    return () => window.removeEventListener("keydown", handleGlobalKey, true)
   }, [])
 
   // Auth
@@ -1801,13 +1814,19 @@ export default function NoteApp() {
 
   // Save settings to localStorage (immediate) and cloud (debounced)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation }
+    const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, trashNotes, skipDeleteConfirmation])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation])
 
   useEffect(() => {
     localStorage.setItem("pulp-sidebar-width", String(sidebarWidth))
   }, [sidebarWidth])
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("pulp-focus-config", {
+      detail: { blockedSites, focusMode }
+    }))
+  }, [blockedSites, focusMode])
 
   // Save Grove & Inventory to localStorage
   useEffect(() => {
@@ -2528,7 +2547,7 @@ export default function NoteApp() {
                   <div className="mt-4 flex items-center justify-center">
                     <div
                       onClick={() => updateSettings({ theme: theme === "light" ? "dark" : "light" })}
-                      className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer"
+                      className="relative flex items-center rounded-full px-1 py-1 transition-all cursor-pointer group"
                       style={{
                         backgroundColor: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
                         border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)"}`,
@@ -2554,16 +2573,17 @@ export default function NoteApp() {
                       </div>
                       <motion.div
                         initial={false}
-                        animate={{ x: theme === "dark" ? 20 : 0 }}
+                        animate={{ x: theme === "dark" ? 36 : 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         style={{
                           width: 28,
                           height: 28,
                           borderRadius: "50%",
-                          backgroundColor: theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+                          backgroundColor: theme === "dark" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.9)",
                           position: "absolute",
-                          left: 2,
-                          zIndex: 0
+                          left: 4,
+                          zIndex: 0,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)"
                         }}
                       />
                       <div style={{ flex: 1, display: "flex", justifyContent: "center", color: theme === "dark" ? "#fbbf24" : "#888", zIndex: 10, position: "relative" }}>

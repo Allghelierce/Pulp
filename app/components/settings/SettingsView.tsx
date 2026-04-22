@@ -76,7 +76,7 @@ export interface PulpConfig {
   accentColor: string; theme: "light" | "dark"
   autoSave: boolean; spellCheck: boolean; autoCorrect: boolean; autoCapitalize: boolean
   editorFont: string; headingFont: string
-  lineSpacing: "compact" | "normal" | "relaxed"; paperStyle: "lined" | "dotgrid" | "plain" | "stenopad"
+  lineSpacing: "compact" | "normal" | "relaxed"; paperStyle: "lined" | "dotgrid" | "plain" | "steno"
   showBinding: boolean; reduceMotion: boolean; reduceVisuals: boolean; sidebarOnStart: boolean
   bgEffect: boolean; smearEffect: boolean; handwrittenEffect: boolean
   language: string; defaultSort: string; wordCountVisible: boolean
@@ -114,10 +114,14 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+      if (e.key === "Escape") {
+        e.stopPropagation()
+        e.preventDefault()
+        onClose()
+      }
     }
-    window.addEventListener("keydown", handleEsc)
-    return () => window.removeEventListener("keydown", handleEsc)
+    window.addEventListener("keydown", handleEsc, true)
+    return () => window.removeEventListener("keydown", handleEsc, true)
   }, [onClose])
 
   const groups = Array.from(new Set(SETTINGS_TABS.map(t => t.group))).map(g => ({
@@ -128,7 +132,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
     : groups
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
       <div className={`relative w-full max-w-[900px] ${isDark ? "bg-[#0a0a0c] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* Close */}
@@ -398,7 +402,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   title="Page style"
                   isDark={isDark}
                   description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["stenopad", "Steno"]]} value={paperStyle} onChange={(v: string) => onUpdateConfig({ paperStyle: v as "lined" | "dotgrid" | "plain" | "stenopad" })} isDark={isDark} />}
+                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["steno", "Steno"]]} value={paperStyle} onChange={(v: string) => onUpdateConfig({ paperStyle: v as "lined" | "dotgrid" | "plain" | "steno" })} isDark={isDark} />}
                 />
                 <SettingRow
                   title="Show spiral binding"
@@ -669,10 +673,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="space-y-1">
-                  <h3 className={`text-[15px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
-                  <p className={`text-[12px] opacity-60 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Unlimited AI, more storage, and priority support</p>
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div>
+                  <h3 className={`text-[14px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Unlimited AI, more storage, and priority support</p>
                 </div>
 
                 <PricingSection
@@ -713,19 +717,14 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   ]}
                 />
 
-                <div className={`p-6 rounded-2xl border transition-all ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-white border-zinc-200/80 shadow-sm"}`}>
-                  <div className="flex items-center gap-5">
-                    <div className="w-11 h-11 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 shadow-sm">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={`text-[13.5px] font-bold tracking-tight ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Enterprise & Education</h4>
-                      <p className={`text-[11.5px] mt-0.5 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Need Pulp for your entire team or classroom? Contact us for custom volume licensing.</p>
-                    </div>
-                    <button className={`px-5 py-2.5 rounded-xl ${isDark ? "bg-zinc-800 text-zinc-100 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"} text-[11px] font-bold uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-[0.98]`}>
-                      Contact Sales
-                    </button>
+                <div className={`px-4 py-3 rounded-lg border flex items-center gap-3 ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-zinc-50 border-zinc-200/70"}`}>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-[11.5px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
+                    <span className={`text-[11px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Custom volume licensing</span>
                   </div>
+                  <button className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-semibold transition-all shrink-0`}>
+                    Contact Sales
+                  </button>
                 </div>
               </div>
             )}
