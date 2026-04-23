@@ -126,11 +126,13 @@ function Submenu({
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (parentRef.current && ref.current) {
+    if (parentRef.current?.isConnected && ref.current) {
       const pr = parentRef.current.getBoundingClientRect()
+      if (pr.width === 0) { onClose(); return }
       const rh = ref.current.getBoundingClientRect()
       let t = pr.top
       if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
+      if (t < 8) t = 8
       let l = pr.right + 8
       if (l + rh.width > window.innerWidth - 8) l = pr.left - rh.width - 8
       if (l < 8) l = 8
@@ -144,15 +146,18 @@ function Submenu({
         clearTimeout(closeTimeoutRef.current)
         closeTimeoutRef.current = null
       }
-      if (!ref.current || !parentRef.current) return
-      const submenuRect = ref.current.getBoundingClientRect()
-      const parentRect = parentRef.current.getBoundingClientRect()
-      const x = e.clientX
-      const y = e.clientY
+      const submenuEl = ref.current
+      const parentEl = parentRef.current
+      if (!submenuEl || !parentEl || !submenuEl.isConnected || !parentEl.isConnected) return
+      const submenuRect = submenuEl.getBoundingClientRect()
+      const parentRect = parentEl.getBoundingClientRect()
+      if (submenuRect.width === 0 || parentRect.width === 0) return
+      const mx = e.clientX
+      const my = e.clientY
       const gap = 20
-      const inSubmenu = x >= submenuRect.left && x <= submenuRect.right && y >= submenuRect.top && y <= submenuRect.bottom
-      const inParent = x >= parentRect.left && x <= parentRect.right && y >= parentRect.top && y <= parentRect.bottom
-      const inGap = x >= parentRect.right && x <= submenuRect.left + gap && y >= Math.min(parentRect.top, submenuRect.top) && y <= Math.max(parentRect.bottom, submenuRect.bottom)
+      const inSubmenu = mx >= submenuRect.left && mx <= submenuRect.right && my >= submenuRect.top && my <= submenuRect.bottom
+      const inParent = mx >= parentRect.left && mx <= parentRect.right && my >= parentRect.top && my <= parentRect.bottom
+      const inGap = mx >= parentRect.right && mx <= submenuRect.left + gap && my >= Math.min(parentRect.top, submenuRect.top) && my <= Math.max(parentRect.bottom, submenuRect.bottom)
       if (!inSubmenu && !inParent && !inGap) {
         closeTimeoutRef.current = setTimeout(() => onClose(), 100)
       }
@@ -982,7 +987,7 @@ export const SlashMenu = memo(function SlashMenu({
   return (
     <div
       ref={ref}
-      onMouseLeave={() => setActiveIdx(null)}
+      onMouseLeave={() => { setOpenSubmenuId(null) }}
       className="slash-menu-root"
       role="menu"
       aria-label={mode === "/" ? "Insert content menu" : "Insert reference menu"}

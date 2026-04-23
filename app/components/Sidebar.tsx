@@ -80,6 +80,7 @@ interface SidebarProps {
   onArchiveNote?: (id: string) => void
   onUnarchiveNote?: (id: string) => void
   onSearchNavigate?: (noteId: string, pageIdx: number) => void
+  onSetCover?: (noteId: string) => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -88,7 +89,7 @@ export const Sidebar = memo(function Sidebar({
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
-  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate,
+  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
@@ -466,6 +467,16 @@ export const Sidebar = memo(function Sidebar({
             className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
           >
             Change icon
+          </button>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              if (noteMenuId) onSetCover?.(noteMenuId)
+              setNoteMenuId(null)
+            }}
+            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
+          >
+            Set cover
           </button>
           <button
             onClick={e => {

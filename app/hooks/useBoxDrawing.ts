@@ -387,6 +387,7 @@ export function useBoxDrawing({
               ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
             }))
             setSelectedBoxIds(new Set([id]))
+            if (activeTool === 'textbox') setActiveTool('select')
           })
           requestAnimationFrame(() => {
             const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
@@ -658,9 +659,9 @@ export function useBoxDrawing({
 
         const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
 
-        // Preserve the X of the topmost box
         const targetX = sorted[0].x
-        let tempY = sorted[0].y
+        const startY = toAlign.length === bs.length ? 20 : sorted[0].y
+        let tempY = startY
 
         const alignedBoxesMap = new Map()
         for (const box of sorted) {

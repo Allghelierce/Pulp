@@ -988,7 +988,7 @@ export default function NoteApp() {
 
   // Settings
   const SETTINGS_DEFAULTS = {
-    accent: "#4a081e",
+    accent: "#9f1239",
     theme: "dark",
     autoSave: true,
     spellCheck: true,
@@ -1763,20 +1763,30 @@ export default function NoteApp() {
         setTimerOpen(!timerOpen)
       }
 
-      // Option+Arrow - Move selected boxes or switch pages
-      if (e.altKey && !e.metaKey && !e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      // Arrow keys - nudge selected boxes; Option+Arrow - snap to grid; Option+Arrow without selection - switch pages
+      if (!e.metaKey && !e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         const selectedIds = boxes.selectedBoxIdsRef.current
         const active = document.activeElement as HTMLElement | null
         const isEditingBox = active?.isContentEditable && active?.closest?.('[id^="box-"]')
         if (selectedIds.size > 0 && !isEditingBox) {
           e.preventDefault()
-          const step = e.shiftKey ? 20 : 5
-          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
-          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
-          boxes.updateBoxes((prev: any[]) => prev.map((b: any) =>
-            selectedIds.has(b.id) ? { ...b, x: b.x + dx, y: b.y + dy } : b
-          ))
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          if (e.altKey) {
+            const snap = 32
+            boxes.updateBoxes((prev: any[]) => prev.map((b: any) => {
+              if (!selectedIds.has(b.id)) return b
+              const dx = e.key === 'ArrowLeft' ? -snap : e.key === 'ArrowRight' ? snap : 0
+              const dy = e.key === 'ArrowUp' ? -snap : e.key === 'ArrowDown' ? snap : 0
+              return { ...b, x: Math.round((b.x + dx) / snap) * snap, y: Math.round((b.y + dy) / snap) * snap }
+            }))
+          } else {
+            const step = e.shiftKey ? 10 : 2
+            const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+            const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+            boxes.updateBoxes((prev: any[]) => prev.map((b: any) =>
+              selectedIds.has(b.id) ? { ...b, x: b.x + dx, y: b.y + dy } : b
+            ))
+          }
+        } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
           e.preventDefault()
           editor.flushSync()
           if (e.key === 'ArrowLeft') {
@@ -2396,6 +2406,10 @@ export default function NoteApp() {
                 })
               }}
               onUnlockDev={handleUnlockDev}
+              onSetCover={(noteId) => {
+                editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(0); setCurrentView("editor")
+                setTimeout(() => setShowCoverModal(true), 100)
+              }}
             />
 
             {/* Sidebar edge resize handle */}
@@ -2651,13 +2665,13 @@ export default function NoteApp() {
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'textbox' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                         onMouseDown={e => {
                           if (activeTool === 'sticky' || activeTool === 'hr') {
                             // Handled by onClick below to ensure clean single-click placement
                             return
                           }
-                          if (activeTool !== 'select' && activeTool !== 'text') return
+                          if (activeTool !== 'select' && activeTool !== 'text' && activeTool !== 'textbox') return
                           const target = e.target as HTMLElement
                           const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
                           if (boxEl) {
@@ -2862,21 +2876,21 @@ export default function NoteApp() {
                             <button
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
-                              className={`p-1 rounded transition-all ${currentPageIdx === 0 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                               style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="First Page"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8" /><path d="m11 20-4-8 4-8" /></svg>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 18-6-6 6-6" /><path d="m12 18-6-6 6-6" /></svg>
                             </button>
                             {/* Previous */}
                             <button
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                              className={`p-1 rounded transition-all ${currentPageIdx === 0 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                               style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Previous Page"
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
+                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                             </button>
                             <PageNumberInput
                               currentPageIdx={currentPageIdx}
@@ -2895,37 +2909,24 @@ export default function NoteApp() {
                                   setCurrentPageIdx(activeNote.pages.length)
                                 }
                               }}
-                              className="p-1 hover:opacity-60 active:scale-95 rounded transition-all"
+                              className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
                               style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Next Page / Add Page"
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
+                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                             </button>
                             {/* Skip to last */}
                             <button
                               disabled={currentPageIdx === activeNote.pages.length - 1}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
-                              className={`p-1 rounded transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                               style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Last Page"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8" /><path d="m13 20 4-8-4-8" /></svg>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 18 6-6-6-6" /><path d="m12 18 6-6-6-6" /></svg>
                             </button>
                           </div>{/* end inner flex */}
 
-                          {/* Cover button — subtle, top-right corner */}
-                          <button
-                            onClick={() => setShowCoverModal(true)}
-                            className="absolute top-4 right-4 p-1.5 opacity-0 hover:opacity-100 transition-opacity rounded-md hover:bg-black/5"
-                            style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
-                            title={activeNote?.cover ? "Edit cover" : "Add cover"}
-                          >
-                            {activeNote?.cover ? (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.6"><path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /><circle cx="8.5" cy="8.5" r="1.5" fill="white" /><path d="M21 15l-5-5L5 21" stroke="white" strokeWidth="2" fill="none" /></svg>
-                            ) : (
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6.5a2.5 2.5 0 0 0-2 2.5v1a2.5 2.5 0 0 0 2.5 2.5H20" /></svg>
-                            )}
-                          </button>
                         </div>{/* end deadzone */}
 
                       </div>

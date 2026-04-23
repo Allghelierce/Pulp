@@ -45,14 +45,14 @@ export const SETTINGS_TABS = [
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS = [
-  { hex: "#4a081eff", name: "Crimson" },
-  { hex: "#1e3a8a", name: "Cobalt" },
-  { hex: "#166534", name: "Forest" },
-  { hex: "#92400e", name: "Amber" },
-  { hex: "#4c1d95", name: "Violet" },
-  { hex: "#0f4c5c", name: "Teal" },
-  { hex: "#881337", name: "Rose" },
-  { hex: "#374151", name: "Slate" },
+  { hex: "#9f1239", name: "Crimson" },
+  { hex: "#2563eb", name: "Cobalt" },
+  { hex: "#16a34a", name: "Forest" },
+  { hex: "#d97706", name: "Amber" },
+  { hex: "#7c3aed", name: "Violet" },
+  { hex: "#0891b2", name: "Teal" },
+  { hex: "#e11d48", name: "Rose" },
+  { hex: "#6b7280", name: "Slate" },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────────────────
