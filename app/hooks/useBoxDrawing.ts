@@ -291,7 +291,7 @@ export function useBoxDrawing({
       setLoadingBoxId(null)
     }
   }, [setNotes])
-  
+
   const rewriteBox = useCallback(async (text: string, boxId: string) => {
     if (!text.trim() || !activeTabIdRef.current) return
     setLoadingBoxId(boxId)
@@ -380,22 +380,26 @@ export function useBoxDrawing({
           const y = (sy - r.top) / scale
           const id = uid()
           const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 300, h: 32, content: '' }
+          const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
+          const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
           flushSync(() => {
             setNotes(prev => prev.map(n => n.id !== tid ? n : {
-              ...n, boxes: { ...n.boxes, [pidx]: [...(n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor), newBox] }
+              ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
             }))
             setSelectedBoxIds(new Set([id]))
           })
-          const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
-          if (targetNode) {
-            targetNode.focus()
-            const range = document.createRange()
-            range.selectNodeContents(targetNode)
-            range.collapse(false)
-            const sel = window.getSelection()
-            sel?.removeAllRanges()
-            sel?.addRange(range)
-          }
+          requestAnimationFrame(() => {
+            const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
+            if (targetNode) {
+              targetNode.focus()
+              const range = document.createRange()
+              range.selectNodeContents(targetNode)
+              range.collapse(false)
+              const sel = window.getSelection()
+              sel?.removeAllRanges()
+              sel?.addRange(range)
+            }
+          })
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')
@@ -741,7 +745,7 @@ export function useBoxDrawing({
         const sorted = [...toAlign].sort((a, b) => a.y - b.y)
         const first = sorted[0]
         const last = sorted[sorted.length - 1]
-        
+
         const totalGap = (last.y - first.y)
         const step = totalGap / (sorted.length - 1)
 

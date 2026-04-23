@@ -79,6 +79,7 @@ interface SidebarProps {
   archivedNotes?: NoteData[]
   onArchiveNote?: (id: string) => void
   onUnarchiveNote?: (id: string) => void
+  onSearchNavigate?: (noteId: string, pageIdx: number) => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -87,7 +88,7 @@ export const Sidebar = memo(function Sidebar({
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
-  archivedNotes = [], onArchiveNote, onUnarchiveNote,
+  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
@@ -106,6 +107,62 @@ export const Sidebar = memo(function Sidebar({
   const [hideBookmarks, setHideBookmarks] = useState(false)
   const [hideBacklinks, setHideBacklinks] = useState(false)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const stripHtml = useCallback((html: string) => {
+    const tmp = document.createElement("div")
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ""
+  }, [])
+
+  const searchResults = (() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (q.length < 2) return []
+    const results: { noteId: string; noteName: string; noteIcon?: string; pageIdx: number; snippet: string; matchType: "title" | "content" | "box" }[] = []
+    const activeNotes = notes.filter(n => !n.archived)
+    for (const note of activeNotes) {
+      if (note.subject.toLowerCase().includes(q)) {
+        results.push({ noteId: note.id, noteName: note.subject, noteIcon: note.icon, pageIdx: 0, snippet: note.subject, matchType: "title" })
+      }
+      for (let pi = 0; pi < note.pages.length; pi++) {
+        const text = stripHtml(note.pages[pi]).toLowerCase()
+        const idx = text.indexOf(q)
+        if (idx !== -1) {
+          const start = Math.max(0, idx - 30)
+          const end = Math.min(text.length, idx + q.length + 50)
+          const raw = text.slice(start, end).trim()
+          const snippet = (start > 0 ? "..." : "") + raw + (end < text.length ? "..." : "")
+          results.push({ noteId: note.id, noteName: note.subject, noteIcon: note.icon, pageIdx: pi, snippet, matchType: "content" })
+        }
+        const boxes = note.boxes[pi] || []
+        for (const box of boxes) {
+          const boxText = stripHtml(box.content).toLowerCase()
+          const bIdx = boxText.indexOf(q)
+          if (bIdx !== -1) {
+            const start = Math.max(0, bIdx - 20)
+            const end = Math.min(boxText.length, bIdx + q.length + 40)
+            const raw = boxText.slice(start, end).trim()
+            const snippet = (start > 0 ? "..." : "") + raw + (end < boxText.length ? "..." : "")
+            results.push({ noteId: note.id, noteName: note.subject, noteIcon: note.icon, pageIdx: pi, snippet, matchType: "box" })
+          }
+        }
+      }
+      if (results.length >= 20) break
+    }
+    return results
+  })()
+
+  useEffect(() => {
+    if (!searchFocused) return
+    const handler = (e: MouseEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setSearchFocused(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [searchFocused])
 
   useEffect(() => {
     const handler = () => {
@@ -466,7 +523,68 @@ export const Sidebar = memo(function Sidebar({
             </svg>
             <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
           </div>
-          <input placeholder="Search…" className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full px-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors" />
+          <div ref={searchRef} className="relative">
+            <div className="relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onKeyDown={e => {
+                  if (e.key === "Escape") { setSearchQuery(""); setSearchFocused(false); searchInputRef.current?.blur() }
+                  if (e.key === "Enter" && searchResults.length > 0) {
+                    const r = searchResults[0]
+                    onSearchNavigate?.(r.noteId, r.pageIdx)
+                    setSearchQuery(""); setSearchFocused(false)
+                  }
+                }}
+                placeholder="Search notes…"
+                className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full pl-8 pr-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors text-zinc-300 placeholder:text-zinc-600"
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(""); searchInputRef.current?.focus() }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400 transition-colors">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              )}
+            </div>
+            {searchFocused && searchQuery.trim().length >= 2 && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 320 }}>
+                {searchResults.length === 0 ? (
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>
+                  </div>
+                ) : (
+                  <div className="overflow-y-auto" style={{ maxHeight: 320 }}>
+                    {searchResults.map((r, i) => (
+                      <button
+                        key={`${r.noteId}-${r.pageIdx}-${r.matchType}-${i}`}
+                        className="w-full text-left px-3.5 py-2.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
+                        onClick={() => {
+                          onSearchNavigate?.(r.noteId, r.pageIdx)
+                          setSearchQuery(""); setSearchFocused(false)
+                        }}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
+                          <span className="text-[11px] font-semibold text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
+                          {r.matchType !== "title" && (
+                            <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
+                          )}
+                        </div>
+                        {r.matchType !== "title" && (
+                          <p className="text-[10px] text-zinc-500 leading-relaxed truncate">{r.snippet}</p>
+                        )}
+                        <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5" style={{ color: r.matchType === "title" ? "#f59e0b" : r.matchType === "box" ? "#8b5cf6" : "#71717a" }}>
+                          {r.matchType === "title" ? "Title" : r.matchType === "box" ? "Textbox" : "Page content"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible px-0 py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
@@ -550,19 +668,8 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
               <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
-              <button
-                onClick={() => setHideBookmarks(!hideBookmarks)}
-                className="text-zinc-600 hover:text-zinc-400 transition-colors"
-                title={hideBookmarks ? "Show bookmarks" : "Hide bookmarks"}
-              >
-                {hideBookmarks ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                )}
-              </button>
             </div>
-            {!hideBookmarks && bookmarks && bookmarks.length > 0 ? (
+            {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
                 <div
                   key={b.id}
@@ -617,19 +724,8 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
               <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Backlinks</p>
-              <button
-                onClick={() => setHideBacklinks(!hideBacklinks)}
-                className="text-zinc-600 hover:text-zinc-400 transition-colors"
-                title={hideBacklinks ? "Show backlinks" : "Hide backlinks"}
-              >
-                {hideBacklinks ? (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                )}
-              </button>
             </div>
-            {!hideBacklinks && (() => {
+            {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
                 n.pages.some(p => p.includes(`data-backlink-id="${activeTabId}"`)) ||
                 Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some(b => b.content.includes(`data-backlink-id="${activeTabId}"`)))

@@ -40,7 +40,10 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
   const [faceIndex, setFaceIndex] = useState(0)
   const faceScaleMotion = useMotionValue(1)
   const faceScaleSpring = useSpring(faceScaleMotion, { stiffness: 200, damping: 15 })
-  
+
+  const dragY = useMotionValue(0)
+  const dragTriggered = useRef(false)
+
   // Smooth, elastic pendulum
   const springAngle = useSpring(angle, {
     stiffness: 80,
@@ -59,14 +62,12 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const changeFace = useCallback(() => {
-    // Random face, exclude current one
     let newIndex = Math.floor(Math.random() * faces.length)
     while (newIndex === faceIndex) {
       newIndex = Math.floor(Math.random() * faces.length)
     }
     setFaceIndex(newIndex)
 
-    // Trigger scale animation
     faceScaleMotion.set(0.7)
     setTimeout(() => {
       faceScaleMotion.set(1)
@@ -86,10 +87,6 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
 
   return (
     <motion.div
-      onClick={() => {
-        changeFace()
-        setTimeout(onClick, 100)
-      }}
       className="fixed z-[9999]"
       style={{
         top: 0,
@@ -99,14 +96,33 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        cursor: "pointer",
+        cursor: "grab",
         transformOrigin: "top center",
         rotate: springAngle,
+        y: dragY,
       }}
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       whileHover={{ y: 4 }}
-      whileTap={{ y: 40, scaleX: 1.05, scaleY: 0.95, transition: { type: "spring", stiffness: 300, damping: 20 } }}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: 120 }}
+      dragElastic={0.3}
+      onDrag={(_, info) => {
+        if (info.offset.y > 80 && !dragTriggered.current) {
+          dragTriggered.current = true
+          changeFace()
+        }
+      }}
+      onDragEnd={(_, info) => {
+        if (info.offset.y > 80) {
+          onClick()
+        }
+        dragTriggered.current = false
+      }}
+      onClick={() => {
+        changeFace()
+        setTimeout(onClick, 100)
+      }}
     >
       <FlexTwine bow={stringBow} />
       

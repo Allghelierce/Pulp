@@ -44,34 +44,39 @@ export function useDrawing({
   useEffect(() => { activeTabIdRef.current = activeTabId }, [activeTabId])
   useEffect(() => { currentPageIdxRef.current = currentPageIdx }, [currentPageIdx])
   useEffect(() => {
+    activeTabIdRef.current = activeTabId
+    currentPageIdxRef.current = currentPageIdx
     notesRef.current = notes
-    render()
+    syncCanvas()
   }, [notes, currentPageIdx, activeTabId])
 
   const dprRef = useRef(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1)
 
+  const syncCanvas = () => {
+    const c = canvasRef.current
+    if (!c) return
+    const parent = c.parentElement
+    if (!parent) return
+    const w = parent.offsetWidth
+    const h = parent.offsetHeight
+    if (!w || !h) return
+    const dpr = window.devicePixelRatio || 1
+    dprRef.current = dpr
+    const needsResize = c.width !== w * dpr || c.height !== h * dpr
+    if (needsResize) {
+      c.width = w * dpr
+      c.height = h * dpr
+      c.style.width = w + 'px'
+      c.style.height = h + 'px'
+    }
+    render()
+  }
+
   useEffect(() => {
     const c = canvasRef.current
     if (!c) return
-    const sync = () => {
-      const parent = c.parentElement
-      if (!parent) return
-      const w = parent.offsetWidth
-      const h = parent.offsetHeight
-      if (w && h) {
-        const dpr = window.devicePixelRatio || 1
-        dprRef.current = dpr
-        c.width = w * dpr
-        c.height = h * dpr
-        c.style.width = w + 'px'
-        c.style.height = h + 'px'
-        const cx = c.getContext('2d')
-        if (cx) cx.scale(dpr, dpr)
-        render()
-      }
-    }
-    sync()
-    const ro = new ResizeObserver(sync)
+    syncCanvas()
+    const ro = new ResizeObserver(() => syncCanvas())
     ro.observe(c.parentElement || c)
     return () => ro.disconnect()
   }, [canvasRef])
@@ -98,6 +103,47 @@ export function useDrawing({
     setRedoCount(0)
   }
 
+  const distToSegment = (px: number, py: number, ax: number, ay: number, bx: number, by: number) => {
+    const dx = bx - ax, dy = by - ay
+    const len2 = dx * dx + dy * dy
+    if (len2 === 0) return Math.hypot(px - ax, py - ay)
+    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2))
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+  }
+
+  const findStrokeAt = (pos: { x: number; y: number }): string | null => {
+    const threshold = 12
+    const strokes = getCurrentDrawings()
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      const s = strokes[i]
+      if (!s.points || s.points.length < 1) continue
+      if (s.points.length === 1) {
+        if (Math.hypot(pos.x - s.points[0].x, pos.y - s.points[0].y) < threshold) return s.id
+        continue
+      }
+      for (let j = 0; j < s.points.length - 1; j++) {
+        if (distToSegment(pos.x, pos.y, s.points[j].x, s.points[j].y, s.points[j + 1].x, s.points[j + 1].y) < threshold + (s.width || 1) / 2) {
+          return s.id
+        }
+      }
+    }
+    return null
+  }
+
+  const eraseStroke = (id: string) => {
+    pushUndo()
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+    setNotes(prev => prev.map(n => {
+      if (n.id !== tid) return n
+      const drawings = n.drawings || {}
+      const pageDrawings = (drawings[pidx] || []).filter(s => s.id !== id)
+      return { ...n, drawings: { ...drawings, [pidx]: pageDrawings } }
+    }))
+  }
+
+  const erasedIds = useRef<Set<string>>(new Set())
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const c = canvasRef.current
     if (!c) return
@@ -105,12 +151,30 @@ export function useDrawing({
     drawing.current = true
     c.setPointerCapture(e.pointerId)
     const pos = getPos(e)
+
+    if (activeTool === 'eraser') {
+      erasedIds.current = new Set()
+      const hit = findStrokeAt(pos)
+      if (hit) { erasedIds.current.add(hit); eraseStroke(hit) }
+      return
+    }
+
     currentPath.current = [pos]
   }
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!drawing.current) return
     const pos = getPos(e)
+
+    if (activeTool === 'eraser') {
+      const hit = findStrokeAt(pos)
+      if (hit && !erasedIds.current.has(hit)) { erasedIds.current.add(hit); eraseStroke(hit) }
+      return
+    }
+
+    const last = currentPath.current[currentPath.current.length - 1]
+    const dist = Math.hypot(pos.x - last.x, pos.y - last.y)
+    if (dist < 2) return
     currentPath.current.push(pos)
     render()
   }
@@ -120,7 +184,12 @@ export function useDrawing({
     drawing.current = false
     canvasRef.current?.releasePointerCapture(e.pointerId)
 
-    if (currentPath.current.length < 2 && activeTool !== 'eraser' && !['rect', 'circle', 'diamond', 'arrow', 'line'].includes(activeTool)) return
+    if (activeTool === 'eraser') {
+      erasedIds.current = new Set()
+      return
+    }
+
+    if (currentPath.current.length < 2 && !['arrow', 'line'].includes(activeTool)) return
 
     pushUndo()
 
@@ -128,11 +197,11 @@ export function useDrawing({
     const newStroke: DrawingPath = {
       id: Math.random().toString(36).substr(2, 9),
       tool: isHighlighter ? 'pen' : activeTool,
-      color: activeTool === 'eraser' ? '#000000' : strokeColor,
-      fill: activeTool === 'eraser' ? undefined : (fillColor !== 'transparent' ? fillColor : undefined),
-      opacity: activeTool === 'eraser' ? 1 : (isHighlighter ? 0.35 : opacity),
-      dash: activeTool === 'eraser' ? false : dash,
-      width: activeTool === 'eraser' ? 16 : (isHighlighter ? lineWidth * 2.5 : lineWidth),
+      color: strokeColor,
+      fill: fillColor !== 'transparent' ? fillColor : undefined,
+      opacity: isHighlighter ? 0.35 : opacity,
+      dash,
+      width: isHighlighter ? lineWidth * 2.5 : lineWidth,
       points: [...currentPath.current]
     }
 
@@ -178,8 +247,7 @@ export function useDrawing({
       const hasFill = path.fill && path.fill !== 'transparent'
       cx.fillStyle = hasFill ? path.fill! : `${path.color}1a`
 
-      if (path.tool === 'eraser') cx.globalCompositeOperation = 'destination-out'
-      else cx.globalCompositeOperation = 'source-over'
+      cx.globalCompositeOperation = 'source-over'
 
       const pts = path.points
       const start = pts[0]
@@ -190,10 +258,16 @@ export function useDrawing({
       cx.beginPath()
       switch (path.tool) {
         case 'pen':
-        case 'eraser':
           cx.moveTo(pts[0].x, pts[0].y)
-          for (let i = 1; i < pts.length; i++) {
-            cx.lineTo(pts[i].x, pts[i].y)
+          if (pts.length === 2) {
+            cx.lineTo(pts[1].x, pts[1].y)
+          } else {
+            for (let i = 1; i < pts.length - 1; i++) {
+              const mx = (pts[i].x + pts[i + 1].x) / 2
+              const my = (pts[i].y + pts[i + 1].y) / 2
+              cx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my)
+            }
+            cx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y)
           }
           cx.stroke()
           break
@@ -204,13 +278,13 @@ export function useDrawing({
           break
         case 'circle':
           if (Math.abs(dx) > 0 && Math.abs(dy) > 0) {
-            cx.ellipse(start.x + dx/2, start.y + dy/2, Math.abs(dx/2), Math.abs(dy/2), 0, 0, Math.PI*2)
+            cx.ellipse(start.x + dx / 2, start.y + dy / 2, Math.abs(dx / 2), Math.abs(dy / 2), 0, 0, Math.PI * 2)
             if (hasFill) cx.fill()
             cx.stroke()
           }
           break
         case 'diamond': {
-          const mx = start.x + dx/2, my = start.y + dy/2
+          const mx = start.x + dx / 2, my = start.y + dy / 2
           cx.moveTo(mx, start.y); cx.lineTo(start.x + dx, my)
           cx.lineTo(mx, start.y + dy); cx.lineTo(start.x, my)
           cx.closePath()
@@ -227,9 +301,9 @@ export function useDrawing({
           const hl = Math.max(8, path.width * 3)
           cx.beginPath()
           cx.moveTo(end.x, end.y)
-          cx.lineTo(end.x - hl * Math.cos(angle - Math.PI/6), end.y - hl * Math.sin(angle - Math.PI/6))
+          cx.lineTo(end.x - hl * Math.cos(angle - Math.PI / 6), end.y - hl * Math.sin(angle - Math.PI / 6))
           cx.moveTo(end.x, end.y)
-          cx.lineTo(end.x - hl * Math.cos(angle + Math.PI/6), end.y - hl * Math.sin(angle + Math.PI/6))
+          cx.lineTo(end.x - hl * Math.cos(angle + Math.PI / 6), end.y - hl * Math.sin(angle + Math.PI / 6))
           cx.stroke()
           break
         }
@@ -245,16 +319,16 @@ export function useDrawing({
       currentNote.drawings[pidx].forEach(drawPath)
     }
 
-    if (drawing.current && currentPath.current.length > 0) {
+    if (drawing.current && currentPath.current.length > 0 && activeTool !== 'eraser') {
       const isHighlighter = activeTool === 'highlighter'
       drawPath({
         id: '_live',
         tool: isHighlighter ? 'pen' : activeTool,
-        color: activeTool === 'eraser' ? '#000000' : strokeColor,
-        fill: activeTool === 'eraser' ? undefined : (fillColor !== 'transparent' ? fillColor : undefined),
-        opacity: activeTool === 'eraser' ? 1 : (isHighlighter ? 0.35 : opacity),
-        dash: activeTool === 'eraser' ? false : dash,
-        width: activeTool === 'eraser' ? 16 : (isHighlighter ? lineWidth * 2.5 : lineWidth),
+        color: strokeColor,
+        fill: fillColor !== 'transparent' ? fillColor : undefined,
+        opacity: isHighlighter ? 0.35 : opacity,
+        dash,
+        width: isHighlighter ? lineWidth * 2.5 : lineWidth,
         points: currentPath.current
       })
     }

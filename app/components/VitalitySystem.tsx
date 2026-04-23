@@ -11,10 +11,12 @@ interface VitalitySystemProps {
   onSetTimerOpen: (open: boolean) => void
   sunshine: number
   gems: number
+  xp: number
   grove: Tree[]
   achievements: Achievement[]
   setSunshine: React.Dispatch<React.SetStateAction<number>>
   setGems: React.Dispatch<React.SetStateAction<number>>
+  setXp: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
   setAchievements: React.Dispatch<React.SetStateAction<Achievement[]>>
   lastCharCount: number
@@ -25,7 +27,7 @@ interface VitalitySystemProps {
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  sunshine, gems, grove, achievements, setSunshine, setGems, setGrove, setAchievements,
+  sunshine, gems, xp, grove, achievements, setSunshine, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
 }: VitalitySystemProps) {
@@ -158,19 +160,18 @@ export const VitalitySystem = memo(function VitalitySystem({
     const minutes = timerTotal / 60
     const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
     setSunshine(s => s + reward)
+    const xpGain = Math.max(5, Math.round(minutes * 2))
+    setXp(x => x + xpGain)
 
-    // Iron Will — count completed sessions
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
-    // Focus Champion — complete a 50-minute session
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
-    // Time Lord — accumulate 10 hours (36000 s) of focus time
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, setSunshine, checkAchievement])
+  }, [timerDone, treeDead, timerTotal, setSunshine, setXp, checkAchievement])
 
   const dismissDeadTree = useCallback(() => {
     setTimerElapsed(0)
@@ -179,23 +180,16 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [])
 
-  // Passive sunshine gain
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSunshine(s => s + 1)
-    }, 120000)
-    return () => clearInterval(timer)
-  }, [setSunshine])
-
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
       if (!target || !target.completed || target.claimed) return prev
       if (target.rewardType === 'gems') setGems(g => g + target.reward)
       else setSunshine(s => s + target.reward)
+      setXp(x => x + target.reward * 5)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setSunshine, setAchievements])
+  }, [setGems, setSunshine, setXp, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
@@ -238,9 +232,11 @@ export const VitalitySystem = memo(function VitalitySystem({
           return { ...tree, progress: newProgress, stage: newStage }
         }))
         setLastCharCount(totalChars)
-        // Cap contribution per update to 30 chars — prevents paste abuse
         const typedDiff = Math.min(diff, 30)
         checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
+        const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))
+        setXp(x => x + xpFromWriting)
+        setSunshine(s => s + Math.max(1, Math.floor(typedDiff / 15)))
       }
 
       if (totalChars > lastCharCount + 500) {
@@ -248,7 +244,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         setGems(g => g + earned)
       }
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setLastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setSunshine, setLastCharCount])
 
   return (
     <TimerSidebarPanel

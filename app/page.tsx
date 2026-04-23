@@ -905,6 +905,7 @@ export default function NoteApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sunshine, setSunshine] = useState(50)
   const [gems, setGems] = useState(3)
+  const [xp, setXp] = useState(0)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [customSize, setCustomSize] = useState("16")
@@ -1900,7 +1901,9 @@ export default function NoteApp() {
   }, [])
 
   // Save to localStorage whenever notes, folders, or active tab changes
+  const hasMounted = useRef(false)
   useEffect(() => {
+    if (!hasMounted.current) { hasMounted.current = true; return }
     localStorage.setItem("pulp-notes", JSON.stringify(notes))
     localStorage.setItem("pulp-folders", JSON.stringify(folders))
   }, [notes, folders])
@@ -2519,6 +2522,7 @@ export default function NoteApp() {
                 onQuickPrompt={handleQuickPrompt}
                 isTextActive={isTextActive}
                 onOpenChat={() => setShowNotebookChat(v => !v)}
+                chatOpen={showNotebookChat}
               />
             </div>
           )}
@@ -2771,8 +2775,6 @@ export default function NoteApp() {
                                 position: "absolute",
                                 left: 0,
                                 top: 0,
-                                width: "100%",
-                                height: "100%",
                                 pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hline'].includes(activeTool) ? 'all' : 'none',
                                 cursor: drawing.getCursor(),
                                 zIndex: showDrawToolbar ? 200 : 5,
@@ -2912,15 +2914,11 @@ export default function NoteApp() {
             <>
               <FloatingToolbar
                 accent={accent} activeTool={activeTool} onToolChange={setActiveTool}
-                onClearDrawing={drawing.clearCanvas} onImageUpload={handleImageUpload} isVisible={showDrawToolbar}
+                onClearDrawing={drawing.clearCanvas} isVisible={showDrawToolbar}
                 strokeColor={strokeColor} onStrokeColorChange={setStrokeColor}
-                fillColor={fillColor} onFillColorChange={setFillColor}
                 lineWidth={lineWidth} onLineWidthChange={setLineWidth}
-                opacity={drawOpacity} onOpacityChange={setDrawOpacity}
-                dash={drawDash} onDashChange={setDrawDash}
                 onUndo={drawing.undo} onRedo={drawing.redo}
                 canUndo={drawing.canUndo} canRedo={drawing.canRedo}
-                onImproveDrawing={drawing.improveDrawing}
                 onClose={() => { setShowDrawToolbar(false); setActiveTool('select') }}
               />
               <HangingOrange onClick={() => setOrchardOpen(true)} />
@@ -3163,6 +3161,7 @@ export default function NoteApp() {
         accent={accent}
         sunshine={sunshine}
         gems={gems}
+        xp={sunshine}
         grove={grove}
         inventory={inventory}
         setSunshine={setSunshine}
@@ -3196,6 +3195,8 @@ export default function NoteApp() {
         onSetTimerOpen={setTimerOpen}
         sunshine={sunshine}
         gems={gems}
+        xp={xp}
+        setXp={setXp}
         grove={grove}
         achievements={achievements}
         setSunshine={setSunshine}

@@ -242,7 +242,7 @@ function Submenu({
 
 function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/", theme?: "light" | "dark", onClose?: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => {
     if (parentRef.current && ref.current) {
@@ -272,8 +272,9 @@ function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { child
       ref={ref}
       style={{
         position: "fixed",
-        left: coords.left,
-        top: coords.top,
+        left: coords?.left ?? -9999,
+        top: coords?.top ?? -9999,
+        visibility: coords ? "visible" : "hidden",
         zIndex: 10000,
         background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
         backdropFilter: "blur(20px) saturate(120%)",
@@ -607,6 +608,8 @@ export const SlashMenu = memo(function SlashMenu({
   const ref = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLDivElement>(null)
   const submenuRowRef = useRef<HTMLDivElement | null>(null)
+  const scrollingRef = useRef(false)
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── @ menu items ──────────────────────────────────────────────────────────
   const allItems: SlashItem[] = useMemo(() => [
@@ -931,16 +934,28 @@ export const SlashMenu = memo(function SlashMenu({
     return () => document.removeEventListener("keydown", handler, true)
   }, [activeIdx, filtered, onSelect, onClose, openSubmenuId])
 
+  const interactingRef = useRef(false)
   useEffect(() => {
     const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
     const resizer = () => onClose()
-    const focusHandler = (e: FocusEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
+    const focusHandler = (e: FocusEvent) => {
+      if (interactingRef.current) return
+      if (!ref.current?.contains(e.target as Node)) onClose()
+    }
+    const wheelHandler = (e: WheelEvent) => {
+      if (ref.current?.contains(e.target as Node)) {
+        interactingRef.current = true
+        setTimeout(() => { interactingRef.current = false }, 200)
+      }
+    }
     document.addEventListener("mousedown", handler, true)
     document.addEventListener("focusin", focusHandler)
+    document.addEventListener("wheel", wheelHandler, true)
     window.addEventListener("resize", resizer)
     return () => {
       document.removeEventListener("mousedown", handler, true)
       document.removeEventListener("focusin", focusHandler)
+      document.removeEventListener("wheel", wheelHandler, true)
       window.removeEventListener("resize", resizer)
     }
   }, [onClose])
@@ -1001,7 +1016,12 @@ export const SlashMenu = memo(function SlashMenu({
       ` }} />
       <div
         className="hide-scroll"
-        onScroll={() => setOpenSubmenuId(null)}
+        onScroll={() => {
+          setOpenSubmenuId(null)
+          scrollingRef.current = true
+          if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current)
+          scrollTimerRef.current = setTimeout(() => { scrollingRef.current = false }, 150)
+        }}
         style={{ maxHeight: 340, overflowY: "auto", overscrollBehavior: "contain" }}
       >
         <div style={{ padding: "6px 0" }}>
@@ -1042,7 +1062,7 @@ export const SlashMenu = memo(function SlashMenu({
                       }}
                       onMouseEnter={() => {
                         setActiveIdx(actualIdx)
-                        if (hasSubmenu) setOpenSubmenuId(item.id)
+                        if (hasSubmenu && !scrollingRef.current) setOpenSubmenuId(item.id)
                       }}
                       onMouseLeave={() => {
                         // Don't close immediately; let the Submenu component handle closing

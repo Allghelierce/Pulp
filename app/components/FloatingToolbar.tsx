@@ -9,38 +9,36 @@ const COLORS = [
 const font: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: "0.01em" }
 
 export const FloatingToolbar = memo(function FloatingToolbar({
-  accent, activeTool, onToolChange, onClearDrawing, onImageUpload, isVisible,
-  strokeColor, onStrokeColorChange, fillColor, onFillColorChange,
-  lineWidth, onLineWidthChange, opacity, onOpacityChange,
-  dash, onDashChange,
-  onUndo, onRedo, canUndo, canRedo, onImproveDrawing, onClose,
+  accent, activeTool, onToolChange, onClearDrawing, isVisible,
+  strokeColor, onStrokeColorChange,
+  lineWidth, onLineWidthChange,
+  onUndo, onRedo, canUndo, canRedo, onClose,
 }: {
   accent: string
   activeTool: string
   onToolChange: (t: string) => void
   onClearDrawing: () => void
-  onImageUpload: (dataUrl: string) => void
+  onImageUpload?: (dataUrl: string) => void
   isVisible: boolean
   strokeColor: string
   onStrokeColorChange: (c: string) => void
-  fillColor: string
-  onFillColorChange: (c: string) => void
+  fillColor?: string
+  onFillColorChange?: (c: string) => void
   lineWidth: number
   onLineWidthChange: (w: number) => void
-  opacity: number
-  onOpacityChange: (o: number) => void
-  dash: boolean
-  onDashChange: (d: boolean) => void
+  opacity?: number
+  onOpacityChange?: (o: number) => void
+  dash?: boolean
+  onDashChange?: (d: boolean) => void
   onUndo: () => void
   onRedo: () => void
   canUndo: boolean
   canRedo: boolean
-  onImproveDrawing: () => void
+  onImproveDrawing?: () => void
   onClose: () => void
 }) {
-  const fileRef = useRef<HTMLInputElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
-  const [popup, setPopup] = useState<"stroke" | "fill" | null>(null)
+  const [popup, setPopup] = useState<"stroke" | null>(null)
 
   useEffect(() => {
     if (!popup) return
@@ -50,15 +48,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [popup])
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (!f) return
-    const r = new FileReader()
-    r.onload = ev => { if (ev.target?.result) onImageUpload(ev.target.result as string) }
-    r.readAsDataURL(f)
-    e.target.value = ""
-  }
 
   const is = (t: string) => activeTool === t
 
@@ -77,6 +66,14 @@ export const FloatingToolbar = memo(function FloatingToolbar({
 
   const sep = <div className="w-px h-5 bg-zinc-200/60 shrink-0" />
 
+  const I = (d: string) => (
+    <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+  )
+
+  const Is = (d: string) => (
+    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+  )
+
   const miniBtn = (onClick: () => void, title: string, svg: React.ReactNode, disabled?: boolean) => (
     <button
       onMouseDown={e => { e.preventDefault(); onClick() }}
@@ -86,14 +83,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({
     >
       {svg}
     </button>
-  )
-
-  const I = (d: string) => (
-    <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
-  )
-
-  const Is = (d: string) => (
-    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
   )
 
   return (
@@ -108,8 +97,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({
         pointerEvents: isVisible ? "auto" : "none",
       }}
     >
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-
       <div
         className="flex items-center gap-0.5 px-1.5 py-1 rounded-[8px] border border-zinc-200 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
         style={{
@@ -118,12 +105,19 @@ export const FloatingToolbar = memo(function FloatingToolbar({
           WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        {/* Drawing tools */}
+        {/* Pen */}
         {toolBtn("pen", "Pen", I("M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"))}
-        {toolBtn("highlighter", "Highlighter", I("m9 11-6 6v3h9l3-3M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"))}
+
+        {/* Line */}
+        {toolBtn("line", "Line", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="5" y1="19" x2="19" y2="5" /></svg>)}
+
+        {/* Arrow */}
+        {toolBtn("arrow", "Arrow", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5" /><polyline points="9 5 19 5 19 15" /></svg>)}
+
+        {/* Eraser */}
         <button
-          onMouseDown={e => { e.preventDefault(); is("eraser") ? onClearDrawing() : onToolChange("eraser") }}
-          title={is("eraser") ? "Clear all" : "Eraser"}
+          onMouseDown={e => { e.preventDefault(); onToolChange(is("eraser") ? "pen" : "eraser") }}
+          title="Eraser"
           className="h-7 px-1.5 flex items-center justify-center rounded-[5px] transition-colors cursor-pointer active:scale-[0.96]"
           style={is("eraser")
             ? { backgroundColor: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }
@@ -134,62 +128,38 @@ export const FloatingToolbar = memo(function FloatingToolbar({
 
         {sep}
 
-        {/* Shapes */}
-        {toolBtn("line", "Line", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="5" y1="19" x2="19" y2="5" /></svg>)}
-        {toolBtn("arrow", "Arrow", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5" /><polyline points="9 5 19 5 19 15" /></svg>)}
-        {toolBtn("rect", "Rectangle", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /></svg>)}
-        {toolBtn("circle", "Circle", <svg className="w-[14px] h-[14px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9" /></svg>)}
-        {toolBtn("diamond", "Diamond", I("M12 2l10 10-10 10L2 12z"))}
-
-        {sep}
-
-        {/* Stroke + Fill */}
-        <div className="relative flex items-center gap-1 px-0.5">
+        {/* Stroke color */}
+        <div className="relative flex items-center px-0.5">
           <button
             onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setPopup(popup === "stroke" ? null : "stroke") }}
             className="w-[18px] h-[18px] rounded-[4px] border border-zinc-300/80 cursor-pointer hover:scale-110 transition-transform shrink-0 shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]"
             style={{ backgroundColor: strokeColor }}
-            title="Stroke color"
+            title="Color"
           />
-          <button
-            onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setPopup(popup === "fill" ? null : "fill") }}
-            className="w-[18px] h-[18px] rounded-[4px] border border-zinc-300/80 cursor-pointer hover:scale-110 transition-transform shrink-0 relative overflow-hidden shadow-[0_0.5px_1px_rgba(0,0,0,0.06)]"
-            style={{ backgroundColor: fillColor === "transparent" ? "#fff" : fillColor }}
-            title="Fill color"
-          >
-            {fillColor === "transparent" && <div className="absolute w-[140%] h-[1px] bg-red-400/70 rotate-45 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
-          </button>
 
           {popup && (
             <div className="absolute top-full left-0 mt-1.5 bg-white rounded-[8px] border border-zinc-200 shadow-lg p-2 z-50" style={{ width: 140, ...font }}>
-              <div className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">{popup === "stroke" ? "Stroke" : "Fill"}</div>
+              <div className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Color</div>
               <div className="grid grid-cols-5 gap-1">
-                {popup === "fill" && (
-                  <button onMouseDown={e => { e.preventDefault(); onFillColorChange("transparent"); setPopup(null) }}
-                    className="w-[22px] h-[22px] rounded-[4px] cursor-pointer border border-zinc-300 bg-white relative overflow-hidden hover:scale-110 transition-transform"
-                    style={{ outline: fillColor === "transparent" ? `1.5px solid ${accent}` : "none", outlineOffset: 1 }}>
-                    <div className="absolute w-[140%] h-[1px] bg-red-400 rotate-45 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  </button>
-                )}
-                {(popup === "fill" ? COLORS.slice(0, 9) : COLORS).map(c => (
+                {COLORS.map(c => (
                   <button key={c} onMouseDown={e => {
                     e.preventDefault()
-                    popup === "stroke" ? onStrokeColorChange(c) : onFillColorChange(c)
+                    onStrokeColorChange(c)
                     setPopup(null)
                   }}
                     className="w-[22px] h-[22px] rounded-[4px] cursor-pointer hover:scale-110 transition-transform"
                     style={{
                       backgroundColor: c,
                       border: c === "#ffffff" ? "1px solid #e4e4e7" : "1px solid transparent",
-                      outline: (popup === "stroke" ? strokeColor : fillColor) === c ? `1.5px solid ${accent}` : "none",
+                      outline: strokeColor === c ? `1.5px solid ${accent}` : "none",
                       outlineOffset: 1,
                     }} />
                 ))}
               </div>
               <input
                 type="color"
-                value={popup === "stroke" ? strokeColor : (fillColor === "transparent" ? "#ffffff" : fillColor)}
-                onChange={e => popup === "stroke" ? onStrokeColorChange(e.target.value) : onFillColorChange(e.target.value)}
+                value={strokeColor}
+                onChange={e => onStrokeColorChange(e.target.value)}
                 className="w-full h-5 mt-1.5 rounded-[4px] cursor-pointer border border-zinc-200"
               />
             </div>
@@ -210,23 +180,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({
           ))}
         </div>
 
-        {/* Dash */}
-        <button onMouseDown={e => { e.preventDefault(); onDashChange(!dash) }}
-          className="h-[18px] w-[18px] flex items-center justify-center rounded-[3px] cursor-pointer transition-colors"
-          style={dash ? { color: "#b85e22" } : { color: "#a1a1aa" }}
-          title={dash ? "Solid" : "Dashed"}>
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={dash ? "3 3" : "none"}><line x1="4" y1="12" x2="20" y2="12" /></svg>
-        </button>
-
-        {/* Opacity slider */}
-        <input
-          type="range" min="0.1" max="1" step="0.05" value={opacity}
-          onChange={e => onOpacityChange(Number(e.target.value))}
-          className="w-8 h-px rounded cursor-pointer accent-zinc-400 shrink-0"
-          title={`${Math.round(opacity * 100)}%`}
-          style={{ opacity: 0.6 }}
-        />
-
         {sep}
 
         {/* Undo / Redo */}
@@ -235,8 +188,8 @@ export const FloatingToolbar = memo(function FloatingToolbar({
 
         {sep}
 
-        {miniBtn(onImproveDrawing, "Smooth", Is("M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"))}
-        {miniBtn(() => fileRef.current?.click(), "Image", <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>)}
+        {/* Clear all */}
+        {miniBtn(onClearDrawing, "Clear all", <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>)}
 
         {sep}
 

@@ -36,3 +36,44 @@ export const TREE_TYPES: Record<string, any> = {
 
   spoiled: { name: 'Spoiled Grove', color: '#71717a', bg: 'rgba(113, 113, 122, 0.1)', cost: 0, currency: 'sunshine', rarity: 'common', weight: 0 }
 }
+
+export const XP_LEVELS: { xp: number; name: string }[] = [
+  { xp: 0, name: "Seedling" },
+  { xp: 100, name: "Sprout" },
+  { xp: 300, name: "Sapling" },
+  { xp: 600, name: "Scribe" },
+  { xp: 1000, name: "Wordsmith" },
+  { xp: 1600, name: "Inkweaver" },
+  { xp: 2400, name: "Chronicler" },
+  { xp: 3500, name: "Storyteller" },
+  { xp: 5000, name: "Lorekeeper" },
+  { xp: 7000, name: "Sage" },
+  { xp: 10000, name: "Archivist" },
+  { xp: 14000, name: "Oracle" },
+  { xp: 20000, name: "Pulp Legend" },
+]
+
+export function getLevel(xp: number): { level: number; name: string; currentXp: number; nextXp: number; progress: number } {
+  let level = 0
+  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= XP_LEVELS[i].xp) { level = i; break }
+  }
+  const current = XP_LEVELS[level]
+  const next = XP_LEVELS[level + 1] || { xp: current.xp + 5000, name: "Beyond" }
+  const range = next.xp - current.xp
+  const progress = range > 0 ? (xp - current.xp) / range : 1
+  return { level: level + 1, name: current.name, currentXp: xp - current.xp, nextXp: range, progress: Math.min(1, progress) }
+}
+
+export const LEADERBOARD_BOTS = [
+  { name: "quillmaster", xp: 22400 },
+  { name: "midnightscribe", xp: 15200 },
+  { name: "inkdragon", xp: 11800 },
+  { name: "papertiger", xp: 8600 },
+  { name: "notanova", xp: 6300 },
+  { name: "draftpunk", xp: 4100 },
+  { name: "blankpage_hero", xp: 2700 },
+  { name: "lofi_writer", xp: 1500 },
+  { name: "penpal99", xp: 800 },
+  { name: "newleaf", xp: 200 },
+]

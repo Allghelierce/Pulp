@@ -22,21 +22,22 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 sm:p-0">
       {/* Backdrop */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.1 }}
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
       {/* Dialog Frame */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ type: "spring", damping: 25, stiffness: 350 }}
-        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-[360px] overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.1, ease: "easeOut" }}
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-lg shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-[360px] overflow-hidden"
         onKeyDown={e => { 
           if (e.key === "Enter" && config.type !== "alert") { e.preventDefault(); confirm(); }
           if (e.key === "Escape") onClose();
@@ -87,7 +88,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
                 onChange={e => setVal(e.target.value)}
                 placeholder={config.defaultValue ?? "Type something..."}
                 style={{ fontFamily: '"EB Garamond", serif' }}
-                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-2.5 text-base text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-md px-4 py-2.5 text-base text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
               />
             </div>
           )}
@@ -111,7 +112,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
           <div className="flex flex-col w-full gap-3">
             <button
               onClick={confirm}
-              className="w-full py-3.5 rounded-xl text-white text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] hover:brightness-110"
+              className="w-full py-3.5 rounded-md text-white text-[11px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] hover:brightness-110"
               style={{ backgroundColor: btnColor, boxShadow: `0 8px 24px -6px ${btnColor}44`, fontFamily: '"EB Garamond", serif' }}
             >
               {config.type === "prompt"  ? (config.confirmLabel ?? "Confirm") :
@@ -120,7 +121,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
             {config.type !== "alert" && (
               <button 
                 onClick={onClose} 
-                className="w-full py-3 rounded-xl text-[11px] font-bold text-zinc-500 uppercase tracking-[0.22em] hover:bg-zinc-700/30 transition-all"
+                className="w-full py-3 rounded-md text-[11px] font-bold text-zinc-500 uppercase tracking-[0.22em] hover:bg-zinc-700/30 transition-all"
                 style={{ fontFamily: '"EB Garamond", serif' }}
               >
                 Cancel
