@@ -2862,21 +2862,21 @@ export default function NoteApp() {
                             <button
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
-                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              className={`p-1 rounded transition-all ${currentPageIdx === 0 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="First Page"
                             >
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8" /><path d="m11 20-4-8 4-8" /></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 20-4-8 4-8" /><path d="m11 20-4-8 4-8" /></svg>
                             </button>
                             {/* Previous */}
                             <button
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
-                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              className={`p-1 rounded transition-all ${currentPageIdx === 0 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Previous Page"
                             >
-                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 20-4-8 4-8" /></svg>
                             </button>
                             <PageNumberInput
                               currentPageIdx={currentPageIdx}
@@ -2895,21 +2895,21 @@ export default function NoteApp() {
                                   setCurrentPageIdx(activeNote.pages.length)
                                 }
                               }}
-                              className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              className="p-1 hover:opacity-60 active:scale-95 rounded transition-all"
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Next Page / Add Page"
                             >
-                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m10 20 4-8-4-8" /></svg>
                             </button>
                             {/* Skip to last */}
                             <button
                               disabled={currentPageIdx === activeNote.pages.length - 1}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
-                              className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#9ca3af" : "#4b5563" }}
+                              className={`p-1 rounded transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-15" : "hover:opacity-60 active:scale-95"}`}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
                               title="Last Page"
                             >
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8" /><path d="m13 20 4-8-4-8" /></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 20 4-8-4-8" /><path d="m13 20 4-8-4-8" /></svg>
                             </button>
                           </div>{/* end inner flex */}
 

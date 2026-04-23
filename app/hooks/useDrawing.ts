@@ -72,14 +72,24 @@ export function useDrawing({
     render()
   }
 
+  const roRef = useRef<ResizeObserver | null>(null)
+  const observedCanvasRef = useRef<HTMLCanvasElement | null>(null)
+
   useEffect(() => {
     const c = canvasRef.current
-    if (!c) return
+    if (!c || c === observedCanvasRef.current) return
+    if (roRef.current) roRef.current.disconnect()
+    observedCanvasRef.current = c
     syncCanvas()
-    const ro = new ResizeObserver(() => syncCanvas())
-    ro.observe(c.parentElement || c)
-    return () => ro.disconnect()
-  }, [canvasRef])
+    roRef.current = new ResizeObserver(() => syncCanvas())
+    roRef.current.observe(c.parentElement || c)
+  })
+
+  useEffect(() => {
+    return () => {
+      if (roRef.current) { roRef.current.disconnect(); roRef.current = null }
+    }
+  }, [])
 
   const getPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const c = canvasRef.current!
