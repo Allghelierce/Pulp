@@ -770,7 +770,7 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
-    onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox,
+    onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
 }

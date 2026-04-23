@@ -49,25 +49,77 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [indexing, setIndexing] = useState(true)
+  const [indexProgress, setIndexProgress] = useState(0)
+  const notebookTextRef = useRef("")
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isDark = theme === "dark"
 
   useEffect(() => {
+    let cancelled = false
+    const totalPages = note.pages.length
+    const boxPages = Object.keys(note.boxes).length
+    const totalSteps = totalPages + boxPages + 1
+    let step = 0
+
+    const advance = () => {
+      step++
+      if (!cancelled) setIndexProgress(Math.min(step / totalSteps, 0.95))
+    }
+
+    const run = async () => {
+      const parts: string[] = []
+
+      for (let i = 0; i < note.pages.length; i++) {
+        const html = note.pages[i]
+        const div = document.createElement("div")
+        div.innerHTML = html
+        const text = div.textContent?.trim() || ""
+        if (text) parts.push(`[Page ${i + 1}]\n${text}`)
+        advance()
+        await new Promise(r => setTimeout(r, 60))
+      }
+
+      for (const [pageIdx, boxes] of Object.entries(note.boxes)) {
+        for (const box of boxes) {
+          if (!box.content.trim()) continue
+          const div = document.createElement("div")
+          div.innerHTML = box.content
+          const text = div.textContent?.trim()
+          if (text) parts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
+        }
+        advance()
+        await new Promise(r => setTimeout(r, 40))
+      }
+
+      notebookTextRef.current = parts.join("\n\n")
+      if (!cancelled) {
+        setIndexProgress(1)
+        await new Promise(r => setTimeout(r, 300))
+        setIndexing(false)
+      }
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [note])
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
   }, [messages])
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => { if (!indexing) inputRef.current?.focus() }, [indexing])
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || loading) return
+    if (!text.trim() || loading || indexing) return
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: text.trim() }
     setMessages(prev => [...prev, userMsg])
     setInput("")
     setLoading(true)
 
     try {
-      const notebookContent = gatherNotebookText(note)
+      const notebookContent = notebookTextRef.current || gatherNotebookText(note)
       const history = [...messages, userMsg].slice(-10).map(m => `${m.role}: ${m.content}`).join("\n")
       const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}\n\n[CONVERSATION HISTORY]:\n${history}`
 
@@ -129,7 +181,26 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
 
       {/* Messages */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-        {messages.length === 0 && (
+        {indexing ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "40px 20px" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${accent}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? "#d4d4d8" : "#3f3f46", marginBottom: 4 }}>Reading your notebook...</div>
+              <div style={{ fontSize: 11, color: mutedText, maxWidth: 220, lineHeight: 1.5 }}>Indexing {note.pages.length} page{note.pages.length !== 1 ? "s" : ""} for context</div>
+            </div>
+            <div style={{ width: "100%", maxWidth: 200, height: 4, borderRadius: 2, background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: 2, background: accent,
+                width: `${indexProgress * 100}%`,
+                transition: "width 0.15s ease-out",
+              }} />
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "40px 0" }}>
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${accent}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -162,7 +233,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
         {messages.map(msg => (
           <div key={msg.id} style={{

@@ -15,10 +15,10 @@ import type { Achievement, NoteData } from "@/app/types"
 
 const TAB_DESCRIPTIONS: Record<string, string> = {
   general: "Account, shortcuts, and application preferences",
-  appearance: "Theme, interface, and visual customization",
+  appearance: "Theme, fonts, paper style, and visual customization",
   achievements: "Track your progress and claim rewards",
-  typography: "Fine-tune your writing aesthetics",
-  editor: "Writing tools, focus mode, and distraction blocking",
+  editor: "Writing tools, layout, and focus mode",
+  focus: "Block distracting websites and apps",
   data: "Storage, exports, and account management",
   subscription: "Manage your plan and billing",
 }
@@ -27,7 +27,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
   general: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   appearance: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 20 4 4 0 0 0 0-8 4 4 0 0 1 0-8"/><circle cx="12" cy="9" r="1" fill="currentColor"/></svg>,
   achievements: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>,
-  typography: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>,
+  focus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   editor: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   data: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>,
   subscription: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
@@ -37,8 +37,8 @@ export const SETTINGS_TABS = [
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "achievements", label: "Achievements", group: "App" },
-  { id: "typography", label: "Typography", group: "Writing" },
   { id: "editor", label: "Editor", group: "Writing" },
+  { id: "focus", label: "Focus", group: "Writing" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
 ] as const
@@ -142,8 +142,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
     : groups
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
-      <div className={`relative w-full max-w-[900px] ${isDark ? "bg-[#0a0a0c] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={onClose}>
+      <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#0a0a0c] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* Close */}
         <button
@@ -354,17 +354,14 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   control={<SettingToggle checked={wordCountVisible} onChange={v => onUpdateConfig({ wordCountVisible: v })} isDark={isDark} />}
                 />
               </SettingSection>
-            </>)}
 
-            {/* ── Typography ── */}
-            {activeTab === "typography" && (<>
               <SettingSection title="Font Selection" isDark={isDark}>
                  <SettingRow
                   title="Heading Font"
                   isDark={isDark}
                   description="Used for large titles and notebook covers"
                   control={
-                    <select 
+                    <select
                       value={headingFont}
                       onChange={e => onUpdateConfig({ headingFont: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
@@ -381,7 +378,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   isDark={isDark}
                   description="The default font for notes and boxes"
                   control={
-                    <select 
+                    <select
                       value={editorFont}
                       onChange={e => onUpdateConfig({ editorFont: e.target.value })}
                       className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
@@ -489,11 +486,14 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   control={<SettingToggle checked={focusMode} onChange={v => onUpdateConfig({ focusMode: v })} isDark={isDark} />}
                 />
               </SettingSection>
+            </>)}
 
+            {/* ── Focus ── */}
+            {activeTab === "focus" && (<>
               <SettingSection title="Focus Blocker" isDark={isDark}>
                  <div className="px-5 py-4 pb-2">
                     <p className={`text-[12px] leading-relaxed mb-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-                      Restrict access to distractions while your Focus Timer is running.
+                      Restrict access to distractions while your Focus Timer is running. Requires the Pulp Focus browser extension.
                     </p>
                  </div>
                  <BlockList
@@ -591,7 +591,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             {/* ── Data ── */}
             {activeTab === "data" && (<>
                <SettingSection title="Local Storage" isDark={isDark}>
-                 <SettingRow title="Used space" isDark={isDark} control={<span className="text-[11px] font-mono opacity-50">14.2 MB</span>} />
+                 <StorageBar isDark={isDark} />
                </SettingSection>
                <SettingSection title="Exports" isDark={isDark}>
                  <div className="flex flex-col gap-2 p-5">
@@ -657,28 +657,37 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                  </SettingSection>
                )}
 
-               <SettingSection title="Danger Zone" isDark={isDark}>
-                <SettingRow
-                  title="Delete all notes"
-                  isDark={isDark}
-                  description="Permanently erase every note and page. This cannot be undone."
-                  control={
-                    <DestructiveButton onClick={() => setDeleteConfirmType("notes")}>
-                      Delete All
-                    </DestructiveButton>
-                  }
-                />
-                <SettingRow
-                  title="Delete account"
-                  isDark={isDark}
-                  description="Permanently delete your account and all associated data."
-                  control={
-                    <DestructiveButton onClick={() => setDeleteConfirmType("account")}>
-                      Delete Account
-                    </DestructiveButton>
-                  }
-                />
-              </SettingSection>
+               <div className="mb-7">
+                <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
+                  Danger Zone
+                </p>
+                <div className={`rounded-xl border overflow-hidden divide-y ${
+                  isDark
+                    ? "bg-red-950/20 border-red-900/40 divide-red-900/30"
+                    : "bg-red-50/50 border-red-200/60 divide-red-100/60"
+                }`}>
+                  <SettingRow
+                    title={<span className={isDark ? "text-red-300" : "text-red-700"}>Delete all notes</span>}
+                    isDark={isDark}
+                    description="Permanently erase every note and page. This cannot be undone."
+                    control={
+                      <DestructiveButton onClick={() => setDeleteConfirmType("notes")}>
+                        Delete All
+                      </DestructiveButton>
+                    }
+                  />
+                  <SettingRow
+                    title={<span className={isDark ? "text-red-300" : "text-red-700"}>Delete account</span>}
+                    isDark={isDark}
+                    description="Permanently delete your account and all associated data."
+                    control={
+                      <DestructiveButton onClick={() => setDeleteConfirmType("account")}>
+                        Delete Account
+                      </DestructiveButton>
+                    }
+                  />
+                </div>
+              </div>
             </>)}
 
             {/* ── Subscription ── */}
@@ -705,6 +714,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                         { name: "500 AI Images / month", description: "Generative sketches for your notes", included: true },
                         { name: "50,000 AI Tokens / month", description: "Powerful text generation & analysis", included: true },
                         { name: "5 GB Cloud Storage", description: "Sync across all devices", included: true },
+                        { name: "100 MB Local Storage", description: "Expanded offline cache", included: true },
                         { name: "All Page Styles", description: "Lined, grid, plain, and more", included: true },
                       ],
                     },
@@ -721,6 +731,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                         { name: "Unlimited AI Images", description: "No monthly cap on sketches", included: true },
                         { name: "500,000 AI Tokens / month", description: "Large context window power", included: true },
                         { name: "50 GB Cloud Storage", description: "Ample space for your media", included: true },
+                        { name: "500 MB Local Storage", description: "Maximum offline capacity", included: true },
                         { name: "Priority Support", description: "Fast-track email & chat", included: true },
                       ],
                     },
@@ -842,6 +853,56 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function StorageBar({ isDark }: { isDark: boolean }) {
+  const [usedBytes, setUsedBytes] = useState(0)
+
+  useEffect(() => {
+    let total = 0
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key) {
+          total += key.length + (localStorage.getItem(key)?.length || 0)
+        }
+      }
+      total *= 2
+    } catch { /* ignore */ }
+    setUsedBytes(total)
+  }, [])
+
+  const QUOTA = 10 * 1024 * 1024 // 10 MB free tier
+  const pct = Math.min(100, (usedBytes / QUOTA) * 100)
+  const usedMB = (usedBytes / (1024 * 1024)).toFixed(1)
+  const quotaMB = (QUOTA / (1024 * 1024)).toFixed(0)
+  const isHigh = pct > 80
+
+  return (
+    <div className="px-5 py-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className={`text-[12px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Used space</span>
+        <span className={`text-[11px] font-mono tabular-nums ${isHigh ? "text-amber-500 font-semibold" : (isDark ? "text-zinc-500" : "text-zinc-400")}`}>
+          {usedMB} MB / {quotaMB} MB
+        </span>
+      </div>
+      <div className={`h-2 w-full rounded-full overflow-hidden ${isDark ? "bg-zinc-800" : "bg-zinc-200/60"}`}>
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            isHigh
+              ? "bg-gradient-to-r from-amber-400 to-red-500"
+              : isDark
+                ? "bg-gradient-to-r from-zinc-600 to-zinc-500"
+                : "bg-gradient-to-r from-zinc-400 to-zinc-300"
+          }`}
+          style={{ width: `${Math.max(1, pct)}%` }}
+        />
+      </div>
+      <p className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+        Free plan: {quotaMB} MB local storage. Upgrade for more capacity.
+      </p>
     </div>
   )
 }

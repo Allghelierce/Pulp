@@ -134,12 +134,16 @@ export function useDrawing({
     pushUndo()
     const tid = activeTabIdRef.current
     const pidx = currentPageIdxRef.current
-    setNotes(prev => prev.map(n => {
-      if (n.id !== tid) return n
-      const drawings = n.drawings || {}
-      const pageDrawings = (drawings[pidx] || []).filter(s => s.id !== id)
-      return { ...n, drawings: { ...drawings, [pidx]: pageDrawings } }
-    }))
+    setNotes(prev => {
+      const updated = prev.map(n => {
+        if (n.id !== tid) return n
+        const drawings = n.drawings || {}
+        const pageDrawings = (drawings[pidx] || []).filter(s => s.id !== id)
+        return { ...n, drawings: { ...drawings, [pidx]: pageDrawings } }
+      })
+      notesRef.current = updated
+      return updated
+    })
   }
 
   const erasedIds = useRef<Set<string>>(new Set())
@@ -208,12 +212,16 @@ export function useDrawing({
     const tid = activeTabIdRef.current
     const pidx = currentPageIdxRef.current
 
-    setNotes(prev => prev.map(n => {
-      if (n.id !== tid) return n
-      const drawings = n.drawings || {}
-      const pageDrawings = drawings[pidx] || []
-      return { ...n, drawings: { ...drawings, [pidx]: [...pageDrawings, newStroke] } }
-    }))
+    setNotes(prev => {
+      const updated = prev.map(n => {
+        if (n.id !== tid) return n
+        const drawings = n.drawings || {}
+        const pageDrawings = drawings[pidx] || []
+        return { ...n, drawings: { ...drawings, [pidx]: [...pageDrawings, newStroke] } }
+      })
+      notesRef.current = updated
+      return updated
+    })
 
     currentPath.current = []
     render()
@@ -338,7 +346,11 @@ export function useDrawing({
     pushUndo()
     const tid = activeTabIdRef.current
     const pidx = currentPageIdxRef.current
-    setNotes(prev => prev.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: [] } } : n))
+    setNotes(prev => {
+      const updated = prev.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: [] } } : n)
+      notesRef.current = updated
+      return updated
+    })
   }, [setNotes])
 
   const undo = useCallback(() => {
@@ -347,7 +359,11 @@ export function useDrawing({
     const pidx = currentPageIdxRef.current
     redoStack.current.push([...getCurrentDrawings()])
     const prev = undoStack.current.pop()!
-    setNotes(p => p.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: prev } } : n))
+    setNotes(p => {
+      const updated = p.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: prev } } : n)
+      notesRef.current = updated
+      return updated
+    })
     setUndoCount(undoStack.current.length)
     setRedoCount(redoStack.current.length)
   }, [setNotes])
@@ -358,7 +374,11 @@ export function useDrawing({
     const pidx = currentPageIdxRef.current
     undoStack.current.push([...getCurrentDrawings()])
     const next = redoStack.current.pop()!
-    setNotes(p => p.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: next } } : n))
+    setNotes(p => {
+      const updated = p.map(n => n.id === tid ? { ...n, drawings: { ...(n.drawings || {}), [pidx]: next } } : n)
+      notesRef.current = updated
+      return updated
+    })
     setUndoCount(undoStack.current.length)
     setRedoCount(redoStack.current.length)
   }, [setNotes])

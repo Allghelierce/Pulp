@@ -87,14 +87,15 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-fade {
-                               0% { opacity: 0.6; transform: scale(1) translateY(0); filter: blur(0); }
-                               40% { opacity: 0.3; transform: scale(0.85) translateY(-3px); filter: blur(0.5px); }
-                               100% { opacity: 0; transform: scale(0.4) translateY(-8px); filter: blur(2.5px); }
+    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
+                               0% { opacity: 0.55; transform: scaleX(1) scaleY(1); filter: blur(0px); }
+                               25% { opacity: 0.4; transform: scaleX(1.3) scaleY(0.7); filter: blur(1px); }
+                               50% { opacity: 0.2; transform: scaleX(1.8) scaleY(0.4); filter: blur(2.5px); }
+                               100% { opacity: 0; transform: scaleX(2.5) scaleY(0.15); filter: blur(4px); }
                              }
                              .erased {
                                display: flex;
-                               animation: erase-fade 0.35s forwards cubic-bezier(0.4, 0, 0.2, 1);
+                               animation: erase-smudge 0.35s forwards cubic-bezier(0.2, 0, 0.4, 1);
                                pointer-events: none;
                                user-select: none;
                                white-space: pre;
@@ -680,7 +681,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Indie Flower', cursive")
+  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Caveat', cursive")
   const inkColor = isMarginStyle
     ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
     : "#1a1a1a"
@@ -986,7 +987,7 @@ export default function NoteApp() {
   }, [])
 
   // Settings
-  const [settings, setSettings] = useState<any>({
+  const SETTINGS_DEFAULTS = {
     accent: "#4a081e",
     theme: "dark",
     autoSave: true,
@@ -1014,6 +1015,14 @@ export default function NoteApp() {
     blockedApps: [],
     devMode: false,
     isDevUnlocked: false
+  }
+  const [settings, setSettings] = useState<any>(() => {
+    if (typeof window === "undefined") return SETTINGS_DEFAULTS
+    try {
+      const saved = localStorage.getItem("pulp-settings")
+      if (saved) return { ...SETTINGS_DEFAULTS, ...JSON.parse(saved) }
+    } catch {}
+    return SETTINGS_DEFAULTS
   })
 
   const updateSettings = (updates: any) => setSettings((prev: any) => {
@@ -1480,11 +1489,22 @@ export default function NoteApp() {
         e.preventDefault()
         return
       }
-      const isBox = (e.currentTarget as HTMLElement) !== editorRef.current
+      const ce = e.currentTarget as HTMLElement
+      const isBox = ce !== editorRef.current
       if (isBox) {
-        (e.currentTarget as HTMLElement).blur()
-        boxes.setSelectedBoxIds(new Set())
         e.preventDefault()
+        const isFocused = document.activeElement === ce || ce.contains(document.activeElement)
+        if (isFocused) {
+          ce.blur()
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+          const boxId = ce.closest('[id^="box-"]')?.id?.replace('box-', '')
+          if (boxId) boxes.setSelectedBoxIds(new Set([boxId]))
+        } else {
+          boxes.setSelectedBoxIds(new Set())
+        }
+      } else if (boxes.selectedBoxIdsRef.current.size > 0) {
+        e.preventDefault()
+        boxes.setSelectedBoxIds(new Set())
       }
       return
     }
@@ -1717,15 +1737,14 @@ export default function NoteApp() {
         return
       }
 
-      // Escape - exit draw mode
+      // Escape - exit draw mode or deselect boxes
       if (e.key === 'Escape') {
-        setShowDrawToolbar(prev => {
-          if (prev) {
-            setActiveTool('select')
-            return false
-          }
-          return prev
-        })
+        if (showDrawToolbar) {
+          setShowDrawToolbar(false)
+          setActiveTool('select')
+        } else if (boxes.selectedBoxIdsRef.current.size > 0) {
+          boxes.setSelectedBoxIds(new Set())
+        }
       }
 
       // \ - AI editing command
@@ -1744,17 +1763,30 @@ export default function NoteApp() {
         setTimerOpen(!timerOpen)
       }
 
-      // Option+ArrowLeft / Option+ArrowRight - Switch pages
-      if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault()
-        editor.flushSync()
-        if (e.key === 'ArrowLeft') {
-          setCurrentPageIdx(p => Math.max(0, p - 1))
-        } else {
-          setCurrentPageIdx(p => {
-            const max = (notesRef.current.find(n => n.id === activeTabIdRef.current)?.pages.length ?? 1) - 1
-            return Math.min(max, p + 1)
-          })
+      // Option+Arrow - Move selected boxes or switch pages
+      if (e.altKey && !e.metaKey && !e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        const selectedIds = boxes.selectedBoxIdsRef.current
+        const active = document.activeElement as HTMLElement | null
+        const isEditingBox = active?.isContentEditable && active?.closest?.('[id^="box-"]')
+        if (selectedIds.size > 0 && !isEditingBox) {
+          e.preventDefault()
+          const step = e.shiftKey ? 20 : 5
+          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+          boxes.updateBoxes((prev: any[]) => prev.map((b: any) =>
+            selectedIds.has(b.id) ? { ...b, x: b.x + dx, y: b.y + dy } : b
+          ))
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault()
+          editor.flushSync()
+          if (e.key === 'ArrowLeft') {
+            setCurrentPageIdx((p: number) => Math.max(0, p - 1))
+          } else {
+            setCurrentPageIdx((p: number) => {
+              const max = (notesRef.current.find(n => n.id === activeTabIdRef.current)?.pages.length ?? 1) - 1
+              return Math.min(max, p + 1)
+            })
+          }
         }
       }
     }
@@ -1796,33 +1828,21 @@ export default function NoteApp() {
     return () => window.removeEventListener("click", handler)
   }, [editor])
 
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("pulp-settings")
-    if (saved) {
-      try {
-        const s = JSON.parse(saved)
-        updateSettings(s)
-      } catch (e) { console.error("Local settings load failed:", e) }
-    }
-  }, [])
-
-  // Load settings from cloud
+  // Load settings from cloud (only fills in missing keys — localStorage always wins)
   useEffect(() => {
     if (!user) return
+    const hasLocal = !!localStorage.getItem("pulp-settings")
     supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
       if (!data?.settings) return
       const s = data.settings
-      updateSettings(s)
+      if (!hasLocal) updateSettings(s)
       if (s.trashNotes) setTrashNotes(s.trashNotes)
       if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
     })
   }, [user])
 
   // Save settings to localStorage (immediate) and cloud (debounced)
-  const settingsMounted = useRef(false)
   useEffect(() => {
-    if (!settingsMounted.current) { settingsMounted.current = true; return }
     const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation])
@@ -2828,7 +2848,7 @@ export default function NoteApp() {
                         {/* Page Navigation + Bookmark — generous deadzone prevents accidental textbox creation */}
                         <div
                           className="absolute top-0 right-0 z-50 no-print select-none"
-                          style={{ padding: "32px 20px 48px 60px" }}
+                          style={{ padding: "12px 10px 16px 20px" }}
                           onMouseDown={e => e.stopPropagation()}
                           onPointerDown={e => e.stopPropagation()}
                           onClick={e => e.stopPropagation()}

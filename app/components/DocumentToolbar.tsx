@@ -113,11 +113,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 }: DocumentToolbarProps) {
 
   const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnBaseActive = "text-[12px] font-medium border rounded-[5px] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnBaseActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }
 
   const NEON_ORANGE = "#f97316"
-  const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 8px rgba(249,115,22,0.5), 0 0 2px rgba(249,115,22,0.3)`, borderColor: "rgba(249,115,22,0.3)", backgroundColor: "rgba(249,115,22,0.04)" }
+  const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 8px rgba(249,115,22,0.5), 0 0 2px rgba(249,115,22,0.3)` }
   const btn = (active: boolean) => active ? btnBaseActive : btnBaseInactive
   const activeStyle = (active: boolean): React.CSSProperties => active ? neonStyle : {}
 
@@ -190,7 +190,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onClick={() => setInsertOpen(!insertOpen)}
             title="Insert elements"
-            className={`text-[12px] font-medium rounded-[5px] px-3 py-1 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 bg-white hover:bg-zinc-100'}`}
+            className={`text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
             style={{ ...(insertOpen ? neonStyle : {}), ...btnFont }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -212,7 +212,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 </svg>
                 Sticky Note
                 <div className="ml-auto flex items-center gap-1">
-                  {[['#fef08a'], ['#fce7f3'], ['#fed7aa']].map(([color]) => (
+                  {[['#fef08a'], ['#fce7f3'], ['#fed7aa'], ['#bfdbfe']].map(([color]) => (
                     <span
                       key={color}
                       onClick={e => { e.stopPropagation(); setStickyColor(color); setActiveTool('sticky'); setInsertOpen(false) }}
@@ -241,19 +241,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           )}
         </div>
-
-        {/* Draw */}
-        <button
-          onMouseDown={e => { e.preventDefault(); onToggleDrawToolbar() }}
-          title={showDrawToolbar ? "Close Drawing" : "Drawing"}
-          className={`${btn(showDrawToolbar)} flex items-center gap-1.5`}
-          style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
-          <span>Draw</span>
-        </button>
-
-        <div className="w-px h-5 bg-zinc-200/60 mr-1" />
 
         {/* Grid */}
         <button
@@ -329,6 +316,19 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           )}
         </div>
+
+        <div className="w-px h-5 bg-zinc-200/60 mx-0.5" />
+
+        {/* Draw */}
+        <button
+          onMouseDown={e => { e.preventDefault(); onToggleDrawToolbar() }}
+          title={showDrawToolbar ? "Close Drawing" : "Drawing"}
+          className={`${btn(showDrawToolbar)} flex items-center gap-1.5`}
+          style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
+          <span>Draw</span>
+        </button>
 
         {isVault && (
           <button
@@ -414,19 +414,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
           Quiz Me
-        </button>
-
-        {/* Compact All */}
-        <button
-          onClick={onCompactAll}
-          className={`${btn(allCompacted)} flex items-center gap-1.5`}
-          style={{ ...activeStyle(allCompacted), ...btnFont }}
-          title={allCompacted ? "Expand All" : "Collapse All"}
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: allCompacted ? 'rotate(0deg)' : 'rotate(90deg)' }}>
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-          Compact
         </button>
 
         <div className="w-px h-5 bg-zinc-200 shrink-0" />

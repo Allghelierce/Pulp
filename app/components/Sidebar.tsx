@@ -490,7 +490,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className="bg-[#110d0e] text-white flex flex-col shrink-0 overflow-hidden border-r border-white/5 relative" style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
+      <div id="app-sidebar" className={`bg-[#110d0e] text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} border-r border-white/5 relative`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
         {/* Background Ambient Pattern - covers logo + content area */}
         <div
           className="absolute top-0 left-0 right-0 bottom-[52px] pointer-events-none z-[1] overflow-hidden"
@@ -499,7 +499,7 @@ export const Sidebar = memo(function Sidebar({
           <BackgroundPlus plusColor="#e8862a" plusSize={40} fade={false} style={{ opacity: 0.5 }} />
         </div>
 
-        <div className="relative p-4 border-b border-white/5 shrink-0 overflow-hidden z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+        <div className="relative p-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           <div
             onClick={() => {
               const count = devClicks + 1
@@ -549,13 +549,13 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 320 }}>
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-[100] rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }}>
                 {searchResults.length === 0 ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>
                   </div>
                 ) : (
-                  <div className="overflow-y-auto" style={{ maxHeight: 320 }}>
+                  <div className="overflow-y-auto" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }}>
                     {searchResults.map((r, i) => (
                       <button
                         key={`${r.noteId}-${r.pageIdx}-${r.matchType}-${i}`}
