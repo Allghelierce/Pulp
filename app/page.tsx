@@ -30,6 +30,7 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
+import { BackgroundEngravings } from "@/app/components/BackgroundEngravings"
 
 function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme: "light" | "dark"; onNavigate: (idx: number) => void
@@ -816,6 +817,58 @@ const BoxTextarea = memo(function BoxTextarea({
         onInput(e)
         clearTimeout(timerRef.current)
         timerRef.current = setTimeout(syncState, 150)
+      }}
+      onPaste={e => {
+        const clip = e.clipboardData
+        if (!clip) return
+        const el = ref.current
+
+        const imageFile = Array.from(clip.files).find(f => f.type.startsWith("image/"))
+        if (imageFile) {
+          e.preventDefault()
+          const reader = new FileReader()
+          reader.onload = () => {
+            if (el) el.focus()
+            const img = `<img src="${reader.result}" style="max-width:100%;border-radius:4px;margin:6px 0;" />`
+            document.execCommand("insertHTML", false, img)
+            syncState()
+          }
+          reader.readAsDataURL(imageFile)
+          return
+        }
+
+        const text = clip.getData("text/plain")
+        if (!text) return
+
+        const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+
+        const urlPattern = /^https?:\/\/\S+$/
+        if (urlPattern.test(text.trim())) {
+          e.preventDefault()
+          const url = text.trim()
+          const display = esc(url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))
+          const link = `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;cursor:pointer;">${display}</a>`
+          document.execCommand("insertHTML", false, link)
+          syncState()
+          return
+        }
+
+        const lines = text.split("\n")
+        const codeScore = lines.length >= 3 && lines.filter(l =>
+          /^\s{2,}\S/.test(l) || /[{};]$/.test(l.trim()) || /^(import|export|const|let|var|function|class|def|if|for|while|return)\b/.test(l.trim())
+        ).length > lines.length * 0.4
+        if (codeScore) {
+          e.preventDefault()
+          const code = `<pre style="background:rgba(0,0,0,0.05);border-radius:6px;padding:12px 16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;tab-size:2;"><code>${esc(text)}</code></pre>`
+          document.execCommand("insertHTML", false, code)
+          syncState()
+          return
+        }
+
+        e.preventDefault()
+        const plain = esc(text).replace(/\n/g, "<br>")
+        document.execCommand("insertHTML", false, plain)
+        syncState()
       }}
       onMouseDown={e => e.stopPropagation()}
       onFocus={() => { onFocus() }}
@@ -1763,30 +1816,10 @@ export default function NoteApp() {
         setTimerOpen(!timerOpen)
       }
 
-      // Arrow keys - nudge selected boxes; Option+Arrow - snap to grid; Option+Arrow without selection - switch pages
-      if (!e.metaKey && !e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      // Option+Arrow without box selection - switch pages
+      if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         const selectedIds = boxes.selectedBoxIdsRef.current
-        const active = document.activeElement as HTMLElement | null
-        const isEditingBox = active?.isContentEditable && active?.closest?.('[id^="box-"]')
-        if (selectedIds.size > 0 && !isEditingBox) {
-          e.preventDefault()
-          if (e.altKey) {
-            const snap = 32
-            boxes.updateBoxes((prev: any[]) => prev.map((b: any) => {
-              if (!selectedIds.has(b.id)) return b
-              const dx = e.key === 'ArrowLeft' ? -snap : e.key === 'ArrowRight' ? snap : 0
-              const dy = e.key === 'ArrowUp' ? -snap : e.key === 'ArrowDown' ? snap : 0
-              return { ...b, x: Math.round((b.x + dx) / snap) * snap, y: Math.round((b.y + dy) / snap) * snap }
-            }))
-          } else {
-            const step = e.shiftKey ? 10 : 2
-            const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
-            const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
-            boxes.updateBoxes((prev: any[]) => prev.map((b: any) =>
-              selectedIds.has(b.id) ? { ...b, x: b.x + dx, y: b.y + dy } : b
-            ))
-          }
-        } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        if (selectedIds.size === 0) {
           e.preventDefault()
           editor.flushSync()
           if (e.key === 'ArrowLeft') {
@@ -2654,7 +2687,8 @@ export default function NoteApp() {
                 />
               </main>
             ) : (
-              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
+              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
+                <BackgroundEngravings theme={theme} />
                 <div style={{ zoom: zoom, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "relative" }}>

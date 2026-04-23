@@ -112,6 +112,9 @@ export const Sidebar = memo(function Sidebar({
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [aiResults, setAiResults] = useState<{ noteId: string; noteName: string; noteIcon?: string; pageIdx: number; reason: string }[]>([])
+  const [aiSearching, setAiSearching] = useState(false)
+  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const stripHtml = useCallback((html: string) => {
     const tmp = document.createElement("div")
@@ -155,6 +158,53 @@ export const Sidebar = memo(function Sidebar({
     }
     return results
   })()
+
+  useEffect(() => {
+    const q = searchQuery.trim()
+    if (q.length < 3) {
+      setAiResults([])
+      setAiSearching(false)
+      return
+    }
+    if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current)
+    setAiSearching(true)
+    aiDebounceRef.current = setTimeout(async () => {
+      try {
+        const activeNotes = notes.filter(n => !n.archived)
+        const noteSummaries = activeNotes.map(n => ({
+          id: n.id,
+          name: n.subject,
+          pages: n.pages.map((p, pi) => {
+            const text = stripHtml(p).slice(0, 200)
+            const boxes = (n.boxes[pi] || []).map(b => stripHtml(b.content).slice(0, 100)).join(" | ")
+            return text + (boxes ? " [boxes: " + boxes + "]" : "")
+          }),
+        }))
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q, notes: noteSummaries }),
+        })
+        if (!res.ok) { setAiSearching(false); return }
+        const data = await res.json()
+        const mapped = (data.results || [])
+          .filter((r: { noteIdx: number; pageIdx: number }) => r.noteIdx >= 0 && r.noteIdx < activeNotes.length)
+          .map((r: { noteIdx: number; pageIdx: number; reason: string }) => {
+            const note = activeNotes[r.noteIdx]
+            return {
+              noteId: note.id,
+              noteName: note.subject,
+              noteIcon: note.icon,
+              pageIdx: Math.min(r.pageIdx, note.pages.length - 1),
+              reason: r.reason,
+            }
+          })
+        setAiResults(mapped)
+      } catch { /* ignore */ }
+      setAiSearching(false)
+    }, 600)
+    return () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current) }
+  }, [searchQuery, notes, stripHtml])
 
   useEffect(() => {
     if (!searchFocused) return
@@ -561,7 +611,7 @@ export const Sidebar = memo(function Sidebar({
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
               <div className="absolute left-0 right-0 top-full mt-1.5 z-[100] rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }}>
-                {searchResults.length === 0 ? (
+                {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>
                   </div>
@@ -591,6 +641,41 @@ export const Sidebar = memo(function Sidebar({
                         </span>
                       </button>
                     ))}
+                    {(aiResults.length > 0 || aiSearching) && (
+                      <>
+                        {searchResults.length > 0 && <div className="border-t border-white/5" />}
+                        <div className="px-3.5 py-1.5 flex items-center gap-1.5">
+                          {aiSearching && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" className="animate-spin text-orange-400 shrink-0">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+                            </svg>
+                          )}
+                          <span className="text-[9px] uppercase tracking-widest font-bold text-orange-400/70">
+                            {aiSearching ? "Searching with AI…" : "AI Results"}
+                          </span>
+                        </div>
+                        {aiResults
+                          .filter(ar => !searchResults.some(lr => lr.noteId === ar.noteId && lr.pageIdx === ar.pageIdx))
+                          .map((r, i) => (
+                          <button
+                            key={`ai-${r.noteId}-${r.pageIdx}-${i}`}
+                            className="w-full text-left px-3.5 py-2.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
+                            onClick={() => {
+                              onSearchNavigate?.(r.noteId, r.pageIdx)
+                              setSearchQuery(""); setSearchFocused(false)
+                            }}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
+                              <span className="text-[11px] font-semibold text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
+                              <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
+                            </div>
+                            <p className="text-[10px] text-orange-400/60 leading-relaxed truncate">{r.reason}</p>
+                            <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5 text-orange-400/50">AI match</span>
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </div>
                 )}
               </div>
