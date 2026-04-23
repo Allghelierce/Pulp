@@ -1016,7 +1016,13 @@ export default function NoteApp() {
     isDevUnlocked: false
   })
 
-  const updateSettings = (updates: any) => setSettings((prev: any) => ({ ...prev, ...updates }))
+  const updateSettings = (updates: any) => setSettings((prev: any) => {
+    const merged = { ...prev }
+    for (const key in updates) {
+      if (updates[key] !== undefined) merged[key] = updates[key]
+    }
+    return merged
+  })
 
   const {
     accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -1814,7 +1820,9 @@ export default function NoteApp() {
   }, [user])
 
   // Save settings to localStorage (immediate) and cloud (debounced)
+  const settingsMounted = useRef(false)
   useEffect(() => {
+    if (!settingsMounted.current) { settingsMounted.current = true; return }
     const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
     localStorage.setItem("pulp-settings", JSON.stringify(settings))
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation])
