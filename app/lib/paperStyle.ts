@@ -9,7 +9,7 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
             preview ? "#ffffff" : "#FDFCF9"
 
   const lineColor = preview ? "#e4e4e7" : "#C2D3E8"
-  const stenoLine = preview ? "#fca5a5" : "#f8717166" // Faint red/pink for steno
+  const stenoLine = preview ? "#94a3b8" : "#5f9ea066"
   
   const dotR = preview ? "1px" : "1.5px"
 
