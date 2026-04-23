@@ -312,11 +312,12 @@ export const Sidebar = memo(function Sidebar({
 
   const noteRowStyle = (id: string): React.CSSProperties => {
     const accentSolid = accent.length > 7 ? accent.slice(0, 7) : accent
-    if (multiSelectedIds.has(id)) return { backgroundColor: `${accentSolid}33`, color: "white" }
+    const r = parseInt(accentSolid.slice(1, 3), 16), g = parseInt(accentSolid.slice(3, 5), 16), b = parseInt(accentSolid.slice(5, 7), 16)
+    if (multiSelectedIds.has(id)) return { backgroundColor: `rgba(${r},${g},${b},0.15)` }
     if (nestTargetId === id && draggedNoteId !== id)
-      return { outline: `1.5px solid ${accent}`, outlineOffset: -1, backgroundColor: `${accent}22`, color: "white" }
-    if (activeTabId === id) return { backgroundColor: `${accentSolid}44`, color: "white" }
-    return { color: "#a1a1aa" }
+      return { outline: `1.5px solid rgba(${r},${g},${b},0.45)`, outlineOffset: -1, backgroundColor: `rgba(${r},${g},${b},0.1)` }
+    if (activeTabId === id) return { backgroundColor: `rgba(${r},${g},${b},0.14)` }
+    return {}
   }
 
   const renderNote = (n: NoteData, indentPx: number): React.ReactNode => (

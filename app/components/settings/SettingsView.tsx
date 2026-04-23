@@ -45,14 +45,14 @@ export const SETTINGS_TABS = [
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS = [
-  { hex: "#9f1239", name: "Crimson" },
-  { hex: "#2563eb", name: "Cobalt" },
-  { hex: "#16a34a", name: "Forest" },
-  { hex: "#d97706", name: "Amber" },
-  { hex: "#7c3aed", name: "Violet" },
-  { hex: "#0891b2", name: "Teal" },
-  { hex: "#e11d48", name: "Rose" },
-  { hex: "#6b7280", name: "Slate" },
+  { hex: "#f97316", name: "Orange" },
+  { hex: "#ef4444", name: "Red" },
+  { hex: "#ec4899", name: "Pink" },
+  { hex: "#a855f7", name: "Purple" },
+  { hex: "#3b82f6", name: "Blue" },
+  { hex: "#06b6d4", name: "Cyan" },
+  { hex: "#22c55e", name: "Green" },
+  { hex: "#64748b", name: "Slate" },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -322,21 +322,28 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               <SettingSection title="Personalization" isDark={isDark}>
                 <div className="px-5 py-4">
                   <p className={`text-[12px] font-semibold mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Accent Color</p>
-                  <div className="flex flex-wrap gap-4">
-                    {ACCENT_COLORS.map(({ hex, name }) => (
-                      <button
-                        key={hex}
-                        onClick={() => onUpdateConfig({ accentColor: hex })}
-                        title={name}
-                        className="group flex flex-col items-center gap-1.5"
-                      >
-                        <div
-                          className={`w-9 h-9 rounded-none border-[3px] transition-transform hover:scale-110 shadow-sm`}
-                          style={{ backgroundColor: hex, borderColor: accentColor.startsWith(hex) ? (isDark ? "#ffffff" : "#1a1a1a") : "transparent" }}
-                        />
-                        <span className={`text-[9px] ${isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"} transition-colors`}>{name}</span>
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-3">
+                    {ACCENT_COLORS.map(({ hex, name }) => {
+                      const selected = accentColor === hex
+                      return (
+                        <button
+                          key={hex}
+                          onClick={() => onUpdateConfig({ accentColor: hex })}
+                          title={name}
+                          className="group flex flex-col items-center gap-1.5"
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full transition-all duration-150"
+                            style={{
+                              backgroundColor: hex,
+                              boxShadow: selected ? `0 0 0 2px ${isDark ? "#18181b" : "#fff"}, 0 0 0 4px ${hex}` : "none",
+                              transform: selected ? "scale(1.1)" : undefined,
+                            }}
+                          />
+                          <span className={`text-[9px] font-medium transition-colors ${selected ? (isDark ? "text-zinc-200" : "text-zinc-700") : isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"}`}>{name}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </SettingSection>

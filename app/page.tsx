@@ -30,7 +30,6 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
-import { BackgroundEngravings } from "@/app/components/BackgroundEngravings"
 
 function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme: "light" | "dark"; onNavigate: (idx: number) => void
@@ -88,7 +87,8 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   return (<>
-    <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
+    <style dangerouslySetInnerHTML={{
+      __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
                                0% { opacity: 0.55; transform: scaleX(1) scaleY(1); filter: blur(0px); }
                                25% { opacity: 0.4; transform: scaleX(1.3) scaleY(0.7); filter: blur(1px); }
                                50% { opacity: 0.2; transform: scaleX(1.8) scaleY(0.4); filter: blur(2.5px); }
@@ -547,12 +547,12 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           {open === "style" && (
             <div style={dropdownBase}>
               {BOX_STYLES.map(s => (
-                  <button key={s.value} style={optionBtn(styleKey === s.value)} onMouseDown={e => {
-                    e.preventDefault()
-                    onUpdateBox(box.id, { boxHeadingStyle: s.value as any, boxFontSize: undefined })
-                    setOpen(null)
-                  }}>{s.label}</button>
-                )
+                <button key={s.value} style={optionBtn(styleKey === s.value)} onMouseDown={e => {
+                  e.preventDefault()
+                  onUpdateBox(box.id, { boxHeadingStyle: s.value as any, boxFontSize: undefined })
+                  setOpen(null)
+                }}>{s.label}</button>
+              )
               )}
             </div>
           )}
@@ -803,7 +803,8 @@ const BoxTextarea = memo(function BoxTextarea({
                 setTimeout(cleanup, 500)
                 layer.appendChild(ghost)
               }
-              syncState()
+              clearTimeout(timerRef.current)
+              timerRef.current = setTimeout(syncState, 200)
             }
           }
         }
@@ -829,7 +830,7 @@ const BoxTextarea = memo(function BoxTextarea({
           const reader = new FileReader()
           reader.onload = () => {
             if (el) el.focus()
-            const img = `<img src="${reader.result}" style="max-width:100%;border-radius:4px;margin:6px 0;" />`
+            const img = `<img src="${reader.result}" style="max-width:100%;border-radius:4px;margin:6px 0;display:block;" />`
             document.execCommand("insertHTML", false, img)
             syncState()
           }
@@ -846,9 +847,12 @@ const BoxTextarea = memo(function BoxTextarea({
         if (urlPattern.test(text.trim())) {
           e.preventDefault()
           const url = text.trim()
-          const display = esc(url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))
-          const link = `<a href="${esc(url)}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline;cursor:pointer;">${display}</a>`
-          document.execCommand("insertHTML", false, link)
+          let hostname = ""
+          try { hostname = new URL(url).hostname.replace(/^www\./, "") } catch { hostname = url.slice(0, 40) }
+          const path = esc(url.replace(/^https?:\/\/(www\.)?[^/]+/, "").slice(0, 80) || "/")
+          const favicon = `https://www.google.com/s2/favicons?domain=${esc(hostname)}&sz=32`
+          const card = `<a href="${esc(url)}" target="_blank" rel="noopener" contenteditable="false" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:8px 0;border:1px solid rgba(0,0,0,0.12);border-radius:8px;text-decoration:none;cursor:pointer;background:rgba(0,0,0,0.02);max-width:100%;overflow:hidden;"><img src="${favicon}" width="20" height="20" style="border-radius:4px;flex-shrink:0;" /><span style="display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:system-ui,sans-serif;">${esc(hostname)}</span><span style="font-size:11px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:system-ui,sans-serif;">${path}</span></span></a>`
+          document.execCommand("insertHTML", false, card)
           syncState()
           return
         }
@@ -859,14 +863,14 @@ const BoxTextarea = memo(function BoxTextarea({
         ).length > lines.length * 0.4
         if (codeScore) {
           e.preventDefault()
-          const code = `<pre style="background:rgba(0,0,0,0.05);border-radius:6px;padding:12px 16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;tab-size:2;"><code>${esc(text)}</code></pre>`
+          const code = `<pre style="background:rgba(0,0,0,0.05);border-radius:6px;padding:12px 16px;font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;tab-size:2;color:#1a1a1a;"><code>${esc(text)}</code></pre>`
           document.execCommand("insertHTML", false, code)
           syncState()
           return
         }
 
         e.preventDefault()
-        const plain = esc(text).replace(/\n/g, "<br>")
+        const plain = `<span style="color:#1a1a1a;">${esc(text).replace(/\n/g, "<br>")}</span>`
         document.execCommand("insertHTML", false, plain)
         syncState()
       }}
@@ -1074,7 +1078,7 @@ export default function NoteApp() {
     try {
       const saved = localStorage.getItem("pulp-settings")
       if (saved) return { ...SETTINGS_DEFAULTS, ...JSON.parse(saved) }
-    } catch {}
+    } catch { }
     return SETTINGS_DEFAULTS
   })
 
@@ -2687,8 +2691,7 @@ export default function NoteApp() {
                 />
               </main>
             ) : (
-              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
-                <BackgroundEngravings theme={theme} />
+              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
                 <div style={{ zoom: zoom, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "relative" }}>
@@ -2887,7 +2890,7 @@ export default function NoteApp() {
                                 setAiOpen={setToolbarAiOpen}
                                 onDragStart={() => setIsAnyBoxDragging(true)}
                                 onDragEnd={() => setIsAnyBoxDragging(false)}
-                                 handwrittenEffect={handwrittenEffect}
+                                handwrittenEffect={handwrittenEffect}
                               />
                             ))}
                           </>
@@ -3116,7 +3119,7 @@ export default function NoteApp() {
                       </span>
                     </div>
                     <button onClick={() => setQuizState(null)} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                     </button>
                   </div>
 
