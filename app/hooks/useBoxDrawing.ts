@@ -99,7 +99,8 @@ export function useBoxDrawing({
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
 
-        const pageW = paperRef.current?.offsetWidth ?? 800
+        const scale = parseFloat(zoomRef.current) || 1
+        const pageW = Math.round((paperRef.current?.offsetWidth ?? 800) / scale)
         const pageH = 1100
 
         if (e.altKey) {
@@ -123,7 +124,9 @@ export function useBoxDrawing({
             if (n.id !== tid) return n
             const boxes = (n.boxes[pidx] || []).map(b => {
               if (!ids.has(b.id)) return b
-              return { ...b, x: Math.max(0, b.x + dx), y: Math.max(0, b.y + dy) }
+              const newX = Math.min(Math.max(0, pageW - b.w), Math.max(0, b.x + dx))
+              const newY = Math.min(Math.max(0, pageH - b.h), Math.max(0, b.y + dy))
+              return { ...b, x: newX, y: newY }
             })
             return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }
           }))

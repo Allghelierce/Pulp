@@ -26,6 +26,9 @@ import { NotebookChat } from "@/app/components/NotebookChat"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { OrchardView } from "@/app/components/OrchardView"
 import { BoutiqueView } from "@/app/components/BoutiqueView"
+import { GemStoreModal } from "@/app/components/GemStoreModal"
+import { StatsView } from "@/app/components/StatsView"
+import { FocusView } from "@/app/components/FocusView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -980,6 +983,9 @@ export default function NoteApp() {
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [focusOpen, setFocusOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
+  const [gemStoreOpen, setGemStoreOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 5, rewardType: 'gems', completed: false, claimed: false },
     { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
@@ -2368,7 +2374,7 @@ export default function NoteApp() {
   }
 
   const handleOpenShop = () => {
-    setShopOpen(true)
+    setGemStoreOpen(true)
   }
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
@@ -2460,6 +2466,15 @@ export default function NoteApp() {
                 })
               }}
               onUnlockDev={handleUnlockDev}
+              onOpenShop={() => setShopOpen(true)}
+              onOpenLeaderboard={() => setOrchardOpen(true)}
+              onOpenFocus={() => setFocusOpen(true)}
+              onOpenStats={() => setStatsOpen(true)}
+              sunshine={sunshine}
+              gems={gems}
+              xp={xp}
+              totalNotes={notes.filter(n => !n.archived).length}
+              totalChars={totalChars}
               onSetCover={(noteId) => {
                 editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(0); setCurrentView("editor")
                 setTimeout(() => setShowCoverModal(true), 100)
@@ -2610,6 +2625,8 @@ export default function NoteApp() {
                 isSidebarDragging={isSidebarDragging}
                 sunshine={devMode ? 999999 : sunshine}
                 gems={devMode ? 999999 : gems}
+                userAvatarUrl={user?.user_metadata?.avatar_url}
+                userEmail={user?.email}
                 sidebarOpen={sidebarWidth > 40}
                 onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
@@ -3265,6 +3282,32 @@ export default function NoteApp() {
         setGrove={setGrove}
         unlockedCosmetics={unlockedCosmetics}
         setUnlockedCosmetics={setUnlockedCosmetics}
+        onUpdateConfig={updateSettings}
+      />
+
+      <GemStoreModal
+        isOpen={gemStoreOpen}
+        onClose={() => setGemStoreOpen(false)}
+        gems={gems}
+      />
+
+      <StatsView
+        isOpen={statsOpen}
+        onClose={() => setStatsOpen(false)}
+        sunshine={sunshine}
+        gems={gems}
+        xp={xp}
+        totalNotes={notes.filter(n => !n.archived).length}
+        totalChars={totalChars}
+        grove={grove}
+        achievements={achievements}
+      />
+
+      <FocusView
+        isOpen={focusOpen}
+        onClose={() => setFocusOpen(false)}
+        blockedSites={blockedSites}
+        blockedApps={blockedApps}
         onUpdateConfig={updateSettings}
       />
 

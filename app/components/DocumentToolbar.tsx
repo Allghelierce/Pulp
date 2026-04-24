@@ -62,6 +62,8 @@ interface DocumentToolbarProps {
   onTimerOpen?: () => void
   onOpenShop: () => void
   onOpenGrove?: () => void
+  userAvatarUrl?: string | null
+  userEmail?: string | null
   onInsertImage?: () => void
   strokeColor: string
   onStrokeColorChange: (c: string) => void
@@ -119,7 +121,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
-  strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing
+  strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
+  userAvatarUrl, userEmail
 }: DocumentToolbarProps) {
 
   const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -543,6 +546,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         >
           <ShoppingBag size={11} strokeWidth={2.8} className="group-hover:scale-110 mb-0.5" />
         </button>
+        {userAvatarUrl ? (
+          <img src={userAvatarUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0 ml-1" referrerPolicy="no-referrer" />
+        ) : userEmail ? (
+          <div className="w-4 h-4 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[7px] font-bold text-zinc-600 uppercase ml-1">
+            {userEmail[0]}
+          </div>
+        ) : null}
       </div>
 
       {/* Right: Share */}

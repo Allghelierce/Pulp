@@ -112,7 +112,7 @@ export const OrchardView = memo(function OrchardView({
     >
       <div className="absolute inset-0 bg-[#080c08]">
         <div className="absolute inset-0 opacity-30" style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(22,101,52,0.4) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 20% 80%, rgba(120,80,30,0.2) 0%, transparent 60%)'
+          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(40,55,35,0.35) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 20% 80%, rgba(80,65,40,0.15) 0%, transparent 60%)'
         }} />
       </div>
 
@@ -227,12 +227,12 @@ export const OrchardView = memo(function OrchardView({
                               {TREE_TYPES[tree.type]?.name?.split(' ')[0]}
                             </span>
                             {tree.stage >= 4 ? (
-                              <span className="text-[7px] font-bold text-emerald-400 uppercase tracking-widest mt-0.5">
+                              <span className="text-[7px] font-bold text-stone-400 uppercase tracking-widest mt-0.5">
                                 Harvest +{Math.floor(TREE_TYPES[tree.type].cost * 1.5)} {TREE_TYPES[tree.type].currency === 'sunshine' ? '☀️' : '💎'}
                               </span>
                             ) : (
                               <div className="w-10 h-[3px] rounded-full bg-white/5 mt-1 overflow-hidden">
-                                <div className="h-full bg-emerald-500/60 rounded-full" style={{ width: `${Math.min(100, tree.progress)}%` }} />
+                                <div className="h-full bg-stone-500/50 rounded-full" style={{ width: `${Math.min(100, tree.progress)}%` }} />
                               </div>
                             )}
                           </div>
@@ -245,10 +245,10 @@ export const OrchardView = memo(function OrchardView({
                           {/* Empty plot marker */}
                           <div className={`w-10 h-10 rounded-full border-2 border-dashed flex items-center justify-center transition-all ${
                             isPlanting
-                              ? 'border-emerald-500/50 bg-emerald-500/10 scale-110'
+                              ? 'border-stone-500/40 bg-stone-500/10 scale-110'
                               : 'border-zinc-700/30 group-hover:border-zinc-600/50'
                           }`}>
-                            <span className={`text-sm ${isPlanting ? 'text-emerald-400 rotate-45' : 'text-zinc-700 group-hover:text-zinc-500'} transition-all`}>+</span>
+                            <span className={`text-sm ${isPlanting ? 'text-stone-400 rotate-45' : 'text-zinc-700 group-hover:text-zinc-500'} transition-all`}>+</span>
                           </div>
                           <div className="w-8 h-1.5 rounded-full bg-amber-900/10 mt-0.5 blur-[1px]" />
                         </button>
@@ -267,7 +267,7 @@ export const OrchardView = memo(function OrchardView({
                       className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4 pt-10"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/70">Plant a seed</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400/70">Plant a seed</span>
                         <button onClick={() => setPlantingPlot(null)} className="ml-auto text-zinc-500 hover:text-zinc-300 text-xs">Cancel</button>
                       </div>
                       {inventory.length === 0 ? (
@@ -281,7 +281,7 @@ export const OrchardView = memo(function OrchardView({
                               <button
                                 key={sIdx}
                                 onClick={() => plantFromInventory(seedType, sIdx, plantingPlot)}
-                                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-emerald-500/10 hover:border-emerald-500/20 transition-all"
+                                className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/[0.1] transition-all"
                               >
                                 <PlantIcon type={seedType} size={22} isSeed />
                                 <span className="text-[10px] font-bold text-zinc-300">{info.name}</span>
@@ -310,11 +310,11 @@ export const OrchardView = memo(function OrchardView({
                     })
                   }}
                   disabled={sunshine < 5 || (grove || []).filter(t => t && t.stage < 4 && t.type !== 'spoiled').length === 0}
-                  className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-emerald-500/[0.06] hover:border-emerald-500/[0.1] transition-all disabled:opacity-20 disabled:pointer-events-none group"
+                  className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/[0.08] transition-all disabled:opacity-20 disabled:pointer-events-none group"
                 >
                   <span className="text-base group-hover:scale-110 transition-transform">🌿</span>
                   <div className="text-left flex-1">
-                    <span className="block text-[10px] font-bold text-emerald-300/80">Mulch</span>
+                    <span className="block text-[10px] font-bold text-stone-300/70">Mulch</span>
                     <span className="block text-[8px] text-zinc-600">+15% growth · 5☀️</span>
                   </div>
                 </button>
@@ -326,11 +326,11 @@ export const OrchardView = memo(function OrchardView({
                     setGrove(prev => { const next = [...prev]; next[spoiledIdx] = { ...next[spoiledIdx], type: 'navel', stage: 0, progress: 0 }; return next })
                   }}
                   disabled={gems < 5 || !grove.some(t => t && t.type === 'spoiled')}
-                  className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-purple-500/[0.06] hover:border-purple-500/[0.1] transition-all disabled:opacity-20 disabled:pointer-events-none group"
+                  className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/[0.08] transition-all disabled:opacity-20 disabled:pointer-events-none group"
                 >
                   <span className="text-base group-hover:scale-110 transition-transform">✨</span>
                   <div className="text-left flex-1">
-                    <span className="block text-[10px] font-bold text-purple-300/80">Revival</span>
+                    <span className="block text-[10px] font-bold text-stone-300/70">Revival</span>
                     <span className="block text-[8px] text-zinc-600">Revive spoiled · 5💎</span>
                   </div>
                 </button>
@@ -341,7 +341,7 @@ export const OrchardView = memo(function OrchardView({
           {/* Right: Nursery Shop */}
           <div className="w-[320px] shrink-0 border-l border-white/[0.03] flex flex-col bg-black/20 overflow-hidden">
             <div className="px-5 pt-5 pb-3 shrink-0">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500/50 mb-3">Nursery</h2>
+              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500/60 mb-3">Nursery</h2>
               {/* Rarity tabs */}
               <div className="flex gap-1 overflow-x-auto pb-1">
                 {RARITY_ORDER.filter(r => shopItems[r]?.length).map(r => {
@@ -413,8 +413,8 @@ export const OrchardView = memo(function OrchardView({
                         </div>
                       </div>
                       <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                          <span className="text-emerald-400 text-[10px]">+</span>
+                        <div className="w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center">
+                          <span className="text-stone-400 text-[10px]">+</span>
                         </div>
                       </div>
                     </motion.button>
@@ -446,7 +446,7 @@ export const OrchardView = memo(function OrchardView({
 
             {/* Footer quote */}
             <div className="px-5 py-3 border-t border-white/[0.03] shrink-0">
-              <p className="text-[9px] italic text-emerald-800/40 text-center" style={{ fontFamily: '"EB Garamond", serif' }}>
+              <p className="text-[9px] italic text-stone-600/40 text-center" style={{ fontFamily: '"EB Garamond", serif' }}>
                 &quot;An orchard is grown with patience and nurtured by persistence.&quot;
               </p>
             </div>

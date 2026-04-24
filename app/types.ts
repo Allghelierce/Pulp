@@ -83,5 +83,5 @@ export interface SlashMenuState {
 export interface User {
   id: string
   email?: string
-  // ... other supabase user fields if needed
+  user_metadata?: { avatar_url?: string; [key: string]: unknown }
 }
