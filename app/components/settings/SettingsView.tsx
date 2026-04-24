@@ -44,15 +44,37 @@ export const SETTINGS_TABS = [
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
-export const ACCENT_COLORS = [
-  { hex: "#f97316", name: "Orange" },
-  { hex: "#ef4444", name: "Red" },
-  { hex: "#ec4899", name: "Pink" },
-  { hex: "#a855f7", name: "Purple" },
-  { hex: "#3b82f6", name: "Blue" },
-  { hex: "#06b6d4", name: "Cyan" },
-  { hex: "#22c55e", name: "Green" },
-  { hex: "#64748b", name: "Slate" },
+export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: boolean }[] = [
+  { hex: "#71717a", name: "Gray" },
+  { hex: "#f97316", name: "Orange", cost: 5 },
+  { hex: "#ef4444", name: "Red", cost: 5 },
+  { hex: "#ec4899", name: "Pink", cost: 8 },
+  { hex: "#a855f7", name: "Purple", cost: 8 },
+  { hex: "#3b82f6", name: "Blue", cost: 10 },
+  { hex: "#06b6d4", name: "Cyan", cost: 10 },
+  { hex: "#22c55e", name: "Green", pro: true },
+  { hex: "#64748b", name: "Slate", pro: true },
+]
+
+const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+  { value: "EB Garamond", label: "EB Garamond" },
+  { value: "Playfair Display", label: "Playfair Display", cost: 8 },
+  { value: "Georgia", label: "Georgia", cost: 5 },
+  { value: "Arial", label: "Arial", cost: 5 },
+]
+
+const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+  { value: "Playfair Display", label: "Playfair Display" },
+  { value: "EB Garamond", label: "EB Garamond", cost: 5 },
+  { value: "Italiana", label: "Italiana", cost: 10 },
+  { value: "Bodoni", label: "Bodoni", pro: true },
+]
+
+const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+  { value: "lined", label: "Lined" },
+  { value: "dotgrid", label: "Grid", cost: 5 },
+  { value: "plain", label: "Plain", cost: 8 },
+  { value: "steno", label: "Steno", pro: true },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -97,7 +119,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote }: {
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics }: {
   user: { email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -107,6 +129,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   trashNotes: NoteData[]
   onRestoreNote: (id: string) => void
   onPermanentlyDeleteNote: (id: string) => void
+  unlockedCosmetics: string[]
+  gems: number
+  setGems: React.Dispatch<React.SetStateAction<number>>
+  setUnlockedCosmetics: React.Dispatch<React.SetStateAction<string[]>>
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -117,6 +143,17 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   const isDark = theme === "dark"
   const isPremium = user?.email?.includes("pro") || false
   const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
+
+  const isUnlocked = (id: string, cost?: number, pro?: boolean) => {
+    if (!cost && !pro) return true
+    return unlockedCosmetics.includes(id)
+  }
+  const buyUnlock = (id: string, cost: number) => {
+    if (gems < cost || unlockedCosmetics.includes(id)) return false
+    setGems(g => g - cost)
+    setUnlockedCosmetics(prev => [...prev, id])
+    return true
+  }
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
   const [deleteUsername, setDeleteUsername] = useState("")
@@ -323,14 +360,20 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 <div className="px-5 py-4">
                   <p className={`text-[12px] font-semibold mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Accent Color</p>
                   <div className="flex flex-wrap gap-3">
-                    {ACCENT_COLORS.map(({ hex, name }) => {
+                    {ACCENT_COLORS.map(({ hex, name, cost, pro }) => {
+                      const id = `accent_${hex}`
+                      const unlocked = isUnlocked(id, cost, pro)
                       const selected = accentColor === hex
                       return (
                         <button
                           key={hex}
-                          onClick={() => onUpdateConfig({ accentColor: hex })}
-                          title={name}
-                          className="group flex flex-col items-center gap-1.5"
+                          onClick={() => {
+                            if (unlocked) { onUpdateConfig({ accentColor: hex }); return }
+                            if (pro) return
+                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ accentColor: hex })
+                          }}
+                          title={unlocked ? name : pro ? `${name} — Pro only` : `${name} — ${cost} 💎`}
+                          className="group flex flex-col items-center gap-1.5 relative"
                         >
                           <div
                             className="w-8 h-8 rounded-full transition-all duration-150"
@@ -338,8 +381,18 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                               backgroundColor: hex,
                               boxShadow: selected ? `0 0 0 2px ${isDark ? "#18181b" : "#fff"}, 0 0 0 4px ${hex}` : "none",
                               transform: selected ? "scale(1.1)" : undefined,
+                              opacity: unlocked ? 1 : 0.4,
                             }}
                           />
+                          {!unlocked && (
+                            <div className="absolute -top-1 -right-1 flex items-center justify-center">
+                              {pro ? (
+                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                              ) : (
+                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                              )}
+                            </div>
+                          )}
                           <span className={`text-[9px] font-medium transition-colors ${selected ? (isDark ? "text-zinc-200" : "text-zinc-700") : isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"}`}>{name}</span>
                         </button>
                       )
@@ -363,40 +416,86 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               </SettingSection>
 
               <SettingSection title="Font Selection" isDark={isDark}>
-                 <SettingRow
-                  title="Heading Font"
-                  isDark={isDark}
-                  description="Used for large titles and notebook covers"
-                  control={
-                    <select
-                      value={headingFont}
-                      onChange={e => onUpdateConfig({ headingFont: e.target.value })}
-                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
-                    >
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="EB Garamond">EB Garamond</option>
-                      <option value="Italiana">Italiana</option>
-                      <option value="Bodoni">Bodoni</option>
-                    </select>
-                  }
-                />
-                <SettingRow
-                  title="Body Copy Font"
-                  isDark={isDark}
-                  description="The default font for notes and boxes"
-                  control={
-                    <select
-                      value={editorFont}
-                      onChange={e => onUpdateConfig({ editorFont: e.target.value })}
-                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-800"} rounded-none px-2.5 py-1.5 outline-none`}
-                    >
-                      <option value="EB Garamond">EB Garamond</option>
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="Georgia">Georgia</option>
-                      <option value="Arial">Arial</option>
-                    </select>
-                  }
-                />
+                <div className="px-5 py-4">
+                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Heading Font</p>
+                  <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Used for large titles and notebook covers</p>
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {HEADING_FONT_OPTIONS.map(({ value, label, cost, pro }) => {
+                      const id = `hfont_${value}`
+                      const unlocked = isUnlocked(id, cost, pro)
+                      const selected = headingFont === value
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            if (unlocked) { onUpdateConfig({ headingFont: value }); return }
+                            if (pro) return
+                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ headingFont: value })
+                          }}
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                            selected
+                              ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
+                              : unlocked
+                                ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                          }`}
+                          style={{ fontFamily: `"${value}", serif` }}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                        >
+                          {label}
+                          {!unlocked && (
+                            <span className="absolute -top-1.5 -right-1.5">
+                              {pro ? (
+                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                              ) : (
+                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Body Copy Font</p>
+                  <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>The default font for notes and boxes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {FONT_OPTIONS.map(({ value, label, cost, pro }) => {
+                      const id = `bfont_${value}`
+                      const unlocked = isUnlocked(id, cost, pro)
+                      const selected = editorFont === value
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            if (unlocked) { onUpdateConfig({ editorFont: value }); return }
+                            if (pro) return
+                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ editorFont: value })
+                          }}
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                            selected
+                              ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
+                              : unlocked
+                                ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                          }`}
+                          style={{ fontFamily: `"${value}", serif` }}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                        >
+                          {label}
+                          {!unlocked && (
+                            <span className="absolute -top-1.5 -right-1.5">
+                              {pro ? (
+                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                              ) : (
+                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </SettingSection>
               <SettingSection title="Sizing & Spacing" isDark={isDark}>
                 <SettingRow
@@ -412,12 +511,46 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               </SettingSection>
 
               <SettingSection title="Paper & Page" isDark={isDark}>
-                <SettingRow
-                  title="Page style"
-                  isDark={isDark}
-                  description="Background ruling on your note pages"
-                  control={<SegmentedControl options={[["lined", "Lined"], ["dotgrid", "Grid"], ["plain", "Plain"], ["steno", "Steno"]]} value={paperStyle} onChange={(v: string) => onUpdateConfig({ paperStyle: v as "lined" | "dotgrid" | "plain" | "steno" })} isDark={isDark} />}
-                />
+                <div className="px-5 py-4">
+                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Page Style</p>
+                  <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Background ruling on your note pages</p>
+                  <div className="flex flex-wrap gap-2">
+                    {PAGE_STYLE_OPTIONS.map(({ value, label, cost, pro }) => {
+                      const id = `paper_${value}`
+                      const unlocked = isUnlocked(id, cost, pro)
+                      const selected = paperStyle === value
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            if (unlocked) { onUpdateConfig({ paperStyle: value as any }); return }
+                            if (pro) return
+                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ paperStyle: value as any })
+                          }}
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                            selected
+                              ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
+                              : unlocked
+                                ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                          }`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                        >
+                          {label}
+                          {!unlocked && (
+                            <span className="absolute -top-1.5 -right-1.5">
+                              {pro ? (
+                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                              ) : (
+                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                              )}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
                 <SettingRow
                   title="Show spiral binding"
                   isDark={isDark}

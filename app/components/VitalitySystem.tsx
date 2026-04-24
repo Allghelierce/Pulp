@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, memo, useCallback } from "react"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, Tree } from "@/app/types"
+import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 
 interface VitalitySystemProps {
   theme: "light" | "dark"
@@ -178,6 +179,8 @@ export const VitalitySystem = memo(function VitalitySystem({
     const xpGain = Math.max(5, Math.round(minutes * 2))
     setXp(x => x + xpGain)
 
+    logFocusSession(minutes, reward)
+
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
@@ -249,6 +252,7 @@ export const VitalitySystem = memo(function VitalitySystem({
           return { ...tree, progress: newProgress, stage: newStage }
         }))
         setLastCharCount(totalChars)
+        logCharsWritten(diff)
         const typedDiff = Math.min(diff, 30)
         checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
         const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))

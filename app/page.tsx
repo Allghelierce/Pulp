@@ -1052,7 +1052,7 @@ export default function NoteApp() {
 
   // Settings
   const SETTINGS_DEFAULTS = {
-    accent: "#9f1239",
+    accent: "#71717a",
     theme: "dark",
     autoSave: true,
     spellCheck: true,
@@ -1061,7 +1061,7 @@ export default function NoteApp() {
     editorFont: "EB Garamond",
     headingFont: "Playfair Display",
     lineSpacing: "normal",
-    paperStyle: "steno",
+    paperStyle: "lined",
     showBinding: false,
     reduceMotion: false,
     reduceVisuals: false,
@@ -2396,6 +2396,10 @@ export default function NoteApp() {
             trashNotes={trashNotes}
             onRestoreNote={restoreNote}
             onPermanentlyDeleteNote={permanentlyDeleteNote}
+            unlockedCosmetics={unlockedCosmetics}
+            gems={gems}
+            setGems={setGems}
+            setUnlockedCosmetics={setUnlockedCosmetics}
           />
         )}
         <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
@@ -2451,7 +2455,7 @@ export default function NoteApp() {
               onSetDraggedNoteId={setDraggedNoteId}
               onDropNote={handleDropNote}
               onOpenSettings={() => setShowSettings(true)}
-              onOpenTimer={() => { if (notes.filter(n => !n.archived).length > 0) setTimerOpen(t => !t) }}
+              onOpenTimer={() => setTimerOpen(t => !t)}
               timerOpen={timerOpen}
               onSetNoteParent={setNoteParent}
               onChangeNoteIcon={changeNoteIcon}

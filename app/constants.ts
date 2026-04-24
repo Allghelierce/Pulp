@@ -66,14 +66,14 @@ export function getLevel(xp: number): { level: number; name: string; currentXp: 
 }
 
 export const LEADERBOARD_BOTS = [
-  { name: "quillmaster", xp: 22400 },
-  { name: "midnightscribe", xp: 15200 },
-  { name: "inkdragon", xp: 11800 },
-  { name: "papertiger", xp: 8600 },
-  { name: "notanova", xp: 6300 },
-  { name: "draftpunk", xp: 4100 },
-  { name: "blankpage_hero", xp: 2700 },
-  { name: "lofi_writer", xp: 1500 },
-  { name: "penpal99", xp: 800 },
-  { name: "newleaf", xp: 200 },
+  { name: "quillmaster", xp: 22400, sunshine: 4800 },
+  { name: "midnightscribe", xp: 15200, sunshine: 3200 },
+  { name: "inkdragon", xp: 11800, sunshine: 2400 },
+  { name: "papertiger", xp: 8600, sunshine: 1700 },
+  { name: "notanova", xp: 6300, sunshine: 1100 },
+  { name: "draftpunk", xp: 4100, sunshine: 680 },
+  { name: "blankpage_hero", xp: 2700, sunshine: 420 },
+  { name: "lofi_writer", xp: 1500, sunshine: 210 },
+  { name: "penpal99", xp: 800, sunshine: 95 },
+  { name: "newleaf", xp: 200, sunshine: 30 },
 ]

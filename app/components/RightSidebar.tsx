@@ -31,10 +31,10 @@ export const RightSidebar = memo(function RightSidebar({
   const isDark = theme === "dark"
 
   const leaderboard = useMemo(() => {
-    const you = { name: userName || "you", xp, isYou: true }
+    const you = { name: userName || "you", xp, sunshine, isYou: true }
     const others = LEADERBOARD_BOTS.map(b => ({ ...b, isYou: false }))
-    return [...others, you].sort((a, b) => b.xp - a.xp)
-  }, [xp, userName])
+    return [...others, you].sort((a, b) => b.sunshine - a.sunshine)
+  }, [xp, sunshine, userName])
 
   const yourRank = leaderboard.findIndex(e => e.isYou) + 1
 
@@ -258,7 +258,7 @@ export const RightSidebar = memo(function RightSidebar({
                         </span>
                       </div>
                       <span className={`text-[10px] font-bold tabular-nums ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        {entry.xp.toLocaleString()}
+                        ☀️ {entry.sunshine.toLocaleString()}
                       </span>
                     </div>
                   )
