@@ -104,14 +104,19 @@ export function useBoxDrawing({
         const pageH = 1100
 
         if (e.altKey) {
+          const padX = 32
+          const padY = 24
+          const marginLineX = 112
+          const noteLines = notesRef.current.find(n => n.id === tid)?.lines?.[pidx] || []
+          const leftEdge = noteLines.length > 0 ? Math.min(...noteLines) + padX : marginLineX + padX
           setNotes(prev => prev.map(n => {
             if (n.id !== tid) return n
             const boxes = (n.boxes[pidx] || []).map(b => {
               if (!ids.has(b.id)) return b
-              const maxX = Math.max(0, pageW - b.w)
-              const maxY = Math.max(0, pageH - b.h)
-              const newX = e.key === 'ArrowLeft' ? 0 : e.key === 'ArrowRight' ? maxX : b.x
-              const newY = e.key === 'ArrowUp' ? 0 : e.key === 'ArrowDown' ? maxY : b.y
+              const maxX = Math.max(leftEdge, pageW - b.w - padX)
+              const maxY = Math.max(padY, pageH - b.h - padY)
+              const newX = e.key === 'ArrowLeft' ? leftEdge : e.key === 'ArrowRight' ? maxX : b.x
+              const newY = e.key === 'ArrowUp' ? padY : e.key === 'ArrowDown' ? maxY : b.y
               return { ...b, x: newX, y: newY }
             })
             return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }

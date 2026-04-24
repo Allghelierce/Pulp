@@ -389,8 +389,8 @@ export const OrchardView = memo(function OrchardView({
                   return (
                     <motion.button
                       key={type}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => {
                         if (!canAfford) return
                         if (info.currency === 'sunshine') setSunshine(s => s - info.cost)
@@ -398,38 +398,45 @@ export const OrchardView = memo(function OrchardView({
                         setInventory(inv => [...inv, type])
                       }}
                       disabled={!canAfford}
-                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left group disabled:opacity-25"
+                      className="w-full flex flex-col rounded-xl overflow-hidden transition-all text-left group disabled:opacity-25"
                       style={{
-                        backgroundColor: 'rgba(255,255,255,0.015)',
-                        border: '1px solid rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.04)',
                       }}
                     >
+                      {/* Scene background with plant preview */}
                       <div
-                        className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"
+                        className="w-full flex items-end justify-center relative overflow-hidden group-hover:brightness-110 transition-all"
                         style={{
-                          backgroundColor: info.bg,
-                          boxShadow: meta.glow || undefined,
+                          height: 80,
+                          background: info.sceneBg || 'linear-gradient(180deg, #111 0%, #1a1a1a 100%)',
                         }}
                       >
-                        <PlantIcon type={type} size={28} isSeed />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-bold text-zinc-200 truncate">{info.name}</span>
+                        {/* Ground */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[12px]" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.4) 100%)' }} />
+                        <div className="relative -mb-1">
+                          <PlantIcon type={type} size={56} stage={3} />
                         </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[9px] font-bold tabular-nums" style={{ color: meta.color }}>
-                            {info.cost} {info.currency === 'sunshine' ? '☀️' : '💎'}
-                          </span>
-                          <span className="text-[8px] text-zinc-700">·</span>
-                          <span className="text-[8px] text-zinc-600">
-                            Harvest {Math.floor(info.cost * 1.5)} {info.currency === 'sunshine' ? '☀️' : '💎'}
-                          </span>
-                        </div>
+                        {/* Subtle vignette */}
+                        <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.4)' }} />
                       </div>
-                      <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center">
-                          <span className="text-stone-400 text-[10px]">+</span>
+                      {/* Info bar */}
+                      <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[11px] font-bold text-zinc-200 truncate block">{info.name}</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] font-bold tabular-nums" style={{ color: meta.color }}>
+                              {info.cost} {info.currency === 'sunshine' ? '☀️' : '💎'}
+                            </span>
+                            <span className="text-[8px] text-zinc-700">·</span>
+                            <span className="text-[8px] text-zinc-600">
+                              Harvest {Math.floor(info.cost * 1.5)} {info.currency === 'sunshine' ? '☀️' : '💎'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center">
+                            <span className="text-stone-400 text-[10px]">+</span>
+                          </div>
                         </div>
                       </div>
                     </motion.button>

@@ -63,12 +63,12 @@ export const BoutiqueView = memo(function BoutiqueView({
   const isDark = theme === 'dark'
 
   const bg = isDark ? '#0a0a0c' : '#f5f3f1'
-  const cardBg = isDark ? '#18181b' : '#ffffff'
-  const cardBorder = isDark ? '#27272a' : '#e5e5e5'
+  const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
+  const cardBorder = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
   const textPrimary = isDark ? '#e4e4e7' : '#18181b'
   const textSecondary = isDark ? '#71717a' : '#71717a'
   const textMuted = isDark ? '#52525b' : '#a1a1aa'
-  const dividerColor = isDark ? '#27272a' : '#e5e5e5'
+  const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
 
   useEffect(() => {
     if (!isOpen) return
@@ -169,41 +169,37 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }} onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={onClose}>
       <div
         onMouseDown={e => e.stopPropagation()}
-        style={{
-          width: '92vw', maxWidth: 960, height: '88vh', maxHeight: 820,
-          backgroundColor: bg, borderRadius: 18, overflow: 'hidden',
-          display: 'flex', flexDirection: 'column',
-          boxShadow: '0 25px 60px -15px rgba(0,0,0,0.5)',
-          border: `1px solid ${cardBorder}`,
-          fontFamily: font,
-        }}
+        className={`relative w-full max-w-[1000px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
+        style={{ backgroundColor: bg, height: 740 }}
       >
         {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: `1px solid ${dividerColor}`, flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <div className={`px-6 pt-5 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
+          <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); setSelectedPlant(null) }}
-                style={{
-                  padding: '6px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  fontFamily: font, cursor: 'pointer', border: 'none', transition: 'all 0.15s',
-                  backgroundColor: activeTab === tab.id ? (isDark ? '#27272a' : '#2c2417') : 'transparent',
-                  color: activeTab === tab.id ? (isDark ? '#e4e4e7' : '#fff') : textSecondary,
-                }}
+                className={`px-3.5 py-1.5 rounded-md text-[12.5px] font-medium transition-all ${
+                  activeTab === tab.id
+                    ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                    : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
+                }`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div className="flex items-center gap-2">
             <CurrencyPill type="sunshine" amount={sunshine} />
             <CurrencyPill type="gems" amount={gems} />
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: textMuted, padding: 4 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <button
+              onClick={onClose}
+              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ml-2 ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
@@ -211,18 +207,16 @@ export const BoutiqueView = memo(function BoutiqueView({
         {/* ── Plant Preview (when selected) ── */}
         {selectedPlant && previewInfo && (
           <div style={{ flexShrink: 0, borderBottom: `1px solid ${dividerColor}` }}>
-            {/* Preview area */}
+            {/* Compact header bar */}
             <div style={{
-              height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: isDark
-                ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)'
-                : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)',
-              position: 'relative',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 20px',
+              borderBottom: `1px solid ${dividerColor}`,
+              backgroundColor: isDark ? 'rgba(24,24,27,0.5)' : 'rgba(255,255,255,0.6)',
             }}>
               <button
                 onClick={() => setSelectedPlant(null)}
                 style={{
-                  position: 'absolute', top: 16, left: 20,
                   background: 'none', border: 'none', cursor: 'pointer',
                   color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 500,
                   display: 'flex', alignItems: 'center', gap: 4,
@@ -231,78 +225,26 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 Back
               </button>
-
-              {/* Name + rarity badge */}
-              <div style={{ position: 'absolute', top: 16, right: 20, textAlign: 'right' }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: textPrimary, fontFamily: font }}>{previewInfo.name}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: RARITY_COLOR[previewInfo.rarity], marginTop: 2, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   {RARITY_LABEL[previewInfo.rarity]}
-                </div>
+                </span>
               </div>
-
-              {/* Growth stages */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, paddingBottom: 8 }}>
-                {STAGE_NAMES.map((name, i) => {
-                  const active = previewStage === i
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setPreviewStage(i)}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        opacity: active ? 1 : 0.4,
-                        transform: active ? 'scale(1.08)' : 'scale(1)',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <div style={{
-                        padding: 8, borderRadius: 12,
-                        backgroundColor: active ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)') : 'transparent',
-                      }}>
-                        {i === 0 ? (
-                          <PlantIcon type={selectedPlant} size={active ? 60 : 44} isSeed />
-                        ) : (
-                          <PlantIcon type={selectedPlant} size={active ? 60 : 44} stage={i - 1} />
-                        )}
-                      </div>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
-                        color: active ? textPrimary : textMuted, fontFamily: font,
-                      }}>{name}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Purchase bar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 24px',
-              backgroundColor: isDark ? '#18181b' : '#faf8f5',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <CurrencyPill type={previewInfo.currency} amount={previewInfo.cost} />
-                {shopStock[selectedPlant!] !== undefined && (
-                  <span style={{ fontSize: 11, color: textMuted, fontFamily: font }}>
-                    {(shopStock[selectedPlant!] || 0) > 0 ? `${shopStock[selectedPlant!]} in stock` : 'Sold out'}
-                  </span>
-                )}
+                <button
+                  onClick={() => buySeed(selectedPlant!)}
+                  disabled={(shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)}
+                  className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all ${isDark ? "bg-zinc-200 text-zinc-900 hover:bg-white" : "bg-zinc-800 text-white hover:bg-zinc-700"}`}
+                  style={{
+                    fontFamily: font, cursor: 'pointer', border: 'none',
+                    opacity: ((shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)) ? 0.3 : 1,
+                  }}
+                >
+                  {(shopStock[selectedPlant!] || 0) <= 0 ? 'Sold out' : 'Buy Seed'}
+                </button>
               </div>
-              <button
-                onClick={() => buySeed(selectedPlant!)}
-                disabled={(shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)}
-                style={{
-                  padding: '8px 24px', borderRadius: 8, fontSize: 13, fontWeight: 700,
-                  fontFamily: font, cursor: 'pointer', border: 'none', transition: 'all 0.15s',
-                  backgroundColor: isDark ? '#e4e4e7' : '#2c2417',
-                  color: isDark ? '#141416' : '#fff',
-                  opacity: ((shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)) ? 0.3 : 1,
-                }}
-              >
-                Buy Seed
-              </button>
             </div>
           </div>
         )}
@@ -316,8 +258,8 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* Featured */}
               <div style={{ marginBottom: 32 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font }}>Featured Today</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#34d399', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font }}>Refreshes daily</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Featured Today</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#34d399', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Refreshes daily</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
                   {dailySeeds.map(type => <PlantCard key={type} type={type} isDark={isDark} cardBg={cardBg} cardBorder={cardBorder} textPrimary={textPrimary} textMuted={textMuted} shopStock={shopStock} onClick={() => { setSelectedPlant(type); setPreviewStage(3) }} featured />)}
@@ -332,7 +274,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div key={rarity} style={{ marginBottom: 28 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: RARITY_COLOR[rarity] }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font }}>{RARITY_LABEL[rarity]}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                       <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
@@ -344,16 +286,75 @@ export const BoutiqueView = memo(function BoutiqueView({
             </div>
           )}
 
-          {activeTab === 'shop' && selectedPlant && (
-            <div style={{ padding: '40px 24px', textAlign: 'center', color: textMuted, fontSize: 13, fontFamily: font }}>
-              Browse through the growth stages above.
+          {activeTab === 'shop' && selectedPlant && previewInfo && (
+            <div style={{ padding: '24px 24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {/* Large plant preview */}
+              <div style={{
+                width: '100%', maxWidth: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                borderRadius: 16, overflow: 'hidden', position: 'relative',
+                height: 280,
+                background: previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+              }}>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)' }} />
+                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)', borderRadius: 16, pointerEvents: 'none' }} />
+                <div style={{ position: 'relative', marginBottom: 8 }}>
+                  {previewStage === 0
+                    ? <PlantIcon type={selectedPlant!} size={160} isSeed />
+                    : <PlantIcon type={selectedPlant!} size={160} stage={previewStage - 1} />
+                  }
+                </div>
+              </div>
+
+              {/* Stage label */}
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary, fontFamily: font }}>
+                  {STAGE_NAMES[previewStage]}
+                </span>
+                <span style={{ fontSize: 11, color: textMuted, fontFamily: font, marginLeft: 8 }}>
+                  Stage {previewStage + 1} of {STAGE_NAMES.length}
+                </span>
+              </div>
+
+              {/* Slider */}
+              <div style={{ width: '100%', maxWidth: 400, marginTop: 12, padding: '0 4px' }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={STAGE_NAMES.length - 1}
+                  value={previewStage}
+                  onChange={e => setPreviewStage(Number(e.target.value))}
+                  className="boutique-slider"
+                  style={{
+                    width: '100%', height: 4, appearance: 'none', WebkitAppearance: 'none',
+                    background: `linear-gradient(90deg, ${isDark ? '#52525b' : '#a1a1aa'} 0%, ${isDark ? '#52525b' : '#a1a1aa'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} 100%)`,
+                    borderRadius: 4, outline: 'none', cursor: 'pointer',
+                  }}
+                />
+                {/* Stage dots */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, padding: '0 2px' }}>
+                  {STAGE_NAMES.map((name, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPreviewStage(i)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+                        fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
+                        color: previewStage === i ? textPrimary : textMuted,
+                        fontFamily: font, transition: 'color 0.15s',
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
           {/* ── GEMS ── */}
           {activeTab === 'gems' && (
             <div style={{ padding: 24 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font, display: 'block', marginBottom: 14 }}>Exchange Sunshine for Gems</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 14 }}>Exchange Sunshine for Gems</span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 32 }}>
                 {[
                   { amount: 10, cost: 25, label: 'Small Pouch' },
@@ -373,10 +374,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       transition: 'all 0.15s',
                     }}
                   >
-                    {(pack as any).best && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font }}>Best value</span>}
+                    {(pack as any).best && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Best value</span>}
                     <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, marginBottom: 4 }}>{pack.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>💎 {pack.amount} gems</div>
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${dividerColor}`, fontSize: 12, fontWeight: 600, color: '#d97706' }}>☀️ {pack.cost} sunshine</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>◆ {pack.amount} gems</div>
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${dividerColor}`, fontSize: 12, fontWeight: 600, color: '#d97706' }}>✦ {pack.cost} sunshine</div>
                   </button>
                 ))}
               </div>
@@ -387,7 +388,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 const label = category === 'accent' ? 'Accent Colors' : category === 'ink' ? 'Ink Styles' : 'Paper Textures'
                 return (
                   <div key={category} style={{ marginBottom: 24 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font, display: 'block', marginBottom: 10 }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>{label}</span>
                     <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
                       {items.map((cosmetic, idx) => {
                         const owned = unlockedCosmetics.includes(cosmetic.id)
@@ -401,7 +402,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               {cosmetic.type === 'accent' ? (
                                 <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: cosmetic.value }} />
                               ) : (
-                                <span style={{ fontSize: 12 }}>{cosmetic.type === 'ink' ? '🖋' : '📄'}</span>
+                                <span style={{ fontSize: 12 }}>{cosmetic.type === 'ink' ? '✎' : '▤'}</span>
                               )}
                             </div>
                             <div style={{ flex: 1 }}>
@@ -417,7 +418,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 disabled={cantAfford}
                                 style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}
                               >
-                                💎 {cosmetic.cost}
+                                ◆ {cosmetic.cost}
                               </button>
                             )}
                           </div>
@@ -434,7 +435,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           {activeTab === 'bag' && (
             <div style={{ padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font }}>Your Seeds</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Your Seeds</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: textMuted, fontFamily: font }}>{inventory.length}/40</span>
               </div>
               {inventory.length === 0 ? (
@@ -456,14 +457,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         }}
                       >
                         <div
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0', cursor: 'pointer', backgroundColor: isDark ? '#1a1a1e' : '#f5f2ed' }}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0', cursor: 'pointer', backgroundColor: isDark ? 'rgba(26,26,30,0.5)' : '#f5f2ed' }}
                           onClick={() => { setSelectedPlant(type); setPreviewStage(0); setActiveTab('shop') }}
                         >
                           <PlantIcon type={type} size={44} isSeed />
                         </div>
                         <div style={{ padding: '8px 10px', borderTop: `1px solid ${dividerColor}` }}>
                           <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                          <div style={{ fontSize: 9, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginTop: 2 }}>{RARITY_LABEL[t.rarity]}</div>
+                          <div style={{ fontSize: 9, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase', marginTop: 2 }}>{RARITY_LABEL[t.rarity]}</div>
                         </div>
                         <button
                           onClick={() => discardSeed(idx)}
@@ -497,7 +498,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div key={rarity} style={{ marginBottom: 28 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: RARITY_COLOR[rarity] }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font }}>{RARITY_LABEL[rarity]}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                       <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
@@ -514,19 +515,27 @@ export const BoutiqueView = memo(function BoutiqueView({
                               transition: 'all 0.15s', position: 'relative', fontFamily: font,
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0', backgroundColor: isDark ? '#1a1a1e' : '#f5f2ed' }}>
-                              <PlantIcon type={type} size={76} stage={3} />
+                            <div style={{
+                              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                              height: 130, position: 'relative',
+                              background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                            }}>
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
+                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
+                              <div style={{ position: 'relative', marginBottom: -2 }}>
+                                <PlantIcon type={type} size={90} stage={3} />
+                              </div>
                               {owned && (
-                                <div style={{ position: 'absolute', top: 10, right: 10, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? '#064e3b' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#34d399" : "#059669"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
                               )}
                             </div>
-                            <div style={{ padding: '12px 14px', borderTop: `1px solid ${dividerColor}` }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+                            <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                                 <span style={{ fontSize: 12, fontWeight: 600, color: t.currency === 'gems' ? '#a78bfa' : '#d97706' }}>
-                                  {t.currency === 'gems' ? '💎' : '☀️'} {t.cost}
+                                  {t.currency === 'gems' ? '◆' : '✦'} {t.cost}
                                 </span>
                                 <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
@@ -554,11 +563,12 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   const t = TREE_TYPES[type]
   if (!t) return null
   const soldOut = (shopStock[type] || 0) <= 0
-  const dividerColor = isDark ? '#27272a' : '#e8e5e0'
+  const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
 
   return (
     <button
       onClick={onClick}
+      className={`${isDark ? "hover:border-zinc-700" : "hover:border-zinc-300"}`}
       style={{
         borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
         backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
@@ -567,26 +577,30 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
       }}
     >
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: featured ? '36px 0' : '32px 0',
-        backgroundColor: isDark ? '#1a1a1e' : '#f5f2ed',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        height: featured ? 140 : 130,
+        background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
         position: 'relative',
       }}>
-        <PlantIcon type={type} size={featured ? 88 : 76} stage={3} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', marginBottom: -2 }}>
+          <PlantIcon type={type} size={featured ? 100 : 90} stage={3} />
+        </div>
         {soldOut && (
-          <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? '#27272a' : '#e8e5e0', padding: '2px 8px', borderRadius: 6 }}>
+          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
             Sold out
           </div>
         )}
       </div>
-      <div style={{ padding: '12px 14px', borderTop: `1px solid ${dividerColor}` }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {t.name}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
           <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: t.currency === 'gems' ? '#a78bfa' : '#d97706' }}>
-            {t.currency === 'gems' ? '💎' : '☀️'} {t.cost}
+            {t.currency === 'gems' ? '◆' : '✦'} {t.cost}
           </span>
         </div>
       </div>

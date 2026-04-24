@@ -3294,7 +3294,8 @@ export default function NoteApp() {
       <LeaderboardView
         isOpen={leaderboardOpen}
         onClose={() => setLeaderboardOpen(false)}
-        xp={xp}
+        theme={theme}
+        sunshine={sunshine}
       />
 
       <BoutiqueView
@@ -3325,18 +3326,13 @@ export default function NoteApp() {
         onClose={() => setStatsOpen(false)}
         theme={theme}
         accent={accent}
-        sunshine={sunshine}
-        gems={gems}
         xp={xp}
-        totalNotes={notes.filter(n => !n.archived).length}
-        totalChars={totalChars}
-        grove={grove}
-        achievements={achievements}
       />
 
       <FocusView
         isOpen={focusOpen}
         onClose={() => setFocusOpen(false)}
+        theme={theme}
         blockedSites={blockedSites}
         blockedApps={blockedApps}
         onUpdateConfig={updateSettings}

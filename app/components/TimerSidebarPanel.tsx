@@ -55,7 +55,7 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
   const plantType = type || 'navel'
   const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.navel
   const color = typeInfo.color
-  const shape = typeInfo.shape || 'classic'
+  const shape = typeInfo.shape || 'oak'
 
   // Idle state: show a default sprout
   if (idle) {

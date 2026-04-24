@@ -6,23 +6,23 @@ interface LeaderboardViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  xp: number
+  sunshine: number
 }
 
 const DUMMY_PLAYERS = [
-  { rank: 1, name: "inkwell_sage", level: 42, xp: 128400, streak: 87, trees: 34, avatar: "#d4a84a" },
-  { rank: 2, name: "midnight_quill", level: 38, xp: 104200, streak: 63, trees: 28, avatar: "#a78bfa" },
-  { rank: 3, name: "paper_moth", level: 35, xp: 92800, streak: 55, trees: 25, avatar: "#f472b6" },
-  { rank: 4, name: "velvet_prose", level: 31, xp: 78300, streak: 41, trees: 21, avatar: "#34d399" },
-  { rank: 5, name: "cedar_drafts", level: 28, xp: 64100, streak: 34, trees: 18, avatar: "#60a5fa" },
-  { rank: 6, name: "amber_letters", level: 25, xp: 51600, streak: 29, trees: 15, avatar: "#fb923c" },
-  { rank: 7, name: "foxglove_ink", level: 22, xp: 42300, streak: 22, trees: 12, avatar: "#c084fc" },
-  { rank: 8, name: "willow_script", level: 19, xp: 33800, streak: 18, trees: 9, avatar: "#4ade80" },
-  { rank: 9, name: "dusk_typist", level: 16, xp: 24500, streak: 14, trees: 7, avatar: "#f87171" },
-  { rank: 10, name: "lantern_words", level: 13, xp: 16200, streak: 9, trees: 4, avatar: "#fbbf24" },
+  { rank: 1, name: "inkwell_sage", level: 42, sunshine: 84200, streak: 87, trees: 34, avatar: "#d4a84a" },
+  { rank: 2, name: "midnight_quill", level: 38, sunshine: 67500, streak: 63, trees: 28, avatar: "#a78bfa" },
+  { rank: 3, name: "paper_moth", level: 35, sunshine: 51300, streak: 55, trees: 25, avatar: "#f472b6" },
+  { rank: 4, name: "velvet_prose", level: 31, sunshine: 42100, streak: 41, trees: 21, avatar: "#34d399" },
+  { rank: 5, name: "cedar_drafts", level: 28, sunshine: 33800, streak: 34, trees: 18, avatar: "#60a5fa" },
+  { rank: 6, name: "amber_letters", level: 25, sunshine: 26400, streak: 29, trees: 15, avatar: "#fb923c" },
+  { rank: 7, name: "foxglove_ink", level: 22, sunshine: 19700, streak: 22, trees: 12, avatar: "#c084fc" },
+  { rank: 8, name: "willow_script", level: 19, sunshine: 14200, streak: 18, trees: 9, avatar: "#4ade80" },
+  { rank: 9, name: "dusk_typist", level: 16, sunshine: 9800, streak: 14, trees: 7, avatar: "#f87171" },
+  { rank: 10, name: "lantern_words", level: 13, sunshine: 5100, streak: 9, trees: 4, avatar: "#fbbf24" },
 ]
 
-export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, xp }: LeaderboardViewProps) {
+export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sunshine }: LeaderboardViewProps) {
   const isDark = theme === "dark"
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                       <span className="text-[18px] font-bold" style={{ color: isFirst ? gold : isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)" }}>
                         #{p.rank}
                       </span>
-                      <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{(p.xp / 1000).toFixed(1)}k XP</span>
+                      <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{(p.sunshine / 1000).toFixed(1)}k ✦</span>
                     </div>
                   </div>
                 )
@@ -140,7 +140,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Lv.{p.level} · {p.streak}d streak · {p.trees} trees</div>
                   </div>
                   <span className={`text-[12px] font-semibold tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                    {p.xp.toLocaleString()} XP
+                    {p.sunshine.toLocaleString()} ✦
                   </span>
                 </motion.div>
               ))}
@@ -164,7 +164,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Keep writing to climb the ranks</div>
                 </div>
                 <span className="text-[12px] font-semibold tabular-nums" style={{ color: gold }}>
-                  {xp.toLocaleString()} XP
+                  {sunshine.toLocaleString()} ✦
                 </span>
               </div>
             </div>
@@ -172,7 +172,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             {/* Footer */}
             <div className={`px-8 py-3 border-t shrink-0 ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
               <p className={`text-[10px] text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
-                Rankings reset each season. Earn XP by writing and completing focus sessions.
+                Rankings reset each season. Earn sunshine by writing and completing focus sessions.
               </p>
             </div>
           </motion.div>

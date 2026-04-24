@@ -174,3 +174,27 @@ details.toggle-block summary:focus {
   0% { transform: scale(0) translateY(0); opacity: 1; }
   100% { transform: scale(1) translateY(-20px); opacity: 0; }
 }
+
+/* Boutique stage slider */
+.boutique-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #a1a1aa;
+  border: 2px solid #27272a;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.boutique-slider::-webkit-slider-thumb:hover {
+  background: #d4d4d8;
+}
+.boutique-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #a1a1aa;
+  border: 2px solid #27272a;
+  cursor: pointer;
+}
