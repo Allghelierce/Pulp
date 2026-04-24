@@ -225,9 +225,9 @@ const BoxItem = memo(function BoxItem({
         // Sticky: always fixed height. Regular: auto-grow.
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : `1px solid ${isSticky ? "transparent" : (isDark ? "#3f3f46" : "rgba(0,0,0,0.15)")}`),
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 2, backgroundColor: box.boxHighlightColor || (isSticky ? "transparent" : (isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)")),
+        borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"

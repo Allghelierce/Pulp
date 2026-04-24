@@ -156,10 +156,17 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const [confirmGiveUp, setConfirmGiveUp] = useState(false)
+  const [seedTrayOpen, setSeedTrayOpen] = useState(false)
 
   useEffect(() => {
     if (!running || done || treeDead) setConfirmGiveUp(false)
   }, [running, done, treeDead])
+
+  useEffect(() => {
+    if (!confirmGiveUp) return
+    const timer = setTimeout(() => setConfirmGiveUp(false), 10000)
+    return () => clearTimeout(timer)
+  }, [confirmGiveUp])
 
   // Tick once a second so the water countdown stays fresh
   useEffect(() => {
@@ -231,7 +238,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed z-50 flex flex-col select-none overflow-hidden shadow-2xl"
+          className="fixed z-50 flex flex-col select-none shadow-2xl"
           style={{
             left: sidebarWidth + 10,
             bottom: 12,
@@ -323,7 +330,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </p>
               </div>
 
-              {/* Tree + progress ring */}
+              {/* Tree + progress ring + seed tray */}
               <div className="relative w-52 h-60 mx-auto mb-5">
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 240">
                   <defs>
@@ -355,6 +362,83 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} />
                   </div>
                 </div>
+
+                {/* Backpack trigger — right side of oval */}
+                {!running && !done && !treeDead && inventory.length > 0 && (
+                  <button
+                    onClick={() => setSeedTrayOpen(o => !o)}
+                    className="absolute flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    style={{
+                      right: -6, top: "50%", transform: "translateY(-50%)",
+                      width: 28, height: 28, borderRadius: 8,
+                      backgroundColor: seedTrayOpen ? `${mainColor}20` : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${seedTrayOpen ? `${mainColor}50` : "rgba(255,255,255,0.1)"}`,
+                      color: seedTrayOpen ? mainColor : subtleColor,
+                      zIndex: 20,
+                    }}
+                    title="Select seed"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3" />
+                      <polyline points="8 2 8 8 2 8" style={{ display: 'none' }} />
+                      <path d="M3 12h10" />
+                      <path d="M10 9l3 3-3 3" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Seed tray slide-out */}
+                <AnimatePresence>
+                  {seedTrayOpen && !running && !done && !treeDead && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10, scaleX: 0.8 }}
+                      animate={{ opacity: 1, x: 0, scaleX: 1 }}
+                      exit={{ opacity: 0, x: -10, scaleX: 0.8 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute flex items-center gap-1.5 px-2 py-1.5 rounded-lg overflow-x-auto"
+                      style={{
+                        right: -8, top: "50%", transform: "translateY(-50%)",
+                        transformOrigin: "left center",
+                        marginRight: -140,
+                        backgroundColor: isDark ? "rgba(0,0,0,0.85)" : "rgba(10,10,12,0.9)",
+                        backdropFilter: "blur(12px)",
+                        border: `1px solid rgba(255,255,255,0.08)`,
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                        zIndex: 30,
+                        maxWidth: 160,
+                      }}
+                    >
+                      {[...new Set(inventory)].map(type => {
+                        const count = inventory.filter(s => s === type).length
+                        const isSelected = selectedSeed === type
+                        const info = TREE_TYPES[type]
+                        if (!info) return null
+                        return (
+                          <motion.button
+                            key={type}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
+                            className="relative flex flex-col items-center gap-0.5 shrink-0 rounded-md px-1.5 py-1 transition-colors"
+                            style={{
+                              backgroundColor: isSelected ? `${info.color}20` : "transparent",
+                              border: `1px solid ${isSelected ? `${info.color}50` : "transparent"}`,
+                            }}
+                            title={`${info.name} (${count})`}
+                          >
+                            <PlantIcon type={type} size={16} />
+                            <span className="text-[7px] font-bold tabular-nums" style={{ color: isSelected ? info.color : dimColor }}>
+                              {count}
+                            </span>
+                            {isSelected && (
+                              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: info.color, boxShadow: `0 0 4px ${info.color}` }} />
+                            )}
+                          </motion.button>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Watering can — visible during a session that requires it */}
@@ -441,120 +525,33 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
 
-            {/* Seed selection UI — only before starting */}
-            {!running && !done && !treeDead && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    Select Crop
-                  </p>
-                  {inventory.length === 0 && (
-                    <span className="text-[9px]" style={{ color: '#ef4444' }}>No seeds available</span>
-                  )}
-                </div>
-                
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
-                  {/* Common Seed (always available if inventory empty? or just show what they have) */}
-                  {[...new Set(inventory)].length === 0 && (
-                    <div className="text-[10px] italic p-2 rounded bg-white/5 border border-white/10 w-full text-center" style={{ color: subtleColor }}>
-                      Visit the Shop to buy seeds
-                    </div>
-                  )}
-
-                  {[...new Set(inventory)].map(type => {
-                    const count = inventory.filter(s => s === type).length
-                    const isSelected = selectedSeed === type
-                    const info = TREE_TYPES[type]
-                    if (!info) return null
-                    
-                    return (
-                      <motion.button
-                        key={type}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onSelectSeed(isSelected ? null : type)}
-                        className="relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all"
-                        style={{
-                          backgroundColor: isSelected ? `${info.color}25` : "rgba(255,255,255,0.03)",
-                          border: `1px solid ${isSelected ? `${info.color}80` : "rgba(255,255,255,0.08)"}`,
-                          boxShadow: isSelected ? `0 4px 12px ${info.color}20` : 'none',
-                        }}
-                      >
-                        <PlantIcon type={type} size={18} isSeed={true} />
-                        <div className="flex flex-col items-start leading-none">
-                           <span className="text-[10px] font-bold" style={{ color: isSelected ? info.color : textColor }}>
-                             {info.name.split(' ')[0]}
-                           </span>
-                           <span className="text-[8px] opacity-60" style={{ color: isSelected ? info.color : dimColor }}>
-                             {count} held
-                           </span>
-                        </div>
-                        {isSelected && (
-                          <motion.div 
-                            layoutId="activeSeed"
-                            className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white flex items-center justify-center shadow-lg"
-                          >
-                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: info.color }} />
-                          </motion.div>
-                        )}
-                      </motion.button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Main button */}
             <div className="mt-7">
-              {confirmGiveUp ? (
-                <div
-                  className="w-full rounded-[6px] px-3 py-2.5 flex flex-col items-center gap-2"
-                  style={{
-                    backgroundColor: "rgba(239,68,68,0.08)",
-                    border: "1px solid rgba(239,68,68,0.25)",
-                    fontFamily: serifFont,
-                  }}
-                >
-                  <span className="text-[10px] tracking-[0.08em]" style={{ color: "#ef4444" }}>
-                    Abandon this session?
-                  </span>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => { onGiveUp(); setConfirmGiveUp(false) }}
-                      className="text-[9px] font-black uppercase tracking-[0.2em] hover:underline"
-                      style={{ color: "#ef4444" }}
-                    >
-                      Yes, give up
-                    </button>
-                    <span style={{ color: subtleColor }}>·</span>
-                    <button
-                      onClick={() => setConfirmGiveUp(false)}
-                      className="text-[9px] font-black uppercase tracking-[0.2em] hover:underline"
-                      style={{ color: dimColor }}
-                    >
-                      Keep going
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={handleMainButton}
-                  className="w-full py-2 rounded-[6px] transition-colors text-[11px] font-semibold"
-                  style={{
-                    fontFamily: serifFont,
-                    letterSpacing: '0.01em',
-                    backgroundColor: treeDead || (running && !done)
-                      ? "rgba(239,68,68,0.1)"
-                      : done
-                        ? `${mainColor}1a`
-                        : isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5",
-                    color: treeDead || (running && !done) ? "#ef4444" : done ? mainColor : textColor,
-                    border: `1px solid ${treeDead || (running && !done) ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
-                  }}
-                >
-                  {treeDead ? "Try Again" : done ? "Claim Reward" : running ? "Give Up" : "Start Session"}
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (running && !done && !treeDead) {
+                    if (confirmGiveUp) { onGiveUp(); setConfirmGiveUp(false) }
+                    else setConfirmGiveUp(true)
+                  } else {
+                    handleMainButton()
+                  }
+                }}
+                className="w-full py-2 rounded-[6px] transition-all text-[11px] font-semibold"
+                style={{
+                  fontFamily: serifFont,
+                  letterSpacing: '0.01em',
+                  backgroundColor: treeDead || (running && !done)
+                    ? "rgba(239,68,68,0.1)"
+                    : done
+                      ? `${mainColor}1a`
+                      : isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5",
+                  color: treeDead || (running && !done) ? "#ef4444" : done ? mainColor : textColor,
+                  border: `1px solid ${treeDead || (running && !done) ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
+                  textDecoration: confirmGiveUp ? "underline" : "none",
+                }}
+              >
+                {treeDead ? "Try Again" : done ? "Claim Reward" : confirmGiveUp ? "Are you sure?" : running ? "Give Up" : "Start Session"}
+              </button>
 
               {lostSunshine > 0 && !running && !done && (
                 <div

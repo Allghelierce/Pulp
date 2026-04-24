@@ -71,6 +71,15 @@ interface SidebarProps {
   timerOpen?: boolean
   onUnlockDev: () => void
   onGoToShelf: () => void
+  onOpenShop?: () => void
+  onOpenLeaderboard?: () => void
+  onOpenFocus?: () => void
+  onOpenStats?: () => void
+  sunshine?: number
+  gems?: number
+  xp?: number
+  totalNotes?: number
+  totalChars?: number
   bookmarks: Bookmark[]
   onJumpToBookmark: (b: Bookmark) => void
   onReorderBookmarks: (b: Bookmark[]) => void
@@ -88,6 +97,8 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
+  onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
+  sunshine = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
 }: SidebarProps) {
@@ -843,25 +854,55 @@ export const Sidebar = memo(function Sidebar({
           </div>
         </div>
 
-        <div className="border-t border-white/5 px-3 py-2 shrink-0 z-10 relative bg-[#110d0e] flex items-center gap-1" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          <button onClick={onOpenSettings} className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-zinc-800/70 group">
-            <span className="text-[13px] shrink-0">⚙️</span>
-            <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
-          </button>
-          {onOpenTimer && (
-            <button
-              onClick={onOpenTimer}
-              title="Focus timer  (⌘⌥T)"
-              className="shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-zinc-800/70"
-              style={{ color: timerOpen ? "#fb923c" : "#f97316" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="13" r="8" />
-                <path d="M12 9v4l2 2" />
-                <path d="M9 2h6" />
-              </svg>
+        <div className="border-t border-white/5 shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+          {/* Nav buttons */}
+          <div className="px-2 pt-2 pb-1 flex flex-col gap-px">
+            {onOpenShop && (
+              <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Shop</span>
+              </button>
+            )}
+            {onOpenLeaderboard && (
+              <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
+                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Leaderboard</span>
+              </button>
+            )}
+            {onOpenFocus && (
+              <button onClick={onOpenFocus} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Focus</span>
+              </button>
+            )}
+            {onOpenStats && (
+              <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Stats</span>
+              </button>
+            )}
+          </div>
+          {/* Settings + Timer row */}
+          <div className="px-2 pb-2 pt-1 border-t border-white/[0.03] flex items-center gap-1">
+            <button onClick={onOpenSettings} className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">{user?.email ?? "Settings"}</span>
             </button>
-          )}
+            {onOpenTimer && (
+              <button
+                onClick={onOpenTimer}
+                title="Focus timer"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05]"
+                style={{ color: timerOpen ? "#fb923c" : "#71717a" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="13" r="8" />
+                  <path d="M12 9v4l2 2" />
+                  <path d="M9 2h6" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Archive Section */}

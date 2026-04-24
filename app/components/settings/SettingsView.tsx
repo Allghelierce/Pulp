@@ -717,10 +717,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       icon: <Sparkles className="w-5 h-5" style={{ color: "#f59e0b" }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
-                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
                         { name: "Grove & Achievements", description: "Plant trees, earn sunshine, unlock rewards", included: true },
                         { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
+                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
                       ],
                     },
                     {
@@ -736,7 +736,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                         { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
                         { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
                         { name: "Rare Seed Drops", description: "Bonus rare & chroma seeds every month", included: true },
-                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
+                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                       ],
                     },
                   ]}
