@@ -41,7 +41,7 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
-  const color = theme === "dark" ? "#e4e4e7" : "#18181b"
+  const color = theme === "dark" ? "#e4e4e7" : "#000000"
   const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 600, fontSize: 15 }
 
   const commit = (val: string) => {
@@ -2988,7 +2988,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#000000" }}
                               title="First Page"
                             >
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 18-6-6 6-6" /><path d="m12 18-6-6 6-6" /></svg>
@@ -2998,7 +2998,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#000000" }}
                               title="Previous Page"
                             >
                               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -3021,7 +3021,7 @@ export default function NoteApp() {
                                 }
                               }}
                               className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#000000" }}
                               title="Next Page / Add Page"
                             >
                               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
@@ -3031,7 +3031,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === activeNote.pages.length - 1}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-20" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: theme === "dark" ? "#e4e4e7" : "#18181b" }}
+                              style={{ color: theme === "dark" ? "#e4e4e7" : "#000000" }}
                               title="Last Page"
                             >
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 18 6-6-6-6" /><path d="m12 18 6-6-6-6" /></svg>
