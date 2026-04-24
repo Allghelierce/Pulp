@@ -318,14 +318,14 @@ export const StatsView = memo(function StatsView({
 
                 {/* Chart */}
                 {timeRange !== "day" ? (
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: timeRange === "week" ? 8 : 2, height: 120 }}>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: timeRange === "week" ? 8 : 2, height: 220 }}>
                     {timeData.map((d, i) => {
                       const focusH = Math.max(0, (d.focusMinutes / maxFocus) * 100)
                       const charsH = Math.max(0, (d.charsWritten / maxChars) * 100)
                       const showLabel = timeRange === "week" || i % 5 === 0
                       return (
                         <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>
-                          <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 100, width: "100%" }}>
+                          <div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 200, width: "100%" }}>
                             <div
                               title={`${d.focusMinutes} min focus`}
                               style={{
