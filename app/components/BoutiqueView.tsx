@@ -116,6 +116,103 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
   )
 }
 
+function RarityScene({ rarity }: { rarity: string }) {
+  if (rarity === 'extinct') {
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 20%, #0d0a1a 0%, #050508 50%, #000000 100%)' }}>
+        <style>{`
+          @keyframes twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
+          @keyframes shoot { 0% { transform: translateX(0) translateY(0); opacity: 1; } 100% { transform: translateX(120px) translateY(80px); opacity: 0; } }
+        `}</style>
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div key={`s${i}`} style={{
+            position: 'absolute',
+            width: i % 5 === 0 ? 2.5 : 1.5,
+            height: i % 5 === 0 ? 2.5 : 1.5,
+            borderRadius: '50%',
+            background: i % 7 === 0 ? '#c4b5fd' : i % 5 === 0 ? '#93c5fd' : '#e4e4e7',
+            left: `${(i * 31 + 7) % 95}%`,
+            top: `${(i * 23 + 13) % 85}%`,
+            animation: `twinkle ${2 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 5}s infinite`,
+            boxShadow: i % 5 === 0 ? '0 0 4px rgba(196,181,253,0.4)' : 'none',
+          }} />
+        ))}
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={`sh${i}`} style={{
+            position: 'absolute',
+            width: 2, height: 2, borderRadius: '50%',
+            background: '#f8fafc',
+            left: `${10 + i * 35}%`, top: `${15 + i * 20}%`,
+            animation: `shoot 1.8s linear ${i * 4 + 2}s infinite`,
+            boxShadow: '0 0 6px 2px rgba(248,250,252,0.5), -20px -2px 12px rgba(248,250,252,0.15)',
+          }}>
+            <div style={{ position: 'absolute', right: 2, top: 0, width: 30, height: 1, background: 'linear-gradient(90deg, rgba(248,250,252,0.4) 0%, transparent 100%)', transformOrigin: 'right center', transform: 'rotate(-33deg)' }} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (rarity === 'chroma') {
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'linear-gradient(180deg, #1a0e24 0%, #12081c 50%, #0a0612 100%)' }}>
+        <style>{`
+          @keyframes chromaShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+          @keyframes chromaPulse { 0%, 100% { opacity: 0.12; transform: scale(1); } 50% { opacity: 0.25; transform: scale(1.1); } }
+        `}</style>
+        <div style={{
+          position: 'absolute', inset: -20,
+          background: 'radial-gradient(circle at 30% 40%, rgba(192,132,252,0.15) 0%, transparent 50%), radial-gradient(circle at 70% 60%, rgba(244,114,182,0.12) 0%, transparent 50%), radial-gradient(circle at 50% 20%, rgba(96,165,250,0.1) 0%, transparent 40%)',
+          animation: 'chromaShift 8s linear infinite',
+        }} />
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            width: 3 + (i % 3) * 2,
+            height: 3 + (i % 3) * 2,
+            borderRadius: '50%',
+            background: ['#c084fc', '#f472b6', '#60a5fa', '#34d399'][i % 4],
+            left: `${(i * 29 + 5) % 90}%`,
+            top: `${(i * 23 + 8) % 80}%`,
+            animation: `chromaPulse ${3 + (i % 3)}s ease-in-out ${i * 0.5}s infinite`,
+          }} />
+        ))}
+      </div>
+    )
+  }
+
+  if (rarity === 'premium') {
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'linear-gradient(180deg, #1a1508 0%, #1c1406 50%, #141004 100%)' }}>
+        <style>{`
+          @keyframes goldFloat { 0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; } 20% { opacity: 0.6; } 80% { opacity: 0.3; } 100% { transform: translateY(-60px) rotate(20deg); opacity: 0; } }
+          @keyframes goldPulse { 0%, 100% { opacity: 0.06; } 50% { opacity: 0.15; } }
+        `}</style>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.1) 0%, transparent 60%), radial-gradient(circle at 30% 30%, rgba(251,191,36,0.05) 0%, transparent 40%)',
+          animation: 'goldPulse 4s ease-in-out infinite',
+        }} />
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            width: 2 + (i % 3),
+            height: 2 + (i % 3),
+            borderRadius: '50%',
+            background: i % 2 === 0 ? '#fbbf24' : '#f59e0b',
+            left: `${(i * 28 + 10) % 85}%`,
+            bottom: `${5 + (i * 7) % 30}%`,
+            animation: `goldFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 1.2}s infinite`,
+            boxShadow: '0 0 6px rgba(251,191,36,0.3)',
+          }} />
+        ))}
+      </div>
+    )
+  }
+
+  return null
+}
+
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
   sunshine, gems, inventory, setSunshine, setGems, setInventory, setGrove,
@@ -268,7 +365,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
   const CurrencyPill = ({ type, amount }: { type: 'sunshine' | 'gems'; amount: number }) => (
-    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200"} border rounded-full px-2.5 py-1`} style={{ color: type === 'gems' ? '#a78bfa' : '#d97706' }}>
+    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
       <span className="text-[10px] leading-none">{type === 'gems' ? '💎' : '☀️'}</span>
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
@@ -297,9 +394,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                 onClick={() => { setActiveTab(tab.id); setSelectedPlant(null) }}
                 className={`px-3.5 py-1.5 rounded-md text-[12.5px] font-medium transition-all ${
                   activeTab === tab.id
-                    ? isDark ? "bg-zinc-800 text-white shadow-sm" : "bg-white text-zinc-900 shadow-sm"
+                    ? "shadow-sm"
                     : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
                 }`}
+                style={activeTab === tab.id ? {
+                  backgroundColor: `${accent}18`,
+                  color: accent,
+                  border: `1px solid ${accent}30`,
+                } : { border: '1px solid transparent' }}
               >
                 {tab.label}
               </button>
@@ -363,7 +465,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         )}
 
         {/* ── Content ── */}
-        <div style={{ flex: 1, overflowY: 'auto', backgroundColor: bg }}>
+        <div style={{ flex: 1, overflowY: 'auto', backgroundColor: bg, display: 'flex', flexDirection: 'column' }}>
 
           {/* ── SHOP ── */}
           {activeTab === 'shop' && !selectedPlant && (
@@ -708,10 +810,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               height: 180, position: 'relative',
-                              background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                              background: ['extinct', 'chroma', 'premium'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
                             }}>
-                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
-                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
+                              <RarityScene rarity={t.rarity} />
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
+                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
                               <Sparkles rarity={t.rarity} count={4} />
                               <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
                                 <PlantIcon type={type} size={120} stage={3} />
@@ -727,10 +830,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                                <span style={{ fontSize: 12, fontWeight: 600, color: '#d97706' }}>
-                                  ☀️ {t.cost.toLocaleString()}
-                                </span>
+                              <div style={{ marginTop: 4 }}>
                                 <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
                             </div>
@@ -776,11 +876,12 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
         height: featured ? 200 : 180,
-        background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+        background: ['extinct', 'chroma', 'premium'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
         position: 'relative',
       }}>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
-        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
+        <RarityScene rarity={t.rarity} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
+        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
         {isShop ? (
           <div style={{ position: 'relative', marginBottom: -2, width: featured ? 130 : 120, height: featured ? 130 : 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>

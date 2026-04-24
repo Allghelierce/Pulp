@@ -23,6 +23,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
   const light = lighten(color, 50)
   const uid = `plant-${type}-${size}-${stage}`
 
+  const swayDelay = (type.charCodeAt(0) + (type.charCodeAt(1) || 0)) % 10
+  const swayDuration = 4 + (swayDelay % 3)
+
   if (isSeed) {
     return (
       <svg width={size} height={size} viewBox="0 0 48 48">
@@ -33,11 +36,22 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           </radialGradient>
         </defs>
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
-        <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
-        <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
-        <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
-        <path d="M24 21 Q22 17 24 14 Q26 17 24 21" fill="#6ab04c" opacity="0.6" />
-        <path d="M24 14 L24 21" stroke="#4a8c3f" strokeWidth="0.6" opacity="0.4" />
+        <g style={{
+          transformOrigin: '24px 38px',
+          animation: `plant-sway-${uid} ${swayDuration}s ease-in-out ${swayDelay * 0.3}s infinite`,
+        }}>
+          <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
+          <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
+          <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
+          <path d="M24 21 Q22 17 24 14 Q26 17 24 21" fill="#6ab04c" opacity="0.6" />
+          <path d="M24 14 L24 21" stroke="#4a8c3f" strokeWidth="0.6" opacity="0.4" />
+        </g>
+        <style>{`
+          @keyframes plant-sway-${uid} {
+            0%, 100% { transform: rotate(1.5deg); }
+            50% { transform: rotate(-1.5deg); }
+          }
+        `}</style>
       </svg>
     )
   }
@@ -437,41 +451,73 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 L24 34" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M23.5 40 L24.5 40" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 37 Q21 34 19 32" fill="#4a8c3a" opacity="0.5" />
             <path d="M24 36 Q27 33 29 31" fill="#3a7a2a" opacity="0.5" />
             <circle cx="24" cy="32" r="3" fill="#4a8c3a" opacity="0.6" />
+            <circle cx="23" cy="31" r="1" fill="#5a9c4a" opacity="0.2" />
           </g>
         )
         if (s === 1) return (
           <g>
             <path d="M24 46 L24 30" stroke={trunk} strokeWidth="2" strokeLinecap="round" />
+            <path d="M23.5 38 L24.8 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <circle cx="24" cy="24" r="8" fill="#3a7a2a" opacity="0.8" />
             <circle cx="22" cy="22" r="4" fill="#4a8c3a" opacity="0.5" />
+            <circle cx="26" cy="27" r="3" fill="#2a6a1e" opacity="0.15" />
             <circle cx="26" cy="20" r="1.5" fill={color} opacity="0.6" />
+            <circle cx="21" cy="26" r="1.2" fill={color} opacity="0.4" />
+            <circle cx="20" cy="20" r="0.8" fill="#5a9c4a" opacity="0.2" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M23 46 Q23 40 23 34 L25 34 Q25 40 25 46 Z" fill={trunk} />
+            <path d="M23.5 38 L25 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.2 42 L25.2 41.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
             <path d="M23 36 Q19 34 17 32" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            <path d="M25 36 Q28 34 30 33" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" />
             <circle cx="24" cy="22" r="12" fill="#3a7a2a" />
+            <circle cx="24" cy="29" rx="10" ry="4" fill="#2a6a1e" opacity="0.1" />
             <circle cx="20" cy="18" r="6" fill="#4a8c3a" opacity="0.5" />
+            <circle cx="30" cy="24" r="4" fill="#2a6a1e" opacity="0.2" />
+            <circle cx="16" cy="24" r="3" fill="#4a8c3a" opacity="0.2" />
             <circle cx="19" cy="26" r="2" fill={color} opacity="0.7" />
             <circle cx="28" cy="16" r="1.8" fill={color} opacity="0.6" />
+            <circle cx="30" cy="24" r="1.5" fill={color} opacity="0.5" />
+            <circle cx="18" cy="18" r="1" fill="#5a9c4a" opacity="0.2" />
+            {/* roots */}
+            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <path d="M22 46 Q22 40 22 34 L26 34 Q26 40 26 46 Z" fill={trunk} />
+            <path d="M22.5 38 L25.5 37.8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M23 42 L25.5 41.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 35 L25 34.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M22 36 Q18 34 16 32" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <path d="M26 36 Q30 34 32 33" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <circle cx="24" cy="22" r="14" fill="#3a7a2a" />
+            <ellipse cx="24" cy="30" rx="12" ry="4" fill="#2a6a1e" opacity="0.12" />
             <circle cx="20" cy="16" r="8" fill="#4a8c3a" opacity="0.6" />
             <circle cx="30" cy="24" r="6" fill="#2a6a1e" opacity="0.4" />
+            <circle cx="14" cy="22" r="4" fill="#4a8c3a" opacity="0.25" />
+            <circle cx="28" cy="12" r="3.5" fill="#4a8c3a" opacity="0.2" />
             <circle cx="18" cy="26" r="2.5" fill={color} />
             <circle cx="28" cy="14" r="2.2" fill={color} />
             <circle cx="32" cy="22" r="2" fill={color} />
             <circle cx="14" cy="18" r="1.8" fill={color} opacity="0.8" />
+            <circle cx="22" cy="12" r="1.5" fill={color} opacity="0.6" />
             <circle cx="24" cy="10" r="1.5" fill={light} opacity="0.3" />
+            <circle cx="18" cy="14" r="1" fill="#5a9c4a" opacity="0.2" />
+            <circle cx="32" cy="18" r="0.8" fill="#5a9c4a" opacity="0.15" />
+            {/* roots */}
+            <path d="M22 46 Q19 44.5 16 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M26 46 Q29 44.5 32 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M24 46 Q22 45.5 20 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -482,33 +528,66 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <rect x="23" y="38" width="2" height="8" fill={trunk} />
             <path d="M24 28 L20 38 L28 38 Z" fill={color} opacity="0.7" />
             <path d="M24 28 L22 34 L26 34 Z" fill={light} opacity="0.25" />
+            <path d="M24 28 L24 36" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
           </g>
         )
         if (s === 1) return (
           <g>
             <rect x="22.5" y="36" width="3" height="10" fill={trunk} />
+            <path d="M23 40 L25 39.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 18 L18 30 L30 30 Z" fill={color} />
             <path d="M24 24 L16 36 L32 36 Z" fill={color} />
             <path d="M24 18 L21 24 L27 24 Z" fill={light} opacity="0.25" />
+            <path d="M24 24 L24 34" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M20 28 L28 28" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            <circle cx="22" cy="26" r="0.6" fill={light} opacity="0.15" />
           </g>
         )
         if (s === 2) return (
           <g>
             <rect x="22" y="36" width="4" height="10" fill={trunk} />
+            <path d="M22.5 40 L25.5 39.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M23 43 L25 42.8" stroke={dark} strokeWidth="0.4" opacity="0.18" />
             <path d="M24 10 L16 22 L32 22 Z" fill={color} />
             <path d="M24 18 L13 30 L35 30 Z" fill={color} />
             <path d="M24 24 L11 36 L37 36 Z" fill={color} />
             <path d="M24 10 L20 18 L28 18 Z" fill={light} opacity="0.25" />
+            {/* layer shadows */}
+            <path d="M18 22 L30 22" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.12" />
+            <path d="M15 30 L33 30" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.1" />
+            {/* texture */}
+            <path d="M24 12 L24 20" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <circle cx="20" cy="18" r="0.6" fill={light} opacity="0.15" />
+            <circle cx="28" cy="26" r="0.5" fill={light} opacity="0.12" />
+            <circle cx="16" cy="32" r="0.5" fill={light} opacity="0.1" />
           </g>
         )
         return (
           <g>
             <rect x="22" y="36" width="4" height="10" fill={trunk} />
+            <path d="M22.5 40 L25.5 39.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 43 L25.5 42.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M24 6 L14 20 L34 20 Z" fill={color} />
             <path d="M24 14 L12 28 L36 28 Z" fill={color} />
             <path d="M24 22 L10 36 L38 36 Z" fill={color} />
             <path d="M24 6 L19 14 L29 14 Z" fill={light} opacity="0.3" />
             <path d="M24 14 L18 22 L30 22 Z" fill={light} opacity="0.2" />
+            {/* layer shadows */}
+            <path d="M16 20 L32 20" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.12" />
+            <path d="M14 28 L34 28" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.1" />
+            <path d="M12 36 L36 36" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.08" />
+            {/* texture details */}
+            <path d="M24 8 L24 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M24 16 L24 26" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <circle cx="18" cy="16" r="0.7" fill={light} opacity="0.15" />
+            <circle cx="28" cy="14" r="0.6" fill={light} opacity="0.12" />
+            <circle cx="16" cy="24" r="0.6" fill={light} opacity="0.12" />
+            <circle cx="30" cy="24" r="0.5" fill={light} opacity="0.1" />
+            <circle cx="14" cy="32" r="0.5" fill={light} opacity="0.1" />
+            <circle cx="32" cy="32" r="0.5" fill={light} opacity="0.08" />
+            {/* roots */}
+            <path d="M22 46 Q20 45 18 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M26 46 Q28 45 30 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -519,6 +598,8 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 46 L24 32" stroke="#5a8c3f" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M24 36 Q21 34 19 36 Q21 32 24 35" fill="#6ab04c" opacity="0.5" />
             <ellipse cx="24" cy="28" rx="2" ry="5" fill={color} opacity="0.6" />
+            <circle cx="24" cy="25" r="0.8" fill={light} opacity="0.25" />
+            <circle cx="24" cy="30" r="0.6" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 1) return (
@@ -529,6 +610,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <ellipse cx="24" cy="22" rx="2.5" ry="6" fill={color} opacity="0.8" />
             <ellipse cx="20" cy="28" rx="2" ry="5" fill={color} opacity="0.6" />
             <ellipse cx="24" cy="20" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            {/* floret dots */}
+            <circle cx="24" cy="18" r="0.7" fill={light} opacity="0.25" />
+            <circle cx="24" cy="24" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="20" cy="26" r="0.5" fill={light} opacity="0.2" />
+            <circle cx="20" cy="30" r="0.5" fill={light} opacity="0.15" />
           </g>
         )
         if (s === 2) return (
@@ -541,6 +627,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <ellipse cx="18" cy="24" rx="2" ry="6" fill={color} opacity="0.7" />
             <ellipse cx="30" cy="22" rx="2" ry="6" fill={color} opacity="0.7" />
             <ellipse cx="24" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            {/* floret dots */}
+            <circle cx="24" cy="15" r="0.7" fill={light} opacity="0.25" />
+            <circle cx="24" cy="22" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="18" cy="21" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="18" cy="27" r="0.5" fill={light} opacity="0.15" />
+            <circle cx="30" cy="19" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="30" cy="25" r="0.5" fill={light} opacity="0.15" />
           </g>
         )
         return (
@@ -550,12 +643,28 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M30 46 L30 26" stroke="#4a7c35" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M24 34 Q20 30 16 32" stroke="#5a8c3f" strokeWidth="1" fill="none" />
             <path d="M24 34 Q28 30 32 32" stroke="#5a8c3f" strokeWidth="1" fill="none" />
+            {/* extra leaf */}
+            <path d="M24 38 Q21 36 19 38 Q21 35 24 37" fill="#6ab04c" opacity="0.35" />
             <ellipse cx="24" cy="18" rx="3" ry="8" fill={color} />
             <ellipse cx="18" cy="22" rx="2.5" ry="7" fill={color} opacity="0.8" />
             <ellipse cx="30" cy="20" rx="2.5" ry="7" fill={color} opacity="0.8" />
             <ellipse cx="24" cy="14" rx="2" ry="4" fill={light} opacity="0.4" />
             <ellipse cx="18" cy="18" rx="1.5" ry="3" fill={light} opacity="0.3" />
             <ellipse cx="30" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            {/* floret dots */}
+            <circle cx="24" cy="12" r="0.8" fill={light} opacity="0.3" />
+            <circle cx="24" cy="16" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="24" cy="22" r="0.6" fill={light} opacity="0.18" />
+            <circle cx="18" cy="17" r="0.6" fill={light} opacity="0.22" />
+            <circle cx="18" cy="21" r="0.5" fill={light} opacity="0.18" />
+            <circle cx="18" cy="25" r="0.5" fill={light} opacity="0.15" />
+            <circle cx="30" cy="15" r="0.6" fill={light} opacity="0.22" />
+            <circle cx="30" cy="19" r="0.5" fill={light} opacity="0.18" />
+            <circle cx="30" cy="23" r="0.5" fill={light} opacity="0.15" />
+            {/* depth shadow on spikes */}
+            <ellipse cx="24" cy="24" rx="2" ry="1" fill={dark} opacity="0.1" />
+            <ellipse cx="18" cy="27" rx="1.5" ry="0.8" fill={dark} opacity="0.08" />
+            <ellipse cx="30" cy="25" rx="1.5" ry="0.8" fill={dark} opacity="0.08" />
           </g>
         )
 
@@ -565,8 +674,10 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <path d="M24 46 L24 34" stroke="#d4cfc8" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M23.5 38 L24.5 37.5" stroke="#6b6560" strokeWidth="0.6" />
+            <path d="M23.7 41 L24.3 40.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.3" />
             <path d="M24 36 Q21 33 18 32" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <ellipse cx="17" cy="31" rx="4" ry="3" fill={color} opacity="0.6" />
+            <ellipse cx="16" cy="30" rx="1.5" ry="1" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 1) return (
@@ -575,10 +686,14 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24.5 46 L24.5 22" stroke="#b8b0a4" strokeWidth="0.6" opacity="0.3" />
             <path d="M23.5 36 L25 35.5" stroke="#6b6560" strokeWidth="0.6" />
             <path d="M23.5 28 L25 27.5" stroke="#6b6560" strokeWidth="0.6" />
+            <path d="M23.8 42 L24.5 41.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.3" />
+            <path d="M23.6 32 L24.8 31.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 30 Q18 26 14 25" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
             <ellipse cx="12" cy="23" rx="5" ry="4" fill={color} opacity="0.7" />
             <path d="M24 24 Q28 21 32 20" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <ellipse cx="34" cy="18" rx="4" ry="3" fill={color} opacity="0.6" />
+            <ellipse cx="11" cy="22" rx="2" ry="1.5" fill={light} opacity="0.2" />
+            <ellipse cx="33" cy="17" rx="1.5" ry="1" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
@@ -588,6 +703,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M22.5 36 L25 35.5" stroke="#6b6560" strokeWidth="0.7" />
             <path d="M22.5 28 L25 27.5" stroke="#6b6560" strokeWidth="0.7" />
             <path d="M22.5 20 L25 19.5" stroke="#6b6560" strokeWidth="0.7" />
+            <path d="M22.8 42 L24.5 41.8" stroke="#6b6560" strokeWidth="0.5" opacity="0.3" />
+            <path d="M22.8 32 L24.8 31.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.25" />
+            <path d="M22.8 24 L24.5 23.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.25" />
             <path d="M23 30 Q17 26 13 25" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M23 22 Q29 18 33 17" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M23 16 Q18 12 14 12" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
@@ -595,6 +713,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <ellipse cx="35" cy="15" rx="6" ry="4" fill={color} opacity="0.7" />
             <ellipse cx="12" cy="10" rx="4" ry="3" fill={color} opacity="0.5" />
             <ellipse cx="24" cy="8" rx="5" ry="3" fill={light} opacity="0.4" />
+            {/* leaf cluster details */}
+            <ellipse cx="10" cy="22" rx="2" ry="1.5" fill={light} opacity="0.2" />
+            <ellipse cx="34" cy="14" rx="2.5" ry="1.5" fill={light} opacity="0.18" />
+            <circle cx="14" cy="10" r="1" fill={light} opacity="0.15" />
+            {/* roots */}
+            <path d="M22 46 Q20 45 18 46" stroke="#8a8478" strokeWidth="0.6" fill="none" opacity="0.2" />
+            <path d="M25 46 Q27 45 29 46" stroke="#8a8478" strokeWidth="0.5" fill="none" opacity="0.18" />
           </g>
         )
         return (
@@ -604,13 +729,32 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M22 38 L24.5 37.5" stroke="#6b6560" strokeWidth="0.8" />
             <path d="M22 30 L24.5 29.5" stroke="#6b6560" strokeWidth="0.8" />
             <path d="M22 22 L24.5 21.5" stroke="#6b6560" strokeWidth="0.8" />
+            <path d="M22 14 L24.5 13.5" stroke="#6b6560" strokeWidth="0.7" opacity="0.7" />
+            <path d="M22.2 42 L24.2 41.8" stroke="#6b6560" strokeWidth="0.5" opacity="0.3" />
+            <path d="M22.2 34 L24.5 33.8" stroke="#6b6560" strokeWidth="0.5" opacity="0.25" />
+            <path d="M22.2 26 L24.5 25.8" stroke="#6b6560" strokeWidth="0.5" opacity="0.25" />
+            <path d="M22.5 18 L24.2 17.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.25" />
             <path d="M23 32 Q16 28 12 26" stroke="#8a8478" strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M23 24 Q30 20 34 18" stroke="#8a8478" strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M23 16 Q16 12 12 11" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
+            <path d="M23 12 Q28 10 32 10" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <ellipse cx="10" cy="24" rx="6" ry="5" fill={color} opacity="0.8" />
             <ellipse cx="36" cy="16" rx="7" ry="5" fill={color} opacity="0.8" />
             <ellipse cx="10" cy="10" rx="5" ry="4" fill={color} opacity="0.7" />
             <ellipse cx="24" cy="6" rx="6" ry="4" fill={light} opacity="0.5" />
+            <ellipse cx="34" cy="9" rx="4" ry="3" fill={color} opacity="0.4" />
+            {/* leaf cluster highlights */}
+            <ellipse cx="8" cy="22" rx="2.5" ry="2" fill={light} opacity="0.2" />
+            <ellipse cx="34" cy="14" rx="3" ry="2" fill={light} opacity="0.2" />
+            <ellipse cx="9" cy="9" rx="2" ry="1.5" fill={light} opacity="0.18" />
+            <ellipse cx="23" cy="5" rx="2.5" ry="1.5" fill={light} opacity="0.2" />
+            {/* depth shadows */}
+            <ellipse cx="12" cy="27" rx="4" ry="1.5" fill={dark} opacity="0.08" />
+            <ellipse cx="38" cy="19" rx="4" ry="1.5" fill={dark} opacity="0.08" />
+            {/* roots */}
+            <path d="M21 46 Q18 44.5 15 46" stroke="#8a8478" strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M25 46 Q28 44.5 31 46" stroke="#8a8478" strokeWidth="0.7" fill="none" opacity="0.2" />
+            <path d="M23 46 Q21 45.5 19 46" stroke="#8a8478" strokeWidth="0.5" fill="none" opacity="0.18" />
           </g>
         )
 
@@ -621,34 +765,64 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <rect x="23" y="38" width="2" height="8" rx="0.5" fill={trunk} />
             <circle cx="24" cy="34" r="5" fill={color} opacity="0.6" />
             <circle cx="22" cy="32" r="2" fill={light} opacity="0.2" />
+            <circle cx="25" cy="36" r="1.5" fill={dark} opacity="0.1" />
           </g>
         )
         if (s === 1) return (
           <g>
             <rect x="22.5" y="36" width="3" height="10" rx="0.8" fill={trunk} />
+            <path d="M23 40 L25 39.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <circle cx="24" cy="28" r="9" fill={color} opacity="0.8" />
             <circle cx="21" cy="24" r="4" fill={light} opacity="0.2" />
             <circle cx="28" cy="30" r="3" fill={dark} opacity="0.15" />
+            <circle cx="20" cy="28" r="2" fill={color} opacity="0.25" />
+            <circle cx="28" cy="24" r="1.8" fill={color} opacity="0.2" />
+            <circle cx="24" cy="21" r="1" fill={light} opacity="0.15" />
           </g>
         )
         if (s === 2) return (
           <g>
             <rect x="22" y="34" width="4" height="12" rx="1" fill={trunk} />
+            <path d="M22.5 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M23 42 L25 41.8" stroke={dark} strokeWidth="0.4" opacity="0.18" />
             <circle cx="24" cy="24" r="12" fill={color} />
+            <ellipse cx="24" cy="32" rx="10" ry="3" fill={dark} opacity="0.1" />
             <circle cx="20" cy="18" r="6" fill={light} opacity="0.2" />
             <circle cx="30" cy="28" r="4" fill={dark} opacity="0.15" />
+            <circle cx="16" cy="24" r="3" fill={color} opacity="0.2" />
+            <circle cx="30" cy="18" r="2.5" fill={color} opacity="0.18" />
             <circle cx="24" cy="24" r="1.2" fill={dark} opacity="0.12" />
+            <circle cx="18" cy="28" r="1" fill={light} opacity="0.12" />
+            {/* roots */}
+            <path d="M22 46 Q20 45 18 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M26 46 Q28 45 30 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <rect x="22" y="34" width="4" height="12" rx="1" fill={trunk} />
+            <path d="M22.5 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 42 L25.5 41.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M23 36 L25 35.8" stroke={dark} strokeWidth="0.4" opacity="0.18" />
             <circle cx="24" cy="22" r="14" fill={color} />
+            <ellipse cx="24" cy="32" rx="12" ry="3.5" fill={dark} opacity="0.1" />
             <circle cx="19" cy="16" r="7" fill={light} opacity="0.25" />
             <circle cx="30" cy="26" r="5" fill={dark} opacity="0.2" />
+            <circle cx="14" cy="22" r="3.5" fill={color} opacity="0.2" />
+            <circle cx="32" cy="16" r="3" fill={color} opacity="0.18" />
+            <circle cx="20" cy="26" r="2.5" fill={color} opacity="0.15" />
             <circle cx="24" cy="22" r="1.5" fill={dark} opacity="0.15" />
             <circle cx="16" cy="26" r="1.5" fill={dark} opacity="0.15" />
             <circle cx="32" cy="18" r="1.5" fill={dark} opacity="0.15" />
+            <circle cx="20" cy="14" r="1.2" fill={light} opacity="0.15" />
+            <circle cx="28" cy="12" r="1" fill={light} opacity="0.12" />
+            <circle cx="12" cy="18" r="0.8" fill={light} opacity="0.1" />
+            {/* trimmed texture lines */}
+            <path d="M12 22 Q14 20 16 22" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <path d="M32 22 Q34 20 36 22" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            {/* roots */}
+            <path d="M22 46 Q19 44.5 16 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M26 46 Q29 44.5 32 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
           </g>
         )
 
@@ -657,42 +831,75 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 L24 34" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M23.5 40 L24.5 40" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 37 Q21 34 19 32" fill="#5a9c4a" opacity="0.5" />
             <path d="M24 36 Q27 33 29 31" fill="#4a8c3a" opacity="0.5" />
             <ellipse cx="24" cy="32" rx="4" ry="3" fill="#4a8c3a" opacity="0.6" />
+            <circle cx="23" cy="31" r="0.8" fill="#5a9c4a" opacity="0.2" />
           </g>
         )
         if (s === 1) return (
           <g>
             <path d="M24 46 L24 28" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M23.5 38 L24.8 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 34 Q18 30 15 28" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <ellipse cx="24" cy="22" rx="9" ry="8" fill="#4a8c3a" />
             <ellipse cx="21" cy="20" rx="4" ry="3" fill="#5a9c4a" opacity="0.4" />
+            <ellipse cx="27" cy="26" rx="3" ry="2" fill="#3a7a2a" opacity="0.15" />
             <ellipse cx="26" cy="18" rx="2" ry="1.5" fill={color} opacity="0.5" transform="rotate(-10 26 18)" />
+            <circle cx="20" cy="22" r="0.8" fill="#5a9c4a" opacity="0.2" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M23 46 Q22 40 22 34 L26 34 Q26 40 25 46 Z" fill={trunk} />
+            <path d="M23 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 42 L25 41.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
             <path d="M23 36 Q17 32 14 30" stroke={trunk} strokeWidth="1.3" strokeLinecap="round" fill="none" />
             <path d="M25 34 Q30 30 34 28" stroke={trunk} strokeWidth="1.3" strokeLinecap="round" fill="none" />
             <ellipse cx="24" cy="21" rx="13" ry="12" fill="#4a8c3a" />
+            <ellipse cx="24" cy="28" rx="11" ry="3.5" fill="#3a7a2a" opacity="0.1" />
             <ellipse cx="19" cy="17" rx="6" ry="4" fill="#5a9c4a" opacity="0.4" />
+            <ellipse cx="30" cy="24" rx="4" ry="3" fill="#3a7a2a" opacity="0.2" />
             <ellipse cx="18" cy="24" rx="2.2" ry="1.8" fill={color} transform="rotate(-15 18 24)" />
             <ellipse cx="30" cy="16" rx="2" ry="1.5" fill={color} transform="rotate(10 30 16)" />
+            <ellipse cx="24" cy="12" rx="1.5" ry="1.2" fill={color} opacity="0.5" />
+            <circle cx="20" cy="18" r="0.8" fill="#5a9c4a" opacity="0.2" />
+            {/* roots */}
+            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M26 46 Q28 45 30 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <path d="M22 46 Q21 40 21 34 L27 34 Q27 40 26 46 Z" fill={trunk} />
+            <path d="M22.5 38 L25.5 37.8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M23 42 L25.5 41.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 35 L25 34.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M22 36 Q16 32 12 30" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
             <path d="M26 34 Q32 30 36 28" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <path d="M24 36 Q20 34 16 33" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.5" />
             <ellipse cx="24" cy="20" rx="15" ry="13" fill="#4a8c3a" />
+            <ellipse cx="24" cy="28" rx="13" ry="4" fill="#3a7a2a" opacity="0.1" />
             <ellipse cx="18" cy="16" rx="7" ry="5" fill="#5a9c4a" opacity="0.5" />
             <ellipse cx="30" cy="24" rx="5" ry="4" fill="#3a7a2a" opacity="0.4" />
+            <ellipse cx="14" cy="22" rx="4" ry="3" fill="#4a8c3a" opacity="0.2" />
+            <ellipse cx="32" cy="14" rx="3.5" ry="2.5" fill="#4a8c3a" opacity="0.18" />
+            {/* fruits */}
             <ellipse cx="16" cy="24" rx="2.5" ry="2" fill={color} transform="rotate(-20 16 24)" />
             <ellipse cx="30" cy="16" rx="2.5" ry="2" fill={color} transform="rotate(15 30 16)" />
             <ellipse cx="22" cy="12" rx="2" ry="1.5" fill={light} transform="rotate(-10 22 12)" />
+            <ellipse cx="34" cy="22" rx="1.8" ry="1.5" fill={color} opacity="0.6" transform="rotate(10 34 22)" />
+            <ellipse cx="14" cy="16" rx="1.5" ry="1.2" fill={color} opacity="0.5" />
+            {/* leaf highlights */}
+            <circle cx="18" cy="14" r="1.2" fill="#5a9c4a" opacity="0.2" />
+            <circle cx="28" cy="12" r="1" fill="#5a9c4a" opacity="0.18" />
+            <circle cx="12" cy="20" r="0.8" fill="#5a9c4a" opacity="0.15" />
+            {/* roots */}
+            <path d="M21 46 Q18 44.5 15 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M27 46 Q30 44.5 33 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M24 46 Q22 45.5 20 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -701,6 +908,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 L24 34" stroke={trunk} strokeWidth="2" strokeLinecap="round" />
+            <path d="M23.5 40 L24.5 40" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 34 Q22 30 20 34 Q18 38 16 40" stroke={color} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
             <path d="M24 34 Q26 30 28 34 Q30 38 32 40" stroke={color} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
           </g>
@@ -708,29 +916,55 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 1) return (
           <g>
             <path d="M24 46 L24 28" stroke={trunk} strokeWidth="3" strokeLinecap="round" />
+            <path d="M23.2 38 L25 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 28 Q20 24 16 28 Q14 34 12 40" stroke={color} fill="none" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
             <path d="M24 28 Q28 24 32 28 Q34 34 36 40" stroke={color} fill="none" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
             <path d="M24 26 Q22 24 20 26 Q18 32 16 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+            <path d="M24 26 Q26 24 28 26 Q30 32 32 36" stroke={dark} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.12" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M24 46 L24 24" stroke={trunk} strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M23 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 30 L25 29.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 24 Q18 18 12 24 Q10 30 8 40" stroke={color} fill="none" strokeWidth="3.5" strokeLinecap="round" />
             <path d="M24 24 Q30 18 36 24 Q38 30 40 40" stroke={color} fill="none" strokeWidth="3.5" strokeLinecap="round" />
             <path d="M24 22 Q20 20 18 22 Q16 28 14 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
             <path d="M24 22 Q28 20 30 22 Q32 28 34 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+            {/* extra cascading strands */}
+            <path d="M24 23 Q21 22 20 24 Q18 30 16 38" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+            <path d="M24 23 Q27 22 28 24 Q30 30 32 38" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+            {/* roots */}
+            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <path d="M24 46 L24 22" stroke={trunk} strokeWidth="4" strokeLinecap="round" />
+            <path d="M22.5 38 L26 37.8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M23 34 L25.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 30 L25.5 29.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M23.5 26 L25 25.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 20 Q18 14 10 22 Q8 30 6 40" stroke={color} fill="none" strokeWidth="4" strokeLinecap="round" />
             <path d="M24 20 Q30 14 38 22 Q40 30 42 40" stroke={color} fill="none" strokeWidth="4" strokeLinecap="round" />
             <path d="M24 18 Q20 16 16 20 Q14 28 12 36" stroke={light} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
             <path d="M24 18 Q28 16 32 20 Q34 28 36 36" stroke={light} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+            {/* extra cascading strands */}
+            <path d="M24 19 Q19 15 14 20 Q12 28 10 38" stroke={color} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+            <path d="M24 19 Q29 15 34 20 Q36 28 38 38" stroke={color} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+            <path d="M24 18 Q22 16 20 18 Q18 26 16 34" stroke={dark} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.12" />
+            <path d="M24 18 Q26 16 28 18 Q30 26 32 34" stroke={dark} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.12" />
             <circle cx="6" cy="40" r="2.5" fill={light} opacity="0.5" />
             <circle cx="42" cy="40" r="2.5" fill={light} opacity="0.5" />
+            <circle cx="10" cy="38" r="1.5" fill={light} opacity="0.3" />
+            <circle cx="38" cy="38" r="1.5" fill={light} opacity="0.3" />
+            {/* roots */}
+            <path d="M23 46 Q20 44.5 17 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M25 46 Q28 44.5 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
           </g>
         )
 
@@ -739,6 +973,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 L24 34" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" />
+            <path d="M23.5 40 L24.5 40" stroke="#4a3a2a" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 36 Q20 32 18 30" stroke="#5c4a3a" strokeWidth="1" strokeLinecap="round" fill="none" />
             <circle cx="18" cy="30" r="3" fill={color} opacity="0.5" />
             <circle cx="24" cy="32" r="2.5" fill={color} opacity="0.6" />
@@ -748,17 +983,23 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 1) return (
           <g>
             <path d="M24 46 L24 28" stroke="#5c4a3a" strokeWidth="3" strokeLinecap="round" />
+            <path d="M23.2 38 L25 37.8" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25 33.8" stroke="#4a3a2a" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 32 Q16 26 12 24" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 28 Q30 24 34 22" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
             <circle cx="12" cy="22" r="5" fill={color} opacity="0.6" />
             <circle cx="24" cy="20" r="5" fill={color} opacity="0.7" />
             <circle cx="34" cy="20" r="4" fill={color} opacity="0.5" />
             <circle cx="24" cy="18" r="2" fill={light} opacity="0.4" />
+            <circle cx="11" cy="20" r="1.5" fill={light} opacity="0.2" />
+            <circle cx="33" cy="18" r="1" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M23 46 L23 28" stroke="#5c4a3a" strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M22.2 38 L24.5 37.8" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.3" />
+            <path d="M22.5 34 L24.5 33.8" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.25" />
             <path d="M23 30 Q14 24 8 22" stroke="#5c4a3a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M23 26 Q32 20 38 18" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M23 24 Q18 18 14 16" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
@@ -767,26 +1008,56 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <circle cx="24" cy="12" r="5" fill={color} opacity="0.8" />
             <circle cx="34" cy="16" r="5" fill={color} opacity="0.7" />
             <circle cx="38" cy="16" r="4" fill={color} opacity="0.5" />
+            {/* blossom highlights */}
             <circle cx="24" cy="10" r="2" fill={light} opacity="0.4" />
+            <circle cx="15" cy="12" r="1.5" fill={light} opacity="0.25" />
+            <circle cx="33" cy="14" r="1.2" fill={light} opacity="0.2" />
+            <circle cx="7" cy="18" r="1" fill={light} opacity="0.18" />
+            {/* blossom center dots */}
+            <circle cx="16" cy="14" r="0.8" fill="#fbbf24" opacity="0.3" />
+            <circle cx="24" cy="12" r="0.7" fill="#fbbf24" opacity="0.25" />
+            {/* falling petals */}
             <ellipse cx="20" cy="36" rx="1.2" ry="0.8" fill={color} opacity="0.3" transform="rotate(20 20 36)" />
+            <ellipse cx="30" cy="40" rx="1" ry="0.6" fill={color} opacity="0.2" transform="rotate(-15 30 40)" />
           </g>
         )
         return (
           <g>
             <path d="M23 46 L23 28" stroke="#5c4a3a" strokeWidth="4" strokeLinecap="round" />
+            <path d="M21.5 38 L24.5 37.8" stroke="#4a3a2a" strokeWidth="0.6" opacity="0.3" />
+            <path d="M22 34 L24.5 33.8" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.25" />
+            <path d="M22.5 30 L24 29.8" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.2" />
             <path d="M23 30 Q12 24 6 20" stroke="#5c4a3a" strokeWidth="3" strokeLinecap="round" fill="none" />
             <path d="M23 26 Q34 20 42 18" stroke="#5c4a3a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M23 24 Q18 18 14 14" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
+            <path d="M23 22 Q28 16 32 12" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
             <circle cx="6" cy="18" r="6" fill={color} opacity="0.7" />
             <circle cx="14" cy="12" r="7" fill={color} opacity="0.8" />
             <circle cx="24" cy="10" r="6" fill={color} />
             <circle cx="34" cy="14" r="6" fill={color} opacity="0.8" />
             <circle cx="42" cy="16" r="5" fill={color} opacity="0.7" />
+            <circle cx="32" cy="10" r="4" fill={color} opacity="0.5" />
+            {/* blossom highlights */}
             <circle cx="12" cy="10" r="3" fill={light} opacity="0.4" />
             <circle cx="24" cy="8" r="2.5" fill={light} opacity="0.5" />
             <circle cx="36" cy="12" r="2" fill={light} opacity="0.3" />
+            <circle cx="5" cy="16" r="1.8" fill={light} opacity="0.25" />
+            <circle cx="41" cy="14" r="1.5" fill={light} opacity="0.2" />
+            {/* blossom center dots */}
+            <circle cx="6" cy="18" r="0.8" fill="#fbbf24" opacity="0.3" />
+            <circle cx="14" cy="12" r="0.8" fill="#fbbf24" opacity="0.3" />
+            <circle cx="24" cy="10" r="0.7" fill="#fbbf24" opacity="0.25" />
+            <circle cx="34" cy="14" r="0.7" fill="#fbbf24" opacity="0.25" />
+            {/* depth shadows */}
+            <ellipse cx="6" cy="22" rx="4" ry="1.5" fill={dark} opacity="0.08" />
+            <ellipse cx="42" cy="20" rx="3.5" ry="1.2" fill={dark} opacity="0.08" />
+            {/* falling petals */}
             <ellipse cx="18" cy="34" rx="1.5" ry="1" fill={color} opacity="0.4" transform="rotate(30 18 34)" />
             <ellipse cx="32" cy="38" rx="1.2" ry="0.8" fill={color} opacity="0.3" transform="rotate(-20 32 38)" />
+            <ellipse cx="12" cy="40" rx="1" ry="0.7" fill={color} opacity="0.25" transform="rotate(10 12 40)" />
+            {/* roots */}
+            <path d="M22 46 Q19 44.5 16 46" stroke="#5c4a3a" strokeWidth="0.9" fill="none" opacity="0.25" />
+            <path d="M24 46 Q27 44.5 30 46" stroke="#5c4a3a" strokeWidth="0.7" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -797,28 +1068,56 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <rect x="23" y="40" width="2" height="6" fill={trunk} />
             <path d="M24 30 Q26 34 26 40 L22 40 Q22 34 24 30 Z" fill={color} opacity="0.7" />
             <path d="M24 30 Q25 34 25 38 L24 40 L24 30 Z" fill={light} opacity="0.15" />
+            <path d="M23 36 Q24 35 25 36" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
           </g>
         )
         if (s === 1) return (
           <g>
             <rect x="22.5" y="38" width="3" height="8" fill={trunk} />
+            <path d="M23 42 L25 41.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 18 Q28 24 27 32 Q26 38 26 40 L22 40 Q22 38 21 32 Q20 24 24 18 Z" fill={color} />
             <path d="M24 18 Q26 22 25.5 30 L24 34 L24 18 Z" fill={light} opacity="0.15" />
+            <path d="M22 32 Q24 31 26 32" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <path d="M22.5 26 Q24 25 25.5 26" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            <circle cx="23" cy="24" r="0.5" fill={light} opacity="0.15" />
           </g>
         )
         if (s === 2) return (
           <g>
             <rect x="22" y="36" width="4" height="10" fill={trunk} />
+            <path d="M22.5 40 L25.5 39.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M23 43 L25 42.8" stroke={dark} strokeWidth="0.4" opacity="0.18" />
             <path d="M24 8 Q30 16 29 24 Q28 32 28 38 L20 38 Q20 32 19 24 Q18 16 24 8 Z" fill={color} />
             <path d="M24 8 Q27 14 26.5 22 Q26 30 26 36 L24 38 L24 8 Z" fill={light} opacity="0.18" />
+            <path d="M21 30 Q24 29 27 30" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <path d="M21.5 22 Q24 21 26.5 22" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            <path d="M22.5 14 Q24 13 25.5 14" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            <circle cx="22.5" cy="18" r="0.6" fill={light} opacity="0.15" />
+            <circle cx="23" cy="26" r="0.5" fill={light} opacity="0.12" />
           </g>
         )
         return (
           <g>
             <rect x="22" y="36" width="4" height="10" fill={trunk} />
+            <path d="M22.5 40 L25.5 39.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 43 L25.5 42.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M24 4 Q32 14 30 24 Q28 34 28 38 L20 38 Q20 34 18 24 Q16 14 24 4 Z" fill={color} />
             <path d="M24 4 Q28 10 27 18 Q26 26 26 34 L24 36 L24 4 Z" fill={light} opacity="0.2" />
             <path d="M22 38 Q20 34 19 28" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+            {/* horizontal texture lines */}
+            <path d="M20 32 Q24 31 28 32" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.12" />
+            <path d="M20.5 26 Q24 25 27.5 26" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.1" />
+            <path d="M21 20 Q24 19 27 20" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.1" />
+            <path d="M22 14 Q24 13 26 14" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            <path d="M23 8 Q24 7 25 8" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.08" />
+            {/* highlight dots */}
+            <circle cx="22" cy="16" r="0.7" fill={light} opacity="0.15" />
+            <circle cx="23" cy="24" r="0.6" fill={light} opacity="0.12" />
+            <circle cx="22.5" cy="32" r="0.5" fill={light} opacity="0.1" />
+            <circle cx="23" cy="10" r="0.5" fill={light} opacity="0.12" />
+            {/* roots */}
+            <path d="M22 46 Q20 45 18 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M26 46 Q28 45 30 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -827,6 +1126,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 L24 36" stroke={trunk} strokeWidth="2" strokeLinecap="round" />
+            <path d="M23.5 42 L24.5 42" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 36 Q28 32 30 28 Q26 30 24 34" fill={color} opacity="0.6" />
             <path d="M24 36 Q20 32 18 28 Q22 30 24 34" fill={color} opacity="0.5" />
             <circle cx="24" cy="32" r="2" fill={light} opacity="0.4" />
@@ -836,31 +1136,63 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <path d="M24 46 C24 40 28 38 28 30" stroke={trunk} strokeWidth="2" fill="none" strokeLinecap="round" />
             <path d="M24 46 C24 40 20 38 20 30" stroke={trunk} strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M27 36 L28.5 35.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
+            <path d="M20.5 36 L22 35.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M28 30 Q32 26 28 22 Q26 26 28 30" fill={color} opacity="0.7" />
             <path d="M20 30 Q16 26 20 22 Q22 26 20 30" fill={color} opacity="0.7" />
             <circle cx="24" cy="24" r="3" fill={light} opacity="0.4" />
+            <circle cx="28" cy="25" r="0.8" fill={light} opacity="0.2" />
+            <circle cx="20" cy="25" r="0.8" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M24 46 C24 38 30 34 30 26" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
             <path d="M24 46 C24 38 18 34 18 26" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            <path d="M29 34 L30.5 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
+            <path d="M17.5 34 L19 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M30 26 Q36 20 32 14 Q28 18 30 26" fill={color} opacity="0.8" />
             <path d="M30 22 Q34 16 30 12 Q28 16 30 22" fill={light} opacity="0.4" />
             <path d="M18 26 Q12 20 16 14 Q20 18 18 26" fill={color} opacity="0.8" />
             <path d="M18 22 Q14 16 18 12 Q20 16 18 22" fill={light} opacity="0.4" />
             <circle cx="24" cy="18" r="4" fill={light} opacity="0.5" />
+            {/* leaf veins */}
+            <path d="M30 24 L32 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M18 24 L16 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <circle cx="32" cy="16" r="0.6" fill={light} opacity="0.18" />
+            <circle cx="16" cy="16" r="0.6" fill={light} opacity="0.15" />
+            {/* roots */}
+            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <path d="M24 46 C24 38 32 34 32 24" stroke={trunk} strokeWidth="3" fill="none" strokeLinecap="round" />
             <path d="M24 46 C24 38 16 34 16 24" stroke={trunk} strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M30 34 L32.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M16.5 34 L19 33.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M31 28 L33 27.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
+            <path d="M15.5 28 L18 27.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M32 24 Q40 18 34 10 Q26 16 32 24" fill={color} />
             <path d="M32 20 Q38 14 32 8 Q28 14 32 20" fill={light} opacity="0.5" />
             <path d="M16 24 Q8 18 14 10 Q22 16 16 24" fill={color} />
             <path d="M16 20 Q10 14 16 8 Q20 14 16 20" fill={light} opacity="0.5" />
             <circle cx="24" cy="16" r="5" fill={light} opacity="0.6" />
+            {/* leaf veins */}
+            <path d="M32 22 L36 16" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+            <path d="M16 22 L12 16" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+            <path d="M34 14 L34 10" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <path d="M14 14 L14 10" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            {/* highlight dots */}
+            <circle cx="36" cy="14" r="0.8" fill={light} opacity="0.2" />
+            <circle cx="12" cy="14" r="0.8" fill={light} opacity="0.18" />
+            <circle cx="34" cy="10" r="0.6" fill={light} opacity="0.15" />
+            <circle cx="14" cy="10" r="0.6" fill={light} opacity="0.15" />
+            {/* roots */}
+            <path d="M23 46 Q20 44.5 17 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M25 46 Q28 44.5 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            <path d="M24 46 Q22 45.5 20 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
 
@@ -872,22 +1204,30 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 34 Q20 30 18 32" stroke={trunk} strokeWidth="1" fill="none" strokeLinecap="round" />
             <ellipse cx="18" cy="34" rx="2" ry="4" fill={color} opacity="0.5" />
             <ellipse cx="24" cy="30" rx="2" ry="3" fill={color} opacity="0.6" />
+            <circle cx="18" cy="33" r="0.6" fill={light} opacity="0.25" />
           </g>
         )
         if (s === 1) return (
           <g>
             <path d="M24 46 L24 26" stroke={trunk} strokeWidth="3" strokeLinecap="round" />
+            <path d="M23.2 38 L25 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 28 Q18 24 14 26" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 26 Q30 22 34 24" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <ellipse cx="14" cy="28" rx="2.5" ry="6" fill={color} opacity="0.6" />
             <ellipse cx="24" cy="24" rx="2.5" ry="6" fill={color} opacity="0.7" />
             <ellipse cx="34" cy="26" rx="2.5" ry="6" fill={color} opacity="0.6" />
             <ellipse cx="24" cy="20" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            <circle cx="14" cy="26" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="34" cy="24" r="0.6" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
           <g>
             <path d="M24 46 L24 22" stroke={trunk} strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M23 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M23.2 34 L25.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23.5 28 L25 27.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 24 Q16 18 10 20" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 22 Q32 16 38 18" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <ellipse cx="10" cy="24" rx="3" ry="7" fill={color} opacity="0.6" />
@@ -896,13 +1236,25 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <ellipse cx="34" cy="22" rx="3" ry="8" fill={color} opacity="0.7" />
             <ellipse cx="38" cy="22" rx="2.5" ry="6" fill={color} opacity="0.5" />
             <ellipse cx="26" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            {/* flower cluster dots */}
+            <circle cx="10" cy="22" r="0.7" fill={light} opacity="0.22" />
+            <circle cx="18" cy="19" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="34" cy="20" r="0.6" fill={light} opacity="0.18" />
+            <circle cx="26" cy="24" r="0.5" fill={light} opacity="0.15" />
+            {/* roots */}
+            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
+            <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
           </g>
         )
         return (
           <g>
             <path d="M24 46 L24 20" stroke={trunk} strokeWidth="4" strokeLinecap="round" />
+            <path d="M22.5 38 L26 37.8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M23 34 L25.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
+            <path d="M23 28 L25.5 27.8" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M24 22 Q14 16 8 18" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M24 20 Q34 14 40 16" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            <path d="M24 22 Q20 18 16 20" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
             <ellipse cx="8" cy="22" rx="3" ry="8" fill={color} opacity="0.7" />
             <ellipse cx="14" cy="24" rx="3" ry="10" fill={color} opacity="0.8" />
             <ellipse cx="20" cy="20" rx="3" ry="9" fill={color} />
@@ -911,6 +1263,21 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <ellipse cx="40" cy="20" rx="3" ry="8" fill={color} opacity="0.7" />
             <ellipse cx="20" cy="16" rx="1.5" ry="3" fill={light} opacity="0.4" />
             <ellipse cx="28" cy="14" rx="1.5" ry="3" fill={light} opacity="0.4" />
+            {/* flower cluster dots */}
+            <circle cx="8" cy="18" r="0.8" fill={light} opacity="0.25" />
+            <circle cx="14" cy="20" r="0.7" fill={light} opacity="0.22" />
+            <circle cx="20" cy="16" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="28" cy="14" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="34" cy="18" r="0.6" fill={light} opacity="0.18" />
+            <circle cx="40" cy="16" r="0.5" fill={light} opacity="0.15" />
+            {/* depth shadows on clusters */}
+            <ellipse cx="14" cy="30" rx="2" ry="1" fill={dark} opacity="0.08" />
+            <ellipse cx="34" cy="28" rx="2" ry="1" fill={dark} opacity="0.08" />
+            <ellipse cx="20" cy="26" rx="2" ry="0.8" fill={dark} opacity="0.06" />
+            <ellipse cx="28" cy="24" rx="2" ry="0.8" fill={dark} opacity="0.06" />
+            {/* roots */}
+            <path d="M23 46 Q20 44.5 17 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
+            <path d="M25 46 Q28 44.5 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
           </g>
         )
 
@@ -919,19 +1286,26 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         if (s === 0) return (
           <g>
             <path d="M24 46 Q25 42 24.5 36" stroke={trunk} strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M24 42 L24.8 41.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24.5 36 L18 32 Q22 36 24.5 36" fill={color} />
             <path d="M24.5 36 L30 32 Q26 36 24.5 36" fill={color} />
             <path d="M24.5 36 L24 28 Q26 32 24.5 36" fill={color} opacity="0.8" />
+            <path d="M24.5 36 L21 32" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
           </g>
         )
         if (s === 1) return (
           <g>
             <path d="M24 46 Q26 40 25 30" stroke={trunk} strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M24.5 40 L25.8 39.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
+            <path d="M24.8 36 L26 35.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M25 30 L12 24 Q18 30 25 30" fill={color} />
             <path d="M25 30 L36 24 Q30 30 25 30" fill={color} />
             <path d="M25 30 L24 16 Q28 22 25 30" fill={color} opacity="0.8" />
             <path d="M25 30 L16 18 Q20 24 25 30" fill={color} opacity="0.7" />
             <path d="M25 30 L34 18 Q30 24 25 30" fill={light} opacity="0.35" />
+            {/* frond veins */}
+            <path d="M25 30 L18 24" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M25 30 L30 24" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
           </g>
         )
         if (s === 2) return (
@@ -939,11 +1313,17 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 46 Q27 38 26 24" stroke={trunk} strokeWidth="4" fill="none" strokeLinecap="round" />
             <path d="M25 26 Q26 32 24 46" stroke={dark} strokeWidth="1" fill="none" opacity="0.2" />
             <path d="M22.5 34 Q26 33 27.5 34" stroke={dark} strokeWidth="0.7" fill="none" opacity="0.3" />
+            <path d="M23 38 Q26 37 28 38" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.2" />
             <path d="M26 24 L8 18 Q16 26 26 24" fill={color} />
             <path d="M26 24 L40 18 Q32 26 26 24" fill={color} />
             <path d="M26 24 L26 6 Q32 14 26 24" fill={color} />
             <path d="M26 24 L14 10 Q20 18 26 24" fill={color} opacity="0.8" />
             <path d="M26 24 L36 10 Q32 18 26 24" fill={light} opacity="0.35" />
+            {/* frond veins */}
+            <path d="M26 24 L14 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M26 24 L36 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M26 24 L28 10" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+            <path d="M26 24 L18 12" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
           </g>
         )
         return (
@@ -952,11 +1332,26 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M25 22 Q26 30 24 46" stroke={dark} strokeWidth="1.5" fill="none" opacity="0.2" />
             <path d="M22 36 Q26 35 28 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
             <path d="M22 30 Q26 29 28 30" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
+            <path d="M22.5 42 Q26 41 28 42" stroke={dark} strokeWidth="0.6" fill="none" opacity="0.2" />
             <path d="M26 20 L4 14 Q14 24 26 20" fill={color} />
             <path d="M26 20 L44 14 Q34 24 26 20" fill={color} />
             <path d="M26 20 L26 2 Q34 12 26 20" fill={color} />
             <path d="M26 20 L10 6 Q18 14 26 20" fill={color} />
             <path d="M26 20 L40 6 Q34 14 26 20" fill={light} opacity="0.4" />
+            {/* frond veins */}
+            <path d="M26 20 L10 14" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+            <path d="M26 20 L40 14" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+            <path d="M26 20 L30 6" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.12" />
+            <path d="M26 20 L14 8" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.12" />
+            <path d="M26 20 L36 8" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
+            {/* frond tip highlights */}
+            <circle cx="6" cy="14" r="0.8" fill={light} opacity="0.2" />
+            <circle cx="42" cy="14" r="0.8" fill={light} opacity="0.18" />
+            <circle cx="28" cy="4" r="0.6" fill={light} opacity="0.15" />
+            <circle cx="12" cy="7" r="0.6" fill={light} opacity="0.15" />
+            {/* coconuts/fruit */}
+            <circle cx="25" cy="20" r="1.5" fill={dark} opacity="0.25" />
+            <circle cx="27" cy="21" r="1.3" fill={dark} opacity="0.2" />
           </g>
         )
 
@@ -967,6 +1362,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M22 46 Q21 40 21 36 Q21 30 24 28 Q27 30 27 36 Q27 40 26 46 Z" fill={color} />
             <path d="M24 28 L24 46" stroke={dark} strokeWidth="0.6" opacity="0.25" />
             <path d="M23 30 Q23 36 22.5 42" stroke={light} strokeWidth="1" fill="none" opacity="0.12" />
+            {/* spine dots */}
+            <circle cx="22" cy="34" r="0.3" fill={light} opacity="0.3" />
+            <circle cx="26" cy="36" r="0.3" fill={light} opacity="0.25" />
           </g>
         )
         if (s === 1) return (
@@ -974,7 +1372,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M21 46 Q20 40 20 32 Q20 22 24 18 Q28 22 28 32 Q28 40 27 46 Z" fill={color} />
             <path d="M24 18 L24 46" stroke={dark} strokeWidth="0.7" opacity="0.25" />
             <path d="M22.5 20 Q22.5 30 22 40" stroke={light} strokeWidth="1" fill="none" opacity="0.12" />
+            <path d="M25.5 20 Q25.5 30 26 40" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.1" />
             <path d="M20 32 Q16 30 15 26" stroke={color} strokeWidth="3" fill="none" strokeLinecap="round" />
+            {/* spine dots */}
+            <circle cx="21" cy="26" r="0.3" fill={light} opacity="0.3" />
+            <circle cx="27" cy="28" r="0.3" fill={light} opacity="0.25" />
+            <circle cx="21" cy="36" r="0.3" fill={light} opacity="0.25" />
+            <circle cx="27" cy="38" r="0.3" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 2) return (
@@ -984,6 +1388,15 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M29 28 Q34 26 36 22 Q36 18 34 16" stroke={color} strokeWidth="4" fill="none" strokeLinecap="round" />
             <path d="M24 12 L24 46" stroke={dark} strokeWidth="0.7" opacity="0.25" />
             <path d="M22 14 Q22 24 21.5 36" stroke={light} strokeWidth="1.2" fill="none" opacity="0.12" />
+            <path d="M26 14 Q26 24 26.5 36" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.1" />
+            {/* arm ribs */}
+            <path d="M14 22 L14 18" stroke={dark} strokeWidth="0.4" opacity="0.2" />
+            <path d="M34 20 L34 16" stroke={dark} strokeWidth="0.4" opacity="0.2" />
+            {/* spine dots */}
+            <circle cx="20" cy="22" r="0.3" fill={light} opacity="0.3" />
+            <circle cx="28" cy="24" r="0.3" fill={light} opacity="0.25" />
+            <circle cx="20" cy="34" r="0.3" fill={light} opacity="0.25" />
+            <circle cx="28" cy="36" r="0.3" fill={light} opacity="0.2" />
             <circle cx="24" cy="10" r="2" fill={light} opacity="0.6" />
           </g>
         )
@@ -996,8 +1409,24 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M21 12 L20 46" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M27 12 L28 46" stroke={dark} strokeWidth="0.5" opacity="0.2" />
             <path d="M22 14 Q22 24 21 36" stroke={light} strokeWidth="1.5" fill="none" opacity="0.15" />
+            <path d="M26 14 Q26 24 27 36" stroke={dark} strokeWidth="0.6" fill="none" opacity="0.1" />
+            {/* arm ribs */}
+            <path d="M12 24 L12 18" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M36 20 L36 14" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M10 20 L14 14" stroke={dark} strokeWidth="0.3" opacity="0.12" />
+            <path d="M38 16 L34 10" stroke={dark} strokeWidth="0.3" opacity="0.12" />
+            {/* spine dots */}
+            <circle cx="19" cy="20" r="0.4" fill={light} opacity="0.3" />
+            <circle cx="29" cy="22" r="0.4" fill={light} opacity="0.25" />
+            <circle cx="19" cy="30" r="0.4" fill={light} opacity="0.25" />
+            <circle cx="29" cy="32" r="0.4" fill={light} opacity="0.2" />
+            <circle cx="19" cy="40" r="0.3" fill={light} opacity="0.2" />
+            <circle cx="29" cy="40" r="0.3" fill={light} opacity="0.18" />
             <circle cx="24" cy="8" r="3" fill={light} />
             <circle cx="24" cy="8" r="1.5" fill="#fbbf24" />
+            {/* flower petals */}
+            <circle cx="22" cy="7" r="0.8" fill={light} opacity="0.4" />
+            <circle cx="26" cy="7" r="0.8" fill={light} opacity="0.35" />
           </g>
         )
 
@@ -1016,6 +1445,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
               <ellipse cx="24" cy="32" rx="5" ry="4" fill={color} opacity="0.3" />
               <ellipse cx="24" cy="32" rx="3" ry="2" fill={light} opacity="0.5" />
             </g>
+            <circle cx="22" cy="31" r="0.5" fill={light} opacity="0.3" />
           </g>
         )
         if (s === 1) return (
@@ -1032,6 +1462,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
               <ellipse cx="24" cy="26" rx="5" ry="4" fill={color} opacity="0.4" />
               <ellipse cx="24" cy="26" rx="2.5" ry="2" fill={light} opacity="0.6" />
             </g>
+            <circle cx="20" cy="24" r="0.6" fill={light} opacity="0.25" />
+            <circle cx="28" cy="28" r="0.5" fill={light} opacity="0.2" />
+            <path d="M22 30 Q24 28 26 30" stroke={light} fill="none" strokeWidth="0.4" opacity="0.15" />
           </g>
         )
         if (s === 2) return (
@@ -1049,6 +1482,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
               <ellipse cx="24" cy="22" rx="4" ry="3" fill={light} opacity="0.65" />
               <path d="M16" cy="28" fill="none" />
             </g>
+            <circle cx="18" cy="20" r="0.7" fill={light} opacity="0.25" />
+            <circle cx="30" cy="24" r="0.6" fill={light} opacity="0.2" />
+            <circle cx="24" cy="16" r="0.5" fill={light} opacity="0.2" />
+            <path d="M18 28 Q24 24 30 28" stroke={light} fill="none" strokeWidth="0.5" opacity="0.15" />
+            <path d="M20 32 Q24 28 28 32" stroke={light} fill="none" strokeWidth="0.4" opacity="0.1" />
           </g>
         )
         return (
@@ -1067,6 +1505,19 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
               <path d="M14 28 Q24 22 34 28" stroke={light} fill="none" strokeWidth="1" opacity="0.3" />
               <path d="M18 32 Q24 26 30 32" stroke={light} fill="none" strokeWidth="0.8" opacity="0.2" />
             </g>
+            {/* ethereal motes */}
+            <circle cx="16" cy="18" r="0.8" fill={light} opacity="0.3" />
+            <circle cx="32" cy="22" r="0.7" fill={light} opacity="0.25" />
+            <circle cx="20" cy="12" r="0.6" fill={light} opacity="0.25" />
+            <circle cx="28" cy="14" r="0.5" fill={light} opacity="0.2" />
+            <circle cx="14" cy="24" r="0.5" fill={light} opacity="0.18" />
+            <circle cx="34" cy="16" r="0.5" fill={light} opacity="0.18" />
+            {/* wispy branch hints */}
+            <path d="M24 30 Q20 28 16 26" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2" fill="none" opacity="0.2" />
+            <path d="M24 28 Q28 26 32 24" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2" fill="none" opacity="0.2" />
+            {/* inner glow rings */}
+            <ellipse cx="24" cy="20" rx="8" ry="6" fill="none" stroke={light} strokeWidth="0.3" opacity="0.15" />
+            <ellipse cx="24" cy="20" rx="12" ry="10" fill="none" stroke={light} strokeWidth="0.3" opacity="0.1" />
           </g>
         )
 
@@ -1623,11 +2074,24 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
     }
   }
 
+  const swayAmount = s <= 1 ? 2 : 1.2
+
   return (
     <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <style>{`
+        @keyframes plant-sway-${uid} {
+          0%, 100% { transform: rotate(${swayAmount}deg); }
+          50% { transform: rotate(-${swayAmount}deg); }
+        }
+      `}</style>
       <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         {renderGround()}
-        {renderShape()}
+        <g style={{
+          transformOrigin: '24px 46px',
+          animation: `plant-sway-${uid} ${swayDuration}s ease-in-out ${swayDelay * 0.3}s infinite`,
+        }}>
+          {renderShape()}
+        </g>
       </svg>
     </div>
   )

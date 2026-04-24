@@ -157,9 +157,25 @@ export const StatsView = memo(function StatsView({
           >
             {/* Header */}
             <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-              <div>
-                <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Stats</h2>
-                <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Level {lvl.level} — {lvl.name}</p>
+              <div className="flex items-center gap-3">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                  style={{
+                    width: 36, height: 36, borderRadius: 9,
+                    background: `linear-gradient(135deg, ${accentColor}99, ${accentColor})`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 15, fontWeight: 800, color: "#fff",
+                    boxShadow: `0 4px 12px ${accentColor}40`,
+                  }}
+                >
+                  {lvl.level}
+                </motion.div>
+                <div>
+                  <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{lvl.name}</h2>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
+                </div>
               </div>
               <button
                 onClick={onClose}
@@ -173,35 +189,9 @@ export const StatsView = memo(function StatsView({
             <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
 
               {/* XP Level Bar */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                      style={{
-                        width: 40, height: 40, borderRadius: 10,
-                        background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 17, fontWeight: 800, color: "#fff",
-                        boxShadow: "0 4px 16px rgba(34,197,94,0.4)",
-                      }}
-                    >
-                      {lvl.level}
-                    </motion.div>
-                    <div>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: textPrimary }}>{lvl.name}</span>
-                      <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>{lvl.currentXp} / {lvl.nextXp} XP</div>
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 11, color: textSecondary, fontWeight: 600 }}>
-                    Level {lvl.level + 1}
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={textMuted} strokeWidth="2.5" strokeLinecap="round" style={{ display: "inline", marginLeft: 4 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </span>
-                </div>
+              <div style={{ marginBottom: 28 }}>
                 <div style={{
-                  height: 12, borderRadius: 6, position: "relative",
+                  height: 8, borderRadius: 4, position: "relative",
                   backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
                   overflow: "hidden",
                 }}>
@@ -210,24 +200,28 @@ export const StatsView = memo(function StatsView({
                     animate={{ width: `${xpProgress}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
                     style={{
-                      height: "100%", borderRadius: 6, position: "relative",
-                      background: "linear-gradient(90deg, #16a34a, #22c55e, #4ade80)",
-                      boxShadow: "0 0 12px rgba(34,197,94,0.5)",
+                      height: "100%", borderRadius: 4, position: "relative",
+                      background: `linear-gradient(90deg, ${accentColor}99, ${accentColor})`,
+                      boxShadow: `0 0 10px ${accentColor}40`,
                     }}
                   >
                     <div style={{
-                      position: "absolute", right: 0, top: 0, bottom: 0, width: 20,
-                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3))",
-                      borderRadius: "0 6px 6px 0",
+                      position: "absolute", right: 0, top: 0, bottom: 0, width: 16,
+                      background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25))",
+                      borderRadius: "0 4px 4px 0",
                     }} />
                   </motion.div>
                 </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                  <span style={{ fontSize: 10, color: textMuted, fontWeight: 600 }}>{xpProgress}%</span>
+                  <span style={{ fontSize: 10, color: textMuted, fontWeight: 600 }}>Lv. {lvl.level + 1}</span>
+                </div>
               </div>
 
-              {/* Consistency Heatmap — GitHub style */}
-              <div style={{ marginBottom: 20 }}>
+              {/* Consistency Heatmap */}
+              <div style={{ marginBottom: 28 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>Consistency</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Consistency</span>
                   <span style={{ fontSize: 10, color: textMuted }}>Last 6 months</span>
                 </div>
 
@@ -266,8 +260,8 @@ export const StatsView = memo(function StatsView({
 
               {/* Activity Chart */}
               <div style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>Activity</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Activity</span>
                   <div style={{
                     display: "flex", gap: 2, padding: 2, borderRadius: 8,
                     backgroundColor: subtleBg, border: `1px solid ${cardBorder}`,
@@ -278,13 +272,10 @@ export const StatsView = memo(function StatsView({
                         onClick={() => setTimeRange(r)}
                         style={{
                           padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                          border: "none", cursor: "pointer",
-                          backgroundColor: timeRange === r
-                            ? (isDark ? '#27272a' : '#2c2417')
-                            : 'transparent',
-                          color: timeRange === r
-                            ? (isDark ? '#e4e4e7' : '#fff')
-                            : textSecondary,
+                          border: timeRange === r ? `1px solid ${accentColor}30` : '1px solid transparent',
+                          cursor: "pointer",
+                          backgroundColor: timeRange === r ? `${accentColor}18` : 'transparent',
+                          color: timeRange === r ? accentColor : textSecondary,
                           transition: "all 0.15s",
                         }}
                       >
@@ -295,20 +286,24 @@ export const StatsView = memo(function StatsView({
                 </div>
 
                 {/* Summary */}
-                <div style={{ display: "flex", gap: 24, marginBottom: 18, marginTop: 12 }}>
+                <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
                   {[
                     { label: "Focus", value: totalFocusThisRange, unit: "min" },
                     { label: "Sessions", value: totalSessionsThisRange, unit: "" },
                     { label: "Written", value: totalCharsThisRange.toLocaleString(), unit: "chars" },
-                  ].map(s => (
-                    <div key={s.label}>
+                  ].map((s, i) => (
+                    <div key={s.label} style={{
+                      flex: 1,
+                      paddingLeft: i > 0 ? 20 : 0,
+                      borderLeft: i > 0 ? `1px solid ${cardBorder}` : 'none',
+                    }}>
                       <div style={{
                         fontSize: 9, color: textMuted, textTransform: "uppercase",
-                        letterSpacing: "0.1em", fontWeight: 700, marginBottom: 3,
+                        letterSpacing: "0.1em", fontWeight: 700, marginBottom: 4,
                       }}>
                         {s.label}
                       </div>
-                      <div style={{ fontSize: 20, fontWeight: 600, color: textPrimary, fontFamily: font }}>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: textPrimary, fontFamily: font }}>
                         {s.value}
                         {s.unit && <span style={{ fontSize: 11, color: textMuted, marginLeft: 3 }}>{s.unit}</span>}
                       </div>

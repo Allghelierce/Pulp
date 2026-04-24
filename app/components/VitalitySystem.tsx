@@ -146,6 +146,14 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [sunshine, setSunshine])
 
+  const cancelSession = useCallback(() => {
+    setTimerRunning(false)
+    setTimerElapsed(0)
+    setTimerDone(false)
+    setTreeDead(false)
+    setWaterDeadline(null)
+  }, [])
+
   const recoverSunshine = useCallback(() => {
     const cost = Math.max(5, Math.ceil(lostSunshine * 0.5))
     if (gems < cost || lostSunshine <= 0) return
@@ -284,6 +292,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       onSetPreset={setTimerPreset}
       onStart={startSession}
       onGiveUp={giveUp}
+      onCancel={cancelSession}
       onWater={waterTree}
       onClaim={claimReward}
       onDismissDead={dismissDeadTree}

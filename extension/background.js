@@ -1,7 +1,5 @@
 // Background service worker — manages declarativeNetRequest rules.
 
-const BLOCKED_REDIRECT = chrome.runtime.getURL("blocked.html")
-
 async function updateRules() {
   try {
     const { blockedSites = [], focusMode = false } = await chrome.storage.local.get(["blockedSites", "focusMode"])
@@ -28,7 +26,7 @@ async function updateRules() {
           priority: 1,
           action: {
             type: "redirect",
-            redirect: { url: BLOCKED_REDIRECT + "?site=" + encodeURIComponent(domain) }
+            redirect: { extensionPath: "/blocked.html?site=" + encodeURIComponent(domain) }
           },
           condition: {
             requestDomains: [domain],
