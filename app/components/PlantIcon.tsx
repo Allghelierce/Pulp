@@ -16,7 +16,7 @@ function lighten(hex: string, amount: number) {
 }
 
 export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type: string, size?: number, stage?: number, isSeed?: boolean }) {
-  const typeInfo = TREE_TYPES[type] || TREE_TYPES.navel
+  const typeInfo = TREE_TYPES[type] || TREE_TYPES.heartwood
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
   const dark = darken(color, 40)
@@ -1488,31 +1488,72 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <defs>
               <filter id={`glow-${uid}`}>
-                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
+              <radialGradient id={`${uid}-eglow`} cx="50%" cy="45%">
+                <stop offset="0%" stopColor={light} stopOpacity="0.9" />
+                <stop offset="50%" stopColor={color} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={color} stopOpacity="0" />
+              </radialGradient>
             </defs>
-            <path d="M24 46 L24 30" stroke={color} strokeWidth="2" strokeDasharray="3 2" opacity="0.5" />
+            {/* fading trunk made of light */}
+            <path d="M24 46 L24 28" stroke={color} strokeWidth="2" strokeDasharray="3 2" opacity="0.5" />
+            <path d="M24 46 L24 28" stroke={light} strokeWidth="0.8" strokeDasharray="1 3" opacity="0.3" />
+            {/* wispy branch tendrils */}
+            <path d="M24 30 Q18 26 12 24" stroke={color} strokeWidth="0.6" strokeDasharray="2 2" fill="none" opacity="0.25" />
+            <path d="M24 28 Q30 24 36 22" stroke={color} strokeWidth="0.6" strokeDasharray="2 2" fill="none" opacity="0.25" />
+            <path d="M24 26 Q20 20 14 16" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2.5" fill="none" opacity="0.18" />
+            <path d="M24 26 Q28 20 34 16" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2.5" fill="none" opacity="0.18" />
+            <path d="M24 24 Q22 18 18 12" stroke={light} strokeWidth="0.3" strokeDasharray="1 3" fill="none" opacity="0.12" />
+            <path d="M24 24 Q26 18 30 12" stroke={light} strokeWidth="0.3" strokeDasharray="1 3" fill="none" opacity="0.12" />
+            {/* layered translucent canopy rings */}
             <g filter={`url(#glow-${uid})`}>
-              <ellipse cx="24" cy="20" rx="14" ry="12" fill={color} opacity="0.3" />
-              <ellipse cx="24" cy="20" rx="10" ry="8" fill={color} opacity="0.5" />
-              <ellipse cx="24" cy="20" rx="5" ry="4" fill={light} opacity="0.8" />
-              <path d="M14 28 Q24 22 34 28" stroke={light} fill="none" strokeWidth="1" opacity="0.3" />
-              <path d="M18 32 Q24 26 30 32" stroke={light} fill="none" strokeWidth="0.8" opacity="0.2" />
+              <ellipse cx="24" cy="18" rx="16" ry="14" fill={color} opacity="0.15" />
+              <ellipse cx="24" cy="18" rx="12" ry="10" fill={color} opacity="0.3" />
+              <ellipse cx="24" cy="18" rx="8" ry="6" fill={color} opacity="0.45" />
+              <ellipse cx="24" cy="18" rx="4" ry="3" fill={light} opacity="0.85" />
             </g>
-            {/* ethereal motes */}
-            <circle cx="16" cy="18" r="0.8" fill={light} opacity="0.3" />
-            <circle cx="32" cy="22" r="0.7" fill={light} opacity="0.25" />
-            <circle cx="20" cy="12" r="0.6" fill={light} opacity="0.25" />
-            <circle cx="28" cy="14" r="0.5" fill={light} opacity="0.2" />
-            <circle cx="14" cy="24" r="0.5" fill={light} opacity="0.18" />
-            <circle cx="34" cy="16" r="0.5" fill={light} opacity="0.18" />
-            {/* wispy branch hints */}
-            <path d="M24 30 Q20 28 16 26" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2" fill="none" opacity="0.2" />
-            <path d="M24 28 Q28 26 32 24" stroke={color} strokeWidth="0.5" strokeDasharray="1.5 2" fill="none" opacity="0.2" />
-            {/* inner glow rings */}
-            <ellipse cx="24" cy="20" rx="8" ry="6" fill="none" stroke={light} strokeWidth="0.3" opacity="0.15" />
-            <ellipse cx="24" cy="20" rx="12" ry="10" fill="none" stroke={light} strokeWidth="0.3" opacity="0.1" />
+            {/* canopy ring outlines */}
+            <ellipse cx="24" cy="18" rx="16" ry="14" fill="none" stroke={light} strokeWidth="0.3" opacity="0.1" />
+            <ellipse cx="24" cy="18" rx="12" ry="10" fill="none" stroke={light} strokeWidth="0.3" opacity="0.15" />
+            <ellipse cx="24" cy="18" rx="8" ry="6" fill="none" stroke={light} strokeWidth="0.4" opacity="0.2" />
+            {/* arc wisps across canopy */}
+            <path d="M12 26 Q24 20 36 26" stroke={light} fill="none" strokeWidth="0.8" opacity="0.25" />
+            <path d="M16 30 Q24 24 32 30" stroke={light} fill="none" strokeWidth="0.6" opacity="0.18" />
+            <path d="M18 12 Q24 8 30 12" stroke={light} fill="none" strokeWidth="0.5" opacity="0.15" />
+            {/* floating wisps / motes with animation */}
+            <circle cx="14" cy="16" r="1" fill={light} opacity="0.35">
+              <animate attributeName="cy" values="16;13;16" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.35;0.15;0.35" dur="4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="34" cy="20" r="0.9" fill={light} opacity="0.3">
+              <animate attributeName="cy" values="20;17;20" dur="3.5s" repeatCount="indefinite" begin="0.5s" />
+              <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3.5s" repeatCount="indefinite" begin="0.5s" />
+            </circle>
+            <circle cx="18" cy="10" r="0.7" fill={light} opacity="0.3">
+              <animate attributeName="cy" values="10;7;10" dur="5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="opacity" values="0.3;0.1;0.3" dur="5s" repeatCount="indefinite" begin="1s" />
+            </circle>
+            <circle cx="30" cy="12" r="0.6" fill={light} opacity="0.25">
+              <animate attributeName="cy" values="12;9;12" dur="4.5s" repeatCount="indefinite" begin="1.5s" />
+              <animate attributeName="opacity" values="0.25;0.08;0.25" dur="4.5s" repeatCount="indefinite" begin="1.5s" />
+            </circle>
+            <circle cx="10" cy="24" r="0.5" fill={light} opacity="0.2">
+              <animate attributeName="cy" values="24;21;24" dur="3.8s" repeatCount="indefinite" begin="2s" />
+              <animate attributeName="opacity" values="0.2;0.05;0.2" dur="3.8s" repeatCount="indefinite" begin="2s" />
+            </circle>
+            <circle cx="38" cy="14" r="0.5" fill={light} opacity="0.2">
+              <animate attributeName="cy" values="14;11;14" dur="4.2s" repeatCount="indefinite" begin="0.8s" />
+              <animate attributeName="opacity" values="0.2;0.05;0.2" dur="4.2s" repeatCount="indefinite" begin="0.8s" />
+            </circle>
+            <circle cx="24" cy="6" r="0.8" fill={light} opacity="0.28">
+              <animate attributeName="cy" values="6;3;6" dur="5.5s" repeatCount="indefinite" begin="0.3s" />
+              <animate attributeName="opacity" values="0.28;0.08;0.28" dur="5.5s" repeatCount="indefinite" begin="0.3s" />
+            </circle>
+            <circle cx="8" cy="20" r="0.4" fill={light} opacity="0.15">
+              <animate attributeName="cy" values="20;17;20" dur="3.2s" repeatCount="indefinite" begin="1.2s" />
+            </circle>
           </g>
         )
 
@@ -1609,20 +1650,71 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         )
         return (
           <g>
+            <defs>
+              <linearGradient id={`${uid}-prism`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={light} />
+                <stop offset="50%" stopColor={color} />
+                <stop offset="100%" stopColor={dark} />
+              </linearGradient>
+              <filter id={`${uid}-sparkle`}>
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            {/* base / trunk */}
             <path d="M24 46 L24 38" stroke={trunk} strokeWidth="3" />
-            <path d="M24 6 L38 22 L24 42 L10 22 Z" fill={color} opacity="0.7" />
-            <path d="M24 6 L32 16 L24 30 L16 16 Z" fill={light} opacity="0.3" />
-            <path d="M24 6 L24 42" stroke={light} strokeWidth="0.8" opacity="0.4" />
-            <path d="M10 22 L38 22" stroke={light} strokeWidth="0.8" opacity="0.4" />
-            <path d="M17 14 L31 30" stroke={light} strokeWidth="0.5" opacity="0.2" />
-            <circle cx="30" cy="14" r="1.5" fill="white">
-              <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+            <path d="M22 46 Q20 44 19 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.3" />
+            <path d="M26 46 Q28 44 29 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.3" />
+            {/* main crystal body */}
+            <path d="M24 4 L38 22 L24 44 L10 22 Z" fill={color} opacity="0.55" />
+            {/* inner facets */}
+            <path d="M24 4 L32 16 L24 32 L16 16 Z" fill={light} opacity="0.3" />
+            <path d="M24 4 L28 14 L24 28 Z" fill={`url(#${uid}-prism)`} opacity="0.25" />
+            <path d="M24 4 L20 14 L24 28 Z" fill={light} opacity="0.15" />
+            {/* facet edge lines */}
+            <path d="M24 4 L24 44" stroke={light} strokeWidth="0.8" opacity="0.4" />
+            <path d="M10 22 L38 22" stroke={light} strokeWidth="0.7" opacity="0.35" />
+            <path d="M17 13 L31 31" stroke={light} strokeWidth="0.5" opacity="0.2" />
+            <path d="M31 13 L17 31" stroke={light} strokeWidth="0.5" opacity="0.2" />
+            {/* secondary crystal shards */}
+            <path d="M8 28 L4 18 L10 22 Z" fill={color} opacity="0.5" />
+            <path d="M40 28 L44 18 L38 22 Z" fill={color} opacity="0.5" />
+            <path d="M6 18 L8 22 L4 18 Z" fill={light} opacity="0.2" />
+            <path d="M42 18 L40 22 L44 18 Z" fill={light} opacity="0.2" />
+            {/* small crystal offshoots */}
+            <path d="M14 32 L10 38 L12 34 Z" fill={color} opacity="0.4" />
+            <path d="M34 32 L38 38 L36 34 Z" fill={color} opacity="0.4" />
+            {/* horizontal refraction bands */}
+            <path d="M12 16 L36 16" stroke={light} strokeWidth="0.4" opacity="0.15" />
+            <path d="M14 28 L34 28" stroke={light} strokeWidth="0.4" opacity="0.15" />
+            <path d="M18 10 L30 10" stroke={light} strokeWidth="0.3" opacity="0.12" />
+            {/* sparkle glints */}
+            <g filter={`url(#${uid}-sparkle)`}>
+              <circle cx="30" cy="12" r="1.8" fill="white">
+                <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="15" cy="28" r="1.4" fill="white">
+                <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.6s" />
+              </circle>
+              <circle cx="28" cy="24" r="1.2" fill="white">
+                <animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite" begin="1.2s" />
+              </circle>
+              <circle cx="20" cy="10" r="1" fill="white">
+                <animate attributeName="opacity" values="0;0.8;0" dur="2.2s" repeatCount="indefinite" begin="0.3s" />
+              </circle>
+              <circle cx="34" cy="18" r="0.9" fill="white">
+                <animate attributeName="opacity" values="0;0.7;0" dur="2.8s" repeatCount="indefinite" begin="1.8s" />
+              </circle>
+            </g>
+            {/* prismatic color flashes */}
+            <circle cx="18" cy="20" r="0.6" fill="#ff6b9d" opacity="0.4">
+              <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite" />
             </circle>
-            <circle cx="16" cy="28" r="1.2" fill="white">
-              <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="0.8s" />
+            <circle cx="30" cy="20" r="0.5" fill="#4ecdc4" opacity="0.35">
+              <animate attributeName="opacity" values="0;0.35;0" dur="2.5s" repeatCount="indefinite" begin="1s" />
             </circle>
-            <circle cx="28" cy="24" r="1" fill="white">
-              <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="1.5s" />
+            <circle cx="24" cy="14" r="0.5" fill="#ffe66d" opacity="0.3">
+              <animate attributeName="opacity" values="0.3;0;0.3" dur="3.5s" repeatCount="indefinite" begin="0.5s" />
             </circle>
           </g>
         )
@@ -1700,9 +1792,10 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M20 46 Q19 38 20 32 Q22 28 24 28 Q26 28 28 32 Q29 38 28 46 Z" fill={trunk} />
             <path d="M24 28 Q24 22 24 18" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M22 30 Q16 26 14 24" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <circle cx="14" cy="22" r="3.5" fill={color} opacity="0.6" />
-            <circle cx="24" cy="15" r="4" fill={color} opacity="0.7" />
-            <circle cx="24" cy="14" r="2" fill={light} opacity="0.2" />
+            <ellipse cx="14" cy="22" rx="4" ry="3.5" fill={color} opacity="0.6" />
+            <ellipse cx="12" cy="20" rx="2" ry="1.5" fill={light} opacity="0.2" />
+            <ellipse cx="24" cy="15" rx="5" ry="4" fill={color} opacity="0.7" />
+            <ellipse cx="22" cy="13" rx="2.5" ry="2" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 2) return (
@@ -1712,10 +1805,12 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M20 26 Q14 22 12 20" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M28 26 Q34 22 36 20" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 22 Q24 16 24 12" stroke={trunk} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <circle cx="12" cy="16" r="4" fill={color} opacity="0.7" />
-            <circle cx="36" cy="16" r="4" fill={color} opacity="0.7" />
-            <circle cx="24" cy="8" r="5" fill={color} />
-            <circle cx="24" cy="6" r="2.5" fill={light} opacity="0.25" />
+            <ellipse cx="12" cy="16" rx="5" ry="4" fill={color} opacity="0.7" />
+            <ellipse cx="10" cy="14" rx="2.5" ry="2" fill={light} opacity="0.2" />
+            <ellipse cx="36" cy="16" rx="5" ry="4" fill={color} opacity="0.7" />
+            <ellipse cx="34" cy="14" rx="2.5" ry="2" fill={light} opacity="0.2" />
+            <ellipse cx="24" cy="8" rx="6" ry="5" fill={color} />
+            <ellipse cx="22" cy="6" rx="3" ry="2.5" fill={light} opacity="0.25" />
           </g>
         )
         return (
@@ -1725,10 +1820,17 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M18 24 Q12 18 8 16" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M30 24 Q36 18 40 16" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M24 20 Q24 14 24 10" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <circle cx="8" cy="12" r="5" fill={color} />
-            <circle cx="40" cy="12" r="5" fill={color} />
-            <circle cx="24" cy="6" r="6" fill={color} />
-            <circle cx="24" cy="4" r="3" fill={light} opacity="0.3" />
+            <ellipse cx="8" cy="12" rx="6" ry="5" fill={color} />
+            <ellipse cx="6" cy="10" rx="3" ry="2.5" fill={light} opacity="0.2" />
+            <ellipse cx="10" cy="14" rx="3" ry="2" fill={dark} opacity="0.15" />
+            <ellipse cx="40" cy="12" rx="6" ry="5" fill={color} />
+            <ellipse cx="38" cy="10" rx="3" ry="2.5" fill={light} opacity="0.2" />
+            <ellipse cx="42" cy="14" rx="3" ry="2" fill={dark} opacity="0.15" />
+            <ellipse cx="24" cy="6" rx="7" ry="5.5" fill={color} />
+            <ellipse cx="22" cy="4" rx="4" ry="3" fill={light} opacity="0.25" />
+            <ellipse cx="28" cy="8" rx="3" ry="2.5" fill={dark} opacity="0.12" />
+            <circle cx="20" cy="6" r="1" fill={light} opacity="0.18" />
+            <circle cx="30" cy="4" r="0.8" fill={light} opacity="0.12" />
           </g>
         )
 
@@ -1773,22 +1875,48 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         )
         return (
           <g>
+            {/* main stems */}
             <path d="M24 46 Q20 40 18 34" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M24 46 Q28 40 30 34" stroke={trunk} strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M24 46 Q24 38 24 30" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <path d="M18 34 Q12 28 8 24" stroke={trunk} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            <path d="M30 34 Q36 28 40 24" stroke={trunk} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            <ellipse cx="24" cy="22" rx="16" ry="12" fill="#2a4a2a" />
-            <ellipse cx="16" cy="20" rx="8" ry="7" fill="#1e3e1e" opacity="0.6" />
-            <ellipse cx="32" cy="20" rx="8" ry="7" fill="#1e3e1e" opacity="0.6" />
-            <circle cx="14" cy="18" r="2" fill={color} />
-            <circle cx="16" cy="22" r="1.8" fill={color} />
-            <circle cx="12" cy="20" r="1.5" fill={color} opacity="0.8" />
-            <circle cx="30" cy="16" r="2" fill={color} />
-            <circle cx="34" cy="20" r="1.8" fill={color} />
-            <circle cx="32" cy="24" r="1.5" fill={color} opacity="0.8" />
-            <circle cx="24" cy="14" r="1.8" fill={light} />
-            <circle cx="22" cy="18" r="1.5" fill={light} opacity="0.7" />
+            {/* sprawling branches */}
+            <path d="M18 34 Q12 28 6 22" stroke={trunk} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            <path d="M30 34 Q36 28 42 22" stroke={trunk} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            <path d="M20 32 Q16 26 12 28" stroke={trunk} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            <path d="M28 32 Q32 26 36 28" stroke={trunk} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            <path d="M24 30 Q24 24 22 18" stroke={trunk} strokeWidth="1" fill="none" strokeLinecap="round" />
+            <path d="M24 28 Q26 22 28 16" stroke={trunk} strokeWidth="1" fill="none" strokeLinecap="round" />
+            {/* thorn details */}
+            <path d="M20 38 L18 36" stroke={trunk} strokeWidth="0.8" strokeLinecap="round" />
+            <path d="M28 38 L30 36" stroke={trunk} strokeWidth="0.8" strokeLinecap="round" />
+            <path d="M16 30 L14 28" stroke={trunk} strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M32 30 L34 28" stroke={trunk} strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M10 26 L8 24" stroke={trunk} strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M38 26 L40 24" stroke={trunk} strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M22 28 L20 26" stroke={trunk} strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M26 28 L28 26" stroke={trunk} strokeWidth="0.5" strokeLinecap="round" />
+            {/* dense foliage mass */}
+            <ellipse cx="24" cy="20" rx="18" ry="14" fill="#2a4a2a" />
+            <ellipse cx="14" cy="18" rx="8" ry="7" fill="#1e3e1e" opacity="0.6" />
+            <ellipse cx="34" cy="18" rx="8" ry="7" fill="#1e3e1e" opacity="0.6" />
+            <ellipse cx="24" cy="14" rx="6" ry="5" fill="#1e3e1e" opacity="0.5" />
+            <ellipse cx="8" cy="22" rx="5" ry="4" fill="#243d24" opacity="0.5" />
+            <ellipse cx="40" cy="22" rx="5" ry="4" fill="#243d24" opacity="0.5" />
+            {/* berries */}
+            <circle cx="12" cy="16" r="2" fill={color} />
+            <circle cx="14" cy="22" r="1.8" fill={color} />
+            <circle cx="10" cy="20" r="1.5" fill={color} opacity="0.8" />
+            <circle cx="30" cy="14" r="2.2" fill={color} />
+            <circle cx="34" cy="18" r="1.8" fill={color} />
+            <circle cx="36" cy="22" r="1.5" fill={color} opacity="0.8" />
+            <circle cx="24" cy="12" r="2" fill={light} />
+            <circle cx="20" cy="16" r="1.5" fill={light} opacity="0.7" />
+            <circle cx="28" cy="20" r="1.3" fill={color} opacity="0.7" />
+            <circle cx="18" cy="24" r="1.2" fill={color} opacity="0.6" />
+            {/* berry highlights */}
+            <circle cx="11" cy="15" r="0.6" fill={light} opacity="0.4" />
+            <circle cx="29" cy="13" r="0.7" fill={light} opacity="0.4" />
+            <circle cx="23" cy="11" r="0.6" fill="white" opacity="0.3" />
           </g>
         )
 
@@ -1929,31 +2057,78 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
               </filter>
               <radialGradient id={`vgrad-${uid}`} cx="50%" cy="50%">
                 <stop offset="0%" stopColor="#000" />
-                <stop offset="60%" stopColor="#1a1a2e" />
+                <stop offset="40%" stopColor="#0a0a14" />
+                <stop offset="70%" stopColor="#1a1a2e" />
+                <stop offset="100%" stopColor="transparent" />
+              </radialGradient>
+              <radialGradient id={`vring-${uid}`} cx="50%" cy="50%">
+                <stop offset="0%" stopColor="transparent" />
+                <stop offset="70%" stopColor="#6366f1" stopOpacity="0.15" />
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
             </defs>
-            <path d="M24 46 L24 30" stroke="#2a2a3e" strokeWidth="3" strokeLinecap="round" />
-            <path d="M24 32 Q16 26 10 24" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M24 28 Q32 22 38 20" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
+            {/* twisted warped trunk */}
+            <path d="M24 46 C22 42 26 38 23 34 C20 30 26 28 24 24" stroke="#2a2a3e" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+            <path d="M24 46 C26 42 22 38 25 34 C28 30 22 28 24 24" stroke="#1a1a2e" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
+            {/* warped branches */}
+            <path d="M24 32 C18 28 12 30 8 24" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M24 28 C30 24 36 26 40 20" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M24 26 C20 22 16 18 14 12" stroke="#2a2a3e" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            {/* gravity well core */}
             <g filter={`url(#vglow-${uid})`}>
-              <circle cx="24" cy="20" r="14" fill={`url(#vgrad-${uid})`} />
-              <circle cx="24" cy="20" r="6" fill="#0a0a14" />
+              <circle cx="24" cy="18" r="16" fill={`url(#vgrad-${uid})`} />
+              <circle cx="24" cy="18" r="7" fill="#050510" />
+              <circle cx="24" cy="18" r="3" fill="#000" />
             </g>
-            <circle cx="10" cy="14" r="1" fill="#6366f1" opacity="0.6">
-              <animate attributeName="cx" values="10;22" dur="3s" repeatCount="indefinite" />
-              <animate attributeName="cy" values="14;20" dur="3s" repeatCount="indefinite" />
+            {/* distortion rings */}
+            <ellipse cx="24" cy="18" rx="10" ry="10" fill="none" stroke="#6366f1" strokeWidth="0.5" opacity="0.2">
+              <animate attributeName="rx" values="10;12;10" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="ry" values="10;8;10" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.2;0.05;0.2" dur="4s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="24" cy="18" rx="14" ry="12" fill="none" stroke="#8b5cf6" strokeWidth="0.4" opacity="0.12">
+              <animate attributeName="rx" values="14;16;14" dur="5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="ry" values="12;10;12" dur="5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="opacity" values="0.12;0.03;0.12" dur="5s" repeatCount="indefinite" begin="1s" />
+            </ellipse>
+            <ellipse cx="24" cy="18" rx="18" ry="14" fill={`url(#vring-${uid})`} opacity="0.3">
+              <animate attributeName="opacity" values="0.3;0.1;0.3" dur="6s" repeatCount="indefinite" />
+            </ellipse>
+            {/* particles being pulled inward */}
+            <circle cx="8" cy="12" r="1" fill="#6366f1" opacity="0.6">
+              <animate attributeName="cx" values="8;22" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="cy" values="12;18" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="r" values="1;0.2" dur="3s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.6;0" dur="3s" repeatCount="indefinite" />
             </circle>
-            <circle cx="38" cy="24" r="0.8" fill="#8b5cf6" opacity="0.5">
-              <animate attributeName="cx" values="38;26" dur="2.5s" repeatCount="indefinite" begin="0.5s" />
-              <animate attributeName="cy" values="24;20" dur="2.5s" repeatCount="indefinite" begin="0.5s" />
-              <animate attributeName="opacity" values="0.5;0" dur="2.5s" repeatCount="indefinite" begin="0.5s" />
+            <circle cx="40" cy="22" r="0.9" fill="#8b5cf6" opacity="0.5">
+              <animate attributeName="cx" values="40;26" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
+              <animate attributeName="cy" values="22;18" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
+              <animate attributeName="r" values="0.9;0.15" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
+              <animate attributeName="opacity" values="0.5;0" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
             </circle>
-            <circle cx="16" cy="30" r="0.8" fill="#a78bfa" opacity="0.4">
-              <animate attributeName="cx" values="16;23" dur="3.5s" repeatCount="indefinite" begin="1.2s" />
-              <animate attributeName="cy" values="30;22" dur="3.5s" repeatCount="indefinite" begin="1.2s" />
-              <animate attributeName="opacity" values="0.4;0" dur="3.5s" repeatCount="indefinite" begin="1.2s" />
+            <circle cx="14" cy="32" r="0.8" fill="#a78bfa" opacity="0.4">
+              <animate attributeName="cx" values="14;23" dur="3.5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="cy" values="32;20" dur="3.5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="r" values="0.8;0.1" dur="3.5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="opacity" values="0.4;0" dur="3.5s" repeatCount="indefinite" begin="1s" />
+            </circle>
+            <circle cx="36" cy="8" r="0.7" fill="#6366f1" opacity="0.45">
+              <animate attributeName="cx" values="36;25" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
+              <animate attributeName="cy" values="8;17" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
+              <animate attributeName="r" values="0.7;0.1" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
+              <animate attributeName="opacity" values="0.45;0" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
+            </circle>
+            <circle cx="18" cy="6" r="0.6" fill="#c4b5fd" opacity="0.35">
+              <animate attributeName="cx" values="18;23" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
+              <animate attributeName="cy" values="6;17" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
+              <animate attributeName="r" values="0.6;0.1" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
+              <animate attributeName="opacity" values="0.35;0" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
+            </circle>
+            {/* eerie inner glow pulse */}
+            <circle cx="24" cy="18" r="4" fill="#6366f1" opacity="0.08">
+              <animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.08;0.02;0.08" dur="3s" repeatCount="indefinite" />
             </circle>
           </g>
         )

@@ -53,8 +53,8 @@ const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
 
 function TreeVisualization({ progress, type, idle }: { progress: number; type: string | null; idle?: boolean }) {
   const p = Math.max(0, Math.min(1, progress))
-  const plantType = type || 'navel'
-  const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.navel
+  const plantType = type || 'heartwood'
+  const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.heartwood
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 

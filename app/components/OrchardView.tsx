@@ -274,7 +274,7 @@ export const OrchardView = memo(function OrchardView({
                     const spoiledIdx = grove.findIndex(t => t && t.type === 'spoiled')
                     if (spoiledIdx === -1) return
                     setGems(g => g - 5)
-                    setGrove(prev => { const next = [...prev]; next[spoiledIdx] = { ...next[spoiledIdx], type: 'navel', stage: 0, progress: 0 }; return next })
+                    setGrove(prev => { const next = [...prev]; next[spoiledIdx] = { ...next[spoiledIdx], type: 'heartwood', stage: 0, progress: 0 }; return next })
                   }}
                   disabled={gems < 5 || !grove.some(t => t && t.type === 'spoiled')}
                   className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] hover:border-white/[0.08] transition-all disabled:opacity-20 disabled:pointer-events-none group"
