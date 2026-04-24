@@ -17,16 +17,23 @@ function syncAll() {
     if (settings) {
       const parsed = JSON.parse(settings)
       const sites = parsed.blockedSites || []
-      const focus = sites.length > 0
-      chrome.storage.local.set({
-        blockedSites: sites,
-        focusMode: focus
-      }, () => {
+      chrome.storage.local.set({ blockedSites: sites }, () => {
         if (chrome.runtime.lastError) {
           console.warn("[Pulp Focus] Storage set failed:", chrome.runtime.lastError.message)
           return
         }
         try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
+      })
+    }
+
+    // Sync timer state from sessionStorage
+    const timer = sessionStorage.getItem("pulp-timer")
+    if (timer) {
+      const t = JSON.parse(timer)
+      const isRunning = t.running && !t.done
+      chrome.storage.local.set({
+        focusMode: isRunning,
+        timerData: { elapsed: t.elapsed || 0, total: t.total || 0, running: isRunning, done: !!t.done, selectedSeed: t.selectedSeed || null, timestamp: t.timestamp || Date.now() }
       })
     }
 
@@ -53,12 +60,24 @@ setInterval(() => {
   if (isExtensionValid()) syncAll()
 }, 3000)
 
+// Signal to the Pulp app that the extension is installed
+if (isExtensionValid()) {
+  document.documentElement.setAttribute("data-pulp-extension", "true")
+  window.dispatchEvent(new CustomEvent("pulp-extension-detected"))
+}
+
 // Listen for direct updates from the Pulp app via postMessage
 window.addEventListener("message", (e) => {
   if (!isExtensionValid()) return
   if (e.data && e.data.type === "pulp-focus-config") {
     const sites = e.data.blockedSites || []
-    chrome.storage.local.set({ blockedSites: sites, focusMode: sites.length > 0 }, () => {
+    chrome.storage.local.set({ blockedSites: sites }, () => {
+      if (chrome.runtime.lastError) return
+      try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
+    })
+  }
+  if (e.data && e.data.type === "pulp-timer-state") {
+    chrome.storage.local.set({ focusMode: !!e.data.timerRunning }, () => {
       if (chrome.runtime.lastError) return
       try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
     })

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
 
 export function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
-  const [val, setVal] = useState("")
+  const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
   const [checked, setChecked] = useState(false)
 
   const confirm = () => {
@@ -86,7 +86,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
                 autoFocus
                 value={val}
                 onChange={e => setVal(e.target.value)}
-                placeholder={config.defaultValue ?? "Type something..."}
+                placeholder={config.placeholder ?? "Type something..."}
                 style={{ fontFamily: '"EB Garamond", serif' }}
                 className="w-full bg-zinc-900/50 border border-zinc-700 rounded-md px-4 py-2.5 text-base text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
               />

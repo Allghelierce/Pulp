@@ -95,9 +95,10 @@ export const VitalitySystem = memo(function VitalitySystem({
       done: timerDone,
       preset: timerPreset,
       waterDeadline,
+      selectedSeed,
       timestamp: Date.now()
     }))
-  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline])
+  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed])
 
   // Timer tick
   useEffect(() => {
@@ -115,7 +116,11 @@ export const VitalitySystem = memo(function VitalitySystem({
             setTimerDone(true)
             return timerTotal
           }
-          return prev + 1
+          const next = prev + 1
+          if (next > 0 && next % 600 === 0 && Math.random() < 0.125) {
+            setGems(g => g + 1)
+          }
+          return next
         })
       }, 1000)
     }
@@ -155,7 +160,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [])
 
   const recoverSunshine = useCallback(() => {
-    const cost = Math.max(5, Math.ceil(lostSunshine * 0.5))
+    const cost = Math.max(1, Math.ceil(lostSunshine * 0.02))
     if (gems < cost || lostSunshine <= 0) return
     setGems(g => g - cost)
     setSunshine(s => s + lostSunshine)
@@ -252,6 +257,11 @@ export const VitalitySystem = memo(function VitalitySystem({
     return () => window.removeEventListener('beforeunload', handler)
   }, [timerRunning])
 
+  // Notify extension of timer state for site blocking
+  useEffect(() => {
+    window.postMessage({ type: "pulp-timer-state", timerRunning }, "*")
+  }, [timerRunning])
+
   // Char count tracking & Collection Growth
   useEffect(() => {
     if (totalChars > lastCharCount) {
@@ -272,10 +282,6 @@ export const VitalitySystem = memo(function VitalitySystem({
         setSunshine(s => s + Math.max(1, Math.floor(typedDiff / 15)))
       }
 
-      if (totalChars > lastCharCount + 500) {
-        const earned = Math.floor((totalChars - lastCharCount) / 500)
-        setGems(g => g + earned)
-      }
     }
   }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setSunshine, setLastCharCount])
 

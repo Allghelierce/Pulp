@@ -38,7 +38,6 @@ export const SETTINGS_TABS = [
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "achievements", label: "Achievements", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
-  { id: "focus", label: "Focus", group: "Writing" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
 ] as const
@@ -46,34 +45,34 @@ export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: boolean }[] = [
   { hex: "#71717a", name: "Gray" },
-  { hex: "#f97316", name: "Orange", cost: 5 },
-  { hex: "#ef4444", name: "Red", cost: 5 },
-  { hex: "#ec4899", name: "Pink", cost: 8 },
-  { hex: "#a855f7", name: "Purple", cost: 8 },
-  { hex: "#3b82f6", name: "Blue", cost: 10 },
-  { hex: "#06b6d4", name: "Cyan", cost: 10 },
+  { hex: "#f97316", name: "Orange", cost: 1 },
+  { hex: "#ef4444", name: "Red", cost: 1 },
+  { hex: "#ec4899", name: "Pink", cost: 2 },
+  { hex: "#a855f7", name: "Purple", cost: 2 },
+  { hex: "#3b82f6", name: "Blue", cost: 2 },
+  { hex: "#06b6d4", name: "Cyan", cost: 2 },
   { hex: "#22c55e", name: "Green", pro: true },
   { hex: "#64748b", name: "Slate", pro: true },
 ]
 
 export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "EB Garamond", label: "EB Garamond" },
-  { value: "Playfair Display", label: "Playfair Display", cost: 8 },
-  { value: "Georgia", label: "Georgia", cost: 5 },
-  { value: "Arial", label: "Arial", cost: 5 },
+  { value: "Playfair Display", label: "Playfair Display", cost: 2 },
+  { value: "Georgia", label: "Georgia", cost: 1 },
+  { value: "Arial", label: "Arial", cost: 1 },
 ]
 
 export const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "Playfair Display", label: "Playfair Display" },
-  { value: "EB Garamond", label: "EB Garamond", cost: 5 },
-  { value: "Italiana", label: "Italiana", cost: 10 },
+  { value: "EB Garamond", label: "EB Garamond", cost: 1 },
+  { value: "Italiana", label: "Italiana", cost: 2 },
   { value: "Bodoni", label: "Bodoni", pro: true },
 ]
 
 export const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "lined", label: "Lined" },
-  { value: "dotgrid", label: "Grid", cost: 5 },
-  { value: "plain", label: "Plain", cost: 8 },
+  { value: "dotgrid", label: "Grid", cost: 1 },
+  { value: "plain", label: "Plain", cost: 2 },
   { value: "steno", label: "Steno", pro: true },
 ]
 
@@ -626,30 +625,6 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               </SettingSection>
             </>)}
 
-            {/* ── Focus ── */}
-            {activeTab === "focus" && (<>
-              <SettingSection title="Focus Blocker" isDark={isDark}>
-                 <div className="px-5 py-4 pb-2">
-                    <p className={`text-[12px] leading-relaxed mb-4 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-                      Restrict access to distractions while your Focus Timer is running. Requires the Pulp Focus browser extension.
-                    </p>
-                 </div>
-                 <BlockList
-                   placeholder="e.g. twitter.com, reddit.com"
-                   items={blockedSites}
-                   onChange={v => onUpdateConfig({ blockedSites: v })}
-                   isDark={isDark}
-                   description="Blocked websites"
-                 />
-                 <BlockList
-                   placeholder="e.g. Discord, Slack, Steam"
-                   items={blockedApps}
-                   onChange={v => onUpdateConfig({ blockedApps: v })}
-                   isDark={isDark}
-                   description="Blocked applications"
-                 />
-              </SettingSection>
-            </>)}
 
             {/* ── Achievements ── */}
             {activeTab === "achievements" && (<>

@@ -1,202 +1,142 @@
 const TREE_TYPES = {
-  navel: { name: 'Navel Orange', color: '#b85e22', rarity: 'common' },
-  blood: { name: 'Blood Orange', color: '#800000', rarity: 'common' },
-  clementine: { name: 'Clementine', color: '#ff8c00', rarity: 'common' },
-  daisy: { name: 'Daisy', color: '#fbbf24', rarity: 'common' },
-  fern: { name: 'Fern', color: '#16a34a', rarity: 'common' },
-  tangerine: { name: 'Tangerine', color: '#ea580c', rarity: 'uncommon' },
-  lime: { name: 'Key Lime', color: '#65a30d', rarity: 'uncommon' },
-  lavender: { name: 'Lavender', color: '#a78bfa', rarity: 'uncommon' },
-  birch: { name: 'Birch', color: '#a3e635', rarity: 'uncommon' },
-  kumquat: { name: 'Kumquat', color: '#fbbf24', rarity: 'rare' },
-  meyer: { name: 'Meyer Lemon', color: '#facc15', rarity: 'rare' },
-  bergamot: { name: 'Bergamot', color: '#4d7c0f', rarity: 'rare' },
-  cherry_blossom: { name: 'Cherry Blossom', color: '#f9a8d4', rarity: 'rare' },
-  finger_lime: { name: 'Finger Lime', color: '#166534', rarity: 'true rare' },
-  buddha: { name: 'Buddhas Hand', color: '#fef08a', rarity: 'true rare' },
-  wisteria: { name: 'Wisteria', color: '#c084fc', rarity: 'true rare' },
-  starfruit: { name: 'Starfruit', color: '#eab308', rarity: 'premium' },
-  dragonfruit: { name: 'Dragonfruit', color: '#db2777', rarity: 'premium' },
-  ghost: { name: 'Ghost Oak', color: '#f3f4f6', rarity: 'premium' },
-  bonsai: { name: 'Bonsai', color: '#15803d', rarity: 'premium' },
-  rainbow: { name: 'Rainbow Willow', color: '#c084fc', rarity: 'chroma' },
-  neon: { name: 'Neon Fern', color: '#22c55e', rarity: 'chroma' },
-  gold_kumquat: { name: 'Golden Kumquat', color: '#fbbf24', rarity: 'chroma' },
-  elderberry: { name: 'Elderberry', color: '#4c1d95', rarity: 'extinct' },
-  prehistoric: { name: 'Ancient Pine', color: '#bedaf7', rarity: 'extinct' },
-  void: { name: 'Void Tree', color: '#000000', rarity: 'extinct' },
-  spoiled: { name: 'Spoiled', color: '#71717a', rarity: 'common' }
+  heartwood:  { name: 'Heartwood Oak',    color: '#8b6914' },
+  thicket:    { name: 'Inkberry Bush',    color: '#2d6a4f' },
+  penny:      { name: 'Penny Bloom',      color: '#fbbf24' },
+  quill:      { name: 'Quill Fern',       color: '#16a34a' },
+  pebble:     { name: 'Pebble Hedge',     color: '#65a30d' },
+  ember:      { name: 'Ember Maple',      color: '#991b1b' },
+  sentinel:   { name: 'Sentinel Pine',    color: '#064e3b' },
+  manuscript: { name: 'Manuscript Birch',  color: '#a3e635' },
+  whisper:    { name: 'Whisper Bamboo',    color: '#4d7c0f' },
+  dusk:       { name: 'Dusk Lavender',    color: '#a78bfa' },
+  parlor:     { name: 'Parlor Topiary',   color: '#166534' },
+  goldleaf:   { name: 'Goldleaf Citrus',   color: '#facc15' },
+  spine:      { name: 'Spine Cactus',     color: '#22c55e' },
+  inkcap:     { name: 'Inkcap Mushroom',  color: '#ef4444' },
+  monolith:   { name: 'Monolith Cypress', color: '#0f766e' },
+  wisteria:   { name: 'Cascade Wisteria', color: '#c084fc' },
+  hanami:     { name: 'Hanami Sakura',    color: '#f9a8d4' },
+  odyssey:    { name: 'Odyssey Palm',     color: '#eab308' },
+  mythos:     { name: 'Mythos Orchid',    color: '#be185d' },
+  patience:   { name: 'Patience Bonsai',  color: '#15803d' },
+  thornscript:{ name: 'Thornscript',      color: '#4c1d95' },
+  epoch:      { name: 'Epoch Baobab',     color: '#b85e22' },
+  fossil:     { name: 'Fossil Pine',      color: '#bedaf7' },
+  reverie:    { name: 'Reverie Wisp',     color: '#e0c3fc' },
+  prism:      { name: 'Prism Shard',      color: '#67e8f9' },
+  abyss:      { name: 'Abyss Maw',        color: '#000000' },
+  spoiled:    { name: 'Spoiled',           color: '#71717a' },
 }
 
-const XP_LEVELS = [
-  { xp: 0, name: "Seedling" },
-  { xp: 100, name: "Sprout" },
-  { xp: 300, name: "Sapling" },
-  { xp: 600, name: "Scribe" },
-  { xp: 1000, name: "Wordsmith" },
-  { xp: 1600, name: "Inkweaver" },
-  { xp: 2400, name: "Chronicler" },
-  { xp: 3500, name: "Storyteller" },
-  { xp: 5000, name: "Lorekeeper" },
-  { xp: 7000, name: "Sage" },
-  { xp: 10000, name: "Archivist" },
-  { xp: 14000, name: "Oracle" },
-  { xp: 20000, name: "Pulp Legend" },
-]
-
-function getLevel(xp) {
-  let level = 0
-  for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= XP_LEVELS[i].xp) { level = i; break }
-  }
-  const current = XP_LEVELS[level]
-  const next = XP_LEVELS[level + 1] || { xp: current.xp + 5000, name: "Beyond" }
-  const range = next.xp - current.xp
-  const progress = range > 0 ? (xp - current.xp) / range : 1
-  return { level: level + 1, name: current.name, currentXp: xp - current.xp, nextXp: range, progress: Math.min(1, progress) }
-}
-
-function getRarityClass(rarity) {
-  if (rarity === 'uncommon') return 'rarity-uncommon'
-  if (rarity === 'rare' || rarity === 'true rare') return 'rarity-rare'
-  if (rarity === 'premium') return 'rarity-premium'
-  if (rarity === 'chroma') return 'rarity-chroma'
-  if (rarity === 'extinct') return 'rarity-extinct'
-  return 'rarity-common'
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
 }
 
 function render(data) {
   const app = document.getElementById('app')
-  const grove = data.groveData?.grove || []
-  const sunshine = data.groveData?.sunshine ?? 0
-  const gems = data.groveData?.gems ?? 0
-  const lastCharCount = data.groveData?.lastCharCount ?? 0
   const focusMode = data.focusMode || false
   const blockedSites = data.blockedSites || []
-
-  const xp = Math.floor(lastCharCount / 5)
-  const lvl = getLevel(xp)
-
-  const filledPlots = grove.filter(t => t !== null).length
-  const grownPlots = grove.filter(t => t && t.stage >= 4).length
-
-  const hasData = grove.length > 0 || sunshine > 0 || gems > 0
+  const timer = data.timerData || null
 
   let html = ''
 
   // Header
   html += `
     <div class="header">
-      <div class="logo-row">
-        <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
-          <circle cx="14" cy="14" r="13" fill="#B8661A"/>
-          <circle cx="14" cy="14" r="11" fill="#F5A030"/>
-          <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-          <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-          <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-          <circle cx="14" cy="14" r="1.8" fill="#B8661A" fill-opacity="0.75"/>
-        </svg>
-        <span class="logo-text">The Garden</span>
-      </div>
-      <div class="level-badge">
-        <span class="level-num">Lv.${lvl.level}</span>
-        <span class="level-name">${lvl.name}</span>
-      </div>
+      <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" fill="#B8661A"/>
+        <circle cx="14" cy="14" r="11" fill="#F5A030"/>
+        <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
+        <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
+        <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
+        <circle cx="14" cy="14" r="1.8" fill="#B8661A" fill-opacity="0.75"/>
+      </svg>
+      <span class="logo-text">Pulp<span class="logo-sub">Focus</span></span>
     </div>`
 
-  if (!hasData) {
-    html += `
-      <div class="empty-state">
-        <p>Open Pulp to sync your garden data.</p>
-        <p class="hint">Your grove, currencies, and focus settings will appear here once synced.</p>
-      </div>`
+  // Blocker status
+  const siteCount = blockedSites.length
+  let statusLabel, statusDetail
+  if (focusMode) {
+    statusLabel = 'Blocker Active'
+    statusDetail = siteCount > 0 ? `Blocking ${siteCount} site${siteCount === 1 ? '' : 's'}` : 'Timer running'
   } else {
-    // Currencies
-    html += `
-      <div class="currencies">
-        <div class="currency sun">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></svg>
-          ${sunshine}
-        </div>
-        <div class="currency gem">💎 ${gems}</div>
-      </div>`
-
-    // XP Bar
-    html += `
-      <div class="xp-section">
-        <div class="xp-labels">
-          <span class="xp-label">Progress to ${lvl.level < XP_LEVELS.length ? getLevel(xp + lvl.nextXp - lvl.currentXp).name : 'Max'}</span>
-          <span class="xp-label">${xp.toLocaleString()} XP</span>
-        </div>
-        <div class="xp-bar-bg">
-          <div class="xp-bar-fill" style="width:${Math.max(2, lvl.progress * 100)}%"></div>
-        </div>
-        <div class="xp-sub">
-          <span>${lvl.currentXp}/${lvl.nextXp} XP</span>
-          <span>${Math.round(lvl.progress * 100)}%</span>
-        </div>
-      </div>`
-
-    // Grove Grid
-    html += `
-      <div class="grove-section">
-        <div class="grove-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Your Grove</span>
-          <span style="font-size:9px;font-weight:500;color:#52525b;letter-spacing:0.05em">${filledPlots}/9 planted${grownPlots > 0 ? ` · ${grownPlots} grown` : ''}</span>
-        </div>
-        <div class="grove-grid">`
-
-    for (let i = 0; i < 9; i++) {
-      const tree = grove[i]
-      if (!tree) {
-        html += `<div class="plot"><span class="plot-empty">+</span></div>`
-      } else {
-        const info = TREE_TYPES[tree.type] || { name: tree.type, color: '#888', rarity: 'common' }
-        const rarityClass = getRarityClass(info.rarity)
-        const progress = tree.progress || 0
-        const isGrown = tree.stage >= 4
-
-        html += `
-          <div class="plot filled">
-            <div class="plant-circle ${rarityClass}" style="background:${info.color}"></div>
-            <span class="plant-name">${info.name.split(' ')[0]}</span>
-            ${isGrown
-              ? `<span class="grown-badge">✓ Grown</span>`
-              : `<div class="plant-bar-bg"><div class="plant-bar-fill" style="width:${Math.min(100, progress)}%"></div></div>`
-            }
-          </div>`
-      }
-    }
-
-    html += `</div></div>`
+    statusLabel = 'Blocker Inactive'
+    statusDetail = siteCount > 0 ? `${siteCount} site${siteCount === 1 ? '' : 's'} configured` : 'No sites configured'
   }
 
-  // Focus Mode status
   html += `
-    <div class="focus-section">
-      <div class="focus-title">Focus Mode</div>
-      <div class="focus-status">
-        <div class="focus-dot ${focusMode ? 'on' : 'off'}"></div>
-        <span class="focus-label">${focusMode ? 'Active — blocking distractions' : 'Off'}</span>
-        ${blockedSites.length > 0 ? `<span class="blocked-count">${blockedSites.length} site${blockedSites.length === 1 ? '' : 's'}</span>` : ''}
+    <div class="status-section">
+      <div class="status-card">
+        <div class="status-dot ${focusMode ? 'active' : 'inactive'}"></div>
+        <div class="status-info">
+          <div class="status-label">${statusLabel}</div>
+          <div class="status-detail">${statusDetail}</div>
+        </div>
       </div>
     </div>`
 
-  // Footer
-  html += `
-    <div class="footer">
-      <p>"An orchard is grown with patience and nurtured by persistence."</p>
-    </div>`
+  // Timer + tree
+  if (timer && timer.running) {
+    const elapsedSinceLast = Math.floor((Date.now() - timer.timestamp) / 1000)
+    const currentElapsed = Math.min(timer.total, timer.elapsed + elapsedSinceLast)
+    const remaining = Math.max(0, timer.total - currentElapsed)
+    const progress = timer.total > 0 ? (currentElapsed / timer.total) * 100 : 0
+    const seed = timer.selectedSeed
+    const treeInfo = seed ? TREE_TYPES[seed] : null
+
+    html += `
+      <div class="timer-section">
+        <div class="timer-card">
+          <div class="timer-time">${formatTime(remaining)}</div>
+          <div class="timer-label">remaining</div>
+          ${treeInfo ? `
+            <div class="tree-preview">
+              <div class="tree-circle" style="background: ${treeInfo.color}; border-color: ${treeInfo.color}33;"></div>
+              <span class="tree-name">${treeInfo.name}</span>
+            </div>
+          ` : ''}
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: ${Math.min(100, progress)}%"></div>
+          </div>
+        </div>
+      </div>`
+  } else if (timer && timer.done) {
+    const seed = timer.selectedSeed
+    const treeInfo = seed ? TREE_TYPES[seed] : null
+
+    html += `
+      <div class="timer-section">
+        <div class="timer-card">
+          <div class="timer-time">${formatTime(timer.total)}</div>
+          <div class="timer-label">completed</div>
+          ${treeInfo ? `
+            <div class="tree-preview">
+              <div class="tree-circle" style="background: ${treeInfo.color}; border-color: ${treeInfo.color}33;"></div>
+              <span class="tree-name">${treeInfo.name}</span>
+            </div>
+          ` : ''}
+          <span class="done-badge">Session Complete</span>
+        </div>
+      </div>`
+  } else {
+    html += `
+      <div class="idle-section">
+        <p class="idle-text">Start a focus session in Pulp to grow a tree.</p>
+      </div>`
+  }
 
   app.innerHTML = html
 }
 
-chrome.storage.local.get(["groveData", "focusMode", "blockedSites"], (data) => {
+chrome.storage.local.get(["focusMode", "blockedSites", "timerData"], (data) => {
   render(data)
 })
 
 chrome.storage.onChanged.addListener(() => {
-  chrome.storage.local.get(["groveData", "focusMode", "blockedSites"], (data) => {
+  chrome.storage.local.get(["focusMode", "blockedSites", "timerData"], (data) => {
     render(data)
   })
 })

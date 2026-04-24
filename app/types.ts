@@ -56,7 +56,7 @@ export interface Achievement {
   goal?: number
 }
 
-export interface Bookmark { id: string; noteId: string; pageIdx: number; noteTitle: string; icon?: string }
+export interface Bookmark { id: string; noteId: string; pageIdx: number; noteTitle: string; label?: string; icon?: string }
 
 export type DialogConfig =
   | { type: "prompt"; title: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; icon?: string; onConfirm: (val: string) => void }

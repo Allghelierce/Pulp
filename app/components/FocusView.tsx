@@ -1,6 +1,5 @@
 "use client"
 import { memo, useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 
 interface FocusViewProps {
   isOpen: boolean
@@ -68,10 +67,27 @@ function BlockListEditable({ items, onChange, placeholder, label, isDark }: {
   )
 }
 
+function useExtensionDetected() {
+  const [detected, setDetected] = useState(false)
+
+  useEffect(() => {
+    if (document.documentElement.getAttribute("data-pulp-extension") === "true") {
+      setDetected(true)
+      return
+    }
+    const handler = () => setDetected(true)
+    window.addEventListener("pulp-extension-detected", handler)
+    return () => window.removeEventListener("pulp-extension-detected", handler)
+  }, [])
+
+  return detected
+}
+
 export const FocusView = memo(function FocusView({
   isOpen, onClose, theme, blockedSites, blockedApps, onUpdateConfig,
 }: FocusViewProps) {
   const isDark = theme === "dark"
+  const extensionInstalled = useExtensionDetected()
 
   useEffect(() => {
     if (!isOpen) return
@@ -80,25 +96,18 @@ export const FocusView = memo(function FocusView({
     return () => window.removeEventListener("keydown", handler)
   }, [isOpen, onClose])
 
+  if (!isOpen) return null
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-          onMouseDown={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.96, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.96, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            onMouseDown={e => e.stopPropagation()}
-            className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
-            style={{ height: 660 }}
-          >
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+      onMouseDown={onClose}
+    >
+      <div
+        onMouseDown={e => e.stopPropagation()}
+        className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+        style={{ height: 660 }}
+      >
             {/* Header */}
             <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
               <div>
@@ -115,10 +124,34 @@ export const FocusView = memo(function FocusView({
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-8 py-6">
+              {/* Extension status banner */}
               <div className={`rounded-xl p-5 mb-5 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
-                <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
-                  Add websites and applications to block while your Focus Timer is active. Requires the Pulp Focus browser extension for website blocking.
-                </p>
+                {extensionInstalled ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                      Pulp Focus extension is installed and active.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-2 h-2 rounded-full bg-zinc-600 shrink-0" />
+                      <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+                        Extension not detected. Install the Pulp Focus browser extension to block distracting websites.
+                      </p>
+                    </div>
+                    <a
+                      href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 px-4 py-2 rounded-lg text-[11px] font-bold text-white transition-all hover:brightness-110"
+                      style={{ background: "#e67e22" }}
+                    >
+                      Download Extension
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className={`rounded-xl p-6 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
@@ -139,9 +172,7 @@ export const FocusView = memo(function FocusView({
                 />
               </div>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        </div>
   )
 })
