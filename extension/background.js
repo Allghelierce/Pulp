@@ -12,7 +12,12 @@ async function updateRules() {
 
   if (focusMode && blockedSites.length > 0) {
     blockedSites.forEach((site, i) => {
-      const domain = site.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").trim()
+      let domain = site
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
+        .replace(/\/.*$/, "")
+        .trim()
+        .toLowerCase()
       if (!domain) return
 
       addRules.push({
@@ -23,7 +28,7 @@ async function updateRules() {
           redirect: { url: BLOCKED_REDIRECT + "?site=" + encodeURIComponent(domain) }
         },
         condition: {
-          urlFilter: `||${domain}`,
+          requestDomains: [domain],
           resourceTypes: ["main_frame"]
         }
       })
@@ -34,10 +39,18 @@ async function updateRules() {
     removeRuleIds: removeIds,
     addRules
   })
+
+  console.log("[Pulp Focus] Rules updated:", addRules.length, "active blocks")
 }
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "CONFIG_UPDATED") updateRules()
+})
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.blockedSites || changes.focusMode) {
+    updateRules()
+  }
 })
 
 chrome.runtime.onInstalled.addListener(updateRules)

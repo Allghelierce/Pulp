@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useMemo } from "react"
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { format } from "date-fns"
 import katex from "katex"
@@ -122,35 +122,56 @@ function Submenu({
   parentRef: React.RefObject<HTMLDivElement | null>
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    if (parentRef.current?.isConnected && ref.current) {
-      const pr = parentRef.current.getBoundingClientRect()
-      if (pr.width === 0) { onClose(); return }
-      const rh = ref.current.getBoundingClientRect()
-      let t = pr.top
-      if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
-      if (t < 8) t = 8
-      let l = pr.right + 8
-      if (l + rh.width > window.innerWidth - 8) l = pr.left - rh.width - 8
-      if (l < 8) l = 8
-      setCoords({ top: t, left: l })
-    }
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    const parentEl = parentRef.current
+    const submenuEl = ref.current
+    if (!parentEl || !submenuEl || !parentEl.isConnected) return
+
+    const pr = parentEl.getBoundingClientRect()
+    if (pr.width === 0 || pr.height === 0) return
+    const rh = submenuEl.getBoundingClientRect()
+    let t = pr.top
+    if (t + rh.height > window.innerHeight - 8) t = window.innerHeight - rh.height - 8
+    if (t < 8) t = 8
+    let l = pr.right + 8
+    if (l + rh.width > window.innerWidth - 8) l = pr.left - rh.width - 8
+    if (l < 8) l = 8
+    setCoords({ top: t, left: l })
+  }, [parentRef])
+
+  useEffect(() => {
     const handleMouseDown = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
+      if (!mountedRef.current) return
+      if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) {
+        onCloseRef.current()
+      }
     }
     const handleMouseMove = (e: MouseEvent) => {
+      if (!mountedRef.current) return
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current)
         closeTimeoutRef.current = null
       }
       const submenuEl = ref.current
       const parentEl = parentRef.current
-      if (!submenuEl || !parentEl || !submenuEl.isConnected || !parentEl.isConnected) return
-      const submenuRect = submenuEl.getBoundingClientRect()
-      const parentRect = parentEl.getBoundingClientRect()
+      if (!submenuEl || !parentEl) return
+      if (!submenuEl.isConnected || !parentEl.isConnected) return
+      let submenuRect: DOMRect, parentRect: DOMRect
+      try {
+        submenuRect = submenuEl.getBoundingClientRect()
+        parentRect = parentEl.getBoundingClientRect()
+      } catch { return }
       if (submenuRect.width === 0 || parentRect.width === 0) return
       const mx = e.clientX
       const my = e.clientY
@@ -159,7 +180,9 @@ function Submenu({
       const inParent = mx >= parentRect.left && mx <= parentRect.right && my >= parentRect.top && my <= parentRect.bottom
       const inGap = mx >= parentRect.right && mx <= submenuRect.left + gap && my >= Math.min(parentRect.top, submenuRect.top) && my <= Math.max(parentRect.bottom, submenuRect.bottom)
       if (!inSubmenu && !inParent && !inGap) {
-        closeTimeoutRef.current = setTimeout(() => onClose(), 100)
+        closeTimeoutRef.current = setTimeout(() => {
+          if (mountedRef.current) onCloseRef.current()
+        }, 150)
       }
     }
     document.addEventListener("mousedown", handleMouseDown)
@@ -169,7 +192,7 @@ function Submenu({
       document.removeEventListener("mousemove", handleMouseMove)
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
     }
-  }, [onClose, parentRef])
+  }, [parentRef])
 
   const isLight = theme ? theme === "light" : mode === "/"
 
@@ -180,8 +203,9 @@ function Submenu({
       ref={ref}
       style={{
         position: "fixed",
-        left: coords.left,
-        top: coords.top,
+        left: coords?.left ?? -9999,
+        top: coords?.top ?? -9999,
+        visibility: coords ? "visible" : "hidden",
         zIndex: 10000,
         minWidth: 180,
         background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
@@ -597,6 +621,20 @@ function BookmarkInput({ onInsert, onClose, mode, accent }: { onInsert: (html: s
   )
 }
 
+// ─── Stable-ref wrappers ──────────────────────────────────────────────────────
+
+function SubmenuPortal({ parentEl, ...props }: Omit<React.ComponentProps<typeof Submenu>, 'parentRef'> & { parentEl: HTMLDivElement }) {
+  const parentRef = useRef<HTMLDivElement | null>(parentEl)
+  parentRef.current = parentEl
+  return <Submenu {...props} parentRef={parentRef} />
+}
+
+function CustomMenuFlyoutPortal({ parentEl, ...props }: Omit<React.ComponentProps<typeof CustomMenuFlyout>, 'parentRef'> & { parentEl: HTMLDivElement }) {
+  const parentRef = useRef<HTMLDivElement | null>(parentEl)
+  parentRef.current = parentEl
+  return <CustomMenuFlyout {...props} parentRef={parentRef} />
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export const SlashMenu = memo(function SlashMenu({
@@ -612,9 +650,11 @@ export const SlashMenu = memo(function SlashMenu({
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLDivElement>(null)
-  const submenuRowRef = useRef<HTMLDivElement | null>(null)
+  const submenuRowRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const scrollingRef = useRef(false)
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const submenuDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeSubmenu = useCallback(() => setOpenSubmenuId(null), [])
 
   // ── @ menu items ──────────────────────────────────────────────────────────
   const allItems: SlashItem[] = useMemo(() => [
@@ -987,7 +1027,6 @@ export const SlashMenu = memo(function SlashMenu({
   return (
     <div
       ref={ref}
-      onMouseLeave={() => { setOpenSubmenuId(null) }}
       className="slash-menu-root"
       role="menu"
       aria-label={mode === "/" ? "Insert content menu" : "Insert reference menu"}
@@ -1063,15 +1102,22 @@ export const SlashMenu = memo(function SlashMenu({
                       aria-label={item.label + (item.shortcut ? ` (${item.shortcut})` : "")}
                       ref={el => {
                         if (isActive) (activeRef as any).current = el
-                        if (submenuOpen) (submenuRowRef as any).current = el
+                        if (el) submenuRowRefs.current.set(item.id, el)
                       }}
                       onMouseEnter={() => {
                         setActiveIdx(actualIdx)
-                        if (hasSubmenu && !scrollingRef.current) setOpenSubmenuId(item.id)
+                        if (submenuDelayRef.current) clearTimeout(submenuDelayRef.current)
+                        if (hasSubmenu && !scrollingRef.current) {
+                          submenuDelayRef.current = setTimeout(() => setOpenSubmenuId(item.id), 80)
+                        } else {
+                          setOpenSubmenuId(null)
+                        }
                       }}
                       onMouseLeave={() => {
-                        // Don't close immediately; let the Submenu component handle closing
-                        // via its pointer tracking to prevent closing when cursor moves to the gap
+                        if (submenuDelayRef.current) {
+                          clearTimeout(submenuDelayRef.current)
+                          submenuDelayRef.current = null
+                        }
                       }}
                       onMouseDown={(e) => {
                         // Prevent focus loss from editor
@@ -1138,22 +1184,30 @@ export const SlashMenu = memo(function SlashMenu({
                       ) : null}
  
                       {/* Render submenu flyout inline (portalled visually via fixed positioning) */}
-                      {submenuOpen && item.subOptions && (
-                        <Submenu
-                          options={item.subOptions}
-                          onSelect={onSelect}
-                          onClose={() => setOpenSubmenuId(null)}
-                          mode={mode}
-                          theme={theme}
-                          parentRef={submenuRowRef}
-                        />
-                      )}
+                      {submenuOpen && item.subOptions && (() => {
+                        const el = submenuRowRefs.current.get(item.id)
+                        if (!el || !el.isConnected) return null
+                        return (
+                          <SubmenuPortal
+                            options={item.subOptions}
+                            onSelect={onSelect}
+                            onClose={closeSubmenu}
+                            mode={mode}
+                            theme={theme}
+                            parentEl={el}
+                          />
+                        )
+                      })()}
 
-                      {submenuOpen && item.customContent && (
-                        <CustomMenuFlyout parentRef={submenuRowRef} mode={mode} theme={theme} onClose={() => setOpenSubmenuId(null)}>
-                          {item.customContent}
-                        </CustomMenuFlyout>
-                      )}
+                      {submenuOpen && item.customContent && (() => {
+                        const el = submenuRowRefs.current.get(item.id)
+                        if (!el || !el.isConnected) return null
+                        return (
+                          <CustomMenuFlyoutPortal parentEl={el} mode={mode} theme={theme} onClose={closeSubmenu}>
+                            {item.customContent}
+                          </CustomMenuFlyoutPortal>
+                        )
+                      })()}
                     </div>
                   )
                 })}

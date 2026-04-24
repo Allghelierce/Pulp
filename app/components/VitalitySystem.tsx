@@ -23,6 +23,7 @@ interface VitalitySystemProps {
   setLastCharCount: React.Dispatch<React.SetStateAction<number>>
   checkAchievementRef: React.RefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
+  inventory: string[]
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -30,6 +31,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sunshine, gems, xp, grove, achievements, setSunshine, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
+  inventory,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session) ───
@@ -50,6 +52,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">("focus")
   const [waterDeadline, setWaterDeadline] = useState<number | null>(null)
   const [treeDead, setTreeDead] = useState(false)
+  const [selectedSeed, setSelectedSeed] = useState<string | null>(null)
 
   const WATER_INTERVAL_MS = 8 * 60 * 1000 // 8 minutes (so 10-min sessions need watering at 8 min)
   const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
@@ -130,13 +133,25 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
   }, [timerTotal])
 
+  const [lostSunshine, setLostSunshine] = useState(0)
+
   const giveUp = useCallback(() => {
+    setLostSunshine(sunshine)
+    setSunshine(0)
     setTimerRunning(false)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [])
+  }, [sunshine, setSunshine])
+
+  const recoverSunshine = useCallback(() => {
+    const cost = Math.max(5, Math.ceil(lostSunshine * 0.5))
+    if (gems < cost || lostSunshine <= 0) return
+    setGems(g => g - cost)
+    setSunshine(s => s + lostSunshine)
+    setLostSunshine(0)
+  }, [lostSunshine, gems, setGems, setSunshine])
 
   const waterTree = useCallback(() => {
     if (!timerRunning || treeDead) return
@@ -174,11 +189,13 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerDone, treeDead, timerTotal, setSunshine, setXp, checkAchievement])
 
   const dismissDeadTree = useCallback(() => {
+    setLostSunshine(sunshine)
+    setSunshine(0)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [])
+  }, [sunshine, setSunshine])
 
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
@@ -266,6 +283,12 @@ export const VitalitySystem = memo(function VitalitySystem({
       onWater={waterTree}
       onClaim={claimReward}
       onDismissDead={dismissDeadTree}
+      lostSunshine={lostSunshine}
+      gems={gems}
+      onRecoverSunshine={recoverSunshine}
+      inventory={inventory}
+      selectedSeed={selectedSeed}
+      onSelectSeed={setSelectedSeed}
     />
   )
 })

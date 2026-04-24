@@ -1,6 +1,8 @@
 "use client"
 import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { TREE_TYPES } from "@/app/constants"
+import { PlantIcon } from "./PlantIcon"
 
 const QUOTES = [
   "Every moment is a fresh beginning.",
@@ -34,6 +36,12 @@ interface TimerSidebarPanelProps {
   onWater: () => void
   onClaim: () => void
   onDismissDead: () => void
+  lostSunshine: number
+  gems: number
+  onRecoverSunshine: () => void
+  inventory: string[]
+  selectedSeed: string | null
+  onSelectSeed: (seed: string | null) => void
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -42,95 +50,108 @@ const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
   long: 15 * 60,
 }
 
-function TreeVisualization({ progress }: { progress: number; running: boolean; elapsed: number; total: number }) {
-  // Forest-style staged growth: 0 = seed, 1 = mature tree
-  // Stage thresholds:  sprout (0–0.15) → sapling (0.15–0.35) → young (0.35–0.6) → growing (0.6–0.85) → mature (0.85–1)
+function TreeVisualization({ progress, type, idle }: { progress: number; type: string | null; idle?: boolean }) {
   const p = Math.max(0, Math.min(1, progress))
+  const plantType = type || 'navel'
+  const color = TREE_TYPES[plantType]?.color || '#b85e22'
 
-  // Discrete stages — always visible once reached
-  // 0 sprout | 1 sapling | 2 young | 3 growing | 4 mature
-  const stage = p < 0.2 ? 0 : p < 0.4 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
-  // Scale ramps per stage so each is clearly larger than the last
-  const scale = [0.35, 0.55, 0.75, 0.9, 1.05][stage]
-  const showSprout = stage === 0
-  const showTree = stage >= 1
+  // Idle state: show a default sprout
+  if (idle) {
+    return (
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
+          style={{ backgroundColor: '#4ade8044' }}
+        />
+        <motion.div
+          animate={{ y: [0, -3, 0], rotate: [0, 1, -1, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <svg width="80" height="80" viewBox="0 0 24 24" className="overflow-visible">
+            {/* Stem */}
+            <path d="M12 22 L12 13" stroke="#5c2d0b" strokeWidth="1.8" strokeLinecap="round" />
+            {/* Leaf left */}
+            <path d="M12 15 Q7 12 8 8 Q10 10 12 13" fill="#4ade80" opacity="0.8" />
+            {/* Leaf right */}
+            <path d="M12 14 Q17 11 16 7 Q14 9 12 12" fill="#22c55e" opacity="0.7" />
+            {/* Small bud */}
+            <circle cx="12" cy="8" r="2.5" fill="#86efac" opacity="0.6" />
+          </svg>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Stages: 0 (Planted) | 1 (Seedling) | 2 (Sprout) | 3 (Young) | 4 (Mature)
+  const stage = p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
 
   return (
-    <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: "visible" }}>
-      <defs>
-        <radialGradient id="leafGrad" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" style={{ stopColor: "#4a8a4f" }} />
-          <stop offset="100%" style={{ stopColor: "#1B3022" }} />
-        </radialGradient>
-        <radialGradient id="sproutGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" style={{ stopColor: "#7ab87f" }} />
-          <stop offset="100%" style={{ stopColor: "#386641" }} />
-        </radialGradient>
-      </defs>
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Ground Glow */}
+      <div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full blur-xl transition-colors duration-1000"
+        style={{ backgroundColor: color + '33' }}
+      />
 
-      {/* Ground line */}
-      <ellipse cx="50" cy="93" rx="22" ry="1.5" fill="rgba(0,0,0,0.25)" />
-
-      {/* Everything below is drawn relative to (0,0) = trunk base, then translated to (50, 95). */}
-      <g transform="translate(50 95)">
-        {/* Sprout — stage 0 */}
-        {showSprout && (
-          <g>
-            <path d="M0 -2 Q0 -9 0 -15" stroke="#5a8a3f" strokeWidth="1.6" strokeLinecap="round" />
-            <ellipse cx="-5" cy="-14" rx="3.5" ry="1.8" fill="url(#sproutGrad)" transform="rotate(-25 -5 -14)" />
-            <ellipse cx="5" cy="-14" rx="3.5" ry="1.8" fill="url(#sproutGrad)" transform="rotate(25 5 -14)" />
-          </g>
+      <motion.div
+        animate={{
+          scale: stage === 0 ? 0.9 : 1 + (stage * 0.08),
+          y: stage === 0 ? 5 : 0
+        }}
+        transition={{ type: "spring", stiffness: 100 }}
+      >
+        {stage === 0 ? (
+          <div className="relative">
+            <PlantIcon type={plantType} size={60} isSeed={true} />
+            <motion.div
+               animate={{ opacity: [0.2, 0.5, 0.2] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="absolute inset-0 blur-md"
+            >
+              <PlantIcon type={plantType} size={60} isSeed={true} />
+            </motion.div>
+          </div>
+        ) : (
+          <PlantIcon type={plantType} size={120} stage={stage - 1} />
         )}
+      </motion.div>
 
-        {/* Tree — stages 1–4, anchored at (0,0) and scaled per stage */}
-        {showTree && (
-          <g transform={`scale(${scale})`}>
-            {/* Trunk */}
-            <path d="M0 0 L0 -50 Q0 -60 5 -67" stroke="#7a5a3a" strokeWidth="4.5" strokeLinecap="round" />
-            {/* Branches — stage 2+ */}
-            {stage >= 2 && (
-              <>
-                <path d="M0 -30 Q-7 -37 -14 -37" stroke="#7a5a3a" strokeWidth="2.8" strokeLinecap="round" />
-                <path d="M0 -40 Q7 -47 14 -45" stroke="#7a5a3a" strokeWidth="2.4" strokeLinecap="round" />
-              </>
-            )}
-
-            {/* Main canopy */}
-            <motion.circle
-              cx="0" cy="-63" r="14"
-              fill="url(#leafGrad)"
-              animate={{ r: [14, 15, 14] }}
-              transition={{ duration: 3, repeat: Infinity }}
+      {/* Decorative Particles for higher stages */}
+      {stage >= 3 && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full"
+              animate={{
+                y: [-20, -60],
+                x: [0, (i - 2) * 15],
+                opacity: [0, 1, 0],
+                scale: [0, 1.5, 0]
+              }}
+              transition={{
+                duration: 2 + Math.random(),
+                repeat: Infinity,
+                delay: i * 0.4
+              }}
+              style={{
+                left: '50%',
+                top: '50%',
+                backgroundColor: color
+              }}
             />
-            {/* Side canopies */}
-            <circle cx="-8" cy="-53" r="10" fill="url(#leafGrad)" />
-            {stage >= 2 && <circle cx="8" cy="-53" r="11" fill="url(#leafGrad)" />}
-            {stage >= 3 && <circle cx="0" cy="-47" r="13" fill="url(#leafGrad)" opacity={0.95} />}
-            {stage >= 4 && (
-              <>
-                <circle cx="-14" cy="-60" r="8" fill="url(#leafGrad)" opacity={0.9} />
-                <circle cx="14" cy="-60" r="8" fill="url(#leafGrad)" opacity={0.9} />
-              </>
-            )}
-
-            {/* Oranges — stage 4 */}
-            {stage >= 4 && (
-              <g>
-                <circle cx="-6" cy="-57" r="1.4" fill="#EA8C55" />
-                <circle cx="6" cy="-55" r="1.3" fill="#EA8C55" />
-                <circle cx="0" cy="-61" r="1.2" fill="#EA8C55" />
-              </g>
-            )}
-          </g>
-        )}
-      </g>
-    </svg>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onWater, onClaim, onDismissDead,
+  lostSunshine, gems, onRecoverSunshine,
+  inventory, selectedSeed, onSelectSeed,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -331,7 +352,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center p-3 mt-3">
                   <div className="w-full h-full scale-[1.15]" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                    <TreeVisualization progress={progress} running={running} elapsed={elapsed} total={total} />
+                    <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} />
                   </div>
                 </div>
               </div>
@@ -420,6 +441,69 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
 
+            {/* Seed selection UI — only before starting */}
+            {!running && !done && !treeDead && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                    Select Crop
+                  </p>
+                  {inventory.length === 0 && (
+                    <span className="text-[9px]" style={{ color: '#ef4444' }}>No seeds available</span>
+                  )}
+                </div>
+                
+                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                  {/* Common Seed (always available if inventory empty? or just show what they have) */}
+                  {[...new Set(inventory)].length === 0 && (
+                    <div className="text-[10px] italic p-2 rounded bg-white/5 border border-white/10 w-full text-center" style={{ color: subtleColor }}>
+                      Visit the Shop to buy seeds
+                    </div>
+                  )}
+
+                  {[...new Set(inventory)].map(type => {
+                    const count = inventory.filter(s => s === type).length
+                    const isSelected = selectedSeed === type
+                    const info = TREE_TYPES[type]
+                    if (!info) return null
+                    
+                    return (
+                      <motion.button
+                        key={type}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onSelectSeed(isSelected ? null : type)}
+                        className="relative flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all"
+                        style={{
+                          backgroundColor: isSelected ? `${info.color}25` : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${isSelected ? `${info.color}80` : "rgba(255,255,255,0.08)"}`,
+                          boxShadow: isSelected ? `0 4px 12px ${info.color}20` : 'none',
+                        }}
+                      >
+                        <PlantIcon type={type} size={18} isSeed={true} />
+                        <div className="flex flex-col items-start leading-none">
+                           <span className="text-[10px] font-bold" style={{ color: isSelected ? info.color : textColor }}>
+                             {info.name.split(' ')[0]}
+                           </span>
+                           <span className="text-[8px] opacity-60" style={{ color: isSelected ? info.color : dimColor }}>
+                             {count} held
+                           </span>
+                        </div>
+                        {isSelected && (
+                          <motion.div 
+                            layoutId="activeSeed"
+                            className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-white flex items-center justify-center shadow-lg"
+                          >
+                             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: info.color }} />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Main button */}
             <div className="mt-7">
               {confirmGiveUp ? (
@@ -470,6 +554,29 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 >
                   {treeDead ? "Try Again" : done ? "Claim Reward" : running ? "Give Up" : "Start Session"}
                 </button>
+              )}
+
+              {lostSunshine > 0 && !running && !done && (
+                <div
+                  className="w-full rounded-[6px] px-3 py-2.5 mt-2 flex flex-col items-center gap-1.5"
+                  style={{
+                    backgroundColor: isDark ? "rgba(251,191,36,0.06)" : "rgba(251,191,36,0.08)",
+                    border: `1px solid ${isDark ? "rgba(251,191,36,0.15)" : "rgba(251,191,36,0.25)"}`,
+                    fontFamily: serifFont,
+                  }}
+                >
+                  <span className="text-[10px] tracking-[0.04em]" style={{ color: isDark ? "#fbbf24" : "#b45309" }}>
+                    You lost {lostSunshine} ☀️
+                  </span>
+                  <button
+                    onClick={onRecoverSunshine}
+                    disabled={gems < Math.max(5, Math.ceil(lostSunshine * 0.5))}
+                    className="text-[9px] font-black uppercase tracking-[0.15em] hover:underline disabled:opacity-30 disabled:no-underline"
+                    style={{ color: "#a78bfa" }}
+                  >
+                    Recover for {Math.max(5, Math.ceil(lostSunshine * 0.5))} 💎
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -91,6 +91,16 @@ function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: P
               boxShadow: `0 0 0 1px rgba(${rgb},0.25), 0 8px 24px -4px rgba(0,0,0,0.12)`
             } : undefined}
           >
+            {tier.badge && (
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10">
+                <span
+                  className="px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-lg"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  {tier.badge}
+                </span>
+              </div>
+            )}
             {tier.highlight && (
               <div className="pointer-events-none absolute inset-0 rounded-xl overflow-hidden">
                 <div style={{

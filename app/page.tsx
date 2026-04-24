@@ -37,8 +37,8 @@ function PageNumberInput({ currentPageIdx, totalPages, theme, onNavigate }: {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
-  const color = theme === "dark" ? "#9ca3af" : "#4b5563"
-  const fontStyle: React.CSSProperties = { color, fontFamily: '"SF Mono","Fira Code","Roboto Mono",monospace', fontWeight: 600, fontSize: 13 }
+  const color = theme === "dark" ? "#e4e4e7" : "#18181b"
+  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 600, fontSize: 15 }
 
   const commit = (val: string) => {
     const n = parseInt(val, 10)
@@ -192,11 +192,12 @@ const BoxItem = memo(function BoxItem({
   onDragStart: () => void; onDragEnd: () => void; handwrittenEffect: boolean
 }) {
   const [localDragging, setLocalDragging] = useState(false)
+  const isDark = theme === "dark"
   const resizeHandles: [string, React.CSSProperties][] = [
-    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "nw-resize" }],
-    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "ne-resize" }],
-    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "sw-resize" }],
-    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${accentSolid}88`, cursor: "se-resize" }],
+    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "nw-resize" }],
+    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "ne-resize" }],
+    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "sw-resize" }],
+    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "se-resize" }],
     ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
     ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
     ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
@@ -224,9 +225,9 @@ const BoxItem = memo(function BoxItem({
         // Sticky: always fixed height. Regular: auto-grow.
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1px solid ${accentSolid}44` : "1px solid transparent"),
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : `1px solid ${isSticky ? "transparent" : (isDark ? "#3f3f46" : "rgba(0,0,0,0.15)")}`),
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
+        borderRadius: 2, backgroundColor: box.boxHighlightColor || (isSticky ? "transparent" : (isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)")),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -235,8 +236,8 @@ const BoxItem = memo(function BoxItem({
       }}
     >
       {isSelected && (<>
-        <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
-        <div style={{ position: "absolute", inset: 0, border: `1px solid ${accentSolid}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
+        <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${isDark ? "#71717a" : "rgba(0,0,0,0.25)"}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
+        <div style={{ position: "absolute", inset: 0, border: `1px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.15)"}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
       </>)}
       {/* Resize handles — hidden for sticky notes */}
       {isSelected && !isSticky && resizeHandles.map(([h, pos]) => (
@@ -324,7 +325,7 @@ const BoxItem = memo(function BoxItem({
             setSelectedBoxIds(new Set([box.id]))
             startDrag(e, box)
           }}
-          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.08, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
           <div style={{ width: 14, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
         </div>
@@ -885,7 +886,7 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
-        lineHeight: 1.45, color: inkColor, cursor: "text",
+        lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: theme === "dark" ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-0.5deg) skewX(-0.8deg)" : undefined,
@@ -1067,7 +1068,7 @@ export default function NoteApp() {
     wordCountVisible: true,
     focusMode: false,
     baseFontSize: "medium",
-    shortcuts: { ai: "ctrl+j", slash: "/" },
+    shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d" },
     blockedSites: [],
     blockedApps: [],
     devMode: false,
@@ -1318,7 +1319,10 @@ export default function NoteApp() {
       return
     }
 
-    if (!targetText) return
+    if (!targetText) {
+      openAlert("Nothing to work with", "Write or select some text first.")
+      return
+    }
 
     try {
       const apiText = contextText
@@ -1568,8 +1572,8 @@ export default function NoteApp() {
     const isMeta = e.metaKey || e.ctrlKey
     const isAlt = e.altKey
     const isShift = e.shiftKey
-    const modParts = []
-    if (isMeta) modParts.push("cmd")
+    const modParts: string[] = []
+    if (isMeta) modParts.push("ctrl")
     if (isAlt) modParts.push("alt")
     if (isShift) modParts.push("shift")
     if (!["Meta", "Control", "Alt", "Shift", "Escape"].includes(e.key)) {
@@ -1772,29 +1776,33 @@ export default function NoteApp() {
     return () => window.removeEventListener('resize', checkViewport)
   }, [])
 
-  // Global keyboard shortcuts (Ctrl+N, Ctrl+K, \)
+  // Global keyboard shortcuts
   useEffect(() => {
+    const buildKeyStr = (e: KeyboardEvent) => {
+      const parts: string[] = []
+      if (e.ctrlKey || e.metaKey) parts.push("ctrl")
+      if (e.altKey) parts.push("alt")
+      if (e.shiftKey) parts.push("shift")
+      if (!["Control", "Meta", "Alt", "Shift"].includes(e.key)) parts.push(e.key.toLowerCase())
+      return parts.join("+")
+    }
     const handleGlobalKey = (e: KeyboardEvent) => {
-      const isCmd = e.ctrlKey
+      const keyStr = buildKeyStr(e)
 
-      // Cmd/Ctrl+N - Create new note
-      if (isCmd && e.key === 'n') {
+      if (keyStr === shortcuts.newNote) {
         e.preventDefault()
         addNote(null)
         return
       }
 
-      // Cmd/Ctrl+K - Search
-      if (isCmd && e.key === 'k') {
+      if (keyStr === shortcuts.search) {
         e.preventDefault()
         setSlashMenu(null)
-        // Focus search or trigger search UI
         const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement
         if (searchInput) searchInput.focus()
         return
       }
 
-      // Escape - exit draw mode or deselect boxes
       if (e.key === 'Escape') {
         if (showDrawToolbar) {
           setShowDrawToolbar(false)
@@ -1804,29 +1812,38 @@ export default function NoteApp() {
         }
       }
 
-      // \ - AI editing command
-      if (e.key === "\\") {
+      if (keyStr === shortcuts.aiCommand) {
         const active = document.activeElement as HTMLElement | null
         if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
-          return // Let the editor or inputs handle it
+          return
         }
         e.preventDefault()
         setShowAiCommandBar(true)
       }
 
-      // Cmd+Option+T (Mac) / Ctrl+Alt+T (Windows) - Toggle Timer
-      if (isCmd && e.altKey && e.key === 't') {
+      if (keyStr === shortcuts.timer) {
         e.preventDefault()
         setTimerOpen(!timerOpen)
       }
 
-      // Option+Arrow without box selection - switch pages
-      if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      if (keyStr === shortcuts.toggleSidebar) {
+        e.preventDefault()
+        setSidebarWidth((w: number) => w > 40 ? 0 : 256)
+      }
+
+      if (keyStr === shortcuts.drawMode) {
+        const active = document.activeElement as HTMLElement | null
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) return
+        e.preventDefault()
+        setShowDrawToolbar((v: boolean) => !v)
+      }
+
+      if (keyStr === shortcuts.prevPage || keyStr === shortcuts.nextPage) {
         const selectedIds = boxes.selectedBoxIdsRef.current
         if (selectedIds.size === 0) {
           e.preventDefault()
           editor.flushSync()
-          if (e.key === 'ArrowLeft') {
+          if (keyStr === shortcuts.prevPage) {
             setCurrentPageIdx((p: number) => Math.max(0, p - 1))
           } else {
             setCurrentPageIdx((p: number) => {
@@ -2602,6 +2619,15 @@ export default function NoteApp() {
                 isTextActive={isTextActive}
                 onOpenChat={() => setShowNotebookChat(v => !v)}
                 chatOpen={showNotebookChat}
+                strokeColor={strokeColor}
+                onStrokeColorChange={setStrokeColor}
+                lineWidth={lineWidth}
+                onLineWidthChange={setLineWidth}
+                onUndo={drawing.undo}
+                onRedo={drawing.redo}
+                canUndo={drawing.canUndo}
+                canRedo={drawing.canRedo}
+                onClearDrawing={drawing.clearCanvas}
               />
             </div>
           )}
@@ -2977,18 +3003,7 @@ export default function NoteApp() {
           </div>
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <>
-              <FloatingToolbar
-                accent={accent} activeTool={activeTool} onToolChange={setActiveTool}
-                onClearDrawing={drawing.clearCanvas} isVisible={showDrawToolbar}
-                strokeColor={strokeColor} onStrokeColorChange={setStrokeColor}
-                lineWidth={lineWidth} onLineWidthChange={setLineWidth}
-                onUndo={drawing.undo} onRedo={drawing.redo}
-                canUndo={drawing.canUndo} canRedo={drawing.canRedo}
-                onClose={() => { setShowDrawToolbar(false); setActiveTool('select') }}
-              />
-              <HangingOrange onClick={() => setOrchardOpen(true)} />
-            </>
+            <HangingOrange onClick={() => setOrchardOpen(true)} />
           )}
         </div>
 
@@ -3273,6 +3288,7 @@ export default function NoteApp() {
         setLastCharCount={setLastCharCount}
         checkAchievementRef={checkAchievementRef}
         claimAchievementRef={claimAchievementRef}
+        inventory={inventory}
       />
 
       {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

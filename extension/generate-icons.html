@@ -1,23 +1,58 @@
-<!-- Open this file in a browser, right-click each canvas, and "Save Image As" icon48.png / icon128.png -->
-<canvas id="c48" width="48" height="48"></canvas>
-<canvas id="c128" width="128" height="128"></canvas>
+<!DOCTYPE html>
+<html>
+<head><title>Generate Pulp Extension Icons</title></head>
+<body style="font-family: sans-serif; padding: 32px; background: #f5f5f5;">
+<h2>Pulp Focus Icons</h2>
+<p>Right-click each canvas and "Save Image As" → save to <code>extension/icons/</code></p>
+<div style="display:flex; gap:24px; margin-top:24px; align-items: end;">
+  <div><p>icon16.png</p><canvas id="c16" width="16" height="16"></canvas></div>
+  <div><p>icon48.png</p><canvas id="c48" width="48" height="48"></canvas></div>
+  <div><p>icon128.png</p><canvas id="c128" width="128" height="128"></canvas></div>
+</div>
 <script>
 function draw(id, size) {
   const c = document.getElementById(id).getContext('2d');
-  const r = size * 0.2;
-  const m = size * 0.1;
-  // Rounded rect background
+  // Background circle
   c.beginPath();
-  c.roundRect(m, m, size - m*2, size - m*2, r);
-  c.fillStyle = '#1a1a1a';
+  c.arc(size/2, size/2, size/2, 0, Math.PI*2);
+  c.fillStyle = '#B8661A';
   c.fill();
-  // "P" letter
-  c.fillStyle = '#f5f3f1';
-  c.font = `bold ${size * 0.5}px Georgia, serif`;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText('P', size/2, size/2 + size*0.02);
+
+  c.beginPath();
+  c.arc(size/2, size/2, size*0.42, 0, Math.PI*2);
+  c.fillStyle = '#F5A030';
+  c.fill();
+
+  // Segment lines
+  c.strokeStyle = 'rgba(184,102,26,0.45)';
+  c.lineWidth = Math.max(1, size*0.03);
+  // Vertical
+  c.beginPath(); c.moveTo(size/2, size*0.12); c.lineTo(size/2, size*0.88); c.stroke();
+  // Diagonal left
+  c.beginPath(); c.moveTo(size*0.3, size*0.85); c.lineTo(size*0.7, size*0.15); c.stroke();
+  // Diagonal right
+  c.beginPath(); c.moveTo(size*0.7, size*0.85); c.lineTo(size*0.3, size*0.15); c.stroke();
+
+  // Center pip
+  c.beginPath();
+  c.arc(size/2, size/2, size*0.07, 0, Math.PI*2);
+  c.fillStyle = 'rgba(184,102,26,0.7)';
+  c.fill();
+
+  // Highlight
+  if (size >= 48) {
+    c.beginPath();
+    c.moveTo(size*0.3, size*0.28);
+    c.quadraticCurveTo(size*0.38, size*0.22, size*0.48, size*0.25);
+    c.strokeStyle = 'rgba(255,255,255,0.3)';
+    c.lineWidth = Math.max(1, size*0.03);
+    c.lineCap = 'round';
+    c.stroke();
+  }
 }
+draw('c16', 16);
 draw('c48', 48);
 draw('c128', 128);
 </script>
+</body>
+</html>

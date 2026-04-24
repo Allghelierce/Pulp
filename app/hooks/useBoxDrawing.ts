@@ -91,32 +91,43 @@ export function useBoxDrawing({
         return
       }
 
-      // Arrow keys — snap selected boxes
+      // Arrow keys — nudge selected boxes; Option+Arrow — snap to page edge
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         const ids = selectedBoxIdsRef.current
         if (ids.size === 0) return
         e.preventDefault()
-        const snap = e.shiftKey ? 100 : 20
-        const dx = e.key === 'ArrowLeft' ? -snap : e.key === 'ArrowRight' ? snap : 0
-        const dy = e.key === 'ArrowUp' ? -snap : e.key === 'ArrowDown' ? snap : 0
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
-        setNotes(prev => prev.map(n => {
-          if (n.id !== tid) return n
-          const boxes = (n.boxes[pidx] || []).map(b => {
-            if (!ids.has(b.id)) return b
-            const newX = Math.max(0, Math.round((b.x + dx) / snap) * snap)
-            const newY = Math.max(0, Math.round((b.y + dy) / snap) * snap)
-            const isTopLeft = newX < 80 && newY < 80
-            const otherBoxes = (n.boxes[pidx] || []).filter(ob => ob.id !== b.id)
-            const nothingAtTopLeft = !otherBoxes.some(ob => ob.x < 80 && ob.y < 80)
-            if (isTopLeft && nothingAtTopLeft && b.boxHeadingStyle !== 'h1') {
-              return { ...b, x: newX, y: newY, boxHeadingStyle: 'h1' as const }
-            }
-            return { ...b, x: newX, y: newY }
-          })
-          return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }
-        }))
+
+        const pageW = paperRef.current?.offsetWidth ?? 800
+        const pageH = 1100
+
+        if (e.altKey) {
+          setNotes(prev => prev.map(n => {
+            if (n.id !== tid) return n
+            const boxes = (n.boxes[pidx] || []).map(b => {
+              if (!ids.has(b.id)) return b
+              const maxX = Math.max(0, pageW - b.w)
+              const maxY = Math.max(0, pageH - b.h)
+              const newX = e.key === 'ArrowLeft' ? 0 : e.key === 'ArrowRight' ? maxX : b.x
+              const newY = e.key === 'ArrowUp' ? 0 : e.key === 'ArrowDown' ? maxY : b.y
+              return { ...b, x: newX, y: newY }
+            })
+            return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }
+          }))
+        } else {
+          const step = e.shiftKey ? 40 : 15
+          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+          setNotes(prev => prev.map(n => {
+            if (n.id !== tid) return n
+            const boxes = (n.boxes[pidx] || []).map(b => {
+              if (!ids.has(b.id)) return b
+              return { ...b, x: Math.max(0, b.x + dx), y: Math.max(0, b.y + dy) }
+            })
+            return { ...n, boxes: { ...n.boxes, [pidx]: boxes } }
+          }))
+        }
         return
       }
 

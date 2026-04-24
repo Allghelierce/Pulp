@@ -269,16 +269,16 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
               <SettingSection title="Shortcuts" isDark={isDark}>
                 <div className="flex flex-col gap-0.5 px-3 py-2">
-                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
-                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash} isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
-                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
-                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>New Note</span>
-                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ N</kbd>
-                  </div>
-                  <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
-                    <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Toggle Sidebar</span>
-                    <kbd className={`px-2 py-1 rounded text-[10px] font-mono font-bold border ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300" : "bg-white border-zinc-200 text-zinc-600 shadow-sm"}`}>⌘ \</kbd>
-                  </div>
+                  <ShortcutKey label="New Note" id="newNote" currentKey={shortcuts.newNote || "ctrl+n"} defaultKey="ctrl+n" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Search" id="search" currentKey={shortcuts.search || "ctrl+k"} defaultKey="ctrl+k" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Toggle Sidebar" id="toggleSidebar" currentKey={shortcuts.toggleSidebar || "ctrl+\\"} defaultKey="ctrl+\\" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="AI Intelligence" id="ai" currentKey={shortcuts.ai || "ctrl+j"} defaultKey="ctrl+j" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="AI Command" id="aiCommand" currentKey={shortcuts.aiCommand || "\\"} defaultKey="\\" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Slash Command" id="slash" currentKey={shortcuts.slash || "/"} defaultKey="/" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Toggle Timer" id="timer" currentKey={shortcuts.timer || "ctrl+alt+t"} defaultKey="ctrl+alt+t" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Toggle Draw Mode" id="drawMode" currentKey={shortcuts.drawMode || "ctrl+d"} defaultKey="ctrl+d" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Previous Page" id="prevPage" currentKey={shortcuts.prevPage || "alt+arrowleft"} defaultKey="alt+arrowleft" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                  <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                 </div>
               </SettingSection>
 
@@ -711,35 +711,32 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   tiers={[
                     {
                       name: "Creator",
-                      price: { monthly: 8, yearly: 72 },
-                      description: "For AI-powered writers",
+                      price: { monthly: 4, yearly: 36 },
+                      description: "Write smarter with AI",
                       buttonLabel: "Upgrade to Creator",
                       icon: <Sparkles className="w-5 h-5" style={{ color: "#f59e0b" }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
-                        { name: "Unlimited Notes", description: "Create as many notes as you need", included: true },
-                        { name: "500 AI Images / month", description: "Generative sketches for your notes", included: true },
-                        { name: "50,000 AI Tokens / month", description: "Powerful text generation & analysis", included: true },
-                        { name: "5 GB Cloud Storage", description: "Sync across all devices", included: true },
-                        { name: "100 MB Local Storage", description: "Expanded offline cache", included: true },
-                        { name: "All Page Styles", description: "Lined, grid, plain, and more", included: true },
+                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
+                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
+                        { name: "Grove & Achievements", description: "Plant trees, earn sunshine, unlock rewards", included: true },
+                        { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
                       ],
                     },
                     {
                       name: "Pro",
-                      price: { monthly: 16, yearly: 144 },
-                      description: "Ultimate intelligence suite",
+                      price: { monthly: 8, yearly: 72 },
+                      description: "The full Pulp experience",
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
+                      badge: "Most Popular",
                       icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
-                        { name: "Everything in Creator", description: "All features from the Creator plan", included: true },
-                        { name: "Unlimited AI Images", description: "No monthly cap on sketches", included: true },
-                        { name: "500,000 AI Tokens / month", description: "Large context window power", included: true },
-                        { name: "50 GB Cloud Storage", description: "Ample space for your media", included: true },
-                        { name: "500 MB Local Storage", description: "Maximum offline capacity", included: true },
-                        { name: "Priority Support", description: "Fast-track email & chat", included: true },
+                        { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
+                        { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
+                        { name: "Rare Seed Drops", description: "Bonus rare & chroma seeds every month", included: true },
+                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
                       ],
                     },
                   ]}
@@ -914,10 +911,25 @@ function StorageBar({ isDark }: { isDark: boolean }) {
   )
 }
 
-function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: { 
-  label: string; id: string; currentKey: string; onUpdate: (id: string, key: string) => void; isDark: boolean 
+function formatShortcutDisplay(key: string) {
+  return key.split("+").map(p => {
+    if (p === "ctrl") return "⌘"
+    if (p === "alt") return "⌥"
+    if (p === "shift") return "⇧"
+    if (p === "arrowleft") return "←"
+    if (p === "arrowright") return "→"
+    if (p === "arrowup") return "↑"
+    if (p === "arrowdown") return "↓"
+    if (p === "\\") return "\\"
+    return p.toUpperCase()
+  }).join(" ")
+}
+
+function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
+  label: string; id: string; currentKey: string; defaultKey: string; onUpdate: (id: string, key: string) => void; isDark: boolean
 }) {
   const [isRecording, setIsRecording] = useState(false)
+  const isCustom = currentKey !== defaultKey
 
   useEffect(() => {
     if (!isRecording) return
@@ -925,15 +937,14 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
       e.preventDefault()
       e.stopPropagation()
       if (e.key === "Escape") { setIsRecording(false); return }
-      
-      // Captured modifiers
-      const parts = []
-      if (e.ctrlKey) parts.push("ctrl")
+
+      const parts: string[] = []
+      if (e.ctrlKey || e.metaKey) parts.push("ctrl")
       if (e.altKey) parts.push("alt")
       if (e.shiftKey) parts.push("shift")
-      
-      const isModifierOnly = ["Control", "Alt", "Shift"].includes(e.key)
-      
+
+      const isModifierOnly = ["Control", "Meta", "Alt", "Shift"].includes(e.key)
+
       if (!isModifierOnly) {
         parts.push(e.key.toLowerCase())
         onUpdate(id, parts.join("+"))
@@ -947,12 +958,23 @@ function ShortcutKey({ label, id, currentKey, onUpdate, isDark }: {
   return (
     <div className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-black/[0.02]"}`}>
       <span className={`text-[12px] ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>{label}</span>
-      <button
-        onClick={() => setIsRecording(true)}
-        className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
-      >
-        {isRecording ? "Press keys..." : currentKey.toUpperCase().replace("+", " + ").replace("CMD", "CTRL")}
-      </button>
+      <div className="flex items-center gap-1.5">
+        {isCustom && (
+          <button
+            onClick={() => onUpdate(id, defaultKey)}
+            className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isDark ? "text-zinc-600 hover:text-zinc-400 hover:bg-white/5" : "text-zinc-400 hover:text-zinc-600 hover:bg-black/5"}`}
+            title="Reset to default"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        )}
+        <button
+          onClick={() => setIsRecording(true)}
+          className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
+        >
+          {isRecording ? "Press keys..." : formatShortcutDisplay(currentKey)}
+        </button>
+      </div>
     </div>
   )
 }

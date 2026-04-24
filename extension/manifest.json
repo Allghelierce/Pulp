@@ -1,16 +1,25 @@
 {
   "manifest_version": 3,
   "name": "Pulp Focus",
-  "version": "1.0.0",
-  "description": "Block distracting websites while writing in Pulp",
+  "version": "1.1.0",
+  "description": "Block distracting websites while writing in Pulp. Watch your garden grow.",
   "permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pulp Focus"
+  },
   "content_scripts": [
     {
-      "matches": ["http://localhost:*/*", "https://*.vercel.app/*"],
+      "matches": [
+        "http://localhost:*/*",
+        "https://*.vercel.app/*",
+        "https://pulp.ink/*",
+        "https://www.pulp.ink/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
@@ -21,5 +30,9 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "icons": {}
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }

@@ -200,7 +200,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         }`}
       >
         <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100/80'}`}>
-          <PlantIcon type={type} size={18} />
+          <PlantIcon type={type} size={18} isSeed={true} />
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-[12.5px] font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{t.name}</p>
@@ -329,6 +329,46 @@ export const BoutiqueView = memo(function BoutiqueView({
             {/* ── Cosmetics ── */}
             {activeTab === 'cosmetics' && (
               <div className="space-y-5">
+                {/* Get Gems */}
+                <div>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] mb-2 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>Get Gems</p>
+                  <div className={`rounded-xl border overflow-hidden divide-y ${isDark ? 'bg-zinc-900/30 border-zinc-800 divide-zinc-800/60' : 'bg-white border-zinc-200/80 divide-zinc-100'}`}>
+                    {[
+                      { id: 'gems_10', amount: 10, cost: 25, label: 'Small Pouch' },
+                      { id: 'gems_30', amount: 30, cost: 60, label: 'Gem Satchel' },
+                      { id: 'gems_75', amount: 75, cost: 120, label: 'Treasure Chest', best: true },
+                      { id: 'gems_200', amount: 200, cost: 250, label: 'Royal Vault' },
+                    ].map(pack => (
+                      <div key={pack.id} className="flex items-center gap-3.5 px-4 py-3">
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100/80'}`}>
+                          <CurrencyIcon type="gems" size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className={`text-[12.5px] font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{pack.label}</p>
+                            {(pack as any).best && <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isDark ? 'bg-purple-950/60 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>Best value</span>}
+                          </div>
+                          <span className={`text-[9.5px] ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                            {pack.amount} gems
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => { if (sunshine >= pack.cost) { setSunshine((s: number) => s - pack.cost); setGems((g: number) => g + pack.amount) } }}
+                          disabled={sunshine < pack.cost}
+                          className={`flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all ${
+                            sunshine < pack.cost
+                              ? 'opacity-40 cursor-not-allowed'
+                              : isDark ? 'text-amber-400 bg-amber-950/40 hover:bg-amber-950/60 border border-amber-900/50' : 'text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-100'
+                          }`}
+                        >
+                          <CurrencyIcon type="sunshine" size={10} />
+                          {pack.cost}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {(['accent', 'ink', 'paper'] as const).map(category => {
                   const items = GEM_COSMETICS.filter(c => c.type === category)
                   const label = category === 'accent' ? 'Accent Colors' : category === 'ink' ? 'Ink Styles' : 'Paper Textures'
@@ -411,7 +451,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       return (
                         <div key={`${type}-${idx}`} className="flex items-center gap-3.5 px-4 py-3 group">
                           <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100/80'}`}>
-                            <PlantIcon type={type} size={18} />
+                            <PlantIcon type={type} size={18} isSeed={true} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-[12.5px] font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{t.name}</p>
@@ -455,7 +495,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           return (
                             <div key={type} className="flex items-center gap-3.5 px-4 py-2.5">
                               <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100/80'}`}>
-                                <PlantIcon type={type} size={18} />
+                                <PlantIcon type={type} size={18} isSeed={true} />
                               </div>
                               <p className={`flex-1 text-[12.5px] font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-800'}`}>{t.name}</p>
                               <div className="flex items-center gap-1 shrink-0">

@@ -337,7 +337,7 @@ export const OrchardView = memo(function OrchardView({
                                         : 'bg-zinc-50 hover:bg-emerald-50 border-zinc-100 hover:border-emerald-200'
                                     }`}
                                   >
-                                    <PlantIcon type={seedType} size={20} />
+                                    <PlantIcon type={seedType} size={20} isSeed={true} />
                                     <span className="text-[10px] font-bold truncate flex-1">{TREE_TYPES[seedType].name}</span>
                                   </button>
                                 ))
@@ -455,7 +455,7 @@ export const OrchardView = memo(function OrchardView({
                         }`}
                         style={{ backgroundColor: info.bg }}
                       >
-                        <div className="w-5 h-5 rounded-full" style={{ backgroundColor: info.color }} />
+                        <PlantIcon type={type} size={28} isSeed={true} />
                       </div>
                       <span className={`text-[9px] font-bold ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{info.name.split(' ')[0]}</span>
                       <span className={`text-[8px] ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
