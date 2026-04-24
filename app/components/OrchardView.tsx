@@ -108,8 +108,23 @@ export const OrchardView = memo(function OrchardView({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] overflow-hidden"
+      className="fixed inset-0 z-[1000] flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
     >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 350 }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: "92vw", maxWidth: 960, height: "88vh", maxHeight: 820,
+          borderRadius: 18, overflow: "hidden", position: "relative",
+          boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5)",
+          border: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
       <div className="absolute inset-0 bg-[#080c08]">
         <div className="absolute inset-0 opacity-30" style={{
           background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(40,55,35,0.35) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 20% 80%, rgba(80,65,40,0.15) 0%, transparent 60%)'
@@ -453,6 +468,7 @@ export const OrchardView = memo(function OrchardView({
           </div>
         </div>
       </div>
+      </motion.div>
     </motion.div>
   )
 })

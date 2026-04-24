@@ -29,6 +29,7 @@ import { BoutiqueView } from "@/app/components/BoutiqueView"
 import { GemStoreModal } from "@/app/components/GemStoreModal"
 import { StatsView } from "@/app/components/StatsView"
 import { FocusView } from "@/app/components/FocusView"
+import { LeaderboardView } from "@/app/components/LeaderboardView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -982,6 +983,7 @@ export default function NoteApp() {
   const [grove, setGrove] = useState<Tree[]>([])
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
@@ -1074,10 +1076,10 @@ export default function NoteApp() {
     wordCountVisible: true,
     focusMode: false,
     baseFontSize: "medium",
-    shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d" },
+    shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d", cycleHeader: "alt+1" },
     blockedSites: [],
     blockedApps: [],
-    devMode: false,
+    devMode: true,
     isDevUnlocked: false
   }
   const [settings, setSettings] = useState<any>(() => {
@@ -1586,6 +1588,25 @@ export default function NoteApp() {
       modParts.push(e.key.toLowerCase())
     }
     const eventKeyStr = modParts.join("+")
+    const isCycleHeader = eventKeyStr === shortcuts.cycleHeader || (e.altKey && e.code === "Digit1")
+
+    if (isCycleHeader) {
+      e.preventDefault()
+      const selectedIds = Array.from(boxes.selectedBoxIdsRef.current)
+      if (selectedIds.length > 0) {
+        const styles = ["default", "h1", "h2", "h3", "margin"]
+        selectedIds.forEach(id => {
+          const box = activeNote.boxes[currentPageIdx].find(b => b.id === id)
+          if (box) {
+            const currentStyle = box.boxHeadingStyle || "default"
+            const currentIndex = styles.indexOf(currentStyle)
+            const nextStyle = styles[(currentIndex + 1) % styles.length]
+            boxes.updateBox(id, { boxHeadingStyle: nextStyle as any, boxFontSize: undefined })
+          }
+        })
+      }
+      return
+    }
 
     if (eventKeyStr === shortcuts.ai) {
       e.preventDefault()
@@ -1694,7 +1715,7 @@ export default function NoteApp() {
       slashMenuRef.current = m
       setSlashMenu(m)
     }
-  }, [editor.handleEditorKeyDown, closeSlashMenu])
+  }, [editor.handleEditorKeyDown, closeSlashMenu, shortcuts, boxes, activeNote, currentPageIdx])
 
   const handleEditorInput = useCallback((e: React.FormEvent<HTMLElement>) => {
     if ((e.currentTarget as HTMLElement) === editorRef.current) {
@@ -1922,9 +1943,7 @@ export default function NoteApp() {
   }, [sidebarWidth])
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent("pulp-focus-config", {
-      detail: { blockedSites, focusMode }
-    }))
+    window.postMessage({ type: "pulp-focus-config", blockedSites, focusMode }, "*")
   }, [blockedSites, focusMode])
 
   // Save Grove & Inventory to localStorage
@@ -2471,7 +2490,7 @@ export default function NoteApp() {
               }}
               onUnlockDev={handleUnlockDev}
               onOpenShop={() => setShopOpen(true)}
-              onOpenLeaderboard={() => setOrchardOpen(true)}
+              onOpenLeaderboard={() => setLeaderboardOpen(true)}
               onOpenFocus={() => setFocusOpen(true)}
               onOpenStats={() => setStatsOpen(true)}
               sunshine={sunshine}
@@ -3272,13 +3291,19 @@ export default function NoteApp() {
         setGrove={setGrove}
       />
 
+      <LeaderboardView
+        isOpen={leaderboardOpen}
+        onClose={() => setLeaderboardOpen(false)}
+        xp={xp}
+      />
+
       <BoutiqueView
         isOpen={shopOpen}
         onClose={() => setShopOpen(false)}
         theme={theme}
         accent={accent}
-        sunshine={sunshine}
-        gems={gems}
+        sunshine={devMode ? 999999 : sunshine}
+        gems={devMode ? 999999 : gems}
         inventory={inventory}
         setSunshine={setSunshine}
         setGems={setGems}
@@ -3298,6 +3323,8 @@ export default function NoteApp() {
       <StatsView
         isOpen={statsOpen}
         onClose={() => setStatsOpen(false)}
+        theme={theme}
+        accent={accent}
         sunshine={sunshine}
         gems={gems}
         xp={xp}

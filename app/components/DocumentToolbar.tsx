@@ -125,17 +125,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   userAvatarUrl, userEmail
 }: DocumentToolbarProps) {
 
-  const [gemDropOpen, setGemDropOpen] = useState(false)
-  const gemDropRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!gemDropOpen) return
-    const handler = (e: MouseEvent) => {
-      if (gemDropRef.current && !gemDropRef.current.contains(e.target as Node)) setGemDropOpen(false)
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [gemDropOpen])
 
   const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnBaseActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
@@ -541,7 +531,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       </div>
 
       {/* Currencies Display - Centered */}
-      <div ref={gemDropRef} className="relative">
+      <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer" title="Open Grove & Leaderboard">
             <span className="text-[10px] leading-none">☀️</span>
@@ -551,7 +541,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
             title="Gem Store"
-            onClick={e => { e.stopPropagation(); setGemDropOpen(v => !v) }}
+            onClick={e => { e.stopPropagation(); onOpenShop() }}
           >
             <span className="text-[10px] leading-none">💎</span>
             <span>{gems >= 999999 ? "∞" : gems}</span>
@@ -572,54 +562,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           ) : null}
         </div>
 
-        {/* Gem store slide-down */}
-        <div
-          className="absolute top-full right-0 mt-1.5 z-[200] overflow-hidden transition-all duration-200 ease-out"
-          style={{
-            width: 260,
-            maxHeight: gemDropOpen ? 400 : 0,
-            opacity: gemDropOpen ? 1 : 0,
-            pointerEvents: gemDropOpen ? "auto" : "none",
-            transform: gemDropOpen ? "translateY(0)" : "translateY(-6px)",
-          }}
-        >
-          <div className="rounded-xl border border-zinc-200/80 bg-white shadow-lg" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-            <div className="px-3.5 pt-3 pb-2 border-b border-zinc-100">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-zinc-700">Gem Store</span>
-                <span className="text-[9px] text-zinc-400 tabular-nums">{gems} 💎</span>
-              </div>
-            </div>
-            <div className="p-2 flex flex-col gap-1">
-              {[
-                { amount: 10, price: "$0.99", label: "Starter" },
-                { amount: 30, price: "$1.99", label: "Handful" },
-                { amount: 75, price: "$3.99", label: "Pouch", best: true },
-                { amount: 200, price: "$8.99", label: "Chest" },
-                { amount: 500, price: "$17.99", label: "Vault" },
-                { amount: 1200, price: "$34.99", label: "Treasury" },
-              ].map(pack => (
-                <button
-                  key={pack.amount}
-                  className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors w-full ${pack.best ? 'bg-amber-50/80 hover:bg-amber-50 border border-amber-200/50' : 'hover:bg-zinc-50 border border-transparent'}`}
-                >
-                  <span className="text-[13px] w-5 text-center shrink-0">💎</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-zinc-800">{pack.amount}</span>
-                      <span className="text-[9px] text-zinc-400">{pack.label}</span>
-                      {pack.best && <span className="text-[7px] font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-1 py-px rounded">Best</span>}
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-semibold text-zinc-500 shrink-0">{pack.price}</span>
-                </button>
-              ))}
-            </div>
-            <div className="px-3.5 py-2 border-t border-zinc-100">
-              <p className="text-[8px] text-zinc-300 leading-relaxed">Gems buy seeds, cosmetics, and recover lost sunshine.</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Right: Share */}

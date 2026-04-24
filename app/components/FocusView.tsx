@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 interface FocusViewProps {
   isOpen: boolean
   onClose: () => void
+  theme: "light" | "dark"
   blockedSites: string[]
   blockedApps: string[]
   onUpdateConfig: (updates: Record<string, any>) => void
 }
 
-function BlockListEditable({ items, onChange, placeholder, label }: {
-  items: string[], onChange: (v: string[]) => void, placeholder: string, label: string
+function BlockListEditable({ items, onChange, placeholder, label, isDark }: {
+  items: string[], onChange: (v: string[]) => void, placeholder: string, label: string, isDark: boolean
 }) {
   const [input, setInput] = useState("")
 
@@ -24,55 +25,43 @@ function BlockListEditable({ items, onChange, placeholder, label }: {
   }
 
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 10, color: "#6a6258", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+    <div className="mb-5">
+      <div className={`text-[10px] font-bold uppercase tracking-[0.1em] mb-2 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
         {label}
       </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+      <div className="flex gap-2 mb-3">
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") add() }}
           placeholder={placeholder}
-          style={{
-            flex: 1, padding: "8px 12px", fontSize: 12, color: "#e8e0d4",
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 8, outline: "none",
-          }}
+          className={`flex-1 px-3 py-2 text-[12px] rounded-lg outline-none transition-colors ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-700" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
         />
         <button
           onClick={add}
-          style={{
-            padding: "8px 14px", fontSize: 11, fontWeight: 600, color: "#b8943a",
-            background: "rgba(180,140,80,0.1)", border: "1px solid rgba(180,140,80,0.2)",
-            borderRadius: 8, cursor: "pointer",
-          }}
+          className={`px-3.5 py-2 text-[11px] font-semibold rounded-lg transition-colors ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border-zinc-700" : "bg-zinc-900 text-white hover:bg-zinc-800 border-zinc-800"} border`}
         >
           Add
         </button>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      <div className="flex flex-wrap gap-1.5">
         {items.map((item, i) => (
           <span
             key={i}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "4px 10px", fontSize: 11, color: "#c4b8a8",
-              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 6,
-            }}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-md ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-700"} border`}
           >
             {item}
             <button
               onClick={() => onChange(items.filter((_, j) => j !== i))}
-              style={{ background: "none", border: "none", color: "#6a6258", cursor: "pointer", fontSize: 12, lineHeight: 1, padding: 0 }}
+              className={`text-[12px] leading-none ${isDark ? "text-zinc-600 hover:text-zinc-400" : "text-zinc-400 hover:text-zinc-600"}`}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              x
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </span>
         ))}
         {items.length === 0 && (
-          <span style={{ fontSize: 11, color: "#4a4440", fontStyle: "italic" }}>None added yet</span>
+          <span className={`text-[11px] italic ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>None added yet</span>
         )}
       </div>
     </div>
@@ -80,8 +69,10 @@ function BlockListEditable({ items, onChange, placeholder, label }: {
 }
 
 export const FocusView = memo(function FocusView({
-  isOpen, onClose, blockedSites, blockedApps, onUpdateConfig,
+  isOpen, onClose, theme, blockedSites, blockedApps, onUpdateConfig,
 }: FocusViewProps) {
+  const isDark = theme === "dark"
+
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
@@ -96,84 +87,59 @@ export const FocusView = memo(function FocusView({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] overflow-hidden"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+          onMouseDown={onClose}
         >
-          <div className="absolute inset-0 bg-[#0c0a09]">
-            <div className="absolute inset-0 opacity-20" style={{
-              background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(80,120,180,0.15) 0%, transparent 70%)",
-            }} />
-          </div>
-
-          <div className="relative z-10 h-full flex flex-col">
+          <motion.div
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            onMouseDown={e => e.stopPropagation()}
+            className={`relative w-full max-w-[660px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+            style={{ height: 560 }}
+          >
             {/* Header */}
-            <motion.header
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="flex items-center justify-between px-8 py-5 border-b border-white/[0.04] bg-black/20 backdrop-blur-md shrink-0"
-            >
+            <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 600, color: "#e8e0d4", fontFamily: '"EB Garamond", Georgia, serif', margin: 0 }}>
-                  Focus Blocker
-                </h1>
-                <p style={{ fontSize: 12, color: "#6a6258", marginTop: 2 }}>
-                  Restrict distractions while your Focus Timer is running
-                </p>
+                <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Focus Blocker</h2>
+                <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Restrict distractions while your Focus Timer is running</p>
               </div>
               <button
                 onClick={onClose}
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)",
-                  background: "rgba(255,255,255,0.04)", color: "#8a8078", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
-            </motion.header>
+            </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto" style={{ padding: "32px 48px", maxWidth: 640 }}>
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.05 }}
-                style={{
-                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: 12, padding: "20px 24px", marginBottom: 24,
-                }}
-              >
-                <p style={{ fontSize: 12, color: "#8a8078", lineHeight: 1.6, margin: 0 }}>
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className={`rounded-xl p-5 mb-5 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
+                <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                   Add websites and applications to block while your Focus Timer is active. Requires the Pulp Focus browser extension for website blocking.
                 </p>
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                style={{
-                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
-                  borderRadius: 12, padding: "24px",
-                }}
-              >
+              <div className={`rounded-xl p-6 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
                 <BlockListEditable
                   items={blockedSites}
                   onChange={v => onUpdateConfig({ blockedSites: v })}
                   placeholder="e.g. twitter.com, reddit.com"
                   label="Blocked Websites"
+                  isDark={isDark}
                 />
-                <div style={{ height: 1, background: "rgba(255,255,255,0.04)", margin: "4px 0 20px" }} />
+                <div className={`h-px my-1 ${isDark ? "bg-zinc-800" : "bg-zinc-100"}`} />
                 <BlockListEditable
                   items={blockedApps}
                   onChange={v => onUpdateConfig({ blockedApps: v })}
                   placeholder="e.g. Discord, Slack, Steam"
                   label="Blocked Applications"
+                  isDark={isDark}
                 />
-              </motion.div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

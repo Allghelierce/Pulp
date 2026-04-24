@@ -9,12 +9,9 @@ interface GemStoreModalProps {
 }
 
 const GEM_PACKS = [
-  { id: "starter", amount: 10, price: "$0.99", label: "Starter", popular: false },
-  { id: "handful", amount: 30, price: "$1.99", label: "Handful", popular: false },
-  { id: "pouch", amount: 75, price: "$3.99", label: "Pouch", popular: true },
-  { id: "chest", amount: 200, price: "$8.99", label: "Chest", popular: false },
-  { id: "vault", amount: 500, price: "$17.99", label: "Vault", popular: false },
-  { id: "treasury", amount: 1200, price: "$34.99", label: "Treasury", popular: false },
+  { id: "handful", amount: 50, price: "$1.99", label: "Handful", icon: "💎" },
+  { id: "pouch", amount: 150, price: "$4.99", label: "Pouch", icon: "💎💎", popular: true },
+  { id: "chest", amount: 500, price: "$12.99", label: "Chest", icon: "💎💎💎" },
 ]
 
 export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems }: GemStoreModalProps) {
@@ -32,47 +29,50 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100]"
+          className="fixed inset-0 z-[1100] flex items-center justify-center"
           onClick={onClose}
         >
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ type: "spring", damping: 26, stiffness: 350 }}
             onClick={e => e.stopPropagation()}
-            className="absolute right-0 top-0 bottom-0 flex flex-col"
             style={{
-              width: 340,
-              maxWidth: "85vw",
-              background: "#1a1614",
-              borderLeft: "1px solid rgba(255,255,255,0.06)",
-              boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
+              position: "relative",
+              width: 420,
+              maxWidth: "90vw",
+              background: "linear-gradient(165deg, #1e1a16 0%, #141210 100%)",
+              border: "1px solid rgba(180,140,80,0.12)",
+              borderRadius: 18,
+              boxShadow: "0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset",
+              overflow: "hidden",
             }}
           >
-            {/* Header */}
             <div style={{
-              padding: "20px 22px 16px",
-              borderBottom: "1px solid rgba(255,255,255,0.04)",
-              background: "linear-gradient(180deg, rgba(180,140,80,0.05) 0%, transparent 100%)",
-            }}>
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse 60% 40% at 50% -10%, rgba(139,122,205,0.08) 0%, transparent 60%)",
+            }} />
+
+            {/* Header */}
+            <div style={{ padding: "22px 26px 14px", position: "relative" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 600, color: "#d8d0c4", fontFamily: '"EB Garamond", Georgia, serif', margin: 0 }}>
-                    Gem Store
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: "#d8d0c4", fontFamily: '"EB Garamond", Georgia, serif', margin: 0 }}>
+                    Get Gems
                   </h2>
                   <p style={{ fontSize: 11, color: "#706860", marginTop: 3 }}>
-                    Balance: {gems} 💎
+                    You have {gems} 💎
                   </p>
                 </div>
                 <button
                   onClick={onClose}
                   style={{
-                    width: 26, height: 26, borderRadius: 7, border: "none", background: "rgba(255,255,255,0.04)",
-                    color: "#706860", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 14, lineHeight: 1,
+                    width: 28, height: 28, borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(255,255,255,0.04)", color: "#706860", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, lineHeight: 1,
                   }}
                 >
                   ✕
@@ -80,67 +80,66 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
               </div>
             </div>
 
-            {/* Packs */}
-            <div className="flex-1 overflow-y-auto" style={{ padding: "14px 16px", scrollbarWidth: "thin", scrollbarColor: "#27272a transparent" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {GEM_PACKS.map(pack => (
-                  <button
-                    key={pack.id}
-                    className="group"
-                    style={{
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 14px",
-                      background: pack.popular ? "rgba(180,140,80,0.06)" : "rgba(255,255,255,0.02)",
-                      border: pack.popular ? "1px solid rgba(180,140,80,0.15)" : "1px solid rgba(255,255,255,0.04)",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "all 150ms ease",
-                      width: "100%",
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = pack.popular ? "rgba(180,140,80,0.1)" : "rgba(255,255,255,0.05)" }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = pack.popular ? "rgba(180,140,80,0.06)" : "rgba(255,255,255,0.02)" }}
-                  >
-                    <div style={{ fontSize: 18, width: 32, textAlign: "center", flexShrink: 0 }}>
-                      {pack.amount >= 500 ? "💎💎💎" : pack.amount >= 100 ? "💎💎" : "💎"}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: "#d8d0c4", fontFamily: '"EB Garamond", Georgia, serif' }}>
-                          {pack.amount} Gems
-                        </span>
-                        {pack.popular && (
-                          <span style={{
-                            fontSize: 8, fontWeight: 700, color: "#1a1614", background: "#b8943a",
-                            padding: "1px 6px", borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.8,
-                          }}>
-                            Best Value
-                          </span>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 10, color: "#5a5450" }}>{pack.label}</span>
-                    </div>
+            {/* 3 Purchase Options */}
+            <div style={{ padding: "8px 22px 22px", display: "flex", gap: 10, position: "relative" }}>
+              {GEM_PACKS.map(pack => (
+                <button
+                  key={pack.id}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "20px 12px 16px",
+                    background: pack.popular ? "rgba(180,140,80,0.08)" : "rgba(255,255,255,0.02)",
+                    border: pack.popular ? "1px solid rgba(180,140,80,0.2)" : "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: 14,
+                    cursor: "pointer",
+                    transition: "all 150ms ease",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.background = pack.popular ? "rgba(180,140,80,0.13)" : "rgba(255,255,255,0.06)"
+                    ;(e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.background = pack.popular ? "rgba(180,140,80,0.08)" : "rgba(255,255,255,0.02)"
+                    ;(e.currentTarget as HTMLElement).style.transform = "translateY(0)"
+                  }}
+                >
+                  {pack.popular && (
                     <div style={{
-                      fontSize: 12, fontWeight: 600, color: "#b8943a",
-                      background: "rgba(180,140,80,0.08)", borderRadius: 6, padding: "4px 10px",
-                      flexShrink: 0,
+                      position: "absolute", top: 0, left: 0, right: 0,
+                      fontSize: 8, fontWeight: 700, color: "#1a1614", background: "linear-gradient(90deg, #b8943a, #d4a84a)",
+                      padding: "2px 0", textAlign: "center", textTransform: "uppercase", letterSpacing: 1,
                     }}>
-                      {pack.price}
+                      Most Popular
                     </div>
-                  </button>
-                ))}
-              </div>
+                  )}
+                  <div style={{ fontSize: 24, marginTop: pack.popular ? 6 : 0 }}>
+                    {pack.icon}
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: "#d8d0c4", fontFamily: '"EB Garamond", Georgia, serif' }}>
+                    {pack.amount}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#5a5450", marginBottom: 4 }}>{pack.label}</div>
+                  <div style={{
+                    fontSize: 13, fontWeight: 600, color: "#b8943a",
+                    background: "rgba(180,140,80,0.1)", borderRadius: 8, padding: "5px 14px",
+                    width: "100%", textAlign: "center",
+                  }}>
+                    {pack.price}
+                  </div>
+                </button>
+              ))}
             </div>
 
             {/* Footer */}
-            <div style={{
-              padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.04)",
-            }}>
-              <p style={{ fontSize: 9, color: "#4a4640", lineHeight: 1.4 }}>
-                Purchases are non-refundable. Gems buy seeds, cosmetics, and recover lost sunshine.
+            <div style={{ padding: "0 22px 16px", position: "relative" }}>
+              <p style={{ fontSize: 9, color: "#4a4640", lineHeight: 1.4, textAlign: "center", margin: 0 }}>
+                Gems buy seeds, cosmetics, and recover lost sunshine.
               </p>
             </div>
           </motion.div>

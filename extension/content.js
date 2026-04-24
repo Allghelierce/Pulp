@@ -7,9 +7,10 @@ function syncAll() {
     if (settings) {
       const parsed = JSON.parse(settings)
       const sites = parsed.blockedSites || []
+      const focus = sites.length > 0
       chrome.storage.local.set({
         blockedSites: sites,
-        focusMode: sites.length > 0
+        focusMode: focus
       }, () => {
         try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
       })
@@ -34,10 +35,12 @@ function syncAll() {
 syncAll()
 setInterval(syncAll, 3000)
 
-window.addEventListener("pulp-focus-config", (e) => {
-  const { blockedSites } = e.detail
-  const sites = blockedSites || []
-  chrome.storage.local.set({ blockedSites: sites, focusMode: sites.length > 0 }, () => {
-    try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
-  })
+// Listen for direct updates from the Pulp app via postMessage
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "pulp-focus-config") {
+    const sites = e.data.blockedSites || []
+    chrome.storage.local.set({ blockedSites: sites, focusMode: sites.length > 0 }, () => {
+      try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
+    })
+  }
 })

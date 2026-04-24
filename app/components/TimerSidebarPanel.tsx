@@ -53,7 +53,9 @@ const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
 function TreeVisualization({ progress, type, idle }: { progress: number; type: string | null; idle?: boolean }) {
   const p = Math.max(0, Math.min(1, progress))
   const plantType = type || 'navel'
-  const color = TREE_TYPES[plantType]?.color || '#b85e22'
+  const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.navel
+  const color = typeInfo.color
+  const shape = typeInfo.shape || 'classic'
 
   // Idle state: show a default sprout
   if (idle) {
@@ -85,6 +87,19 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
   // Stages: 0 (Planted) | 1 (Seedling) | 2 (Sprout) | 3 (Young) | 4 (Mature)
   const stage = p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
 
+  // Unique animations based on shape
+  const getAnimation = () => {
+    switch (shape) {
+      case 'ethereal': return { y: [0, -8, 0], opacity: [0.8, 1, 0.8] }
+      case 'tropical':
+      case 'weeping': return { rotate: [-2, 2, -2], x: [-1, 1, -1] }
+      case 'spire': return { scaleY: [1, 1.02, 1], y: [0, -2, 0] }
+      case 'succulent': return { scale: [1, 1.03, 1] }
+      case 'prehistoric': return { rotate: [-1, 1, -1] }
+      default: return { rotate: [-0.5, 0.5, -0.5] }
+    }
+  }
+
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       {/* Ground Glow */}
@@ -94,11 +109,16 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
       />
 
       <motion.div
-        animate={{
-          scale: stage === 0 ? 0.9 : 1 + (stage * 0.08),
-          y: stage === 0 ? 5 : 0
+        animate={stage === 0 ? { scale: 0.9, y: 5 } : { 
+          scale: 1 + (stage * 0.08),
+          y: 0,
+          ...getAnimation()
         }}
-        transition={{ type: "spring", stiffness: 100 }}
+        transition={stage === 0 ? { type: "spring", stiffness: 100 } : {
+          duration: shape === 'ethereal' ? 4 : 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       >
         {stage === 0 ? (
           <div className="relative">
@@ -116,28 +136,31 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
         )}
       </motion.div>
 
-      {/* Decorative Particles for higher stages */}
+      {/* Decorative Particles */}
       {stage >= 3 && (
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 rounded-full"
               animate={{
-                y: [-20, -60],
-                x: [0, (i - 2) * 15],
+                y: shape === 'ethereal' ? [-20, -100] : [-20, -60],
+                x: [0, (i - 2.5) * 20],
                 opacity: [0, 1, 0],
-                scale: [0, 1.5, 0]
+                scale: [0, shape === 'crystal' ? 1.8 : 1.2, 0],
+                rotate: shape === 'crystal' ? [0, 180] : 0
               }}
               transition={{
-                duration: 2 + Math.random(),
+                duration: shape === 'ethereal' ? 3 : 2 + Math.random(),
                 repeat: Infinity,
-                delay: i * 0.4
+                delay: i * 0.4,
+                ease: "easeOut"
               }}
               style={{
                 left: '50%',
                 top: '50%',
-                backgroundColor: color
+                backgroundColor: shape === 'crystal' ? '#fff' : color,
+                boxShadow: shape === 'ethereal' ? `0 0 8px ${color}` : 'none'
               }}
             />
           ))}

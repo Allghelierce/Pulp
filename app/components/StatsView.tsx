@@ -7,6 +7,8 @@ import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
 interface StatsViewProps {
   isOpen: boolean
   onClose: () => void
+  theme: "light" | "dark"
+  accent: string
   sunshine: number
   gems: number
   xp: number
@@ -37,14 +39,6 @@ function getWeeksGrid(entries: DailyEntry[]): { date: string; level: number }[] 
   }
   return grid
 }
-
-const HEATMAP_COLORS = [
-  "rgba(255,255,255,0.03)",
-  "rgba(180,140,60,0.25)",
-  "rgba(180,140,60,0.45)",
-  "rgba(200,160,70,0.7)",
-  "rgba(212,168,74,0.95)",
-]
 
 function getTimeData(entries: DailyEntry[], range: "day" | "week" | "month") {
   const today = new Date()
@@ -84,11 +78,35 @@ function getTimeData(entries: DailyEntry[], range: "day" | "week" | "month") {
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+const font = '"EB Garamond", Georgia, serif'
+
 export const StatsView = memo(function StatsView({
-  isOpen, onClose, sunshine, gems, xp, totalNotes, totalChars, grove, achievements,
+  isOpen, onClose, theme, accent, sunshine, gems, xp, totalNotes, totalChars, grove, achievements,
 }: StatsViewProps) {
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week")
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
+
+  const isDark = theme === 'dark'
+  const bg = isDark ? '#0a0a0c' : '#f5f3f1'
+  const cardBg = isDark ? '#1c1c20' : '#ffffff'
+  const cardBorder = isDark ? '#27272a' : '#e5e5e5'
+  const textPrimary = isDark ? '#e4e4e7' : '#2c2417'
+  const textSecondary = isDark ? '#71717a' : '#8c8278'
+  const textMuted = isDark ? '#52525b' : '#b5ada5'
+  const dividerColor = isDark ? '#27272a' : '#e8e5e0'
+  const accentColor = accent || '#d4a84a'
+  const barSecondary = isDark ? 'rgba(140,180,220,0.6)' : 'rgba(100,140,200,0.5)'
+  const barSecondaryLight = isDark ? 'rgba(140,180,220,0.35)' : 'rgba(100,140,200,0.25)'
+  const subtleBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'
+  const hoverBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+
+  const heatmapColors = useMemo(() => [
+    isDark ? 'rgba(180,140,60,0.06)' : 'rgba(180,140,60,0.08)',
+    isDark ? 'rgba(180,140,60,0.22)' : 'rgba(180,140,60,0.2)',
+    isDark ? 'rgba(190,150,60,0.42)' : 'rgba(190,150,60,0.35)',
+    isDark ? 'rgba(210,165,70,0.65)' : 'rgba(210,165,70,0.55)',
+    isDark ? 'rgba(220,175,60,0.92)' : 'rgba(200,160,50,0.8)',
+  ], [isDark])
 
   useEffect(() => {
     if (!isOpen) return
@@ -99,7 +117,7 @@ export const StatsView = memo(function StatsView({
   }, [isOpen, onClose])
 
   const lvl = getLevel(xp)
-  const xpProgress = Math.floor(lvl.progress * 100)
+  const xpProgress = Math.min(100, Math.floor(lvl.progress * 100))
 
   const completedAchievements = achievements.filter((a: any) => a.completed).length
   const totalAchievements = achievements.length
@@ -110,19 +128,23 @@ export const StatsView = memo(function StatsView({
   const streakRaw = typeof window !== "undefined" ? localStorage.getItem("pulp-streak") : null
   const streak = streakRaw ? JSON.parse(streakRaw).streak || 0 : 0
 
+  const StatIcon = ({ d, color }: { d: string; color: string }) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+  )
+
   const stats = useMemo(() => [
-    { label: "Level", value: lvl.level, icon: "star" },
-    { label: "Total XP", value: xp.toLocaleString(), icon: "zap" },
-    { label: "Sunshine", value: sunshine.toLocaleString(), icon: "sun" },
-    { label: "Gems", value: gems.toLocaleString(), icon: "gem" },
-    { label: "Notes", value: totalNotes, icon: "file" },
-    { label: "Characters", value: totalChars.toLocaleString(), icon: "type" },
-    { label: "Words", value: totalWords.toLocaleString(), icon: "align" },
-    { label: "Day Streak", value: streak, icon: "flame" },
-    { label: "Trees Planted", value: totalTrees, icon: "tree" },
-    { label: "Mature Trees", value: matureTrees, icon: "tree2" },
-    { label: "Achievements", value: `${completedAchievements}/${totalAchievements}`, icon: "trophy" },
-  ], [lvl.level, xp, sunshine, gems, totalNotes, totalChars, totalWords, streak, totalTrees, matureTrees, completedAchievements, totalAchievements])
+    { label: "Level", value: lvl.level, color: accentColor, iconPath: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
+    { label: "Total XP", value: xp.toLocaleString(), color: "#c4956a", iconPath: "M13 2L3 14h9l-1 8 10-12h-9l1-8z" },
+    { label: "Sunshine", value: sunshine.toLocaleString(), color: "#e8a830", iconPath: "M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42M12 7a5 5 0 100 10 5 5 0 000-10z" },
+    { label: "Gems", value: gems.toLocaleString(), color: "#8b7acd", iconPath: "M6 3h12l4 6-10 13L2 9l4-6zM12 22L2 9h20L12 22z" },
+    { label: "Notes", value: totalNotes, color: "#7aaa8a", iconPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" },
+    { label: "Words", value: totalWords.toLocaleString(), color: "#8a9a7a", iconPath: "M4 19.5A2.5 2.5 0 016.5 17H20 M4 19.5V5a2 2 0 012-2h14v14H6.5A2.5 2.5 0 004 19.5z" },
+    { label: "Characters", value: totalChars.toLocaleString(), color: "#a0886a", iconPath: "M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" },
+    { label: "Day Streak", value: streak, color: "#d48040", iconPath: "M12 2c1 3-2 6-2 6s3-1.5 3 2c0 2-2 4-2 4s3-1 3 3c0 3-4 5-4 5s-4-2-4-5c0-4 3-3 3-3s-2-2-2-4c0-3.5 3-2 3-2s-3-3-2-6h2z" },
+    { label: "Trees", value: totalTrees, color: "#5a9a5a", iconPath: "M12 22V8 M5 12l7-10 7 10H5z M7 17l5-5 5 5H7z" },
+    { label: "Mature Trees", value: matureTrees, color: "#3a8a5a", iconPath: "M12 22v-7 M17 22H7 M12 15a7 7 0 100-14 7 7 0 000 14z" },
+    { label: "Achievements", value: `${completedAchievements}/${totalAchievements}`, color: "#c49a5a", iconPath: "M6 9H4.5a2.5 2.5 0 010-5C7 4 7 7 7 7 M18 9h1.5a2.5 2.5 0 000-5C17 4 17 7 17 7 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22h10c0-2-0.85-3.25-2.03-3.79A1.07 1.07 0 0114 17v-2.34" },
+  ], [lvl.level, xp, sunshine, gems, totalNotes, totalChars, totalWords, streak, totalTrees, matureTrees, completedAchievements, totalAchievements, accentColor])
 
   const heatmapGrid = useMemo(() => getWeeksGrid(dailyStats), [dailyStats])
   const timeData = useMemo(() => getTimeData(dailyStats, timeRange), [dailyStats, timeRange])
@@ -147,12 +169,7 @@ export const StatsView = memo(function StatsView({
   const totalSessionsThisRange = timeData.reduce((s, d) => s + d.sessions, 0)
   const totalCharsThisRange = timeData.reduce((s, d) => s + d.charsWritten, 0)
 
-  const serif = '"EB Garamond", Georgia, serif'
-  const dim = "#6a6258"
-  const text = "#e8e0d4"
-  const gold = "#d4a84a"
-  const cardBg = "rgba(255,255,255,0.02)"
-  const cardBorder = "rgba(255,255,255,0.05)"
+  if (!isOpen) return null
 
   return (
     <AnimatePresence>
@@ -161,88 +178,132 @@ export const StatsView = memo(function StatsView({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] overflow-hidden"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+          onMouseDown={onClose}
         >
-          <div className="absolute inset-0 bg-[#0c0a09]">
-            <div className="absolute inset-0 opacity-20" style={{
-              background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(180,140,80,0.2) 0%, transparent 70%)",
-            }} />
-          </div>
-
-          <div className="relative z-10 h-full flex flex-col">
-            <motion.header
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="flex items-center justify-between px-8 py-5 border-b border-white/[0.04] bg-black/20 backdrop-blur-md shrink-0"
-            >
+          <motion.div
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 350 }}
+            onMouseDown={e => e.stopPropagation()}
+            className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
+            style={{ backgroundColor: bg, height: 660 }}
+          >
+            {/* Header */}
+            <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 600, color: text, fontFamily: serif, margin: 0 }}>
-                  Your Stats
-                </h1>
-                <p style={{ fontSize: 12, color: dim, marginTop: 2 }}>
-                  Level {lvl.level} — {lvl.name}
-                </p>
+                <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Stats</h2>
+                <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Level {lvl.level} — {lvl.name}</p>
               </div>
               <button
                 onClick={onClose}
-                style={{
-                  width: 32, height: 32, borderRadius: 8, border: `1px solid ${cardBorder}`,
-                  background: cardBg, color: "#8a8078", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
-            </motion.header>
+            </div>
 
-            <div className="flex-1 overflow-y-auto" style={{ padding: "32px 48px" }}>
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+
               {/* XP Progress */}
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.05 }}
-                style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12, padding: "20px 24px", marginBottom: 28 }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: "#c4b8a8", fontFamily: serif }}>
-                    Progress to Level {lvl.level + 1}
-                  </span>
-                  <span style={{ fontSize: 11, color: dim }}>
+              <div style={{
+                backgroundColor: cardBg, border: `1px solid ${cardBorder}`,
+                borderRadius: 12, padding: "20px 22px", marginBottom: 16,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 8,
+                      backgroundColor: subtleBg, border: `1px solid ${cardBorder}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 15, fontWeight: 700, color: textPrimary, fontFamily: font,
+                    }}>
+                      {lvl.level}
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary, fontFamily: font }}>
+                        Level {lvl.level}
+                      </span>
+                      <div style={{ fontSize: 11, color: textMuted, marginTop: 1 }}>{lvl.name}</div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, color: textSecondary, fontWeight: 600, fontFamily: font }}>
                     {lvl.currentXp} / {lvl.nextXp} XP
                   </span>
                 </div>
-                <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+                <div style={{
+                  height: 6, borderRadius: 3,
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                  overflow: "hidden",
+                }}>
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, xpProgress)}%` }}
+                    animate={{ width: `${xpProgress}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, #b8943a, ${gold})` }}
+                    style={{
+                      height: "100%", borderRadius: 3,
+                      background: `linear-gradient(90deg, ${accentColor}, ${accentColor}cc)`,
+                    }}
                   />
                 </div>
-              </motion.div>
+              </div>
+
+              {/* Stats Grid */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                gap: 10, marginBottom: 16,
+              }}>
+                {stats.map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.05 + i * 0.025 }}
+                    style={{
+                      backgroundColor: cardBg, border: `1px solid ${cardBorder}`,
+                      borderRadius: 10, padding: "14px 16px",
+                      position: "relative", overflow: "hidden",
+                    }}
+                  >
+                    <div style={{
+                      position: "absolute", top: -6, right: -4, opacity: 0.06, pointerEvents: "none",
+                    }}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={stat.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d={stat.iconPath} /></svg>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                      <StatIcon d={stat.iconPath} color={stat.color} />
+                      <span style={{
+                        fontSize: 10, color: stat.color, textTransform: "uppercase",
+                        letterSpacing: "0.08em", fontWeight: 700, opacity: 0.7,
+                      }}>
+                        {stat.label}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 600, color: textPrimary, fontFamily: font, position: "relative" }}>
+                      {stat.value}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
               {/* Consistency Heatmap */}
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}
-              >
+              <div style={{
+                backgroundColor: cardBg, border: `1px solid ${cardBorder}`,
+                borderRadius: 12, padding: "20px 22px", marginBottom: 16,
+              }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: text, fontFamily: serif }}>Consistency</span>
-                  <span style={{ fontSize: 10, color: dim }}>Last 6 months</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary, fontFamily: font }}>Consistency</span>
+                  <span style={{ fontSize: 10, color: textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Last 6 months</span>
                 </div>
 
-                {/* Month labels */}
                 <div style={{ position: "relative", height: 14, marginBottom: 4, marginLeft: 2 }}>
                   {heatmapMonths.map((m, i) => (
-                    <span key={i} style={{ position: "absolute", left: m.col * 13, fontSize: 9, color: dim }}>{m.label}</span>
+                    <span key={i} style={{ position: "absolute", left: m.col * 13, fontSize: 9, color: textMuted }}>{m.label}</span>
                   ))}
                 </div>
 
-                {/* Heatmap grid */}
                 <div style={{ display: "flex", gap: 2, overflow: "hidden" }}>
                   {Array.from({ length: Math.ceil(heatmapGrid.length / 7) }).map((_, col) => (
                     <div key={col} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -251,8 +312,8 @@ export const StatsView = memo(function StatsView({
                           key={cell.date}
                           title={`${cell.date}: ${cell.level === 0 ? "No activity" : `Level ${cell.level} activity`}`}
                           style={{
-                            width: 11, height: 11, borderRadius: 2,
-                            backgroundColor: HEATMAP_COLORS[cell.level],
+                            width: 11, height: 11, borderRadius: 3,
+                            backgroundColor: heatmapColors[cell.level],
                             transition: "background-color 0.2s",
                           }}
                         />
@@ -261,34 +322,39 @@ export const StatsView = memo(function StatsView({
                   ))}
                 </div>
 
-                {/* Legend */}
                 <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 10, justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: 9, color: dim, marginRight: 4 }}>Less</span>
-                  {HEATMAP_COLORS.map((c, i) => (
-                    <div key={i} style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: c }} />
+                  <span style={{ fontSize: 9, color: textMuted, marginRight: 4 }}>Less</span>
+                  {heatmapColors.map((c, i) => (
+                    <div key={i} style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c }} />
                   ))}
-                  <span style={{ fontSize: 9, color: dim, marginLeft: 4 }}>More</span>
+                  <span style={{ fontSize: 9, color: textMuted, marginLeft: 4 }}>More</span>
                 </div>
-              </motion.div>
+              </div>
 
-              {/* Time Spent Chart */}
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15 }}
-                style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 12, padding: "20px 24px", marginBottom: 20 }}
-              >
+              {/* Activity Chart */}
+              <div style={{
+                backgroundColor: cardBg, border: `1px solid ${cardBorder}`,
+                borderRadius: 12, padding: "20px 22px",
+              }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: text, fontFamily: serif }}>Activity</span>
-                  <div style={{ display: "flex", gap: 2, padding: 2, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${cardBorder}` }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary, fontFamily: font }}>Activity</span>
+                  <div style={{
+                    display: "flex", gap: 2, padding: 2, borderRadius: 8,
+                    backgroundColor: subtleBg, border: `1px solid ${cardBorder}`,
+                  }}>
                     {(["day", "week", "month"] as const).map(r => (
                       <button
                         key={r}
                         onClick={() => setTimeRange(r)}
                         style={{
-                          padding: "3px 10px", borderRadius: 4, fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer",
-                          background: timeRange === r ? "rgba(255,255,255,0.08)" : "transparent",
-                          color: timeRange === r ? text : dim,
+                          padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                          border: "none", cursor: "pointer", fontFamily: font,
+                          backgroundColor: timeRange === r
+                            ? (isDark ? '#27272a' : '#2c2417')
+                            : 'transparent',
+                          color: timeRange === r
+                            ? (isDark ? '#e4e4e7' : '#fff')
+                            : textSecondary,
                           transition: "all 0.15s",
                         }}
                       >
@@ -298,23 +364,29 @@ export const StatsView = memo(function StatsView({
                   </div>
                 </div>
 
-                {/* Summary row */}
-                <div style={{ display: "flex", gap: 20, marginBottom: 16, marginTop: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 9, color: dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Focus</div>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: text, fontFamily: serif }}>{totalFocusThisRange}<span style={{ fontSize: 11, color: dim }}> min</span></div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 9, color: dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Sessions</div>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: text, fontFamily: serif }}>{totalSessionsThisRange}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 9, color: dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 }}>Written</div>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: text, fontFamily: serif }}>{totalCharsThisRange.toLocaleString()}<span style={{ fontSize: 11, color: dim }}> chars</span></div>
-                  </div>
+                {/* Summary */}
+                <div style={{ display: "flex", gap: 24, marginBottom: 18, marginTop: 12 }}>
+                  {[
+                    { label: "Focus", value: totalFocusThisRange, unit: "min" },
+                    { label: "Sessions", value: totalSessionsThisRange, unit: "" },
+                    { label: "Written", value: totalCharsThisRange.toLocaleString(), unit: "chars" },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <div style={{
+                        fontSize: 9, color: textMuted, textTransform: "uppercase",
+                        letterSpacing: "0.1em", fontWeight: 700, marginBottom: 3,
+                      }}>
+                        {s.label}
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 600, color: textPrimary, fontFamily: font }}>
+                        {s.value}
+                        {s.unit && <span style={{ fontSize: 11, color: textMuted, marginLeft: 3 }}>{s.unit}</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Bar chart */}
+                {/* Chart */}
                 {timeRange !== "day" ? (
                   <div style={{ display: "flex", alignItems: "flex-end", gap: timeRange === "week" ? 8 : 2, height: 120 }}>
                     {timeData.map((d, i) => {
@@ -327,22 +399,26 @@ export const StatsView = memo(function StatsView({
                             <div
                               title={`${d.focusMinutes} min focus`}
                               style={{
-                                flex: 1, borderRadius: "3px 3px 0 0", minHeight: d.focusMinutes > 0 ? 4 : 0,
-                                height: focusH, background: `linear-gradient(to top, #b8943a, ${gold})`,
+                                flex: 1, borderRadius: "3px 3px 0 0",
+                                minHeight: d.focusMinutes > 0 ? 4 : 0,
+                                height: focusH,
+                                background: `linear-gradient(to top, ${accentColor}99, ${accentColor})`,
                                 transition: "height 0.3s ease",
                               }}
                             />
                             <div
                               title={`${d.charsWritten} chars`}
                               style={{
-                                flex: 1, borderRadius: "3px 3px 0 0", minHeight: d.charsWritten > 0 ? 4 : 0,
-                                height: charsH, background: "linear-gradient(to top, rgba(120,160,200,0.4), rgba(140,180,220,0.7))",
+                                flex: 1, borderRadius: "3px 3px 0 0",
+                                minHeight: d.charsWritten > 0 ? 4 : 0,
+                                height: charsH,
+                                background: `linear-gradient(to top, ${barSecondaryLight}, ${barSecondary})`,
                                 transition: "height 0.3s ease",
                               }}
                             />
                           </div>
                           {showLabel && (
-                            <span style={{ fontSize: 8, color: dim, marginTop: 4, whiteSpace: "nowrap" }}>{d.label}</span>
+                            <span style={{ fontSize: 8, color: textMuted, marginTop: 4, whiteSpace: "nowrap" }}>{d.label}</span>
                           )}
                         </div>
                       )
@@ -352,74 +428,60 @@ export const StatsView = memo(function StatsView({
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, color: "#c4b8a8" }}>Focus time</span>
-                        <span style={{ fontSize: 11, color: text, fontFamily: serif }}>{timeData[0].focusMinutes} min</span>
+                        <span style={{ fontSize: 11, color: textSecondary }}>Focus time</span>
+                        <span style={{ fontSize: 11, color: textPrimary, fontFamily: font }}>{timeData[0].focusMinutes} min</span>
                       </div>
-                      <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
-                        <div style={{ height: "100%", borderRadius: 4, width: `${Math.min(100, (timeData[0].focusMinutes / 120) * 100)}%`, background: `linear-gradient(90deg, #b8943a, ${gold})`, transition: "width 0.5s" }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, color: "#c4b8a8" }}>Characters written</span>
-                        <span style={{ fontSize: 11, color: text, fontFamily: serif }}>{timeData[0].charsWritten.toLocaleString()}</span>
-                      </div>
-                      <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
-                        <div style={{ height: "100%", borderRadius: 4, width: `${Math.min(100, (timeData[0].charsWritten / 5000) * 100)}%`, background: "linear-gradient(90deg, rgba(120,160,200,0.5), rgba(140,180,220,0.8))", transition: "width 0.5s" }} />
+                      <div style={{
+                        height: 6, borderRadius: 3, overflow: "hidden",
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                      }}>
+                        <div style={{
+                          height: "100%", borderRadius: 3, transition: "width 0.5s",
+                          width: `${Math.min(100, (timeData[0].focusMinutes / 120) * 100)}%`,
+                          background: `linear-gradient(90deg, ${accentColor}99, ${accentColor})`,
+                        }} />
                       </div>
                     </div>
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 11, color: "#c4b8a8" }}>Sessions completed</span>
-                        <span style={{ fontSize: 11, color: text, fontFamily: serif }}>{timeData[0].sessions}</span>
+                        <span style={{ fontSize: 11, color: textSecondary }}>Characters written</span>
+                        <span style={{ fontSize: 11, color: textPrimary, fontFamily: font }}>{timeData[0].charsWritten.toLocaleString()}</span>
+                      </div>
+                      <div style={{
+                        height: 6, borderRadius: 3, overflow: "hidden",
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                      }}>
+                        <div style={{
+                          height: "100%", borderRadius: 3, transition: "width 0.5s",
+                          width: `${Math.min(100, (timeData[0].charsWritten / 5000) * 100)}%`,
+                          background: `linear-gradient(90deg, ${barSecondaryLight}, ${barSecondary})`,
+                        }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: textSecondary }}>Sessions completed</span>
+                        <span style={{ fontSize: 11, color: textPrimary, fontFamily: font }}>{timeData[0].sessions}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Legend */}
                 {timeRange !== "day" && (
                   <div style={{ display: "flex", gap: 16, marginTop: 10, justifyContent: "flex-end" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: gold }} />
-                      <span style={{ fontSize: 9, color: dim }}>Focus (min)</span>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: accentColor }} />
+                      <span style={{ fontSize: 9, color: textMuted }}>Focus (min)</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: "rgba(140,180,220,0.7)" }} />
-                      <span style={{ fontSize: 9, color: dim }}>Writing (chars)</span>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: barSecondary }} />
+                      <span style={{ fontSize: 9, color: textMuted }}>Writing (chars)</span>
                     </div>
                   </div>
                 )}
-              </motion.div>
-
-              {/* Stats grid */}
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div style={{ fontSize: 14, fontWeight: 600, color: text, fontFamily: serif, marginBottom: 12 }}>Overview</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
-                  {stats.map((stat, i) => (
-                    <motion.div
-                      key={stat.label}
-                      initial={{ y: 12, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.22 + i * 0.03 }}
-                      style={{ background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: "16px 18px" }}
-                    >
-                      <div style={{ fontSize: 10, color: dim, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-                        {stat.label}
-                      </div>
-                      <div style={{ fontSize: 22, fontWeight: 600, color: text, fontFamily: serif }}>
-                        {stat.value}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
