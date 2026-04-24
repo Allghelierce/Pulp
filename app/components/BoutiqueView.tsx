@@ -132,6 +132,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [highlightItem, setHighlightItem] = useState<string | null>(null)
   const [countdown, setCountdown] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const prevTabRef = useRef<TabId>('shop')
   const isDark = theme === 'dark'
 
   useEffect(() => {
@@ -267,13 +268,8 @@ export const BoutiqueView = memo(function BoutiqueView({
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
   const CurrencyPill = ({ type, amount }: { type: 'sunshine' | 'gems'; amount: number }) => (
-    <span className={`inline-flex items-center gap-1 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200"} border rounded-full px-2.5 py-1`} style={{ color: type === 'gems' ? '#a78bfa' : '#d97706' }}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {type === 'gems'
-          ? <path d="M6 3h12l4 6-10 13L2 9l4-6z"/>
-          : <><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></>
-        }
-      </svg>
+    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200"} border rounded-full px-2.5 py-1`} style={{ color: type === 'gems' ? '#a78bfa' : '#d97706' }}>
+      <span className="text-[10px] leading-none">{type === 'gems' ? '💎' : '☀️'}</span>
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
   )
@@ -332,7 +328,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               backgroundColor: isDark ? 'rgba(24,24,27,0.5)' : 'rgba(255,255,255,0.6)',
             }}>
               <button
-                onClick={() => setSelectedPlant(null)}
+                onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
                   color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 500,
@@ -450,7 +446,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           )}
 
           {activeTab === 'shop' && selectedPlant && previewInfo && (
-            <div style={{ padding: '24px 24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ padding: '24px 24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
               {/* Large plant preview */}
               <div style={{
                 width: '100%', maxWidth: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -654,7 +650,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         className="relative group"
                       >
                         <button
-                          onClick={() => { setSelectedPlant(type); setPreviewStage(0); setActiveTab('shop') }}
+                          onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(0); setActiveTab('shop') }}
                           title={t.name}
                           className={`w-14 h-14 rounded-full flex items-center justify-center cursor-pointer transition-all border ${
                             isDark
@@ -702,7 +698,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <button
                             key={type}
                             className={rarityCardClass(t.rarity)}
-                            onClick={() => { setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') }}
+                            onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') }}
                             style={{
                               borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
                               backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
@@ -763,8 +759,6 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   if (!t) return null
   const soldOut = (shopStock[type] || 0) <= 0
   const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
-  const showSeed = isShop && !hovered
-  const showMature = !isShop || hovered
 
   return (
     <button
@@ -788,12 +782,26 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
-        <div className={showMature ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', marginBottom: -2, transition: 'transform 0.3s ease, opacity 0.3s ease' }}>
-          {showSeed
-            ? <PlantIcon type={type} size={featured ? 80 : 70} isSeed />
-            : <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
-          }
-        </div>
+        {isShop ? (
+          <div style={{ position: 'relative', marginBottom: -2, width: featured ? 130 : 120, height: featured ? 130 : 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+            <div style={{
+              position: 'absolute', bottom: 0, left: '50%', transform: `translateX(-50%) scale(${hovered ? 0.6 : 1})`,
+              opacity: hovered ? 0 : 1, transition: 'opacity 0.4s ease, transform 0.4s ease',
+            }}>
+              <PlantIcon type={type} size={featured ? 80 : 70} isSeed />
+            </div>
+            <div className={hovered ? rarityPlantClass(t.rarity) : ''} style={{
+              position: 'absolute', bottom: 0, left: '50%', transform: `translateX(-50%) scale(${hovered ? 1 : 0.5})`,
+              opacity: hovered ? 1 : 0, transition: 'opacity 0.4s ease, transform 0.4s ease',
+            }}>
+              <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
+            </div>
+          </div>
+        ) : (
+          <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
+            <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
+          </div>
+        )}
         <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
           {getDropChance(t.weight)}
         </div>
