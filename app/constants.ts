@@ -15,7 +15,7 @@ export const TREE_TYPES: Record<string, any> = {
 
   // RARE — 125 sunshine each (Total: 4)
   parlor:     { name: 'Parlor Topiary',   color: '#166534', bg: 'rgba(22,101,52,0.1)',   cost: 125,   currency: 'sunshine', rarity: 'rare',      weight: 0.12,  shape: 'topiary',   sceneBg: 'linear-gradient(180deg, #0a160e 0%, #0e2014 50%, #122a1a 100%)' },
-  pulpgrove:  { name: 'Pulp Grove',       color: '#facc15', bg: 'rgba(250,204,21,0.1)',  cost: 125,   currency: 'sunshine', rarity: 'rare',      weight: 0.12,  shape: 'citrus',    sceneBg: 'linear-gradient(180deg, #1c1c0e 0%, #242412 50%, #2e2e18 100%)' },
+  goldleaf:   { name: 'Goldleaf Citrus',   color: '#facc15', bg: 'rgba(250,204,21,0.1)',  cost: 125,   currency: 'sunshine', rarity: 'rare',      weight: 0.12,  shape: 'citrus',    sceneBg: 'linear-gradient(180deg, #1c1c0e 0%, #242412 50%, #2e2e18 100%)' },
   spine:      { name: 'Spine Cactus',     color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   cost: 125,   currency: 'sunshine', rarity: 'rare',      weight: 0.12,  shape: 'cactus',    sceneBg: 'linear-gradient(180deg, #141c0a 0%, #1a2a0e 50%, #223812 100%)' },
   inkcap:     { name: 'Inkcap Mushroom',  color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   cost: 125,   currency: 'sunshine', rarity: 'rare',      weight: 0.12,  shape: 'mushroom',  sceneBg: 'linear-gradient(180deg, #1c0a0a 0%, #2a1010 50%, #381616 100%)' },
 

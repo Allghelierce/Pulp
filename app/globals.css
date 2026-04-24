@@ -113,7 +113,7 @@ details.toggle-block summary:focus {
 }
 @keyframes uncommon-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(0.8deg); }
+  50% { transform: rotate(0.3deg); }
 }
 
 /* RARE: gentle glow, no movement */
@@ -129,7 +129,7 @@ details.toggle-block summary:focus {
 }
 @keyframes true-rare-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(0.6deg); }
+  50% { transform: rotate(0.25deg); }
 }
 
 /* PREMIUM: warm golden glow */
@@ -140,7 +140,7 @@ details.toggle-block summary:focus {
 }
 @keyframes premium-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-0.5deg); }
+  50% { transform: rotate(-0.2deg); }
 }
 
 /* CHROMA: soft color glow, no hue rotation */
@@ -151,7 +151,7 @@ details.toggle-block summary:focus {
 }
 @keyframes chroma-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(0.7deg); }
+  50% { transform: rotate(0.25deg); }
 }
 
 /* EXTINCT: subtle dark glow */
@@ -162,7 +162,7 @@ details.toggle-block summary:focus {
 }
 @keyframes extinct-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-0.4deg); }
+  50% { transform: rotate(-0.15deg); }
 }
 
 /* Card-level rarity effects (subtle inner glow only) */
@@ -207,8 +207,8 @@ details.toggle-block summary:focus {
 }
 
 @keyframes plantSway {
-  0%, 100% { transform: rotate(0.5deg); }
-  50% { transform: rotate(-0.5deg); }
+  0%, 100% { transform: rotate(0.2deg); }
+  50% { transform: rotate(-0.2deg); }
 }
 
 /* Boutique stage slider */

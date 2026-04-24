@@ -373,8 +373,8 @@ export const BoutiqueView = memo(function BoutiqueView({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={onClose}>
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1000px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
-        style={{ backgroundColor: bg, height: 740 }}
+        className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
+        style={{ backgroundColor: bg, height: 660 }}
       >
         {/* ── Header ── */}
         <div className={`px-6 pt-5 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
@@ -413,7 +413,6 @@ export const BoutiqueView = memo(function BoutiqueView({
         {/* ── Plant Preview (when selected) ── */}
         {selectedPlant && previewInfo && (
           <div style={{ flexShrink: 0, borderBottom: `1px solid ${dividerColor}` }}>
-            {/* Compact header bar */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 20px',
@@ -437,20 +436,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   {RARITY_LABEL[previewInfo.rarity]}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <CurrencyPill type={previewInfo.currency} amount={previewInfo.cost} />
-                <button
-                  onClick={() => buySeed(selectedPlant!)}
-                  disabled={(shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)}
-                  className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all ${isDark ? "bg-zinc-200 text-zinc-900 hover:bg-white" : "bg-zinc-800 text-white hover:bg-zinc-700"}`}
-                  style={{
-                    fontFamily: font, cursor: 'pointer', border: 'none',
-                    opacity: ((shopStock[selectedPlant!] || 0) <= 0 || (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost)) ? 0.3 : 1,
-                  }}
-                >
-                  {(shopStock[selectedPlant!] || 0) <= 0 ? 'Sold out' : 'Buy Seed'}
-                </button>
-              </div>
+              <div style={{ width: 50 }} />
             </div>
           </div>
         )}
@@ -477,7 +463,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-                  {dailySeeds.map(type => <PlantCard key={type} type={type} isDark={isDark} cardBg={cardBg} cardBorder={cardBorder} textPrimary={textPrimary} textMuted={textMuted} shopStock={shopStock} onClick={() => { setSelectedPlant(type); setPreviewStage(3) }} featured isShop />)}
+                  {dailySeeds.map(type => <PlantCard key={type} type={type} isDark={isDark} cardBg={cardBg} cardBorder={cardBorder} textPrimary={textPrimary} textMuted={textMuted} shopStock={shopStock} onClick={() => { setSelectedPlant(type); setPreviewStage(0) }} featured isShop />)}
                 </div>
               </div>
 
@@ -539,28 +525,28 @@ export const BoutiqueView = memo(function BoutiqueView({
           )}
 
           {activeTab === 'shop' && selectedPlant && previewInfo && (
-            <div style={{ padding: '24px 24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0 }}>
               {/* Large plant preview */}
               <div style={{
-                width: '100%', maxWidth: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                width: '100%', maxWidth: 520, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
-                height: 280,
+                height: 320,
                 background: ['extinct', 'chroma', 'premium'].includes(previewInfo.rarity) ? 'none' : (previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
               }}>
                 <RarityScene rarity={previewInfo.rarity} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)', borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
-                <Sparkles rarity={previewInfo.rarity} count={8} />
-                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 8, zIndex: 2 }}>
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)', borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
+                <Sparkles rarity={previewInfo.rarity} count={10} />
+                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 12, zIndex: 2 }}>
                   {previewStage === 0
-                    ? <PlantIcon type={selectedPlant!} size={160} isSeed />
-                    : <PlantIcon type={selectedPlant!} size={160} stage={previewStage - 1} />
+                    ? <PlantIcon type={selectedPlant!} size={180} isSeed />
+                    : <PlantIcon type={selectedPlant!} size={180} stage={previewStage - 1} />
                   }
                 </div>
               </div>
 
               {/* Stage label */}
-              <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <div style={{ marginTop: 10, textAlign: 'center' }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary, fontFamily: font }}>
                   {STAGE_NAMES[previewStage]}
                 </span>
@@ -570,7 +556,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               </div>
 
               {/* Slider */}
-              <div style={{ width: '100%', maxWidth: 400, marginTop: 12, padding: '0 4px' }}>
+              <div style={{ width: '100%', maxWidth: 520, marginTop: 16, padding: '0 4px' }}>
                 <input
                   type="range"
                   min={0}
@@ -584,7 +570,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                     borderRadius: 4, outline: 'none', cursor: 'pointer',
                   }}
                 />
-                {/* Stage dots */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, padding: '0 2px' }}>
                   {STAGE_NAMES.map((name, i) => (
                     <button
@@ -602,6 +587,25 @@ export const BoutiqueView = memo(function BoutiqueView({
                   ))}
                 </div>
               </div>
+
+              {/* Buy button — hidden when sold out */}
+              {(shopStock[selectedPlant!] || 0) > 0 && (
+                <button
+                  onClick={() => buySeed(selectedPlant!)}
+                  disabled={previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost}
+                  className={`mt-5 px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all ${isDark ? "bg-zinc-200 text-zinc-900 hover:bg-white" : "bg-zinc-800 text-white hover:bg-zinc-700"}`}
+                  style={{
+                    fontFamily: font, cursor: 'pointer', border: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    opacity: (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost) ? 0.3 : 1,
+                  }}
+                >
+                  Buy Seed
+                  <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
+                  <span className="text-[10px] leading-none">{previewInfo.currency === 'sunshine' ? '☀️' : '💎'}</span>
+                  {previewInfo.cost.toLocaleString()}
+                </button>
+              )}
             </div>
           )}
 
@@ -846,7 +850,6 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   type: string; isDark: boolean; cardBg: string; cardBorder: string; textPrimary: string; textMuted: string
   shopStock: Record<string, number>; onClick: () => void; featured?: boolean; isShop?: boolean
 }) {
-  const [hovered, setHovered] = useState(false)
   const t = TREE_TYPES[type]
   if (!t) return null
   const soldOut = (shopStock[type] || 0) <= 0
@@ -855,8 +858,6 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   return (
     <button
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       className={`${isDark ? "hover:border-zinc-700" : "hover:border-zinc-300"} ${rarityCardClass(t.rarity)}`}
       style={{
         borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
@@ -875,26 +876,9 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
         <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
-        {isShop ? (
-          <div style={{ position: 'relative', marginBottom: -2, width: featured ? 130 : 120, height: featured ? 130 : 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 2 }}>
-            <div style={{
-              position: 'absolute', bottom: 0, left: '50%', transform: `translateX(-50%) scale(${hovered ? 0.6 : 1})`,
-              opacity: hovered ? 0 : 1, transition: 'opacity 0.4s ease, transform 0.4s ease',
-            }}>
-              <PlantIcon type={type} size={featured ? 80 : 70} isSeed />
-            </div>
-            <div className={hovered ? rarityPlantClass(t.rarity) : ''} style={{
-              position: 'absolute', bottom: 0, left: '50%', transform: `translateX(-50%) scale(${hovered ? 1 : 0.5})`,
-              opacity: hovered ? 1 : 0, transition: 'opacity 0.4s ease, transform 0.4s ease',
-            }}>
-              <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
-            </div>
-          </div>
-        ) : (
-          <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
-            <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
-          </div>
-        )}
+        <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
+          <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
+        </div>
         <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
           {getDropChance(t.weight)}
         </div>

@@ -96,8 +96,8 @@ export const FocusView = memo(function FocusView({
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
             onMouseDown={e => e.stopPropagation()}
-            className={`relative w-full max-w-[660px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
-            style={{ height: 560 }}
+            className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+            style={{ height: 660 }}
           >
             {/* Header */}
             <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>

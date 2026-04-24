@@ -50,7 +50,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
             onMouseDown={e => e.stopPropagation()}
-            className={`relative w-full max-w-[560px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+            className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
             style={{ height: 660 }}
           >
             {/* Header */}
