@@ -38,6 +38,19 @@ const PLOT_POSITIONS = [
   { x: 18, y: 72 }, { x: 52, y: 75 }, { x: 83, y: 70 },
 ]
 
+function getRarityPlantClass(type: string): string {
+  const rarity = TREE_TYPES[type]?.rarity
+  switch (rarity) {
+    case 'uncommon': return 'rarity-uncommon'
+    case 'rare': return 'rarity-rare'
+    case 'true rare': return 'rarity-true-rare'
+    case 'premium': return 'rarity-premium'
+    case 'chroma': return 'rarity-chroma'
+    case 'extinct': return 'rarity-extinct'
+    default: return ''
+  }
+}
+
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme, accent,
   sunshine, gems, xp, grove, inventory, setSunshine, setGems, setInventory, setGrove
@@ -227,6 +240,7 @@ export const OrchardView = memo(function OrchardView({
                       {tree ? (
                         <div className="flex flex-col items-center group cursor-pointer" onClick={(e) => { e.stopPropagation(); if (tree.stage >= 4) sellPlant(i) }}>
                           <motion.div
+                            className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}
                             whileHover={{ scale: 1.08 }}
                             transition={{ type: "spring", stiffness: 300 }}
                           >

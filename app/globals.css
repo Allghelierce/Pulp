@@ -105,74 +105,156 @@ details.toggle-block summary:focus {
 }
 /* ── Rarity Effects ────────────────────────────────────────── */
 
-/* PREMIUM: Golden Shimmer */
+/* UNCOMMON: Gentle leaf sway */
+.rarity-uncommon {
+  animation: uncommon-sway 4s ease-in-out infinite;
+}
+@keyframes uncommon-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+/* RARE: Soft blue glow pulse */
+.rarity-rare {
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35));
+  animation: rare-glow 3s ease-in-out infinite;
+}
+@keyframes rare-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35)); }
+  50% { filter: drop-shadow(0 0 14px rgba(96, 165, 250, 0.55)); }
+}
+
+/* TRUE RARE: Purple shimmer + float */
+.rarity-true-rare {
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4));
+  animation: true-rare-float 3.5s ease-in-out infinite, true-rare-shimmer 2s ease-in-out infinite;
+}
+@keyframes true-rare-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes true-rare-shimmer {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4)); }
+  50% { filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.7)); }
+}
+
+/* PREMIUM: Golden shimmer + breathing scale */
 .rarity-premium {
   position: relative;
   filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4));
   animation: premium-pulse 3s ease-in-out infinite;
 }
+@keyframes premium-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4)); }
+  50% { transform: scale(1.03); filter: drop-shadow(0 0 18px rgba(234, 179, 8, 0.65)); }
+}
 
-/* CHROMA: Rainbow Cycling */
+/* CHROMA: Rainbow hue cycling + floating sway */
 .rarity-chroma {
   filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
   animation: chroma-hue 4s linear infinite, chroma-float 3s ease-in-out infinite;
 }
-
-/* EXTINCT: Celestial Void */
-.rarity-extinct {
-  filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2) brightness(1.1);
-  animation: extinct-chaos 5s ease-in-out infinite;
-}
-
-/* Animations */
-@keyframes premium-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4)); }
-  50% { transform: scale(1.03); filter: drop-shadow(0 0 15px rgba(234, 179, 8, 0.6)); }
-}
-
 @keyframes chroma-hue {
   0% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(0deg); }
   100% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(360deg); }
 }
-
 @keyframes chroma-float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   33% { transform: translateY(-3px) rotate(1deg); }
   66% { transform: translateY(1px) rotate(-1deg); }
 }
 
+/* EXTINCT: Chaotic void energy + intense glow */
+.rarity-extinct {
+  filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2) brightness(1.1);
+  animation: extinct-chaos 5s ease-in-out infinite;
+}
 @keyframes extinct-chaos {
-  0%, 100% { 
-    transform: scale(1) rotate(0deg); 
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
     filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2);
   }
   25% { transform: scale(1.05) rotate(0.5deg); }
-  50% { 
-    transform: scale(0.98) rotate(-0.5deg); 
+  50% {
+    transform: scale(0.98) rotate(-0.5deg);
     filter: drop-shadow(0 0 35px rgba(99, 102, 241, 0.8)) contrast(1.4) saturate(1.5);
   }
   75% { transform: scale(1.02) rotate(0.2deg); }
 }
 
-/* Sparkle Effect for High Tiers */
+/* Card-level rarity effects (glow borders + ambient particles) */
+.rarity-card-rare { box-shadow: inset 0 0 20px rgba(96, 165, 250, 0.08); }
+.rarity-card-true-rare { box-shadow: inset 0 0 25px rgba(167, 139, 250, 0.1); }
+.rarity-card-premium {
+  box-shadow: inset 0 0 30px rgba(234, 179, 8, 0.08);
+  animation: card-premium-border 3s ease-in-out infinite;
+}
+.rarity-card-chroma {
+  box-shadow: inset 0 0 30px rgba(192, 132, 252, 0.1);
+  animation: card-chroma-border 4s linear infinite;
+}
+.rarity-card-extinct {
+  box-shadow: inset 0 0 40px rgba(168, 85, 247, 0.12);
+  animation: card-extinct-border 5s ease-in-out infinite;
+}
+
+@keyframes card-premium-border {
+  0%, 100% { box-shadow: inset 0 0 30px rgba(234, 179, 8, 0.08); }
+  50% { box-shadow: inset 0 0 40px rgba(234, 179, 8, 0.15); }
+}
+@keyframes card-chroma-border {
+  0% { box-shadow: inset 0 0 30px rgba(244, 114, 182, 0.1); }
+  33% { box-shadow: inset 0 0 30px rgba(96, 165, 250, 0.1); }
+  66% { box-shadow: inset 0 0 30px rgba(52, 211, 153, 0.1); }
+  100% { box-shadow: inset 0 0 30px rgba(244, 114, 182, 0.1); }
+}
+@keyframes card-extinct-border {
+  0%, 100% { box-shadow: inset 0 0 40px rgba(168, 85, 247, 0.12); }
+  50% { box-shadow: inset 0 0 60px rgba(99, 102, 241, 0.2); }
+}
+
+/* Particle/sparkle system for high rarities */
 .sparkle-container {
   position: absolute;
-  inset: -50%;
+  inset: 0;
   pointer-events: none;
   z-index: 10;
+  overflow: hidden;
 }
 
 .sparkle {
   position: absolute;
-  background: white;
   border-radius: 50%;
   opacity: 0;
-  animation: sparkle-float 2s linear infinite;
 }
 
-@keyframes sparkle-float {
-  0% { transform: scale(0) translateY(0); opacity: 1; }
-  100% { transform: scale(1) translateY(-20px); opacity: 0; }
+.sparkle-premium {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.9) 0%, transparent 70%);
+  animation: sparkle-rise 3s ease-out infinite;
+}
+.sparkle-chroma {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.9) 0%, transparent 70%);
+  animation: sparkle-orbit 4s linear infinite;
+}
+.sparkle-extinct {
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.9) 0%, rgba(99, 102, 241, 0.5) 50%, transparent 70%);
+  animation: sparkle-warp 2.5s ease-in-out infinite;
+}
+
+@keyframes sparkle-rise {
+  0% { transform: translateY(100%) scale(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+}
+@keyframes sparkle-orbit {
+  0% { transform: rotate(0deg) translateX(30px) scale(0.5); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: rotate(360deg) translateX(30px) scale(0); opacity: 0; }
+}
+@keyframes sparkle-warp {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  30% { transform: scale(1.5) rotate(90deg); opacity: 1; }
+  100% { transform: scale(0) rotate(180deg); opacity: 0; }
 }
 
 /* Boutique stage slider */

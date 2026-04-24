@@ -56,21 +56,21 @@ export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: bo
   { hex: "#64748b", name: "Slate", pro: true },
 ]
 
-const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "EB Garamond", label: "EB Garamond" },
   { value: "Playfair Display", label: "Playfair Display", cost: 8 },
   { value: "Georgia", label: "Georgia", cost: 5 },
   { value: "Arial", label: "Arial", cost: 5 },
 ]
 
-const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+export const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "Playfair Display", label: "Playfair Display" },
   { value: "EB Garamond", label: "EB Garamond", cost: 5 },
   { value: "Italiana", label: "Italiana", cost: 10 },
   { value: "Bodoni", label: "Bodoni", pro: true },
 ]
 
-const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
+export const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "lined", label: "Lined" },
   { value: "dotgrid", label: "Grid", cost: 5 },
   { value: "plain", label: "Plain", cost: 8 },

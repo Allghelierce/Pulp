@@ -1,7 +1,10 @@
 "use client"
-import { memo, useState, useEffect } from "react"
+import { memo, useState, useEffect, useRef } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { ACCENT_COLORS, FONT_OPTIONS, HEADING_FONT_OPTIONS, PAGE_STYLE_OPTIONS } from "./settings/SettingsView"
+
+export type TabId = 'shop' | 'gems' | 'bag' | 'catalog'
 
 interface BoutiqueViewProps {
   isOpen: boolean
@@ -18,6 +21,8 @@ interface BoutiqueViewProps {
   unlockedCosmetics: string[]
   setUnlockedCosmetics: (v: string[] | ((p: string[]) => string[])) => void
   onUpdateConfig: (updates: Record<string, any>) => void
+  initialTab?: TabId
+  initialScrollTo?: string
 }
 
 const GEM_COSMETICS = [
@@ -45,14 +50,77 @@ const RARITY_COLOR: Record<string, string> = {
   'true rare': '#a78bfa', premium: '#fbbf24', chroma: '#f472b6', extinct: '#f87171',
 }
 
-type TabId = 'shop' | 'gems' | 'bag' | 'catalog'
+const RARITY_BG: Record<string, string> = {
+  common: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #22301a 100%)',
+  uncommon: 'linear-gradient(180deg, #0e1a16 0%, #122820 50%, #163228 100%)',
+  rare: 'linear-gradient(180deg, #0e1420 0%, #121e30 50%, #162840 100%)',
+  'true rare': 'linear-gradient(180deg, #16102a 0%, #1e1638 50%, #261c46 100%)',
+  premium: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
+  chroma: 'linear-gradient(180deg, #1a0e1e 0%, #28142e 50%, #361a3e 100%)',
+  extinct: 'linear-gradient(180deg, #1a0a0a 0%, #2a1010 50%, #3a1616 100%)',
+}
+
+const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
+
+function getDropChance(weight: number): string {
+  const pct = (weight / TOTAL_WEIGHT) * 100
+  if (pct >= 1) return `${pct.toFixed(0)}%`
+  if (pct >= 0.1) return `${pct.toFixed(1)}%`
+  return `${pct.toFixed(2)}%`
+}
 
 const font = '"EB Garamond", Georgia, serif'
+
+function rarityPlantClass(rarity: string): string {
+  switch (rarity) {
+    case 'uncommon': return 'rarity-uncommon'
+    case 'rare': return 'rarity-rare'
+    case 'true rare': return 'rarity-true-rare'
+    case 'premium': return 'rarity-premium'
+    case 'chroma': return 'rarity-chroma'
+    case 'extinct': return 'rarity-extinct'
+    default: return ''
+  }
+}
+
+function rarityCardClass(rarity: string): string {
+  switch (rarity) {
+    case 'rare': return 'rarity-card-rare'
+    case 'true rare': return 'rarity-card-true-rare'
+    case 'premium': return 'rarity-card-premium'
+    case 'chroma': return 'rarity-card-chroma'
+    case 'extinct': return 'rarity-card-extinct'
+    default: return ''
+  }
+}
+
+function Sparkles({ rarity, count }: { rarity: string; count: number }) {
+  if (!['premium', 'chroma', 'extinct'].includes(rarity)) return null
+  const cls = rarity === 'premium' ? 'sparkle-premium' : rarity === 'chroma' ? 'sparkle-chroma' : 'sparkle-extinct'
+  return (
+    <div className="sparkle-container">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className={`sparkle ${cls}`}
+          style={{
+            width: 3 + Math.random() * 4,
+            height: 3 + Math.random() * 4,
+            left: `${10 + Math.random() * 80}%`,
+            top: `${10 + Math.random() * 80}%`,
+            animationDelay: `${i * (3 / count)}s`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
   sunshine, gems, inventory, setSunshine, setGems, setInventory, setGrove,
-  unlockedCosmetics, setUnlockedCosmetics, onUpdateConfig
+  unlockedCosmetics, setUnlockedCosmetics, onUpdateConfig,
+  initialTab, initialScrollTo
 }: BoutiqueViewProps) {
 
   const [activeTab, setActiveTab] = useState<TabId>('shop')
@@ -60,7 +128,23 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [shopStock, setShopStock] = useState<Record<string, number>>({})
   const [selectedPlant, setSelectedPlant] = useState<string | null>(null)
   const [previewStage, setPreviewStage] = useState(3)
+  const [highlightItem, setHighlightItem] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const isDark = theme === 'dark'
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab)
+      if (initialScrollTo) {
+        setHighlightItem(initialScrollTo)
+        setTimeout(() => {
+          const el = document.getElementById(`gem-item-${initialScrollTo}`)
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          setTimeout(() => setHighlightItem(null), 2000)
+        }, 100)
+      }
+    }
+  }, [isOpen, initialTab, initialScrollTo])
 
   const bg = isDark ? '#0a0a0c' : '#f5f3f1'
   const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
@@ -297,7 +381,8 @@ export const BoutiqueView = memo(function BoutiqueView({
               }}>
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)' }} />
                 <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)', borderRadius: 16, pointerEvents: 'none' }} />
-                <div style={{ position: 'relative', marginBottom: 8 }}>
+                <Sparkles rarity={previewInfo.rarity} count={8} />
+                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 8 }}>
                   {previewStage === 0
                     ? <PlantIcon type={selectedPlant!} size={160} isSeed />
                     : <PlantIcon type={selectedPlant!} size={160} stage={previewStage - 1} />
@@ -376,8 +461,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   >
                     {(pack as any).best && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Best value</span>}
                     <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, marginBottom: 4 }}>{pack.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>◆ {pack.amount} gems</div>
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${dividerColor}`, fontSize: 12, fontWeight: 600, color: '#d97706' }}>✦ {pack.cost} sunshine</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>💎 {pack.amount} gems</div>
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${dividerColor}`, fontSize: 12, fontWeight: 600, color: '#d97706' }}>☀️ {pack.cost} sunshine</div>
                   </button>
                 ))}
               </div>
@@ -418,7 +503,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 disabled={cantAfford}
                                 style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}
                               >
-                                ◆ {cosmetic.cost}
+                                💎 {cosmetic.cost}
                               </button>
                             )}
                           </div>
@@ -508,6 +593,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         return (
                           <button
                             key={type}
+                            className={rarityCardClass(t.rarity)}
                             onClick={() => { setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') }}
                             style={{
                               borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
@@ -517,13 +603,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                           >
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                              height: 130, position: 'relative',
+                              height: 180, position: 'relative',
                               background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
                             }}>
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
                               <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
-                              <div style={{ position: 'relative', marginBottom: -2 }}>
-                                <PlantIcon type={type} size={90} stage={3} />
+                              <Sparkles rarity={t.rarity} count={4} />
+                              <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
+                                <PlantIcon type={type} size={120} stage={3} />
                               </div>
                               {owned && (
                                 <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
@@ -535,7 +622,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                                 <span style={{ fontSize: 12, fontWeight: 600, color: t.currency === 'gems' ? '#a78bfa' : '#d97706' }}>
-                                  {t.currency === 'gems' ? '◆' : '✦'} {t.cost}
+                                  {t.currency === 'gems' ? '💎' : '☀️'} {t.cost}
                                 </span>
                                 <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
@@ -568,7 +655,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   return (
     <button
       onClick={onClick}
-      className={`${isDark ? "hover:border-zinc-700" : "hover:border-zinc-300"}`}
+      className={`${isDark ? "hover:border-zinc-700" : "hover:border-zinc-300"} ${rarityCardClass(t.rarity)}`}
       style={{
         borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
         backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
@@ -578,14 +665,15 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
     >
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        height: featured ? 140 : 130,
+        height: featured ? 200 : 180,
         background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
         position: 'relative',
       }}>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', marginBottom: -2 }}>
-          <PlantIcon type={type} size={featured ? 100 : 90} stage={3} />
+        <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
+        <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
+          <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
         </div>
         {soldOut && (
           <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
@@ -600,7 +688,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
           <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: t.currency === 'gems' ? '#a78bfa' : '#d97706' }}>
-            {t.currency === 'gems' ? '◆' : '✦'} {t.cost}
+            {t.currency === 'gems' ? '💎' : '☀️'} {t.cost}
           </span>
         </div>
       </div>

@@ -102,7 +102,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                       <span className="text-[18px] font-bold" style={{ color: isFirst ? gold : isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)" }}>
                         #{p.rank}
                       </span>
-                      <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{(p.sunshine / 1000).toFixed(1)}k ✦</span>
+                      <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{(p.sunshine / 1000).toFixed(1)}k ☀️</span>
                     </div>
                   </div>
                 )
@@ -140,7 +140,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Lv.{p.level} · {p.streak}d streak · {p.trees} trees</div>
                   </div>
                   <span className={`text-[12px] font-semibold tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                    {p.sunshine.toLocaleString()} ✦
+                    {p.sunshine.toLocaleString()} ☀️
                   </span>
                 </motion.div>
               ))}
@@ -164,7 +164,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Keep writing to climb the ranks</div>
                 </div>
                 <span className="text-[12px] font-semibold tabular-nums" style={{ color: gold }}>
-                  {sunshine.toLocaleString()} ✦
+                  {sunshine.toLocaleString()} ☀️
                 </span>
               </div>
             </div>
