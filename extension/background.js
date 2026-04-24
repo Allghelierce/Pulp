@@ -12,7 +12,8 @@ async function updateRules() {
     const addRules = []
 
     if (focusMode && blockedSites.length > 0) {
-      blockedSites.forEach((site, i) => {
+      let ruleId = 1
+      blockedSites.forEach((site) => {
         let domain = site
           .replace(/^https?:\/\//, "")
           .replace(/^www\./, "")
@@ -23,7 +24,7 @@ async function updateRules() {
         if (!domain || domain.includes(" ")) return
 
         addRules.push({
-          id: i + 1,
+          id: ruleId++,
           priority: 1,
           action: {
             type: "redirect",
@@ -58,5 +59,17 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 })
 
-chrome.runtime.onInstalled.addListener(updateRules)
-chrome.runtime.onStartup.addListener(updateRules)
+// Keep rules in sync on startup, install, and periodically
+chrome.runtime.onInstalled.addListener(() => {
+  updateRules()
+  chrome.alarms.create("pulp-focus-sync", { periodInMinutes: 1 })
+})
+
+chrome.runtime.onStartup.addListener(() => {
+  updateRules()
+  chrome.alarms.create("pulp-focus-sync", { periodInMinutes: 1 })
+})
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "pulp-focus-sync") updateRules()
+})

@@ -1,7 +1,17 @@
 // Content script — runs on the Pulp domain.
 // Syncs focus config AND grove/gamification data to chrome.storage.
 
+function isExtensionValid() {
+  try {
+    return !!chrome.runtime?.id
+  } catch {
+    return false
+  }
+}
+
 function syncAll() {
+  if (!isExtensionValid()) return
+
   try {
     const settings = localStorage.getItem("pulp-settings")
     if (settings) {
@@ -12,6 +22,10 @@ function syncAll() {
         blockedSites: sites,
         focusMode: focus
       }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn("[Pulp Focus] Storage set failed:", chrome.runtime.lastError.message)
+          return
+        }
         try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
       })
     }
@@ -29,17 +43,23 @@ function syncAll() {
         }
       })
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[Pulp Focus] Sync failed:", err)
+  }
 }
 
 syncAll()
-setInterval(syncAll, 3000)
+setInterval(() => {
+  if (isExtensionValid()) syncAll()
+}, 3000)
 
 // Listen for direct updates from the Pulp app via postMessage
 window.addEventListener("message", (e) => {
+  if (!isExtensionValid()) return
   if (e.data && e.data.type === "pulp-focus-config") {
     const sites = e.data.blockedSites || []
     chrome.storage.local.set({ blockedSites: sites, focusMode: sites.length > 0 }, () => {
+      if (chrome.runtime.lastError) return
       try { chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }) } catch {}
     })
   }

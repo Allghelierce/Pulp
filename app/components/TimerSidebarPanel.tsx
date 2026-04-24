@@ -265,16 +265,71 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           style={{
             left: sidebarWidth + 10,
             bottom: 12,
-            width: 260,
-            maxHeight: "calc(100vh - 20px)",
+            width: 280,
+            height: "auto",
+            minHeight: 520,
+            maxHeight: "calc(100vh - 40px)",
             backgroundColor: bgColor,
-            backdropFilter: "blur(18px)",
-            WebkitBackdropFilter: "blur(18px)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
             border: `1px solid ${borderColor}`,
+            borderRadius: 24,
             fontFamily: serifFont,
             userSelect: 'none',
           }}
         >
+          {/* Seed tray slide-out — Moved here to avoid clipping */}
+          <AnimatePresence>
+            {seedTrayOpen && !running && !done && !treeDead && inventory.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-2 rounded-2xl"
+                style={{
+                  bottom: 260,
+                  transformOrigin: "bottom center",
+                  backgroundColor: isDark ? "rgba(18,18,20,0.98)" : "rgba(255,255,255,0.98)",
+                  backdropFilter: "blur(20px)",
+                  border: `1px solid ${mainColor}44`,
+                  boxShadow: "0 12px 48px rgba(0,0,0,0.6)",
+                  zIndex: 100,
+                  width: 'max-content',
+                  maxWidth: 240,
+                }}
+              >
+                {[...new Set(inventory)].map(type => {
+                  const count = inventory.filter(s => s === type).length
+                  const isSelected = selectedSeed === type
+                  const info = TREE_TYPES[type]
+                  if (!info) return null
+                  return (
+                    <motion.button
+                      key={type}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
+                      className="relative flex flex-col items-center gap-0.5 shrink-0 rounded-lg px-2 py-1.5 transition-colors"
+                      style={{
+                        backgroundColor: isSelected ? `${info.color}20` : "transparent",
+                        border: `1px solid ${isSelected ? `${info.color}50` : "transparent"}`,
+                      }}
+                      title={`${info.name} (${count})`}
+                    >
+                      <PlantIcon type={type} size={20} />
+                      <span className="text-[8px] font-bold tabular-nums" style={{ color: isSelected ? info.color : dimColor }}>
+                        {count}
+                      </span>
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ backgroundColor: info.color, boxShadow: `0 0 6px ${info.color}` }} />
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Header */}
           <div
             className="flex items-center justify-between px-3 py-2 shrink-0"
@@ -331,7 +386,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           </div>
 
           {/* Body */}
-          <div className="overflow-y-auto flex flex-col px-4 py-5">
+          <div className="flex-1 flex flex-col px-4 py-6 overflow-visible">
             <div className="flex flex-col items-center">
               {/* Timer display */}
               <div className="text-center mb-3">
@@ -354,8 +409,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               </div>
 
               {/* Tree + progress ring + seed tray */}
-              <div className="relative w-52 h-60 mx-auto mb-5">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 240">
+              <div className="relative w-52 h-64 mx-auto mb-5">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 256">
                   <defs>
                     <linearGradient id="timerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#D4A574" />
@@ -363,13 +418,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </linearGradient>
                   </defs>
                   <path
-                    d="M 100, 10 A 85, 105 0 1, 1 99.9, 10 Z"
+                    d="M 100, 10 A 85, 110 0 1, 1 99.9, 10 Z"
                     fill="transparent"
                     stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
                     strokeWidth="2"
                   />
                   <motion.path
-                    d="M 100, 10 A 85, 105 0 1, 1 99.9, 10 Z"
+                    d="M 100, 10 A 85, 110 0 1, 1 99.9, 10 Z"
                     fill="transparent"
                     stroke="url(#timerGradient)"
                     strokeWidth="3"
@@ -386,82 +441,27 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </div>
                 </div>
 
-                {/* Backpack trigger — right side of oval */}
+                {/* Backpack trigger — bottom of oval */}
                 {!running && !done && !treeDead && inventory.length > 0 && (
                   <button
                     onClick={() => setSeedTrayOpen(o => !o)}
-                    className="absolute flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                    className="absolute flex items-center justify-center transition-all hover:scale-110 active:scale-95 group"
                     style={{
-                      right: -6, top: "50%", transform: "translateY(-50%)",
-                      width: 28, height: 28, borderRadius: 8,
-                      backgroundColor: seedTrayOpen ? `${mainColor}20` : "rgba(255,255,255,0.06)",
-                      border: `1px solid ${seedTrayOpen ? `${mainColor}50` : "rgba(255,255,255,0.1)"}`,
+                      bottom: -24, left: "50%", transform: "translateX(-50%)",
+                      width: 36, height: 36, borderRadius: "50%",
+                      backgroundColor: seedTrayOpen ? `${mainColor}25` : "rgba(255,255,255,0.06)",
                       color: seedTrayOpen ? mainColor : subtleColor,
-                      zIndex: 20,
+                      zIndex: 30,
                     }}
                     title="Select seed"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform">
                       <path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3" />
-                      <polyline points="8 2 8 8 2 8" style={{ display: 'none' }} />
                       <path d="M3 12h10" />
                       <path d="M10 9l3 3-3 3" />
                     </svg>
                   </button>
                 )}
-
-                {/* Seed tray slide-out */}
-                <AnimatePresence>
-                  {seedTrayOpen && !running && !done && !treeDead && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10, scaleX: 0.8 }}
-                      animate={{ opacity: 1, x: 0, scaleX: 1 }}
-                      exit={{ opacity: 0, x: -10, scaleX: 0.8 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute flex items-center gap-1.5 px-2 py-1.5 rounded-lg overflow-x-auto"
-                      style={{
-                        right: -8, top: "50%", transform: "translateY(-50%)",
-                        transformOrigin: "left center",
-                        marginRight: -140,
-                        backgroundColor: isDark ? "rgba(0,0,0,0.85)" : "rgba(10,10,12,0.9)",
-                        backdropFilter: "blur(12px)",
-                        border: `1px solid rgba(255,255,255,0.08)`,
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                        zIndex: 30,
-                        maxWidth: 160,
-                      }}
-                    >
-                      {[...new Set(inventory)].map(type => {
-                        const count = inventory.filter(s => s === type).length
-                        const isSelected = selectedSeed === type
-                        const info = TREE_TYPES[type]
-                        if (!info) return null
-                        return (
-                          <motion.button
-                            key={type}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
-                            className="relative flex flex-col items-center gap-0.5 shrink-0 rounded-md px-1.5 py-1 transition-colors"
-                            style={{
-                              backgroundColor: isSelected ? `${info.color}20` : "transparent",
-                              border: `1px solid ${isSelected ? `${info.color}50` : "transparent"}`,
-                            }}
-                            title={`${info.name} (${count})`}
-                          >
-                            <PlantIcon type={type} size={16} />
-                            <span className="text-[7px] font-bold tabular-nums" style={{ color: isSelected ? info.color : dimColor }}>
-                              {count}
-                            </span>
-                            {isSelected && (
-                              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: info.color, boxShadow: `0 0 4px ${info.color}` }} />
-                            )}
-                          </motion.button>
-                        )
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* Watering can — visible during a session that requires it */}

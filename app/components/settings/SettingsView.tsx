@@ -119,7 +119,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics }: {
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem }: {
   user: { email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -133,6 +133,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   gems: number
   setGems: React.Dispatch<React.SetStateAction<number>>
   setUnlockedCosmetics: React.Dispatch<React.SetStateAction<string[]>>
+  onOpenShopItem?: (itemId: string) => void
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -148,11 +149,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
     if (!cost && !pro) return true
     return unlockedCosmetics.includes(id)
   }
-  const buyUnlock = (id: string, cost: number) => {
-    if (gems < cost || unlockedCosmetics.includes(id)) return false
-    setGems(g => g - cost)
-    setUnlockedCosmetics(prev => [...prev, id])
-    return true
+  const goToShop = (id: string) => {
+    if (onOpenShopItem) { onClose(); onOpenShopItem(id) }
   }
   const [searchQuery, setSearchQuery] = useState("")
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
@@ -370,9 +368,9 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ accentColor: hex }); return }
                             if (pro) return
-                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ accentColor: hex })
+                            goToShop(id)
                           }}
-                          title={unlocked ? name : pro ? `${name} — Pro only` : `${name} — ${cost} 💎`}
+                          title={unlocked ? name : pro ? `${name} — Pro only` : `${name} — Unlock in Shop`}
                           className="group flex flex-col items-center gap-1.5 relative"
                         >
                           <div
@@ -389,7 +387,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                               {pro ? (
                                 <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
-                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
                             </div>
                           )}
@@ -430,17 +428,17 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ headingFont: value }); return }
                             if (pro) return
-                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ headingFont: value })
+                            goToShop(id)
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
                                 ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
                           style={{ fontFamily: `"${value}", serif` }}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
                         >
                           {label}
                           {!unlocked && (
@@ -448,7 +446,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                               {pro ? (
                                 <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
-                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
                             </span>
                           )}
@@ -469,17 +467,17 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ editorFont: value }); return }
                             if (pro) return
-                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ editorFont: value })
+                            goToShop(id)
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
                                 ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
                           style={{ fontFamily: `"${value}", serif` }}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
                         >
                           {label}
                           {!unlocked && (
@@ -487,7 +485,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                               {pro ? (
                                 <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
-                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
                             </span>
                           )}
@@ -525,16 +523,16 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ paperStyle: value as any }); return }
                             if (pro) return
-                            if (cost) buyUnlock(id, cost) && onUpdateConfig({ paperStyle: value as any })
+                            goToShop(id)
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
                                 ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600" : "bg-zinc-50 border-zinc-200/50 text-zinc-400"
+                                : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — ${cost} 💎`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
                         >
                           {label}
                           {!unlocked && (
@@ -542,7 +540,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                               {pro ? (
                                 <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
-                                <span className={`text-[7px] font-bold px-1 rounded-full leading-tight ${isDark ? "bg-zinc-700 text-zinc-300" : "bg-zinc-200 text-zinc-600"}`}>{cost}💎</span>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
                             </span>
                           )}

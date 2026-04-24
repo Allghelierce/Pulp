@@ -985,6 +985,8 @@ export default function NoteApp() {
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'gems' | 'bag' | 'catalog'>('shop')
+  const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const [gemStoreOpen, setGemStoreOpen] = useState(false)
@@ -2419,6 +2421,12 @@ export default function NoteApp() {
             gems={gems}
             setGems={setGems}
             setUnlockedCosmetics={setUnlockedCosmetics}
+            onOpenShopItem={(itemId: string) => {
+              setShowSettings(false)
+              setShopInitialTab('gems')
+              setShopScrollTo(itemId)
+              setShopOpen(true)
+            }}
           />
         )}
         <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
@@ -3300,7 +3308,7 @@ export default function NoteApp() {
 
       <BoutiqueView
         isOpen={shopOpen}
-        onClose={() => setShopOpen(false)}
+        onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
         theme={theme}
         accent={accent}
         sunshine={devMode ? 999999 : sunshine}
@@ -3313,6 +3321,8 @@ export default function NoteApp() {
         unlockedCosmetics={unlockedCosmetics}
         setUnlockedCosmetics={setUnlockedCosmetics}
         onUpdateConfig={updateSettings}
+        initialTab={shopInitialTab}
+        initialScrollTo={shopScrollTo}
       />
 
       <GemStoreModal

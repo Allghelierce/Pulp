@@ -438,81 +438,142 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* ── GEMS ── */}
           {activeTab === 'gems' && (
-            <div style={{ padding: 24 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 14 }}>Exchange Sunshine for Gems</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 32 }}>
-                {[
-                  { amount: 10, cost: 25, label: 'Small Pouch' },
-                  { amount: 30, cost: 60, label: 'Gem Satchel' },
-                  { amount: 75, cost: 120, label: 'Treasure Chest', best: true },
-                  { amount: 200, cost: 250, label: 'Royal Vault' },
-                ].map(pack => (
-                  <button
-                    key={pack.label}
-                    onClick={() => { if (sunshine >= pack.cost) { setSunshine((s: number) => s - pack.cost); setGems((g: number) => g + pack.amount) } }}
-                    disabled={sunshine < pack.cost}
-                    style={{
-                      padding: 16, borderRadius: 10, border: `1px solid ${cardBorder}`,
-                      backgroundColor: cardBg, cursor: sunshine >= pack.cost ? 'pointer' : 'not-allowed',
-                      opacity: sunshine < pack.cost ? 0.35 : 1,
-                      textAlign: 'left', fontFamily: font, position: 'relative',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {(pack as any).best && <span style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Best value</span>}
-                    <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary, marginBottom: 4 }}>{pack.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>💎 {pack.amount} gems</div>
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${dividerColor}`, fontSize: 12, fontWeight: 600, color: '#d97706' }}>☀️ {pack.cost} sunshine</div>
-                  </button>
-                ))}
-              </div>
+            <div ref={scrollRef} style={{ padding: 24 }}>
 
-              {/* Cosmetics */}
-              {(['accent', 'ink', 'paper'] as const).map(category => {
-                const items = GEM_COSMETICS.filter(c => c.type === category)
-                const label = category === 'accent' ? 'Accent Colors' : category === 'ink' ? 'Ink Styles' : 'Paper Textures'
-                return (
-                  <div key={category} style={{ marginBottom: 24 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'block', marginBottom: 10 }}>{label}</span>
-                    <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
-                      {items.map((cosmetic, idx) => {
-                        const owned = unlockedCosmetics.includes(cosmetic.id)
-                        const cantAfford = gems < cosmetic.cost
-                        return (
-                          <div key={cosmetic.id} style={{
-                            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                            borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none',
-                          }}>
-                            <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}>
-                              {cosmetic.type === 'accent' ? (
-                                <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: cosmetic.value }} />
-                              ) : (
-                                <span style={{ fontSize: 12 }}>{cosmetic.type === 'ink' ? '✎' : '▤'}</span>
-                              )}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: font }}>{cosmetic.name}</div>
-                            </div>
-                            {owned ? (
-                              <button onClick={() => applyCosmetic(cosmetic)} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>
-                                {cosmetic.type === 'accent' ? 'Apply' : 'Owned ✓'}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => buyCosmetic(cosmetic)}
-                                disabled={cantAfford}
-                                style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}
-                              >
-                                💎 {cosmetic.cost}
-                              </button>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
+              <GemSection title="Accent Colors" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {[
+                    ...ACCENT_COLORS.filter(c => c.cost || c.pro).map(({ hex, name, cost, pro }) => ({ id: `accent_${hex}`, name, cost, pro, value: hex })),
+                    ...GEM_COSMETICS.filter(c => c.type === 'accent').map(c => ({ id: c.id, name: c.name, cost: c.cost, value: c.value })),
+                  ].map((item, idx) => {
+                    const owned = unlockedCosmetics.includes(item.id)
+                    const cantAfford = !item.cost || gems < item.cost
+                    return (
+                      <div key={item.id} id={`gem-item-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === item.id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}>
+                          <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: item.value }} />
+                        </div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: font }}>{item.name}</div></div>
+                        {(item as any).pro ? (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#f59e0b', padding: '1px 6px', borderRadius: 99 }}>PRO</span>
+                        ) : owned ? (
+                          <button onClick={() => onUpdateConfig({ accentColor: item.value })} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Apply</button>
+                        ) : (
+                          <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {item.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
+              <GemSection title="Heading Fonts" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {HEADING_FONT_OPTIONS.filter(f => f.cost || f.pro).map((f, idx) => {
+                    const id = `hfont_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
+                    return (
+                      <div key={id} id={`gem-item-${id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontFamily: `"${f.value}", serif`, fontWeight: 600, color: textPrimary }}>Aa</span>
+                        </div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: `"${f.value}", serif` }}>{f.label}</div></div>
+                        {f.pro ? (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#f59e0b', padding: '1px 6px', borderRadius: 99 }}>PRO</span>
+                        ) : owned ? (
+                          <button onClick={() => onUpdateConfig({ headingFont: f.value })} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Apply</button>
+                        ) : (
+                          <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {f.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
+              <GemSection title="Body Fonts" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {FONT_OPTIONS.filter(f => f.cost || f.pro).map((f, idx) => {
+                    const id = `bfont_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
+                    return (
+                      <div key={id} id={`gem-item-${id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, fontFamily: `"${f.value}", serif`, fontWeight: 600, color: textPrimary }}>Aa</span>
+                        </div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: `"${f.value}", serif` }}>{f.label}</div></div>
+                        {f.pro ? (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#f59e0b', padding: '1px 6px', borderRadius: 99 }}>PRO</span>
+                        ) : owned ? (
+                          <button onClick={() => onUpdateConfig({ editorFont: f.value })} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Apply</button>
+                        ) : (
+                          <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {f.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
+              <GemSection title="Page Styles" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {PAGE_STYLE_OPTIONS.filter(f => f.cost || f.pro).map((f, idx) => {
+                    const id = `paper_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
+                    return (
+                      <div key={id} id={`gem-item-${id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}>
+                          <span style={{ fontSize: 12 }}>▤</span>
+                        </div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: font }}>{f.label}</div></div>
+                        {f.pro ? (
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#fff', background: '#f59e0b', padding: '1px 6px', borderRadius: 99 }}>PRO</span>
+                        ) : owned ? (
+                          <button onClick={() => onUpdateConfig({ paperStyle: f.value })} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Apply</button>
+                        ) : (
+                          <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {f.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
+              <GemSection title="Ink Styles" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {GEM_COSMETICS.filter(c => c.type === 'ink').map((cosmetic, idx) => {
+                    const owned = unlockedCosmetics.includes(cosmetic.id), cantAfford = gems < cosmetic.cost
+                    return (
+                      <div key={cosmetic.id} id={`gem-item-${cosmetic.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === cosmetic.id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}><span style={{ fontSize: 12 }}>✎</span></div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: font }}>{cosmetic.name}</div></div>
+                        {owned ? (
+                          <button onClick={() => applyCosmetic(cosmetic)} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Owned ✓</button>
+                        ) : (
+                          <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {cosmetic.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
+              <GemSection title="Paper Textures" isDark={isDark} textSecondary={textSecondary} dividerColor={dividerColor}>
+                <div style={{ borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden', backgroundColor: cardBg }}>
+                  {GEM_COSMETICS.filter(c => c.type === 'paper').map((cosmetic, idx) => {
+                    const owned = unlockedCosmetics.includes(cosmetic.id), cantAfford = gems < cosmetic.cost
+                    return (
+                      <div key={cosmetic.id} id={`gem-item-${cosmetic.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: idx > 0 ? `1px solid ${dividerColor}` : 'none', transition: 'background 0.3s', background: highlightItem === cosmetic.id ? (isDark ? 'rgba(167,139,250,0.1)' : 'rgba(167,139,250,0.08)') : 'transparent' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#27272a' : '#f0ede8', flexShrink: 0 }}><span style={{ fontSize: 12 }}>▤</span></div>
+                        <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 500, color: textPrimary, fontFamily: font }}>{cosmetic.name}</div></div>
+                        {owned ? (
+                          <button onClick={() => applyCosmetic(cosmetic)} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer', fontFamily: font }}>Owned ✓</button>
+                        ) : (
+                          <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none', cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1, fontFamily: font }}>💎 {cosmetic.cost}</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </GemSection>
+
             </div>
           )}
 
@@ -604,13 +665,16 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               height: 180, position: 'relative',
-                              background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                              background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
                             }}>
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
                               <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none' }} />
                               <Sparkles rarity={t.rarity} count={4} />
                               <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
                                 <PlantIcon type={type} size={120} stage={3} />
+                              </div>
+                              <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+                                {getDropChance(t.weight)}
                               </div>
                               {owned && (
                                 <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
@@ -666,7 +730,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
         height: featured ? 200 : 180,
-        background: t.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+        background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
         position: 'relative',
       }}>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)' }} />
@@ -674,6 +738,9 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
         <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
           <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
+        </div>
+        <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+          {getDropChance(t.weight)}
         </div>
         {soldOut && (
           <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
@@ -693,5 +760,19 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         </div>
       </div>
     </button>
+  )
+}
+
+function GemSection({ title, isDark, textSecondary, dividerColor, children }: {
+  title: string; isDark: boolean; textSecondary: string; dividerColor: string; children: React.ReactNode
+}) {
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{title}</span>
+        <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
+      </div>
+      {children}
+    </div>
   )
 }

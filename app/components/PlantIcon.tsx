@@ -1385,10 +1385,83 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
     }
   }
 
+  const renderGround = () => {
+    const r = 10 + s * 4
+    switch (shape) {
+      case 'void':
+        return (
+          <g>
+            <circle cx="38" cy="8" r="4" fill="#2a2a3e" opacity="0.3" />
+            <circle cx="37" cy="7" r="1.5" fill="#1a1a2e" opacity="0.4" />
+            <ellipse cx="24" cy="46" rx={r} ry="2.5" fill="#1a1a2e" opacity="0.3" />
+            <path d={`M${24 - r} 46 Q24 ${44 - s} ${24 + r} 46`} fill="#12121a" opacity="0.15" />
+          </g>
+        )
+      case 'ethereal':
+        return (
+          <g>
+            <circle cx="36" cy="10" r="3" fill={color} opacity="0.08" />
+            <circle cx="8" cy="14" r="1.5" fill={color} opacity="0.06" />
+            <circle cx="40" cy="24" r="1" fill={color} opacity="0.05" />
+            <ellipse cx="24" cy="46" rx={r} ry="2" fill={color} opacity="0.08" />
+          </g>
+        )
+      case 'cactus':
+        return (
+          <g>
+            <ellipse cx="24" cy="46" rx={r} ry="2.5" fill="#8a7a5a" opacity="0.2" />
+            <path d={`M${24 - r} 46 Q24 ${44 - s * 0.5} ${24 + r} 46`} fill="#a09070" opacity="0.1" />
+            <circle cx="10" cy="44" r="1" fill="#8a7a5a" opacity="0.15" />
+            <circle cx="38" cy="45" r="0.8" fill="#8a7a5a" opacity="0.12" />
+          </g>
+        )
+      case 'palm':
+        return (
+          <g>
+            <ellipse cx="24" cy="46" rx={r} ry="2.5" fill="#8a7a5a" opacity="0.2" />
+            <path d={`M${24 - r} 46 Q24 ${44 - s * 0.5} ${24 + r} 46`} fill="#a09070" opacity="0.1" />
+          </g>
+        )
+      case 'mushroom':
+        return (
+          <g>
+            <ellipse cx="24" cy="46" rx={r} ry="2.5" fill="#3a5a3a" opacity="0.2" />
+            <path d={`M${24 - r} 46 Q24 ${44 - s} ${24 + r} 46`} fill="#2a4a2a" opacity="0.15" />
+            <circle cx="12" cy="44" r="1.5" fill="#4a6a4a" opacity="0.15" />
+            <circle cx="36" cy="45" r="1" fill="#4a6a4a" opacity="0.12" />
+          </g>
+        )
+      case 'bonsai':
+        return null
+      case 'dead':
+        return (
+          <g>
+            <ellipse cx="24" cy="46" rx={r} ry="2" fill="#4a4a4a" opacity="0.12" />
+            <path d={`M${24 - r} 46 Q24 ${45 - s * 0.3} ${24 + r} 46`} fill="#3a3a3a" opacity="0.08" />
+          </g>
+        )
+      default:
+        return (
+          <g>
+            <ellipse cx="24" cy="46" rx={r} ry="3" fill="#3a5a2a" opacity="0.2" />
+            <path d={`M${24 - r} 46 Q24 ${43 - s} ${24 + r} 46`} fill="#4a6a3a" opacity="0.15" />
+            {s >= 2 && <>
+              <path d={`M${24 - r + 2} 46 Q${24 - r + 4} 44 ${24 - r + 6} 46`} fill="#5a7a4a" opacity="0.2" />
+              <path d={`M${24 + r - 6} 46 Q${24 + r - 4} 44 ${24 + r - 2} 46`} fill="#5a7a4a" opacity="0.18" />
+            </>}
+            {s >= 1 && <>
+              <circle cx={24 - r + 3} cy="45.5" r="0.6" fill="#6a8a5a" opacity="0.2" />
+              <circle cx={24 + r - 3} cy="45.5" r="0.5" fill="#6a8a5a" opacity="0.15" />
+            </>}
+          </g>
+        )
+    }
+  }
+
   return (
     <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="24" cy="45" rx={8 + s * 3} ry={2 + s * 0.5} fill="#5c4a32" opacity="0.15" />
+        {renderGround()}
         {renderShape()}
       </svg>
     </div>

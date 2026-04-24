@@ -106,114 +106,73 @@ details.toggle-block summary:focus {
 /* ── Rarity Effects ────────────────────────────────────────── */
 
 /* UNCOMMON: Gentle leaf sway */
+/* UNCOMMON: very subtle sway at the top */
 .rarity-uncommon {
-  animation: uncommon-sway 4s ease-in-out infinite;
+  transform-origin: bottom center;
+  animation: uncommon-sway 5s ease-in-out infinite;
 }
 @keyframes uncommon-sway {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(1.5deg); }
+  50% { transform: rotate(0.8deg); }
 }
 
-/* RARE: Soft blue glow pulse */
+/* RARE: gentle glow, no movement */
 .rarity-rare {
-  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35));
-  animation: rare-glow 3s ease-in-out infinite;
-}
-@keyframes rare-glow {
-  0%, 100% { filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.35)); }
-  50% { filter: drop-shadow(0 0 14px rgba(96, 165, 250, 0.55)); }
+  filter: drop-shadow(0 0 4px rgba(96, 165, 250, 0.25));
 }
 
-/* TRUE RARE: Purple shimmer + float */
+/* TRUE RARE: soft purple glow */
 .rarity-true-rare {
-  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4));
-  animation: true-rare-float 3.5s ease-in-out infinite, true-rare-shimmer 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.3));
+  transform-origin: bottom center;
+  animation: true-rare-sway 6s ease-in-out infinite;
 }
-@keyframes true-rare-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-@keyframes true-rare-shimmer {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4)); }
-  50% { filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.7)); }
+@keyframes true-rare-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(0.6deg); }
 }
 
-/* PREMIUM: Golden shimmer + breathing scale */
+/* PREMIUM: warm golden glow */
 .rarity-premium {
-  position: relative;
-  filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4));
-  animation: premium-pulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.3));
+  transform-origin: bottom center;
+  animation: premium-sway 5s ease-in-out infinite;
 }
-@keyframes premium-pulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.4)); }
-  50% { transform: scale(1.03); filter: drop-shadow(0 0 18px rgba(234, 179, 8, 0.65)); }
+@keyframes premium-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-0.5deg); }
 }
 
-/* CHROMA: Rainbow hue cycling + floating sway */
+/* CHROMA: soft color glow, no hue rotation */
 .rarity-chroma {
-  filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
-  animation: chroma-hue 4s linear infinite, chroma-float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.35));
+  transform-origin: bottom center;
+  animation: chroma-sway 5.5s ease-in-out infinite;
 }
-@keyframes chroma-hue {
-  0% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(0deg); }
-  100% { filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5)) hue-rotate(360deg); }
-}
-@keyframes chroma-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33% { transform: translateY(-3px) rotate(1deg); }
-  66% { transform: translateY(1px) rotate(-1deg); }
+@keyframes chroma-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(0.7deg); }
 }
 
-/* EXTINCT: Chaotic void energy + intense glow */
+/* EXTINCT: subtle dark glow */
 .rarity-extinct {
-  filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2) brightness(1.1);
-  animation: extinct-chaos 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.35));
+  transform-origin: bottom center;
+  animation: extinct-sway 7s ease-in-out infinite;
 }
-@keyframes extinct-chaos {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) contrast(1.2);
-  }
-  25% { transform: scale(1.05) rotate(0.5deg); }
-  50% {
-    transform: scale(0.98) rotate(-0.5deg);
-    filter: drop-shadow(0 0 35px rgba(99, 102, 241, 0.8)) contrast(1.4) saturate(1.5);
-  }
-  75% { transform: scale(1.02) rotate(0.2deg); }
+@keyframes extinct-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-0.4deg); }
 }
 
-/* Card-level rarity effects (glow borders + ambient particles) */
-.rarity-card-rare { box-shadow: inset 0 0 20px rgba(96, 165, 250, 0.08); }
-.rarity-card-true-rare { box-shadow: inset 0 0 25px rgba(167, 139, 250, 0.1); }
-.rarity-card-premium {
-  box-shadow: inset 0 0 30px rgba(234, 179, 8, 0.08);
-  animation: card-premium-border 3s ease-in-out infinite;
-}
-.rarity-card-chroma {
-  box-shadow: inset 0 0 30px rgba(192, 132, 252, 0.1);
-  animation: card-chroma-border 4s linear infinite;
-}
-.rarity-card-extinct {
-  box-shadow: inset 0 0 40px rgba(168, 85, 247, 0.12);
-  animation: card-extinct-border 5s ease-in-out infinite;
-}
+/* Card-level rarity effects (subtle inner glow only) */
+.rarity-card-rare { box-shadow: inset 0 0 15px rgba(96, 165, 250, 0.06); }
+.rarity-card-true-rare { box-shadow: inset 0 0 18px rgba(167, 139, 250, 0.08); }
+.rarity-card-premium { box-shadow: inset 0 0 20px rgba(234, 179, 8, 0.06); }
+.rarity-card-chroma { box-shadow: inset 0 0 20px rgba(192, 132, 252, 0.08); }
+.rarity-card-extinct { box-shadow: inset 0 0 25px rgba(168, 85, 247, 0.08); }
 
-@keyframes card-premium-border {
-  0%, 100% { box-shadow: inset 0 0 30px rgba(234, 179, 8, 0.08); }
-  50% { box-shadow: inset 0 0 40px rgba(234, 179, 8, 0.15); }
-}
-@keyframes card-chroma-border {
-  0% { box-shadow: inset 0 0 30px rgba(244, 114, 182, 0.1); }
-  33% { box-shadow: inset 0 0 30px rgba(96, 165, 250, 0.1); }
-  66% { box-shadow: inset 0 0 30px rgba(52, 211, 153, 0.1); }
-  100% { box-shadow: inset 0 0 30px rgba(244, 114, 182, 0.1); }
-}
-@keyframes card-extinct-border {
-  0%, 100% { box-shadow: inset 0 0 40px rgba(168, 85, 247, 0.12); }
-  50% { box-shadow: inset 0 0 60px rgba(99, 102, 241, 0.2); }
-}
-
-/* Particle/sparkle system for high rarities */
+/* Particle/sparkle system — gentle rising dots only for premium+ */
 .sparkle-container {
   position: absolute;
   inset: 0;
@@ -229,32 +188,22 @@ details.toggle-block summary:focus {
 }
 
 .sparkle-premium {
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.9) 0%, transparent 70%);
-  animation: sparkle-rise 3s ease-out infinite;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, transparent 70%);
+  animation: sparkle-drift 5s ease-out infinite;
 }
 .sparkle-chroma {
-  background: radial-gradient(circle, rgba(244, 114, 182, 0.9) 0%, transparent 70%);
-  animation: sparkle-orbit 4s linear infinite;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.5) 0%, transparent 70%);
+  animation: sparkle-drift 6s ease-out infinite;
 }
 .sparkle-extinct {
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.9) 0%, rgba(99, 102, 241, 0.5) 50%, transparent 70%);
-  animation: sparkle-warp 2.5s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.5) 0%, transparent 70%);
+  animation: sparkle-drift 5.5s ease-out infinite;
 }
 
-@keyframes sparkle-rise {
-  0% { transform: translateY(100%) scale(0); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
-}
-@keyframes sparkle-orbit {
-  0% { transform: rotate(0deg) translateX(30px) scale(0.5); opacity: 0; }
-  25% { opacity: 1; }
-  100% { transform: rotate(360deg) translateX(30px) scale(0); opacity: 0; }
-}
-@keyframes sparkle-warp {
-  0% { transform: scale(0) rotate(0deg); opacity: 0; }
-  30% { transform: scale(1.5) rotate(90deg); opacity: 1; }
-  100% { transform: scale(0) rotate(180deg); opacity: 0; }
+@keyframes sparkle-drift {
+  0% { transform: translateY(0) scale(0); opacity: 0; }
+  15% { opacity: 0.6; }
+  100% { transform: translateY(-30px) scale(1); opacity: 0; }
 }
 
 /* Boutique stage slider */

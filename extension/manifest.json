@@ -3,7 +3,7 @@
   "name": "Pulp Focus",
   "version": "1.1.0",
   "description": "Block distracting websites while writing in Pulp. Watch your garden grow.",
-  "permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback"],
+  "permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
