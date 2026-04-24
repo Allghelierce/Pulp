@@ -42,15 +42,15 @@ export const TREE_TYPES: Record<string, any> = {
   ghost:      { name: 'Ghost Oak',      color: '#f3f4f6', bg: 'rgba(243,244,246,0.1)', cost: 3000,  currency: 'sunshine', rarity: 'premium',   weight: 0.01,  shape: 'ethereal',  sceneBg: 'linear-gradient(180deg, #14161a 0%, #1a1e22 50%, #20242a 100%)' },
   bonsai:     { name: 'Bonsai',         color: '#15803d', bg: 'rgba(21,128,61,0.1)',    cost: 3000,  currency: 'sunshine', rarity: 'premium',   weight: 0.01,  shape: 'bonsai',    sceneBg: 'linear-gradient(180deg, #141a14 0%, #1a221a 50%, #202a20 100%)' },
 
-  // CHROMA — 15000 sunshine each (Total: 3)
-  rainbow:    { name: 'Rainbow Willow', color: '#c084fc', bg: 'rgba(192,132,252,0.1)', cost: 15000, currency: 'sunshine', rarity: 'chroma',    weight: 0.003, shape: 'crystal',   sceneBg: 'linear-gradient(180deg, #181428 0%, #1e1a32 50%, #28203e 100%)' },
-  neon:       { name: 'Neon Fern',      color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   cost: 15000, currency: 'sunshine', rarity: 'chroma',    weight: 0.003, shape: 'mushroom',  sceneBg: 'linear-gradient(180deg, #0c1a14 0%, #10241a 50%, #143020 100%)' },
-  gold_kumquat:{ name: 'Golden Kumquat',color: '#fbbf24', bg: 'rgba(251,191,36,0.2)',  cost: 15000, currency: 'sunshine', rarity: 'chroma',    weight: 0.003, shape: 'baobab',    sceneBg: 'linear-gradient(180deg, #1c1a0e 0%, #262414 50%, #322e1a 100%)' },
+  // EXTINCT — 15000 sunshine each (Total: 3)
+  elderberry: { name: 'Elderberry',     color: '#4c1d95', bg: 'rgba(76,29,149,0.1)',   cost: 15000, currency: 'sunshine', rarity: 'extinct',   weight: 0.003, shape: 'bramble',   sceneBg: 'linear-gradient(180deg, #14101e 0%, #1a1428 50%, #201a32 100%)' },
+  prehistoric:{ name: 'Ancient Pine',   color: '#bedaf7', bg: 'rgba(190,218,247,0.1)', cost: 15000, currency: 'sunshine', rarity: 'extinct',   weight: 0.003, shape: 'ancient',   sceneBg: 'linear-gradient(180deg, #101820 0%, #142028 50%, #182830 100%)' },
+  void:       { name: 'Void Tree',      color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 15000, currency: 'sunshine', rarity: 'extinct',   weight: 0.003, shape: 'void',      sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
 
-  // EXTINCT — 50000 sunshine each (Total: 3)
-  elderberry: { name: 'Elderberry',     color: '#4c1d95', bg: 'rgba(76,29,149,0.1)',   cost: 50000, currency: 'sunshine', rarity: 'extinct',   weight: 0.001, shape: 'bramble',   sceneBg: 'linear-gradient(180deg, #14101e 0%, #1a1428 50%, #201a32 100%)' },
-  prehistoric:{ name: 'Ancient Pine',   color: '#bedaf7', bg: 'rgba(190,218,247,0.1)', cost: 50000, currency: 'sunshine', rarity: 'extinct',   weight: 0.001, shape: 'ancient',   sceneBg: 'linear-gradient(180deg, #101820 0%, #142028 50%, #182830 100%)' },
-  void:       { name: 'Void Tree',      color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 50000, currency: 'sunshine', rarity: 'extinct',   weight: 0.001, shape: 'void',      sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
+  // CHROMA — 50000 sunshine each (Total: 3)
+  rainbow:    { name: 'Rainbow Willow', color: '#c084fc', bg: 'rgba(192,132,252,0.1)', cost: 50000, currency: 'sunshine', rarity: 'chroma',    weight: 0.001, shape: 'crystal',   sceneBg: 'linear-gradient(180deg, #181428 0%, #1e1a32 50%, #28203e 100%)' },
+  neon:       { name: 'Neon Fern',      color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   cost: 50000, currency: 'sunshine', rarity: 'chroma',    weight: 0.003, shape: 'mushroom',  sceneBg: 'linear-gradient(180deg, #0c1a14 0%, #10241a 50%, #143020 100%)' },
+  gold_kumquat:{ name: 'Golden Kumquat',color: '#fbbf24', bg: 'rgba(251,191,36,0.2)',  cost: 50000, currency: 'sunshine', rarity: 'chroma',    weight: 0.001, shape: 'baobab',    sceneBg: 'linear-gradient(180deg, #1c1a0e 0%, #262414 50%, #322e1a 100%)' },
 
   spoiled:    { name: 'Spoiled',        color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,   currency: 'sunshine', rarity: 'common',    weight: 0,     shape: 'dead',      sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }
 }

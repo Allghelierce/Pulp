@@ -64,7 +64,7 @@ export type DialogConfig =
   | { type: "alert"; title: string; message?: string }
 export interface Tree {
   id: number
-  type: "navel" | "blood" | "clementine" | "spoiled"
+  type: string
   stage: number
   progress: number
   plantedAt: number

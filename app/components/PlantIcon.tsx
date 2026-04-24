@@ -23,8 +23,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
   const light = lighten(color, 50)
   const uid = `plant-${type}-${size}-${stage}`
 
-  const swayDelay = (type.charCodeAt(0) + (type.charCodeAt(1) || 0)) % 10
-  const swayDuration = 4 + (swayDelay % 3)
+  const swayHash = (type.charCodeAt(0) + (type.charCodeAt(1) || 0)) % 10
+  const swayDuration = 6 + (swayHash % 4)
+  const swayDelay = -(swayHash * 0.7)
 
   if (isSeed) {
     return (
@@ -38,7 +39,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
         <g style={{
           transformOrigin: '24px 38px',
-          animation: `plant-sway-${uid} ${swayDuration}s ease-in-out ${swayDelay * 0.3}s infinite`,
+          animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
         }}>
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
@@ -46,12 +47,6 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <path d="M24 21 Q22 17 24 14 Q26 17 24 21" fill="#6ab04c" opacity="0.6" />
           <path d="M24 14 L24 21" stroke="#4a8c3f" strokeWidth="0.6" opacity="0.4" />
         </g>
-        <style>{`
-          @keyframes plant-sway-${uid} {
-            0%, 100% { transform: rotate(1.5deg); }
-            50% { transform: rotate(-1.5deg); }
-          }
-        `}</style>
       </svg>
     )
   }
@@ -1560,14 +1555,18 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <path d="M14 46 L16 40 L32 40 L34 46 Z" fill="#8B6543" />
             <rect x="14" y="38" width="20" height="3" rx="1" fill="#A0774A" />
-            <path d="M24 38 Q16 32 18 24 Q20 18 26 20" stroke={trunk} strokeWidth="4" fill="none" strokeLinecap="round" />
+            <path d="M24 40 Q16 34 18 24 Q20 18 26 20" stroke={trunk} strokeWidth="4" fill="none" strokeLinecap="round" />
             <path d="M18 24 Q12 20 10 18" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
             <path d="M26 20 Q32 16 36 14" stroke={trunk} strokeWidth="2" fill="none" strokeLinecap="round" />
             <ellipse cx="10" cy="14" rx="7" ry="5" fill={color} />
             <ellipse cx="28" cy="14" rx="9" ry="6" fill={color} />
             <ellipse cx="36" cy="10" rx="6" ry="4" fill={color} />
+            <ellipse cx="12" cy="16" rx="4" ry="3" fill={color} opacity="0.6" />
+            <ellipse cx="32" cy="12" rx="5" ry="3" fill={color} opacity="0.5" />
             <ellipse cx="8" cy="12" rx="3" ry="2" fill={light} opacity="0.3" />
             <ellipse cx="26" cy="12" rx="4" ry="3" fill={light} opacity="0.25" />
+            <circle cx="14" cy="14" r="1" fill={light} opacity="0.2" />
+            <circle cx="34" cy="10" r="0.8" fill={light} opacity="0.15" />
           </g>
         )
 
@@ -2074,21 +2073,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
     }
   }
 
-  const swayAmount = s <= 1 ? 2 : 1.2
-
   return (
     <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <style>{`
-        @keyframes plant-sway-${uid} {
-          0%, 100% { transform: rotate(${swayAmount}deg); }
-          50% { transform: rotate(-${swayAmount}deg); }
-        }
-      `}</style>
       <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         {renderGround()}
         <g style={{
           transformOrigin: '24px 46px',
-          animation: `plant-sway-${uid} ${swayDuration}s ease-in-out ${swayDelay * 0.3}s infinite`,
+          animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
         }}>
           {renderShape()}
         </g>

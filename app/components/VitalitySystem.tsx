@@ -193,11 +193,15 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
+    if (selectedSeed) {
+      setGrove(g => [...g, { id: Date.now(), type: selectedSeed, stage: 4, progress: 100, plantedAt: Date.now() }])
+    }
+
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, setSunshine, setXp, checkAchievement])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setSunshine, setXp, setGrove, checkAchievement])
 
   const dismissDeadTree = useCallback(() => {
     setLostSunshine(sunshine)

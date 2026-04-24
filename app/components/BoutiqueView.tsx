@@ -38,7 +38,7 @@ const GEM_COSMETICS = [
   { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 15 },
 ]
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'premium', 'chroma', 'extinct']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'premium', 'extinct', 'chroma']
 
 const RARITY_LABEL: Record<string, string> = {
   common: 'Common', uncommon: 'Uncommon', rare: 'Rare',
@@ -119,93 +119,84 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
 function RarityScene({ rarity }: { rarity: string }) {
   if (rarity === 'extinct') {
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'radial-gradient(ellipse at 30% 20%, #0d0a1a 0%, #050508 50%, #000000 100%)' }}>
-        <style>{`
-          @keyframes twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
-          @keyframes shoot { 0% { transform: translateX(0) translateY(0); opacity: 1; } 100% { transform: translateX(120px) translateY(80px); opacity: 0; } }
-        `}</style>
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div key={`s${i}`} style={{
-            position: 'absolute',
-            width: i % 5 === 0 ? 2.5 : 1.5,
-            height: i % 5 === 0 ? 2.5 : 1.5,
-            borderRadius: '50%',
-            background: i % 7 === 0 ? '#c4b5fd' : i % 5 === 0 ? '#93c5fd' : '#e4e4e7',
-            left: `${(i * 31 + 7) % 95}%`,
-            top: `${(i * 23 + 13) % 85}%`,
-            animation: `twinkle ${2 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 5}s infinite`,
-            boxShadow: i % 5 === 0 ? '0 0 4px rgba(196,181,253,0.4)' : 'none',
-          }} />
-        ))}
-        {Array.from({ length: 2 }).map((_, i) => (
-          <div key={`sh${i}`} style={{
-            position: 'absolute',
-            width: 2, height: 2, borderRadius: '50%',
-            background: '#f8fafc',
-            left: `${10 + i * 35}%`, top: `${15 + i * 20}%`,
-            animation: `shoot 1.8s linear ${i * 4 + 2}s infinite`,
-            boxShadow: '0 0 6px 2px rgba(248,250,252,0.5), -20px -2px 12px rgba(248,250,252,0.15)',
-          }}>
-            <div style={{ position: 'absolute', right: 2, top: 0, width: 30, height: 1, background: 'linear-gradient(90deg, rgba(248,250,252,0.4) 0%, transparent 100%)', transformOrigin: 'right center', transform: 'rotate(-33deg)' }} />
-          </div>
-        ))}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          <rect width="100%" height="100%" fill="#020204" />
+          <radialGradient id="extinct-glow" cx="50%" cy="60%">
+            <stop offset="0%" stopColor="#1a0a0a" />
+            <stop offset="100%" stopColor="#020204" />
+          </radialGradient>
+          <rect width="100%" height="100%" fill="url(#extinct-glow)" />
+          {Array.from({ length: 18 }).map((_, i) => (
+            <circle key={i}
+              cx={`${(i * 37 + 11) % 95}%`} cy={`${(i * 29 + 7) % 85}%`}
+              r={i % 4 === 0 ? 1.2 : 0.7}
+              fill={i % 6 === 0 ? '#f87171' : i % 3 === 0 ? '#fca5a5' : '#71717a'}
+            >
+              <animate attributeName="opacity" values={`${0.1 + (i % 3) * 0.15};${0.5 + (i % 2) * 0.3};${0.1 + (i % 3) * 0.15}`} dur={`${3 + (i % 5) * 1.5}s`} begin={`${(i * 0.8) % 6}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
+        </svg>
       </div>
     )
   }
 
   if (rarity === 'chroma') {
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'linear-gradient(180deg, #1a0e24 0%, #12081c 50%, #0a0612 100%)' }}>
-        <style>{`
-          @keyframes chromaShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-          @keyframes chromaPulse { 0%, 100% { opacity: 0.12; transform: scale(1); } 50% { opacity: 0.25; transform: scale(1.1); } }
-        `}</style>
-        <div style={{
-          position: 'absolute', inset: -20,
-          background: 'radial-gradient(circle at 30% 40%, rgba(192,132,252,0.15) 0%, transparent 50%), radial-gradient(circle at 70% 60%, rgba(244,114,182,0.12) 0%, transparent 50%), radial-gradient(circle at 50% 20%, rgba(96,165,250,0.1) 0%, transparent 40%)',
-          animation: 'chromaShift 8s linear infinite',
-        }} />
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            width: 3 + (i % 3) * 2,
-            height: 3 + (i % 3) * 2,
-            borderRadius: '50%',
-            background: ['#c084fc', '#f472b6', '#60a5fa', '#34d399'][i % 4],
-            left: `${(i * 29 + 5) % 90}%`,
-            top: `${(i * 23 + 8) % 80}%`,
-            animation: `chromaPulse ${3 + (i % 3)}s ease-in-out ${i * 0.5}s infinite`,
-          }} />
-        ))}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          <rect width="100%" height="100%" fill="#08030f" />
+          <radialGradient id="chroma-g1" cx="30%" cy="40%">
+            <stop offset="0%" stopColor="rgba(192,132,252,0.12)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+          <radialGradient id="chroma-g2" cx="70%" cy="65%">
+            <stop offset="0%" stopColor="rgba(244,114,182,0.1)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+          <rect width="100%" height="100%" fill="url(#chroma-g1)" />
+          <rect width="100%" height="100%" fill="url(#chroma-g2)" />
+          {Array.from({ length: 10 }).map((_, i) => {
+            const colors = ['#c084fc', '#f472b6', '#60a5fa', '#a78bfa', '#34d399']
+            return (
+              <circle key={i}
+                cx={`${(i * 31 + 8) % 90}%`} cy={`${(i * 27 + 5) % 80}%`}
+                r={1 + (i % 3) * 0.5}
+                fill={colors[i % 5]}
+              >
+                <animate attributeName="opacity" values="0.05;0.35;0.05" dur={`${4 + (i % 3) * 2}s`} begin={`${i * 0.6}s`} repeatCount="indefinite" />
+                <animate attributeName="r" values={`${1 + (i % 3) * 0.5};${1.5 + (i % 3) * 0.5};${1 + (i % 3) * 0.5}`} dur={`${4 + (i % 3) * 2}s`} begin={`${i * 0.6}s`} repeatCount="indefinite" />
+              </circle>
+            )
+          })}
+        </svg>
       </div>
     )
   }
 
   if (rarity === 'premium') {
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'linear-gradient(180deg, #1a1508 0%, #1c1406 50%, #141004 100%)' }}>
-        <style>{`
-          @keyframes goldFloat { 0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; } 20% { opacity: 0.6; } 80% { opacity: 0.3; } 100% { transform: translateY(-60px) rotate(20deg); opacity: 0; } }
-          @keyframes goldPulse { 0%, 100% { opacity: 0.06; } 50% { opacity: 0.15; } }
-        `}</style>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.1) 0%, transparent 60%), radial-gradient(circle at 30% 30%, rgba(251,191,36,0.05) 0%, transparent 40%)',
-          animation: 'goldPulse 4s ease-in-out infinite',
-        }} />
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            width: 2 + (i % 3),
-            height: 2 + (i % 3),
-            borderRadius: '50%',
-            background: i % 2 === 0 ? '#fbbf24' : '#f59e0b',
-            left: `${(i * 28 + 10) % 85}%`,
-            bottom: `${5 + (i * 7) % 30}%`,
-            animation: `goldFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 1.2}s infinite`,
-            boxShadow: '0 0 6px rgba(251,191,36,0.3)',
-          }} />
-        ))}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          <rect width="100%" height="100%" fill="#0c0a04" />
+          <radialGradient id="premium-glow" cx="50%" cy="70%">
+            <stop offset="0%" stopColor="rgba(251,191,36,0.08)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+          <rect width="100%" height="100%" fill="url(#premium-glow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="5s" repeatCount="indefinite" />
+          </rect>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <circle key={i}
+              cx={`${(i * 33 + 15) % 85}%`}
+              r={0.8 + (i % 2) * 0.4}
+              fill={i % 2 === 0 ? '#fbbf24' : '#f59e0b'}
+            >
+              <animate attributeName="opacity" values="0;0.5;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
+              <animate attributeName="cy" values={`${60 + (i * 11) % 30}%;${40 + (i * 7) % 20}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
+            </circle>
+          ))}
+        </svg>
       </div>
     )
   }
@@ -473,9 +464,9 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* Timer header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>{countdown}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: '#ef444410', padding: '4px 10px', borderRadius: '99px', border: '1px solid #ef444420' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', fontFamily: 'monospace', letterSpacing: '0.02em' }}>{countdown}</span>
                 </div>
               </div>
 
@@ -554,12 +545,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                 width: '100%', maxWidth: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
                 height: 280,
-                background: previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                background: ['extinct', 'chroma', 'premium'].includes(previewInfo.rarity) ? 'none' : (previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
               }}>
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)' }} />
-                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)', borderRadius: 16, pointerEvents: 'none' }} />
+                <RarityScene rarity={previewInfo.rarity} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)', borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
                 <Sparkles rarity={previewInfo.rarity} count={8} />
-                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 8 }}>
+                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 8, zIndex: 2 }}>
                   {previewStage === 0
                     ? <PlantIcon type={selectedPlant!} size={160} isSeed />
                     : <PlantIcon type={selectedPlant!} size={160} stage={previewStage - 1} />
@@ -739,7 +731,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <div className={`text-center py-16 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
                   <div className="text-[32px] mb-3 opacity-40">🌱</div>
                   <div className="text-[14px] font-medium">No seeds yet</div>
-                  <div className="text-[12px] mt-1 opacity-70">Buy seeds from the shop to grow your grove.</div>
+                  <div className="text-[12px] mt-1 opacity-70">Buy seeds from the shop to grow your orchard.</div>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-3">
@@ -816,14 +808,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
                               <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
                               <Sparkles rarity={t.rarity} count={4} />
-                              <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
+                              <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
                                 <PlantIcon type={type} size={120} stage={3} />
                               </div>
-                              <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+                              <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
                               {owned && (
-                                <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                                <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#34d399" : "#059669"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
                               )}
@@ -884,7 +876,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
         {isShop ? (
-          <div style={{ position: 'relative', marginBottom: -2, width: featured ? 130 : 120, height: featured ? 130 : 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', marginBottom: -2, width: featured ? 130 : 120, height: featured ? 130 : 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 2 }}>
             <div style={{
               position: 'absolute', bottom: 0, left: '50%', transform: `translateX(-50%) scale(${hovered ? 0.6 : 1})`,
               opacity: hovered ? 0 : 1, transition: 'opacity 0.4s ease, transform 0.4s ease',
@@ -899,16 +891,21 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
             </div>
           </div>
         ) : (
-          <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2 }}>
+          <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
             <PlantIcon type={type} size={featured ? 130 : 120} stage={3} />
           </div>
         )}
-        <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+        <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
           {getDropChance(t.weight)}
         </div>
         {soldOut && (
-          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)' }}>
+          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)', zIndex: 2 }}>
             Sold out
+          </div>
+        )}
+        {!soldOut && isShop && (shopStock[type] || 0) > 0 && (
+          <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700, color: isDark ? '#a1a1aa' : '#71717a', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: 6, backdropFilter: 'blur(4px)', zIndex: 2 }}>
+            x{shopStock[type]}
           </div>
         )}
       </div>

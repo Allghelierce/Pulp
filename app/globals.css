@@ -206,6 +206,11 @@ details.toggle-block summary:focus {
   100% { transform: translateY(-30px) scale(1); opacity: 0; }
 }
 
+@keyframes plantSway {
+  0%, 100% { transform: rotate(0.5deg); }
+  50% { transform: rotate(-0.5deg); }
+}
+
 /* Boutique stage slider */
 .boutique-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
