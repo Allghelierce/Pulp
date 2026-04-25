@@ -115,13 +115,13 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
       }}
       onDragEnd={(_, info) => {
         if (info.offset.y > 80) {
-          onClick()
+          setTimeout(onClick, 150)
         }
         dragTriggered.current = false
       }}
       onClick={() => {
         changeFace()
-        setTimeout(onClick, 100)
+        setTimeout(onClick, 150)
       }}
     >
       <FlexTwine bow={stringBow} />
