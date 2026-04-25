@@ -395,16 +395,26 @@ export const BoutiqueView = memo(function BoutiqueView({
 
   const CurrencyPill = ({ type, amount }: { type: 'sunshine' | 'gems'; amount: number }) => (
     <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
-      <span className="text-[10px] leading-none">{type === 'gems' ? '💎' : '☀️'}</span>
+      {type === 'gems'
+        ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>
+        : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      }
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
   )
 
-  const tabs: { id: TabId; label: string; icon: string }[] = [
-    { id: 'shop', label: 'Shop', icon: '🏪' },
-    { id: 'gems', label: 'Gems', icon: '💎' },
-    { id: 'bag', label: 'My Seeds', icon: '🎒' },
-    { id: 'catalog', label: 'Catalog', icon: '📖' },
+  const tabIcons: Record<TabId, React.ReactNode> = {
+    shop: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>,
+    gems: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>,
+    bag: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>,
+    catalog: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>,
+  }
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'shop', label: 'Shop' },
+    { id: 'gems', label: 'Gems' },
+    { id: 'bag', label: 'My Seeds' },
+    { id: 'catalog', label: 'Catalog' },
   ]
 
   return (
@@ -437,7 +447,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
                 }`}
               >
-                <span className="text-[12px] opacity-90">{tab.icon}</span>
+                <span className="opacity-80">{tabIcons[tab.id]}</span>
                 {tab.label}
               </button>
             ))}

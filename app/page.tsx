@@ -3099,7 +3099,7 @@ export default function NoteApp() {
           </div>
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange onClick={() => setOrchardOpen(prev => !prev)} />
+            <HangingOrange onClick={() => setOrchardOpen(prev => !prev)} onHover={() => import("@/app/components/OrchardView")} />
           )}
         </div>
 

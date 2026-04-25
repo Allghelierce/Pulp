@@ -32,10 +32,28 @@ function useExtensionDetected() {
   useEffect(() => {
     const check = () => document.documentElement.getAttribute("data-pulp-extension") === "true"
     if (check()) { setDetected(true); return }
-    const handler = () => setDetected(true)
-    window.addEventListener("pulp-extension-detected", handler)
-    const interval = setInterval(() => { if (check()) { setDetected(true); clearInterval(interval) } }, 500)
-    return () => { window.removeEventListener("pulp-extension-detected", handler); clearInterval(interval) }
+
+    const markDetected = () => setDetected(true)
+
+    window.addEventListener("pulp-extension-detected", markDetected)
+
+    const pongHandler = (e: MessageEvent) => {
+      if (e.data && e.data.type === "pulp-extension-pong") markDetected()
+    }
+    window.addEventListener("message", pongHandler)
+
+    const interval = setInterval(() => {
+      if (check()) { markDetected(); clearInterval(interval); return }
+      window.postMessage({ type: "pulp-extension-ping" }, "*")
+    }, 500)
+
+    window.postMessage({ type: "pulp-extension-ping" }, "*")
+
+    return () => {
+      window.removeEventListener("pulp-extension-detected", markDetected)
+      window.removeEventListener("message", pongHandler)
+      clearInterval(interval)
+    }
   }, [])
 
   return detected

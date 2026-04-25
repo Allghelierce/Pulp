@@ -146,167 +146,165 @@ function getRarityPlantClass(type: string): string {
 }
 
 const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
-  const sky = isDark ? '#0a0e0a' : '#d8dcd0'
-  const ground = isDark ? '#141a12' : '#c4c0b0'
-  const groundLight = isDark ? '#1a2216' : '#ccc8b8'
-  const mtnFar = isDark ? '#0c100c' : '#b8b4a8'
-  const mtnMid = isDark ? '#10160e' : '#c0bcae'
-  const mtnNear = isDark ? '#121a10' : '#c8c4b4'
-  const roadColor = isDark ? '#1c1814' : '#b0a898'
-  const roadEdge = isDark ? '#181410' : '#a8a090'
-  const lakeDeep = isDark ? '#0a1420' : '#8aacc8'
-  const lakeShallow = isDark ? '#0e1a2a' : '#a0c4d8'
-  const lakeEdge = isDark ? '#121c12' : '#90a880'
-  const grass = isDark ? '#2a3a22' : '#a8a490'
+  const sky1 = isDark ? '#0a0e14' : '#b8cce0'
+  const sky2 = isDark ? '#0c1018' : '#c8daea'
+  const skyHorizon = isDark ? '#101814' : '#d4e0d0'
+  const ground = isDark ? '#141a12' : '#b8c4a0'
+  const groundLight = isDark ? '#1a2216' : '#c4d0ac'
+  const groundDark = isDark ? '#10140e' : '#a8b490'
+  const mtnFar = isDark ? '#0c120e' : '#8a9a80'
+  const mtnMid = isDark ? '#0e160f' : '#98aa8c'
+  const mtnNear = isDark ? '#101a10' : '#a8b898'
+  const mtnSnow = isDark ? '#2a3028' : '#e4e8dc'
+  const roadBase = isDark ? '#1a1814' : '#a09888'
+  const roadCenter = isDark ? '#22201a' : '#b0a898'
+  const roadEdgeLine = isDark ? '#141210' : '#908878'
+  const lakeDeep = isDark ? '#081018' : '#6898b8'
+  const lakeMid = isDark ? '#0c1820' : '#80aac8'
+  const lakeShallow = isDark ? '#102028' : '#98c0d8'
+  const lakeShore = isDark ? '#182418' : '#8aa880'
+  const grass = isDark ? '#2a3a22' : '#90a478'
 
   return (
     <>
-      {/* Sky gradient at top */}
+      {/* Sky */}
       <div className="absolute inset-0" style={{
         background: isDark
-          ? `linear-gradient(180deg, #080c08 0%, ${ground} 28%)`
-          : `linear-gradient(180deg, #e0e4d8 0%, ${ground} 28%)`,
+          ? `linear-gradient(180deg, ${sky1} 0%, ${sky2} 12%, ${skyHorizon} 24%, ${ground} 34%)`
+          : `linear-gradient(180deg, ${sky1} 0%, ${sky2} 12%, ${skyHorizon} 24%, ${ground} 34%)`,
       }} />
 
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <linearGradient id="lakeGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={lakeShallow} />
-            <stop offset="60%" stopColor={lakeDeep} />
+            <stop offset="40%" stopColor={lakeMid} />
             <stop offset="100%" stopColor={lakeDeep} />
           </linearGradient>
-          <radialGradient id="lakeHighlight" cx="0.4" cy="0.3" r="0.6">
-            <stop offset="0%" stopColor={isDark ? '#1a2a3a' : '#c0dce8'} stopOpacity="0.4" />
+          <linearGradient id="lakeReflect" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#141e14' : '#a0b890'} stopOpacity="0.2" />
             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-          </radialGradient>
+          </linearGradient>
+          <linearGradient id="roadSurface" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={roadCenter} />
+            <stop offset="50%" stopColor={roadBase} />
+            <stop offset="100%" stopColor={roadCenter} />
+          </linearGradient>
         </defs>
 
         {/* ── Mountain range ── */}
-        {/* Far mountains — jagged, desaturated */}
-        <path d="M-5,22 L8,10 L14,16 L22,6 L30,14 L38,4 L46,12 L52,8 L60,14 L68,5 L76,11 L82,7 L90,13 L96,9 L105,18 L105,26 L-5,26 Z" fill={mtnFar} />
+        {/* Far peaks */}
+        <path d="M-5,24 L6,12 L14,18 L22,7 L30,15 L38,5 L46,14 L52,9 L60,15 L68,6 L76,12 L82,8 L90,14 L96,10 L105,19 L105,28 L-5,28 Z" fill={mtnFar} />
         {/* Snow caps */}
-        <path d="M22,6 L24,9 L20,9 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.5" />
-        <path d="M38,4 L40.5,8 L35.5,8 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.6" />
-        <path d="M68,5 L70.5,9 L65.5,9 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.45" />
-        <path d="M52,8 L54,11 L50,11 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.35" />
+        <path d="M22,7 L24.5,11 L19.5,11 Z" fill={mtnSnow} opacity="0.5" />
+        <path d="M38,5 L41,10 L35,10 Z" fill={mtnSnow} opacity="0.6" />
+        <path d="M68,6 L70.5,10 L65.5,10 Z" fill={mtnSnow} opacity="0.45" />
+        {/* Mid range */}
+        <path d="M-5,28 L10,21 L20,25 L32,18 L42,23 L52,19 L64,24 L74,20 L86,25 L95,21 L105,27 L105,34 L-5,34 Z" fill={mtnMid} />
+        {/* Near foothills */}
+        <path d="M-5,33 Q8,28 18,31 Q28,26 38,30 Q50,25 62,29 Q74,26 86,30 Q96,27 105,31 L105,38 L-5,38 Z" fill={mtnNear} />
 
-        {/* Mid mountains — rounder, warmer */}
-        <path d="M-5,28 L10,20 L20,24 L32,17 L42,22 L52,18 L64,23 L74,19 L86,24 L95,20 L105,26 L105,32 L-5,32 Z" fill={mtnMid} />
+        {/* Ground */}
+        <rect x="-5" y="36" width="110" height="68" fill={ground} />
 
-        {/* Near foothills — transition into ground */}
-        <path d="M-5,32 Q8,27 18,30 Q28,25 38,29 Q50,24 62,28 Q74,25 86,29 Q96,26 105,30 L105,36 L-5,36 Z" fill={mtnNear} />
+        {/* Meadow patches */}
+        <ellipse cx="22" cy="54" rx="18" ry="6" fill={groundLight} opacity="0.35" />
+        <ellipse cx="68" cy="66" rx="14" ry="5" fill={groundLight} opacity="0.3" />
+        <ellipse cx="40" cy="84" rx="20" ry="5" fill={groundLight} opacity="0.2" />
+        <ellipse cx="85" cy="44" rx="10" ry="4" fill={groundDark} opacity="0.15" />
 
-        {/* Ground fill below foothills */}
-        <rect x="-5" y="34" width="110" height="70" fill={ground} />
-
-        {/* Subtle terrain variation — meadow patches */}
-        <ellipse cx="20" cy="55" rx="18" ry="7" fill={groundLight} opacity="0.3" />
-        <ellipse cx="55" cy="70" rx="14" ry="5" fill={groundLight} opacity="0.25" />
-        <ellipse cx="35" cy="85" rx="20" ry="6" fill={groundLight} opacity="0.2" />
-
-        {/* ── Main road — winding left-to-right ── */}
+        {/* ── Main road — polished with edges and center line ── */}
+        {/* Road bed (wide, dark edge) */}
         <path
           d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke={roadEdge}
-          strokeWidth="3.5"
+          stroke={roadEdgeLine}
+          strokeWidth="4"
           fill="none"
-          opacity={isDark ? 0.5 : 0.4}
+          opacity={isDark ? 0.4 : 0.35}
           strokeLinecap="round"
         />
+        {/* Road surface */}
         <path
           d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke={roadColor}
-          strokeWidth="2"
+          stroke="url(#roadSurface)"
+          strokeWidth="2.8"
           fill="none"
           opacity={isDark ? 0.6 : 0.5}
           strokeLinecap="round"
         />
-        {/* Road texture dashes */}
+        {/* Center dashes */}
         <path
           d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke={isDark ? '#2a2418' : '#c0b8a8'}
-          strokeWidth="0.4"
+          stroke={isDark ? '#2a2820' : '#c8c0b0'}
+          strokeWidth="0.35"
           fill="none"
-          opacity="0.3"
-          strokeDasharray="2 4"
+          opacity={isDark ? 0.35 : 0.3}
+          strokeDasharray="1.5 3"
           strokeLinecap="round"
         />
 
-        {/* ── Branch road — north toward mountains ── */}
+        {/* ── Branch road ── */}
         <path
           d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
-          stroke={roadEdge}
-          strokeWidth="2.5"
+          stroke={roadEdgeLine}
+          strokeWidth="3"
           fill="none"
-          opacity={isDark ? 0.35 : 0.3}
+          opacity={isDark ? 0.3 : 0.25}
           strokeLinecap="round"
         />
         <path
           d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
-          stroke={roadColor}
-          strokeWidth="1.4"
+          stroke="url(#roadSurface)"
+          strokeWidth="1.8"
           fill="none"
           opacity={isDark ? 0.45 : 0.4}
           strokeLinecap="round"
         />
 
         {/* ── Lake ── */}
+        {/* Shore ring */}
+        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1.2} fill={lakeShore} opacity="0.3" />
+        {/* Water body */}
         <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeGrad)" />
-        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeHighlight)" />
-        {/* Shore */}
-        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1} fill="none" stroke={lakeEdge} strokeWidth="1.2" opacity="0.3" />
-        {/* Reeds on left shore */}
-        {[0,1,2].map(i => {
-          const rx = LAKE_CX - LAKE_RX + 2 + i * 1.8
-          const ry = LAKE_CY - 2 + i * 1.5
-          return <g key={`reed${i}`} opacity={isDark ? 0.3 : 0.25}>
-            <line x1={`${rx}`} y1={`${ry}`} x2={`${rx - 0.3}`} y2={`${ry - 2.5}`} stroke={grass} strokeWidth="0.4" />
-            <line x1={`${rx + 0.6}`} y1={`${ry}`} x2={`${rx + 0.4}`} y2={`${ry - 2}`} stroke={grass} strokeWidth="0.35" />
-          </g>
-        })}
-        {/* Water ripple */}
-        <ellipse cx={LAKE_CX + 2} cy={LAKE_CY - 1} rx="4" ry="1" fill="none" stroke={isDark ? '#1a2a3a' : '#b8d4e0'} strokeWidth="0.3" opacity="0.3" />
-        <ellipse cx={LAKE_CX - 3} cy={LAKE_CY + 2} rx="3" ry="0.7" fill="none" stroke={isDark ? '#1a2a3a' : '#b8d4e0'} strokeWidth="0.25" opacity="0.2" />
+        {/* Reflection of green */}
+        <ellipse cx={LAKE_CX} cy={LAKE_CY - 1} rx={LAKE_RX - 2} ry={LAKE_RY - 2} fill="url(#lakeReflect)" />
+        {/* Highlight */}
+        <ellipse cx={LAKE_CX - 3} cy={LAKE_CY - 2} rx="5" ry="1.5"
+          fill={isDark ? '#18243a' : '#c8dce8'} opacity="0.2" />
+        {/* Ripples */}
+        <ellipse cx={LAKE_CX + 2} cy={LAKE_CY} rx="3.5" ry="0.8" fill="none"
+          stroke={isDark ? '#182838' : '#a8c8d8'} strokeWidth="0.2" opacity="0.2" />
 
-        {/* ── Grass tufts scattered across plantable areas ── */}
-        {Array.from({ length: 30 }).map((_, i) => {
+        {/* ── Grass tufts ── */}
+        {Array.from({ length: 20 }).map((_, i) => {
           const rng = seededRng(i * 53 + 101)
-          const x = 3 + rng() * 94
-          const y = 34 + rng() * 60
+          const x = 4 + rng() * 92
+          const y = 36 + rng() * 58
           if (inLake(x, y)) return null
           if (distToPolyline(x, y, ROAD_MAIN) < 3) return null
-          const h = 0.5 + rng() * 0.7
+          const h = 0.4 + rng() * 0.6
           return (
-            <g key={`g${i}`} opacity={isDark ? 0.15 + rng() * 0.1 : 0.1 + rng() * 0.08}>
-              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.2}`} y2={`${y - h}`} stroke={grass} strokeWidth="0.3" />
-              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.15}`} y2={`${y - h * 0.85}`} stroke={grass} strokeWidth="0.3" />
+            <g key={`g${i}`} opacity={isDark ? 0.18 + rng() * 0.08 : 0.12 + rng() * 0.06}>
+              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.15}`} y2={`${y - h}`} stroke={grass} strokeWidth="0.3" />
+              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.12}`} y2={`${y - h * 0.8}`} stroke={grass} strokeWidth="0.25" />
             </g>
           )
         })}
-
-        {/* Small stones near road */}
-        {Array.from({ length: 10 }).map((_, i) => {
-          const rng = seededRng(i * 89 + 337)
-          const x = 10 + rng() * 80
-          const y = 36 + rng() * 55
-          if (inLake(x, y)) return null
-          return <ellipse key={`s${i}`} cx={`${x}`} cy={`${y}`} rx={`${0.25 + rng() * 0.2}`} ry={`${0.1 + rng() * 0.08}`} fill={isDark ? '#1c1e1a' : '#a8a498'} opacity={isDark ? 0.2 : 0.15} />
-        })}
       </svg>
 
-      {/* Atmospheric haze on mountains */}
+      {/* Atmospheric haze over mountains */}
       <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{
-        height: '32%',
+        height: '30%',
         background: isDark
-          ? `linear-gradient(180deg, rgba(8,12,8,0.6) 0%, rgba(8,12,8,0.2) 60%, transparent 100%)`
-          : `linear-gradient(180deg, rgba(220,224,216,0.5) 0%, rgba(220,224,216,0.15) 60%, transparent 100%)`,
+          ? 'linear-gradient(180deg, rgba(10,14,20,0.4) 0%, transparent 100%)'
+          : 'linear-gradient(180deg, rgba(184,204,224,0.3) 0%, transparent 100%)',
       }} />
 
       {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none" style={{
         boxShadow: isDark
           ? 'inset 0 0 80px 20px rgba(10,14,10,0.5)'
-          : 'inset 0 0 60px 15px rgba(180,176,164,0.25)',
+          : 'inset 0 0 60px 15px rgba(160,170,150,0.2)',
       }} />
     </>
   )
@@ -423,45 +421,34 @@ export const OrchardView = memo(function OrchardView({
         }}
       >
         {/* Notebook Sidebar */}
-        <div className="shrink-0 flex flex-col z-30 overflow-hidden" style={{
-          width: 200,
-          background: sidebarBg,
-          backdropFilter: 'blur(16px)',
-          borderRight: `1px solid ${cardBorder}`,
-        }}>
+        <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0 z-30`}>
           {/* Sidebar header */}
-          <div className="px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: textMuted }}>
-              Orchards
-            </h2>
-          </div>
-
-          {/* All trees button */}
-          <div className="px-2 pt-2 shrink-0">
-            <button
-              onClick={() => setSelectedNotebook(null)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors"
-              style={{
-                background: selectedNotebook === null ? sidebarItemActive : 'transparent',
-                borderLeft: selectedNotebook === null ? '2px solid #ea580c' : '2px solid transparent',
-              }}
-              onMouseEnter={e => { if (selectedNotebook !== null) e.currentTarget.style.background = sidebarItemHover }}
-              onMouseLeave={e => { if (selectedNotebook !== null) e.currentTarget.style.background = 'transparent' }}
-            >
-              <span className="text-[13px]">🌳</span>
-              <div className="flex-1 min-w-0">
-                <span className="text-[11px] font-semibold block truncate" style={{
-                  color: selectedNotebook === null ? '#ea580c' : textPrimary,
-                }}>All Trees</span>
-              </div>
-              <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: textMuted }}>
-                {totalTrees}
-              </span>
-            </button>
+          <div className="px-5 pt-6 pb-4">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Orchard</p>
           </div>
 
           {/* Notebook list */}
-          <div className="flex-1 overflow-y-auto px-2 py-1.5" style={{ scrollbarWidth: 'thin' }}>
+          <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
+            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Views</p>
+
+            {/* All trees */}
+            <button
+              onClick={() => setSelectedNotebook(null)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
+                selectedNotebook === null
+                  ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
+                  : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
+              }`}
+            >
+              <span className="text-[13px] shrink-0">🌳</span>
+              <span className="flex-1 truncate">All Trees</span>
+              <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{totalTrees}</span>
+            </button>
+
+            {activeNotes.length > 0 && (
+              <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mt-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
+            )}
+
             {activeNotes.map(note => {
               const count = notebookTreeCounts[note.id] || 0
               const isSelected = selectedNotebook === note.id
@@ -471,24 +458,16 @@ export const OrchardView = memo(function OrchardView({
                 <button
                   key={note.id}
                   onClick={() => setSelectedNotebook(note.id)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors mb-0.5"
-                  style={{
-                    background: isSelected ? sidebarItemActive : 'transparent',
-                    borderLeft: isSelected ? '2px solid #ea580c' : '2px solid transparent',
-                  }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = sidebarItemHover }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
+                    isSelected
+                      ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
+                      : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
+                  }`}
                 >
                   <span className="text-[13px] shrink-0">{icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[11px] font-medium block truncate" style={{
-                      color: isSelected ? '#ea580c' : textPrimary,
-                    }}>{note.subject || 'Untitled'}</span>
-                  </div>
+                  <span className="flex-1 min-w-0 truncate">{note.subject || 'Untitled'}</span>
                   {count > 0 && (
-                    <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: textMuted }}>
-                      {count}
-                    </span>
+                    <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{count}</span>
                   )}
                 </button>
               )
@@ -496,37 +475,31 @@ export const OrchardView = memo(function OrchardView({
 
             {/* Unassigned trees */}
             {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
-              <button
-                onClick={() => setSelectedNotebook('_unassigned')}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors mt-1"
-                style={{
-                  background: selectedNotebook === '_unassigned' ? sidebarItemActive : 'transparent',
-                  borderLeft: selectedNotebook === '_unassigned' ? '2px solid #ea580c' : '2px solid transparent',
-                  borderTop: `1px solid ${cardBorder}`,
-                }}
-                onMouseEnter={e => { if (selectedNotebook !== '_unassigned') e.currentTarget.style.background = sidebarItemHover }}
-                onMouseLeave={e => { if (selectedNotebook !== '_unassigned') e.currentTarget.style.background = 'transparent' }}
-              >
-                <span className="text-[13px] shrink-0 opacity-50">🌿</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px] font-medium block truncate" style={{
-                    color: selectedNotebook === '_unassigned' ? '#ea580c' : textMuted,
-                  }}>Unassigned</span>
+              <>
+                <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
                 </div>
-                <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: textMuted }}>
-                  {notebookTreeCounts['_unassigned']}
-                </span>
-              </button>
+                <button
+                  onClick={() => setSelectedNotebook('_unassigned')}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
+                    selectedNotebook === '_unassigned'
+                      ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
+                      : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
+                  }`}
+                >
+                  <span className="text-[13px] shrink-0 opacity-50">🌿</span>
+                  <span className="flex-1 min-w-0 truncate">Unassigned</span>
+                  <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{notebookTreeCounts['_unassigned']}</span>
+                </button>
+              </>
             )}
-          </div>
+          </nav>
 
           {/* Sidebar footer — stats */}
-          <div className="shrink-0 px-4 py-3 flex flex-col gap-1.5" style={{ borderTop: `1px solid ${cardBorder}` }}>
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] uppercase tracking-wider" style={{ color: textMuted }}>Level</span>
-              <span className="text-[10px] font-bold" style={{ color: textSecondary }}>
-                {lvl.level} · {lvl.name}
-              </span>
+          <div className={`px-5 py-4 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/60"}`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-[9px] font-bold uppercase tracking-wider ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Level {lvl.level}</span>
+              <span className={`text-[10px] font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{lvl.name}</span>
             </div>
             <div className="h-[2px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
               <motion.div
@@ -537,14 +510,14 @@ export const OrchardView = memo(function OrchardView({
                 transition={{ duration: 1, ease: "easeOut" }}
               />
             </div>
-            <div className="flex items-center gap-3 mt-0.5">
+            <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 <span className="text-[9px]">☀️</span>
-                <span className="text-[9px] font-bold tabular-nums" style={{ color: textSecondary }}>{sunshine}</span>
+                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{sunshine}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[9px]">💎</span>
-                <span className="text-[9px] font-bold tabular-nums" style={{ color: textSecondary }}>{gems}</span>
+                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{gems}</span>
               </div>
             </div>
           </div>

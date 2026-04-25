@@ -35,7 +35,7 @@ const faces = [
   { eyes: "heart", eyeSize: 2, mouth: "curve-up", label: "love" },
 ]
 
-export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick: () => void }) {
+export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: { onClick: () => void; onHover?: () => void }) {
   const angle = useMotionValue(0)
   const [faceIndex, setFaceIndex] = useState(0)
   const faceScaleMotion = useMotionValue(1)
@@ -115,13 +115,14 @@ export const HangingOrange = memo(function HangingOrange({ onClick }: { onClick:
       }}
       onDragEnd={(_, info) => {
         if (info.offset.y > 80) {
-          setTimeout(onClick, 150)
+          onClick()
         }
         dragTriggered.current = false
       }}
+      onHoverStart={onHover}
       onClick={() => {
         changeFace()
-        setTimeout(onClick, 150)
+        onClick()
       }}
     >
       <FlexTwine bow={stringBow} />

@@ -21,6 +21,7 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
   focus: "Block distracting websites and apps",
   data: "Storage, exports, and account management",
   subscription: "Manage your plan and billing",
+  help: "Welcome guide, support, and bug reports",
 }
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
@@ -31,6 +32,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
   editor: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   data: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>,
   subscription: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
+  help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
 }
 
 export const SETTINGS_TABS = [
@@ -40,6 +42,7 @@ export const SETTINGS_TABS = [
   { id: "editor", label: "Editor", group: "Writing" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
+  { id: "help", label: "Help", group: "Support" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 

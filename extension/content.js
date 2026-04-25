@@ -61,10 +61,27 @@ setInterval(() => {
 }, 3000)
 
 // Signal to the Pulp app that the extension is installed
-if (isExtensionValid()) {
+function signalPresence() {
   document.documentElement.setAttribute("data-pulp-extension", "true")
   window.dispatchEvent(new CustomEvent("pulp-extension-detected"))
 }
+
+if (isExtensionValid()) {
+  signalPresence()
+}
+
+// Re-signal periodically in case the page loaded late
+setInterval(() => {
+  if (isExtensionValid()) signalPresence()
+}, 2000)
+
+// Respond to pings from the web app
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "pulp-extension-ping" && isExtensionValid()) {
+    window.postMessage({ type: "pulp-extension-pong" }, "*")
+    signalPresence()
+  }
+})
 
 // Listen for direct updates from the Pulp app via postMessage
 window.addEventListener("message", (e) => {

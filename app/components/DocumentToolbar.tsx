@@ -548,9 +548,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             <span>{gems >= 999999 ? "∞" : gems}</span>
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); onOpenShop() }}
+            onClick={(e) => { e.stopPropagation(); onOpenGemStore?.() }}
             className="flex items-center gap-1 ml-1 pl-1.5 border-l border-zinc-400/20 hover:text-orange-600 transition-colors group cursor-pointer"
-            title="Pulp Boutique"
+            title="Get Gems"
           >
             <ShoppingBag size={11} strokeWidth={2.8} className="group-hover:scale-110 mb-0.5" />
           </button>

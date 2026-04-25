@@ -139,6 +139,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerRunning, timerDone, timerTotal, waterDeadline])
 
   const startSession = useCallback(() => {
+    setSelectedNotebookId(activeTabId)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
@@ -148,7 +149,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     } else {
       setWaterDeadline(null)
     }
-  }, [timerTotal])
+  }, [timerTotal, activeTabId])
 
   const [lostSunshine, setLostSunshine] = useState(0)
 
@@ -328,9 +329,6 @@ export const VitalitySystem = memo(function VitalitySystem({
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
-      notes={notes}
-      selectedNotebookId={selectedNotebookId}
-      onSelectNotebook={setSelectedNotebookId}
     />
   )
 })

@@ -1053,63 +1053,56 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             {/* trunk */}
             <path d="M22 46 C21.5 42 22 38 23 34 C23.5 32 24 31 24 30" fill="none" stroke={trunk} strokeWidth="4" strokeLinecap="round" />
-            <path d="M23 38 L25 37.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
-            <path d="M23 42 L25 41.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
+            {/* trunk shading — subtle dark side */}
+            <path d="M22 46 C21.5 42 22 38 23 34 C23.5 32 24 31 24 30" fill="none" stroke={dark} strokeWidth="1.5" opacity="0.12" strokeLinecap="round" />
+            {/* small branch */}
+            <path d="M22.5 36 C20 34.5 18 35 17 36" stroke={trunk} strokeWidth="1" fill="none" strokeLinecap="round" />
+            {/* critter hole */}
+            <ellipse cx="22" cy="39" rx="2" ry="2.5" fill={trunk} />
+            <ellipse cx="22" cy="39" rx="1.5" ry="2" fill="#1a1008" />
+            <ellipse cx="22" cy="39" rx="0.9" ry="1.3" fill="#0a0604" />
             {/* branches */}
             <path d="M24 30 C20 28 16 28 12 30" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
             <path d="M24 30 C28 28 32 28 36 30" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
             <path d="M14 30 C12 28 10 24 8 22" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
             <path d="M34 30 C36 28 38 24 40 22" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
             <path d="M24 30 C24 26 24 22 24 18" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            {/* irregular organic canopy with leaf bumps */}
+            {/* canopy */}
             <path d="M7 22 C6 14 12 7 18 6 Q21 5 24 6 Q27 5 30 6 C36 7 42 14 41 22 C42 28 38 33 32 34 Q28 35 24 34 Q20 35 16 34 C10 33 6 28 7 22 Z" fill="#4a8c3a" />
-            {/* leaf bump outlines */}
-            <path d="M9 14 Q7 12 9 10 Q10.5 12 9 14" fill="#4a8c3a" opacity="0.75" />
-            <path d="M38 12 Q40 10 39.5 8.5 Q38 10 38 12" fill="#4a8c3a" opacity="0.75" />
-            <path d="M6.5 25 Q5 23.5 6 22 Q7.5 23.5 6.5 25" fill="#4a8c3a" opacity="0.65" />
-            <path d="M41.5 24 Q43 22 42 20 Q41 22 41.5 24" fill="#4a8c3a" opacity="0.65" />
-            <path d="M15 34 Q13 34.5 14 33 Q15.5 33.5 15 34" fill="#4a8c3a" opacity="0.55" />
-            <path d="M33 34 Q35 34.5 34 33 Q32.5 33.5 33 34" fill="#4a8c3a" opacity="0.55" />
-            {/* inner canopy shading */}
-            <path d="M12 22 C12 16 16 12 24 12 C32 12 36 16 36 22 C36 28 32 30 24 30 C16 30 12 28 12 22 Z" fill="#5a9c4a" opacity="0.35" />
-            {/* leaf vein texture */}
-            <path d="M24 20 Q19 17 14 19" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.1" />
-            <path d="M24 20 Q29 17 34 18" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.08" />
-            <path d="M18 14 Q16 17 14 21" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.08" />
-            {/* leaf shapes scattered */}
-            <path d="M15 16 Q13 13 15 12 Q16 14 15 16 Z" fill="#5a9c4a" opacity="0.25" />
-            <path d="M33 14 Q35 11 34 10 Q32 12 33 14 Z" fill="#3a7a2a" opacity="0.2" />
-            <path d="M20 28 Q18 26 19 24 Q21 26 20 28 Z" fill="#5a9c4a" opacity="0.15" />
-            {/* LEFT ORANGE — organic pear shape with stem + leaf + highlight + navel */}
-            <path d="M12 22 L11 19.5" stroke="#5a8c3a" strokeWidth="0.7" strokeLinecap="round" />
-            <path d="M11 19.5 Q9.5 19 10.5 20.5" fill="#4a8c3a" stroke="none" opacity="0.5" />
-            <path d="M12 22 C9.5 22.5 8.5 25 9 27 C9.5 29 11 30 12 30 C13 30 14.5 29 15 27 C15.5 25 14.5 22.5 12 22 Z" fill={color} />
-            <path d="M9.8 24 Q11 22 13.5 22.5" stroke={light} strokeWidth="0.6" fill="none" opacity="0.35" />
-            <circle cx="10.2" cy="24.2" r="0.8" fill="white" opacity="0.22" />
-            <path d="M11.5 29 Q12 29.8 12.5 29" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
-            {/* RIGHT ORANGE */}
-            <path d="M36 22 L37 19.5" stroke="#5a8c3a" strokeWidth="0.7" strokeLinecap="round" />
-            <path d="M37 19.5 Q38.5 19 37.5 20.5" fill="#4a8c3a" stroke="none" opacity="0.5" />
-            <path d="M36 22 C33.5 22.5 32.5 25 33 27 C33.5 29 35 30 36 30 C37 30 38.5 29 39 27 C39.5 25 38.5 22.5 36 22 Z" fill={color} />
-            <path d="M34 24 Q35 22 37.5 22.5" stroke={light} strokeWidth="0.6" fill="none" opacity="0.35" />
-            <circle cx="37.8" cy="24" r="0.8" fill="white" opacity="0.22" />
-            <path d="M35.5 29 Q36 29.8 36.5 29" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
-            {/* TOP ORANGE — smaller */}
-            <path d="M20 9 L19.5 7" stroke="#5a8c3a" strokeWidth="0.5" strokeLinecap="round" />
-            <path d="M19.5 7 Q18.5 6.5 19 8" fill="#4a8c3a" stroke="none" opacity="0.4" />
-            <path d="M20 9 C18 9.3 17.5 11 18 12.5 C18.3 13.5 19.5 14 20 14 C20.5 14 21.7 13.5 22 12.5 C22.5 11 22 9.3 20 9 Z" fill={color} />
-            <path d="M18.5 10 Q19.5 9 21 9.5" stroke={light} strokeWidth="0.4" fill="none" opacity="0.3" />
-            <circle cx="18.8" cy="10.2" r="0.5" fill="white" opacity="0.2" />
-            <path d="M19.8 13 Q20 13.5 20.2 13" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
-            {/* UPPER RIGHT ORANGE */}
-            <path d="M30 12 L31 10" stroke="#5a8c3a" strokeWidth="0.5" strokeLinecap="round" />
-            <path d="M30 12 C28.5 12.3 28 14 28.5 15.5 C28.8 16.5 29.5 17 30 17 C30.5 17 31.2 16.5 31.5 15.5 C32 14 31.5 12.3 30 12 Z" fill={color} />
-            <path d="M28.8 13.5 Q29.8 12.5 31 13" stroke={light} strokeWidth="0.4" fill="none" opacity="0.25" />
-            <circle cx="29" cy="13.5" r="0.5" fill="white" opacity="0.18" />
-            <path d="M29.8 16 Q30 16.5 30.2 16" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
-            {/* half-hidden oranges peeking from foliage */}
-            <path d="M10 18 C9 18.5 9 20 10 20.5 C10.5 20 11 18.5 10 18 Z" fill={color} opacity="0.4" />
-            <path d="M38 17 C37 17.5 37 19 38 19.5 C38.5 19 39 17.5 38 17 Z" fill={color} opacity="0.35" />
+            {/* canopy shading — darker bottom edge */}
+            <path d="M10 28 C14 33 20 35 24 34 Q28 35 34 33 C38 30 40 26 41 22" fill="#3a7a2a" opacity="0.2" />
+            {/* canopy highlight — lighter top */}
+            <path d="M14 12 C18 8 22 7 24 6 Q27 5 30 6 C34 8 38 12 40 18" fill="#56a046" opacity="0.15" />
+            {/* leaf bumps */}
+            <path d="M9 14 Q7 12 9 10 Q10.5 12 9 14" fill="#4a8c3a" />
+            <path d="M38 12 Q40 10 39.5 8.5 Q38 10 38 12" fill="#4a8c3a" />
+            <path d="M6.5 25 Q5 23.5 6 22 Q7.5 23.5 6.5 25" fill="#4a8c3a" />
+            <path d="M41.5 24 Q43 22 42 20 Q41 22 41.5 24" fill="#4a8c3a" />
+            <path d="M15 34 Q13 34.5 14 33 Q15.5 33.5 15 34" fill="#4a8c3a" />
+            <path d="M33 34 Q35 34.5 34 33 Q32.5 33.5 33 34" fill="#4a8c3a" />
+            {/* tangerines with stems */}
+            <line x1="11" y1="26.5" x2="11" y2="27" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
+            <circle cx="11" cy="28" r="1.1" fill={color} />
+            <line x1="14" y1="28.5" x2="14" y2="29" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
+            <circle cx="14" cy="30" r="1.0" fill={color} />
+            <line x1="24" y1="30.5" x2="24" y2="31" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
+            <circle cx="24" cy="32" r="0.9" fill={color} opacity="0.85" />
+            <line x1="35" y1="26.5" x2="35" y2="27" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
+            <circle cx="35" cy="28" r="1.1" fill={color} />
+            <line x1="32" y1="28.5" x2="32" y2="29" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
+            <circle cx="32" cy="30" r="1.0" fill={color} />
+            <line x1="22" y1="24.5" x2="22" y2="25" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
+            <circle cx="22" cy="26" r="0.9" fill={color} opacity="0.75" />
+            <line x1="30" y1="23.5" x2="30" y2="24" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
+            <circle cx="30" cy="25" r="0.85" fill={color} opacity="0.7" />
+            <line x1="18" y1="25.5" x2="18" y2="26" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
+            <circle cx="18" cy="27" r="0.8" fill={color} opacity="0.65" />
+            <line x1="26" y1="26.5" x2="26" y2="27" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
+            <circle cx="26" cy="28" r="0.85" fill={color} opacity="0.7" />
+            <line x1="37" y1="23.5" x2="37" y2="24" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
+            <circle cx="37" cy="25" r="0.8" fill={color} opacity="0.7" />
+            <circle cx="12" cy="21" r="0.7" fill={color} opacity="0.4" />
+            <circle cx="33" cy="20" r="0.7" fill={color} opacity="0.4" />
             {/* roots */}
             <path d="M21 46 C19 45 17 45 15 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
             <path d="M25 46 C27 45 29 45 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
