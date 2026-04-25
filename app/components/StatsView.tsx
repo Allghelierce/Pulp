@@ -122,17 +122,17 @@ export const StatsView = memo(function StatsView({
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
   const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
-  const focusColor = '#e07840'
+  const focusColor = '#ea580c'
   const writingColor = isDark ? '#60a5fa' : '#3b82f6'
-  const levelColor = '#e07840'
+  const levelColor = '#ea580c'
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
   const heatmapColors = useMemo(() => [
     emptyCell,
-    isDark ? 'rgba(224,120,64,0.25)' : 'rgba(224,120,64,0.2)',
-    isDark ? 'rgba(224,120,64,0.45)' : 'rgba(224,120,64,0.4)',
-    isDark ? 'rgba(224,120,64,0.7)' : 'rgba(224,120,64,0.6)',
-    isDark ? 'rgba(224,120,64,0.95)' : 'rgba(224,120,64,0.85)',
+    isDark ? 'rgba(234,88,12,0.25)' : 'rgba(234,88,12,0.2)',
+    isDark ? 'rgba(234,88,12,0.45)' : 'rgba(234,88,12,0.4)',
+    isDark ? 'rgba(234,88,12,0.7)' : 'rgba(234,88,12,0.6)',
+    isDark ? 'rgba(234,88,12,0.95)' : 'rgba(234,88,12,0.85)',
   ], [isDark, emptyCell])
 
   useEffect(() => {

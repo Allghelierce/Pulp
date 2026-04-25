@@ -51,93 +51,78 @@ const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
   long: 15 * 60,
 }
 
-function TreeVisualization({ progress, type, idle }: { progress: number; type: string | null; idle?: boolean }) {
+function MossyHill({ isDark, overlap = 6 }: { isDark: boolean; overlap?: number }) {
+  return (
+    <svg className="w-full shrink-0" viewBox="0 0 200 40" preserveAspectRatio="none" style={{ height: 40, marginTop: -overlap }}>
+      <defs>
+        <linearGradient id="hillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={isDark ? '#2a3a22' : '#8a9a70'} />
+          <stop offset="100%" stopColor={isDark ? '#1a2416' : '#6a7a58'} />
+        </linearGradient>
+        <linearGradient id="mossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={isDark ? '#3a4a30' : '#9aaa80'} />
+          <stop offset="100%" stopColor={isDark ? '#2a3620' : '#7a8a64'} />
+        </linearGradient>
+      </defs>
+      <ellipse cx="100" cy="22" rx="95" ry="18" fill="url(#hillGrad)" />
+      <ellipse cx="80" cy="20" rx="50" ry="10" fill="url(#mossGrad)" opacity="0.6" />
+      <ellipse cx="130" cy="21" rx="35" ry="8" fill="url(#mossGrad)" opacity="0.4" />
+      {[25, 55, 80, 110, 140, 165].map((x, i) => (
+        <g key={i} opacity={isDark ? 0.3 : 0.25}>
+          <path d={`M${x},${14 + (i % 2) * 3} q${-1.5},${-3} ${-0.5},${-4.5} M${x},${14 + (i % 2) * 3} q${1},${-2.5} ${2},${-4} M${x},${14 + (i % 2) * 3} q${0.5},${-3} ${-0.8},${-3.8}`} stroke={isDark ? '#5a7a48' : '#7a9a60'} strokeWidth="0.8" fill="none" />
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function TreeVisualization({ progress, type, idle, isDark }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean }) {
   const p = Math.max(0, Math.min(1, progress))
   const plantType = type || 'heartwood'
   const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.heartwood
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 
-  // Idle state: show a default sprout
   if (idle) {
     return (
-      <div className="relative w-full h-full flex items-center justify-center">
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
-          style={{ backgroundColor: '#4ade8044' }}
-        />
-        <motion.div
-          animate={{ y: [0, -3, 0], rotate: [0, 1, -1, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <svg width="80" height="80" viewBox="0 0 24 24" className="overflow-visible">
-            {/* Stem */}
-            <path d="M12 22 L12 13" stroke="#5c2d0b" strokeWidth="1.8" strokeLinecap="round" />
-            {/* Leaf left */}
-            <path d="M12 15 Q7 12 8 8 Q10 10 12 13" fill="#4ade80" opacity="0.8" />
-            {/* Leaf right */}
-            <path d="M12 14 Q17 11 16 7 Q14 9 12 12" fill="#22c55e" opacity="0.7" />
-            {/* Small bud */}
-            <circle cx="12" cy="8" r="2.5" fill="#86efac" opacity="0.6" />
-          </svg>
-        </motion.div>
+      <div className="relative w-full h-full flex flex-col items-center justify-center" style={{ marginTop: -20 }}>
+        <PlantIcon type={plantType} size={100} stage={4} />
+        <MossyHill isDark={isDark ?? true} overlap={10} />
       </div>
     )
   }
 
-  // Stages: 0 (Planted) | 1 (Seedling) | 2 (Sprout) | 3 (Young) | 4 (Mature)
   const stage = p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
 
-  // Unique animations based on shape
-  const getAnimation = () => {
-    switch (shape) {
-      case 'ethereal': return { y: [0, -8, 0], opacity: [0.8, 1, 0.8] }
-      case 'tropical':
-      case 'bamboo': return { rotate: [-2, 2, -2], x: [-1, 1, -1] }
-      case 'spire': return { scaleY: [1, 1.02, 1], y: [0, -2, 0] }
-      case 'succulent': return { scale: [1, 1.03, 1] }
-      case 'prehistoric': return { rotate: [-1, 1, -1] }
-      default: return { rotate: [-0.5, 0.5, -0.5] }
-    }
-  }
+  const plantSize = stage === 0 ? 50 : 70 + stage * 12
+  const hillOverlap = stage === 0 ? 4 : stage <= 2 ? 8 : 10
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {/* Ground Glow */}
+    <div className="relative w-full h-full flex flex-col items-center justify-center" style={{ marginTop: -20 }}>
       <div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full blur-xl transition-colors duration-1000"
-        style={{ backgroundColor: color + '33' }}
+        className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl transition-colors duration-1000 z-0"
+        style={{ backgroundColor: color + '33', bottom: '38%' }}
       />
 
-      <motion.div
-        animate={stage === 0 ? { scale: 0.9, y: 5 } : { 
-          scale: 1 + (stage * 0.08),
-          y: 0,
-          ...getAnimation()
-        }}
-        transition={stage === 0 ? { type: "spring", stiffness: 100 } : {
-          duration: shape === 'ethereal' ? 4 : 6,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      >
+      <div className="relative z-10">
         {stage === 0 ? (
           <div className="relative">
-            <PlantIcon type={plantType} size={60} isSeed={true} />
+            <PlantIcon type={plantType} size={plantSize} isSeed={true} />
             <motion.div
                animate={{ opacity: [0.2, 0.5, 0.2] }}
                transition={{ duration: 2, repeat: Infinity }}
                className="absolute inset-0 blur-md"
             >
-              <PlantIcon type={plantType} size={60} isSeed={true} />
+              <PlantIcon type={plantType} size={plantSize} isSeed={true} />
             </motion.div>
           </div>
         ) : (
-          <PlantIcon type={plantType} size={120} stage={stage - 1} />
+          <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
         )}
-      </motion.div>
+      </div>
 
-      {/* Decorative Particles */}
+      <MossyHill isDark={isDark ?? true} overlap={hillOverlap} />
+
       {stage >= 3 && (
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(6)].map((_, i) => (
@@ -159,7 +144,7 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
               }}
               style={{
                 left: '50%',
-                top: '50%',
+                top: '30%',
                 backgroundColor: shape === 'crystal' ? '#fff' : color,
                 boxShadow: shape === 'ethereal' ? `0 0 8px ${color}` : 'none'
               }}
@@ -267,7 +252,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           style={{
             left: sidebarWidth + 10,
             bottom: 12,
-            width: 280,
+            width: 250,
             height: "auto",
             minHeight: 560,
             maxHeight: "calc(100vh - 40px)",
@@ -420,37 +405,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative w-52 h-64 mx-auto mb-2"
+                    className="relative w-full mx-auto mb-2"
+                    style={{ height: 200 }}
                   >
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 256">
-                      <defs>
-                        <linearGradient id="timerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#D4A574" />
-                          <stop offset="100%" stopColor="#EA8C55" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d="M 100, 10 A 85, 110 0 1, 1 99.9, 10 Z"
-                        fill="transparent"
-                        stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
-                        strokeWidth="2"
-                      />
-                      <motion.path
-                        d="M 100, 10 A 85, 110 0 1, 1 99.9, 10 Z"
-                        fill="transparent"
-                        stroke="url(#timerGradient)"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        animate={{ strokeDashoffset: 1 - progress }}
-                        transition={{ duration: 1, ease: "linear" }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center p-3 mt-3">
-                      <div className="w-full h-full scale-[1.15]" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                        <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} />
-                      </div>
+                    <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
+                      <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
                     </div>
                   </motion.div>
                 )}

@@ -67,7 +67,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
     return generateFakeGrove(selectedPlayer, p.trees)
   }, [selectedPlayer])
 
-  const accent = '#e07840'
+  const accent = '#ea580c'
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -76,7 +76,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const cardBg = isDark ? '#141618' : '#eae7e1'
   const hoverBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
 
-  const MEDAL_COLORS = ['#e07840', '#9a9590', '#a07050']
+  const MEDAL_COLORS = ['#ea580c', '#9a9590', '#a07050']
 
   if (!isOpen) return null
 
@@ -259,7 +259,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                         </div>
 
                         {/* Sunshine — prominent */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(224,120,64,0.08)' : 'rgba(224,120,64,0.06)' }}>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(234,88,12,0.08)' : 'rgba(234,88,12,0.06)' }}>
                           <span className="text-[11px]">☀️</span>
                           <span className="text-[13px] font-bold tabular-nums" style={{ color: accent }}>
                             {p.sunshine >= 1000 ? `${(p.sunshine / 1000).toFixed(1)}k` : p.sunshine}
@@ -276,7 +276,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   <div className="px-4 py-3">
                     <div
                       className="flex items-center gap-3 px-3 py-3 rounded-xl"
-                      style={{ background: isDark ? 'rgba(224,120,64,0.06)' : 'rgba(224,120,64,0.05)', border: `1px solid ${isDark ? 'rgba(224,120,64,0.1)' : 'rgba(224,120,64,0.12)'}` }}
+                      style={{ background: isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.05)', border: `1px solid ${isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.12)'}` }}
                     >
                       <span className="text-[14px] font-bold w-6 text-center" style={{ color: textMuted }}>—</span>
                       <div
@@ -289,7 +289,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                         <div className="text-[13px] font-semibold" style={{ color: accent }}>You</div>
                         <div className="text-[10px]" style={{ color: textMuted }}>Keep writing to climb</div>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(224,120,64,0.1)' : 'rgba(224,120,64,0.08)' }}>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.08)' }}>
                         <span className="text-[11px]">☀️</span>
                         <span className="text-[13px] font-bold tabular-nums" style={{ color: accent }}>
                           {sunshine >= 1000 ? `${(sunshine / 1000).toFixed(1)}k` : sunshine}

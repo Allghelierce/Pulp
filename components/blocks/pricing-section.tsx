@@ -35,7 +35,7 @@ function hexToRgb(hex: string) {
   return r ? `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}` : "184,94,34"
 }
 
-function PricingSection({ tiers, isDark, accentColor = "#b85c20", className }: PricingSectionProps) {
+function PricingSection({ tiers, isDark, accentColor = "#ea580c", className }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false)
   const rgb = hexToRgb(accentColor)
 

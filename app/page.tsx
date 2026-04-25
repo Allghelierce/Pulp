@@ -90,6 +90,10 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
+  useEffect(() => {
+    if (reduceMotion) document.documentElement.setAttribute('data-reduce-motion', 'true')
+    else document.documentElement.removeAttribute('data-reduce-motion')
+  }, [reduceMotion])
   return (<>
     <style dangerouslySetInnerHTML={{
       __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
@@ -766,7 +770,7 @@ const BoxTextarea = memo(function BoxTextarea({
               }
             }
 
-            if (didDelete && ghostRect) {
+            if (didDelete && ghostRect && !document.documentElement.hasAttribute('data-reduce-motion')) {
               const paper = document.getElementById('editor-paper')
               if (paper) {
                 let zoom = 1
@@ -1041,7 +1045,19 @@ export default function NoteApp() {
       setSunshine(data.sunshine ?? 50)
       setGems(data.gems ?? 3)
       if (data.inventory) setInventory(data.inventory)
-      if (data.grove) setGrove(data.grove)
+      if (data.grove) {
+        // TEST: populate orchard with sample plants
+        const testTypes = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
+        const now = Date.now()
+        const testGrove = testTypes.map((type, i) => ({
+          id: 9000 + i,
+          type,
+          stage: i % 5,
+          progress: (i % 5) * 25,
+          plantedAt: now - (i * 3600000),
+        }))
+        setGrove([...data.grove, ...testGrove])
+      }
       if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
       if (data.achievements) {
@@ -1610,7 +1626,7 @@ export default function NoteApp() {
       return
     }
 
-    if (eventKeyStr === shortcuts.ai) {
+    if (eventKeyStr === shortcuts.ai && (isMeta || isAlt)) {
       e.preventDefault()
       const sel = window.getSelection()
       const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : undefined

@@ -206,10 +206,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all ${
                         isActive
                           ? isPremium
-                            ? isDark ? "bg-amber-950/60 text-amber-300" : "bg-amber-100 text-amber-900"
+                            ? isDark ? "bg-[#ea580c]/10 text-[#ea580c]" : "bg-[#ea580c]/10 text-[#ea580c]"
                             : isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
                           : isPremium
-                            ? isDark ? "text-amber-600 hover:bg-amber-950/30" : "text-amber-600 hover:bg-amber-50"
+                            ? isDark ? "text-[#ea580c]/70 hover:bg-[#ea580c]/5" : "text-[#ea580c]/70 hover:bg-[#ea580c]/5"
                             : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                       }`}
                     >
@@ -243,7 +243,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             {activeTab === "general" && (<>
               <SettingSection title="Account" isDark={isDark}>
                 <div className="flex items-center gap-4 px-5 py-4">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: `linear-gradient(135deg, ${accentColor}99, ${accentColor})` }}>
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: 'linear-gradient(135deg, #ea580c99, #ea580c)' }}>
                     {user?.email?.[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -805,22 +805,50 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div>
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
+                {/* Fun doodles */}
+                <svg className="absolute -top-2 -right-4 pointer-events-none" width="80" height="80" viewBox="0 0 80 80" fill="none" style={{ opacity: isDark ? 0.12 : 0.1 }}>
+                  <path d="M20 60 Q25 20 40 15 Q55 10 60 40 Q65 55 50 65 Q35 72 20 60Z" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                  <path d="M35 35 L38 28 M42 33 L44 26" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1" strokeLinecap="round" />
+                  <circle cx="37" cy="42" r="1.5" fill={isDark ? '#ea580c' : '#ea580c'} />
+                  <circle cx="45" cy="40" r="1.5" fill={isDark ? '#ea580c' : '#ea580c'} />
+                  <path d="M38 48 Q41 51 44 48" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1" fill="none" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute top-16 -left-6 pointer-events-none" width="70" height="70" viewBox="0 0 70 70" fill="none" style={{ opacity: isDark ? 0.1 : 0.08 }}>
+                  <path d="M35 8 L38 22 L52 18 L42 28 L55 35 L42 38 L48 52 L35 42 L22 52 L28 38 L15 35 L28 28 L18 18 L32 22Z" stroke={isDark ? '#facc15' : '#eab308'} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <svg className="absolute bottom-24 -right-2 pointer-events-none" width="60" height="60" viewBox="0 0 60 60" fill="none" style={{ opacity: isDark ? 0.1 : 0.08 }}>
+                  <path d="M30 10 Q35 25 45 30 Q35 35 30 50 Q25 35 15 30 Q25 25 30 10Z" stroke={isDark ? '#22c55e' : '#16a34a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M30 20 L30 40 M22 30 L38 30" stroke={isDark ? '#22c55e' : '#16a34a'} strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+                </svg>
+                <svg className="absolute bottom-8 left-4 pointer-events-none" width="90" height="40" viewBox="0 0 90 40" fill="none" style={{ opacity: isDark ? 0.08 : 0.06 }}>
+                  <path d="M5 30 Q15 8 30 20 Q45 32 55 12 Q65 0 85 18" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                  <circle cx="15" cy="16" r="2" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
+                  <circle cx="55" cy="10" r="1.5" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
+                  <circle cx="78" cy="20" r="2.5" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
+                </svg>
+                <svg className="absolute top-40 right-8 pointer-events-none" width="50" height="50" viewBox="0 0 50 50" fill="none" style={{ opacity: isDark ? 0.09 : 0.07 }}>
+                  <path d="M10 25 Q15 10 25 8 Q35 6 40 20" stroke={isDark ? '#f97316' : '#ea580c'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M25 8 L25 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="1" strokeLinecap="round" />
+                  <path d="M25 42 Q22 44 18 42 M25 42 Q28 44 32 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                </svg>
+
+                <div className="relative z-10">
                   <h3 className={`text-[14px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
                   <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Unlimited AI, more storage, and priority support</p>
                 </div>
 
                 <PricingSection
+                  className="relative z-10"
                   isDark={isDark}
-                  accentColor={accentColor}
+                  accentColor="#ea580c"
                   tiers={[
                     {
                       name: "Creator",
                       price: { monthly: 4, yearly: 36 },
                       description: "Write smarter with AI",
                       buttonLabel: "Upgrade to Creator",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: "#f59e0b" }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: '#ea580c' }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
@@ -836,7 +864,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
                       badge: "Most Popular",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: accentColor }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: '#ea580c' }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
@@ -848,7 +876,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   ]}
                 />
 
-                <div className={`px-4 py-3 rounded-lg border flex items-center gap-3 ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-zinc-50 border-zinc-200/70"}`}>
+                <div className={`relative z-10 px-4 py-3 rounded-lg border flex items-center gap-3 ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-zinc-50 border-zinc-200/70"}`}>
                   <div className="flex-1 min-w-0">
                     <span className={`text-[11.5px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
                     <span className={`text-[11px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Custom volume licensing</span>
@@ -866,7 +894,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             <button
               onClick={onClose}
               className="px-6 py-2 rounded-xl text-[12.5px] font-bold text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-              style={{ backgroundColor: accentColor }}
+              style={{ backgroundColor: '#ea580c' }}
             >Save changes</button>
           </div>
         </div>
@@ -1053,6 +1081,8 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
 
       if (!isModifierOnly) {
         parts.push(e.key.toLowerCase())
+        const hasModifier = e.ctrlKey || e.metaKey || e.altKey || e.shiftKey
+        if (!hasModifier && e.key.length === 1 && !['/', '\\'].includes(e.key)) return
         onUpdate(id, parts.join("+"))
         setIsRecording(false)
       }

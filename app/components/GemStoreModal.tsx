@@ -9,13 +9,13 @@ interface GemStoreModalProps {
 }
 
 const GEM_PACKS = [
-  { id: "handful", amount: 5, price: "$0.99", label: "Handful" },
-  { id: "pouch", amount: 15, price: "$1.99", label: "Pouch", popular: true },
-  { id: "chest", amount: 40, price: "$3.99", label: "Chest" },
+  { id: "handful", amount: 5, price: "$1.49", label: "Handful" },
+  { id: "pouch", amount: 15, price: "$2.99", label: "Pouch", popular: true },
+  { id: "chest", amount: 40, price: "$5.99", label: "Chest" },
 ]
 
 const font = '"EB Garamond", Georgia, serif'
-const accent = '#e07840'
+const accent = '#ea580c'
 
 export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems }: GemStoreModalProps) {
   useEffect(() => {

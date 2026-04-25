@@ -714,7 +714,7 @@ export const Sidebar = memo(function Sidebar({
                 <div className="relative flex items-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
-                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-white bg-zinc-800" : "text-zinc-500 hover:text-white hover:bg-zinc-800"}`}
+                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-400 bg-zinc-800/60" : "text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
                   >
                     + New
                   </button>
@@ -727,7 +727,7 @@ export const Sidebar = memo(function Sidebar({
                     </div>
                   )}
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5">+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5">+ Folder</button>
               </div>
             </div>
 
@@ -752,7 +752,7 @@ export const Sidebar = memo(function Sidebar({
                     <div className="relative inline-block">
                       <button
                         onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === String(f.id) ? null : String(f.id)) }}
-                        className={`text-[11px] px-3 py-0.5 block rounded transition-colors ${newMenuOpen === String(f.id) ? "text-white bg-zinc-800" : "text-zinc-600 hover:text-white hover:bg-zinc-800"}`}
+                        className={`text-[11px] px-3 py-0.5 block rounded transition-colors ${newMenuOpen === String(f.id) ? "text-zinc-400 bg-zinc-800/60" : "text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
                       >
                         + New
                       </button>
