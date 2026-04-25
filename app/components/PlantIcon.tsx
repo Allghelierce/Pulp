@@ -120,21 +120,12 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M40.5 20 Q42 18.5 42.5 20.5 Q41 21.5 40.5 20" fill={color} opacity="0.7" />
             <path d="M15 32.5 Q13 33 13.5 31 Q15 31.5 15 32.5" fill={color} opacity="0.6" />
             <path d="M33 32.5 Q35 33 34.5 31 Q33 31.5 33 32.5" fill={color} opacity="0.6" />
-            {/* organic shadow patches */}
-            <path d="M22 26 Q26 28 30 26 Q28 30 24 31 Q20 30 22 26 Z" fill={dark} opacity="0.1" />
-            <path d="M30 20 Q34 18 35 22 Q33 25 30 23 Q29 21 30 20 Z" fill={dark} opacity="0.15" />
-            {/* highlight cluster - upper left */}
-            <path d="M14 13 Q17 10 21 12 Q19 15 15 16 Q13 15 14 13 Z" fill={light} opacity="0.25" />
-            <path d="M18 16 Q20 14 22 16 Q20 18 18 16 Z" fill={light} opacity="0.15" />
+            {/* subtle leaf texture */}
             {/* vein/branch texture strokes */}
             <path d="M24 20 Q20 18 16 20" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.12" />
             <path d="M24 20 Q28 17 32 18" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.1" />
             <path d="M24 20 Q22 24 20 28" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
             <path d="M18 14 Q16 17 14 20" stroke={dark} strokeWidth="0.25" fill="none" opacity="0.08" />
-            {/* small teardrop leaves at edges */}
-            <path d="M12 18 Q11 16 13 16 Q13.5 17.5 12 18 Z" fill={light} opacity="0.18" />
-            <path d="M34 16 Q35 14 36 15.5 Q35 16.5 34 16 Z" fill={light} opacity="0.15" />
-            <path d="M10 24 Q9 22.5 11 22.5 Q11 24 10 24 Z" fill={light} opacity="0.12" />
             {/* fruits */}
             <circle cx="18" cy="26" r="1.8" fill={color} opacity="0.5" />
             <circle cx="30" cy="24" r="1.5" fill={color} opacity="0.4" />
@@ -284,22 +275,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M42 26 Q43.5 24.5 43 23 Q41.5 24.5 42 26" fill={color} opacity="0.8" />
             <path d="M20 18 Q19 16 21 16.5 Q20.5 17.5 20 18" fill={color} opacity="0.7" />
             <path d="M28 18 Q29 16 27 16.5 Q27.5 17.5 28 18" fill={color} opacity="0.7" />
-            {/* organic shadow patches */}
-            <path d="M20 30 Q24 32 28 30 Q26 34 24 34.5 Q22 34 20 30 Z" fill={dark} opacity="0.1" />
-            <path d="M4 32 Q8 33 12 32 Q10 35 6 34 Q4 33.5 4 32 Z" fill={dark} opacity="0.08" />
-            <path d="M34 32 Q38 33 42 32 Q40 35 36 34 Q34 33.5 34 32 Z" fill={dark} opacity="0.08" />
-            {/* highlight patches - irregular */}
-            <path d="M18 21 Q21 18 24 20 Q22 23 19 23 Q17 22 18 21 Z" fill={light} opacity="0.3" />
-            <path d="M30 23 Q33 21 35 23 Q34 25 31 25 Q29 24.5 30 23 Z" fill={color} opacity="0.3" />
             {/* vein/branch strokes */}
             <path d="M24 22 Q20 24 16 28" stroke={dark} strokeWidth="0.35" fill="none" opacity="0.12" />
             <path d="M24 22 Q28 24 32 28" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.1" />
             <path d="M12 26 Q10 28 8 32" stroke={dark} strokeWidth="0.25" fill="none" opacity="0.1" />
             <path d="M36 26 Q38 28 40 32" stroke={dark} strokeWidth="0.25" fill="none" opacity="0.1" />
-            {/* small teardrop leaves at edges */}
-            <path d="M6 30 Q5 28.5 7 28.5 Q7 30 6 30 Z" fill={light} opacity="0.15" />
-            <path d="M40 28 Q41 26.5 42 28 Q41 29 40 28 Z" fill={light} opacity="0.12" />
-            <path d="M16 19 Q15 17.5 17 18 Q16.5 19 16 19 Z" fill={light} opacity="0.15" />
             {/* fruits */}
             <circle cx="14" cy="26" r="1.5" fill={color} opacity="0.4" />
             <circle cx="34" cy="26" r="1.3" fill={color} opacity="0.35" />
@@ -652,9 +632,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <path d="M24 46 L24 32" stroke="#5a8c3f" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M24 36 Q21 34 19 36 Q21 32 24 35" fill="#6ab04c" opacity="0.5" />
-            <ellipse cx="24" cy="28" rx="2" ry="5" fill={color} opacity="0.6" />
-            <circle cx="24" cy="25" r="0.8" fill={light} opacity="0.25" />
-            <circle cx="24" cy="30" r="0.6" fill={light} opacity="0.2" />
+            {/* lavender spike — layered floret bumps */}
+            <path d="M24 32 Q22.2 30.5 22.5 29 Q22.8 27.5 24 27 Q25.2 27.5 25.5 29 Q25.8 30.5 24 32 Z" fill={color} opacity="0.55" />
+            <path d="M24 28.5 Q22.5 27 22.8 25.5 Q23.2 24.2 24 24 Q24.8 24.2 25.2 25.5 Q25.5 27 24 28.5 Z" fill={color} opacity="0.65" />
+            <path d="M24 25.5 Q23 24.5 23.2 23.5 Q23.5 22.5 24 22.5 Q24.5 22.5 24.8 23.5 Q25 24.5 24 25.5 Z" fill={color} opacity="0.5" />
+            {/* tiny floret petals */}
+            <path d="M23.3 26 Q24 25 24.7 26 Q24 26.8 23.3 26 Z" fill={light} opacity="0.3" />
+            <path d="M23.5 29 Q24 28.2 24.5 29 Q24 29.6 23.5 29 Z" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 1) return (
@@ -662,14 +646,17 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 46 L24 26" stroke="#5a8c3f" strokeWidth="2" strokeLinecap="round" />
             <path d="M20 46 L20 32" stroke="#4a7c35" strokeWidth="1.2" strokeLinecap="round" />
             <path d="M24 34 Q20 30 18 32" stroke="#5a8c3f" strokeWidth="0.8" fill="none" />
-            <ellipse cx="24" cy="22" rx="2.5" ry="6" fill={color} opacity="0.8" />
-            <ellipse cx="20" cy="28" rx="2" ry="5" fill={color} opacity="0.6" />
-            <ellipse cx="24" cy="20" rx="1.5" ry="3" fill={light} opacity="0.3" />
-            {/* floret dots */}
-            <circle cx="24" cy="18" r="0.7" fill={light} opacity="0.25" />
-            <circle cx="24" cy="24" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="20" cy="26" r="0.5" fill={light} opacity="0.2" />
-            <circle cx="20" cy="30" r="0.5" fill={light} opacity="0.15" />
+            {/* center spike — stacked floret bumps */}
+            <path d="M24 28 Q21.8 26 22 24 Q22.3 22 24 21 Q25.7 22 26 24 Q26.2 26 24 28 Z" fill={color} opacity="0.8" />
+            <path d="M24 23 Q22.5 21.5 22.8 19.5 Q23.2 17.8 24 17 Q24.8 17.8 25.2 19.5 Q25.5 21.5 24 23 Z" fill={color} opacity="0.85" />
+            <path d="M24 19 Q23.2 18 23.4 16.5 Q23.7 15.2 24 15 Q24.3 15.2 24.6 16.5 Q24.8 18 24 19 Z" fill={color} opacity="0.7" />
+            {/* left spike */}
+            <path d="M20 33 Q18.5 31.5 18.6 30 Q18.8 28.5 20 28 Q21.2 28.5 21.4 30 Q21.5 31.5 20 33 Z" fill={color} opacity="0.6" />
+            <path d="M20 29.5 Q19 28 19.2 26.5 Q19.5 25.2 20 25 Q20.5 25.2 20.8 26.5 Q21 28 20 29.5 Z" fill={color} opacity="0.65" />
+            {/* floret petal highlights */}
+            <path d="M23.3 20 Q24 19 24.7 20 Q24 20.8 23.3 20 Z" fill={light} opacity="0.3" />
+            <path d="M23.5 25 Q24 24.2 24.5 25 Q24 25.6 23.5 25 Z" fill={light} opacity="0.25" />
+            <path d="M19.5 27 Q20 26.3 20.5 27 Q20 27.6 19.5 27 Z" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 2) return (
@@ -678,17 +665,23 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M18 46 L18 30" stroke="#4a7c35" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M30 46 L30 28" stroke="#4a7c35" strokeWidth="1.5" strokeLinecap="round" />
             <path d="M24 34 Q20 30 17 32" stroke="#5a8c3f" strokeWidth="0.8" fill="none" />
-            <ellipse cx="24" cy="20" rx="2.5" ry="7" fill={color} />
-            <ellipse cx="18" cy="24" rx="2" ry="6" fill={color} opacity="0.7" />
-            <ellipse cx="30" cy="22" rx="2" ry="6" fill={color} opacity="0.7" />
-            <ellipse cx="24" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
-            {/* floret dots */}
-            <circle cx="24" cy="15" r="0.7" fill={light} opacity="0.25" />
-            <circle cx="24" cy="22" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="18" cy="21" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="18" cy="27" r="0.5" fill={light} opacity="0.15" />
-            <circle cx="30" cy="19" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="30" cy="25" r="0.5" fill={light} opacity="0.15" />
+            {/* center spike */}
+            <path d="M24 27 Q21.5 25 21.8 22.5 Q22 20 24 18 Q26 20 26.2 22.5 Q26.5 25 24 27 Z" fill={color} />
+            <path d="M24 20 Q22.8 18.5 23 16.5 Q23.3 14.5 24 13.5 Q24.7 14.5 25 16.5 Q25.2 18.5 24 20 Z" fill={color} opacity="0.85" />
+            <path d="M24 15.5 Q23.4 14.5 23.6 13 Q23.8 11.5 24 11 Q24.2 11.5 24.4 13 Q24.6 14.5 24 15.5 Z" fill={color} opacity="0.7" />
+            {/* left spike */}
+            <path d="M18 31 Q16.2 29 16.4 27 Q16.7 25 18 24 Q19.3 25 19.6 27 Q19.8 29 18 31 Z" fill={color} opacity="0.7" />
+            <path d="M18 26 Q17 24.5 17.2 22.5 Q17.5 20.8 18 20 Q18.5 20.8 18.8 22.5 Q19 24.5 18 26 Z" fill={color} opacity="0.75" />
+            {/* right spike */}
+            <path d="M30 29 Q28.2 27 28.4 25 Q28.7 23 30 22 Q31.3 23 31.6 25 Q31.8 27 30 29 Z" fill={color} opacity="0.7" />
+            <path d="M30 24 Q29 22.5 29.2 20.8 Q29.5 19 30 18 Q30.5 19 30.8 20.8 Q31 22.5 30 24 Z" fill={color} opacity="0.75" />
+            {/* floret petal highlights */}
+            <path d="M23.3 17 Q24 16 24.7 17 Q24 17.8 23.3 17 Z" fill={light} opacity="0.3" />
+            <path d="M23.5 22 Q24 21.2 24.5 22 Q24 22.6 23.5 22 Z" fill={light} opacity="0.25" />
+            <path d="M17.5 23 Q18 22.3 18.5 23 Q18 23.6 17.5 23 Z" fill={light} opacity="0.22" />
+            <path d="M29.5 21 Q30 20.3 30.5 21 Q30 21.6 29.5 21 Z" fill={light} opacity="0.22" />
+            <path d="M17.6 27.5 Q18 26.8 18.4 27.5 Q18 28 17.6 27.5 Z" fill={light} opacity="0.18" />
+            <path d="M29.6 25.5 Q30 24.8 30.4 25.5 Q30 26 29.6 25.5 Z" fill={light} opacity="0.18" />
           </g>
         )
         return (
@@ -700,12 +693,15 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 34 Q28 30 32 32" stroke="#5a8c3f" strokeWidth="1" fill="none" />
             {/* extra leaf */}
             <path d="M24 38 Q21 36 19 38 Q21 35 24 37" fill="#6ab04c" opacity="0.35" />
-            <ellipse cx="24" cy="18" rx="3" ry="8" fill={color} />
-            <ellipse cx="18" cy="22" rx="2.5" ry="7" fill={color} opacity="0.8" />
-            <ellipse cx="30" cy="20" rx="2.5" ry="7" fill={color} opacity="0.8" />
-            <ellipse cx="24" cy="14" rx="2" ry="4" fill={light} opacity="0.4" />
-            <ellipse cx="18" cy="18" rx="1.5" ry="3" fill={light} opacity="0.3" />
-            <ellipse cx="30" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
+            {/* center spike — organic bumpy shape */}
+            <path d="M24 26 Q21 24 21.2 20 Q21.5 16 24 10 Q26.5 16 26.8 20 Q27 24 24 26 Z" fill={color} />
+            <path d="M24 22 Q22.5 20 22.8 17 Q23 14 24 12 Q25 14 25.2 17 Q25.5 20 24 22 Z" fill={light} opacity="0.35" />
+            {/* left spike */}
+            <path d="M18 29 Q15.8 27 16 23 Q16.2 19 18 15 Q19.8 19 20 23 Q20.2 27 18 29 Z" fill={color} opacity="0.8" />
+            <path d="M18 25 Q17 23 17.2 20 Q17.5 17.5 18 16 Q18.5 17.5 18.8 20 Q19 23 18 25 Z" fill={light} opacity="0.28" />
+            {/* right spike */}
+            <path d="M30 27 Q27.8 25 28 21 Q28.2 17 30 13 Q31.8 17 32 21 Q32.2 25 30 27 Z" fill={color} opacity="0.8" />
+            <path d="M30 23 Q29 21 29.2 18 Q29.5 15.5 30 14 Q30.5 15.5 30.8 18 Q31 21 30 23 Z" fill={light} opacity="0.28" />
             {/* irregular floret clusters — 3-petal bezier shapes */}
             <path d="M24 11.5 Q24.6 10.8 24.2 11 Q25 11.2 24.5 11.8 Q23.5 11.3 24 11.5Z" fill={light} opacity="0.3" />
             <path d="M23.6 12.8 L24.4 12.2 L24.1 13.2Z" fill={light} opacity="0.25" />
@@ -740,8 +736,8 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.5 38 L24.5 37.5" stroke="#6b6560" strokeWidth="0.6" />
             <path d="M23.7 41 L24.3 40.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.3" />
             <path d="M24 36 Q21 33 18 32" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <ellipse cx="17" cy="31" rx="4" ry="3" fill={color} opacity="0.6" />
-            <ellipse cx="16" cy="30" rx="1.5" ry="1" fill={light} opacity="0.2" />
+            <path d="M13 30 Q13.5 28 15.5 28 Q18 28.5 20 29.5 Q20.5 31 19 33 Q16.5 34.5 14.5 33.5 Q13 32.5 13 30 Z" fill={color} opacity="0.6" />
+            <path d="M15 29.5 Q16 28.5 17 29.5 Q16 30.5 15 29.5 Z" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 1) return (
@@ -753,11 +749,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.8 42 L24.5 41.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.3" />
             <path d="M23.6 32 L24.8 31.8" stroke="#6b6560" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 30 Q18 26 14 25" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <ellipse cx="12" cy="23" rx="5" ry="4" fill={color} opacity="0.7" />
+            <path d="M7 21 Q8 19 10.5 19.5 Q14 20 16 21.5 Q17 23 15.5 25.5 Q13 27.5 10 27 Q7.5 26 7 23.5 Q6.8 22 7 21 Z" fill={color} opacity="0.7" />
             <path d="M24 24 Q28 21 32 20" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <ellipse cx="34" cy="18" rx="4" ry="3" fill={color} opacity="0.6" />
-            <ellipse cx="11" cy="22" rx="2" ry="1.5" fill={light} opacity="0.2" />
-            <ellipse cx="33" cy="17" rx="1.5" ry="1" fill={light} opacity="0.18" />
+            <path d="M30 16 Q31 14.5 33.5 15.5 Q36 16.5 37 18 Q37 19.5 35.5 20.5 Q33 21 31 20 Q29.5 19 30 16 Z" fill={color} opacity="0.6" />
+            <path d="M9 21 Q10 20 11.5 21 Q10.5 22 9 21 Z" fill={light} opacity="0.2" />
+            <path d="M33 16.5 Q34 15.5 34.5 16.8 Q33.5 17.5 33 16.5 Z" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
@@ -773,14 +769,15 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23 30 Q17 26 13 25" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M23 22 Q29 18 33 17" stroke="#8a8478" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M23 16 Q18 12 14 12" stroke="#8a8478" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <ellipse cx="11" cy="23" rx="5" ry="4" fill={color} opacity="0.7" />
-            <ellipse cx="35" cy="15" rx="6" ry="4" fill={color} opacity="0.7" />
-            <ellipse cx="12" cy="10" rx="4" ry="3" fill={color} opacity="0.5" />
-            <ellipse cx="24" cy="8" rx="5" ry="3" fill={light} opacity="0.4" />
-            {/* leaf cluster details */}
-            <ellipse cx="10" cy="22" rx="2" ry="1.5" fill={light} opacity="0.2" />
-            <ellipse cx="34" cy="14" rx="2.5" ry="1.5" fill={light} opacity="0.18" />
-            <circle cx="14" cy="10" r="1" fill={light} opacity="0.15" />
+            {/* organic leaf clusters */}
+            <path d="M7 21 Q7.5 19 10 19 Q14 19.5 16 21 Q17 23 15.5 25.5 Q13 27.5 10 27 Q7.5 26 7 23.5 Q6.5 22 7 21 Z" fill={color} opacity="0.7" />
+            <path d="M29 13 Q30 11 33 11.5 Q37 12 40 14 Q41 16 39.5 18.5 Q37 20 34 19.5 Q30.5 18.5 29.5 16 Q29 14.5 29 13 Z" fill={color} opacity="0.7" />
+            <path d="M8.5 8.5 Q9.5 7 12 7.5 Q14.5 8 16 9.5 Q16 11.5 14 12.5 Q11.5 13 9.5 12 Q8 10.5 8.5 8.5 Z" fill={color} opacity="0.5" />
+            <path d="M19 5.5 Q20 3.5 23 3.5 Q26.5 4 28.5 5.5 Q29 7.5 27 9 Q24 10 21.5 9 Q19.5 8 19 5.5 Z" fill={light} opacity="0.4" />
+            {/* leaf highlights */}
+            <path d="M9 21 Q10.5 19.5 12 21 Q10.5 22 9 21 Z" fill={light} opacity="0.2" />
+            <path d="M33 13.5 Q34.5 12 35.5 14 Q34 15 33 13.5 Z" fill={light} opacity="0.18" />
+            <path d="M11 8.5 Q12 7.5 13 9 Q12 10 11 8.5 Z" fill={light} opacity="0.15" />
             {/* roots */}
             <path d="M22 46 Q20 45 18 46" stroke="#8a8478" strokeWidth="0.6" fill="none" opacity="0.2" />
             <path d="M25 46 Q27 45 29 46" stroke="#8a8478" strokeWidth="0.5" fill="none" opacity="0.18" />
@@ -997,86 +994,86 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           </g>
         )
 
-      // ── Bergamot: weeping willow ──
-      case 'weeping':
+      // ── Whisper Bamboo: segmented stalks ──
+      case 'bamboo':
         if (s === 0) return (
           <g>
-            <path d="M24 46 L24 34" stroke={trunk} strokeWidth="2" strokeLinecap="round" />
-            <path d="M23.5 40 L24.5 40" stroke={dark} strokeWidth="0.4" opacity="0.25" />
-            <path d="M24 34 Q22 30 20 34 Q18 38 16 40" stroke={color} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-            <path d="M24 34 Q26 30 28 34 Q30 38 32 40" stroke={color} fill="none" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+            <path d="M24 46 L24 32" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M23 38 L25 38" stroke={dark} strokeWidth="0.6" opacity="0.4" />
+            <path d="M24 34 C22 32 20 30 18 32" stroke={color} strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.5" />
+            <path d="M18 32 C17 31 16 30 17 29" fill={color} opacity="0.4" />
           </g>
         )
         if (s === 1) return (
           <g>
-            <path d="M24 46 L24 28" stroke={trunk} strokeWidth="3" strokeLinecap="round" />
-            <path d="M23.2 38 L25 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
-            <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
-            <path d="M24 28 Q20 24 16 28 Q14 34 12 40" stroke={color} fill="none" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-            <path d="M24 28 Q28 24 32 28 Q34 34 36 40" stroke={color} fill="none" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-            <path d="M24 26 Q22 24 20 26 Q18 32 16 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
-            <path d="M24 26 Q26 24 28 26 Q30 32 32 36" stroke={dark} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.12" />
+            <path d="M24 46 L24 18" stroke={color} strokeWidth="3" strokeLinecap="round" />
+            <path d="M24 46 L24 18" stroke={dark} strokeWidth="1" opacity="0.1" />
+            <path d="M22.5 40 L25.5 40" stroke={dark} strokeWidth="0.8" opacity="0.4" />
+            <path d="M22.5 34 L25.5 34" stroke={dark} strokeWidth="0.8" opacity="0.4" />
+            <path d="M22.5 28 L25.5 28" stroke={dark} strokeWidth="0.7" opacity="0.35" />
+            <path d="M23 22 L25 22" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M24 28 C20 26 16 24 14 22 C16 22 20 24 24 27" fill={color} opacity="0.5" />
+            <path d="M24 22 C28 20 32 18 34 16 C32 18 28 20 24 21" fill={color} opacity="0.5" />
+            <path d="M24 18 C22 16 18 14 16 14 C18 13 22 15 24 17" fill={color} opacity="0.4" />
           </g>
         )
         if (s === 2) return (
           <g>
-            <path d="M24 46 L24 24" stroke={trunk} strokeWidth="3.5" strokeLinecap="round" />
-            <path d="M23 38 L25.5 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
-            <path d="M23.5 34 L25.5 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
-            <path d="M23 30 L25 29.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
-            <path d="M24 24 Q18 18 12 24 Q10 30 8 40" stroke={color} fill="none" strokeWidth="3.5" strokeLinecap="round" />
-            <path d="M24 24 Q30 18 36 24 Q38 30 40 40" stroke={color} fill="none" strokeWidth="3.5" strokeLinecap="round" />
-            <path d="M24 22 Q20 20 18 22 Q16 28 14 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
-            <path d="M24 22 Q28 20 30 22 Q32 28 34 36" stroke={light} fill="none" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
-            {/* extra cascading strands */}
-            <path d="M24 23 Q21 22 20 24 Q18 30 16 38" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-            <path d="M24 23 Q27 22 28 24 Q30 30 32 38" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-            {/* roots */}
-            <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
-            <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
+            <path d="M18 46 L18 14" stroke={dark} strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+            <path d="M16.5 38 L19.5 38" stroke={dark} strokeWidth="0.6" opacity="0.25" />
+            <path d="M16.5 30 L19.5 30" stroke={dark} strokeWidth="0.6" opacity="0.25" />
+            <path d="M17 22 L19 22" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M24 46 L24 10" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M24 46 L24 10" stroke={dark} strokeWidth="1" opacity="0.1" />
+            <path d="M22 40 L26 40" stroke={dark} strokeWidth="0.8" opacity="0.4" />
+            <path d="M22 32 L26 32" stroke={dark} strokeWidth="0.8" opacity="0.4" />
+            <path d="M22 24 L26 24" stroke={dark} strokeWidth="0.7" opacity="0.35" />
+            <path d="M22.5 16 L25.5 16" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            <path d="M24 32 C20 30 14 28 10 26 C14 26 20 28 24 31" fill={color} opacity="0.6" />
+            <path d="M24 24 C28 22 34 20 38 18 C34 20 28 22 24 23" fill={color} opacity="0.5" />
+            <path d="M24 16 C20 14 14 12 10 10 C14 11 20 13 24 15" fill={color} opacity="0.5" />
+            <path d="M24 16 C28 14 32 12 36 12 C32 13 28 14 24 15" fill={color} opacity="0.4" />
+            <path d="M18 22 C14 20 10 18 8 18 C10 17 14 19 18 21" fill={color} opacity="0.35" />
           </g>
         )
         return (
           <g>
-            {/* thick gnarled trunk */}
-            <path d="M22 46 C21 40 22 34 23 28 C23.5 24 24 22 24 20" stroke={trunk} strokeWidth="4.5" fill="none" strokeLinecap="round" />
-            <path d="M23 38 L25.5 37.8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
-            <path d="M23 34 L25 33.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
-            <path d="M23.5 30 L25 29.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
-            {/* main boughs arching outward */}
-            <path d="M24 20 C20 16 14 14 8 16" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-            <path d="M24 20 C28 16 34 14 40 16" stroke={trunk} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-            <path d="M24 22 C22 20 18 18 14 20" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            <path d="M24 22 C26 20 30 18 34 20" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-            {/* LEFT leaf curtain — filled shape connecting all tendrils */}
-            <path d="M8 16 C6 22 3 34 2 46 L16 46 C16 38 16 28 18 20 C16 18 12 16 8 16 Z" fill={color} opacity="0.55" />
-            <path d="M8 16 C7 22 4 34 3 46" stroke={color} fill="none" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M10 16 C9 24 7 36 6 46" stroke={color} fill="none" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
-            <path d="M12 17 C11 24 10 36 9 46" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-            <path d="M14 18 C13 26 13 38 12 46" stroke={color} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
-            <path d="M16 20 C15 28 15 38 15 46" stroke={light} fill="none" strokeWidth="0.6" strokeLinecap="round" opacity="0.25" />
-            {/* left highlight edge */}
-            <path d="M9 18 C8 26 5 38 4 46" stroke={light} fill="none" strokeWidth="0.5" strokeLinecap="round" opacity="0.2" />
-            {/* RIGHT leaf curtain — filled shape connecting all tendrils */}
-            <path d="M40 16 C42 22 45 34 46 46 L32 46 C32 38 32 28 30 20 C32 18 36 16 40 16 Z" fill={color} opacity="0.55" />
-            <path d="M40 16 C41 22 44 34 45 46" stroke={color} fill="none" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M38 16 C39 24 41 36 42 46" stroke={color} fill="none" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
-            <path d="M36 17 C37 24 38 36 39 46" stroke={color} fill="none" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-            <path d="M34 18 C35 26 35 38 36 46" stroke={color} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
-            <path d="M32 20 C33 28 33 38 33 46" stroke={light} fill="none" strokeWidth="0.6" strokeLinecap="round" opacity="0.25" />
-            {/* right highlight edge */}
-            <path d="M39 18 C40 26 43 38 44 46" stroke={light} fill="none" strokeWidth="0.5" strokeLinecap="round" opacity="0.2" />
-            {/* middle shorter tendrils */}
-            <path d="M18 18 C17 26 18 36 18 44" stroke={color} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.35" />
-            <path d="M20 18 C19 24 20 34 20 42" stroke={color} fill="none" strokeWidth="0.6" strokeLinecap="round" opacity="0.25" />
-            <path d="M28 18 C29 24 28 34 28 42" stroke={color} fill="none" strokeWidth="0.6" strokeLinecap="round" opacity="0.25" />
-            <path d="M30 18 C31 26 30 36 30 44" stroke={color} fill="none" strokeWidth="0.8" strokeLinecap="round" opacity="0.35" />
-            {/* depth shadow on inner curtain */}
-            <path d="M14 22 C13 30 14 40 14 46" stroke={dark} fill="none" strokeWidth="0.5" strokeLinecap="round" opacity="0.1" />
-            <path d="M34 22 C35 30 34 40 34 46" stroke={dark} fill="none" strokeWidth="0.5" strokeLinecap="round" opacity="0.1" />
-            {/* roots */}
-            <path d="M21 46 C19 45 17 45 15 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
-            <path d="M27 46 C29 45 31 45 33 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
+            {/* back stalks */}
+            <path d="M16 46 L16 12" stroke={dark} strokeWidth="2.5" strokeLinecap="round" opacity="0.35" />
+            <path d="M14.5 38 L17.5 38" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M14.5 28 L17.5 28" stroke={dark} strokeWidth="0.5" opacity="0.2" />
+            <path d="M15 18 L17 18" stroke={dark} strokeWidth="0.4" opacity="0.18" />
+            <path d="M32 46 L32 16" stroke={dark} strokeWidth="2" strokeLinecap="round" opacity="0.3" />
+            <path d="M30.5 38 L33.5 38" stroke={dark} strokeWidth="0.5" opacity="0.18" />
+            <path d="M31 30 L33 30" stroke={dark} strokeWidth="0.4" opacity="0.18" />
+            <path d="M31 22 L33 22" stroke={dark} strokeWidth="0.4" opacity="0.15" />
+            {/* main stalk */}
+            <path d="M24 46 L24 6" stroke={color} strokeWidth="4" strokeLinecap="round" />
+            <path d="M24 46 L24 6" stroke={dark} strokeWidth="1.2" opacity="0.1" />
+            {/* node rings */}
+            <path d="M21.5 40 L26.5 40" stroke={dark} strokeWidth="1" opacity="0.4" />
+            <path d="M21.5 32 L26.5 32" stroke={dark} strokeWidth="1" opacity="0.4" />
+            <path d="M22 24 L26 24" stroke={dark} strokeWidth="0.8" opacity="0.35" />
+            <path d="M22 16 L26 16" stroke={dark} strokeWidth="0.8" opacity="0.35" />
+            <path d="M22.5 8 L25.5 8" stroke={dark} strokeWidth="0.6" opacity="0.3" />
+            {/* leaf sprays — long pointed leaves from nodes */}
+            <path d="M24 32 C18 30 10 28 6 24 C10 24 18 28 24 31" fill={color} opacity="0.6" />
+            <path d="M24 32 C18 30 12 30 8 28 C12 28 18 29 24 31" fill={color} opacity="0.35" />
+            <path d="M24 24 C30 22 38 18 44 16 C38 18 30 21 24 23" fill={color} opacity="0.55" />
+            <path d="M24 24 C30 22 36 22 40 20 C36 21 30 22 24 23" fill={color} opacity="0.3" />
+            <path d="M24 16 C18 14 10 10 4 8 C10 9 18 12 24 15" fill={color} opacity="0.5" />
+            <path d="M24 16 C28 14 34 12 40 12 C34 13 28 14 24 15" fill={color} opacity="0.4" />
+            <path d="M24 8 C20 6 14 4 10 4 C14 3 20 5 24 7" fill={color} opacity="0.4" />
+            <path d="M24 8 C28 6 34 6 38 6 C34 7 28 7 24 7" fill={color} opacity="0.3" />
+            {/* back stalk leaves */}
+            <path d="M16 28 C12 26 8 24 6 22 C8 22 12 25 16 27" fill={color} opacity="0.3" />
+            <path d="M16 18 C20 16 24 14 26 12 C24 14 20 16 16 17" fill={color} opacity="0.25" />
+            <path d="M32 30 C36 28 40 26 42 24 C40 26 36 28 32 29" fill={color} opacity="0.25" />
+            <path d="M32 22 C28 20 24 18 22 16 C24 17 28 19 32 21" fill={color} opacity="0.2" />
+            {/* leaf vein details */}
+            <path d="M24 32 C16 28 8 26 6 24" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M24 24 C32 20 40 18 44 16" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+            <path d="M24 16 C16 12 8 10 4 8" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
           </g>
         )
 
@@ -1087,9 +1084,12 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M24 46 L24 34" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" />
             <path d="M23.5 40 L24.5 40" stroke="#4a3a2a" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 36 Q20 32 18 30" stroke="#5c4a3a" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <circle cx="18" cy="30" r="3" fill={color} opacity="0.5" />
-            <circle cx="24" cy="32" r="2.5" fill={color} opacity="0.6" />
-            <circle cx="24" cy="32" r="1" fill={light} opacity="0.3" />
+            {/* small 3-petal blossom at branch tip */}
+            <path d="M18 30 Q16 28 18 27 Q20 28 21 27 Q20 29 18 30 Z" fill={color} opacity="0.5" />
+            <path d="M18 29.5 L18.3 29 L18.6 29.5 Z" fill="#fbbf24" opacity="0.25" />
+            {/* small bud cluster at fork */}
+            <path d="M24 32 Q22.5 30.5 24 29.5 Q25.5 30.5 26.5 29.5 Q25.5 31 24 32 Z" fill={color} opacity="0.6" />
+            <path d="M23.5 31 Q24 30 24.8 31 Q24.2 31.8 23.5 31 Z" fill={light} opacity="0.3" />
           </g>
         )
         if (s === 1) return (
@@ -1099,12 +1099,16 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.5 34 L25 33.8" stroke="#4a3a2a" strokeWidth="0.4" opacity="0.25" />
             <path d="M24 32 Q16 26 12 24" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 28 Q30 24 34 22" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <circle cx="12" cy="22" r="5" fill={color} opacity="0.6" />
-            <circle cx="24" cy="20" r="5" fill={color} opacity="0.7" />
-            <circle cx="34" cy="20" r="4" fill={color} opacity="0.5" />
-            <circle cx="24" cy="18" r="2" fill={light} opacity="0.4" />
-            <circle cx="11" cy="20" r="1.5" fill={light} opacity="0.2" />
-            <circle cx="33" cy="18" r="1" fill={light} opacity="0.18" />
+            {/* 5-petal blossom cluster - left branch */}
+            <path d="M12 22 Q9 19.5 12 18 Q15 19.5 17 18 Q15 21 17 23 Q14 21.5 12 24 Q9 21 12 22 Z" fill={color} opacity="0.6" />
+            <path d="M12 21.5 L12.4 20.8 L12.8 21.5 L12.4 22.2 Z" fill="#fbbf24" opacity="0.3" />
+            {/* 5-petal blossom cluster - center */}
+            <path d="M24 20 Q21 17 24 15 Q27 17 30 15 Q27 18 30 21 Q27 19 24 22 Q21 19 24 20 Z" fill={color} opacity="0.7" />
+            <path d="M23.5 19 Q24.5 17.5 25.5 19 Q24.5 20 23.5 19 Z" fill={light} opacity="0.4" />
+            <path d="M24 19.5 L24.4 18.8 L24.8 19.5 L24.4 20.2 Z" fill="#fbbf24" opacity="0.25" />
+            {/* 4-petal blossom cluster - right branch */}
+            <path d="M34 20 Q31.5 18 34 16.5 Q36.5 18 38 16.5 Q36.5 19 34 21.5 Q31.5 19 34 20 Z" fill={color} opacity="0.5" />
+            <path d="M33.5 19 Q34 18 34.8 19 Q34.2 19.8 33.5 19 Z" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
@@ -1115,19 +1119,26 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23 30 Q14 24 8 22" stroke="#5c4a3a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
             <path d="M23 26 Q32 20 38 18" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M23 24 Q18 18 14 16" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <circle cx="8" cy="20" r="5" fill={color} opacity="0.6" />
-            <circle cx="16" cy="14" r="6" fill={color} opacity="0.7" />
-            <circle cx="24" cy="12" r="5" fill={color} opacity="0.8" />
-            <circle cx="34" cy="16" r="5" fill={color} opacity="0.7" />
-            <circle cx="38" cy="16" r="4" fill={color} opacity="0.5" />
-            {/* blossom highlights */}
-            <circle cx="24" cy="10" r="2" fill={light} opacity="0.4" />
-            <circle cx="15" cy="12" r="1.5" fill={light} opacity="0.25" />
-            <circle cx="33" cy="14" r="1.2" fill={light} opacity="0.2" />
-            <circle cx="7" cy="18" r="1" fill={light} opacity="0.18" />
+            {/* 5-petal blossom cluster - far left */}
+            <path d="M8 20 Q5 17.5 8 16 Q11 17.5 13 16 Q11 19 13 22 Q10 20 8 23 Q5 20 8 20 Z" fill={color} opacity="0.6" />
+            {/* 5-petal blossom cluster - left-center */}
+            <path d="M16 14 Q12.5 11 16 8.5 Q19.5 11 22.5 8.5 Q19.5 12 22.5 15.5 Q19 13.5 16 17 Q12.5 13 16 14 Z" fill={color} opacity="0.7" />
+            {/* 5-petal blossom cluster - center */}
+            <path d="M24 12 Q21 9 24 7 Q27 9 30 7 Q27 10 30 13 Q27 11.5 24 14.5 Q21 11 24 12 Z" fill={color} opacity="0.8" />
+            {/* 5-petal blossom cluster - right */}
+            <path d="M34 16 Q31 13.5 34 11.5 Q37 13.5 40 11.5 Q37 15 40 18 Q37 16 34 19 Q31 16 34 16 Z" fill={color} opacity="0.7" />
+            {/* small 3-petal cluster - far right */}
+            <path d="M38 16 Q36 14 38 13 Q40 14 42 13 Q40 15.5 38 17 Z" fill={color} opacity="0.5" />
+            {/* petal highlight accents */}
+            <path d="M23 10 Q24 8.5 25.5 10 Q24.2 11 23 10 Z" fill={light} opacity="0.4" />
+            <path d="M15 12 Q16 10.5 17.5 12 Q16.2 13 15 12 Z" fill={light} opacity="0.25" />
+            <path d="M33 14 Q34 12.8 35 14 Q34 15 33 14 Z" fill={light} opacity="0.2" />
+            <path d="M7 18 Q8 17 9 18 Q8 19 7 18 Z" fill={light} opacity="0.18" />
             {/* blossom center dots */}
-            <circle cx="16" cy="14" r="0.8" fill="#fbbf24" opacity="0.3" />
-            <circle cx="24" cy="12" r="0.7" fill="#fbbf24" opacity="0.25" />
+            <path d="M16 13.5 L16.5 12.8 L17 13.5 L16.5 14.2 Z" fill="#fbbf24" opacity="0.3" />
+            <path d="M24 11.5 L24.4 10.8 L24.8 11.5 L24.4 12.2 Z" fill="#fbbf24" opacity="0.25" />
+            <path d="M8 19.5 L8.3 19 L8.6 19.5 L8.3 20 Z" fill="#fbbf24" opacity="0.2" />
+            <path d="M34 15.5 L34.3 15 L34.6 15.5 L34.3 16 Z" fill="#fbbf24" opacity="0.2" />
             {/* falling petals */}
             <ellipse cx="20" cy="36" rx="1.2" ry="0.8" fill={color} opacity="0.3" transform="rotate(20 20 36)" />
             <ellipse cx="30" cy="40" rx="1" ry="0.6" fill={color} opacity="0.2" transform="rotate(-15 30 40)" />
@@ -1245,7 +1256,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.5 42 L24.5 42" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 36 Q28 32 30 28 Q26 30 24 34" fill={color} opacity="0.6" />
             <path d="M24 36 Q20 32 18 28 Q22 30 24 34" fill={color} opacity="0.5" />
-            <circle cx="24" cy="32" r="2" fill={light} opacity="0.4" />
+            {/* organic petal highlight */}
+            <path d="M24 33 Q22.5 31.5 24 30.5 Q25.5 31.5 24 33 Z" fill={light} opacity="0.4" />
+            <path d="M23.5 32 Q24 31 24.5 32 Q24 32.8 23.5 32 Z" fill="#fff" opacity="0.2" />
           </g>
         )
         if (s === 1) return (
@@ -1256,9 +1269,13 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M20.5 36 L22 35.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M28 30 Q32 26 28 22 Q26 26 28 30" fill={color} opacity="0.7" />
             <path d="M20 30 Q16 26 20 22 Q22 26 20 30" fill={color} opacity="0.7" />
-            <circle cx="24" cy="24" r="3" fill={light} opacity="0.4" />
-            <circle cx="28" cy="25" r="0.8" fill={light} opacity="0.2" />
-            <circle cx="20" cy="25" r="0.8" fill={light} opacity="0.18" />
+            {/* organic orchid center - petal ring */}
+            <path d="M24 24 Q21.5 22 24 20.5 Q26.5 22 24 24 Z" fill={light} opacity="0.45" />
+            <path d="M24 24 Q22 25 21 23.5 Q22.5 22 24 24 Z" fill={light} opacity="0.35" />
+            <path d="M24 24 Q26 25 27 23.5 Q25.5 22 24 24 Z" fill={light} opacity="0.35" />
+            {/* stamen details */}
+            <path d="M28 25 Q28.5 24 29 25 Q28.5 25.8 28 25 Z" fill={light} opacity="0.2" />
+            <path d="M20 25 Q20.5 24 21 25 Q20.5 25.8 20 25 Z" fill={light} opacity="0.18" />
           </g>
         )
         if (s === 2) return (
@@ -1271,12 +1288,17 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M30 22 Q34 16 30 12 Q28 16 30 22" fill={light} opacity="0.4" />
             <path d="M18 26 Q12 20 16 14 Q20 18 18 26" fill={color} opacity="0.8" />
             <path d="M18 22 Q14 16 18 12 Q20 16 18 22" fill={light} opacity="0.4" />
-            <circle cx="24" cy="18" r="4" fill={light} opacity="0.5" />
+            {/* organic orchid bloom center - irregular petal ring */}
+            <path d="M24 18 Q21 16 24 14 Q27 16 24 18 Z" fill={light} opacity="0.5" />
+            <path d="M24 18 Q21.5 19.5 20.5 17.5 Q22 15.5 24 18 Z" fill={light} opacity="0.4" />
+            <path d="M24 18 Q26.5 19.5 27.5 17.5 Q26 15.5 24 18 Z" fill={light} opacity="0.4" />
+            <path d="M24 17.5 Q23 16.5 24 16 Q25 16.5 24 17.5 Z" fill="#fff" opacity="0.25" />
             {/* leaf veins */}
             <path d="M30 24 L32 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
             <path d="M18 24 L16 18" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
-            <circle cx="32" cy="16" r="0.6" fill={light} opacity="0.18" />
-            <circle cx="16" cy="16" r="0.6" fill={light} opacity="0.15" />
+            {/* organic petal-tip highlights */}
+            <path d="M32 16 Q32.5 15.2 33 16 Q32.5 16.6 32 16 Z" fill={light} opacity="0.18" />
+            <path d="M16 16 Q16.5 15.2 17 16 Q16.5 16.6 16 16 Z" fill={light} opacity="0.15" />
             {/* roots */}
             <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
             <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
@@ -1306,23 +1328,31 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             {/* top petal */}
             <path d="M24 16 Q20 8 24 2 Q28 8 24 16" fill={color} opacity="0.9" />
             <path d="M24 10 Q22 6 24 4 Q26 6 24 10" fill={light} opacity="0.5" />
-            {/* central flower - layered */}
-            <circle cx="24" cy="17" r="6" fill={color} opacity="0.3" />
-            <circle cx="24" cy="17" r="4" fill={light} opacity="0.5" />
-            <circle cx="24" cy="17" r="2" fill="#fff" opacity="0.3" />
-            {/* stamen dots */}
-            <circle cx="22" cy="16" r="0.7" fill={color} opacity="0.6" />
-            <circle cx="26" cy="16" r="0.7" fill={color} opacity="0.6" />
-            <circle cx="24" cy="14.5" r="0.7" fill={color} opacity="0.5" />
-            <circle cx="24" cy="18.5" r="0.6" fill={color} opacity="0.4" />
+            {/* central flower - organic petal ring */}
+            <path d="M24 17 Q20 14 24 11 Q28 14 24 17 Z" fill={color} opacity="0.35" />
+            <path d="M24 17 Q19 16 18.5 13 Q21 14.5 24 17 Z" fill={color} opacity="0.3" />
+            <path d="M24 17 Q29 16 29.5 13 Q27 14.5 24 17 Z" fill={color} opacity="0.3" />
+            <path d="M24 17 Q20.5 19 19 17 Q21 15.5 24 17 Z" fill={color} opacity="0.25" />
+            <path d="M24 17 Q27.5 19 29 17 Q27 15.5 24 17 Z" fill={color} opacity="0.25" />
+            {/* inner bloom */}
+            <path d="M24 17 Q22 15.5 24 14 Q26 15.5 24 17 Z" fill={light} opacity="0.55" />
+            <path d="M24 17 Q22 17.5 21.5 16 Q23 15 24 17 Z" fill={light} opacity="0.45" />
+            <path d="M24 17 Q26 17.5 26.5 16 Q25 15 24 17 Z" fill={light} opacity="0.45" />
+            {/* stigma center */}
+            <path d="M24 16.8 Q23.2 16 24 15.5 Q24.8 16 24 16.8 Z" fill="#fff" opacity="0.35" />
+            {/* stamen details - teardrop filaments */}
+            <path d="M22 16 Q21.5 15.2 22 15 Q22.5 15.2 22 16 Z" fill={color} opacity="0.6" />
+            <path d="M26 16 Q25.5 15.2 26 15 Q26.5 15.2 26 16 Z" fill={color} opacity="0.6" />
+            <path d="M24 14.5 Q23.5 13.8 24 13.5 Q24.5 13.8 24 14.5 Z" fill={color} opacity="0.5" />
+            <path d="M24 18.5 Q23.5 17.8 24 17.5 Q24.5 17.8 24 18.5 Z" fill={color} opacity="0.4" />
             {/* hanging aerial roots */}
             <path d="M20 36 Q19 40 18 44" stroke={trunk} strokeWidth="0.5" fill="none" opacity="0.2" />
             <path d="M28 36 Q29 40 30 44" stroke={trunk} strokeWidth="0.5" fill="none" opacity="0.18" />
             <path d="M22 38 Q21 42 20 46" stroke={trunk} strokeWidth="0.4" fill="none" opacity="0.15" />
             {/* petal edge highlights */}
-            <circle cx="38" cy="12" r="0.8" fill={light} opacity="0.2" />
-            <circle cx="10" cy="12" r="0.8" fill={light} opacity="0.18" />
-            <circle cx="24" cy="4" r="0.5" fill={light} opacity="0.2" />
+            <path d="M38 12 Q38.5 11 39 12 Q38.5 12.8 38 12 Z" fill={light} opacity="0.2" />
+            <path d="M10 12 Q10.5 11 11 12 Q10.5 12.8 10 12 Z" fill={light} opacity="0.18" />
+            <path d="M24 4 Q24.3 3.3 24.7 4 Q24.3 4.5 24 4 Z" fill={light} opacity="0.2" />
             {/* roots */}
             <path d="M23 46 Q20 44.5 17 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
             <path d="M25 46 Q28 44.5 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
@@ -1335,9 +1365,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
           <g>
             <path d="M24 46 L24 32" stroke={trunk} strokeWidth="2" strokeLinecap="round" />
             <path d="M24 34 Q20 30 18 32" stroke={trunk} strokeWidth="1" fill="none" strokeLinecap="round" />
-            <ellipse cx="18" cy="34" rx="2" ry="4" fill={color} opacity="0.5" />
-            <ellipse cx="24" cy="30" rx="2" ry="3" fill={color} opacity="0.6" />
-            <circle cx="18" cy="33" r="0.6" fill={light} opacity="0.25" />
+            {/* small teardrop clusters */}
+            <path d="M18 30 Q16.5 32 17 35 Q17.5 37 18 37 Q18.5 37 19 35 Q19.5 32 18 30 Z" fill={color} opacity="0.55" />
+            <path d="M24 28 Q22.5 30 23 32 Q23.5 33.5 24 33.5 Q24.5 33.5 25 32 Q25.5 30 24 28 Z" fill={color} opacity="0.65" />
+            <path d="M17.5 32 Q18 31 18.5 32 Q18 32.8 17.5 32 Z" fill={light} opacity="0.25" />
+            <path d="M23.5 30 Q24 29.2 24.5 30 Q24 30.6 23.5 30 Z" fill={light} opacity="0.3" />
           </g>
         )
         if (s === 1) return (
@@ -1347,12 +1379,14 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.5 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             <path d="M24 28 Q18 24 14 26" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 26 Q30 22 34 24" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <ellipse cx="14" cy="28" rx="2.5" ry="6" fill={color} opacity="0.6" />
-            <ellipse cx="24" cy="24" rx="2.5" ry="6" fill={color} opacity="0.7" />
-            <ellipse cx="34" cy="26" rx="2.5" ry="6" fill={color} opacity="0.6" />
-            <ellipse cx="24" cy="20" rx="1.5" ry="3" fill={light} opacity="0.3" />
-            <circle cx="14" cy="26" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="34" cy="24" r="0.6" fill={light} opacity="0.18" />
+            {/* teardrop hanging clusters */}
+            <path d="M14 24 Q11.5 28 12.5 32 Q13 34 14 34 Q15 34 15.5 32 Q16.5 28 14 24 Z" fill={color} opacity="0.6" />
+            <path d="M24 20 Q21.5 24 22.5 28 Q23 30 24 30 Q25 30 25.5 28 Q26.5 24 24 20 Z" fill={color} opacity="0.7" />
+            <path d="M34 22 Q31.5 26 32.5 30 Q33 32 34 32 Q35 32 35.5 30 Q36.5 26 34 22 Z" fill={color} opacity="0.6" />
+            {/* floret highlights */}
+            <path d="M23.5 23 Q24 22 24.5 23 Q24 23.8 23.5 23 Z" fill={light} opacity="0.3" />
+            <path d="M13.5 27 Q14 26.2 14.5 27 Q14 27.6 13.5 27 Z" fill={light} opacity="0.22" />
+            <path d="M33.5 25 Q34 24.2 34.5 25 Q34 25.6 33.5 25 Z" fill={light} opacity="0.2" />
           </g>
         )
         if (s === 2) return (
@@ -1363,17 +1397,21 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
             <path d="M23.5 28 L25 27.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M24 24 Q16 18 10 20" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
             <path d="M24 22 Q32 16 38 18" stroke={trunk} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <ellipse cx="10" cy="24" rx="3" ry="7" fill={color} opacity="0.6" />
-            <ellipse cx="18" cy="22" rx="3" ry="8" fill={color} opacity="0.7" />
-            <ellipse cx="26" cy="20" rx="3" ry="8" fill={color} opacity="0.8" />
-            <ellipse cx="34" cy="22" rx="3" ry="8" fill={color} opacity="0.7" />
-            <ellipse cx="38" cy="22" rx="2.5" ry="6" fill={color} opacity="0.5" />
-            <ellipse cx="26" cy="16" rx="1.5" ry="3" fill={light} opacity="0.3" />
-            {/* flower cluster dots */}
-            <circle cx="10" cy="22" r="0.7" fill={light} opacity="0.22" />
-            <circle cx="18" cy="19" r="0.6" fill={light} opacity="0.2" />
-            <circle cx="34" cy="20" r="0.6" fill={light} opacity="0.18" />
-            <circle cx="26" cy="24" r="0.5" fill={light} opacity="0.15" />
+            {/* teardrop wisteria clusters */}
+            <path d="M10 18 Q7.5 22 8.5 28 Q9 31 10 31 Q11 31 11.5 28 Q12.5 22 10 18 Z" fill={color} opacity="0.6" />
+            <path d="M18 16 Q14.5 22 16 28 Q17 32 18 32 Q19 32 20 28 Q21.5 22 18 16 Z" fill={color} opacity="0.7" />
+            <path d="M26 14 Q22.5 20 24 26 Q25 30 26 30 Q27 30 28 26 Q29.5 20 26 14 Z" fill={color} opacity="0.8" />
+            <path d="M34 16 Q30.5 22 32 28 Q33 32 34 32 Q35 32 36 28 Q37.5 22 34 16 Z" fill={color} opacity="0.7" />
+            <path d="M38 16 Q36 20 37 25 Q37.5 28 38 28 Q38.5 28 39 25 Q40 20 38 16 Z" fill={color} opacity="0.5" />
+            {/* floret petal accents */}
+            <path d="M25.5 18 Q26 17 26.5 18 Q26 18.8 25.5 18 Z" fill={light} opacity="0.35" />
+            <path d="M17.5 20 Q18 19.2 18.5 20 Q18 20.6 17.5 20 Z" fill={light} opacity="0.25" />
+            <path d="M33.5 20 Q34 19.2 34.5 20 Q34 20.6 33.5 20 Z" fill={light} opacity="0.22" />
+            <path d="M9.5 22 Q10 21.3 10.5 22 Q10 22.6 9.5 22 Z" fill={light} opacity="0.2" />
+            <path d="M37.5 19 Q38 18.3 38.5 19 Q38 19.5 37.5 19 Z" fill={light} opacity="0.18" />
+            {/* shadow patches */}
+            <path d="M16 29 Q18 28 20 29 Q18 30 16 29 Z" fill={dark} opacity="0.08" />
+            <path d="M32 29 Q34 28 36 29 Q34 30 32 29 Z" fill={dark} opacity="0.08" />
             {/* roots */}
             <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
             <path d="M25 46 Q27 45 29 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />

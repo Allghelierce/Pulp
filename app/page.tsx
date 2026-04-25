@@ -992,14 +992,14 @@ export default function NoteApp() {
   const [gemStoreOpen, setGemStoreOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
-    { id: 'binder_buddy', title: 'Librarian', icon: '📚', description: 'Create 20 folders to organise your work.', reward: 1, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 20 },
-    { id: 'archivist', title: 'The Archivist', icon: '🗃️', description: 'Archive 50 notes without looking back.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between midnight and 4 AM.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
-    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 14 days in a row — no breaks.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 14 },
-    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 36000 },
+    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
+    { id: 'wordsmith', title: 'Wordsmith', icon: '✒️', description: 'Type 200,000 characters by hand — a small novel.', reward: 6, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 200000 },
+    { id: 'full_grove', title: 'Groundskeeper', icon: '🌳', description: 'Grow 25 trees in your orchard.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 25 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between 3 and 4 AM.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 2, rewardType: 'gems', completed: false, claimed: false },
+    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
+    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 30 days in a row — no breaks.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
+    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 36000 },
     { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 7200 },
   ])
   const [lastCharCount, setLastCharCount] = useState(0)
@@ -1026,7 +1026,7 @@ export default function NoteApp() {
   // Restore Grove from LocalStorage
   useEffect(() => {
     const hour = new Date().getHours()
-    const isNightOwl = hour >= 0 && hour <= 4
+    const isNightOwl = hour === 3
 
     const applyTimeChecks = (list: Achievement[]) =>
       list.map((a: Achievement) => {
@@ -2271,7 +2271,6 @@ export default function NoteApp() {
   const archiveNote = (id: string) => {
     if (activeTabId === id) setActiveTabId(null)
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: true } : n))
-    checkAchievement('archivist', a => ({ progress: (a.progress || 0) + 1 }))
   }
 
   const unarchiveNote = (id: string) => {
@@ -2346,7 +2345,6 @@ export default function NoteApp() {
     const id = Date.now()
     setFolders(prev => [...prev, { id, name: "New Folder", open: true }])
     setRenamingFolder(id)
-    checkAchievement('binder_buddy', a => ({ progress: (a.progress || 0) + 1 }))
   }
   const toggleFolder = (id: number) => setFolders(prev => prev.map(f => f.id === id ? { ...f, open: !f.open } : f))
   const renameFolder = (id: number, name: string) => setFolders(prev => prev.map(f => f.id === id ? { ...f, name } : f))
@@ -2506,10 +2504,8 @@ export default function NoteApp() {
               onJumpToBookmark={(b) => { editor.flushSync(); setActiveTabId(b.noteId); setCurrentPageIdx(b.pageIdx); setCurrentView("editor") }}
               onReorderBookmarks={(newB) => setBookmarks(newB)}
               onDeleteBookmark={(id) => setBookmarks(prev => prev.filter(b => b.id !== id))}
-              onRenameBookmark={(id, current) => {
-                openPrompt("Rename Bookmark", current, "Enter new name...", "Rename", (val: string) => {
-                  if (val) setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: val } : b))
-                })
+              onRenameBookmark={(id, newName) => {
+                setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: newName } : b))
               }}
               onUnlockDev={handleUnlockDev}
               onOpenShop={() => setShopOpen(true)}
@@ -3359,8 +3355,10 @@ export default function NoteApp() {
         onClose={() => setFocusOpen(false)}
         theme={theme}
         blockedSites={blockedSites}
-        blockedApps={blockedApps}
+        gems={gems}
         onUpdateConfig={updateSettings}
+        onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
+        openConfirm={openConfirm}
       />
 
       <VitalitySystem
@@ -3391,7 +3389,7 @@ export default function NoteApp() {
         <button
           onClick={() => setTimerOpen(!timerOpen)}
           title="Focus timer  (⌘⌥T)"
-          className="fixed bottom-3 left-3 z-[60] w-8 h-8 flex items-center justify-center rounded-md transition-colors"
+          className="fixed bottom-3 left-3 z-[60] w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
           style={{
             backgroundColor: theme === "dark" ? "rgba(20,20,22,0.85)" : "rgba(255,255,255,0.9)",
             border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
@@ -3399,7 +3397,7 @@ export default function NoteApp() {
             backdropFilter: "blur(12px)",
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="13" r="8" />
             <path d="M12 9v4l2 2" />
             <path d="M9 2h6" />

@@ -104,6 +104,8 @@ export const Sidebar = memo(function Sidebar({
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
+  const [renamingBookmarkId, setRenamingBookmarkId] = useState<string | null>(null)
+  const [bookmarkRenameValue, setBookmarkRenameValue] = useState("")
   const [iconPicker, setIconPicker] = useState<{ noteId: string; x: number; y: number } | null>(null)
   const [draggedBookmarkId, setDraggedBookmarkId] = useState<string | null>(null)
   const [bookmarkTargetId, setBookmarkTargetId] = useState<string | null>(null)
@@ -781,23 +783,37 @@ export const Sidebar = memo(function Sidebar({
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
                 <div
                   key={b.id}
-                  draggable
+                  draggable={renamingBookmarkId !== b.id}
                   onDragStart={() => setDraggedBookmarkId(b.id)}
                   onDragOver={e => { e.preventDefault(); e.stopPropagation(); if (draggedBookmarkId && draggedBookmarkId !== b.id) setBookmarkTargetId(b.id) }}
                   onDrop={() => handleBookmarkDrop(b.id)}
-                  className={`relative group flex items-center transition-all ${draggedBookmarkId === b.id ? "opacity-30" : ""} ${bookmarkTargetId === b.id ? "border-t-2" : ""}`}
+                  onClick={() => { if (renamingBookmarkId !== b.id) onJumpToBookmark(b) }}
+                  className={`relative group flex items-center cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all ${draggedBookmarkId === b.id ? "opacity-30" : ""} ${bookmarkTargetId === b.id ? "border-t-2" : ""}`}
                   style={{ borderTopColor: bookmarkTargetId === b.id ? accent : "transparent" }}
                 >
-                  <div
-                    onClick={() => onJumpToBookmark(b)}
-                    className="flex-1 flex items-center gap-2 cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all truncate min-w-0"
-                  >
-                    <span className="shrink-0 text-[10px] font-bold text-zinc-600 w-4 text-right">{idx + 1}.</span>
-                    <span className="truncate text-xs">{b.label || b.noteTitle} <span className="text-[10px] opacity-40 ml-1">p.{b.pageIdx + 1}</span></span>
-                  </div>
+                  <span className="shrink-0 text-[10px] font-bold text-zinc-600 w-4 text-right">{idx + 1}.</span>
+                  {renamingBookmarkId === b.id ? (
+                    <input
+                      autoFocus
+                      value={bookmarkRenameValue}
+                      onChange={e => setBookmarkRenameValue(e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      onBlur={() => {
+                        if (bookmarkRenameValue.trim()) onRenameBookmark(b.id, bookmarkRenameValue.trim())
+                        setRenamingBookmarkId(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") { if (bookmarkRenameValue.trim()) onRenameBookmark(b.id, bookmarkRenameValue.trim()); setRenamingBookmarkId(null) }
+                        if (e.key === "Escape") setRenamingBookmarkId(null)
+                      }}
+                      className="flex-1 bg-white/10 text-white text-xs rounded px-1.5 py-0.5 ml-2 outline-none min-w-0"
+                    />
+                  ) : (
+                    <span className="truncate text-xs ml-2">{b.label || b.noteTitle} <span className="text-[10px] opacity-40 ml-1">p.{b.pageIdx + 1}</span></span>
+                  )}
                   <button
                     onClick={e => { e.stopPropagation(); setBookmarkMenuId(bookmarkMenuId === b.id ? null : b.id) }}
-                    className="shrink-0 mr-3 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all text-zinc-500 hover:text-zinc-300"
+                    className="shrink-0 ml-auto mr-1 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all text-zinc-500 hover:text-zinc-300"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                   </button>
@@ -807,7 +823,7 @@ export const Sidebar = memo(function Sidebar({
                       onMouseLeave={() => setBookmarkMenuId(null)}
                     >
                       <button
-                        onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); onRenameBookmark(b.id, b.label || b.noteTitle) }}
+                        onClick={e => { e.stopPropagation(); setBookmarkMenuId(null); setBookmarkRenameValue(b.label || b.noteTitle); setRenamingBookmarkId(b.id) }}
                         className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white flex items-center gap-2 transition-colors whitespace-nowrap"
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>

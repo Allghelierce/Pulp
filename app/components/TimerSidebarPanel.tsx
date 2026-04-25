@@ -93,7 +93,7 @@ function TreeVisualization({ progress, type, idle }: { progress: number; type: s
     switch (shape) {
       case 'ethereal': return { y: [0, -8, 0], opacity: [0.8, 1, 0.8] }
       case 'tropical':
-      case 'weeping': return { rotate: [-2, 2, -2], x: [-1, 1, -1] }
+      case 'bamboo': return { rotate: [-2, 2, -2], x: [-1, 1, -1] }
       case 'spire': return { scaleY: [1, 1.02, 1], y: [0, -2, 0] }
       case 'succulent': return { scale: [1, 1.03, 1] }
       case 'prehistoric': return { rotate: [-1, 1, -1] }
@@ -415,7 +415,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </motion.div>
                 ) : (
                   <motion.div
-                    key="tree-view"
+                    key={`tree-view-${selectedSeed || 'none'}`}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}

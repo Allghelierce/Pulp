@@ -1,6 +1,8 @@
 "use client"
-import { memo, useEffect } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { TREE_TYPES } from "@/app/constants"
+import { PlantIcon } from "./PlantIcon"
 
 interface LeaderboardViewProps {
   isOpen: boolean
@@ -9,175 +11,303 @@ interface LeaderboardViewProps {
   sunshine: number
 }
 
-const DUMMY_PLAYERS = [
-  { rank: 1, name: "inkwell_sage", level: 42, sunshine: 84200, streak: 87, trees: 34, avatar: "#d4a84a" },
-  { rank: 2, name: "midnight_quill", level: 38, sunshine: 67500, streak: 63, trees: 28, avatar: "#a78bfa" },
-  { rank: 3, name: "paper_moth", level: 35, sunshine: 51300, streak: 55, trees: 25, avatar: "#f472b6" },
-  { rank: 4, name: "velvet_prose", level: 31, sunshine: 42100, streak: 41, trees: 21, avatar: "#34d399" },
-  { rank: 5, name: "cedar_drafts", level: 28, sunshine: 33800, streak: 34, trees: 18, avatar: "#60a5fa" },
-  { rank: 6, name: "amber_letters", level: 25, sunshine: 26400, streak: 29, trees: 15, avatar: "#fb923c" },
-  { rank: 7, name: "foxglove_ink", level: 22, sunshine: 19700, streak: 22, trees: 12, avatar: "#c084fc" },
-  { rank: 8, name: "willow_script", level: 19, sunshine: 14200, streak: 18, trees: 9, avatar: "#4ade80" },
-  { rank: 9, name: "dusk_typist", level: 16, sunshine: 9800, streak: 14, trees: 7, avatar: "#f87171" },
-  { rank: 10, name: "lantern_words", level: 13, sunshine: 5100, streak: 9, trees: 4, avatar: "#fbbf24" },
+const PLAYERS = [
+  { rank: 1, name: "inkwell_sage", level: 42, sunshine: 84200, streak: 87, trees: 34, avatar: "#e07840" },
+  { rank: 2, name: "midnight_quill", level: 38, sunshine: 67500, streak: 63, trees: 28, avatar: "#8b7aaa" },
+  { rank: 3, name: "paper_moth", level: 35, sunshine: 51300, streak: 55, trees: 25, avatar: "#c06878" },
+  { rank: 4, name: "velvet_prose", level: 31, sunshine: 42100, streak: 41, trees: 21, avatar: "#5a9a6a" },
+  { rank: 5, name: "cedar_drafts", level: 28, sunshine: 33800, streak: 34, trees: 18, avatar: "#5a88b0" },
 ]
+
+const TREE_KEYS = Object.keys(TREE_TYPES).filter(k => k !== 'spoiled')
+
+function seededRng(seed: number) {
+  let s = Math.abs(seed) || 1
+  return () => {
+    s ^= s << 13
+    s ^= s >> 17
+    s ^= s << 5
+    return ((s >>> 0) % 10000) / 10000
+  }
+}
+
+function generateFakeGrove(playerIdx: number, treeCount: number) {
+  const rng = seededRng(playerIdx * 311 + 1337)
+  const trees: { type: string; stage: number; x: number; y: number }[] = []
+  for (let i = 0; i < treeCount; i++) {
+    const typeIdx = Math.floor(rng() * TREE_KEYS.length)
+    trees.push({
+      type: TREE_KEYS[typeIdx],
+      stage: Math.min(4, Math.floor(rng() * 3) + 2),
+      x: 8 + rng() * 84,
+      y: 10 + rng() * 75,
+    })
+  }
+  return trees.sort((a, b) => a.y - b.y)
+}
 
 export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sunshine }: LeaderboardViewProps) {
   const isDark = theme === "dark"
+  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() } }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, selectedPlayer])
 
-  const gold = "#d4a84a"
+  useEffect(() => {
+    if (!isOpen) setSelectedPlayer(null)
+  }, [isOpen])
+
+  const selectedGrove = useMemo(() => {
+    if (selectedPlayer === null) return []
+    const p = PLAYERS[selectedPlayer]
+    return generateFakeGrove(selectedPlayer, p.trees)
+  }, [selectedPlayer])
+
+  const accent = '#e07840'
+  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
+  const textSecondary = isDark ? '#8a8680' : '#7a7670'
+  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
+  const bgColor = isDark ? '#0c0e10' : '#f5f3ef'
+  const cardBg = isDark ? '#141618' : '#eae7e1'
+  const hoverBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
+
+  const MEDAL_COLORS = ['#e07840', '#9a9590', '#a07050']
+
+  if (!isOpen) return null
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-          onMouseDown={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.96, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.96, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            onMouseDown={e => e.stopPropagation()}
-            className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
-            style={{ height: 660 }}
-          >
-            {/* Header */}
-            <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-              <div>
-                <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Leaderboard</h2>
-                <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Top writers this season</p>
-              </div>
-              <button
-                onClick={onClose}
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-
-            {/* Podium - Top 3 */}
-            <div className="flex justify-center items-end gap-4 px-6 pt-6 pb-4 shrink-0">
-              {[DUMMY_PLAYERS[1], DUMMY_PLAYERS[0], DUMMY_PLAYERS[2]].map((p, i) => {
-                const heights = [90, 110, 74]
-                const sizes = [42, 52, 38]
-                const isFirst = i === 1
-                return (
-                  <div key={p.rank} className="flex flex-col items-center gap-1.5">
-                    <div
-                      className="rounded-full flex items-center justify-center font-bold"
-                      style={{
-                        width: sizes[i], height: sizes[i],
-                        background: isDark ? `linear-gradient(135deg, ${p.avatar}30, ${p.avatar}10)` : `linear-gradient(135deg, ${p.avatar}25, ${p.avatar}08)`,
-                        border: `2px solid ${isFirst ? gold : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
-                        fontSize: sizes[i] * 0.38, color: p.avatar,
-                      }}
-                    >
-                      {p.name[0].toUpperCase()}
-                    </div>
-                    <span className={`text-[11px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{p.name}</span>
-                    <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Lv.{p.level}</span>
-                    <div
-                      className="flex flex-col items-center justify-center gap-0.5"
-                      style={{
-                        width: 64, height: heights[i], borderRadius: "8px 8px 0 0",
-                        background: isFirst
-                          ? isDark ? "linear-gradient(180deg, rgba(212,168,74,0.15) 0%, rgba(212,168,74,0.04) 100%)" : "linear-gradient(180deg, rgba(212,168,74,0.12) 0%, rgba(212,168,74,0.03) 100%)"
-                          : isDark ? "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)" : "linear-gradient(180deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.01) 100%)",
-                        border: `1px solid ${isFirst ? (isDark ? "rgba(212,168,74,0.12)" : "rgba(212,168,74,0.2)") : (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)")}`,
-                        borderBottom: "none",
-                      }}
-                    >
-                      <span className="text-[18px] font-bold" style={{ color: isFirst ? gold : isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)" }}>
-                        #{p.rank}
-                      </span>
-                      <span className={`text-[9px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{(p.sunshine / 1000).toFixed(1)}k ☀️</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Divider */}
-            <div className={`h-px mx-6 ${isDark ? "bg-zinc-800/80" : "bg-zinc-200/70"}`} />
-
-            {/* Rankings list */}
-            <div className="flex-1 overflow-y-auto px-4 py-3">
-              {DUMMY_PLAYERS.slice(3).map((p, i) => (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+      onMouseDown={() => { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() }}
+    >
+      <div
+        onMouseDown={e => e.stopPropagation()}
+        className="relative w-full overflow-hidden flex flex-col"
+        style={{
+          maxWidth: selectedPlayer !== null ? 780 : 480,
+          borderRadius: 16,
+          background: bgColor,
+          boxShadow: isDark ? "0 25px 80px -15px rgba(0,0,0,0.7)" : "0 25px 80px -15px rgba(0,0,0,0.15)",
+          border: `1px solid ${cardBorder}`,
+          transition: 'max-width 0.3s ease',
+        }}
+      >
+            <AnimatePresence mode="wait">
+              {selectedPlayer !== null ? (
                 <motion.div
-                  key={p.rank}
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.05 * i }}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-colors ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-200/40"}`}
+                  key="profile"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 30 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col"
                 >
-                  <span className={`text-[13px] font-semibold w-6 text-center tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                    {p.rank}
-                  </span>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
-                    style={{
-                      background: isDark ? `linear-gradient(135deg, ${p.avatar}25, ${p.avatar}08)` : `linear-gradient(135deg, ${p.avatar}20, ${p.avatar}06)`,
-                      border: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
-                      color: p.avatar,
-                    }}
-                  >
-                    {p.name[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-[13px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{p.name}</div>
-                    <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Lv.{p.level} · {p.streak}d streak · {p.trees} trees</div>
-                  </div>
-                  <span className={`text-[12px] font-semibold tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                    {p.sunshine.toLocaleString()} ☀️
-                  </span>
+                  {(() => {
+                    const p = PLAYERS[selectedPlayer]
+                    return (
+                      <>
+                        {/* Profile header */}
+                        <div className="px-6 py-4 flex items-center gap-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                          <button
+                            onClick={() => setSelectedPlayer(null)}
+                            className="p-1.5 rounded-lg transition-colors"
+                            style={{ color: textMuted }}
+                            onMouseEnter={e => e.currentTarget.style.color = textPrimary}
+                            onMouseLeave={e => e.currentTarget.style.color = textMuted}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                          </button>
+                          <div
+                            className="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0"
+                            style={{ background: p.avatar, color: '#fff' }}
+                          >
+                            {p.name[0].toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[13px] font-semibold" style={{ color: textPrimary }}>{p.name}</div>
+                            <div className="text-[10px]" style={{ color: textSecondary }}>Lv.{p.level} · {p.streak}d streak</div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <div className="text-[14px] font-bold" style={{ color: accent }}>{p.sunshine.toLocaleString()}</div>
+                              <div className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>sunshine</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-[14px] font-bold" style={{ color: textPrimary }}>{p.trees}</div>
+                              <div className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>trees</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Orchard */}
+                        <div className="px-6 py-4" style={{ height: 380 }}>
+                          <div
+                            className="relative w-full h-full rounded-xl overflow-hidden"
+                            style={{
+                              background: isDark
+                                ? 'linear-gradient(180deg, #10140e 0%, #1a1e16 40%, #222820 100%)'
+                                : 'linear-gradient(180deg, #ede9e0 0%, #e2ddd4 40%, #d8d2c8 100%)',
+                              border: `1px solid ${cardBorder}`,
+                            }}
+                          >
+                            {/* Subtle grid */}
+                            <svg className="absolute inset-0 w-full h-full" style={{ opacity: isDark ? 0.04 : 0.06 }}>
+                              {Array.from({ length: 8 }).map((_, i) => (
+                                <line key={`h-${i}`} x1="0" y1={`${(i + 1) * 11}%`} x2="100%" y2={`${(i + 1) * 11}%`} stroke={isDark ? '#fff' : '#000'} strokeWidth="0.5" />
+                              ))}
+                            </svg>
+
+                            {selectedGrove.map((tree, i) => {
+                              const depthT = tree.y / 100
+                              const scale = 0.65 + depthT * 0.4
+                              const size = Math.round(32 * scale)
+                              return (
+                                <div
+                                  key={i}
+                                  className="absolute flex flex-col items-center"
+                                  style={{
+                                    left: `${tree.x}%`,
+                                    top: `${tree.y}%`,
+                                    transform: 'translate(-50%, -85%)',
+                                    zIndex: 10 + i,
+                                  }}
+                                >
+                                  <PlantIcon type={tree.type} size={size} stage={tree.stage} />
+                                  <div
+                                    className="rounded-full -mt-0.5"
+                                    style={{
+                                      width: size * 0.45,
+                                      height: Math.max(2, size * 0.08),
+                                      backgroundColor: isDark ? `rgba(0,0,0,${0.2 + depthT * 0.1})` : `rgba(0,0,0,${0.06 + depthT * 0.04})`,
+                                      filter: 'blur(1px)',
+                                    }}
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </motion.div>
-              ))}
-
-              {/* Current user */}
-              <div className={`h-px mx-3 my-3 ${isDark ? "bg-zinc-800/60" : "bg-zinc-200/60"}`} />
-              <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${isDark ? "bg-amber-950/20 border border-amber-900/20" : "bg-amber-50/60 border border-amber-200/40"}`}>
-                <span className="text-[13px] font-semibold w-6 text-center" style={{ color: gold }}>—</span>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
-                  style={{
-                    background: isDark ? "linear-gradient(135deg, rgba(212,168,74,0.15), rgba(212,168,74,0.05))" : "linear-gradient(135deg, rgba(212,168,74,0.2), rgba(212,168,74,0.06))",
-                    border: `1px solid ${isDark ? "rgba(212,168,74,0.12)" : "rgba(212,168,74,0.2)"}`,
-                    color: gold,
-                  }}
+              ) : (
+                <motion.div
+                  key="list"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col"
                 >
-                  Y
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold" style={{ color: gold }}>You</div>
-                  <div className={`text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Keep writing to climb the ranks</div>
-                </div>
-                <span className="text-[12px] font-semibold tabular-nums" style={{ color: gold }}>
-                  {sunshine.toLocaleString()} ☀️
-                </span>
-              </div>
-            </div>
+                  {/* Header */}
+                  <div className="px-6 py-4 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                    <div>
+                      <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: textPrimary }}>Leaderboard</h2>
+                      <p className="text-[11px] mt-0.5" style={{ color: textMuted }}>Top writers this season</p>
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="p-1.5 rounded-lg transition-colors"
+                      style={{ color: textMuted }}
+                      onMouseEnter={e => e.currentTarget.style.color = textPrimary}
+                      onMouseLeave={e => e.currentTarget.style.color = textMuted}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                  </div>
 
-            {/* Footer */}
-            <div className={`px-8 py-3 border-t shrink-0 ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-              <p className={`text-[10px] text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
-                Rankings reset each season. Earn sunshine by writing and completing focus sessions.
-              </p>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                  {/* Top 5 */}
+                  <div className="px-4 py-3">
+                    {PLAYERS.map((p, i) => (
+                      <motion.div
+                        key={p.rank}
+                        initial={{ y: 8, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.04 * i }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl mb-1 cursor-pointer transition-colors"
+                        style={{ background: 'transparent' }}
+                        onMouseEnter={e => e.currentTarget.style.background = hoverBg}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        onClick={() => setSelectedPlayer(i)}
+                      >
+                        {/* Rank */}
+                        <span
+                          className="text-[14px] font-bold w-6 text-center tabular-nums"
+                          style={{ color: i < 3 ? MEDAL_COLORS[i] : textMuted }}
+                        >
+                          {p.rank}
+                        </span>
+
+                        {/* Avatar */}
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0"
+                          style={{ background: p.avatar, color: '#fff' }}
+                        >
+                          {p.name[0].toUpperCase()}
+                        </div>
+
+                        {/* Name + meta */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-semibold" style={{ color: textPrimary }}>{p.name}</div>
+                          <div className="text-[10px]" style={{ color: textMuted }}>Lv.{p.level} · {p.streak}d streak · {p.trees} trees</div>
+                        </div>
+
+                        {/* Sunshine — prominent */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(224,120,64,0.08)' : 'rgba(224,120,64,0.06)' }}>
+                          <span className="text-[11px]">☀️</span>
+                          <span className="text-[13px] font-bold tabular-nums" style={{ color: accent }}>
+                            {p.sunshine >= 1000 ? `${(p.sunshine / 1000).toFixed(1)}k` : p.sunshine}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="px-6"><div style={{ height: 1, background: cardBorder }} /></div>
+
+                  {/* You */}
+                  <div className="px-4 py-3">
+                    <div
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl"
+                      style={{ background: isDark ? 'rgba(224,120,64,0.06)' : 'rgba(224,120,64,0.05)', border: `1px solid ${isDark ? 'rgba(224,120,64,0.1)' : 'rgba(224,120,64,0.12)'}` }}
+                    >
+                      <span className="text-[14px] font-bold w-6 text-center" style={{ color: textMuted }}>—</span>
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-bold shrink-0"
+                        style={{ background: accent, color: '#fff' }}
+                      >
+                        Y
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-semibold" style={{ color: accent }}>You</div>
+                        <div className="text-[10px]" style={{ color: textMuted }}>Keep writing to climb</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: isDark ? 'rgba(224,120,64,0.1)' : 'rgba(224,120,64,0.08)' }}>
+                        <span className="text-[11px]">☀️</span>
+                        <span className="text-[13px] font-bold tabular-nums" style={{ color: accent }}>
+                          {sunshine >= 1000 ? `${(sunshine / 1000).toFixed(1)}k` : sunshine}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 pb-4">
+                    <p className="text-[9px] text-center" style={{ color: textMuted }}>
+                      Rankings reset each season · Earn sunshine by writing and completing focus sessions
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
   )
 })

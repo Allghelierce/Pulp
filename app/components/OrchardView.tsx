@@ -163,19 +163,11 @@ export const OrchardView = memo(function OrchardView({
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
       onClick={onClose}
     >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ type: "spring", damping: 28, stiffness: 350 }}
+      <div
         onClick={e => e.stopPropagation()}
         style={{
           width: "94vw", maxWidth: 860, height: "90vh", maxHeight: 720,
@@ -386,7 +378,7 @@ export const OrchardView = memo(function OrchardView({
             )}
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 })

@@ -1,70 +1,29 @@
 "use client"
-import { memo, useState, useEffect } from "react"
+import { memo, useState, useEffect, useCallback } from "react"
 
 interface FocusViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
   blockedSites: string[]
-  blockedApps: string[]
+  gems: number
   onUpdateConfig: (updates: Record<string, any>) => void
+  onSpendGems: (amount: number) => void
+  openConfirm: (title: string, message: string, onConfirm: (checked?: boolean) => void, confirmLabel?: string, danger?: boolean) => void
 }
 
-function BlockListEditable({ items, onChange, placeholder, label, isDark }: {
-  items: string[], onChange: (v: string[]) => void, placeholder: string, label: string, isDark: boolean
-}) {
-  const [input, setInput] = useState("")
+function cleanDomain(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/.*$/, "")
+    .replace(/:.*$/, "")
+}
 
-  const add = () => {
-    const val = input.trim()
-    if (val && !items.includes(val)) {
-      onChange([...items, val])
-      setInput("")
-    }
-  }
-
-  return (
-    <div className="mb-5">
-      <div className={`text-[10px] font-bold uppercase tracking-[0.1em] mb-2 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-        {label}
-      </div>
-      <div className="flex gap-2 mb-3">
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") add() }}
-          placeholder={placeholder}
-          className={`flex-1 px-3 py-2 text-[12px] rounded-lg outline-none transition-colors ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-700" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
-        />
-        <button
-          onClick={add}
-          className={`px-3.5 py-2 text-[11px] font-semibold rounded-lg transition-colors ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border-zinc-700" : "bg-zinc-900 text-white hover:bg-zinc-800 border-zinc-800"} border`}
-        >
-          Add
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {items.map((item, i) => (
-          <span
-            key={i}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-md ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-700"} border`}
-          >
-            {item}
-            <button
-              onClick={() => onChange(items.filter((_, j) => j !== i))}
-              className={`text-[12px] leading-none ${isDark ? "text-zinc-600 hover:text-zinc-400" : "text-zinc-400 hover:text-zinc-600"}`}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-          </span>
-        ))}
-        {items.length === 0 && (
-          <span className={`text-[11px] italic ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>None added yet</span>
-        )}
-      </div>
-    </div>
-  )
+function getFaviconUrl(domain: string): string {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`
 }
 
 function useExtensionDetected() {
@@ -84,10 +43,12 @@ function useExtensionDetected() {
 }
 
 export const FocusView = memo(function FocusView({
-  isOpen, onClose, theme, blockedSites, blockedApps, onUpdateConfig,
+  isOpen, onClose, theme, blockedSites, gems, onUpdateConfig, onSpendGems, openConfirm,
 }: FocusViewProps) {
   const isDark = theme === "dark"
   const extensionInstalled = useExtensionDetected()
+  const [input, setInput] = useState("")
+  const font = '"EB Garamond", Georgia, serif'
 
   useEffect(() => {
     if (!isOpen) return
@@ -95,6 +56,28 @@ export const FocusView = memo(function FocusView({
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [isOpen, onClose])
+
+  const addSite = useCallback(() => {
+    const domain = cleanDomain(input)
+    if (domain && !blockedSites.includes(domain)) {
+      onUpdateConfig({ blockedSites: [...blockedSites, domain] })
+      setInput("")
+    }
+  }, [input, blockedSites, onUpdateConfig])
+
+  const removeSite = useCallback((domain: string) => {
+    if (gems < 50) return
+    openConfirm(
+      "Remove Blocked Site",
+      `Unblocking ${domain} costs 💎 50 gems. This will allow you to access this site during focus sessions.`,
+      () => {
+        onSpendGems(50)
+        onUpdateConfig({ blockedSites: blockedSites.filter(s => s !== domain) })
+      },
+      "Pay 💎 50 & Remove",
+      true
+    )
+  }, [gems, blockedSites, onUpdateConfig, onSpendGems, openConfirm])
 
   if (!isOpen) return null
 
@@ -105,74 +88,147 @@ export const FocusView = memo(function FocusView({
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
-        style={{ height: 660 }}
+        className={`relative w-full max-w-[560px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+        style={{ maxHeight: 660 }}
       >
-            {/* Header */}
-            <div className={`px-8 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-              <div>
-                <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Focus Blocker</h2>
-                <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Restrict distractions while your Focus Timer is running</p>
-              </div>
-              <button
-                onClick={onClose}
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto px-8 py-6">
-              {/* Extension status banner */}
-              <div className={`rounded-xl p-5 mb-5 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
-                {extensionInstalled ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
-                      Pulp Focus extension is installed and active.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-2 h-2 rounded-full bg-zinc-600 shrink-0" />
-                      <p className={`text-[12px] leading-relaxed m-0 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
-                        Extension not detected. Install the Pulp Focus browser extension to block distracting websites.
-                      </p>
-                    </div>
-                    <a
-                      href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 px-4 py-2 rounded-lg text-[11px] font-bold text-white transition-all hover:brightness-110"
-                      style={{ background: "#e67e22" }}
-                    >
-                      Download Extension
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              <div className={`rounded-xl p-6 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-white border-zinc-200"} border`}>
-                <BlockListEditable
-                  items={blockedSites}
-                  onChange={v => onUpdateConfig({ blockedSites: v })}
-                  placeholder="e.g. twitter.com, reddit.com"
-                  label="Blocked Websites"
-                  isDark={isDark}
-                />
-                <div className={`h-px my-1 ${isDark ? "bg-zinc-800" : "bg-zinc-100"}`} />
-                <BlockListEditable
-                  items={blockedApps}
-                  onChange={v => onUpdateConfig({ blockedApps: v })}
-                  placeholder="e.g. Discord, Slack, Steam"
-                  label="Blocked Applications"
-                  isDark={isDark}
-                />
-              </div>
-            </div>
+        {/* Header */}
+        <div className={`px-7 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
+          <div>
+            <h2 className="text-[17px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? "#e4e4e7" : "#18181b" }}>Focus Blocker</h2>
+            <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>Sites blocked while your timer is running</p>
           </div>
+          <button
+            onClick={onClose}
+            className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-7 py-5">
+          {/* Extension status */}
+          <div className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 ${isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-white border-zinc-200"} border`}>
+            {extensionInstalled ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style={{ boxShadow: "0 0 6px rgba(34,197,94,0.4)" }} />
+                <p className={`text-[11px] m-0 ${isDark ? "text-zinc-400" : "text-zinc-500"}`} style={{ fontFamily: font }}>
+                  Extension installed and active
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-zinc-600 shrink-0" />
+                <p className={`text-[11px] m-0 flex-1 ${isDark ? "text-zinc-500" : "text-zinc-500"}`} style={{ fontFamily: font }}>
+                  Extension not detected
+                </p>
+                <a
+                  href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all hover:brightness-110"
+                  style={{ background: "#e67e22", fontFamily: font }}
+                >
+                  Download
+                </a>
+              </>
+            )}
+          </div>
+
+          {/* Warning */}
+          <div className={`rounded-xl px-4 py-3 mb-4 flex items-start gap-3 ${isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50 border-amber-200/50"} border`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 text-amber-500/70">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p className={`text-[11px] leading-relaxed m-0 ${isDark ? "text-amber-500/60" : "text-amber-700/70"}`} style={{ fontFamily: font }}>
+              Once you add a site, removing it costs <strong>💎 50 gems</strong>. Choose carefully.
+            </p>
+          </div>
+
+          {/* Add site input */}
+          <div className="flex gap-2 mb-5">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addSite() }}
+              placeholder="Add a website to block..."
+              style={{ fontFamily: font }}
+              className={`flex-1 px-4 py-2.5 text-[13px] rounded-xl outline-none transition-colors ${isDark ? "bg-zinc-900/80 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-600" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
+            />
+            <button
+              onClick={addSite}
+              className="px-5 py-2.5 rounded-xl text-[12px] font-bold text-white transition-all hover:brightness-110"
+              style={{ background: "#e67e22", fontFamily: font }}
+            >
+              Block
+            </button>
+          </div>
+
+          {/* Blocked sites list */}
+          {blockedSites.length > 0 ? (
+            <div className={`rounded-xl overflow-hidden border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+              <div className={`px-4 py-2.5 flex items-center justify-between ${isDark ? "bg-zinc-900/80" : "bg-zinc-50"}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-500" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+                  Blocked Sites
+                </span>
+                <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+                  {blockedSites.length}
+                </span>
+              </div>
+              {blockedSites.map((site, i) => (
+                <div
+                  key={site}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors ${i > 0 ? (isDark ? "border-t border-zinc-800/60" : "border-t border-zinc-100") : ""} ${isDark ? "bg-zinc-900/30 hover:bg-zinc-900/50" : "bg-white hover:bg-zinc-50"}`}
+                >
+                  <img
+                    src={getFaviconUrl(site)}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="shrink-0 rounded"
+                    style={{ imageRendering: "auto" }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = "none" }}
+                  />
+                  <span className={`flex-1 text-[13px] min-w-0 truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`} style={{ fontFamily: font }}>
+                    {site}
+                  </span>
+                  <button
+                    onClick={() => removeSite(site)}
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                    style={{
+                      fontFamily: font,
+                      background: gems >= 50 ? "rgba(168,85,247,0.1)" : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),
+                      border: `1px solid ${gems >= 50 ? "rgba(168,85,247,0.2)" : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)")}`,
+                      color: gems >= 50 ? "#c084fc" : (isDark ? "#3f3f46" : "#a1a1aa"),
+                      cursor: gems >= 50 ? "pointer" : "not-allowed",
+                      opacity: gems >= 50 ? 1 : 0.5,
+                    }}
+                    disabled={gems < 50}
+                    title={gems >= 50 ? "Remove for 50 gems" : "Need 50 gems to remove"}
+                  >
+                    💎 50
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={`rounded-xl p-8 text-center ${isDark ? "bg-zinc-900/30 border-zinc-800" : "bg-white border-zinc-200"} border`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className={`mx-auto mb-3 ${isDark ? "text-zinc-700" : "text-zinc-300"}`}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <p className={`text-[12px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+                No blocked sites yet. Add a website above to block it during focus sessions.
+              </p>
+            </div>
+          )}
+
+          {blockedSites.length > 0 && (
+            <p className={`text-[10px] mt-3 text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+              Removing a site costs 💎 50 gems · You have 💎 {gems}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   )
 })

@@ -199,7 +199,11 @@ export const VitalitySystem = memo(function VitalitySystem({
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
     if (selectedSeed) {
-      setGrove(g => [...g, { id: Date.now(), type: selectedSeed, stage: 4, progress: 100, plantedAt: Date.now() }])
+      setGrove(g => {
+        const next = [...g, { id: Date.now(), type: selectedSeed, stage: 4, progress: 100, plantedAt: Date.now() }]
+        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+        return next
+      })
     }
 
     setTimerElapsed(0)
@@ -277,6 +281,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         logCharsWritten(diff)
         const typedDiff = Math.min(diff, 30)
         checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
+        checkAchievement('wordsmith', a => ({ progress: Math.min(200000, (a.progress || 0) + typedDiff) }))
         const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))
         setXp(x => x + xpFromWriting)
         setSunshine(s => s + Math.max(1, Math.floor(typedDiff / 15)))

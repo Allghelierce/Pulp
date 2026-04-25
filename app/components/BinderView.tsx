@@ -275,7 +275,7 @@ export const BinderView = memo(function BinderView({
                       <h2 className="text-3xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">PULP ESTATE</h2>
                       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mt-2">Folio Archetype v2.4</span>
                    </div>
-                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-zinc-500">PG {page * 2 + 1}</div>
+                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 1}</div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-8 flex-1">
@@ -299,7 +299,7 @@ export const BinderView = memo(function BinderView({
                          </div>
                       </div>
                    </div>
-                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-zinc-500">PG {page * 2 + 2}</div>
+                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 2}</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-8 flex-1">
@@ -319,12 +319,12 @@ export const BinderView = memo(function BinderView({
                 disabled={page === 0}
                 className="group flex flex-col items-center gap-1 transition-all disabled:opacity-20 hover:scale-105 active:scale-95"
              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">Previous</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-black group-hover:text-white transition-colors">Previous</span>
                 <div className="w-12 h-1 bg-zinc-700 rounded-full group-hover:bg-emerald-500 transition-colors" />
              </button>
 
              <div className="flex items-center gap-4">
-                <div className="text-[10px] font-black text-zinc-600 bg-black/20 px-4 py-2 rounded-full uppercase tracking-[0.2em]">{page + 1} / {totalPages}</div>
+                <div className="text-[10px] font-black text-black bg-black/20 px-4 py-2 rounded-full uppercase tracking-[0.2em]">{page + 1} / {totalPages}</div>
                 <button
                   onClick={() => setPlantingPlot(-1)}
                   className="flex items-center gap-4 px-10 py-4 rounded-2xl bg-[#fbf9f6] text-[#121214] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white active:scale-95 transition-all group"
@@ -339,7 +339,7 @@ export const BinderView = memo(function BinderView({
                 disabled={page >= totalPages - 1}
                 className="group flex flex-col items-center gap-1 transition-all disabled:opacity-20 hover:scale-105 active:scale-95"
              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">Next</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-black group-hover:text-white transition-colors">Next</span>
                 <div className="w-12 h-1 bg-zinc-700 rounded-full group-hover:bg-emerald-500 transition-colors" />
              </button>
           </div>

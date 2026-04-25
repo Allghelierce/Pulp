@@ -129,9 +129,8 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                 {/* Subtle Hover selection hint (No popup) */}
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
-                {/* Page Number in Top Right */}
-                <div className="absolute top-4 right-5 z-[50] mix-blend-difference pointer-events-none">
-                  <span className="text-[18px] font-bold text-white/20 group-hover:text-white/60 transition-colors uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>
+                <div className="absolute top-4 right-5 z-[50] pointer-events-none">
+                  <span className="text-[18px] font-bold text-black transition-colors uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>
                     0{idx + 1}
                   </span>
                 </div>

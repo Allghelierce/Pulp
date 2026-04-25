@@ -26,16 +26,16 @@ interface BoutiqueViewProps {
 }
 
 const GEM_COSMETICS = [
-  { id: 'color_gold', name: 'Liquid Gold', type: 'accent', value: '#b8860b', cost: 8 },
-  { id: 'color_midnight', name: 'Midnight Ink', type: 'accent', value: '#191970', cost: 8 },
-  { id: 'color_ember', name: 'Ember', type: 'accent', value: '#cc5500', cost: 8 },
-  { id: 'color_seafoam', name: 'Seafoam', type: 'accent', value: '#2e8b57', cost: 8 },
-  { id: 'color_plum', name: 'Dark Plum', type: 'accent', value: '#3c1361', cost: 8 },
-  { id: 'ink_vintage', name: 'Vintage Sepia', type: 'ink', value: 'vintage', cost: 12 },
-  { id: 'ink_blueprint', name: 'Blueprint Blue', type: 'ink', value: 'blueprint', cost: 12 },
-  { id: 'ink_emerald', name: 'Emerald Script', type: 'ink', value: 'emerald', cost: 12 },
-  { id: 'paper_parchment', name: 'Aged Parchment', type: 'paper', value: 'parchment', cost: 15 },
-  { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 15 },
+  { id: 'color_gold', name: 'Liquid Gold', type: 'accent', value: '#b8860b', cost: 2 },
+  { id: 'color_midnight', name: 'Midnight Ink', type: 'accent', value: '#191970', cost: 2 },
+  { id: 'color_ember', name: 'Ember', type: 'accent', value: '#cc5500', cost: 2 },
+  { id: 'color_seafoam', name: 'Seafoam', type: 'accent', value: '#2e8b57', cost: 2 },
+  { id: 'color_plum', name: 'Dark Plum', type: 'accent', value: '#3c1361', cost: 2 },
+  { id: 'ink_vintage', name: 'Vintage Sepia', type: 'ink', value: 'vintage', cost: 3 },
+  { id: 'ink_blueprint', name: 'Blueprint Blue', type: 'ink', value: 'blueprint', cost: 3 },
+  { id: 'ink_emerald', name: 'Emerald Script', type: 'ink', value: 'emerald', cost: 3 },
+  { id: 'paper_parchment', name: 'Aged Parchment', type: 'paper', value: 'parchment', cost: 4 },
+  { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 4 },
 ]
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'premium', 'extinct', 'chroma']
@@ -47,7 +47,7 @@ const RARITY_LABEL: Record<string, string> = {
 
 const RARITY_COLOR: Record<string, string> = {
   common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa',
-  'true rare': '#a78bfa', premium: '#fbbf24', chroma: '#f472b6', extinct: '#f87171',
+  'true rare': '#a78bfa', premium: '#e07840', chroma: '#f472b6', extinct: '#f87171',
 }
 
 const RARITY_BG: Record<string, string> = {
@@ -57,7 +57,7 @@ const RARITY_BG: Record<string, string> = {
   'true rare': 'linear-gradient(180deg, #16102a 0%, #1e1638 50%, #261c46 100%)',
   premium: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
   chroma: 'linear-gradient(180deg, #1a0e1e 0%, #28142e 50%, #361a3e 100%)',
-  extinct: 'linear-gradient(180deg, #1a0a0a 0%, #2a1010 50%, #3a1616 100%)',
+  extinct: 'linear-gradient(180deg, #161014 0%, #1e1418 50%, #26181e 100%)',
 }
 
 const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
@@ -123,13 +123,13 @@ function RarityScene({ rarity }: { rarity: string }) {
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
             <radialGradient id="ext-core" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="#3a0a0a" />
-              <stop offset="60%" stopColor="#1a0606" />
-              <stop offset="100%" stopColor="#0a0202" />
+              <stop offset="0%" stopColor="#1e1018" />
+              <stop offset="60%" stopColor="#120a10" />
+              <stop offset="100%" stopColor="#0a060a" />
             </radialGradient>
             <radialGradient id="ext-ember" cx="50%" cy="80%">
-              <stop offset="0%" stopColor="rgba(239,68,68,0.06)">
-                <animate attributeName="stopColor" values="rgba(239,68,68,0.06);rgba(239,68,68,0.12);rgba(239,68,68,0.06)" dur="6s" repeatCount="indefinite" />
+              <stop offset="0%" stopColor="rgba(168,85,100,0.05)">
+                <animate attributeName="stopColor" values="rgba(168,85,100,0.05);rgba(168,85,100,0.1);rgba(168,85,100,0.05)" dur="6s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
@@ -140,7 +140,7 @@ function RarityScene({ rarity }: { rarity: string }) {
             <circle key={i}
               cx={`${(i * 29 + 12) % 88}%`}
               r={0.6 + (i % 3) * 0.3}
-              fill={i % 3 === 0 ? '#ef4444' : i % 2 === 0 ? '#f87171' : '#7f1d1d'}
+              fill={i % 3 === 0 ? '#a85568' : i % 2 === 0 ? '#8a4a5a' : '#4a2030'}
             >
               <animate attributeName="opacity" values="0;0.6;0.2;0" dur={`${4 + (i % 4) * 1.5}s`} begin={`${i * 0.9}s`} repeatCount="indefinite" />
               <animate attributeName="cy" values={`${75 + (i * 7) % 20}%;${55 + (i * 5) % 15}%`} dur={`${4 + (i % 4) * 1.5}s`} begin={`${i * 0.9}s`} repeatCount="indefinite" />
@@ -211,8 +211,8 @@ function RarityScene({ rarity }: { rarity: string }) {
               <stop offset="100%" stopColor="#0a0804" />
             </radialGradient>
             <radialGradient id="prm-glow" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="rgba(251,191,36,0.08)">
-                <animate attributeName="stopColor" values="rgba(251,191,36,0.05);rgba(251,191,36,0.12);rgba(251,191,36,0.05)" dur="5s" repeatCount="indefinite" />
+              <stop offset="0%" stopColor="rgba(224,120,64,0.08)">
+                <animate attributeName="stopColor" values="rgba(224,120,64,0.05);rgba(224,120,64,0.12);rgba(224,120,64,0.05)" dur="5s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
@@ -223,7 +223,7 @@ function RarityScene({ rarity }: { rarity: string }) {
             <circle key={i}
               cx={`${(i * 33 + 15) % 85}%`}
               r={0.6 + (i % 2) * 0.3}
-              fill={i % 2 === 0 ? '#fbbf24' : '#f59e0b'}
+              fill={i % 2 === 0 ? '#e07840' : '#c06030'}
             >
               <animate attributeName="opacity" values="0;0.5;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
               <animate attributeName="cy" values={`${70 + (i * 11) % 20}%;${45 + (i * 7) % 15}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
@@ -274,8 +274,8 @@ export const BoutiqueView = memo(function BoutiqueView({
   const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
   const cardBorder = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
   const textPrimary = isDark ? '#e4e4e7' : '#18181b'
-  const textSecondary = isDark ? '#71717a' : '#71717a'
-  const textMuted = isDark ? '#52525b' : '#a1a1aa'
+  const textSecondary = isDark ? '#a1a1aa' : '#000000'
+  const textMuted = isDark ? '#52525b' : '#000000'
   const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
 
   useEffect(() => {
@@ -460,7 +460,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   display: 'flex', alignItems: 'center', gap: 4,
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 Back
               </button>
               <div style={{ textAlign: 'center' }}>
@@ -522,24 +522,24 @@ export const BoutiqueView = memo(function BoutiqueView({
                           }}
                         >
                           <div style={{
-                            height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: isDark ? 'linear-gradient(180deg, #16102a 0%, #1e1638 50%, #261c46 100%)' : 'linear-gradient(180deg, #f0edf5 0%, #e8e3f0 100%)',
+                            height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #18181c 100%)' : 'linear-gradient(180deg, #f2f0ed 0%, #eae8e4 100%)',
                           }}>
                             {cosmetic.type === 'accent' && <div style={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: cosmetic.value, boxShadow: `0 0 16px ${cosmetic.value}40` }} />}
-                            {cosmetic.type === 'ink' && <span style={{ fontSize: 22, color: isDark ? '#a78bfa' : '#7c3aed' }}>✎</span>}
-                            {cosmetic.type === 'paper' && <span style={{ fontSize: 22, color: isDark ? '#a78bfa' : '#7c3aed' }}>▤</span>}
+                            {cosmetic.type === 'ink' && <span style={{ fontSize: 22, color: isDark ? '#a1a1aa' : '#71717a' }}>✎</span>}
+                            {cosmetic.type === 'paper' && <span style={{ fontSize: 22, color: isDark ? '#a1a1aa' : '#71717a' }}>▤</span>}
                           </div>
                           <div style={{ padding: '6px 10px', borderTop: `1px solid ${dividerColor}` }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cosmetic.name}</div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3 }}>
-                              <span style={{ fontSize: 10, fontWeight: 600, color: '#a78bfa', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{cosmetic.type}</span>
+                              <span style={{ fontSize: 10, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{cosmetic.type}</span>
                               {owned
                                 ? <button onClick={() => applyCosmetic(cosmetic)} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer' }}>Apply</button>
                                 : <button
                                     onClick={() => buyCosmetic(cosmetic)}
                                     disabled={cantAfford}
                                     style={{
-                                      fontSize: 11, fontWeight: 700, color: '#a78bfa', background: 'none', border: 'none',
+                                      fontSize: 11, fontWeight: 700, color: textSecondary, background: 'none', border: 'none',
                                       cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1,
                                     }}
                                   >
@@ -564,7 +564,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 width: '100%', maxWidth: 520, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
                 height: 320,
-                background: previewInfo.rarity === 'premium' ? 'none' : (previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+                background: ['premium', 'chroma', 'extinct'].includes(previewInfo.rarity) ? 'none' : (previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
               }}>
                 <RarityScene rarity={previewInfo.rarity} />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
@@ -583,7 +583,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary, fontFamily: font }}>
                   {STAGE_NAMES[previewStage]}
                 </span>
-                <span style={{ fontSize: 11, color: textMuted, fontFamily: font, marginLeft: 8 }}>
+                <span style={{ fontSize: 11, color: isDark ? textMuted : "#000000", fontFamily: font, marginLeft: 8 }}>
                   Stage {previewStage + 1} of {STAGE_NAMES.length}
                 </span>
               </div>
@@ -621,30 +621,52 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </div>
               </div>
 
-              {/* Buy button — hidden when sold out */}
-              {(shopStock[selectedPlant!] || 0) > 0 && (
-                <button
-                  onClick={() => buySeed(selectedPlant!)}
-                  disabled={previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost}
-                  className={`mt-5 px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all ${isDark ? "bg-zinc-200 text-zinc-900 hover:bg-white" : "bg-zinc-800 text-white hover:bg-zinc-700"}`}
-                  style={{
-                    fontFamily: font, cursor: 'pointer', border: 'none',
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    opacity: (previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost) ? 0.3 : 1,
-                  }}
-                >
-                  Buy Seed
-                  <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
-                  <span className="text-[10px] leading-none">{previewInfo.currency === 'sunshine' ? '☀️' : '💎'}</span>
-                  {previewInfo.cost.toLocaleString()}
-                </button>
-              )}
+              {/* Buy button + stock indicator */}
+              {(() => {
+                const stock = shopStock[selectedPlant!] || 0
+                const cantAfford = previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost
+                if (stock <= 0) return (
+                  <div className="mt-5 px-6 py-2.5 rounded-xl text-[13px] font-bold" style={{
+                    fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                    color: isDark ? '#71717a' : '#a1a1aa',
+                  }}>
+                    Sold Out
+                  </div>
+                )
+                return (
+                  <div className="mt-5 flex items-center gap-3">
+                    <button
+                      onClick={() => buySeed(selectedPlant!)}
+                      disabled={cantAfford}
+                      className="px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all hover:brightness-110"
+                      style={{
+                        fontFamily: font, cursor: cantAfford ? 'default' : 'pointer', border: 'none',
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: '#e67e22', color: '#fff',
+                        opacity: cantAfford ? 0.35 : 1,
+                      }}
+                    >
+                      Buy Seed
+                      <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
+                      <span className="text-[10px] leading-none">{previewInfo.currency === 'sunshine' ? '☀️' : '💎'}</span>
+                      {previewInfo.cost.toLocaleString()}
+                    </button>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, fontFamily: font,
+                      color: isDark ? '#71717a' : '#a1a1aa',
+                    }}>
+                      ×{stock} left
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
           )}
 
           {/* ── GEMS ── */}
           {activeTab === 'gems' && (
-            <div ref={scrollRef} className="px-6 py-5">
+            <div ref={scrollRef} className="px-6 py-4">
 
               <GemSection title="Accent Colors" isDark={isDark}>
                 {[
@@ -658,10 +680,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: item.value }} />}
                       label={item.name}
                       action={(item as any).pro
-                        ? <span className="text-[9px] font-extrabold text-white bg-amber-500 px-1.5 py-0.5 rounded-full">PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#e07840' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ accentColor: item.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {item.cost}</button>
+                        : <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {item.cost}</button>
                       }
                     />
                   )
@@ -676,10 +698,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
                       label={f.label} labelFont={`"${f.value}", serif`}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white bg-amber-500 px-1.5 py-0.5 rounded-full">PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#e07840' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ headingFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
                       }
                     />
                   )
@@ -694,10 +716,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
                       label={f.label} labelFont={`"${f.value}", serif`}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white bg-amber-500 px-1.5 py-0.5 rounded-full">PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#e07840' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ editorFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
                       }
                     />
                   )
@@ -712,10 +734,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className="text-[12px]">▤</span>}
                       label={f.label}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white bg-amber-500 px-1.5 py-0.5 rounded-full">PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#e07840' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ paperStyle: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
                       }
                     />
                   )
@@ -731,7 +753,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       label={cosmetic.name}
                       action={owned
                         ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
+                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
                       }
                     />
                   )
@@ -747,7 +769,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       label={cosmetic.name}
                       action={owned
                         ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-violet-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
+                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
                       }
                     />
                   )
@@ -839,7 +861,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               height: 180, position: 'relative',
-                              background: t.rarity === 'premium' ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+                              background: ['premium', 'chroma', 'extinct'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
                             }}>
                               <RarityScene rarity={t.rarity} />
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
@@ -902,7 +924,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
         height: featured ? 100 : 95,
-        background: t.rarity === 'premium' ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+        background: ['premium', 'chroma', 'extinct'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
         position: 'relative',
       }}>
         <RarityScene rarity={t.rarity} />
@@ -945,13 +967,13 @@ function GemSection({ title, isDark, children }: {
   title: string; isDark: boolean; textSecondary?: string; dividerColor?: string; children: React.ReactNode
 }) {
   return (
-    <div className="mb-6">
-      <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] mb-2.5 px-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+    <div className="mb-4">
+      <p className={`text-[9px] font-semibold uppercase tracking-[0.12em] mb-1.5 px-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
         {title}
       </p>
-      <div className={`rounded-xl border overflow-hidden divide-y ${
+      <div className={`rounded-lg border overflow-hidden divide-y ${
         isDark
-          ? "bg-zinc-900/50 border-zinc-800 divide-zinc-800"
+          ? "bg-zinc-900/50 border-zinc-800 divide-zinc-800/60"
           : "bg-white border-zinc-200/80 divide-zinc-100"
       }`}>
         {children}
@@ -967,13 +989,13 @@ function GemRow({ id, isDark, highlight, icon, label, labelFont, action }: {
   return (
     <div
       id={id}
-      className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${highlight ? (isDark ? 'bg-violet-500/10' : 'bg-violet-500/5') : ''}`}
+      className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${highlight ? (isDark ? 'bg-zinc-700/20' : 'bg-zinc-200/40') : ''}`}
     >
-      <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+      <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-medium leading-snug ${isDark ? 'text-zinc-100' : 'text-zinc-800'}`} style={labelFont ? { fontFamily: labelFont } : undefined}>
+        <p className={`text-[12px] font-medium leading-snug ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={labelFont ? { fontFamily: labelFont } : undefined}>
           {label}
         </p>
       </div>
