@@ -83,29 +83,28 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 
-  if (idle) {
-    return (
-      <div className="relative w-full h-full flex flex-col items-center justify-center" style={{ marginTop: -20 }}>
-        <PlantIcon type={plantType} size={100} stage={4} />
-        <MossyHill isDark={isDark ?? true} overlap={10} />
-      </div>
-    )
-  }
-
-  const stage = p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
-
-  const plantSize = stage === 0 ? 50 : 70 + stage * 12
-  const hillOverlap = stage === 0 ? 4 : stage <= 2 ? 8 : 10
+  const stage = idle ? -1 : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
+  const plantSize = idle ? 100 : stage === 0 ? 50 : 70 + stage * 12
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center" style={{ marginTop: -20 }}>
-      <div
-        className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl transition-colors duration-1000 z-0"
-        style={{ backgroundColor: color + '33', bottom: '38%' }}
-      />
+    <div className="relative w-full h-full">
+      {/* Hill — fixed position, never moves */}
+      <div className="absolute bottom-[40px] left-0 w-full z-0">
+        <MossyHill isDark={isDark ?? true} overlap={0} />
+      </div>
 
-      <div className="relative z-10">
-        {stage === 0 ? (
+      {/* Plant — positioned from the bottom so it sits on the hill */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: 66 }}>
+        {!idle && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
+            style={{ backgroundColor: color + '33', bottom: -4 }}
+          />
+        )}
+
+        {idle ? (
+          <PlantIcon type={plantType} size={plantSize} stage={4} />
+        ) : stage === 0 ? (
           <div className="relative">
             <PlantIcon type={plantType} size={plantSize} isSeed={true} />
             <motion.div
@@ -121,10 +120,8 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
         )}
       </div>
 
-      <MossyHill isDark={isDark ?? true} overlap={hillOverlap} />
-
       {stage >= 3 && (
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none z-20">
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
@@ -405,8 +402,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative w-full mx-auto mb-2"
-                    style={{ height: 200 }}
+                    className="relative w-full mx-auto"
+                    style={{ height: 160 }}
                   >
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
@@ -419,7 +416,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {!running && !done && !treeDead && !seedTrayOpen && inventory.length > 0 && (
                 <button
                   onClick={() => setSeedTrayOpen(true)}
-                  className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all hover:underline"
+                  className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
                   style={{ color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   Change Plant
