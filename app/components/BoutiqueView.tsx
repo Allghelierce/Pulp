@@ -245,6 +245,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 }: BoutiqueViewProps) {
 
   const [activeTab, setActiveTab] = useState<TabId>('shop')
+  const [isRenderingCatalog, setIsRenderingCatalog] = useState(false)
   const [dailySeeds, setDailySeeds] = useState<string[]>([])
   const [shopItems, setShopItems] = useState<string[]>([])
   const [shopStock, setShopStock] = useState<Record<string, number>>({})
@@ -259,6 +260,10 @@ export const BoutiqueView = memo(function BoutiqueView({
   useEffect(() => {
     if (isOpen && initialTab) {
       setActiveTab(initialTab)
+      if (initialTab === 'catalog') {
+        setIsRenderingCatalog(true)
+        setTimeout(() => setIsRenderingCatalog(false), 20)
+      }
       if (initialScrollTo) {
         setHighlightItem(initialScrollTo)
         setTimeout(() => {
@@ -395,11 +400,11 @@ export const BoutiqueView = memo(function BoutiqueView({
     </span>
   )
 
-  const tabs: { id: TabId; label: string }[] = [
-    { id: 'shop', label: 'Shop' },
-    { id: 'gems', label: 'Gems' },
-    { id: 'bag', label: 'My Seeds' },
-    { id: 'catalog', label: 'Catalog' },
+  const tabs: { id: TabId; label: string; icon: string }[] = [
+    { id: 'shop', label: 'Shop', icon: '🏪' },
+    { id: 'gems', label: 'Gems', icon: '💎' },
+    { id: 'bag', label: 'My Seeds', icon: '🎒' },
+    { id: 'catalog', label: 'Catalog', icon: '📖' },
   ]
 
   return (
@@ -415,13 +420,24 @@ export const BoutiqueView = memo(function BoutiqueView({
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setSelectedPlant(null) }}
-                className={`px-3.5 py-1.5 rounded-md transition-all ${
+                onClick={() => { 
+                  if (tab.id === 'catalog' && activeTab !== 'catalog') {
+                    setActiveTab('catalog')
+                    setIsRenderingCatalog(true)
+                    setSelectedPlant(null)
+                    setTimeout(() => setIsRenderingCatalog(false), 20)
+                  } else {
+                    setActiveTab(tab.id)
+                    setSelectedPlant(null)
+                  }
+                }}
+                className={`px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
                   activeTab === tab.id
                     ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
                     : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
                 }`}
               >
+                <span className="text-[12px] opacity-90">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -828,10 +844,16 @@ export const BoutiqueView = memo(function BoutiqueView({
           {/* ── CATALOG ── */}
           {activeTab === 'catalog' && (
             <div style={{ padding: 24 }}>
-              {RARITY_ORDER.map(rarity => {
-                const plants = Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === rarity && t !== 'spoiled')
-                if (plants.length === 0) return null
-                return (
+              {isRenderingCatalog ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', opacity: 0.6 }}>
+                  <span style={{ fontSize: 24, marginBottom: 12 }}>📖</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: textMuted, fontFamily: font }}>Opening catalog...</span>
+                </div>
+              ) : (
+                RARITY_ORDER.map(rarity => {
+                  const plants = Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === rarity && t !== 'spoiled')
+                  if (plants.length === 0) return null
+                  return (
                   <div key={rarity} style={{ marginBottom: 28 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: RARITY_COLOR[rarity] }} />
@@ -889,8 +911,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                       })}
                     </div>
                   </div>
-                )
               })}
+              )}
             </div>
           )}
 
