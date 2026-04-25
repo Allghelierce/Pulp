@@ -13,7 +13,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
-      if (data.user) window.location.href = '/'
+      if (data.user) window.location.href = '/app'
     }
     checkUser()
   }, [])
@@ -29,7 +29,7 @@ export default function LoginPage() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
-      else window.location.href = '/'
+      else window.location.href = '/app'
     }
     setLoading(false)
   }

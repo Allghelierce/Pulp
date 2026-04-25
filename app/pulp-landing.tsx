@@ -542,7 +542,7 @@ export default function PulpLanding() {
               style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer', userSelect: 'none' }}
             >reach out</a>
             <div style={{
-              position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+              position: 'absolute', top: '100%', left: '50%',
               marginTop: 10, minWidth: 160, borderRadius: 8,
               background: '#fff', border: '1px solid rgba(15,15,16,0.08)',
               boxShadow: '0 8px 30px -8px rgba(0,0,0,0.12)',
