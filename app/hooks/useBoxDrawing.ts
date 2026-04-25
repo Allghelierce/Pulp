@@ -401,14 +401,12 @@ export function useBoxDrawing({
           const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 300, h: 32, content: '' }
           const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
           const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
-          flushSync(() => {
-            setNotes(prev => prev.map(n => n.id !== tid ? n : {
-              ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
-            }))
-            setSelectedBoxIds(new Set([id]))
-            if (activeTool === 'textbox') setActiveTool('select')
-          })
-          requestAnimationFrame(() => {
+          setNotes(prev => prev.map(n => n.id !== tid ? n : {
+            ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
+          }))
+          setSelectedBoxIds(new Set([id]))
+          if (activeTool === 'textbox') setActiveTool('select')
+          const focusNewBox = () => {
             const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
             if (targetNode) {
               targetNode.focus()
@@ -418,8 +416,11 @@ export function useBoxDrawing({
               const sel = window.getSelection()
               sel?.removeAllRanges()
               sel?.addRange(range)
+            } else {
+              requestAnimationFrame(focusNewBox)
             }
-          })
+          }
+          requestAnimationFrame(focusNewBox)
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')

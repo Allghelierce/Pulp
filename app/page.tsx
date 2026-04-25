@@ -90,6 +90,8 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   )
 }
 
+const noop = () => {}
+
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
   useEffect(() => {
@@ -215,6 +217,7 @@ const BoxItem = memo(function BoxItem({
   ]
   const isImage = box.content.includes("http") || box.content.startsWith("data:image")
   const isSticky = !!box.boxHighlightColor
+  const isEmpty = !isSticky && !isImage && box.content.trim() === ''
   return (
     <div
       id={`box-${box.id}`}
@@ -224,7 +227,6 @@ const BoxItem = memo(function BoxItem({
         window.addEventListener('mouseup', up)
       }}
       onClick={e => {
-        // Clicking anywhere on a sticky focuses its text area
         if (isSticky) {
           const ta = (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[contenteditable]')
           ta?.focus()
@@ -232,10 +234,9 @@ const BoxItem = memo(function BoxItem({
       }}
       style={{
         position: "absolute", left: box.x, top: box.y, width: box.w,
-        // Sticky: always fixed height. Regular: auto-grow.
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
+        border: isEmpty ? "none" : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
@@ -245,16 +246,15 @@ const BoxItem = memo(function BoxItem({
         transition: localDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
-      {isSelected && (<>
+      {isSelected && !isEmpty && (<>
         <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${isDark ? "#71717a" : "rgba(0,0,0,0.25)"}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
         <div style={{ position: "absolute", inset: 0, border: `1px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.15)"}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
       </>)}
-      {/* Resize handles — hidden for sticky notes */}
-      {isSelected && !isSticky && resizeHandles.map(([h, pos]) => (
+      {isSelected && !isSticky && !isEmpty && resizeHandles.map(([h, pos]) => (
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
-      {isSelected && !isSticky && (
+      {isSelected && !isSticky && !isEmpty && (
         <div style={{ position: "absolute", top: 0, right: -34, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, zIndex: 120 }}>
           {/* Rotate button */}
           <div
@@ -320,13 +320,12 @@ const BoxItem = memo(function BoxItem({
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
       )}
-      {isSelected && selectedCount === 1 && !isImage && !isSticky && (
+      {isSelected && selectedCount === 1 && !isImage && !isSticky && !isEmpty && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
 
-      {/* Drag handle — hidden for sticky (whole surface is draggable) */}
-      {isSelected && !isSticky && (
+      {isSelected && !isSticky && !isEmpty && (
         <div
           onMouseDown={e => {
             const ce = (e.currentTarget.parentElement as HTMLElement)?.querySelector<HTMLElement>('[contenteditable]')
@@ -984,7 +983,6 @@ export default function NoteApp() {
   const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
   const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
-  const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
   const [grove, setGrove] = useState<Tree[]>([])
   const [streak, setStreak] = useState(0)
@@ -3012,8 +3010,8 @@ export default function NoteApp() {
                                 setFormattingOpen={setToolbarFormattingOpen}
                                 aiOpen={toolbarAiOpen}
                                 setAiOpen={setToolbarAiOpen}
-                                onDragStart={() => setIsAnyBoxDragging(true)}
-                                onDragEnd={() => setIsAnyBoxDragging(false)}
+                                onDragStart={noop}
+                                onDragEnd={noop}
                                 handwrittenEffect={handwrittenEffect}
                               />
                             ))}
@@ -3388,6 +3386,7 @@ export default function NoteApp() {
         theme={theme}
         accent={accent}
         xp={xp}
+        streak={streak}
       />
 
       <FocusView

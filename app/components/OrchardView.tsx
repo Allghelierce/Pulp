@@ -38,32 +38,95 @@ function seededRng(seed: number) {
   return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return ((s >>> 0) % 10000) / 10000 }
 }
 
-function centerOutPlacement(trees: any[]): { x: number; y: number; tree: any }[] {
+// Road segments (polylines in viewBox 0–100 coords)
+const ROAD_MAIN = [[-2,100],[6,92],[14,84],[22,76],[30,70],[40,65],[50,62],[60,60],[70,58],[80,54],[90,48],[102,42]]
+const ROAD_BRANCH = [[50,62],[48,54],[44,46],[38,38],[34,32]]
+
+// Lake: ellipse at bottom-right
+const LAKE_CX = 78, LAKE_CY = 80, LAKE_RX = 14, LAKE_RY = 7
+
+function distToPolyline(x: number, y: number, pts: number[][]): number {
+  let minD = Infinity
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1]
+    const dx = bx - ax, dy = by - ay
+    const len2 = dx * dx + dy * dy
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len2))
+    const d = Math.hypot(x - (ax + t * dx), y - (ay + t * dy))
+    if (d < minD) minD = d
+  }
+  return minD
+}
+
+function inLake(x: number, y: number): boolean {
+  return ((x - LAKE_CX) / (LAKE_RX + 3)) ** 2 + ((y - LAKE_CY) / (LAKE_RY + 3)) ** 2 < 1
+}
+
+function isPlantable(x: number, y: number): boolean {
+  if (y < 30) return false
+  if (y > 96) return false
+  if (x < 3 || x > 97) return false
+  if (distToPolyline(x, y, ROAD_MAIN) < 4.5) return false
+  if (distToPolyline(x, y, ROAD_BRANCH) < 4) return false
+  if (inLake(x, y)) return false
+  return true
+}
+
+function forestPlacement(trees: any[]): { x: number; y: number; tree: any }[] {
   if (trees.length === 0) return []
 
-  const cx = 50, cy = 52
   const results: { x: number; y: number; tree: any }[] = []
-  const goldenAngle = 137.508 * (Math.PI / 180)
+
+  // Organic cluster seeds — groups of trees form around these anchor points
+  const clusterSeeds = [
+    { cx: 18, cy: 50, r: 16 },  // left meadow
+    { cx: 14, cy: 72, r: 14 },  // bottom-left
+    { cx: 38, cy: 80, r: 16 },  // bottom-center-left
+    { cx: 60, cy: 82, r: 12 },  // bottom-center-right (avoid lake)
+    { cx: 82, cy: 66, r: 12 },  // right side
+    { cx: 70, cy: 42, r: 14 },  // upper-right
+    { cx: 28, cy: 42, r: 12 },  // upper-left
+    { cx: 50, cy: 50, r: 10 },  // center (between roads)
+    { cx: 8, cy: 90, r: 10 },   // far bottom-left
+    { cx: 92, cy: 88, r: 8 },   // far bottom-right
+  ]
+
+  const minSpacing = trees.length > 40 ? 4.5 : trees.length > 20 ? 5.5 : 6.5
 
   for (let i = 0; i < trees.length; i++) {
-    const rng = seededRng(i * 311 + 4729)
-    const t = i / Math.max(trees.length - 1, 1)
+    let placed = false
 
-    const maxR = 38
-    const r = maxR * Math.sqrt(t) * (0.8 + rng() * 0.4)
-    const angle = i * goldenAngle + (rng() - 0.5) * 1.2
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const rng = seededRng(i * 311 + attempt * 173 + 4729)
+      // Pick a cluster weighted by how full it is, with randomness
+      const ci = Math.floor(rng() * clusterSeeds.length)
+      const cluster = clusterSeeds[ci]
 
-    const rawX = cx + Math.cos(angle) * r
-    const rawY = cy + Math.sin(angle) * r * 0.55
+      // Random point within cluster radius with bias toward center
+      const a = rng() * Math.PI * 2
+      const dist = cluster.r * Math.sqrt(rng()) * (0.4 + rng() * 0.6)
+      const x = cluster.cx + Math.cos(a) * dist
+      const y = cluster.cy + Math.sin(a) * dist * 0.6 // squash for perspective
 
-    const jX = (rng() - 0.5) * 8
-    const jY = (rng() - 0.5) * 6
+      const cx = Math.max(4, Math.min(96, x))
+      const cy = Math.max(32, Math.min(95, y))
 
-    results.push({
-      x: Math.max(4, Math.min(96, rawX + jX)),
-      y: Math.max(6, Math.min(92, rawY + jY)),
-      tree: trees[i],
-    })
+      if (!isPlantable(cx, cy)) continue
+
+      const tooClose = results.some(r => Math.hypot(r.x - cx, r.y - cy) < minSpacing)
+      if (tooClose) continue
+
+      results.push({ x: cx, y: cy, tree: trees[i] })
+      placed = true
+      break
+    }
+
+    if (!placed) {
+      const rng = seededRng(i * 997 + 7331)
+      const x = 5 + rng() * 90
+      const y = 34 + rng() * 58
+      results.push({ x, y, tree: trees[i] })
+    }
   }
 
   return results.sort((a, b) => a.y - b.y)
@@ -83,75 +146,167 @@ function getRarityPlantClass(type: string): string {
 }
 
 const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
-  const ground = isDark ? '#141a12' : '#c8c4b4'
-  const groundLight = isDark ? '#1a2216' : '#d0ccbc'
-  const hillFar = isDark ? '#0e140e' : '#c0bcac'
-  const hillMid = isDark ? '#121812' : '#bab6a6'
+  const sky = isDark ? '#0a0e0a' : '#d8dcd0'
+  const ground = isDark ? '#141a12' : '#c4c0b0'
+  const groundLight = isDark ? '#1a2216' : '#ccc8b8'
+  const mtnFar = isDark ? '#0c100c' : '#b8b4a8'
+  const mtnMid = isDark ? '#10160e' : '#c0bcae'
+  const mtnNear = isDark ? '#121a10' : '#c8c4b4'
+  const roadColor = isDark ? '#1c1814' : '#b0a898'
+  const roadEdge = isDark ? '#181410' : '#a8a090'
+  const lakeDeep = isDark ? '#0a1420' : '#8aacc8'
+  const lakeShallow = isDark ? '#0e1a2a' : '#a0c4d8'
+  const lakeEdge = isDark ? '#121c12' : '#90a880'
   const grass = isDark ? '#2a3a22' : '#a8a490'
 
   return (
     <>
-      <div className="absolute inset-0" style={{ background: ground }} />
+      {/* Sky gradient at top */}
+      <div className="absolute inset-0" style={{
+        background: isDark
+          ? `linear-gradient(180deg, #080c08 0%, ${ground} 28%)`
+          : `linear-gradient(180deg, #e0e4d8 0%, ${ground} 28%)`,
+      }} />
 
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect x="0" y="0" width="100" height="18" fill={hillFar} />
-        <path d="M0,16 Q10,12 22,15 Q35,10 50,14 Q65,9 78,13 Q90,10 100,14 L100,22 L0,22 Z" fill={hillMid} />
-        <path d="M0,20 Q15,16 28,19 Q42,13 58,18 Q72,12 85,17 Q95,14 100,16 L100,35 L0,35 Z" fill={ground} />
-        <ellipse cx="30" cy="45" rx="22" ry="8" fill={groundLight} opacity="0.4" />
-        <ellipse cx="72" cy="52" rx="18" ry="6" fill={groundLight} opacity="0.35" />
-        <ellipse cx="50" cy="55" rx="28" ry="14" fill={groundLight} opacity="0.2" />
+        <defs>
+          <linearGradient id="lakeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={lakeShallow} />
+            <stop offset="60%" stopColor={lakeDeep} />
+            <stop offset="100%" stopColor={lakeDeep} />
+          </linearGradient>
+          <radialGradient id="lakeHighlight" cx="0.4" cy="0.3" r="0.6">
+            <stop offset="0%" stopColor={isDark ? '#1a2a3a' : '#c0dce8'} stopOpacity="0.4" />
+            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
+        {/* ── Mountain range ── */}
+        {/* Far mountains — jagged, desaturated */}
+        <path d="M-5,22 L8,10 L14,16 L22,6 L30,14 L38,4 L46,12 L52,8 L60,14 L68,5 L76,11 L82,7 L90,13 L96,9 L105,18 L105,26 L-5,26 Z" fill={mtnFar} />
+        {/* Snow caps */}
+        <path d="M22,6 L24,9 L20,9 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.5" />
+        <path d="M38,4 L40.5,8 L35.5,8 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.6" />
+        <path d="M68,5 L70.5,9 L65.5,9 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.45" />
+        <path d="M52,8 L54,11 L50,11 Z" fill={isDark ? '#2a2e2a' : '#e0dcd4'} opacity="0.35" />
+
+        {/* Mid mountains — rounder, warmer */}
+        <path d="M-5,28 L10,20 L20,24 L32,17 L42,22 L52,18 L64,23 L74,19 L86,24 L95,20 L105,26 L105,32 L-5,32 Z" fill={mtnMid} />
+
+        {/* Near foothills — transition into ground */}
+        <path d="M-5,32 Q8,27 18,30 Q28,25 38,29 Q50,24 62,28 Q74,25 86,29 Q96,26 105,30 L105,36 L-5,36 Z" fill={mtnNear} />
+
+        {/* Ground fill below foothills */}
+        <rect x="-5" y="34" width="110" height="70" fill={ground} />
+
+        {/* Subtle terrain variation — meadow patches */}
+        <ellipse cx="20" cy="55" rx="18" ry="7" fill={groundLight} opacity="0.3" />
+        <ellipse cx="55" cy="70" rx="14" ry="5" fill={groundLight} opacity="0.25" />
+        <ellipse cx="35" cy="85" rx="20" ry="6" fill={groundLight} opacity="0.2" />
+
+        {/* ── Main road — winding left-to-right ── */}
         <path
-          d="M -2,98 C 10,90 18,82 24,74 C 30,66 36,60 42,55 C 48,50 52,46 50,40 C 48,34 46,28 50,22"
-          stroke={isDark ? '#1e1a14' : '#b8b0a0'}
+          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
+          stroke={roadEdge}
+          strokeWidth="3.5"
+          fill="none"
+          opacity={isDark ? 0.5 : 0.4}
+          strokeLinecap="round"
+        />
+        <path
+          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
+          stroke={roadColor}
+          strokeWidth="2"
+          fill="none"
+          opacity={isDark ? 0.6 : 0.5}
+          strokeLinecap="round"
+        />
+        {/* Road texture dashes */}
+        <path
+          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
+          stroke={isDark ? '#2a2418' : '#c0b8a8'}
+          strokeWidth="0.4"
+          fill="none"
+          opacity="0.3"
+          strokeDasharray="2 4"
+          strokeLinecap="round"
+        />
+
+        {/* ── Branch road — north toward mountains ── */}
+        <path
+          d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
+          stroke={roadEdge}
           strokeWidth="2.5"
           fill="none"
-          opacity={isDark ? 0.35 : 0.25}
+          opacity={isDark ? 0.35 : 0.3}
           strokeLinecap="round"
         />
         <path
-          d="M 102,78 C 90,72 80,66 72,60 C 64,54 58,50 52,48"
-          stroke={isDark ? '#1e1a14' : '#b8b0a0'}
-          strokeWidth="1.5"
+          d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
+          stroke={roadColor}
+          strokeWidth="1.4"
           fill="none"
-          opacity={isDark ? 0.2 : 0.15}
+          opacity={isDark ? 0.45 : 0.4}
           strokeLinecap="round"
         />
 
-        <ellipse cx="50" cy="55" rx="32" ry="18" fill="none" stroke={isDark ? '#282420' : '#b0a898'} strokeWidth="0.4" opacity={isDark ? 0.2 : 0.15} strokeDasharray="1.5 2" />
+        {/* ── Lake ── */}
+        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeGrad)" />
+        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeHighlight)" />
+        {/* Shore */}
+        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1} fill="none" stroke={lakeEdge} strokeWidth="1.2" opacity="0.3" />
+        {/* Reeds on left shore */}
+        {[0,1,2].map(i => {
+          const rx = LAKE_CX - LAKE_RX + 2 + i * 1.8
+          const ry = LAKE_CY - 2 + i * 1.5
+          return <g key={`reed${i}`} opacity={isDark ? 0.3 : 0.25}>
+            <line x1={`${rx}`} y1={`${ry}`} x2={`${rx - 0.3}`} y2={`${ry - 2.5}`} stroke={grass} strokeWidth="0.4" />
+            <line x1={`${rx + 0.6}`} y1={`${ry}`} x2={`${rx + 0.4}`} y2={`${ry - 2}`} stroke={grass} strokeWidth="0.35" />
+          </g>
+        })}
+        {/* Water ripple */}
+        <ellipse cx={LAKE_CX + 2} cy={LAKE_CY - 1} rx="4" ry="1" fill="none" stroke={isDark ? '#1a2a3a' : '#b8d4e0'} strokeWidth="0.3" opacity="0.3" />
+        <ellipse cx={LAKE_CX - 3} cy={LAKE_CY + 2} rx="3" ry="0.7" fill="none" stroke={isDark ? '#1a2a3a' : '#b8d4e0'} strokeWidth="0.25" opacity="0.2" />
 
-        {Array.from({ length: 20 }).map((_, i) => {
+        {/* ── Grass tufts scattered across plantable areas ── */}
+        {Array.from({ length: 30 }).map((_, i) => {
           const rng = seededRng(i * 53 + 101)
           const x = 3 + rng() * 94
-          const y = 22 + rng() * 74
-          const h = 0.6 + rng() * 0.8
+          const y = 34 + rng() * 60
+          if (inLake(x, y)) return null
+          if (distToPolyline(x, y, ROAD_MAIN) < 3) return null
+          const h = 0.5 + rng() * 0.7
           return (
-            <g key={`g${i}`} opacity={isDark ? 0.15 + rng() * 0.08 : 0.1 + rng() * 0.06}>
+            <g key={`g${i}`} opacity={isDark ? 0.15 + rng() * 0.1 : 0.1 + rng() * 0.08}>
               <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.2}`} y2={`${y - h}`} stroke={grass} strokeWidth="0.3" />
               <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.15}`} y2={`${y - h * 0.85}`} stroke={grass} strokeWidth="0.3" />
             </g>
           )
         })}
 
-        {Array.from({ length: 8 }).map((_, i) => {
+        {/* Small stones near road */}
+        {Array.from({ length: 10 }).map((_, i) => {
           const rng = seededRng(i * 89 + 337)
-          const x = 15 + rng() * 70
-          const y = 30 + rng() * 55
-          return <ellipse key={`s${i}`} cx={`${x}`} cy={`${y}`} rx={`${0.3 + rng() * 0.25}`} ry={`${0.12 + rng() * 0.1}`} fill={isDark ? '#1c1e1a' : '#a8a498'} opacity={isDark ? 0.25 : 0.18} />
+          const x = 10 + rng() * 80
+          const y = 36 + rng() * 55
+          if (inLake(x, y)) return null
+          return <ellipse key={`s${i}`} cx={`${x}`} cy={`${y}`} rx={`${0.25 + rng() * 0.2}`} ry={`${0.1 + rng() * 0.08}`} fill={isDark ? '#1c1e1a' : '#a8a498'} opacity={isDark ? 0.2 : 0.15} />
         })}
       </svg>
 
+      {/* Atmospheric haze on mountains */}
       <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{
-        height: '20%',
+        height: '32%',
         background: isDark
-          ? `linear-gradient(180deg, ${ground}cc 0%, ${ground}00 100%)`
-          : `linear-gradient(180deg, ${ground}88 0%, ${ground}00 100%)`,
+          ? `linear-gradient(180deg, rgba(8,12,8,0.6) 0%, rgba(8,12,8,0.2) 60%, transparent 100%)`
+          : `linear-gradient(180deg, rgba(220,224,216,0.5) 0%, rgba(220,224,216,0.15) 60%, transparent 100%)`,
       }} />
 
+      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none" style={{
         boxShadow: isDark
           ? 'inset 0 0 80px 20px rgba(10,14,10,0.5)'
-          : 'inset 0 0 80px 20px rgba(180,176,164,0.3)',
+          : 'inset 0 0 60px 15px rgba(180,176,164,0.25)',
       }} />
     </>
   )
@@ -199,7 +354,7 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
-  const placed = useMemo(() => centerOutPlacement(filteredTrees), [filteredTrees])
+  const placed = useMemo(() => forestPlacement(filteredTrees), [filteredTrees])
 
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -220,9 +375,9 @@ export const OrchardView = memo(function OrchardView({
   const sidebarItemHover = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
   const sidebarItemActive = isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.08)'
 
-  const treeSize = filteredTrees.length <= 6 ? 80 :
-    filteredTrees.length <= 15 ? 74 :
-    filteredTrees.length <= 30 ? 68 : 62
+  const baseSize = filteredTrees.length <= 6 ? 62 :
+    filteredTrees.length <= 15 ? 56 :
+    filteredTrees.length <= 30 ? 50 : 44
 
   const totalTrees = grove.filter(Boolean).length
 
@@ -403,7 +558,13 @@ export const OrchardView = memo(function OrchardView({
           </div>
 
           {/* Orchard scene */}
-          <div className="flex-1 relative overflow-hidden">
+          <div className="flex-1 relative overflow-hidden" style={{
+            perspective: '800px',
+          }}>
+            <div className="absolute inset-0" style={{
+              transform: 'rotateX(8deg)',
+              transformOrigin: 'center 40%',
+            }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedNotebook ?? 'all'}
@@ -431,6 +592,8 @@ export const OrchardView = memo(function OrchardView({
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
+                      const depthScale = 0.6 + (y / 100) * 0.5
+                      const treeSize = Math.round(baseSize * depthScale)
 
                       return (
                         <div
@@ -481,6 +644,7 @@ export const OrchardView = memo(function OrchardView({
                 )}
               </motion.div>
             </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

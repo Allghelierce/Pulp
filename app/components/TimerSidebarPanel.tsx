@@ -102,46 +102,22 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
           />
         )}
 
-        <AnimatePresence mode="wait">
-          {idle ? (
+        {idle ? (
+          <PlantIcon type={plantType} size={plantSize} stage={4} />
+        ) : stage === 0 ? (
+          <div className="relative">
+            <PlantIcon type={plantType} size={plantSize} isSeed={true} />
             <motion.div
-              key="idle-tree"
-              initial={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6, y: 10 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-            >
-              <PlantIcon type={plantType} size={plantSize} stage={4} />
-            </motion.div>
-          ) : stage === 0 ? (
-            <motion.div
-              key="seed"
-              initial={{ opacity: 0, scale: 0.3, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="relative"
+               animate={{ opacity: [0.2, 0.5, 0.2] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="absolute inset-0 blur-md"
             >
               <PlantIcon type={plantType} size={plantSize} isSeed={true} />
-              <motion.div
-                 animate={{ opacity: [0.2, 0.5, 0.2] }}
-                 transition={{ duration: 2, repeat: Infinity }}
-                 className="absolute inset-0 blur-md"
-              >
-                <PlantIcon type={plantType} size={plantSize} isSeed={true} />
-              </motion.div>
             </motion.div>
-          ) : (
-            <motion.div
-              key={`stage-${stage}`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-            >
-              <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        ) : (
+          <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
+        )}
       </div>
 
       {stage >= 3 && (
@@ -434,7 +410,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         </div>
 
                         <div className="flex-1 flex items-center px-3">
-                          <div className="grid grid-cols-5 gap-1.5 w-full">
+                          <div className="grid grid-cols-4 gap-2 w-full">
                             {pageSeeds.map((type) => {
                               const info = TREE_TYPES[type]
                               if (!info) return null
@@ -458,7 +434,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                                     transition: 'border-color 0.15s, box-shadow 0.15s',
                                   }}
                                 >
-                                  <PlantIcon type={type} size={20} isSeed />
+                                  <PlantIcon type={type} size={28} isSeed />
                                   {count > 1 && (
                                     <span className="absolute -bottom-1 -right-1 text-[7px] font-bold rounded-full min-w-[13px] h-[13px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}` }}>
                                       {count}

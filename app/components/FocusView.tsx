@@ -30,13 +30,12 @@ function useExtensionDetected() {
   const [detected, setDetected] = useState(false)
 
   useEffect(() => {
-    if (document.documentElement.getAttribute("data-pulp-extension") === "true") {
-      setDetected(true)
-      return
-    }
+    const check = () => document.documentElement.getAttribute("data-pulp-extension") === "true"
+    if (check()) { setDetected(true); return }
     const handler = () => setDetected(true)
     window.addEventListener("pulp-extension-detected", handler)
-    return () => window.removeEventListener("pulp-extension-detected", handler)
+    const interval = setInterval(() => { if (check()) { setDetected(true); clearInterval(interval) } }, 500)
+    return () => { window.removeEventListener("pulp-extension-detected", handler); clearInterval(interval) }
   }, [])
 
   return detected
@@ -93,9 +92,19 @@ export const FocusView = memo(function FocusView({
       >
         {/* Header */}
         <div className={`px-7 pt-6 pb-4 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-          <div>
-            <h2 className="text-[17px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? "#e4e4e7" : "#18181b" }}>Focus Blocker</h2>
-            <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>Sites blocked while your timer is running</p>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-2 h-2 rounded-full shrink-0"
+              title={extensionInstalled ? "Extension active" : "Extension not detected"}
+              style={{
+                backgroundColor: extensionInstalled ? "#22c55e" : "#71717a",
+                boxShadow: extensionInstalled ? "0 0 6px rgba(34,197,94,0.4)" : "none",
+              }}
+            />
+            <div>
+              <h2 className="text-[17px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? "#e4e4e7" : "#18181b" }}>Focus Blocker</h2>
+              <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>Sites blocked while your timer is running</p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -107,33 +116,26 @@ export const FocusView = memo(function FocusView({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-7 py-5">
-          {/* Extension status */}
-          <div className={`rounded-xl px-4 py-3 mb-5 flex items-center gap-3 ${isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-white border-zinc-200"} border`}>
-            {extensionInstalled ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style={{ boxShadow: "0 0 6px rgba(34,197,94,0.4)" }} />
-                <p className={`text-[11px] m-0 ${isDark ? "text-zinc-400" : "text-zinc-500"}`} style={{ fontFamily: font }}>
-                  Extension installed and active
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="w-2 h-2 rounded-full bg-zinc-600 shrink-0" />
-                <p className={`text-[11px] m-0 flex-1 ${isDark ? "text-zinc-500" : "text-zinc-500"}`} style={{ fontFamily: font }}>
-                  Extension not detected
-                </p>
-                <a
-                  href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all hover:brightness-110"
-                  style={{ background: "#e67e22", fontFamily: font }}
-                >
-                  Download
-                </a>
-              </>
-            )}
-          </div>
+          {/* Extension not detected prompt */}
+          {!extensionInstalled && (
+            <div className={`rounded-xl px-4 py-3.5 mb-5 flex items-center gap-3 ${isDark ? "bg-zinc-900/60 border-zinc-800" : "bg-white border-zinc-200"} border`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <p className={`text-[11px] m-0 flex-1 leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-500"}`} style={{ fontFamily: font }}>
+                Install the Chrome extension to enforce blocks while you write.
+              </p>
+              <a
+                href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all hover:brightness-110"
+                style={{ background: "#e67e22", fontFamily: font }}
+              >
+                Get Extension
+              </a>
+            </div>
+          )}
 
           {/* Warning */}
           <div className={`rounded-xl px-4 py-3 mb-4 flex items-start gap-3 ${isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50 border-amber-200/50"} border`}>

@@ -60,7 +60,7 @@ const RARITY_BG: Record<string, string> = {
   extinct: 'linear-gradient(180deg, #161014 0%, #1e1418 50%, #26181e 100%)',
 }
 
-const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
+const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled' && t !== 'tangerine').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
 
 function getDropChance(weight: number): string {
   const pct = (weight / TOTAL_WEIGHT) * 100
@@ -325,7 +325,7 @@ export const BoutiqueView = memo(function BoutiqueView({
       if (r < 2) return 7; if (r < 7) return 3; if (r < 27) return 2; return 1
     }
     if (lastReset !== epoch) {
-      const allTypes = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled')
+      const allTypes = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled' && t !== 'tangerine')
       const selected: string[] = []
       const newStock: Record<string, number> = {}
       for (let i = 0; i < 4; i++) {
@@ -411,21 +411,16 @@ export const BoutiqueView = memo(function BoutiqueView({
       >
         {/* ── Header ── */}
         <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-          <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
+          <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); setSelectedPlant(null) }}
-                className={`px-3.5 py-1.5 rounded-md text-[12.5px] font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-md transition-all ${
                   activeTab === tab.id
-                    ? "shadow-sm"
-                    : isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700"
+                    ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+                    : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
                 }`}
-                style={activeTab === tab.id ? {
-                  backgroundColor: `${accent}18`,
-                  color: accent,
-                  border: `1px solid ${accent}30`,
-                } : { border: '1px solid transparent' }}
               >
                 {tab.label}
               </button>
@@ -873,7 +868,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                               <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
-                              {owned && (
+                              {type === 'tangerine' ? (
+                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#fb923c', letterSpacing: '0.06em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
+                                  Default
+                                </div>
+                              ) : owned && (
                                 <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#34d399" : "#059669"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
