@@ -250,12 +250,21 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   )
 }
 
+const MODAL_CONFIG: Record<string, { subtitle: string, hasSubject: boolean, subjectPlaceholder: string, bodyPlaceholder: string, bodyLabel: string }> = {
+  'report a bug': { subtitle: 'help me squash it.', hasSubject: true, subjectPlaceholder: "what's broken?", bodyPlaceholder: 'steps to reproduce, what you expected, etc.', bodyLabel: 'details (optional)' },
+  'request a feature': { subtitle: "i want to hear it. i'll let you know if i add it.", hasSubject: true, subjectPlaceholder: "what's the feature?", bodyPlaceholder: 'why would this be useful? any details help.', bodyLabel: 'description (optional)' },
+  'feedback': { subtitle: 'i read everything.', hasSubject: false, subjectPlaceholder: '', bodyPlaceholder: "whats up?", bodyLabel: '' },
+}
+
 function ReachOutModal({ type, onClose }: { type: string, onClose: () => void }) {
+  const [subject, setSubject] = useState('')
   const [text, setText] = useState('')
   const [sent, setSent] = useState(false)
   const mono = '"JetBrains Mono", ui-monospace, monospace'
   const serif = '"EB Garamond", Georgia, serif'
   const accent = '#ea580c'
+  const config = MODAL_CONFIG[type] || MODAL_CONFIG['feedback']
+  const canSend = config.hasSubject ? subject.trim().length > 0 : text.trim().length > 0
 
   return (
     <div
@@ -300,18 +309,39 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
               {type}
             </h3>
             <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#a1a1aa', textTransform: 'lowercase', margin: '0 0 20px 0' }}>
-              i read everything.
+              {config.subtitle}
             </p>
+            {config.hasSubject && (
+              <input
+                value={subject}
+                onChange={e => setSubject(e.target.value)}
+                placeholder={config.subjectPlaceholder}
+                autoFocus
+                style={{
+                  width: '100%', borderRadius: 8, border: '1px solid rgba(15,15,16,0.1)',
+                  padding: 14, fontFamily: serif, fontSize: '0.92rem', color: '#0f0f10',
+                  outline: 'none', background: 'rgba(0,0,0,0.02)', marginBottom: 12,
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = accent)}
+                onBlur={e => (e.currentTarget.style.borderColor = 'rgba(15,15,16,0.1)')}
+              />
+            )}
+            {config.hasSubject && (
+              <p style={{ fontFamily: mono, fontSize: '0.65rem', color: '#a1a1aa', textTransform: 'lowercase', margin: '0 0 6px 0', letterSpacing: '0.06em' }}>
+                {config.bodyLabel}
+              </p>
+            )}
             <textarea
               value={text}
               onChange={e => setText(e.target.value)}
-              placeholder="write your message here..."
-              autoFocus
+              placeholder={config.bodyPlaceholder}
+              autoFocus={!config.hasSubject}
               style={{
-                width: '100%', height: 140, borderRadius: 8, border: '1px solid rgba(15,15,16,0.1)',
+                width: '100%', height: config.hasSubject ? 100 : 140, borderRadius: 8, border: '1px solid rgba(15,15,16,0.1)',
                 padding: 14, fontFamily: serif, fontSize: '0.92rem', color: '#0f0f10',
                 resize: 'vertical', outline: 'none',
-                background: 'rgba(0,0,0,0.02)',
+                background: 'rgba(0,0,0,0.02)', boxSizing: 'border-box',
               }}
               onFocus={e => (e.currentTarget.style.borderColor = accent)}
               onBlur={e => (e.currentTarget.style.borderColor = 'rgba(15,15,16,0.1)')}
@@ -327,17 +357,17 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
               >cancel</a>
               <a
                 onClick={() => {
-                  if (!text.trim()) return
-                  const subject = encodeURIComponent(`${type} — Pulp`)
-                  const body = encodeURIComponent(text)
-                  window.open(`mailto:pulpsupport@gmail.com?subject=${subject}&body=${body}`, '_self')
+                  if (!canSend) return
+                  const emailSubject = encodeURIComponent(config.hasSubject ? `${type}: ${subject} — Pulp` : `${type} — Pulp`)
+                  const body = encodeURIComponent(config.hasSubject && text.trim() ? `${subject}\n\n${text}` : text || subject)
+                  window.open(`mailto:pulpsupport@gmail.com?subject=${emailSubject}&body=${body}`, '_self')
                   setSent(true)
                 }}
                 style={{
                   fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
                   padding: '8px 20px', borderRadius: 6, cursor: 'pointer',
-                  background: text.trim() ? accent : '#e5e5e5',
-                  color: text.trim() ? '#fff' : '#a1a1aa',
+                  background: canSend ? accent : '#e5e5e5',
+                  color: canSend ? '#fff' : '#a1a1aa',
                   textDecoration: 'none', textTransform: 'lowercase',
                   transition: 'background 0.2s, color 0.2s',
                 }}
