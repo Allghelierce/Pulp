@@ -15,21 +15,23 @@ import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
 import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
-import { ShelfView } from "@/app/components/ShelfView"
-import { ImageUploadModal } from "@/app/components/ImageUploadModal"
-import { CoverModal } from "@/app/components/CoverModal"
-import { FlashcardView } from "@/app/components/FlashcardView"
-import { AiResultModal } from "@/app/components/AiResultModal"
-import { AiInlineMenu } from "@/app/components/AiInlineMenu"
-import { AiCommandBar } from "@/app/components/AiCommandBar"
-import { NotebookChat } from "@/app/components/NotebookChat"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { OrchardView } from "@/app/components/OrchardView"
-import { BoutiqueView } from "@/app/components/BoutiqueView"
-import { GemStoreModal } from "@/app/components/GemStoreModal"
-import { StatsView } from "@/app/components/StatsView"
-import { FocusView } from "@/app/components/FocusView"
-import { LeaderboardView } from "@/app/components/LeaderboardView"
+import { AiInlineMenu } from "@/app/components/AiInlineMenu"
+import { AiResultModal } from "@/app/components/AiResultModal"
+import dynamic from "next/dynamic"
+
+const ShelfView = dynamic(() => import("@/app/components/ShelfView").then(m => m.ShelfView), { ssr: false })
+const ImageUploadModal = dynamic(() => import("@/app/components/ImageUploadModal").then(m => m.ImageUploadModal), { ssr: false })
+const CoverModal = dynamic(() => import("@/app/components/CoverModal").then(m => m.CoverModal), { ssr: false })
+const FlashcardView = dynamic(() => import("@/app/components/FlashcardView").then(m => m.FlashcardView), { ssr: false })
+const AiCommandBar = dynamic(() => import("@/app/components/AiCommandBar").then(m => m.AiCommandBar), { ssr: false })
+const NotebookChat = dynamic(() => import("@/app/components/NotebookChat").then(m => m.NotebookChat), { ssr: false })
+const OrchardView = dynamic(() => import("@/app/components/OrchardView").then(m => m.OrchardView), { ssr: false })
+const BoutiqueView = dynamic(() => import("@/app/components/BoutiqueView").then(m => m.BoutiqueView), { ssr: false })
+const GemStoreModal = dynamic(() => import("@/app/components/GemStoreModal").then(m => m.GemStoreModal), { ssr: false })
+const StatsView = dynamic(() => import("@/app/components/StatsView").then(m => m.StatsView), { ssr: false })
+const FocusView = dynamic(() => import("@/app/components/FocusView").then(m => m.FocusView), { ssr: false })
+const LeaderboardView = dynamic(() => import("@/app/components/LeaderboardView").then(m => m.LeaderboardView), { ssr: false })
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -985,6 +987,7 @@ export default function NoteApp() {
   const [isAnyBoxDragging, setIsAnyBoxDragging] = useState(false)
   const unlockedVaults = useRef<Set<string>>(new Set())
   const [grove, setGrove] = useState<Tree[]>([])
+  const [streak, setStreak] = useState(0)
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
@@ -1005,6 +1008,7 @@ export default function NoteApp() {
     { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 30 days in a row — no breaks.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
     { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 36000 },
     { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 7200 },
+    { id: 'tangerine_grove', title: 'Pulp Fiction', icon: '🍊', description: 'Grow 100 tangerine trees — the signature fruit of Pulp.', reward: 10, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 100 },
   ])
   const [lastCharCount, setLastCharCount] = useState(0)
 
@@ -1044,7 +1048,8 @@ export default function NoteApp() {
       const data = JSON.parse(saved)
       setSunshine(data.sunshine ?? 50)
       setGems(data.gems ?? 3)
-      if (data.inventory) setInventory(data.inventory)
+      const allSeeds = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
+      setInventory(allSeeds)
       if (data.grove) {
         // TEST: populate orchard with sample plants
         const testTypes = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
@@ -1067,6 +1072,21 @@ export default function NoteApp() {
       }
     } else {
       setAchievements(prev => applyTimeChecks(prev))
+    }
+
+    // Streak tracking
+    const streakData = JSON.parse(localStorage.getItem('pulp-streak') || '{"count":0,"lastDate":""}')
+    const today = new Date().toISOString().slice(0, 10)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+    if (streakData.lastDate === today) {
+      setStreak(streakData.count)
+    } else if (streakData.lastDate === yesterday) {
+      const next = streakData.count + 1
+      setStreak(next)
+      localStorage.setItem('pulp-streak', JSON.stringify({ count: next, lastDate: today }))
+    } else {
+      setStreak(1)
+      localStorage.setItem('pulp-streak', JSON.stringify({ count: 1, lastDate: today }))
     }
   }, [])
 
@@ -2525,6 +2545,7 @@ export default function NoteApp() {
               }}
               onUnlockDev={handleUnlockDev}
               onOpenShop={() => setShopOpen(true)}
+              onOpenGemStore={() => setGemStoreOpen(true)}
               onOpenLeaderboard={() => setLeaderboardOpen(true)}
               onOpenFocus={() => setFocusOpen(true)}
               onOpenStats={() => setStatsOpen(true)}
@@ -2533,6 +2554,7 @@ export default function NoteApp() {
               xp={xp}
               totalNotes={notes.filter(n => !n.archived).length}
               totalChars={totalChars}
+              streak={streak}
               onSetCover={(noteId) => {
                 editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(0); setCurrentView("editor")
                 setTimeout(() => setShowCoverModal(true), 100)
@@ -2688,7 +2710,8 @@ export default function NoteApp() {
                 sidebarOpen={sidebarWidth > 40}
                 onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
-                onOpenShop={handleOpenShop}
+                onOpenShop={() => setShopOpen(true)}
+                onOpenGemStore={() => setGemStoreOpen(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
                 isTextActive={isTextActive}
@@ -3324,6 +3347,7 @@ export default function NoteApp() {
         setGems={setGems}
         setInventory={setInventory}
         setGrove={setGrove}
+        notes={notes}
       />
 
       <LeaderboardView
@@ -3398,6 +3422,7 @@ export default function NoteApp() {
         checkAchievementRef={checkAchievementRef}
         claimAchievementRef={claimAchievementRef}
         inventory={inventory}
+        activeTabId={activeTabId}
       />
 
       {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

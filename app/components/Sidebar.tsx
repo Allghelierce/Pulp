@@ -72,6 +72,7 @@ interface SidebarProps {
   onUnlockDev: () => void
   onGoToShelf: () => void
   onOpenShop?: () => void
+  onOpenGemStore?: () => void
   onOpenLeaderboard?: () => void
   onOpenFocus?: () => void
   onOpenStats?: () => void
@@ -80,6 +81,7 @@ interface SidebarProps {
   xp?: number
   totalNotes?: number
   totalChars?: number
+  streak?: number
   bookmarks: Bookmark[]
   onJumpToBookmark: (b: Bookmark) => void
   onReorderBookmarks: (b: Bookmark[]) => void
@@ -97,8 +99,8 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
-  onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
-  sunshine = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
+  onOpenShop, onOpenGemStore, onOpenLeaderboard, onOpenFocus, onOpenStats,
+  sunshine = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
 }: SidebarProps) {
@@ -898,8 +900,18 @@ export const Sidebar = memo(function Sidebar({
               </button>
             )}
           </div>
+          {/* Streak */}
+          {streak > 0 && (
+            <div className="px-4 pb-1 pt-1.5 border-t border-white/[0.03]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[12px]" style={{ lineHeight: 1 }}>🔥</span>
+                <span className="text-[11px] font-bold tabular-nums" style={{ color: '#fb923c' }}>{streak}</span>
+                <span className="text-[10px] text-zinc-600">day streak</span>
+              </div>
+            </div>
+          )}
           {/* Settings + Timer row */}
-          <div className="px-2 pb-2 pt-1 border-t border-white/[0.03] flex items-center gap-1">
+          <div className={`px-2 pb-2 pt-1 ${streak <= 0 ? 'border-t border-white/[0.03]' : ''} flex items-center gap-1`}>
             <button onClick={onOpenSettings} className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">Settings</span>

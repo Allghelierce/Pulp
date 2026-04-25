@@ -61,6 +61,7 @@ interface DocumentToolbarProps {
   onSidebarToggle?: () => void
   onTimerOpen?: () => void
   onOpenShop: () => void
+  onOpenGemStore?: () => void
   onOpenGrove?: () => void
   userAvatarUrl?: string | null
   userEmail?: string | null
@@ -120,7 +121,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sunshine, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail
 }: DocumentToolbarProps) {
@@ -540,8 +541,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <div className="w-px h-3 bg-zinc-400/30" />
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            title="Gem Store"
-            onClick={e => { e.stopPropagation(); onOpenShop() }}
+            onClick={(e) => { e.stopPropagation(); onOpenGemStore?.() }}
+            title="Get Gems"
           >
             <span className="text-[10px] leading-none">💎</span>
             <span>{gems >= 999999 ? "∞" : gems}</span>
@@ -554,9 +555,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             <ShoppingBag size={11} strokeWidth={2.8} className="group-hover:scale-110 mb-0.5" />
           </button>
           {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" className="w-4 h-4 rounded-full object-cover shrink-0 ml-1" referrerPolicy="no-referrer" />
+            <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5" referrerPolicy="no-referrer" />
           ) : userEmail ? (
-            <div className="w-4 h-4 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[7px] font-bold text-zinc-600 uppercase ml-1">
+            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-bold text-zinc-600 uppercase ml-1.5">
               {userEmail[0]}
             </div>
           ) : null}

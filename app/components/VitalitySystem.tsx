@@ -25,6 +25,7 @@ interface VitalitySystemProps {
   checkAchievementRef: React.RefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
   inventory: string[]
+  activeTabId: string | null
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -32,7 +33,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sunshine, gems, xp, grove, achievements, setSunshine, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory,
+  inventory, activeTabId,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session) ───
@@ -198,19 +199,19 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
-    if (selectedSeed) {
-      setGrove(g => {
-        const next = [...g, { id: Date.now(), type: selectedSeed, stage: 4, progress: 100, plantedAt: Date.now() }]
-        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-        return next
-      })
-    }
+    const treeType = selectedSeed || 'tangerine'
+    setGrove(g => {
+      const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: activeTabId ?? undefined }]
+      checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+      checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
+      return next
+    })
 
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setSunshine, setXp, setGrove, checkAchievement])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setSunshine, setXp, setGrove, checkAchievement, activeTabId])
 
   const dismissDeadTree = useCallback(() => {
     setLostSunshine(sunshine)

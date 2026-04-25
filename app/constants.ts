@@ -1,4 +1,7 @@
 export const TREE_TYPES: Record<string, any> = {
+  // DEFAULT — free, always available
+  tangerine:  { name: 'Tangerine Tree',   color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   cost: 0,     currency: 'sunshine', rarity: 'common',    weight: 0,     shape: 'citrus',    sceneBg: 'linear-gradient(180deg, #1c1608 0%, #24200e 50%, #2e2814 100%)' },
+
   // COMMON — 3 sunshine each
   heartwood:  { name: 'Heartwood Oak',    color: '#8b6914', bg: 'rgba(139,105,20,0.1)',  cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'oak',       sceneBg: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #222e1a 100%)' },
   thicket:    { name: 'Inkberry Bush',    color: '#2d6a4f', bg: 'rgba(45,106,79,0.1)',   cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'shrub',     sceneBg: 'linear-gradient(180deg, #0e1a12 0%, #142218 50%, #182a1c 100%)' },

@@ -78,8 +78,8 @@ function MossyHill({ isDark, overlap = 6 }: { isDark: boolean; overlap?: number 
 
 function TreeVisualization({ progress, type, idle, isDark }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean }) {
   const p = Math.max(0, Math.min(1, progress))
-  const plantType = type || 'heartwood'
-  const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.heartwood
+  const plantType = type || 'tangerine'
+  const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 
@@ -89,12 +89,12 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
   return (
     <div className="relative w-full h-full">
       {/* Hill — fixed position, never moves */}
-      <div className="absolute bottom-[40px] left-0 w-full z-0">
+      <div className="absolute bottom-[4px] left-0 w-full z-0">
         <MossyHill isDark={isDark ?? true} overlap={0} />
       </div>
 
       {/* Plant — positioned from the bottom so it sits on the hill */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: 66 }}>
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: stage === 0 ? 18 : 30 }}>
         {!idle && (
           <div
             className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
@@ -102,22 +102,46 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
           />
         )}
 
-        {idle ? (
-          <PlantIcon type={plantType} size={plantSize} stage={4} />
-        ) : stage === 0 ? (
-          <div className="relative">
-            <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+        <AnimatePresence mode="wait">
+          {idle ? (
             <motion.div
-               animate={{ opacity: [0.2, 0.5, 0.2] }}
-               transition={{ duration: 2, repeat: Infinity }}
-               className="absolute inset-0 blur-md"
+              key="idle-tree"
+              initial={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6, y: 10 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+            >
+              <PlantIcon type={plantType} size={plantSize} stage={4} />
+            </motion.div>
+          ) : stage === 0 ? (
+            <motion.div
+              key="seed"
+              initial={{ opacity: 0, scale: 0.3, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="relative"
             >
               <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+              <motion.div
+                 animate={{ opacity: [0.2, 0.5, 0.2] }}
+                 transition={{ duration: 2, repeat: Infinity }}
+                 className="absolute inset-0 blur-md"
+              >
+                <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+              </motion.div>
             </motion.div>
-          </div>
-        ) : (
-          <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
-        )}
+          ) : (
+            <motion.div
+              key={`stage-${stage}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {stage >= 3 && (
@@ -163,11 +187,17 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [now, setNow] = useState(() => Date.now())
   const [confirmGiveUp, setConfirmGiveUp] = useState(false)
   const [seedTrayOpen, setSeedTrayOpen] = useState(false)
+  const [seedPage, setSeedPage] = useState(0)
+  const [showGuide, setShowGuide] = useState(false)
 
   useEffect(() => {
     if (!running || done || treeDead) setConfirmGiveUp(false)
     if (running) setSeedTrayOpen(false)
   }, [running, done, treeDead])
+
+  useEffect(() => {
+    if (!isOpen) setShowGuide(false)
+  }, [isOpen])
 
   useEffect(() => {
     if (!confirmGiveUp) return
@@ -238,9 +268,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   }
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="timer-panel"
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
@@ -304,17 +336,31 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-              style={{ color: subtleColor }}
-              title="Close (⌘⌥T)"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            <div className="flex flex-col items-center gap-0.5">
+              <button
+                onClick={onClose}
+                className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                style={{ color: subtleColor }}
+                title="Close (⌘⌥T)"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowGuide(true)}
+                className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                style={{ color: subtleColor }}
+                title="How to use"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Body */}
@@ -340,89 +386,129 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </p>
               </div>
 
-              {/* Tree + progress ring OR inline seed inventory */}
-              <AnimatePresence mode="wait">
-                {seedTrayOpen && !running && !done && !treeDead ? (
-                  <motion.div
-                    key="seed-tray"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full mx-auto mb-5"
-                    style={{ minHeight: 256 }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>My Seeds</span>
-                      <button
-                        onClick={() => setSeedTrayOpen(false)}
-                        className="text-[9px] font-semibold uppercase tracking-[0.1em] hover:underline"
-                        style={{ color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
-                      >
-                        Back
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2.5 overflow-y-auto" style={{ maxHeight: 280 }}>
-                      {inventory.map((type, idx) => {
-                        const info = TREE_TYPES[type]
-                        if (!info) return null
-                        const isSelected = selectedSeed === type
-                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#a78bfa' : info.rarity === 'premium' ? '#fbbf24' : info.rarity === 'chroma' ? '#f472b6' : '#f87171'
-                        return (
-                          <motion.button
-                            key={`${type}-${idx}`}
-                            whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
-                            title={info.name}
-                            className="relative"
-                            style={{
-                              width: 48, height: 48, borderRadius: '50%',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              backgroundColor: isDark ? 'rgba(39,39,42,0.4)' : 'rgba(255,255,255,0.9)',
-                              border: `1.5px solid ${isSelected ? info.color : isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}`,
-                              boxShadow: isSelected ? `0 0 0 2px ${info.color}40, 0 0 12px ${info.color}20` : `0 0 0 2px ${rarityColor}15`,
-                              cursor: 'pointer',
-                              transition: 'border-color 0.15s, box-shadow 0.15s',
-                            }}
-                          >
-                            <PlantIcon type={type} size={28} isSeed />
-                            {isSelected && (
-                              <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
-                            )}
-                          </motion.button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={`tree-view-${selectedSeed || 'none'}`}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative w-full mx-auto"
-                    style={{ height: 160 }}
-                  >
-                    <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                      <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Tree view — always rendered */}
+              <div className="relative w-full mx-auto" style={{ height: 160 }}>
+                <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
+                  <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
+                </div>
 
-              {/* Change Plant button — visible only when idle */}
+                {/* Seed tray overlay */}
+                <AnimatePresence>
+                  {seedTrayOpen && !running && !done && !treeDead && (() => {
+                    const counts = new Map<string, number>()
+                    inventory.forEach(t => counts.set(t, (counts.get(t) || 0) + 1))
+                    const uniqueTypes = [...counts.keys()]
+                    const perPage = 15
+                    const totalPages = Math.max(1, Math.ceil(uniqueTypes.length / perPage))
+                    const page = Math.min(seedPage, totalPages - 1)
+                    const pageSeeds = uniqueTypes.slice(page * perPage, (page + 1) * perPage)
+
+                    return (
+                      <motion.div
+                        key="seed-tray"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute inset-0 z-30 flex flex-col rounded-lg"
+                        style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.88)' : 'rgba(10,10,12,0.88)', backdropFilter: 'blur(8px)' }}
+                        onKeyDown={e => {
+                          if (e.key === 'ArrowRight' && page < totalPages - 1) { e.preventDefault(); setSeedPage(page + 1) }
+                          if (e.key === 'ArrowLeft' && page > 0) { e.preventDefault(); setSeedPage(page - 1) }
+                          if (e.key === 'Escape') { e.preventDefault(); setSeedTrayOpen(false) }
+                        }}
+                        tabIndex={0}
+                        ref={el => el?.focus()}
+                      >
+                        <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
+                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                            Seeds
+                          </span>
+                          <button
+                            onClick={() => setSeedTrayOpen(false)}
+                            className="w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                            style={{ color: subtleColor }}
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          </button>
+                        </div>
+
+                        <div className="flex-1 flex items-center px-3">
+                          <div className="grid grid-cols-5 gap-1.5 w-full">
+                            {pageSeeds.map((type) => {
+                              const info = TREE_TYPES[type]
+                              if (!info) return null
+                              const isSelected = selectedSeed === type
+                              const count = counts.get(type) || 1
+                              const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#a78bfa' : info.rarity === 'premium' ? '#fbbf24' : info.rarity === 'chroma' ? '#f472b6' : '#f87171'
+                              return (
+                                <motion.button
+                                  key={type}
+                                  whileHover={{ scale: 1.08 }}
+                                  whileTap={{ scale: 0.92 }}
+                                  onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
+                                  title={`${info.name} (×${count})`}
+                                  className="relative flex items-center justify-center mx-auto"
+                                  style={{
+                                    width: 36, height: 36, borderRadius: '50%',
+                                    backgroundColor: isDark ? 'rgba(39,39,42,0.5)' : 'rgba(255,255,255,0.9)',
+                                    border: `1.5px solid ${isSelected ? info.color : isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}`,
+                                    boxShadow: isSelected ? `0 0 0 2px ${info.color}40, 0 0 12px ${info.color}20` : `0 0 0 2px ${rarityColor}15`,
+                                    cursor: 'pointer',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                                  }}
+                                >
+                                  <PlantIcon type={type} size={20} isSeed />
+                                  {count > 1 && (
+                                    <span className="absolute -bottom-1 -right-1 text-[7px] font-bold rounded-full min-w-[13px] h-[13px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}` }}>
+                                      {count}
+                                    </span>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
+                                  )}
+                                </motion.button>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-3 px-3 pb-2">
+                            <button onClick={() => setSeedPage(Math.max(0, page - 1))} disabled={page === 0} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                            </button>
+                            <div className="flex gap-1">
+                              {Array.from({ length: totalPages }).map((_, i) => (
+                                <div key={i} className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: i === page ? mainColor : 'rgba(255,255,255,0.15)' }} />
+                              ))}
+                            </div>
+                            <button onClick={() => setSeedPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    )
+                  })()}
+                </AnimatePresence>
+              </div>
+
+              {/* Change Plant button */}
               {!running && !done && !treeDead && !seedTrayOpen && inventory.length > 0 && (
                 <button
-                  onClick={() => setSeedTrayOpen(true)}
-                  className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
-                  style={{ color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
+                  onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
+                  className="relative z-20 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
+                  style={{ marginTop: 6, color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   Change Plant
                 </button>
               )}
 
+            </div>
+
+            {/* Bottom controls — pushed down */}
+            <div className="flex flex-col items-center mt-auto">
               {/* Watering can — visible during a session that requires it */}
               {showWaterWidget && !treeDead && (
                 <button
@@ -468,6 +554,23 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    {[15, 45, 90].map(m => (
+                      <button
+                        key={m}
+                        onClick={() => onSetTotal(m * 60)}
+                        className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                        style={{
+                          fontFamily: 'Inter, system-ui, sans-serif',
+                          color: Math.floor(total / 60) === m ? textColor : subtleColor,
+                          backgroundColor: Math.floor(total / 60) === m ? `${mainColor}20` : 'transparent',
+                          border: `1px solid ${Math.floor(total / 60) === m ? `${mainColor}40` : 'transparent'}`,
+                        }}
+                      >
+                        {m}m
+                      </button>
+                    ))}
+                  </div>
                   <div
                     className="relative h-1 rounded-full cursor-grab active:cursor-grabbing mb-1.5"
                     style={{ backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
@@ -508,7 +611,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             </div>
 
             {/* Main button */}
-            <div className="mt-7">
+            <div className="pt-4">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {
@@ -570,6 +673,113 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           </div>
         </motion.div>
       )}
+
     </AnimatePresence>
+
+    <AnimatePresence>
+      {showGuide && (
+        <motion.div
+          key="timer-guide"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowGuide(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={e => e.stopPropagation()}
+            className="w-[340px] max-h-[80vh] overflow-y-auto rounded-2xl border shadow-2xl"
+            style={{
+              background: isDark ? '#141416' : '#fafaf8',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+            }}
+          >
+            <div className="px-6 pt-5 pb-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+              <h2 className="text-[15px] font-bold" style={{ fontFamily: serifFont, color: isDark ? '#e4e4e7' : '#18181b' }}>
+                How the Timer Works
+              </h2>
+              <button
+                onClick={() => setShowGuide(false)}
+                className="w-6 h-6 flex items-center justify-center rounded-full transition-colors"
+                style={{ color: subtleColor }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {[
+                {
+                  icon: '🌱',
+                  title: 'Pick a Seed',
+                  body: 'Before starting, choose a seed from your inventory. Each seed grows into a unique plant as you focus. Rarer seeds produce rarer plants.',
+                },
+                {
+                  icon: '⏱️',
+                  title: 'Set Your Timer',
+                  body: 'Choose Focus (25 min), Short Break (5 min), or Long Break (15 min). You can also adjust the time with the + and − buttons.',
+                },
+                {
+                  icon: '🌳',
+                  title: 'Watch It Grow',
+                  body: 'Your plant grows through 4 stages as the timer progresses. Stay focused — if you leave or give up, the plant dies!',
+                },
+                {
+                  icon: '💧',
+                  title: 'Water Your Plant',
+                  body: 'A water prompt will appear during longer sessions. Tap it before the countdown expires or your plant will wilt. This keeps you engaged.',
+                },
+                {
+                  icon: '☀️',
+                  title: 'Earn Sunshine & XP',
+                  body: 'Completing a session earns you sunshine and XP. Sunshine is used to buy new seeds in the shop. XP levels up your gardener rank.',
+                },
+                {
+                  icon: '🌿',
+                  title: 'Your Orchard',
+                  body: 'Every plant you grow is added to your orchard — a visual garden of all your focus sessions. Mature plants can be harvested for bonus sunshine.',
+                },
+                {
+                  icon: '💎',
+                  title: 'Gems & Recovery',
+                  body: 'If a plant dies, you can spend gems to recover lost sunshine. Gems are also used to remove sites from your focus blocker.',
+                },
+                {
+                  icon: '🚫',
+                  title: 'Focus Blocker',
+                  body: 'Block distracting websites while the timer runs. The Chrome extension enforces blocks automatically. Removing a site costs 50 gems.',
+                },
+              ].map((item, i) => (
+                <div key={i} className="flex gap-3">
+                  <span className="text-[18px] shrink-0 mt-0.5">{item.icon}</span>
+                  <div>
+                    <h3 className="text-[12px] font-bold" style={{ fontFamily: serifFont, color: isDark ? '#d4d4d8' : '#27272a' }}>
+                      {item.title}
+                    </h3>
+                    <p className="text-[11px] leading-relaxed mt-0.5" style={{ fontFamily: serifFont, color: isDark ? '#71717a' : '#a1a1aa' }}>
+                      {item.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => setShowGuide(false)}
+                className="w-full py-2.5 rounded-xl text-[12px] font-bold text-white transition-all hover:brightness-110 active:scale-[0.98]"
+                style={{ background: mainColor, fontFamily: serifFont }}
+              >
+                Got it!
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   )
 })

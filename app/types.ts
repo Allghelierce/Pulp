@@ -68,6 +68,7 @@ export interface Tree {
   stage: number
   progress: number
   plantedAt: number
+  notebookId?: string
 }
 
 export interface SlashMenuState {
