@@ -20,7 +20,7 @@ const SHOWCASE_TREES = [
 
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.' },
-  { label: 'living orchard', desc: 'each notebook has its own orchard. complete sessions to plant trees across hand-painted terrain.' },
+  { label: 'living orchard', desc: 'every notebook grows its own orchard — so you can see exactly where your time went at a glance.' },
   { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.' },
   { label: 'notebooks', desc: 'multiple types — standard, single page, flashcards, cornell, and encrypted vaults.' },
   { label: 'achievements', desc: 'unlock milestones as you write. earn sunshine, gems, and xp to level up.' },
@@ -80,7 +80,7 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   const treeType = DEMO_TREES[treeIdx % DEMO_TREES.length]
 
   useEffect(() => {
-    const t = setTimeout(() => setStarted(true), 2500)
+    const t = setTimeout(() => setStarted(true), 500)
     return () => clearTimeout(t)
   }, [])
 
@@ -693,7 +693,7 @@ export default function PulpLanding() {
       >
         <div style={{ paddingTop: 70 }}>
 
-        <div style={{ height: '4vh' }} />
+        <div style={{ height: '7vh' }} />
         {/* Why not docs */}
         <section style={{ borderTop: '1px solid rgba(15,15,16,0.08)', padding: '80px 40px 40px' }}>
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
@@ -705,7 +705,7 @@ export default function PulpLanding() {
                 docs wasn't built for this.
               </h2>
               <p style={{ fontFamily: serif, fontSize: '0.95rem', lineHeight: 1.7, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
-                google docs is a word processor pretending to be a notebook. it's slow, cluttered, and built for collaboration — not for you sitting in lecture trying to keep up.
+                google docs is a word processor pretending to be a notebook. it's slow, cluttered, and built for collaboration. not for you sitting in lecture trying to keep up.
                 pulp is different. it loads instantly, stays out of your way, and rewards you for staying focused. no toolbar maze, no 2-second load times, no distractions.
               </p>
             </div>
@@ -730,36 +730,6 @@ export default function PulpLanding() {
                       <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#0f0f10', textTransform: 'lowercase', fontWeight: 500 }}>{r}</span>
                     </div>
                   ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" ref={featuresRef} style={{ padding: '48px 40px 100px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 48 }}>
-              -- features
-            </span>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 60px' }}>
-              {FEATURES.map((f, i) => (
-                <div
-                  key={i}
-                  data-idx={i}
-                  style={{
-                    opacity: visibleFeatures.includes(i) ? 1 : 0,
-                    transform: visibleFeatures.includes(i) ? 'translateY(0)' : 'translateY(24px)',
-                    transition: 'opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)',
-                  }}
-                >
-                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 600, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
-                    {f.label}
-                  </h3>
-                  <p style={{ fontFamily: serif, fontSize: '0.92rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
-                    {f.desc}
-                  </p>
                 </div>
               ))}
             </div>
@@ -797,6 +767,36 @@ export default function PulpLanding() {
                 ))}
               </div>
               <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" ref={featuresRef} style={{ padding: '48px 40px 100px' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 48 }}>
+              -- features
+            </span>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 60px' }}>
+              {FEATURES.map((f, i) => (
+                <div
+                  key={i}
+                  data-idx={i}
+                  style={{
+                    opacity: visibleFeatures.includes(i) ? 1 : 0,
+                    transform: visibleFeatures.includes(i) ? 'translateY(0)' : 'translateY(24px)',
+                    transition: 'opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)',
+                  }}
+                >
+                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 600, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
+                    {f.label}
+                  </h3>
+                  <p style={{ fontFamily: serif, fontSize: '0.92rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
+                    {f.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

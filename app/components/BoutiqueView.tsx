@@ -225,8 +225,8 @@ function RarityScene({ rarity }: { rarity: string }) {
               r={0.6 + (i % 2) * 0.3}
               fill={i % 2 === 0 ? '#ea580c' : '#c06030'}
             >
-              <animate attributeName="opacity" values="0;0.5;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
-              <animate attributeName="cy" values={`${70 + (i * 11) % 20}%;${45 + (i * 7) % 15}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0;0.4;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
+              <animate attributeName="cy" values={`${80 + (i * 7) % 15}%;${60 + (i * 5) % 15}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
             </circle>
           ))}
         </svg>
