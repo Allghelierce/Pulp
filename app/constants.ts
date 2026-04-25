@@ -40,7 +40,7 @@ export const TREE_TYPES: Record<string, any> = {
   // CHROMA — 400 sunshine each (~10 hours focus)
   reverie:    { name: 'Reverie Wisp',     color: '#e0c3fc', bg: 'rgba(224,195,252,0.1)', cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'ethereal',  sceneBg: 'linear-gradient(180deg, #14161a 0%, #1a1e22 50%, #20242a 100%)' },
   prism:      { name: 'Prism Crystal',    color: '#67e8f9', bg: 'rgba(103,232,249,0.1)', cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'crystal',   sceneBg: 'linear-gradient(180deg, #181428 0%, #1e1a32 50%, #28203e 100%)' },
-  abyss:      { name: 'Abyss Void',       color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'void',      sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
+  abyss:      { name: 'Abyss Maw',       color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'void',      sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
 
   spoiled:    { name: 'Spoiled',           color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,     currency: 'sunshine', rarity: 'common',    weight: 0,     shape: 'dead',      sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }
 }

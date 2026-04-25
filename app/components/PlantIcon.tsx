@@ -15,7 +15,7 @@ function lighten(hex: string, amount: number) {
   return `rgb(${r},${g},${b})`
 }
 
-export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type: string, size?: number, stage?: number, isSeed?: boolean }) {
+export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.heartwood
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
@@ -2891,7 +2891,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
   return (
     <div style={{ width: size, height: Math.round(size * 1.3), display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {renderGround()}
+        {!hideGround && renderGround()}
         <g style={{
           transformOrigin: '24px 46px',
           animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
