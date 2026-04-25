@@ -325,10 +325,12 @@ export const OrchardView = memo(function OrchardView({
   sunshine, gems, xp, grove, notes,
 }: OrchardViewProps) {
 
-  const [selectedNotebook, setSelectedNotebook] = useState<string | null>(() => {
-    const active = notes.filter(n => !n.archived && !n.deletedAt)
-    return active.length > 0 ? active[0].id : '_unassigned'
-  })
+  const [selectedNotebook, setSelectedNotebook] = useState<string | null>(null)
+  const [plotPage, setPlotPage] = useState(0)
+
+  useEffect(() => {
+    setPlotPage(0)
+  }, [selectedNotebook])
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
 
@@ -352,15 +354,20 @@ export const OrchardView = memo(function OrchardView({
 
   const filteredTrees = useMemo(() => {
     const all = grove.filter(t => t !== null)
-    let list = []
-    if (selectedNotebook === null) list = all
-    else if (selectedNotebook === '_unassigned') list = all.filter(t => !t.notebookId)
-    else list = all.filter(t => t.notebookId === selectedNotebook)
-    
-    return list.length > 200 ? list.slice(-200) : list
+    if (selectedNotebook === null) return all
+    if (selectedNotebook === '_unassigned') return all.filter(t => !t.notebookId)
+    return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
-  const placed = useMemo(() => forestPlacement(filteredTrees), [filteredTrees])
+  const TREES_PER_PLOT = 120
+  const totalPlots = Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT))
+  
+  const currentPlotTrees = useMemo(() => {
+    const start = plotPage * TREES_PER_PLOT
+    return filteredTrees.slice(start, start + TREES_PER_PLOT)
+  }, [filteredTrees, plotPage])
+
+  const placed = useMemo(() => forestPlacement(currentPlotTrees), [currentPlotTrees])
 
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -391,9 +398,11 @@ export const OrchardView = memo(function OrchardView({
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md"
       onClick={onClose}
+      onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
     >
       <div
         onClick={e => e.stopPropagation()}
+        onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
         className="relative flex overflow-hidden"
         style={{
           width: "96vw", maxWidth: 1060, height: "92vh", maxHeight: 780,
@@ -416,7 +425,29 @@ export const OrchardView = memo(function OrchardView({
             </h2>
           </div>
 
-          <div className="pt-2 shrink-0" />
+          {/* All trees button */}
+          <div className="px-2 pt-2 shrink-0">
+            <button
+              onClick={() => setSelectedNotebook(null)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors"
+              style={{
+                background: selectedNotebook === null ? sidebarItemActive : 'transparent',
+                borderLeft: selectedNotebook === null ? '2px solid #ea580c' : '2px solid transparent',
+              }}
+              onMouseEnter={e => { if (selectedNotebook !== null) e.currentTarget.style.background = sidebarItemHover }}
+              onMouseLeave={e => { if (selectedNotebook !== null) e.currentTarget.style.background = 'transparent' }}
+            >
+              <span className="text-[13px]">🌳</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-[11px] font-semibold block truncate" style={{
+                  color: selectedNotebook === null ? '#ea580c' : textPrimary,
+                }}>All Trees</span>
+              </div>
+              <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: textMuted }}>
+                {totalTrees}
+              </span>
+            </button>
+          </div>
 
           {/* Notebook list */}
           <div className="flex-1 overflow-y-auto px-2 py-1.5" style={{ scrollbarWidth: 'thin' }}>
@@ -520,7 +551,8 @@ export const OrchardView = memo(function OrchardView({
           }}>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold" style={{ color: textPrimary }}>
-                {selectedNotebook === '_unassigned' ? 'Unassigned' :
+                {selectedNotebook === null ? 'All Trees' :
+                 selectedNotebook === '_unassigned' ? 'Unassigned' :
                  activeNotes.find(n => n.id === selectedNotebook)?.subject || 'Untitled'}
               </span>
               <span className="text-[10px] font-medium tabular-nums" style={{ color: textMuted }}>
@@ -528,6 +560,19 @@ export const OrchardView = memo(function OrchardView({
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {totalPlots > 1 && (
+                <div className="flex items-center gap-2 mr-4 rounded-lg px-2 py-1" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)' }}>
+                  <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <span className="text-[10px] tabular-nums font-bold uppercase tracking-widest" style={{ color: textSecondary }}>
+                    Plot {plotPage + 1} <span className="opacity-50">/ {totalPlots}</span>
+                  </span>
+                  <button onClick={() => setPlotPage(p => Math.min(totalPlots - 1, p + 1))} disabled={plotPage === totalPlots - 1} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                </div>
+              )}
               {RARITY_ORDER.filter(r => rarityCounts[r] && r !== 'common').map(r => (
                 <span key={r} className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RARITY_META[r].color }} />
@@ -561,7 +606,8 @@ export const OrchardView = memo(function OrchardView({
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
                     <span className="text-[32px]">🌱</span>
                     <p className="text-[12px]" style={{ color: textMuted }}>
-                      {selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
+                      {selectedNotebook === null ? 'Your orchard is empty.' :
+                       selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                        'No trees grown for this notebook yet.'}
                     </p>
                     <p className="text-[10px]" style={{ color: textMuted }}>
