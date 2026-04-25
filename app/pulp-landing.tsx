@@ -76,6 +76,7 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   const [elapsed, setElapsed] = useState(0)
   const [started, setStarted] = useState(false)
   const [treeIdx, setTreeIdx] = useState(0)
+  const [showFruit, setShowFruit] = useState(false)
   const treeType = DEMO_TREES[treeIdx % DEMO_TREES.length]
 
   useEffect(() => {
@@ -86,6 +87,15 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   useEffect(() => {
     if (!started) return
     if (elapsed >= total) {
+      if (treeType === 'tangerine') {
+        setShowFruit(true)
+        const t = setTimeout(() => {
+          setShowFruit(false)
+          setTreeIdx(i => i + 1)
+          setElapsed(0)
+        }, 2000)
+        return () => clearTimeout(t)
+      }
       const t = setTimeout(() => {
         setTreeIdx(i => i + 1)
         setElapsed(0)
@@ -112,103 +122,128 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   const borderColor = "rgba(255,255,255,0.04)"
   const done = elapsed >= total
 
+  const boxW = 250
+  const boxH = 480
+  const perim = 2 * (boxW + boxH)
+  const dashOffset = perim - perim * progress
+
   return (
     <div style={{
-      width: 250, borderRadius: 24, overflow: 'hidden',
-      background: 'rgba(0,0,0,0.15)',
-      backdropFilter: 'blur(24px)',
-      border: `1px solid ${borderColor}`,
-      boxShadow: '0 30px 80px -20px rgba(0,0,0,0.25)',
+      width: boxW, position: 'relative',
       fontFamily: serif,
       userSelect: 'none',
     }}>
-      {/* Header */}
+      {/* Border trace SVG */}
+      <svg
+        style={{ position: 'absolute', inset: -1, width: boxW + 2, height: boxH + 2, pointerEvents: 'none', zIndex: 1 }}
+        viewBox={`-1 -1 ${boxW + 2} ${boxH + 2}`}
+      >
+        <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
+          fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
+        <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
+          fill="none" stroke={mainColor} strokeWidth="2"
+          strokeDasharray={perim} strokeDashoffset={dashOffset}
+          style={{ transition: 'stroke-dashoffset 1s linear' }} />
+      </svg>
+
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '8px 12px',
-        borderBottom: `1px solid ${borderColor}`,
-        fontFamily: 'Inter, system-ui, sans-serif',
+        background: 'rgba(0,0,0,0.02)', borderRadius: 4, overflow: 'hidden',
+        height: boxH,
       }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={dimColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="13" r="8" />
-          <path d="M12 9v4l2 2" />
-          <path d="M9 2h6" />
-        </svg>
-        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: dimColor }}>
-          Focus Timer
-        </span>
-      </div>
-
-      {/* Body */}
-      <div style={{ padding: '28px 16px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {/* Time */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            fontFamily: serif, fontWeight: 500, fontSize: 44, lineHeight: 1,
-            color: started ? mainColor : textColor,
-            fontVariantNumeric: 'tabular-nums',
-          }}>
-            {String(mins).padStart(2, '0')}
-            <span style={{ opacity: 0.55 }}>:{String(secs).padStart(2, '0')}</span>
-          </div>
-          <p style={{
-            fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', marginTop: 8,
-            color: done ? '#22c55e' : subtleColor,
-            fontFamily: 'Inter, system-ui, sans-serif',
-          }}>
-            {done ? 'complete' : started ? 'in session' : 'ready'}
-          </p>
-        </div>
-
-        {/* Tree scene */}
-        <div style={{ position: 'relative', width: '100%', height: 260 }}>
-          {/* Hill */}
-          <div style={{ position: 'absolute', bottom: 4, left: 0, width: '100%', zIndex: 0 }}>
-            <svg width="100%" viewBox="0 0 200 40" preserveAspectRatio="none" style={{ height: 40 }}>
-              <defs>
-                <linearGradient id="dh-hill" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#2a3a22" />
-                  <stop offset="100%" stopColor="#1a2416" />
-                </linearGradient>
-                <linearGradient id="dh-moss" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3a4a30" />
-                  <stop offset="100%" stopColor="#2a3620" />
-                </linearGradient>
-              </defs>
-              <ellipse cx="100" cy="22" rx="95" ry="18" fill="url(#dh-hill)" />
-              <ellipse cx="80" cy="20" rx="50" ry="10" fill="url(#dh-moss)" opacity="0.6" />
-              <ellipse cx="130" cy="21" rx="35" ry="8" fill="url(#dh-moss)" opacity="0.4" />
-              {[25, 55, 80, 110, 140, 165].map((x, i) => (
-                <g key={i} opacity={0.3}>
-                  <path d={`M${x},${14 + (i % 2) * 3} q${-1.5},${-3} ${-0.5},${-4.5} M${x},${14 + (i % 2) * 3} q${1},${-2.5} ${2},${-4}`} stroke="#5a7a48" strokeWidth="0.8" fill="none" />
-                </g>
-              ))}
-            </svg>
+        {/* Body */}
+        <div style={{ padding: '36px 16px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+          {/* Time */}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{
+              fontFamily: serif, fontWeight: 500, fontSize: 44, lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              <span style={{ color: started ? mainColor : textColor }}>{String(mins).padStart(2, '0')}</span>
+              <span style={{ color: '#a1a1aa' }}>:{String(secs).padStart(2, '0')}</span>
+            </div>
+            <p style={{
+              fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', marginTop: 8,
+              color: done ? '#22c55e' : subtleColor,
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}>
+              {done ? 'complete' : started ? 'in session' : 'ready'}
+            </p>
           </div>
 
-          {/* Plant */}
-          <div style={{
-            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-            bottom: stage === 0 ? 18 : 30, zIndex: 10,
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-          }}>
-            {!started ? (
-              <PlantIcon type={treeType} size={plantSize} stage={4} />
-            ) : stage === 0 ? (
-              <PlantIcon type={treeType} size={plantSize} isSeed />
-            ) : (
-              <PlantIcon type={treeType} size={plantSize} stage={stage - 1} />
+          {/* Tree scene */}
+          <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+            {/* Hill */}
+            <div style={{ position: 'absolute', bottom: 4, left: 0, width: '100%', zIndex: 0 }}>
+              <svg width="100%" viewBox="0 0 200 40" preserveAspectRatio="none" style={{ height: 40 }}>
+                <defs>
+                  <linearGradient id="dh-hill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#2a3a22" />
+                    <stop offset="100%" stopColor="#1a2416" />
+                  </linearGradient>
+                  <linearGradient id="dh-moss" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3a4a30" />
+                    <stop offset="100%" stopColor="#2a3620" />
+                  </linearGradient>
+                </defs>
+                <ellipse cx="100" cy="22" rx="95" ry="18" fill="url(#dh-hill)" />
+                <ellipse cx="80" cy="20" rx="50" ry="10" fill="url(#dh-moss)" opacity="0.6" />
+                <ellipse cx="130" cy="21" rx="35" ry="8" fill="url(#dh-moss)" opacity="0.4" />
+                {[25, 55, 80, 110, 140, 165].map((x, i) => (
+                  <g key={i} opacity={0.3}>
+                    <path d={`M${x},${14 + (i % 2) * 3} q${-1.5},${-3} ${-0.5},${-4.5} M${x},${14 + (i % 2) * 3} q${1},${-2.5} ${2},${-4}`} stroke="#5a7a48" strokeWidth="0.8" fill="none" />
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            {/* Plant */}
+            <div style={{
+              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+              bottom: stage === 0 ? 18 : 30, zIndex: 10,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+            }}>
+              {!started ? (
+                <PlantIcon type={treeType} size={plantSize} stage={4} />
+              ) : stage === 0 ? (
+                <PlantIcon type={treeType} size={plantSize} isSeed />
+              ) : (
+                <PlantIcon type={treeType} size={plantSize} stage={stage - 1} />
+              )}
+            {/* Falling orange — matches the fruit at SVG (35,28) in the mature tangerine */}
+            {showFruit && (
+              <div style={{
+                position: 'absolute', zIndex: 20,
+                left: '50%', bottom: 30,
+                width: plantSize, height: Math.round(plantSize * 1.3),
+                marginLeft: -plantSize / 2,
+                pointerEvents: 'none',
+              }}>
+                <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" style={{ overflow: 'visible' }}>
+                  <g>
+                    <circle cx="35" cy="28" r="1.1" fill="#ea580c" />
+                    <animateTransform attributeName="transform" type="translate" values="0,0; 2,22" dur="1s" fill="freeze" calcMode="spline" keySplines="0.4 0 1 1" />
+                    <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="1s" fill="freeze" />
+                  </g>
+                </svg>
+              </div>
             )}
+            </div>
           </div>
-        </div>
 
-        {/* Progress bar */}
-        <div style={{ width: '100%', height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', marginTop: 16 }}>
-          <div style={{
-            height: '100%', borderRadius: 2, background: mainColor,
-            width: `${progress * 100}%`,
-            transition: 'width 1s linear',
-          }} />
+          <span style={{
+            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 9, fontWeight: 500,
+            textTransform: 'uppercase', letterSpacing: '0.15em',
+            marginTop: 16, cursor: 'default',
+            color: done ? '#22c55e' : 'transparent',
+            backgroundImage: done ? 'none' : 'linear-gradient(90deg, #bdb9b2 0%, #bdb9b2 40%, #fff 50%, #bdb9b2 60%, #bdb9b2 100%)',
+            backgroundSize: '200% 100%',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            animation: done ? 'none' : 'shimmer 2s ease-in-out infinite',
+          }}>
+            {done ? 'complete' : 'in progress'}
+            <style>{`@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }`}</style>
+          </span>
         </div>
       </div>
     </div>
@@ -350,8 +385,9 @@ export default function PulpLanding() {
       }}>
         <span
           onClick={() => { setActiveSlide(0); if (slide2Ref.current) slide2Ref.current.scrollTop = 0 }}
-          style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: accent, letterSpacing: '-0.02em', cursor: 'pointer' }}
+          style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
         >
+          <img src="/pulp_logo.svg" alt="pulp" style={{ width: 22, height: 22 }} />
           pulp
         </span>
         <div style={{
@@ -361,8 +397,6 @@ export default function PulpLanding() {
           transition: 'opacity 0.4s ease 0.15s, transform 0.4s ease 0.15s',
           pointerEvents: activeSlide === 1 ? 'auto' : 'none',
         }}>
-          <a onClick={() => setActiveSlide(1)} style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer' }}>features</a>
-          <a onClick={() => setActiveSlide(1)} style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer' }}>collection</a>
           <a href="mailto:ctvillegas@ucsd.edu" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase' }}>reach out</a>
           <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase' }}>log in</a>
         </div>
@@ -421,6 +455,7 @@ export default function PulpLanding() {
                   }}>
                     <li>focus timer</li>
                     <li>site blocker</li>
+                    <li>hyperproductive shortcut setup</li>
                     <li>an orchard that grows as you write</li>
                   </ul>
 
@@ -476,9 +511,9 @@ export default function PulpLanding() {
       >
         <div style={{ paddingTop: 70 }}>
 
-        <div style={{ height: '30vh' }} />
+        <div style={{ height: '4vh' }} />
         {/* Why not docs */}
-        <section style={{ borderTop: '1px solid rgba(15,15,16,0.08)', padding: '80px 40px' }}>
+        <section style={{ borderTop: '1px solid rgba(15,15,16,0.08)', padding: '80px 40px 40px' }}>
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
             <div>
               <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 16 }}>
@@ -520,7 +555,7 @@ export default function PulpLanding() {
         </section>
 
         {/* Features */}
-        <section id="features" ref={featuresRef} style={{ padding: '80px 40px 100px' }}>
+        <section id="features" ref={featuresRef} style={{ padding: '48px 40px 100px' }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 48 }}>
               -- features
@@ -562,21 +597,24 @@ export default function PulpLanding() {
               each hand-drawn and earned through focus.
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 32, flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 8 }}>
-              {SHOWCASE_TREES.map((t, i) => (
-                <motion.div
-                  key={t.type}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, root: slide2Ref }}
-                  transition={{ delay: i * 0.05, duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}
-                >
-                  <PlantIcon type={t.type} size={56} stage={3} hideGround />
-                  <span style={{ fontFamily: serif, fontSize: '0.78rem', color: '#0f0f10', textTransform: 'lowercase' }}>{t.name}</span>
-                  <span style={{ fontFamily: mono, fontSize: '0.55rem', letterSpacing: '0.12em', color: RARITY_COLOR[t.rarity] || '#a1a1aa', textTransform: 'lowercase' }}>{t.rarity}</span>
-                </motion.div>
-              ))}
+            <div style={{ overflow: 'hidden', width: '100%', maskImage: 'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)' }}>
+              <div style={{
+                display: 'flex', alignItems: 'flex-end', gap: 32, width: 'max-content',
+                animation: 'conveyorScroll 60s linear infinite',
+                willChange: 'transform',
+              }}>
+                {[...SHOWCASE_TREES, ...SHOWCASE_TREES].map((t, i) => (
+                  <div
+                    key={`${t.type}-${i}`}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                  >
+                    <PlantIcon type={t.type} size={56} stage={3} hideGround />
+                    <span style={{ fontFamily: serif, fontSize: '0.78rem', color: '#0f0f10', textTransform: 'lowercase' }}>{t.name}</span>
+                    <span style={{ fontFamily: mono, fontSize: '0.55rem', letterSpacing: '0.12em', color: RARITY_COLOR[t.rarity] || '#a1a1aa', textTransform: 'lowercase' }}>{t.rarity}</span>
+                  </div>
+                ))}
+              </div>
+              <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
             </div>
           </div>
         </section>
