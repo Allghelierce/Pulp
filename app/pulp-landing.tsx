@@ -250,13 +250,111 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   )
 }
 
+function ReachOutModal({ type, onClose }: { type: string, onClose: () => void }) {
+  const [text, setText] = useState('')
+  const [sent, setSent] = useState(false)
+  const mono = '"JetBrains Mono", ui-monospace, monospace'
+  const serif = '"EB Garamond", Georgia, serif'
+  const accent = '#ea580c'
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        background: 'rgba(0,0,0,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: 420, borderRadius: 12, background: '#fff',
+          border: '1px solid rgba(15,15,16,0.08)',
+          boxShadow: '0 20px 60px -12px rgba(0,0,0,0.2)',
+          padding: 32,
+          animation: 'modalIn 0.25s ease',
+        }}
+      >
+        <style>{`@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(8px) } to { opacity: 1; transform: scale(1) translateY(0) } }`}</style>
+        {sent ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <p style={{ fontFamily: serif, fontSize: '1.3rem', color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
+              thank you for your support.
+            </p>
+            <p style={{ fontFamily: serif, fontSize: '0.9rem', color: '#6b6864', textTransform: 'lowercase', margin: '0 0 24px 0' }}>
+              we'll get back to you as soon as we can.
+            </p>
+            <a
+              onClick={onClose}
+              style={{
+                fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
+                padding: '8px 20px', borderRadius: 6, cursor: 'pointer',
+                background: accent, color: '#fff', textDecoration: 'none', textTransform: 'lowercase',
+              }}
+            >close</a>
+          </div>
+        ) : (
+          <>
+            <h3 style={{ fontFamily: serif, fontSize: '1.2rem', fontWeight: 500, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 4px 0' }}>
+              {type}
+            </h3>
+            <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#a1a1aa', textTransform: 'lowercase', margin: '0 0 20px 0' }}>
+              i read everything.
+            </p>
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="write your message here..."
+              autoFocus
+              style={{
+                width: '100%', height: 140, borderRadius: 8, border: '1px solid rgba(15,15,16,0.1)',
+                padding: 14, fontFamily: serif, fontSize: '0.92rem', color: '#0f0f10',
+                resize: 'vertical', outline: 'none',
+                background: 'rgba(0,0,0,0.02)',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = accent)}
+              onBlur={e => (e.currentTarget.style.borderColor = 'rgba(15,15,16,0.1)')}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+              <a
+                onClick={onClose}
+                style={{
+                  fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
+                  padding: '8px 16px', borderRadius: 6, cursor: 'pointer',
+                  color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase',
+                }}
+              >cancel</a>
+              <a
+                onClick={() => {
+                  if (!text.trim()) return
+                  const subject = encodeURIComponent(`${type} — Pulp`)
+                  const body = encodeURIComponent(text)
+                  window.open(`mailto:pulpsupport@gmail.com?subject=${subject}&body=${body}`, '_self')
+                  setSent(true)
+                }}
+                style={{
+                  fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
+                  padding: '8px 20px', borderRadius: 6, cursor: 'pointer',
+                  background: text.trim() ? accent : '#e5e5e5',
+                  color: text.trim() ? '#fff' : '#a1a1aa',
+                  textDecoration: 'none', textTransform: 'lowercase',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+              >send</a>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function PulpLanding() {
   const [heroDone, setHeroDone] = useState(false)
   const [activeSlide, setActiveSlide] = useState(0)
   const [reachOutOpen, setReachOutOpen] = useState(false)
   const [modalType, setModalType] = useState<string | null>(null)
-  const [modalText, setModalText] = useState('')
-  const [modalSent, setModalSent] = useState(false)
 
   useEffect(() => {
     if (!reachOutOpen) return
@@ -438,8 +536,6 @@ export default function PulpLanding() {
                       window.open('https://www.cesarvillegas.me', '_blank')
                     } else {
                       setModalType(item.label)
-                      setModalText('')
-                      setModalSent(false)
                     }
                   }}
                   style={{
@@ -717,98 +813,7 @@ export default function PulpLanding() {
         </div>
       </div>
 
-      {/* Reach out modal */}
-      {modalType && (
-        <div
-          onClick={() => setModalType(null)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: 420, borderRadius: 12, background: '#fff',
-              border: '1px solid rgba(15,15,16,0.08)',
-              boxShadow: '0 20px 60px -12px rgba(0,0,0,0.2)',
-              padding: 32,
-              animation: 'modalIn 0.25s ease',
-            }}
-          >
-            <style>{`@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(8px) } to { opacity: 1; transform: scale(1) translateY(0) } }`}</style>
-            {modalSent ? (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <p style={{ fontFamily: serif, fontSize: '1.3rem', color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
-                  thank you for your support.
-                </p>
-                <p style={{ fontFamily: serif, fontSize: '0.9rem', color: '#6b6864', textTransform: 'lowercase', margin: '0 0 24px 0' }}>
-                  we'll get back to you as soon as we can.
-                </p>
-                <a
-                  onClick={() => setModalType(null)}
-                  style={{
-                    fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
-                    padding: '8px 20px', borderRadius: 6, cursor: 'pointer',
-                    background: accent, color: '#fff', textDecoration: 'none', textTransform: 'lowercase',
-                  }}
-                >close</a>
-              </div>
-            ) : (
-              <>
-                <h3 style={{ fontFamily: serif, fontSize: '1.2rem', fontWeight: 500, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 4px 0' }}>
-                  {modalType}
-                </h3>
-                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#a1a1aa', textTransform: 'lowercase', margin: '0 0 20px 0' }}>
-                  i read everything.
-                </p>
-                <textarea
-                  value={modalText}
-                  onChange={e => setModalText(e.target.value)}
-                  placeholder="write your message here..."
-                  style={{
-                    width: '100%', height: 140, borderRadius: 8, border: '1px solid rgba(15,15,16,0.1)',
-                    padding: 14, fontFamily: serif, fontSize: '0.92rem', color: '#0f0f10',
-                    resize: 'vertical', outline: 'none',
-                    background: 'rgba(0,0,0,0.02)',
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = accent)}
-                  onBlur={e => (e.currentTarget.style.borderColor = 'rgba(15,15,16,0.1)')}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
-                  <a
-                    onClick={() => setModalType(null)}
-                    style={{
-                      fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
-                      padding: '8px 16px', borderRadius: 6, cursor: 'pointer',
-                      color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase',
-                    }}
-                  >cancel</a>
-                  <a
-                    onClick={() => {
-                      if (!modalText.trim()) return
-                      const subject = encodeURIComponent(`${modalType} — Pulp`)
-                      const body = encodeURIComponent(modalText)
-                      window.open(`mailto:pulpsupport@gmail.com?subject=${subject}&body=${body}`, '_self')
-                      setModalSent(true)
-                    }}
-                    style={{
-                      fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
-                      padding: '8px 20px', borderRadius: 6, cursor: 'pointer',
-                      background: modalText.trim() ? accent : '#e5e5e5',
-                      color: modalText.trim() ? '#fff' : '#a1a1aa',
-                      textDecoration: 'none', textTransform: 'lowercase',
-                      transition: 'background 0.2s, color 0.2s',
-                    }}
-                  >send</a>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {modalType && <ReachOutModal type={modalType} onClose={() => setModalType(null)} />}
     </div>
   )
 }
