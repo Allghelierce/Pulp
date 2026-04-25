@@ -1049,15 +1049,28 @@ export default function NoteApp() {
       const allSeeds = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
       setInventory(allSeeds)
       if (data.grove) {
-        // TEST: populate orchard with sample plants
-        const testTypes = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
+        // TEST: populate orchard with 150 realistic trees
+        const pool: [string, number][] = [
+          ['tangerine', 22], ['heartwood', 14], ['thicket', 12], ['penny', 10], ['quill', 10], ['pebble', 8],
+          ['ember', 9], ['sentinel', 7], ['manuscript', 6], ['whisper', 6], ['dusk', 5],
+          ['parlor', 5], ['goldleaf', 4], ['spine', 4], ['inkcap', 3],
+          ['monolith', 3], ['wisteria', 3], ['hanami', 3],
+          ['odyssey', 2], ['mythos', 2], ['patience', 2],
+          ['thornscript', 2], ['epoch', 1], ['fossil', 1],
+          ['reverie', 2], ['prism', 2], ['abyss', 1],
+        ]
+        const testTypes: string[] = []
+        for (const [type, count] of pool) for (let i = 0; i < count; i++) testTypes.push(type)
         const now = Date.now()
+        const savedNotes = localStorage.getItem('pulp-notes')
+        const nbIds = savedNotes ? JSON.parse(savedNotes).filter((n: any) => !n.archived && !n.deletedAt).map((n: any) => n.id) : []
         const testGrove = testTypes.map((type, i) => ({
           id: 9000 + i,
           type,
-          stage: i % 5,
-          progress: (i % 5) * 25,
-          plantedAt: now - (i * 3600000),
+          stage: 4,
+          progress: 100,
+          plantedAt: now - ((150 - i) * 2 * 3600000),
+          notebookId: nbIds.length > 0 ? nbIds[i % nbIds.length] : undefined,
         }))
         setGrove([...data.grove, ...testGrove])
       }

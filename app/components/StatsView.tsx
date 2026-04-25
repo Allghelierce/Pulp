@@ -203,13 +203,13 @@ export const StatsView = memo(function StatsView({
                 <LevelIcon level={lvl.level} size={18} />
               </div>
               <div>
-                <h2 className="text-[13px] font-semibold tracking-tight" style={{ color: textPrimary }}>{lvl.name}</h2>
-                <p className="text-[9px] mt-0.5" style={{ color: textSecondary }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
+                <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: textPrimary, fontFamily: '"EB Garamond", Georgia, serif' }}>{lvl.name}</h2>
+                <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: '"EB Garamond", Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg transition-colors"
+              className="p-1.5 rounded-full transition-colors"
               style={{ color: textMuted }}
               onMouseEnter={e => e.currentTarget.style.color = textPrimary}
               onMouseLeave={e => e.currentTarget.style.color = textMuted}
@@ -282,7 +282,7 @@ export const StatsView = memo(function StatsView({
           {/* Consistency Heatmap */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Consistency</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", Georgia, serif' }}>Consistency</span>
               <span style={{ fontSize: 9, color: textMuted }}>Past year</span>
             </div>
 
@@ -339,7 +339,7 @@ export const StatsView = memo(function StatsView({
           {/* Activity Chart */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase" }}>Activity</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", Georgia, serif' }}>Activity</span>
               <div style={{ display: "flex", gap: 1 }}>
                 {(["day", "week", "month"] as const).map(r => (
                   <button

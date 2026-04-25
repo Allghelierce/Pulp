@@ -232,10 +232,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className={`text-[15px] font-semibold tracking-tight ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>
+            <h2 className="text-[15px] font-semibold tracking-tight" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-            <p className={`text-[12px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
               {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
@@ -890,6 +890,109 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 </div>
               </div>
             )}
+
+            {activeTab === "help" && (<>
+              {/* Welcome */}
+              <SettingSection title="Welcome to Pulp" isDark={isDark}>
+                <div className="px-5 py-4 space-y-3">
+                  <p className={`text-[12.5px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                    Pulp is a focused writing app designed to make the act of writing feel rewarding. Every feature is built around one idea: the more you write, the more your world grows.
+                  </p>
+                </div>
+              </SettingSection>
+
+              <SettingSection title="Getting Started" isDark={isDark}>
+                <div className="px-5 py-4 space-y-4">
+                  {[
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, title: "Notebooks & Pages", desc: "Create notebooks from the sidebar. Each notebook holds multiple pages you can flip through. Click anywhere on a page to create a text box and start writing." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>, title: "Sunshine & Gems", desc: "Sunshine is earned by writing and completing focus sessions. Gems are a premium currency for unlocking cosmetics, rare seeds, and accent colors. You can purchase gems in the gem store." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. Removing a site costs 50 gems to discourage impulsive unblocking. Install the Chrome extension for enforcement." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-3">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
+                        <p className={`text-[11.5px] leading-relaxed mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SettingSection>
+
+              <SettingSection title="Your Orchard" isDark={isDark}>
+                <div className="px-5 py-4 space-y-4">
+                  {[
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, title: "Growing Plants", desc: "Every completed focus session grows a plant. The plant type depends on the seed you select before starting. Plants are automatically assigned to whichever notebook you had open." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, true rare, premium, chroma, and exotic. Rarer seeds grow into unique plants. Find seeds in the boutique or earn them through achievements." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all sunshine earned that session." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-3">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
+                        {item.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
+                        <p className={`text-[11.5px] leading-relaxed mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SettingSection>
+
+              <SettingSection title="Keyboard Shortcuts" isDark={isDark}>
+                <div className="px-5 py-4">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                    {[
+                      ["Cmd + Opt + T", "Toggle focus timer"],
+                      ["Cmd + A", "Select all text boxes"],
+                      ["Cmd + Z", "Undo"],
+                      ["Cmd + Shift + Z", "Redo"],
+                      ["Arrow keys", "Nudge selected boxes"],
+                      ["Opt + Arrow", "Snap box to edge"],
+                      ["Delete / Backspace", "Delete selected box"],
+                      ["/", "Open slash commands"],
+                      ["Escape", "Close modals & panels"],
+                    ].map(([key, desc], i) => (
+                      <div key={i} className="flex items-center justify-between py-1.5">
+                        <span className={`text-[11px] ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{desc}</span>
+                        <kbd className={`text-[9.5px] font-mono px-1.5 py-0.5 rounded ${isDark ? "bg-zinc-800 text-zinc-400 border-zinc-700" : "bg-zinc-100 text-zinc-600 border-zinc-200"} border`}>{key}</kbd>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </SettingSection>
+
+              <SettingSection title="Contact & Support" isDark={isDark}>
+                <div className="px-5 py-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>General Support</p>
+                      <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[#ea580c] hover:underline">pulpsupport@gmail.com</a>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Report a Bug</p>
+                      <p className={`text-[11.5px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
+                        Found something broken? Email us at{" "}
+                        <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[#ea580c] hover:underline">pulpsupport@gmail.com</a>
+                        {" "}with a description of the issue and steps to reproduce it. Screenshots help!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SettingSection>
+            </>)}
 
           </div>
           <div className={`px-8 py-3.5 border-t ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0 flex items-center justify-between`}>

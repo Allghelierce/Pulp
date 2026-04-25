@@ -63,7 +63,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
               </div>
               <button
                 onClick={onClose}
-                className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
                 style={{ color: '#5a5650' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#dcd8d0'}
                 onMouseLeave={e => e.currentTarget.style.color = '#5a5650'}

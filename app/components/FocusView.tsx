@@ -120,8 +120,8 @@ export const FocusView = memo(function FocusView({
               }}
             />
             <div>
-              <h2 className="text-[17px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? "#e4e4e7" : "#18181b" }}>Focus Blocker</h2>
-              <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>Sites blocked while your timer is running</p>
+              <h2 className="text-[15px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? '#dcd8d0' : '#2a2620' }}>Focus Blocker</h2>
+              <p className="text-[11px] mt-0.5" style={{ fontFamily: font, color: isDark ? '#5a5650' : '#a8a4a0' }}>Sites blocked while your timer is running</p>
             </div>
           </div>
           <button

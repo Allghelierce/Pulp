@@ -584,7 +584,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 width: '100%', maxWidth: 520, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
                 height: 320,
-                background: ['premium', 'chroma', 'extinct'].includes(previewInfo.rarity) ? 'none' : (previewInfo.sceneBg || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+                background: previewInfo.sceneBg || RARITY_BG[previewInfo.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
               }}>
                 <RarityScene rarity={previewInfo.rarity} />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
@@ -887,7 +887,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               height: 180, position: 'relative',
-                              background: ['premium', 'chroma', 'extinct'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+                              background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
                             }}>
                               <RarityScene rarity={t.rarity} />
                               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
@@ -955,7 +955,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
         height: featured ? 100 : 95,
-        background: ['premium', 'chroma', 'extinct'].includes(t.rarity) ? 'none' : (RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)')),
+        background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
         position: 'relative',
       }}>
         <RarityScene rarity={t.rarity} />

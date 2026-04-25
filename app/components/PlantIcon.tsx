@@ -2889,8 +2889,8 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false }: { type
   }
 
   return (
-    <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div style={{ width: size, height: Math.round(size * 1.3), display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         {renderGround()}
         <g style={{
           transformOrigin: '24px 46px',
