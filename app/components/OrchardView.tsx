@@ -327,10 +327,21 @@ export const OrchardView = memo(function OrchardView({
 
   const [selectedNotebook, setSelectedNotebook] = useState<string | null>(null)
   const [plotPage, setPlotPage] = useState(0)
+  const [renderTrees, setRenderTrees] = useState(false)
 
   useEffect(() => {
     setPlotPage(0)
   }, [selectedNotebook])
+  
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => setRenderTrees(true), 150)
+      return () => clearTimeout(timer)
+    } else {
+      setRenderTrees(false)
+    }
+  }, [isOpen])
+
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
 
@@ -602,7 +613,11 @@ export const OrchardView = memo(function OrchardView({
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
               >
-                {filteredTrees.length === 0 ? (
+                {!renderTrees ? (
+                  <div className="h-full flex items-center justify-center relative z-10">
+                    <span className="text-[32px] animate-pulse">🌿</span>
+                  </div>
+                ) : filteredTrees.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
                     <span className="text-[32px]">🌱</span>
                     <p className="text-[12px]" style={{ color: textMuted }}>
