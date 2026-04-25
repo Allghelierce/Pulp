@@ -912,7 +912,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </div>
                   </div>
                 )
-              })}
+              })
               )}
             </div>
           )}
