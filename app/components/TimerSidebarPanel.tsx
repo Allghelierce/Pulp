@@ -43,6 +43,9 @@ interface TimerSidebarPanelProps {
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
+  notes: any[]
+  selectedNotebookId: string | null
+  onSelectNotebook: (id: string | null) => void
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -158,6 +161,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   lostSunshine, gems, onRecoverSunshine,
   inventory, selectedSeed, onSelectSeed,
+  notes, selectedNotebookId, onSelectNotebook,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -470,15 +474,42 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </AnimatePresence>
               </div>
 
-              {/* Change Plant button */}
-              {!running && !done && !treeDead && !seedTrayOpen && inventory.length > 0 && (
-                <button
-                  onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
-                  className="relative z-20 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
-                  style={{ marginTop: 6, color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
-                >
-                  Change Plant
-                </button>
+              {/* Change Plant and Notebook Selector */}
+              {!running && !done && !treeDead && !seedTrayOpen && (
+                <div className="flex flex-col items-center gap-3 mt-3 relative z-20">
+                  {inventory.length > 0 && (
+                    <button
+                      onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
+                      className="text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
+                      style={{ color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
+                    >
+                      Change Plant
+                    </button>
+                  )}
+                  
+                  {notes.filter(n => !n.archived && !n.deletedAt).length > 0 && (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-[8px] uppercase tracking-widest font-bold opacity-50">Plant in:</span>
+                      <div className="relative">
+                        <select
+                          value={selectedNotebookId || ''}
+                          onChange={e => onSelectNotebook(e.target.value)}
+                          className="text-[10px] font-semibold uppercase tracking-[0.05em] bg-transparent border rounded px-2 py-1 pr-6 outline-none appearance-none text-center cursor-pointer max-w-[140px] truncate"
+                          style={{ color: dimColor, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
+                        >
+                          {notes.filter(n => !n.archived && !n.deletedAt).map(n => (
+                            <option key={n.id} value={n.id} className={isDark ? 'bg-zinc-900' : 'bg-white'}>
+                              {n.subject || 'Untitled'}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
             </div>

@@ -3422,6 +3422,7 @@ export default function NoteApp() {
         claimAchievementRef={claimAchievementRef}
         inventory={inventory}
         activeTabId={activeTabId}
+        notes={notes}
       />
 
       {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

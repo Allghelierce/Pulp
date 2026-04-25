@@ -26,6 +26,7 @@ interface VitalitySystemProps {
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
   inventory: string[]
   activeTabId: string | null
+  notes: any[]
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -33,7 +34,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sunshine, gems, xp, grove, achievements, setSunshine, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory, activeTabId,
+  inventory, activeTabId, notes,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session) ───
@@ -48,6 +49,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   // ─── Timer State ───
   const [timerElapsed, setTimerElapsed] = useState(0)
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(activeTabId || (notes.length > 0 ? notes[0].id : null))
   const [timerTotal, setTimerTotal] = useState(25 * 60)
   const [timerRunning, setTimerRunning] = useState(false)
   const [timerDone, setTimerDone] = useState(false)
@@ -55,6 +57,14 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [waterDeadline, setWaterDeadline] = useState<number | null>(null)
   const [treeDead, setTreeDead] = useState(false)
   const [selectedSeed, setSelectedSeed] = useState<string | null>(null)
+
+  // Remove unassigned trees (admin trees) globally
+  useEffect(() => {
+    setGrove(g => {
+      const filtered = g.filter(t => t.notebookId && t.notebookId !== '_unassigned')
+      return filtered.length !== g.length ? filtered : g
+    })
+  }, [setGrove])
 
   const WATER_INTERVAL_MS = 8 * 60 * 1000 // 8 minutes (so 10-min sessions need watering at 8 min)
   const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
@@ -201,7 +211,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     const treeType = selectedSeed || 'tangerine'
     setGrove(g => {
-      const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: activeTabId ?? undefined }]
+      const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }]
       checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
       checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
       return next
@@ -318,6 +328,9 @@ export const VitalitySystem = memo(function VitalitySystem({
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
+      notes={notes}
+      selectedNotebookId={selectedNotebookId}
+      onSelectNotebook={setSelectedNotebookId}
     />
   )
 })
