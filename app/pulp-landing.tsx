@@ -37,9 +37,9 @@ const RARITY_COLOR: Record<string, string> = {
   chroma: '#f472b6',
 }
 
-function TypewriterHeadline({ serif }: { serif: string }) {
-  const line1 = "not another"
-  const line2 = "google doc."
+function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?: () => void }) {
+  const line1 = "not your"
+  const line2 = "avg docs."
   const full = line1 + "\n" + line2
   const [charIdx, setCharIdx] = useState(0)
   const [showCursor, setShowCursor] = useState(true)
@@ -48,7 +48,7 @@ function TypewriterHeadline({ serif }: { serif: string }) {
 
   useEffect(() => {
     if (charIdx >= full.length) {
-      const t = setTimeout(() => setShowCursor(false), 1500)
+      const t = setTimeout(() => { setShowCursor(false); onComplete?.() }, 800)
       return () => clearTimeout(t)
     }
     // Pause for 1s after finishing line1 (the \n char)
@@ -70,7 +70,7 @@ function TypewriterHeadline({ serif }: { serif: string }) {
   const headlineStyle = {
     fontFamily: serif, fontSize: 'clamp(3rem, 8vw, 6.5rem)', fontWeight: 400,
     lineHeight: 0.85, letterSpacing: '-0.03em', textTransform: 'lowercase' as const,
-    color: '#0f0f10', margin: '0 0 40px 0',
+    color: '#0f0f10', margin: '0 0 0 0',
   }
 
   const cursorEl = showCursor ? (
@@ -84,9 +84,9 @@ function TypewriterHeadline({ serif }: { serif: string }) {
       {line2Started && <br />}
       <span style={{
         color: '#6b6864',
-        marginLeft: 'clamp(1.5rem, 4vw, 3.5rem)',
+        marginLeft: 'clamp(3rem, 8vw, 7rem)',
         display: 'inline-block',
-        marginTop: 'clamp(0.4rem, 1.5vw, 1rem)',
+        marginTop: 'clamp(0.6rem, 2vw, 1.4rem)',
         opacity: line2Started ? 1 : 0,
         transform: line2Started ? 'translateY(0)' : 'translateY(20px)',
         transition: 'opacity 0.5s cubic-bezier(0.2,0.8,0.2,1), transform 0.5s cubic-bezier(0.2,0.8,0.2,1)',
@@ -100,6 +100,7 @@ function TypewriterHeadline({ serif }: { serif: string }) {
 }
 
 export default function PulpLanding() {
+  const [heroDone, setHeroDone] = useState(false)
   const [visibleFeatures, setVisibleFeatures] = useState<number[]>([])
   const featuresRef = useRef<HTMLDivElement>(null)
 
@@ -163,6 +164,7 @@ export default function PulpLanding() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <a href="#features" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase' }}>features</a>
           <a href="#collection" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase' }}>collection</a>
+          <a href="mailto:ctvillegas@ucsd.edu" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#b0b0b0', textDecoration: 'none', textTransform: 'lowercase' }}>reach out</a>
           <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase' }}>log in</a>
           <a href="/login" style={{
             fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em',
@@ -179,36 +181,46 @@ export default function PulpLanding() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1], delay: 0.1 }}
         >
-          <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 28 }}>
+          <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 40 }}>
             -- built for students, by students
           </span>
 
-          <TypewriterHeadline serif={serif} />
+          <TypewriterHeadline serif={serif} onComplete={() => setHeroDone(true)} />
 
-          <p style={{
-            fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.7,
-            color: '#6b6864', maxWidth: 500, textTransform: 'lowercase', margin: '16px 0 20px 0',
+          <div style={{
+            marginTop: 56,
+            opacity: heroDone ? 1 : 0,
+            transform: heroDone ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1), transform 0.8s cubic-bezier(0.2,0.8,0.2,1)',
           }}>
-            a lightweight notebook app that keeps up with you in class.
-            focus timer, site blocker, and an orchard that grows as you write.
-          </p>
-
-          <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 40 }}>
-            -- because note-taking should be fast, fun, and distraction-free.
-          </span>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <a href="/login" style={{
-              fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
-              padding: '10px 28px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
-              background: accent, color: '#fff',
-              boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
+            <p style={{
+              fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.7,
+              color: '#6b6864', maxWidth: 500, textTransform: 'lowercase', margin: '0 0 16px 0',
             }}>
-              start writing — free
-            </a>
-            <span style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', letterSpacing: '0.06em', textTransform: 'lowercase' }}>
-              lightweight. no bloat.
-            </span>
+              a lightweight notebook app that keeps up with you in class.
+              focus timer, site blocker, and an orchard that grows as you write.
+            </p>
+
+            <p style={{
+              fontFamily: serif, fontSize: '0.95rem', lineHeight: 1.7,
+              color: '#6b6864', textTransform: 'lowercase', margin: '0 0 40px 0',
+            }}>
+              because note-taking should be fast, fun, and distraction-free.
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <a href="/login" style={{
+                fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
+                padding: '10px 28px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
+                background: accent, color: '#fff',
+                boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
+              }}>
+                start writing — free
+              </a>
+              <span style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', letterSpacing: '0.06em', textTransform: 'lowercase' }}>
+                no credit card. lightweight. no bloat.
+              </span>
+            </div>
           </div>
         </motion.div>
 
