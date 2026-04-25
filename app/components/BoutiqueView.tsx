@@ -502,8 +502,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           {activeTab === 'shop' && !selectedPlant && (
             <div style={{ padding: '12px 20px' }}>
               {/* Timer header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Shop</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: '#ef444410', padding: '4px 10px', borderRadius: '99px', border: '1px solid #ef444420' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', fontFamily: 'monospace', letterSpacing: '0.02em' }}>{countdown}</span>
@@ -512,7 +511,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
               {/* 4 Seed Cards */}
               <div style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Seeds</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                 </div>
@@ -524,7 +523,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* 2 Item Cards */}
               {shopItems.length > 0 && (
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Items</span>
                     <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                   </div>

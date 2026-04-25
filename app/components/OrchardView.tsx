@@ -40,7 +40,6 @@ function seededRng(seed: number) {
 
 // Road segments (polylines in viewBox 0–100 coords)
 const ROAD_MAIN = [[-2,100],[6,92],[14,84],[22,76],[30,70],[40,65],[50,62],[60,60],[70,58],[80,54],[90,48],[102,42]]
-const ROAD_BRANCH = [[50,62],[48,54],[44,46],[38,38],[34,32]]
 
 // Lake: ellipse at bottom-right
 const LAKE_CX = 78, LAKE_CY = 80, LAKE_RX = 14, LAKE_RY = 7
@@ -67,7 +66,6 @@ function isPlantable(x: number, y: number): boolean {
   if (y > 96) return false
   if (x < 3 || x > 97) return false
   if (distToPolyline(x, y, ROAD_MAIN) < 4.5) return false
-  if (distToPolyline(x, y, ROAD_BRANCH) < 4) return false
   if (inLake(x, y)) return false
   return true
 }
@@ -208,10 +206,10 @@ const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
         <rect x="-5" y="36" width="110" height="68" fill={ground} />
 
         {/* Meadow patches */}
-        <ellipse cx="22" cy="54" rx="18" ry="6" fill={groundLight} opacity="0.35" />
-        <ellipse cx="68" cy="66" rx="14" ry="5" fill={groundLight} opacity="0.3" />
-        <ellipse cx="40" cy="84" rx="20" ry="5" fill={groundLight} opacity="0.2" />
-        <ellipse cx="85" cy="44" rx="10" ry="4" fill={groundDark} opacity="0.15" />
+        <ellipse cx="22" cy="54" rx="18" ry="6" fill={groundLight} opacity="0.55" />
+        <ellipse cx="68" cy="66" rx="14" ry="5" fill={groundLight} opacity="0.5" />
+        <ellipse cx="40" cy="84" rx="20" ry="5" fill={groundLight} opacity="0.4" />
+        <ellipse cx="85" cy="44" rx="10" ry="4" fill={groundDark} opacity="0.3" />
 
         {/* ── Main road — polished with edges and center line ── */}
         {/* Road bed (wide, dark edge) */}
@@ -220,7 +218,7 @@ const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
           stroke={roadEdgeLine}
           strokeWidth="4"
           fill="none"
-          opacity={isDark ? 0.4 : 0.35}
+          opacity={isDark ? 0.7 : 0.6}
           strokeLinecap="round"
         />
         {/* Road surface */}
@@ -229,7 +227,7 @@ const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
           stroke="url(#roadSurface)"
           strokeWidth="2.8"
           fill="none"
-          opacity={isDark ? 0.6 : 0.5}
+          opacity={isDark ? 0.85 : 0.75}
           strokeLinecap="round"
         />
         {/* Center dashes */}
@@ -238,32 +236,15 @@ const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
           stroke={isDark ? '#2a2820' : '#c8c0b0'}
           strokeWidth="0.35"
           fill="none"
-          opacity={isDark ? 0.35 : 0.3}
+          opacity={isDark ? 0.5 : 0.45}
           strokeDasharray="1.5 3"
           strokeLinecap="round"
         />
 
-        {/* ── Branch road ── */}
-        <path
-          d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
-          stroke={roadEdgeLine}
-          strokeWidth="3"
-          fill="none"
-          opacity={isDark ? 0.3 : 0.25}
-          strokeLinecap="round"
-        />
-        <path
-          d="M 50,62 C 48,54 44,46 38,38 C 34,32 32,28 30,24"
-          stroke="url(#roadSurface)"
-          strokeWidth="1.8"
-          fill="none"
-          opacity={isDark ? 0.45 : 0.4}
-          strokeLinecap="round"
-        />
 
         {/* ── Lake ── */}
         {/* Shore ring */}
-        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1.2} fill={lakeShore} opacity="0.3" />
+        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1.2} fill={lakeShore} opacity="0.5" />
         {/* Water body */}
         <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeGrad)" />
         {/* Reflection of green */}
@@ -323,7 +304,8 @@ export const OrchardView = memo(function OrchardView({
   sunshine, gems, xp, grove, notes,
 }: OrchardViewProps) {
 
-  const [selectedNotebook, setSelectedNotebook] = useState<string | null>(null)
+  const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
+  const [selectedNotebook, setSelectedNotebook] = useState<string>(activeNotesForDefault.length > 0 ? activeNotesForDefault[0].id : '_unassigned')
   const [plotPage, setPlotPage] = useState(0)
   const [renderTrees, setRenderTrees] = useState(false)
 
@@ -363,7 +345,6 @@ export const OrchardView = memo(function OrchardView({
 
   const filteredTrees = useMemo(() => {
     const all = grove.filter(t => t !== null)
-    if (selectedNotebook === null) return all
     if (selectedNotebook === '_unassigned') return all.filter(t => !t.notebookId)
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
@@ -393,15 +374,12 @@ export const OrchardView = memo(function OrchardView({
   const textPrimary = isDark ? '#d4d0c8' : '#3a3630'
   const textSecondary = isDark ? '#6b6860' : '#9a9590'
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
-  const sidebarBg = isDark ? 'rgba(10,12,10,0.85)' : 'rgba(240,236,228,0.9)'
-  const sidebarItemHover = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
-  const sidebarItemActive = isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.08)'
 
   const baseSize = filteredTrees.length <= 6 ? 62 :
     filteredTrees.length <= 15 ? 56 :
     filteredTrees.length <= 30 ? 50 : 44
 
-  const totalTrees = grove.filter(Boolean).length
+  const archivedNotes = useMemo(() => notes.filter(n => n.archived && !n.deletedAt), [notes])
 
   return (
     <div
@@ -429,25 +407,7 @@ export const OrchardView = memo(function OrchardView({
 
           {/* Notebook list */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
-            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Views</p>
-
-            {/* All trees */}
-            <button
-              onClick={() => setSelectedNotebook(null)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
-                selectedNotebook === null
-                  ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
-                  : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
-              }`}
-            >
-              <span className="text-[13px] shrink-0">🌳</span>
-              <span className="flex-1 truncate">All Trees</span>
-              <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{totalTrees}</span>
-            </button>
-
-            {activeNotes.length > 0 && (
-              <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mt-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
-            )}
+            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
 
             {activeNotes.map(note => {
               const count = notebookTreeCounts[note.id] || 0
@@ -472,6 +432,38 @@ export const OrchardView = memo(function OrchardView({
                 </button>
               )
             })}
+
+            {/* Archived notebooks */}
+            {archivedNotes.length > 0 && archivedNotes.some(n => (notebookTreeCounts[n.id] || 0) > 0) && (
+              <>
+                <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
+                </div>
+                {archivedNotes.filter(n => (notebookTreeCounts[n.id] || 0) > 0).map(note => {
+                  const count = notebookTreeCounts[note.id] || 0
+                  const isSelected = selectedNotebook === note.id
+                  const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
+                  return (
+                    <button
+                      key={note.id}
+                      onClick={() => setSelectedNotebook(note.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
+                        isSelected
+                          ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
+                          : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
+                      }`}
+                      style={{ opacity: isSelected ? 1 : 0.7 }}
+                    >
+                      <span className="text-[13px] shrink-0">{icon}</span>
+                      <span className="flex-1 min-w-0 truncate">{note.subject || 'Untitled'}</span>
+                      {count > 0 && (
+                        <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{count}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </>
+            )}
 
             {/* Unassigned trees */}
             {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
@@ -535,9 +527,8 @@ export const OrchardView = memo(function OrchardView({
           }}>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold" style={{ color: textPrimary }}>
-                {selectedNotebook === null ? 'All Trees' :
-                 selectedNotebook === '_unassigned' ? 'Unassigned' :
-                 activeNotes.find(n => n.id === selectedNotebook)?.subject || 'Untitled'}
+                {selectedNotebook === '_unassigned' ? 'Unassigned' :
+                 [...activeNotes, ...notes.filter(n => n.archived)].find(n => n.id === selectedNotebook)?.subject || 'Untitled'}
               </span>
               <span className="text-[10px] font-medium tabular-nums" style={{ color: textMuted }}>
                 {filteredTrees.length} {filteredTrees.length === 1 ? 'tree' : 'trees'}
@@ -611,6 +602,13 @@ export const OrchardView = memo(function OrchardView({
                       const depthScale = 0.6 + (y / 100) * 0.5
                       const treeSize = Math.round(baseSize * depthScale)
 
+                      // Atmospheric perspective: depth 0 = far (y~30), depth 1 = near (y~95)
+                      const depthNorm = Math.max(0, Math.min(1, (y - 30) / 65))
+                      const fogOpacity = 0.55 + depthNorm * 0.45
+                      const blurPx = (1 - depthNorm) * 1.2
+                      const saturate = 0.5 + depthNorm * 0.5
+                      const brightness = 1 + (1 - depthNorm) * 0.12
+
                       return (
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
@@ -620,6 +618,8 @@ export const OrchardView = memo(function OrchardView({
                             top: `${y}%`,
                             transform: 'translate(-50%, -85%)',
                             zIndex: Math.round(y),
+                            opacity: fogOpacity,
+                            filter: `blur(${blurPx}px) saturate(${saturate}) brightness(${brightness})`,
                           }}
                         >
                           <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}>
