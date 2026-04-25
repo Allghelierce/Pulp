@@ -325,7 +325,10 @@ export const OrchardView = memo(function OrchardView({
   sunshine, gems, xp, grove, notes,
 }: OrchardViewProps) {
 
-  const [selectedNotebook, setSelectedNotebook] = useState<string | null>(null)
+  const [selectedNotebook, setSelectedNotebook] = useState<string | null>(() => {
+    const active = notes.filter(n => !n.archived && !n.deletedAt)
+    return active.length > 0 ? active[0].id : '_unassigned'
+  })
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
 
@@ -349,9 +352,12 @@ export const OrchardView = memo(function OrchardView({
 
   const filteredTrees = useMemo(() => {
     const all = grove.filter(t => t !== null)
-    if (selectedNotebook === null) return all
-    if (selectedNotebook === '_unassigned') return all.filter(t => !t.notebookId)
-    return all.filter(t => t.notebookId === selectedNotebook)
+    let list = []
+    if (selectedNotebook === null) list = all
+    else if (selectedNotebook === '_unassigned') list = all.filter(t => !t.notebookId)
+    else list = all.filter(t => t.notebookId === selectedNotebook)
+    
+    return list.length > 200 ? list.slice(-200) : list
   }, [grove, selectedNotebook])
 
   const placed = useMemo(() => forestPlacement(filteredTrees), [filteredTrees])
@@ -410,29 +416,7 @@ export const OrchardView = memo(function OrchardView({
             </h2>
           </div>
 
-          {/* All trees button */}
-          <div className="px-2 pt-2 shrink-0">
-            <button
-              onClick={() => setSelectedNotebook(null)}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors"
-              style={{
-                background: selectedNotebook === null ? sidebarItemActive : 'transparent',
-                borderLeft: selectedNotebook === null ? '2px solid #ea580c' : '2px solid transparent',
-              }}
-              onMouseEnter={e => { if (selectedNotebook !== null) e.currentTarget.style.background = sidebarItemHover }}
-              onMouseLeave={e => { if (selectedNotebook !== null) e.currentTarget.style.background = 'transparent' }}
-            >
-              <span className="text-[13px]">🌳</span>
-              <div className="flex-1 min-w-0">
-                <span className="text-[11px] font-semibold block truncate" style={{
-                  color: selectedNotebook === null ? '#ea580c' : textPrimary,
-                }}>All Trees</span>
-              </div>
-              <span className="text-[9px] font-bold tabular-nums shrink-0" style={{ color: textMuted }}>
-                {totalTrees}
-              </span>
-            </button>
-          </div>
+          <div className="pt-2 shrink-0" />
 
           {/* Notebook list */}
           <div className="flex-1 overflow-y-auto px-2 py-1.5" style={{ scrollbarWidth: 'thin' }}>
@@ -536,8 +520,7 @@ export const OrchardView = memo(function OrchardView({
           }}>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold" style={{ color: textPrimary }}>
-                {selectedNotebook === null ? 'All Trees' :
-                 selectedNotebook === '_unassigned' ? 'Unassigned' :
+                {selectedNotebook === '_unassigned' ? 'Unassigned' :
                  activeNotes.find(n => n.id === selectedNotebook)?.subject || 'Untitled'}
               </span>
               <span className="text-[10px] font-medium tabular-nums" style={{ color: textMuted }}>
@@ -578,8 +561,7 @@ export const OrchardView = memo(function OrchardView({
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
                     <span className="text-[32px]">🌱</span>
                     <p className="text-[12px]" style={{ color: textMuted }}>
-                      {selectedNotebook === null ? 'Your orchard is empty.' :
-                       selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
+                      {selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                        'No trees grown for this notebook yet.'}
                     </p>
                     <p className="text-[10px]" style={{ color: textMuted }}>
