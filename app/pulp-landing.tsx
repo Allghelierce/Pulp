@@ -712,11 +712,10 @@ export default function PulpLanding() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, justifyContent: 'center' }}>
               {[
                 { left: 'google docs', right: 'pulp', items: [
-                  ['slow startup', 'instant load'],
-                  ['no focus tools', 'built-in timer + blocker'],
-                  ['just text', 'gamified — trees, xp, achievements'],
-                  ['bloated toolbar', 'clean, minimal editor'],
-                  ['generic', 'built for students'],
+                  ['no focus tools', 'focus timer + site blocker'],
+                  ['no consequences', 'real stakes — quit a session, lose all your progress'],
+                  ['clunky ui', 'hyperproductive shortcut setup'],
+                  ['just a doc', 'an orchard that grows as you write'],
                 ]}
               ].map(section => (
                 <div key="compare" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -727,9 +726,39 @@ export default function PulpLanding() {
                   {section.items.map(([l, r], i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid rgba(15,15,16,0.05)' }}>
                       <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#bdb9b2', textTransform: 'lowercase', textDecoration: 'line-through', textDecorationColor: 'rgba(15,15,16,0.15)' }}>{l}</span>
-                      <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#0f0f10', textTransform: 'lowercase', fontWeight: 500 }}>{r}</span>
+                      <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#6b6864', textTransform: 'lowercase', fontWeight: 500 }}>{r}</span>
                     </div>
                   ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section id="features" ref={featuresRef} style={{ padding: '48px 40px 100px' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 48 }}>
+              -- features
+            </span>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 60px' }}>
+              {FEATURES.map((f, i) => (
+                <div
+                  key={i}
+                  data-idx={i}
+                  style={{
+                    opacity: visibleFeatures.includes(i) ? 1 : 0,
+                    transform: visibleFeatures.includes(i) ? 'translateY(0)' : 'translateY(24px)',
+                    transition: 'opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)',
+                  }}
+                >
+                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 600, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
+                    {f.label}
+                  </h3>
+                  <p style={{ fontFamily: serif, fontSize: '0.92rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
+                    {f.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -767,36 +796,6 @@ export default function PulpLanding() {
                 ))}
               </div>
               <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" ref={featuresRef} style={{ padding: '48px 40px 100px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 48 }}>
-              -- features
-            </span>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 60px' }}>
-              {FEATURES.map((f, i) => (
-                <div
-                  key={i}
-                  data-idx={i}
-                  style={{
-                    opacity: visibleFeatures.includes(i) ? 1 : 0,
-                    transform: visibleFeatures.includes(i) ? 'translateY(0)' : 'translateY(24px)',
-                    transition: 'opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)',
-                  }}
-                >
-                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 600, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
-                    {f.label}
-                  </h3>
-                  <p style={{ fontFamily: serif, fontSize: '0.92rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
-                    {f.desc}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

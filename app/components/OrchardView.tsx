@@ -368,6 +368,8 @@ export const OrchardView = memo(function OrchardView({
     return counts
   }, [filteredTrees])
 
+  const archivedNotes = useMemo(() => notes.filter(n => n.archived && !n.deletedAt), [notes])
+
   if (!isOpen) return null
 
   const cardBorder = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
@@ -378,8 +380,6 @@ export const OrchardView = memo(function OrchardView({
   const baseSize = filteredTrees.length <= 6 ? 62 :
     filteredTrees.length <= 15 ? 56 :
     filteredTrees.length <= 30 ? 50 : 44
-
-  const archivedNotes = useMemo(() => notes.filter(n => n.archived && !n.deletedAt), [notes])
 
   return (
     <div

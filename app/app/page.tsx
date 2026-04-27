@@ -236,7 +236,7 @@ const BoxItem = memo(function BoxItem({
         position: "absolute", left: box.x, top: box.y, width: box.w,
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: isEmpty ? "none" : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
+        border: isEmpty ? `1px dashed ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
         borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
@@ -672,6 +672,7 @@ const BoxTextarea = memo(function BoxTextarea({
 
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== content) {
+      if (ref.current.contains(document.activeElement) || ref.current === document.activeElement) return
       ref.current.innerHTML = content
       prevContentRef.current = content
     }
@@ -2121,12 +2122,14 @@ export default function NoteApp() {
   }, []) // [] — run once on mount only, not on every user change
 
 
+  const defaultBoxes = () => ({ 0: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] })
+
   // Note/folder actions
   const addNote = (folderId: number | null = null) =>
     openPrompt("Name your notebook", "New Notebook", "Notebook name…", "Create", name => {
       const finalName = name.trim() || "New Notebook"
       const id = uid()
-      const newNote = { id, subject: finalName, pages: [""], folderId, boxes: {} }
+      const newNote = { id, subject: finalName, pages: [""], folderId, boxes: defaultBoxes() }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
@@ -2134,7 +2137,7 @@ export default function NoteApp() {
 
   const addFirstNotebook = () => {
     const id = uid()
-    const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: {} }
+    const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: defaultBoxes() }
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
     setSidebarOpen(true)
@@ -2157,7 +2160,7 @@ export default function NoteApp() {
 
     const finishCreate = (name: string, pwd?: string) => {
       const id = uid()
-      const baseNote = { id, subject: name.trim(), folderId, boxes: {}, noteType, password: pwd }
+      const baseNote = { id, subject: name.trim(), folderId, boxes: defaultBoxes(), noteType, password: pwd }
       const newNote: NoteData = noteType === "flashcard"
         ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "", interval: 1, easeFactor: 2.5, repetitions: 0, nextReviewDate: Date.now() }] }
         : noteType === "singlepage"
@@ -2247,7 +2250,7 @@ export default function NoteApp() {
       if (!name.trim()) return
       const newId = uid()
       const parentId = activeTabId ?? undefined
-      const newNote: NoteData = { id: newId, subject: name.trim(), pages: [""], folderId: null, parentId, boxes: {} }
+      const newNote: NoteData = { id: newId, subject: name.trim(), pages: [""], folderId: null, parentId, boxes: defaultBoxes() }
 
       const color = accent.length > 7 ? accent.slice(0, 7) : accent
       const linkHtml = `<span data-backlink-id="${newId}" contenteditable="false" style="display:inline-flex;align-items:center;gap:4px;background:${color}18;color:${color};border:1px solid ${color}44;padding:1px 8px;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;margin:0 2px;user-select:none;-webkit-user-modify:read-only;text-decoration:none;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>${name.trim()}</span>&nbsp;`
@@ -2275,7 +2278,7 @@ export default function NoteApp() {
 
       if (user) {
         await supabase.from("notes").insert({
-          id: newId, subject: name.trim(), pages: [""], boxes: {}, folder_id: null, parent_id: parentId ?? null, user_id: user.id
+          id: newId, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: null, parent_id: parentId ?? null, user_id: user.id
         })
       }
     })
@@ -3077,8 +3080,9 @@ export default function NoteApp() {
                                 if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
                                 else {
                                   const np = [...activeNote.pages, ""];
-                                  setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np } : n));
-                                  setCurrentPageIdx(activeNote.pages.length)
+                                  const pageIdx = activeNote.pages.length
+                                  setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] } } : n));
+                                  setCurrentPageIdx(pageIdx)
                                 }
                               }}
                               className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
