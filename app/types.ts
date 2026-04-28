@@ -86,3 +86,14 @@ export interface User {
   email?: string
   user_metadata?: { avatar_url?: string; [key: string]: unknown }
 }
+
+export interface NoteVersion {
+  timestamp: number
+  subject: string
+  pages: string[]
+  boxes: BoxesMap
+  lines?: { [pageIdx: number]: number[] }
+  hlines?: { [pageIdx: number]: number[] }
+  drawings?: { [pageIdx: number]: DrawingPath[] }
+  flashcards?: FlashcardItem[]
+}

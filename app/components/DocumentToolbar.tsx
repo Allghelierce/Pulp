@@ -126,15 +126,33 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   userAvatarUrl, userEmail
 }: DocumentToolbarProps) {
 
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const [toolbarWidth, setToolbarWidth] = useState(9999)
+  const compact = toolbarWidth < 820
+  const hideShare = toolbarWidth < 760
+  const hideCurrencies = toolbarWidth < 680
+  const ultraCompact = toolbarWidth < 600
 
+  useEffect(() => {
+    const el = toolbarRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width
+      if (w) setToolbarWidth(w)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnBaseActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnIconOnly = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnIconOnlyActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }
 
   const NEON_ORANGE = "#d97706"
   const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 6px rgba(217,119,6,0.3), 0 0 2px rgba(217,119,6,0.15)` }
-  const btn = (active: boolean) => active ? btnBaseActive : btnBaseInactive
+  const btn = (active: boolean) => compact ? (active ? btnIconOnlyActive : btnIconOnly) : (active ? btnBaseActive : btnBaseInactive)
   const activeStyle = (active: boolean): React.CSSProperties => active ? neonStyle : {}
 
   const leftToolsRef = useRef<HTMLDivElement>(null)
@@ -182,6 +200,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
   return (
     <div
+      ref={toolbarRef}
       id="document-toolbar"
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
       style={{ transform: "translateZ(0)" }}
@@ -206,12 +225,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onClick={() => setInsertOpen(!insertOpen)}
             title="Insert elements"
-            className={`text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
+            className={`text-[12px] font-medium border border-zinc-200 rounded-[5px] ${compact ? 'p-1.5' : 'px-3 py-1'} bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
             style={{ ...(insertOpen ? neonStyle : {}), ...btnFont }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            <span>Insert</span>
-            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
+            {!compact && <><span>Insert</span>
+            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg></>}
           </button>
 
           {insertOpen && (
@@ -279,11 +298,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             <rect x="14" y="14" width="7" height="7" />
             <rect x="3" y="14" width="7" height="7" />
           </svg>
-          <span>Grid</span>
+          {!compact && <span>Grid</span>}
         </button>
 
         {/* Align Dropdown */}
-        <div ref={alignRef} className="relative flex shrink-0">
+        {!ultraCompact && <div ref={alignRef} className="relative flex shrink-0">
           <button
             onMouseDown={e => { e.preventDefault(); setAlignOpen(!alignOpen) }}
             title="Align options"
@@ -295,7 +314,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <line x1="5" y1="12" x2="19" y2="12" strokeWidth="2" opacity="0.6" />
               <line x1="7" y1="18" x2="17" y2="18" strokeWidth="2" opacity="0.4" />
             </svg>
-            <span>Align</span>
+            {!compact && <span>Align</span>}
             <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg>
           </button>
 
@@ -339,7 +358,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               </button>
             </div>
           )}
-        </div>
+        </div>}
 
         <div className="w-px h-5 bg-zinc-200/60 mx-0.5" />
 
@@ -352,7 +371,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             style={{ ...activeStyle(showDrawToolbar), ...btnFont }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="m2 2 7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
-            <span>Draw</span>
+            {!compact && <span>Draw</span>}
           </button>
 
           {showDrawToolbar && (
@@ -448,12 +467,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             {isUnlocked ? (
               <>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" /></svg>
-                Lock Vault
+                {!compact && "Lock Vault"}
               </>
             ) : (
               <>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                Unlock
+                {!compact && "Unlock"}
               </>
             )}
           </button>
@@ -462,7 +481,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
 
         {/* AI Button with Dropdown */}
-        <div ref={aiRef} className="relative flex shrink-0">
+        {!ultraCompact && <div ref={aiRef} className="relative flex shrink-0">
           <button
             onMouseDown={e => { e.preventDefault(); if (isTextActive) setAiOpen(!aiOpen) }}
             title={isTextActive ? "Quick Prompts" : "Click on a text box first"}
@@ -474,8 +493,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             }}
           >
             <AiMascotIcon size={14} />
-            <span>Quick Prompts</span>
-            <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5, marginLeft: 2 }}><path d="M0 0l5 6 5-6z" /></svg>
+            {!compact && <span>Quick Prompts</span>}
+            {!compact && <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5, marginLeft: 2 }}><path d="M0 0l5 6 5-6z" /></svg>}
           </button>
 
           {aiOpen && (
@@ -511,20 +530,20 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               </button>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Quiz / Chat button */}
-        <button
+        {!ultraCompact && <button
           onClick={onOpenChat}
           title="Chat with your notebook"
           className={`${btn(chatOpen)} flex items-center gap-1.5`}
           style={{ ...activeStyle(chatOpen), ...btnFont }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-          Quiz Me
-        </button>
+          {!compact && "Quiz Me"}
+        </button>}
 
-        <div className="w-px h-5 bg-zinc-200 shrink-0" />
+        {!compact && <div className="w-px h-5 bg-zinc-200 shrink-0" />}
 
         <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer" style={btnFont}>
           {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -532,7 +551,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       </div>
 
       {/* Currencies Display - Centered */}
-      <div className="relative">
+      {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer" title="Open Grove & Leaderboard">
             <span className="text-[10px] leading-none">☀️</span>
@@ -563,10 +582,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           ) : null}
         </div>
 
-      </div>
+      </div>}
 
       {/* Right: Share */}
-      <div className="flex items-center gap-3 shrink-0 pl-2 pr-[68px]" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
+      {!hideShare && <div className="flex items-center gap-3 shrink-0 pl-2 pr-[68px]" style={{ fontFamily: '"EB Garamond", Georgia, serif' }}>
 
         <ShareButton
           links={[
@@ -582,7 +601,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           Share
         </ShareButton>
 
-      </div>
+      </div>}
     </div>
   )
 })

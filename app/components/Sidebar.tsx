@@ -56,7 +56,7 @@ interface SidebarProps {
   onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard" | "vault" | "cornell") => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
-  onRenameNote: (id: string, currentName: string) => void
+  onRenameNote: (id: string, newName: string) => void
   onDeleteNote: (id: string) => void
   onToggleFolder: (id: number) => void
   onRenameFolder: (id: number, name: string) => void
@@ -513,36 +513,6 @@ export const Sidebar = memo(function Sidebar({
             className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
           >
             Rename
-          </button>
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              onSelectNote(noteMenuId)
-              setNoteMenuId(null)
-            }}
-            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
-          >
-            Open
-          </button>
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              if (noteMenuId) onChangeNoteIcon(noteMenuId, "📄")
-              setNoteMenuId(null)
-            }}
-            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
-          >
-            Change icon
-          </button>
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              if (noteMenuId) onSetCover?.(noteMenuId)
-              setNoteMenuId(null)
-            }}
-            className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors whitespace-nowrap"
-          >
-            Set cover
           </button>
           <button
             onClick={e => {

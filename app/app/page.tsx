@@ -236,9 +236,9 @@ const BoxItem = memo(function BoxItem({
         position: "absolute", left: box.x, top: box.y, width: box.w,
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: isEmpty ? `1px dashed ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : (isSelected ? `1.5px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.3)"}` : "1px solid transparent"),
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : isEmpty ? `1px dashed ${isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"}` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}`,
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 2, backgroundColor: box.boxHighlightColor || "transparent",
+        borderRadius: 3, backgroundColor: box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)"),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -685,7 +685,9 @@ const BoxTextarea = memo(function BoxTextarea({
     if (isSticky) {
       onUpdate(id, { content: v })
     } else {
+      ref.current.style.height = "0px"
       const sh = ref.current.scrollHeight
+      ref.current.style.height = ""
       onUpdate(id, { content: v, h: Math.max(sh, 32) })
     }
   }, [id, isSticky, onUpdate])
@@ -927,6 +929,7 @@ export default function NoteApp() {
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
+  const [windowScale, setWindowScale] = useState(1)
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window === "undefined") return 0
     const saved = localStorage.getItem("pulp-sidebar-width")
@@ -1155,9 +1158,21 @@ export default function NoteApp() {
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
     shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
   } = settings
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
-  const [trashNotes, setTrashNotes] = useState<NoteData[]>([])
-  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(false)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
+    if (typeof window === "undefined") return []
+    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (Array.isArray(p.bookmarks)) return p.bookmarks } } catch { }
+    return []
+  })
+  const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => {
+    if (typeof window === "undefined") return []
+    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (Array.isArray(p.trashNotes)) return p.trashNotes } } catch { }
+    return []
+  })
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => {
+    if (typeof window === "undefined") return false
+    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (typeof p.skipDeleteConfirmation === "boolean") return p.skipDeleteConfirmation } } catch { }
+    return false
+  })
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
@@ -1627,6 +1642,36 @@ export default function NoteApp() {
       }
       return
     }
+
+    if (e.key === "Enter" && e.shiftKey) {
+      const ce = e.currentTarget as HTMLElement
+      const boxEl = ce.closest('[id^="box-"]') as HTMLElement | null
+      if (boxEl && activeNote) {
+        const boxId = boxEl.id.replace('box-', '')
+        const currentBox = activeNote.boxes[currentPageIdx]?.find((b: any) => b.id === boxId)
+        if (currentBox) {
+          e.preventDefault()
+          ce.blur()
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+          const el = document.getElementById(`box-${boxId}`)
+          const actualH = el ? el.getBoundingClientRect().height / (Number(zoom) || 1) : currentBox.h
+          const newId = uid()
+          const newBox = { id: newId, x: currentBox.x, y: currentBox.y + actualH + 8, w: currentBox.w, h: 32, content: '' }
+          setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+            ...n,
+            boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
+          }))
+          boxes.setSelectedBoxIds(new Set([newId]))
+          setTimeout(() => {
+            const newEl = document.getElementById(`box-${newId}`)
+            const editable = newEl?.querySelector('[contenteditable]') as HTMLElement | null
+            if (editable) editable.focus()
+          }, 30)
+          return
+        }
+      }
+    }
+
     const isMeta = e.metaKey || e.ctrlKey
     const isAlt = e.altKey
     const isShift = e.shiftKey
@@ -1860,8 +1905,11 @@ export default function NoteApp() {
 
   useEffect(() => {
     const checkViewport = () => {
-      const isNarrow = window.innerWidth < 1000
+      const w = window.innerWidth
+      const isNarrow = w < 1000
       updateSettings({ wordCountVisible: !isNarrow })
+      const scale = w < 800 ? Math.max(0.55, w / 1200) : w < 1100 ? Math.max(0.7, w / 1300) : 1
+      setWindowScale(scale)
     }
     checkViewport()
     window.addEventListener('resize', checkViewport)
@@ -1879,6 +1927,9 @@ export default function NoteApp() {
       return parts.join("+")
     }
     const handleGlobalKey = (e: KeyboardEvent) => {
+      if (e.altKey && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault()
+      }
       const keyStr = buildKeyStr(e)
 
       if (keyStr === shortcuts.newNote) {
@@ -1931,9 +1982,9 @@ export default function NoteApp() {
       }
 
       if (keyStr === shortcuts.prevPage || keyStr === shortcuts.nextPage) {
+        e.preventDefault()
         const selectedIds = boxes.selectedBoxIdsRef.current
         if (selectedIds.size === 0) {
-          e.preventDefault()
           editor.flushSync()
           if (keyStr === shortcuts.prevPage) {
             setCurrentPageIdx((p: number) => Math.max(0, p - 1))
@@ -2014,7 +2065,7 @@ export default function NoteApp() {
   // Save Grove & Inventory to localStorage
   useEffect(() => {
     localStorage.setItem("pulp-grove", JSON.stringify({ sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics }))
-  }, [sunshine, gems, grove, inventory, achievements, lastCharCount])
+  }, [sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics])
 
   // Cloud autosave
   useEffect(() => {
@@ -2293,10 +2344,12 @@ export default function NoteApp() {
     if (user) supabase.from("notes").update({ icon }).eq("id", id).then(({ error }) => { if (error) console.error("Icon save failed:", error.message) })
   }, [user])
 
-  const renameNote = (id: string, currentName: string) =>
-    openPrompt("Rename note", currentName, "Note name…", "Rename", newName => {
-      if (newName.trim()) setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName.trim() } : n))
-    })
+  const renameNote = useCallback((id: string, newName: string) => {
+    if (newName.trim()) {
+      setNotes(prev => prev.map(n => n.id === id ? { ...n, subject: newName.trim() } : n))
+      if (user) supabase.from("notes").update({ subject: newName.trim() }).eq("id", id).then(({ error }) => { if (error) console.error("Rename save failed:", error.message) })
+    }
+  }, [user])
 
   const deleteNote = (id: string) => {
     const note = notes.find(n => n.id === id)
@@ -2830,7 +2883,7 @@ export default function NoteApp() {
               </main>
             ) : (
               <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
-                <div style={{ zoom: zoom, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
+                <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "relative" }}>
                       <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />

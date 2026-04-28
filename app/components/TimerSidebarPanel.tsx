@@ -165,10 +165,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [seedTrayOpen, setSeedTrayOpen] = useState(false)
   const [seedPage, setSeedPage] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
+  const [minimized, setMinimized] = useState(false)
 
   useEffect(() => {
     if (!running || done || treeDead) setConfirmGiveUp(false)
     if (running) setSeedTrayOpen(false)
+    if (!running) setMinimized(false)
   }, [running, done, treeDead])
 
   useEffect(() => {
@@ -243,6 +245,71 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     document.addEventListener("mouseup", handleUp)
   }
 
+  if (isOpen && minimized && running) {
+    return (
+      <>
+      <motion.div
+        key="timer-mini"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed z-50 flex items-center gap-2 select-none shadow-lg"
+        style={{
+          left: sidebarWidth + 10,
+          bottom: 12,
+          backgroundColor: bgColor,
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: `1px solid ${borderColor}`,
+          borderRadius: 14,
+          fontFamily: serifFont,
+          userSelect: 'none',
+          padding: "6px 10px",
+        }}
+      >
+        <span
+          className="tabular-nums"
+          style={{ fontFamily: serifFont, fontWeight: 600, fontSize: 16, color: mainColor, lineHeight: 1 }}
+        >
+          {String(minutes).padStart(2, "0")}
+          <span style={{ opacity: 0.5 }}>:{String(seconds).padStart(2, "0")}</span>
+        </span>
+
+        {showWaterWidget && !treeDead && (
+          <button
+            onClick={onWater}
+            title="Water"
+            className="flex items-center justify-center rounded-md transition-all"
+            style={{
+              width: 24, height: 24,
+              backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.12)",
+              color: waterUrgent ? "#fca5a5" : "#93c5fd",
+              animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2c0 0-8 7.5-8 12a8 8 0 0 0 16 0c0-4.5-8-12-8-12z" />
+            </svg>
+          </button>
+        )}
+
+        <button
+          onClick={() => setMinimized(false)}
+          className="flex items-center justify-center rounded-md transition-colors hover:bg-white/10"
+          style={{ width: 24, height: 24, color: subtleColor }}
+          title="Expand"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 15l-6-6-6 6" />
+          </svg>
+        </button>
+      </motion.div>
+      <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }`}</style>
+      </>
+    )
+  }
+
   return (
     <>
     <AnimatePresence>
@@ -313,29 +380,44 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <button
-                onClick={onClose}
-                className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-                style={{ color: subtleColor }}
-                title="Close (⌘⌥T)"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setShowGuide(true)}
-                className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-                style={{ color: subtleColor }}
-                title="How to use"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-              </button>
+              {running && !done ? (
+                <button
+                  onClick={() => setMinimized(true)}
+                  className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                  style={{ color: subtleColor }}
+                  title="Minimize"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={onClose}
+                    className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                    style={{ color: subtleColor }}
+                    title="Close (⌘⌥T)"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setShowGuide(true)}
+                    className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                    style={{ color: subtleColor }}
+                    title="How to use"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -350,125 +432,134 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     fontFamily: serifFont,
                     fontWeight: 500,
                     fontSize: 44,
-                    color: running || done ? mainColor : textColor,
                     lineHeight: 1,
+                    ...(running && !done ? {
+                      backgroundImage: 'linear-gradient(90deg, #EA8C55 0%, #EA8C55 38%, #f0a87a 50%, #EA8C55 62%, #EA8C55 100%)',
+                      backgroundSize: '300% 100%',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      animation: 'pulp-timer-shimmer 6s ease-in-out infinite',
+                    } : {
+                      color: done ? mainColor : textColor,
+                    }),
                   }}
                 >
                   {String(minutes).padStart(2, "0")}
-                  <span style={{ opacity: 0.55 }}>:{String(seconds).padStart(2, "0")}</span>
+                  <span style={{ opacity: running ? undefined : 0.55, ...(running && !done ? { WebkitTextFillColor: 'transparent' } : {}) }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[9px] uppercase tracking-[0.18em] mt-2" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : "ready"}
                 </p>
               </div>
 
-              {/* Tree view — always rendered */}
+              {/* Tree view */}
               <div className="relative w-full mx-auto" style={{ height: 160 }}>
-                <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                  <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
-                </div>
+                    <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
+                      <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
+                    </div>
 
-                {/* Seed tray overlay */}
-                <AnimatePresence>
-                  {seedTrayOpen && !running && !done && !treeDead && (() => {
-                    const counts = new Map<string, number>()
-                    inventory.forEach(t => counts.set(t, (counts.get(t) || 0) + 1))
-                    const uniqueTypes = [...counts.keys()]
-                    const perPage = 15
-                    const totalPages = Math.max(1, Math.ceil(uniqueTypes.length / perPage))
-                    const page = Math.min(seedPage, totalPages - 1)
-                    const pageSeeds = uniqueTypes.slice(page * perPage, (page + 1) * perPage)
+                    {/* Seed tray overlay */}
+                    <AnimatePresence>
+                      {seedTrayOpen && !running && !done && !treeDead && (() => {
+                        const counts = new Map<string, number>()
+                        inventory.forEach(t => counts.set(t, (counts.get(t) || 0) + 1))
+                        const uniqueTypes = [...counts.keys()]
+                        const perPage = 15
+                        const totalPages = Math.max(1, Math.ceil(uniqueTypes.length / perPage))
+                        const page = Math.min(seedPage, totalPages - 1)
+                        const pageSeeds = uniqueTypes.slice(page * perPage, (page + 1) * perPage)
 
-                    return (
-                      <motion.div
-                        key="seed-tray"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute inset-0 z-30 flex flex-col rounded-lg"
-                        style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.88)' : 'rgba(10,10,12,0.88)', backdropFilter: 'blur(8px)' }}
-                        onKeyDown={e => {
-                          if (e.key === 'ArrowRight' && page < totalPages - 1) { e.preventDefault(); setSeedPage(page + 1) }
-                          if (e.key === 'ArrowLeft' && page > 0) { e.preventDefault(); setSeedPage(page - 1) }
-                          if (e.key === 'Escape') { e.preventDefault(); setSeedTrayOpen(false) }
-                        }}
-                        tabIndex={0}
-                        ref={el => el?.focus()}
-                      >
-                        <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
-                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                            Seeds
-                          </span>
-                          <button
-                            onClick={() => setSeedTrayOpen(false)}
-                            className="w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-white/10"
-                            style={{ color: subtleColor }}
+                        return (
+                          <motion.div
+                            key="seed-tray"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute inset-0 z-30 flex flex-col rounded-lg"
+                            style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.88)' : 'rgba(10,10,12,0.88)', backdropFilter: 'blur(8px)' }}
+                            onKeyDown={e => {
+                              if (e.key === 'ArrowRight' && page < totalPages - 1) { e.preventDefault(); setSeedPage(page + 1) }
+                              if (e.key === 'ArrowLeft' && page > 0) { e.preventDefault(); setSeedPage(page - 1) }
+                              if (e.key === 'Escape') { e.preventDefault(); setSeedTrayOpen(false) }
+                            }}
+                            tabIndex={0}
+                            ref={el => el?.focus()}
                           >
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                          </button>
-                        </div>
-
-                        <div className="flex-1 flex items-center px-3">
-                          <div className="grid grid-cols-4 gap-2 w-full">
-                            {pageSeeds.map((type) => {
-                              const info = TREE_TYPES[type]
-                              if (!info) return null
-                              const isSelected = selectedSeed === type
-                              const count = counts.get(type) || 1
-                              const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#a78bfa' : info.rarity === 'premium' ? '#fbbf24' : info.rarity === 'chroma' ? '#f472b6' : '#f87171'
-                              return (
-                                <motion.button
-                                  key={type}
-                                  whileHover={{ scale: 1.08 }}
-                                  whileTap={{ scale: 0.92 }}
-                                  onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
-                                  title={`${info.name} (×${count})`}
-                                  className="relative flex items-center justify-center mx-auto"
-                                  style={{
-                                    width: 36, height: 36, borderRadius: '50%',
-                                    backgroundColor: isDark ? 'rgba(39,39,42,0.5)' : 'rgba(255,255,255,0.9)',
-                                    border: `1.5px solid ${isSelected ? info.color : isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}`,
-                                    boxShadow: isSelected ? `0 0 0 2px ${info.color}40, 0 0 12px ${info.color}20` : `0 0 0 2px ${rarityColor}15`,
-                                    cursor: 'pointer',
-                                    transition: 'border-color 0.15s, box-shadow 0.15s',
-                                  }}
-                                >
-                                  <PlantIcon type={type} size={28} isSeed />
-                                  {count > 1 && (
-                                    <span className="absolute -bottom-1 -right-1 text-[7px] font-bold rounded-full min-w-[13px] h-[13px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}` }}>
-                                      {count}
-                                    </span>
-                                  )}
-                                  {isSelected && (
-                                    <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
-                                  )}
-                                </motion.button>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        {totalPages > 1 && (
-                          <div className="flex items-center justify-center gap-3 px-3 pb-2">
-                            <button onClick={() => setSeedPage(Math.max(0, page - 1))} disabled={page === 0} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                            </button>
-                            <div className="flex gap-1">
-                              {Array.from({ length: totalPages }).map((_, i) => (
-                                <div key={i} className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: i === page ? mainColor : 'rgba(255,255,255,0.15)' }} />
-                              ))}
+                            <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
+                              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                                Seeds
+                              </span>
+                              <button
+                                onClick={() => setSeedTrayOpen(false)}
+                                className="w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-white/10"
+                                style={{ color: subtleColor }}
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                              </button>
                             </div>
-                            <button onClick={() => setSeedPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                            </button>
-                          </div>
-                        )}
-                      </motion.div>
-                    )
-                  })()}
-                </AnimatePresence>
-              </div>
+
+                            <div className="flex-1 flex items-center px-3">
+                              <div className="grid grid-cols-4 gap-2 w-full">
+                                {pageSeeds.map((type) => {
+                                  const info = TREE_TYPES[type]
+                                  if (!info) return null
+                                  const isSelected = selectedSeed === type
+                                  const count = counts.get(type) || 1
+                                  const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#a78bfa' : info.rarity === 'premium' ? '#fbbf24' : info.rarity === 'chroma' ? '#f472b6' : '#f87171'
+                                  return (
+                                    <motion.button
+                                      key={type}
+                                      whileHover={{ scale: 1.08 }}
+                                      whileTap={{ scale: 0.92 }}
+                                      onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
+                                      title={`${info.name} (×${count})`}
+                                      className="relative flex items-center justify-center mx-auto"
+                                      style={{
+                                        width: 36, height: 36, borderRadius: '50%',
+                                        backgroundColor: isDark ? 'rgba(39,39,42,0.5)' : 'rgba(255,255,255,0.9)',
+                                        border: `1.5px solid ${isSelected ? info.color : isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}`,
+                                        boxShadow: isSelected ? `0 0 0 2px ${info.color}40, 0 0 12px ${info.color}20` : `0 0 0 2px ${rarityColor}15`,
+                                        cursor: 'pointer',
+                                        transition: 'border-color 0.15s, box-shadow 0.15s',
+                                      }}
+                                    >
+                                      <PlantIcon type={type} size={28} isSeed />
+                                      {count > 1 && (
+                                        <span className="absolute -bottom-1 -right-1 text-[7px] font-bold rounded-full min-w-[13px] h-[13px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.6)' : 'rgba(228,228,231,0.8)'}` }}>
+                                          {count}
+                                        </span>
+                                      )}
+                                      {isSelected && (
+                                        <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
+                                      )}
+                                    </motion.button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-center gap-3 px-3 pb-2">
+                                <button onClick={() => setSeedPage(Math.max(0, page - 1))} disabled={page === 0} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                                </button>
+                                <div className="flex gap-1">
+                                  {Array.from({ length: totalPages }).map((_, i) => (
+                                    <div key={i} className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: i === page ? mainColor : 'rgba(255,255,255,0.15)' }} />
+                                  ))}
+                                </div>
+                                <button onClick={() => setSeedPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1} className="w-5 h-5 flex items-center justify-center rounded transition-colors disabled:opacity-20" style={{ color: dimColor }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                                </button>
+                              </div>
+                            )}
+                          </motion.div>
+                        )
+                      })()}
+                    </AnimatePresence>
+                  </div>
 
               {/* Change Plant and Notebook Selector */}
               {!running && !done && !treeDead && !seedTrayOpen && (
@@ -482,7 +573,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       Change Plant
                     </button>
                   )}
-                  
                 </div>
               )}
 
@@ -513,7 +603,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <span className="text-[11px] font-semibold">Water</span>
                 </button>
               )}
-              <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }`}</style>
+              <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes pulp-timer-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
 
               {/* Quote when running */}
               {running && (
