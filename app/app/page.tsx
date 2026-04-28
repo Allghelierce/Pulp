@@ -8,6 +8,7 @@ import { getPaperBg } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
+import { useVersionHistory } from "@/app/hooks/useVersionHistory"
 import { AppDialog } from "@/app/components/AppDialog"
 import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
@@ -26,6 +27,7 @@ const CoverModal = dynamic(() => import("@/app/components/CoverModal").then(m =>
 const FlashcardView = dynamic(() => import("@/app/components/FlashcardView").then(m => m.FlashcardView), { ssr: false })
 const AiCommandBar = dynamic(() => import("@/app/components/AiCommandBar").then(m => m.AiCommandBar), { ssr: false })
 const NotebookChat = dynamic(() => import("@/app/components/NotebookChat").then(m => m.NotebookChat), { ssr: false })
+const VersionHistoryPanel = dynamic(() => import("@/app/components/VersionHistoryPanel").then(m => m.VersionHistoryPanel), { ssr: false })
 const OrchardView = dynamic(() => import("@/app/components/OrchardView").then(m => m.OrchardView), { ssr: false })
 const BoutiqueView = dynamic(() => import("@/app/components/BoutiqueView").then(m => m.BoutiqueView), { ssr: false })
 const GemStoreModal = dynamic(() => import("@/app/components/GemStoreModal").then(m => m.GemStoreModal), { ssr: false })
@@ -236,9 +238,9 @@ const BoxItem = memo(function BoxItem({
         position: "absolute", left: box.x, top: box.y, width: box.w,
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : isEmpty ? `1px dashed ${isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"}` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"}`,
+        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 3, backgroundColor: box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)"),
+        borderRadius: 3, backgroundColor: box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -1277,6 +1279,7 @@ export default function NoteApp() {
     onError: openAlert
   })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes, strokeColor, fillColor, lineWidth, opacity: drawOpacity, dash: drawDash })
+  const versionHistory = useVersionHistory(notes, activeTabId)
 
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null)
@@ -1284,6 +1287,7 @@ export default function NoteApp() {
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [showNotebookChat, setShowNotebookChat] = useState(false)
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
   const [isTextActive, setIsTextActive] = useState(false)
   const slashMenuRef = useRef<{ x: number; y: number; filter: string; type: "editor" | "textarea"; mode: "@" | "/"; target?: HTMLElement; isSelectionMode?: boolean } | null>(null)
@@ -1908,7 +1912,7 @@ export default function NoteApp() {
       const w = window.innerWidth
       const isNarrow = w < 1000
       updateSettings({ wordCountVisible: !isNarrow })
-      const scale = w < 800 ? Math.max(0.55, w / 1200) : w < 1100 ? Math.max(0.7, w / 1300) : 1
+      const scale = w < 800 ? Math.max(0.75, w / 1000) : 1
       setWindowScale(scale)
     }
     checkViewport()
@@ -1927,7 +1931,7 @@ export default function NoteApp() {
       return parts.join("+")
     }
     const handleGlobalKey = (e: KeyboardEvent) => {
-      if (e.altKey && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (e.altKey && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
         e.preventDefault()
       }
       const keyStr = buildKeyStr(e)
@@ -1981,17 +1985,24 @@ export default function NoteApp() {
         setShowDrawToolbar((v: boolean) => !v)
       }
 
-      if (keyStr === shortcuts.prevPage || keyStr === shortcuts.nextPage) {
+      const isAltLeft = e.altKey && e.code === 'ArrowLeft'
+      const isAltRight = e.altKey && e.code === 'ArrowRight'
+      if (isAltLeft || isAltRight) {
         e.preventDefault()
-        const selectedIds = boxes.selectedBoxIdsRef.current
-        if (selectedIds.size === 0) {
-          editor.flushSync()
-          if (keyStr === shortcuts.prevPage) {
-            setCurrentPageIdx((p: number) => Math.max(0, p - 1))
-          } else {
+        editor.flushSync()
+        if (isAltLeft) {
+          setCurrentPageIdx((p: number) => Math.max(0, p - 1))
+        } else {
+          const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
+          if (note) {
             setCurrentPageIdx((p: number) => {
-              const max = (notesRef.current.find(n => n.id === activeTabIdRef.current)?.pages.length ?? 1) - 1
-              return Math.min(max, p + 1)
+              if (p >= note.pages.length - 1) {
+                const np = [...note.pages, ""]
+                const pageIdx = note.pages.length
+                setNotes((prev: any[]) => prev.map(n => n.id !== note.id ? n : { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] } }))
+                return pageIdx
+              }
+              return p + 1
             })
           }
         }
@@ -2793,6 +2804,7 @@ export default function NoteApp() {
                 canUndo={drawing.canUndo}
                 canRedo={drawing.canRedo}
                 onClearDrawing={drawing.clearCanvas}
+                onOpenVersionHistory={() => setShowVersionHistory(true)}
               />
             </div>
           )}
@@ -2882,7 +2894,7 @@ export default function NoteApp() {
                 />
               </main>
             ) : (
-              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start transition-all" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
+              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
                 <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "relative" }}>
@@ -3385,6 +3397,19 @@ export default function NoteApp() {
             theme={theme}
             accent={accent}
             onClose={() => setShowNotebookChat(false)}
+          />
+        )}
+
+        {showVersionHistory && activeNote && (
+          <VersionHistoryPanel
+            versions={versionHistory.getVersions(activeNote.id)}
+            noteSubject={activeNote.subject}
+            currentPages={activeNote.pages}
+            onRestore={v => versionHistory.restoreVersion(activeNote.id, v, setNotes)}
+            onDelete={ts => versionHistory.deleteVersion(activeNote.id, ts)}
+            onSaveSnapshot={() => versionHistory.takeSnapshot()}
+            onClose={() => setShowVersionHistory(false)}
+            theme={theme}
           />
         )}
 

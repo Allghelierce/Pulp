@@ -65,7 +65,7 @@ function isPlantable(x: number, y: number): boolean {
   if (y < 30) return false
   if (y > 96) return false
   if (x < 3 || x > 97) return false
-  if (distToPolyline(x, y, ROAD_MAIN) < 4.5) return false
+  if (distToPolyline(x, y, ROAD_MAIN) < 8) return false
   if (inLake(x, y)) return false
   return true
 }
@@ -75,55 +75,81 @@ function forestPlacement(trees: any[]): { x: number; y: number; tree: any }[] {
 
   const results: { x: number; y: number; tree: any }[] = []
 
-  // Organic cluster seeds — groups of trees form around these anchor points
   const clusterSeeds = [
-    { cx: 18, cy: 50, r: 16 },  // left meadow
-    { cx: 14, cy: 72, r: 14 },  // bottom-left
-    { cx: 38, cy: 80, r: 16 },  // bottom-center-left
-    { cx: 60, cy: 82, r: 12 },  // bottom-center-right (avoid lake)
-    { cx: 82, cy: 66, r: 12 },  // right side
-    { cx: 70, cy: 42, r: 14 },  // upper-right
-    { cx: 28, cy: 42, r: 12 },  // upper-left
-    { cx: 50, cy: 50, r: 10 },  // center (between roads)
-    { cx: 8, cy: 90, r: 10 },   // far bottom-left
-    { cx: 92, cy: 88, r: 8 },   // far bottom-right
+    { cx: 18, cy: 50, r: 16 },
+    { cx: 14, cy: 72, r: 14 },
+    { cx: 38, cy: 80, r: 16 },
+    { cx: 60, cy: 82, r: 12 },
+    { cx: 82, cy: 66, r: 12 },
+    { cx: 70, cy: 42, r: 14 },
+    { cx: 28, cy: 42, r: 12 },
+    { cx: 50, cy: 55, r: 10 },
+    { cx: 8, cy: 90, r: 10 },
+    { cx: 92, cy: 88, r: 8 },
   ]
 
-  const minSpacing = trees.length > 40 ? 4.5 : trees.length > 20 ? 5.5 : 6.5
-
-  for (let i = 0; i < trees.length; i++) {
-    let placed = false
-
-    for (let attempt = 0; attempt < 50; attempt++) {
-      const rng = seededRng(i * 311 + attempt * 173 + 4729)
-      // Pick a cluster weighted by how full it is, with randomness
-      const ci = Math.floor(rng() * clusterSeeds.length)
-      const cluster = clusterSeeds[ci]
-
-      // Random point within cluster radius with bias toward center
-      const a = rng() * Math.PI * 2
-      const dist = cluster.r * Math.sqrt(rng()) * (0.4 + rng() * 0.6)
-      const x = cluster.cx + Math.cos(a) * dist
-      const y = cluster.cy + Math.sin(a) * dist * 0.6 // squash for perspective
-
-      const cx = Math.max(4, Math.min(96, x))
-      const cy = Math.max(32, Math.min(95, y))
-
-      if (!isPlantable(cx, cy)) continue
-
-      const tooClose = results.some(r => Math.hypot(r.x - cx, r.y - cy) < minSpacing)
-      if (tooClose) continue
-
-      results.push({ x: cx, y: cy, tree: trees[i] })
-      placed = true
-      break
+  // Group trees by date so same-day trees cluster together
+  const sorted = [...trees].sort((a, b) => (a.plantedAt || 0) - (b.plantedAt || 0))
+  const dayMs = 24 * 60 * 60 * 1000
+  const groups: any[][] = []
+  let currentGroup: any[] = []
+  let currentDay = -1
+  for (const tree of sorted) {
+    const day = Math.floor((tree.plantedAt || 0) / dayMs)
+    if (day !== currentDay && currentGroup.length > 0) {
+      groups.push(currentGroup)
+      currentGroup = []
     }
+    currentDay = day
+    currentGroup.push(tree)
+  }
+  if (currentGroup.length > 0) groups.push(currentGroup)
 
-    if (!placed) {
-      const rng = seededRng(i * 997 + 7331)
-      const x = 5 + rng() * 90
-      const y = 34 + rng() * 58
-      results.push({ x, y, tree: trees[i] })
+  // Assign each date-group a preferred cluster
+  const minSpacing = trees.length > 40 ? 4.5 : trees.length > 20 ? 5.5 : 6.5
+  const usedClusters = new Set<number>()
+
+  for (let gi = 0; gi < groups.length; gi++) {
+    // Pick a cluster for this date group — prefer unused ones
+    const groupRng = seededRng(gi * 7919 + 1301)
+    let bestCi = Math.floor(groupRng() * clusterSeeds.length)
+    for (let t = 0; t < clusterSeeds.length; t++) {
+      const ci = (bestCi + t) % clusterSeeds.length
+      if (!usedClusters.has(ci)) { bestCi = ci; break }
+    }
+    usedClusters.add(bestCi)
+    const primaryCluster = clusterSeeds[bestCi]
+
+    for (let i = 0; i < groups[gi].length; i++) {
+      let placed = false
+      for (let attempt = 0; attempt < 60; attempt++) {
+        const rng = seededRng(gi * 311 + i * 173 + attempt * 59 + 4729)
+        // First 40 attempts try the assigned cluster, rest overflow to any
+        const cluster = attempt < 40 ? primaryCluster : clusterSeeds[Math.floor(rng() * clusterSeeds.length)]
+
+        const a = rng() * Math.PI * 2
+        const dist = cluster.r * Math.sqrt(rng()) * (0.4 + rng() * 0.6)
+        const x = cluster.cx + Math.cos(a) * dist
+        const y = cluster.cy + Math.sin(a) * dist * 0.6
+
+        const cx = Math.max(4, Math.min(96, x))
+        const cy = Math.max(32, Math.min(95, y))
+
+        if (!isPlantable(cx, cy)) continue
+        const tooClose = results.some(r => Math.hypot(r.x - cx, r.y - cy) < minSpacing)
+        if (tooClose) continue
+
+        results.push({ x: cx, y: cy, tree: groups[gi][i] })
+        placed = true
+        break
+      }
+
+      if (!placed) {
+        const rng = seededRng(gi * 997 + i * 331 + 7331)
+        const x = 5 + rng() * 90
+        const y = 34 + rng() * 58
+        results.push({ x, y, tree: groups[gi][i] })
+      }
     }
   }
 
@@ -377,9 +403,9 @@ export const OrchardView = memo(function OrchardView({
   const textSecondary = isDark ? '#6b6860' : '#9a9590'
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
-  const baseSize = filteredTrees.length <= 6 ? 62 :
-    filteredTrees.length <= 15 ? 56 :
-    filteredTrees.length <= 30 ? 50 : 44
+  const baseSize = filteredTrees.length <= 6 ? 78 :
+    filteredTrees.length <= 15 ? 70 :
+    filteredTrees.length <= 30 ? 62 : 54
 
   return (
     <div
@@ -599,14 +625,14 @@ export const OrchardView = memo(function OrchardView({
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
-                      const depthScale = 0.6 + (y / 100) * 0.5
+                      const depthScale = 0.55 + (y / 100) * 0.5
                       const treeSize = Math.round(baseSize * depthScale)
 
                       // Atmospheric perspective: depth 0 = far (y~30), depth 1 = near (y~95)
                       const depthNorm = Math.max(0, Math.min(1, (y - 30) / 65))
-                      const fogOpacity = 0.55 + depthNorm * 0.45
-                      const blurPx = (1 - depthNorm) * 1.2
-                      const saturate = 0.5 + depthNorm * 0.5
+                      const fogOpacity = 0.5 + depthNorm * 0.5
+                      const blurPx = (1 - depthNorm) * 0.4
+                      const saturate = 0.6 + depthNorm * 0.4
                       const brightness = 1 + (1 - depthNorm) * 0.12
 
                       return (

@@ -38,11 +38,20 @@ const faces = [
 export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: { onClick: () => void; onHover?: () => void }) {
   const angle = useMotionValue(0)
   const [faceIndex, setFaceIndex] = useState(0)
+  const [timerRunning, setTimerRunning] = useState(false)
   const faceScaleMotion = useMotionValue(1)
   const faceScaleSpring = useSpring(faceScaleMotion, { stiffness: 200, damping: 15 })
 
   const dragY = useMotionValue(0)
   const dragTriggered = useRef(false)
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "pulp-timer-state") setTimerRunning(!!e.data.timerRunning)
+    }
+    window.addEventListener("message", handler)
+    return () => window.removeEventListener("message", handler)
+  }, [])
 
   // Smooth, elastic pendulum
   const springAngle = useSpring(angle, {
@@ -90,7 +99,7 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
       className="fixed z-[9999]"
       style={{
         top: 0,
-        right: 40,
+        right: 12,
         width: 32,
         height: 180,
         display: "flex",
@@ -101,9 +110,10 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
         rotate: springAngle,
         y: dragY,
       }}
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      whileHover={{ y: 4 }}
+      initial={{ y: -180, opacity: 0 }}
+      animate={timerRunning ? { y: -180, opacity: 0 } : { y: 0, opacity: 1 }}
+      transition={timerRunning ? { type: "spring", stiffness: 120, damping: 18 } : { type: "spring", stiffness: 60, damping: 14, mass: 0.8 }}
+      whileHover={timerRunning ? {} : { y: 4 }}
       drag="y"
       dragConstraints={{ top: 0, bottom: 120 }}
       dragElastic={0.3}

@@ -48,22 +48,24 @@ export function useVersionHistory(
   activeTabId: string | null,
 ) {
   const lastHashRef = useRef<string>("")
-  const intervalRef = useRef<ReturnType<typeof setInterval>>()
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
   const getActiveNote = useCallback(() => {
     if (!activeTabId) return null
     return notes.find(n => n.id === activeTabId) ?? null
   }, [notes, activeTabId])
 
-  const takeSnapshot = useCallback(() => {
+  const takeSnapshot = useCallback((): NoteVersion[] => {
     const note = getActiveNote()
-    if (!note) return
+    if (!note) return []
     const hash = contentHash(note)
-    if (hash === lastHashRef.current) return
-    lastHashRef.current = hash
     const versions = loadVersions(note.id)
-    versions.push(extractVersion(note))
-    saveVersions(note.id, versions)
+    if (hash !== lastHashRef.current) {
+      lastHashRef.current = hash
+      versions.push(extractVersion(note))
+      saveVersions(note.id, versions)
+    }
+    return versions
   }, [getActiveNote])
 
   // Auto-snapshot on interval

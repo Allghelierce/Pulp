@@ -37,6 +37,7 @@ export function useBoxDrawing({
   const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
   const aligningRef = useRef(false)
+  const undoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
 
   // Stable refs so DOM handlers never have stale closures
   const zoomRef = useRef(zoom)
@@ -88,6 +89,21 @@ export function useBoxDrawing({
         if (allIds.size === 0) return
         e.preventDefault()
         setSelectedBoxIds(allIds)
+        return
+      }
+
+      // Undo — restore previous box/drawing state
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        const stack = undoStackRef.current
+        if (stack.length === 0) return
+        const snap = stack.pop()!
+        e.preventDefault()
+        setNotes(prev => prev.map(n => {
+          if (n.id !== snap.tabId) return n
+          const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
+          if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
+          return { ...n, ...restored }
+        }))
         return
       }
 
@@ -164,6 +180,16 @@ export function useBoxDrawing({
       const toDeleteDrawings = Array.from(drawIds)
       const tid = activeTabIdRef.current
       const pidx = currentPageIdxRef.current
+      const note = notesRef.current.find(n => n.id === tid)
+      if (note) {
+        undoStackRef.current.push({
+          tabId: tid!,
+          pageIdx: pidx,
+          boxes: [...(note.boxes[pidx] || [])],
+          drawings: note.drawings?.[pidx] ? [...note.drawings[pidx]] : undefined,
+        })
+        if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+      }
       setNotes(prev => prev.map(n => {
         if (n.id !== tid) return n
         const updated: Partial<NoteData> = {}
@@ -398,7 +424,9 @@ export function useBoxDrawing({
           const x = (sx - r.left) / scale
           const y = (sy - r.top) / scale
           const id = uid()
-          const newBox: TextBox = { id, x: x - 8, y: y - 8, w: 300, h: 32, content: '' }
+          const paperW = paperRef.current?.clientWidth || 800
+          const bw = Math.min(300, paperW - x - 8)
+          const newBox: TextBox = { id, x, y: y - 8, w: Math.max(bw, 120), h: 32, content: '' }
           const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
           const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
@@ -553,7 +581,23 @@ export function useBoxDrawing({
     addListeners()
   }, [addListeners, setDrawLineMode, setNotes])
 
+  const pushUndo = useCallback(() => {
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+    const note = notesRef.current.find(n => n.id === tid)
+    if (note) {
+      undoStackRef.current.push({
+        tabId: tid!,
+        pageIdx: pidx,
+        boxes: [...(note.boxes[pidx] || [])],
+        drawings: note.drawings?.[pidx] ? [...note.drawings[pidx]] : undefined,
+      })
+      if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+    }
+  }, [])
+
   const deleteBox = useCallback((id: string) => {
+    pushUndo()
     const element = document.getElementById(`box-${id}`)
     if (element) {
       element.style.pointerEvents = 'none'
@@ -594,7 +638,7 @@ export function useBoxDrawing({
       updateBoxes(bs => bs.filter(b => b.id !== id))
       setSelectedBoxIds(prev => { const n = new Set(prev); n.delete(id); return n })
     }
-  }, [setSelectedBoxIds, updateBoxes])
+  }, [pushUndo, setSelectedBoxIds, updateBoxes])
 
   const updateBoxContent = useCallback((id: string, text: string) => updateBoxes(bs => bs.map(b => b.id === id ? { ...b, content: text } : b)), [updateBoxes])
 

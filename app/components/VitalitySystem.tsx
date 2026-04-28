@@ -48,15 +48,69 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [checkAchievementRef])
 
   // ─── Timer State ───
-  const [timerElapsed, setTimerElapsed] = useState(0)
+  const GRACE_PERIOD_MS = 15 * 60 * 1000
+  const _st = useRef<any>(() => {
+    if (typeof window === "undefined") return null
+    try {
+      const s = sessionStorage.getItem('pulp-timer')
+      if (s) return { ...JSON.parse(s), _source: 'session' }
+      const b = localStorage.getItem('pulp-timer-backup')
+      if (b) return { ...JSON.parse(b), _source: 'backup' }
+    } catch { }
+    return null
+  })
+  const _saved = useRef(_st.current())
+  const _isBackup = _saved.current?._source === 'backup'
+  const _backupExpired = _isBackup && _saved.current?.timestamp && (Date.now() - _saved.current.timestamp > GRACE_PERIOD_MS)
+
+  const [timerElapsed, setTimerElapsed] = useState(() => {
+    const t = _saved.current
+    if (!t) return 0
+    if (_backupExpired) return 0
+    if (t.running && !t.done) {
+      const elapsed = (t.elapsed || 0) + Math.floor((Date.now() - (t.timestamp || Date.now())) / 1000)
+      return Math.min(elapsed, t.total ?? 25 * 60)
+    }
+    return t.elapsed ?? 0
+  })
   const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(activeTabId || (notes.length > 0 ? notes[0].id : null))
-  const [timerTotal, setTimerTotal] = useState(25 * 60)
-  const [timerRunning, setTimerRunning] = useState(false)
-  const [timerDone, setTimerDone] = useState(false)
-  const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">("focus")
-  const [waterDeadline, setWaterDeadline] = useState<number | null>(null)
-  const [treeDead, setTreeDead] = useState(false)
-  const [selectedSeed, setSelectedSeed] = useState<string | null>(null)
+  const [timerTotal, setTimerTotal] = useState(() => _backupExpired ? 25 * 60 : (_saved.current?.total ?? 25 * 60))
+  const [timerRunning, setTimerRunning] = useState(() => {
+    const t = _saved.current
+    if (!t || !t.running || t.done || _backupExpired) return false
+    const elapsed = (t.elapsed || 0) + Math.floor((Date.now() - (t.timestamp || Date.now())) / 1000)
+    if (elapsed >= (t.total ?? 25 * 60)) return false
+    if (t.waterDeadline && Date.now() > t.waterDeadline) return false
+    return true
+  })
+  const [timerDone, setTimerDone] = useState(() => {
+    const t = _saved.current
+    if (!t || _backupExpired) return false
+    if (t.done) return true
+    if (t.running) {
+      const elapsed = (t.elapsed || 0) + Math.floor((Date.now() - (t.timestamp || Date.now())) / 1000)
+      return elapsed >= (t.total ?? 25 * 60)
+    }
+    return false
+  })
+  const [timerPreset, setTimerPreset] = useState<"focus" | "short" | "long">(() => _backupExpired ? "focus" : (_saved.current?.preset ?? "focus"))
+  const [waterDeadline, setWaterDeadline] = useState<number | null>(() => _backupExpired ? null : (_saved.current?.waterDeadline ?? null))
+  const waterDeadlineRef = useRef<number | null>(_backupExpired ? null : (_saved.current?.waterDeadline ?? null))
+  const [treeDead, setTreeDead] = useState(() => {
+    const t = _saved.current
+    if (!t) return false
+    if (_backupExpired) return true
+    return !!(t.running && !t.done && t.waterDeadline && Date.now() > t.waterDeadline)
+  })
+  const [selectedSeed, setSelectedSeed] = useState<string | null>(() => _backupExpired ? null : (_saved.current?.selectedSeed ?? null))
+
+  // Tab-close grace period expired — penalize
+  useEffect(() => {
+    if (_isBackup && _backupExpired) {
+      setSunshine(0)
+      localStorage.removeItem('pulp-timer-backup')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Remove unassigned trees (admin trees) globally
   useEffect(() => {
@@ -69,37 +123,10 @@ export const VitalitySystem = memo(function VitalitySystem({
   const WATER_INTERVAL_MS = 8 * 60 * 1000 // 8 minutes (so 10-min sessions need watering at 8 min)
   const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
 
-  // Hydration — runs once on mount for session-only data
-  useEffect(() => {
-    const savedTimer = sessionStorage.getItem('pulp-timer')
-    if (savedTimer) {
-      const t = JSON.parse(savedTimer)
-      setTimerTotal(t.total ?? 25 * 60)
-      setTimerPreset(t.preset ?? "focus")
-      setTimerDone(t.done ?? false)
-      setWaterDeadline(t.waterDeadline ?? null)
-      if (t.running && !t.done) {
-        const elapsedSinceLast = Math.floor((Date.now() - t.timestamp) / 1000)
-        const totalElapsed = (t.elapsed || 0) + elapsedSinceLast
-        const totalCap = t.total ?? 25 * 60
-        if (totalElapsed >= totalCap) {
-          setTimerElapsed(totalCap)
-          setTimerDone(true)
-        } else if (t.waterDeadline && Date.now() > t.waterDeadline) {
-          setTimerElapsed(totalElapsed)
-          setTreeDead(true)
-        } else {
-          setTimerElapsed(totalElapsed)
-          setTimerRunning(true)
-        }
-      } else {
-        setTimerElapsed(t.elapsed ?? 0)
-      }
-    }
-  }, [])
+  // Timer state is now initialized from sessionStorage in useState initializers above
 
   useEffect(() => {
-    sessionStorage.setItem('pulp-timer', JSON.stringify({
+    const data = JSON.stringify({
       elapsed: timerElapsed,
       total: timerTotal,
       running: timerRunning,
@@ -108,20 +135,26 @@ export const VitalitySystem = memo(function VitalitySystem({
       waterDeadline,
       selectedSeed,
       timestamp: Date.now()
-    }))
+    })
+    sessionStorage.setItem('pulp-timer', data)
+    if (timerRunning) localStorage.setItem('pulp-timer-backup', data)
+    else localStorage.removeItem('pulp-timer-backup')
   }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed])
+
+  useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
 
   // Timer tick
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
       interval = setInterval(() => {
-        if (waterDeadline && Date.now() > waterDeadline) {
+        const wd = waterDeadlineRef.current
+        if (wd && Date.now() > wd) {
           setTimerRunning(false)
           setTreeDead(true)
           return
         }
-        setTimerElapsed(prev => {
+        setTimerElapsed((prev: number) => {
           if (prev >= timerTotal) {
             setTimerRunning(false)
             setTimerDone(true)
@@ -136,7 +169,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [timerRunning, timerDone, timerTotal, waterDeadline])
+  }, [timerRunning, timerDone, timerTotal])
 
   const startSession = useCallback(() => {
     setSelectedNotebookId(activeTabId)
@@ -265,12 +298,9 @@ export const VitalitySystem = memo(function VitalitySystem({
     }))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Leave-page warning when timer is running (focus blocker)
+  // Clean up localStorage backup when timer stops
   useEffect(() => {
-    if (!timerRunning) return
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
+    if (!timerRunning) localStorage.removeItem('pulp-timer-backup')
   }, [timerRunning])
 
   // Notify extension of timer state for site blocking
