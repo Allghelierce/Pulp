@@ -9,11 +9,11 @@ interface BinderViewProps {
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  sunshine: number
+  juice: number
   gems: number
   grove: any[]
   inventory: string[]
-  setSunshine: (v: number | ((p: number) => number)) => void
+  setJuice: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
@@ -23,11 +23,7 @@ const RARITY_CARD_STYLES: Record<string, string> = {
   common: "card-common",
   uncommon: "card-uncommon",
   rare: "card-rare",
-  "true rare": "card-true-rare",
-  premium: "card-premium",
-  chroma: "card-chroma",
-  extinct: "card-extinct",
-  limited: "card-limited"
+  legendary: "card-premium",
 }
 
 const Card = ({ card, idx, sellCard, theme }: any) => {
@@ -62,8 +58,8 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       {/* Rarity Tag */}
       <div className="absolute top-4 left-4 flex flex-col">
         <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">{typeInfo.rarity}</span>
-        {typeInfo.rarity === 'extinct' && (
-          <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">1 in a milly</span>
+        {typeInfo.rarity === 'legendary' && (
+          <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Legendary</span>
         )}
       </div>
 
@@ -119,7 +115,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
               <span className="text-4xl">💰</span>
               <span className="font-black text-xs tracking-widest uppercase">Redeem Estate</span>
               <div className="px-4 py-1 rounded-full bg-white/20 text-[10px] font-bold">
-                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'sunshine' ? '☀️' : '💎'}
+                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'juice' ? '🧃' : '💎'}
               </div>
             </div>
           </motion.button>
@@ -131,7 +127,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
 
 export const BinderView = memo(function BinderView({
   isOpen, onClose, theme, accent,
-  sunshine, gems, grove, inventory, setSunshine, setGems, setInventory, setGrove
+  juice, gems, grove, inventory, setJuice, setGems, setInventory, setGrove
 }: BinderViewProps) {
 
   const [page, setPage] = useState(0)
@@ -144,7 +140,7 @@ export const BinderView = memo(function BinderView({
     if (!tree || tree.stage < 4) return
     const typeInfo = TREE_TYPES[tree.type]
     const goldBack = Math.floor(typeInfo.cost * 1.5)
-    if (typeInfo.currency === 'sunshine') setSunshine(s => s + goldBack)
+    if (typeInfo.currency === 'juice') setJuice(s => s + goldBack)
     else setGems(g => g + goldBack)
     setGrove(g => g.filter((_, i) => i !== idx))
   }
@@ -294,7 +290,7 @@ export const BinderView = memo(function BinderView({
                       <div className="flex flex-col">
                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Yield Balance</span>
                          <div className="flex items-center gap-4 mt-1 font-black text-sm">
-                            <span className="flex items-center gap-1.5"><span className="text-lg">☀️</span> {sunshine}</span>
+                            <span className="flex items-center gap-1.5"><span className="text-lg">🧃</span> {juice}</span>
                             <span className="flex items-center gap-1.5"><span className="text-lg">💎</span> {gems}</span>
                          </div>
                       </div>

@@ -76,7 +76,7 @@ interface SidebarProps {
   onOpenLeaderboard?: () => void
   onOpenFocus?: () => void
   onOpenStats?: () => void
-  sunshine?: number
+  juice?: number
   gems?: number
   xp?: number
   totalNotes?: number
@@ -100,7 +100,7 @@ export const Sidebar = memo(function Sidebar({
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
   onOpenShop, onOpenGemStore, onOpenLeaderboard, onOpenFocus, onOpenStats,
-  sunshine = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
+  juice = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
 }: SidebarProps) {
@@ -568,7 +568,7 @@ export const Sidebar = memo(function Sidebar({
               <circle cx="14" cy="14" r="1.8" fill="#B8661A" fillOpacity="0.75" />
               <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
             </svg>
-            <h1 className="text-3xl text-white" style={{ fontFamily: 'var(--font-dancing), cursive', letterSpacing: '0.02em' }}>Pulp</h1>
+            <h1 className="text-white" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>pulp</h1>
           </div>
           <div ref={searchRef} className="relative">
             <div className="relative">
@@ -687,6 +687,7 @@ export const Sidebar = memo(function Sidebar({
                   <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
                     className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-400 bg-zinc-800/60" : "text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
+                    style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}
                   >
                     + New
                   </button>
@@ -699,7 +700,7 @@ export const Sidebar = memo(function Sidebar({
                     </div>
                   )}
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5">+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>+ Folder</button>
               </div>
             </div>
 
@@ -848,25 +849,25 @@ export const Sidebar = memo(function Sidebar({
             {onOpenShop && (
               <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Shop</span>
+                <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Shop</span>
               </button>
             )}
             {onOpenStats && (
               <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Stats</span>
+                <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Stats</span>
               </button>
             )}
             {onOpenFocus && (
               <button onClick={onOpenFocus} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Focus</span>
+                <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Focus</span>
               </button>
             )}
             {onOpenLeaderboard && (
               <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
-                <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300">Leaderboard</span>
+                <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Leaderboard</span>
               </button>
             )}
           </div>
@@ -874,7 +875,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="px-2 pb-2 pt-1 border-t border-white/[0.03] flex items-center gap-1">
             <button onClick={onOpenSettings} className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 truncate min-w-0">Settings</span>
+              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300 truncate min-w-0" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Settings</span>
             </button>
             {onOpenTimer && (
               <button

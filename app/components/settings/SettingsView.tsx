@@ -193,12 +193,12 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Sidebar ── */}
         <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Settings</p>
+            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>Settings</p>
           </div>
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
               <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-3 mt-3 border-t border-zinc-800" : "pt-3 mt-3 border-t border-zinc-300/40") : "mb-1"}>
-                <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
+                <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>{group.name}</p>
                 {group.tabs.map(tab => {
                   const isPremium = tab.id === "subscription"
                   const isActive = activeTab === tab.id
@@ -215,6 +215,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                             ? isDark ? "text-[#ea580c]/70 hover:bg-[#ea580c]/5" : "text-[#ea580c]/70 hover:bg-[#ea580c]/5"
                             : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                       }`}
+                      style={{ fontFamily: 'var(--font-italiana)' }}
                     >
                       <span className="mr-2 w-4 h-4 flex items-center justify-center">{TAB_ICONS[tab.id]}</span>
                       {tab.label}
@@ -232,10 +233,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className="text-[15px] font-semibold tracking-tight" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
+            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-            <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: 'var(--font-italiana)', color: isDark ? '#5a5650' : '#a8a4a0' }}>
               {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
@@ -661,7 +662,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
-                            {a.rewardType === 'gems' ? '💎' : '☀️'} {a.reward}
+                            {a.rewardType === 'gems' ? '💎' : '🧃'} {a.reward}
                           </div>
                         </div>
                       </div>
@@ -764,7 +765,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                        </div>
                      }
                      isDark={isDark}
-                     description="Grant infinite Sunshine and Gems for testing"
+                     description="Grant infinite Juice and Gems for testing"
                      control={<SettingToggle checked={devMode} onChange={v => onUpdateConfig({ devMode: v })} isDark={isDark} />}
                    />
                    <div className="px-5 pb-3">
@@ -855,7 +856,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
-                        { name: "Grove & Achievements", description: "Plant trees, earn sunshine, unlock rewards", included: true },
+                        { name: "Grove & Achievements", description: "Plant trees, earn juice, unlock rewards", included: true },
                         { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
                         { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
                       ],
@@ -872,7 +873,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       features: [
                         { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
                         { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
-                        { name: "Rare Seed Drops", description: "Bonus rare & chroma seeds every month", included: true },
+                        { name: "Rare Seed Drops", description: "Bonus rare & legendary seeds every month", included: true },
                         { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                       ],
                     },
@@ -907,7 +908,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, title: "Notebooks & Pages", desc: "Create notebooks from the sidebar. Each notebook holds multiple pages you can flip through. Click anywhere on a page to create a text box and start writing." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>, title: "Sunshine & Gems", desc: "Sunshine is earned by writing and completing focus sessions. Gems are a premium currency for unlocking cosmetics, rare seeds, and accent colors. You can purchase gems in the gem store." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Juice & Gems", desc: "Juice is earned by writing and completing focus sessions — use it to buy seeds in the shop. Gems are a premium currency for cosmetics, orchard expansion, and accent colors." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. Removing a site costs 50 gems to discourage impulsive unblocking. Install the Chrome extension for enforcement." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
@@ -927,8 +928,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 <div className="px-5 py-4 space-y-4">
                   {[
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, title: "Growing Plants", desc: "Every completed focus session grows a plant. The plant type depends on the seed you select before starting. Plants are automatically assigned to whichever notebook you had open." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, true rare, premium, chroma, and exotic. Rarer seeds grow into unique plants. Find seeds in the boutique or earn them through achievements." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all sunshine earned that session." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, and legendary. Fruit trees produce juice, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all juice earned that session." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>

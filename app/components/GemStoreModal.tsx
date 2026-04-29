@@ -121,7 +121,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
             {/* Footer */}
             <div className="px-6 pb-4">
               <p style={{ fontSize: 9, color: '#3a3630', lineHeight: 1.4, textAlign: 'center', margin: 0, fontFamily: font }}>
-                Gems unlock cosmetics and recover lost sunshine.
+                Gems unlock cosmetics and recover lost juice.
               </p>
             </div>
           </motion.div>

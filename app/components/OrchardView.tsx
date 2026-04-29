@@ -10,27 +10,24 @@ interface OrchardViewProps {
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  sunshine: number
+  juice: number
   gems: number
   xp: number
   grove: any[]
   inventory: string[]
-  setSunshine: (v: number | ((p: number) => number)) => void
+  setJuice: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
 }
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'premium', 'extinct', 'chroma']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
 const RARITY_META: Record<string, { label: string; color: string }> = {
   common: { label: 'Common', color: '#8a8a8f' },
   uncommon: { label: 'Uncommon', color: '#6b9a6b' },
   rare: { label: 'Rare', color: '#6888a8' },
-  'true rare': { label: 'True Rare', color: '#8b7aaa' },
-  premium: { label: 'Premium', color: '#b89860' },
-  chroma: { label: 'Chroma', color: '#a8708a' },
-  extinct: { label: 'Extinct', color: '#7a6a9a' },
+  legendary: { label: 'Legendary', color: '#b89860' },
 }
 
 function seededRng(seed: number) {
@@ -161,10 +158,7 @@ function getRarityPlantClass(type: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
     case 'rare': return 'rarity-rare'
-    case 'true rare': return 'rarity-true-rare'
-    case 'premium': return 'rarity-premium'
-    case 'chroma': return 'rarity-chroma'
-    case 'extinct': return 'rarity-extinct'
+    case 'legendary': return 'rarity-premium'
     default: return ''
   }
 }
@@ -327,7 +321,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  sunshine, gems, xp, grove, notes,
+  juice, gems, xp, grove, notes,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -428,12 +422,12 @@ export const OrchardView = memo(function OrchardView({
         <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0 z-30`}>
           {/* Sidebar header */}
           <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Orchard</p>
+            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>Orchard</p>
           </div>
 
           {/* Notebook list */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
-            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
+            <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
 
             {activeNotes.map(note => {
               const count = notebookTreeCounts[note.id] || 0
@@ -463,7 +457,7 @@ export const OrchardView = memo(function OrchardView({
             {archivedNotes.length > 0 && archivedNotes.some(n => (notebookTreeCounts[n.id] || 0) > 0) && (
               <>
                 <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
                 </div>
                 {archivedNotes.filter(n => (notebookTreeCounts[n.id] || 0) > 0).map(note => {
                   const count = notebookTreeCounts[note.id] || 0
@@ -495,7 +489,7 @@ export const OrchardView = memo(function OrchardView({
             {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
               <>
                 <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
                 </div>
                 <button
                   onClick={() => setSelectedNotebook('_unassigned')}
@@ -530,8 +524,8 @@ export const OrchardView = memo(function OrchardView({
             </div>
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
-                <span className="text-[9px]">☀️</span>
-                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{sunshine}</span>
+                <span className="text-[9px]">🧃</span>
+                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{juice}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[9px]">💎</span>

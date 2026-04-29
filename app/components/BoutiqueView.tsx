@@ -11,11 +11,11 @@ interface BoutiqueViewProps {
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  sunshine: number
   gems: number
+  juice: number
   inventory: string[]
-  setSunshine: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
+  setJuice: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   unlockedCosmetics: string[]
@@ -38,26 +38,29 @@ const GEM_COSMETICS = [
   { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 4 },
 ]
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'premium', 'extinct', 'chroma']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
 
 const RARITY_LABEL: Record<string, string> = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare',
-  'true rare': 'True Rare', premium: 'Premium', chroma: 'Chroma', extinct: 'Extinct',
+  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary',
 }
 
 const RARITY_COLOR: Record<string, string> = {
-  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa',
-  'true rare': '#a78bfa', premium: '#ea580c', chroma: '#f472b6', extinct: '#f87171',
+  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', legendary: '#f59e0b',
 }
 
 const RARITY_BG: Record<string, string> = {
   common: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #22301a 100%)',
   uncommon: 'linear-gradient(180deg, #0e1a16 0%, #122820 50%, #163228 100%)',
   rare: 'linear-gradient(180deg, #0e1420 0%, #121e30 50%, #162840 100%)',
-  'true rare': 'linear-gradient(180deg, #16102a 0%, #1e1638 50%, #261c46 100%)',
-  premium: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
-  chroma: 'linear-gradient(180deg, #1a0e1e 0%, #28142e 50%, #361a3e 100%)',
-  extinct: 'linear-gradient(180deg, #161014 0%, #1e1418 50%, #26181e 100%)',
+  legendary: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  fruit: '🍊 Fruit', paper: '📄 Paper', gem: '💎 Gem', none: '',
+}
+
+const CATEGORY_COLOR: Record<string, string> = {
+  fruit: '#fb923c', paper: '#a3e635', gem: '#a78bfa', none: '#71717a',
 }
 
 const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled' && t !== 'tangerine').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
@@ -75,10 +78,7 @@ function rarityPlantClass(rarity: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
     case 'rare': return 'rarity-rare'
-    case 'true rare': return 'rarity-true-rare'
-    case 'premium': return 'rarity-premium'
-    case 'chroma': return 'rarity-chroma'
-    case 'extinct': return 'rarity-extinct'
+    case 'legendary': return 'rarity-premium'
     default: return ''
   }
 }
@@ -86,17 +86,14 @@ function rarityPlantClass(rarity: string): string {
 function rarityCardClass(rarity: string): string {
   switch (rarity) {
     case 'rare': return 'rarity-card-rare'
-    case 'true rare': return 'rarity-card-true-rare'
-    case 'premium': return 'rarity-card-premium'
-    case 'chroma': return 'rarity-card-chroma'
-    case 'extinct': return 'rarity-card-extinct'
+    case 'legendary': return 'rarity-card-premium'
     default: return ''
   }
 }
 
 function Sparkles({ rarity, count }: { rarity: string; count: number }) {
-  if (!['premium', 'chroma', 'extinct'].includes(rarity)) return null
-  const cls = rarity === 'premium' ? 'sparkle-premium' : rarity === 'chroma' ? 'sparkle-chroma' : 'sparkle-extinct'
+  if (rarity !== 'legendary') return null
+  const cls = 'sparkle-premium'
   return (
     <div className="sparkle-container">
       {Array.from({ length: count }).map((_, i) => (
@@ -117,91 +114,7 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
 }
 
 function RarityScene({ rarity }: { rarity: string }) {
-  if (rarity === 'extinct') {
-    return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
-          <defs>
-            <radialGradient id="ext-core" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="#1e1018" />
-              <stop offset="60%" stopColor="#120a10" />
-              <stop offset="100%" stopColor="#0a060a" />
-            </radialGradient>
-            <radialGradient id="ext-ember" cx="50%" cy="80%">
-              <stop offset="0%" stopColor="rgba(168,85,100,0.05)">
-                <animate attributeName="stopColor" values="rgba(168,85,100,0.05);rgba(168,85,100,0.1);rgba(168,85,100,0.05)" dur="6s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#ext-core)" />
-          <rect width="100%" height="100%" fill="url(#ext-ember)" />
-          {Array.from({ length: 8 }).map((_, i) => (
-            <circle key={i}
-              cx={`${(i * 29 + 12) % 88}%`}
-              r={0.6 + (i % 3) * 0.3}
-              fill={i % 3 === 0 ? '#a85568' : i % 2 === 0 ? '#8a4a5a' : '#4a2030'}
-            >
-              <animate attributeName="opacity" values="0;0.6;0.2;0" dur={`${4 + (i % 4) * 1.5}s`} begin={`${i * 0.9}s`} repeatCount="indefinite" />
-              <animate attributeName="cy" values={`${75 + (i * 7) % 20}%;${55 + (i * 5) % 15}%`} dur={`${4 + (i % 4) * 1.5}s`} begin={`${i * 0.9}s`} repeatCount="indefinite" />
-            </circle>
-          ))}
-        </svg>
-      </div>
-    )
-  }
-
-  if (rarity === 'chroma') {
-    return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
-          <defs>
-            <radialGradient id="chr-a" cx="25%" cy="30%">
-              <stop offset="0%" stopColor="rgba(192,132,252,0.14)">
-                <animate attributeName="stopColor" values="rgba(192,132,252,0.14);rgba(96,165,250,0.14);rgba(244,114,182,0.14);rgba(192,132,252,0.14)" dur="12s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-            <radialGradient id="chr-b" cx="75%" cy="70%">
-              <stop offset="0%" stopColor="rgba(244,114,182,0.1)">
-                <animate attributeName="stopColor" values="rgba(244,114,182,0.1);rgba(52,211,153,0.1);rgba(192,132,252,0.1);rgba(244,114,182,0.1)" dur="12s" begin="4s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-            <radialGradient id="chr-c" cx="55%" cy="50%">
-              <stop offset="0%" stopColor="rgba(96,165,250,0.06)">
-                <animate attributeName="stopColor" values="rgba(96,165,250,0.06);rgba(244,114,182,0.06);rgba(52,211,153,0.06);rgba(96,165,250,0.06)" dur="12s" begin="8s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="#06020e" />
-          <rect width="100%" height="100%" fill="url(#chr-a)">
-            <animate attributeName="opacity" values="0.8;1;0.8" dur="8s" repeatCount="indefinite" />
-          </rect>
-          <rect width="100%" height="100%" fill="url(#chr-b)">
-            <animate attributeName="opacity" values="1;0.7;1" dur="10s" repeatCount="indefinite" />
-          </rect>
-          <rect width="100%" height="100%" fill="url(#chr-c)" />
-          {Array.from({ length: 5 }).map((_, i) => {
-            const colors = ['#c084fc', '#f472b6', '#60a5fa', '#34d399', '#a78bfa']
-            return (
-              <circle key={i}
-                cx={`${(i * 37 + 10) % 85}%`} cy={`${(i * 31 + 15) % 75}%`}
-                r={1}
-                fill={colors[i]}
-              >
-                <animate attributeName="opacity" values="0;0.4;0" dur={`${6 + (i % 3) * 2}s`} begin={`${i * 1.8}s`} repeatCount="indefinite" />
-                <animate attributeName="r" values="0.8;1.8;0.8" dur={`${6 + (i % 3) * 2}s`} begin={`${i * 1.8}s`} repeatCount="indefinite" />
-              </circle>
-            )
-          })}
-        </svg>
-      </div>
-    )
-  }
-
-  if (rarity === 'premium') {
+  if (rarity === 'legendary') {
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
@@ -239,7 +152,7 @@ function RarityScene({ rarity }: { rarity: string }) {
 
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
-  sunshine, gems, inventory, setSunshine, setGems, setInventory, setGrove,
+  gems, juice, inventory, setGems, setJuice, setInventory, setGrove,
   unlockedCosmetics, setUnlockedCosmetics, onUpdateConfig,
   initialTab, initialScrollTo
 }: BoutiqueViewProps) {
@@ -366,10 +279,8 @@ export const BoutiqueView = memo(function BoutiqueView({
   const buySeed = (type: string) => {
     if ((shopStock[type] || 0) <= 0 || inventory.length >= 60) return
     const t = TREE_TYPES[type]
-    const hasFunds = t.currency === 'sunshine' ? sunshine >= t.cost : gems >= t.cost
-    if (!hasFunds) return
-    if (t.currency === 'sunshine') setSunshine((s: number) => s - t.cost)
-    else setGems((g: number) => g - t.cost)
+    if (juice < t.cost) return
+    setJuice((j: number) => j - t.cost)
     const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
     setShopStock(nextStock)
     localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
@@ -393,11 +304,11 @@ export const BoutiqueView = memo(function BoutiqueView({
   const STAGE_NAMES = ['Seed', 'Seedling', 'Sprout', 'Young', 'Mature']
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
-  const CurrencyPill = ({ type, amount }: { type: 'sunshine' | 'gems'; amount: number }) => (
+  const CurrencyPill = ({ type, amount }: { type: 'juice' | 'gems'; amount: number }) => (
     <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
       {type === 'gems'
         ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>
-        : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        : <span style={{ fontSize: 11 }}>🧃</span>
       }
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
@@ -453,7 +364,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <CurrencyPill type="sunshine" amount={sunshine} />
+            <CurrencyPill type="juice" amount={juice} />
             <CurrencyPill type="gems" amount={gems} />
             <button
               onClick={onClose}
@@ -644,7 +555,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* Buy button + stock indicator */}
               {(() => {
                 const stock = shopStock[selectedPlant!] || 0
-                const cantAfford = previewInfo.currency === 'sunshine' ? sunshine < previewInfo.cost : gems < previewInfo.cost
+                const cantAfford = juice < previewInfo.cost
                 if (stock <= 0) return (
                   <div className="mt-5 px-6 py-2.5 rounded-xl text-[13px] font-bold" style={{
                     fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -669,7 +580,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     >
                       Buy Seed
                       <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
-                      <span className="text-[10px] leading-none">{previewInfo.currency === 'sunshine' ? '☀️' : '💎'}</span>
+                      <span className="text-[10px] leading-none">🧃</span>
                       {previewInfo.cost.toLocaleString()}
                     </button>
                     <span style={{
@@ -911,8 +822,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                              <div style={{ marginTop: 4 }}>
+                              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
+                                <span style={{ fontSize: 9, fontWeight: 600, color: CATEGORY_COLOR[t.category], letterSpacing: '0.04em' }}>{CATEGORY_LABEL[t.category]}</span>
                               </div>
                             </div>
                           </button>
@@ -986,7 +898,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
           <span style={{ fontSize: 9, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>
-            ☀️ {t.cost.toLocaleString()}
+            🧃 {t.cost.toLocaleString()}
           </span>
         </div>
       </div>

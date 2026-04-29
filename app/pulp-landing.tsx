@@ -6,25 +6,23 @@ import { PlantIcon } from "./components/PlantIcon"
 
 const SHOWCASE_TREES = [
   { type: 'tangerine', name: 'tangerine', rarity: 'default' },
-  { type: 'ember', name: 'ember', rarity: 'uncommon' },
-  { type: 'sentinel', name: 'sentinel', rarity: 'uncommon' },
-  { type: 'goldleaf', name: 'goldleaf', rarity: 'rare' },
-  { type: 'wisteria', name: 'wisteria', rarity: 'true rare' },
-  { type: 'hanami', name: 'hanami', rarity: 'true rare' },
-  { type: 'odyssey', name: 'odyssey', rarity: 'premium' },
-  { type: 'manuscript', name: 'manuscript birch', rarity: 'uncommon' },
-  { type: 'fossil', name: 'fossil', rarity: 'extinct' },
-  { type: 'prism', name: 'prism', rarity: 'chroma' },
-  { type: 'abyss', name: 'abyss maw', rarity: 'chroma' },
+  { type: 'cherry', name: 'cherry', rarity: 'common' },
+  { type: 'apple', name: 'apple', rarity: 'uncommon' },
+  { type: 'peach', name: 'peach', rarity: 'rare' },
+  { type: 'pineapple', name: 'pineapple', rarity: 'rare' },
+  { type: 'passionfruit', name: 'passionfruit', rarity: 'rare' },
+  { type: 'redwood', name: 'redwood', rarity: 'rare' },
+  { type: 'sakura', name: 'sakura', rarity: 'legendary' },
+  { type: 'abyss', name: 'abyss maw', rarity: 'legendary' },
 ]
 
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.' },
-  { label: 'living orchard', desc: 'every notebook grows its own orchard — so you can see exactly where your time went at a glance.' },
+  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest juice and cut trees for paper.' },
   { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.' },
   { label: 'notebooks', desc: 'multiple types — standard, single page, flashcards, cornell, and encrypted vaults.' },
-  { label: 'achievements', desc: 'unlock milestones as you write. earn sunshine, gems, and xp to level up.' },
-  { label: 'seed shop', desc: 'spend sunshine on rare seeds. grow 30+ unique species from tangerines to mythic chroma trees.' },
+  { label: 'achievements', desc: 'unlock milestones as you write. earn juice, gems, and xp to level up.' },
+  { label: 'seed shop', desc: 'spend juice on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.' },
 ]
 
 const RARITY_COLOR: Record<string, string> = {
@@ -32,10 +30,7 @@ const RARITY_COLOR: Record<string, string> = {
   common: '#a1a1aa',
   uncommon: '#34d399',
   rare: '#60a5fa',
-  'true rare': '#a78bfa',
-  premium: '#ea580c',
-  extinct: '#f87171',
-  chroma: '#f472b6',
+  legendary: '#f59e0b',
 }
 
 function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?: () => void }) {
@@ -69,7 +64,7 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
   )
 }
 
-const DEMO_TREES = ['tangerine', 'manuscript', 'abyss'] as const
+const DEMO_TREES = ['tangerine', 'cherry', 'abyss'] as const
 
 function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   const total = 10

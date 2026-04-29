@@ -11,7 +11,7 @@ interface FlashcardViewProps {
   noteTitle: string
   theme: "light" | "dark"
   accent: string
-  onStudyComplete?: (cardsReviewed: number, sunshineEarned: number) => void
+  onStudyComplete?: (cardsReviewed: number, juiceEarned: number) => void
 }
 
 // SM-2 Spaced Repetition Algorithm
@@ -102,8 +102,8 @@ export function FlashcardView({
     } else {
       // End session
       if (studiedCards.size > 0 && onStudyComplete) {
-        const sunshineEarned = studiedCards.size * 2
-        onStudyComplete(studiedCards.size, sunshineEarned)
+        const juiceEarned = studiedCards.size * 2
+        onStudyComplete(studiedCards.size, juiceEarned)
       }
     }
     setIsStudyMode(enable)

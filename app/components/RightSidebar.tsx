@@ -9,21 +9,21 @@ interface RightSidebarProps {
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  sunshine: number
+  juice: number
   gems: number
   xp: number
   grove: any[]
   userName?: string
-  setSunshine: (v: number | ((p: number) => number)) => void
+  setJuice: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
 }
 
 export const RightSidebar = memo(function RightSidebar({
   isOpen, onClose, theme, accent,
-  sunshine, gems, xp, grove, userName, setSunshine, setGems, setGrove
+  juice, gems, xp, grove, userName, setJuice, setGems, setGrove
 }: RightSidebarProps) {
-  const [sunshineTooltip, setSunshineTooltip] = useState(false)
+  const [juiceTooltip, setJuiceTooltip] = useState(false)
   const [gemsTooltip, setGemsTooltip] = useState(false)
   const [tab, setTab] = useState<"grove" | "leaderboard">("grove")
 
@@ -31,19 +31,19 @@ export const RightSidebar = memo(function RightSidebar({
   const isDark = theme === "dark"
 
   const leaderboard = useMemo(() => {
-    const you = { name: userName || "you", xp, sunshine, isYou: true }
+    const you = { name: userName || "you", xp, juice, isYou: true }
     const others = LEADERBOARD_BOTS.map(b => ({ ...b, isYou: false }))
-    return [...others, you].sort((a, b) => b.sunshine - a.sunshine)
-  }, [xp, sunshine, userName])
+    return [...others, you].sort((a, b) => b.juice - a.juice)
+  }, [xp, juice, userName])
 
   const yourRank = leaderboard.findIndex(e => e.isYou) + 1
 
   const plantSeed = (type: keyof typeof TREE_TYPES) => {
     const typeInfo = TREE_TYPES[type]
-    const hasFunds = typeInfo.currency === 'sunshine' ? sunshine >= typeInfo.cost : gems >= typeInfo.cost
+    const hasFunds = typeInfo.currency === 'juice' ? juice >= typeInfo.cost : gems >= typeInfo.cost
     if (!hasFunds) return
 
-    if (typeInfo.currency === 'sunshine') setSunshine(s => s - typeInfo.cost)
+    if (typeInfo.currency === 'juice') setJuice(s => s - typeInfo.cost)
     else setGems(g => g - typeInfo.cost)
 
     setGrove(g => [...g.slice(0, 8), {
@@ -124,15 +124,15 @@ export const RightSidebar = memo(function RightSidebar({
               <div className="grid grid-cols-2 gap-3">
                 <div
                   className={`p-4 rounded-2xl border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-orange-50/30 border-orange-100/50 hover:bg-orange-50/50'}`}
-                  onMouseEnter={() => setSunshineTooltip(true)}
-                  onMouseLeave={() => setSunshineTooltip(false)}
+                  onMouseEnter={() => setJuiceTooltip(true)}
+                  onMouseLeave={() => setJuiceTooltip(false)}
                 >
                   <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center mb-2">
                     <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></svg>
                   </div>
-                  <span className="text-[18px] font-bold font-serif">{sunshine}</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Sunshine</span>
-                  {sunshineTooltip && (
+                  <span className="text-[18px] font-bold font-serif">{juice}</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Juice</span>
+                  {juiceTooltip && (
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none bg-zinc-800 text-white">
                       Earned by writing &amp; focus sessions.
                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-800" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
@@ -166,7 +166,7 @@ export const RightSidebar = memo(function RightSidebar({
                     <button
                       key={type}
                       onClick={() => plantSeed(type)}
-                      disabled={TREE_TYPES[type].currency === 'sunshine' ? sunshine < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost}
+                      disabled={TREE_TYPES[type].currency === 'juice' ? juice < TREE_TYPES[type].cost : gems < TREE_TYPES[type].cost}
                       className="flex flex-col items-center group disabled:opacity-30"
                     >
                       <div
@@ -176,7 +176,7 @@ export const RightSidebar = memo(function RightSidebar({
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: TREE_TYPES[type].color }} />
                       </div>
                       <span className="text-[8px] font-bold text-zinc-500">{TREE_TYPES[type].name.split(' ')[0]}</span>
-                      <span className="text-[7px] text-zinc-400">{TREE_TYPES[type].cost} {TREE_TYPES[type].currency === 'sunshine' ? 'Sun' : 'Gem'}</span>
+                      <span className="text-[7px] text-zinc-400">{TREE_TYPES[type].cost} {TREE_TYPES[type].currency === 'juice' ? 'Sun' : 'Gem'}</span>
                     </button>
                   ))}
                 </div>
@@ -258,7 +258,7 @@ export const RightSidebar = memo(function RightSidebar({
                         </span>
                       </div>
                       <span className={`text-[10px] font-bold tabular-nums ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        ☀️ {entry.sunshine.toLocaleString()}
+                        🧃 {entry.juice.toLocaleString()}
                       </span>
                     </div>
                   )

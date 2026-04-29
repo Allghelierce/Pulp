@@ -1,48 +1,47 @@
 export const TREE_TYPES: Record<string, any> = {
+  // ═══ FRUIT TREES — produce juice when mature ═══
+
   // DEFAULT — free, always available
-  tangerine:  { name: 'Tangerine',         color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   cost: 0,     currency: 'sunshine', rarity: 'common',    weight: 0,     shape: 'citrus',    sceneBg: 'linear-gradient(180deg, #1c1608 0%, #24200e 50%, #2e2814 100%)' },
+  tangerine:     { name: 'Tangerine',      color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'citrus',       category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1608 0%, #24200e 50%, #2e2814 100%)' },
 
-  // COMMON — 3 sunshine each
-  heartwood:  { name: 'Heartwood Oak',    color: '#8b6914', bg: 'rgba(139,105,20,0.1)',  cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'oak',       sceneBg: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #222e1a 100%)' },
-  thicket:    { name: 'Inkberry Bush',    color: '#2d6a4f', bg: 'rgba(45,106,79,0.1)',   cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'shrub',     sceneBg: 'linear-gradient(180deg, #0e1a12 0%, #142218 50%, #182a1c 100%)' },
-  penny:      { name: 'Penny Bloom',      color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'daisy',     sceneBg: 'linear-gradient(180deg, #1a1e14 0%, #22281c 50%, #283020 100%)' },
-  quill:      { name: 'Quill Fern',       color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'fern',      sceneBg: 'linear-gradient(180deg, #0e1a12 0%, #142218 50%, #182a1c 100%)' },
-  pebble:     { name: 'Pebble Shrub',     color: '#65a30d', bg: 'rgba(101,163,13,0.1)',  cost: 3,     currency: 'sunshine', rarity: 'common',    weight: 0.5,   shape: 'round',     sceneBg: 'linear-gradient(180deg, #141c0a 0%, #1a2a0e 50%, #223812 100%)' },
+  // COMMON — 5 juice each
+  cherry:        { name: 'Cherry',         color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'cherry',       category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c0a0a 0%, #2a1010 50%, #381616 100%)' },
+  lemon:         { name: 'Lemon',          color: '#facc15', bg: 'rgba(250,204,21,0.1)',  cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'lemon',        category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1c0e 0%, #242412 50%, #2e2e18 100%)' },
 
-  // UNCOMMON — 12 sunshine each (~20 min focus)
-  ember:      { name: 'Ember Maple',      color: '#991b1b', bg: 'rgba(153,27,27,0.1)',   cost: 12,    currency: 'sunshine', rarity: 'uncommon',  weight: 0.3,   shape: 'maple',     sceneBg: 'linear-gradient(180deg, #1c0a0a 0%, #2a1010 50%, #381616 100%)' },
-  sentinel:   { name: 'Sentinel Pine',    color: '#064e3b', bg: 'rgba(6,78,59,0.1)',     cost: 12,    currency: 'sunshine', rarity: 'uncommon',  weight: 0.3,   shape: 'conifer',   sceneBg: 'linear-gradient(180deg, #0a1c18 0%, #0e2a24 50%, #123830 100%)' },
-  manuscript: { name: 'Manuscript Birch', color: '#a3e635', bg: 'rgba(163,230,53,0.1)',  cost: 12,    currency: 'sunshine', rarity: 'uncommon',  weight: 0.3,   shape: 'birch',     sceneBg: 'linear-gradient(180deg, #161e18 0%, #1c2820 50%, #223228 100%)' },
-  whisper:    { name: 'Whisper Bamboo',   color: '#4d7c0f', bg: 'rgba(77,124,15,0.1)',   cost: 12,    currency: 'sunshine', rarity: 'uncommon',  weight: 0.3,   shape: 'bamboo',    sceneBg: 'linear-gradient(180deg, #101c10 0%, #162a16 50%, #1c381c 100%)' },
-  dusk:       { name: 'Dusk Lavender',    color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', cost: 12,    currency: 'sunshine', rarity: 'uncommon',  weight: 0.3,   shape: 'lavender',  sceneBg: 'linear-gradient(180deg, #181420 0%, #1e1a28 50%, #241e30 100%)' },
+  // UNCOMMON — 15 juice each
+  apple:         { name: 'Apple',          color: '#4a8c3a', bg: 'rgba(74,140,58,0.1)',    cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'apple',        category: 'fruit', juiceYield: 4,  paperYield: 2, sceneBg: 'linear-gradient(180deg, #0e1c0e 0%, #142814 50%, #1a341a 100%)' },
+  plum:          { name: 'Plum',           color: '#7c3aed', bg: 'rgba(124,58,237,0.1)',  cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'plum',         category: 'fruit', juiceYield: 4,  paperYield: 2, sceneBg: 'linear-gradient(180deg, #18102a 0%, #1e1634 50%, #241c3e 100%)' },
+  blackberry:    { name: 'Blackberry',     color: '#3d7a2e', bg: 'rgba(61,122,46,0.1)',   cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'blackberry',   category: 'fruit', juiceYield: 5,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #101e10 0%, #142814 50%, #1a321a 100%)' },
 
-  // RARE — 40 sunshine each (~1 hour focus)
-  parlor:     { name: 'Parlor Topiary',   color: '#166534', bg: 'rgba(22,101,52,0.1)',   cost: 40,    currency: 'sunshine', rarity: 'rare',      weight: 0.2,   shape: 'topiary',   sceneBg: 'linear-gradient(180deg, #0a160e 0%, #0e2014 50%, #122a1a 100%)' },
-  goldleaf:   { name: 'Gold Leaf',        color: '#facc15', bg: 'rgba(250,204,21,0.1)',  cost: 40,    currency: 'sunshine', rarity: 'rare',      weight: 0.2,   shape: 'goldleaf',  sceneBg: 'linear-gradient(180deg, #1c1c0e 0%, #242412 50%, #2e2e18 100%)' },
-  spine:      { name: 'Spine Cactus',     color: '#22c55e', bg: 'rgba(34,197,94,0.1)',   cost: 40,    currency: 'sunshine', rarity: 'rare',      weight: 0.2,   shape: 'cactus',    sceneBg: 'linear-gradient(180deg, #141c0a 0%, #1a2a0e 50%, #223812 100%)' },
-  inkcap:     { name: 'Ink Cap',          color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   cost: 40,    currency: 'sunshine', rarity: 'rare',      weight: 0.2,   shape: 'mushroom',  sceneBg: 'linear-gradient(180deg, #1c0a0a 0%, #2a1010 50%, #381616 100%)' },
+  // RARE — 40 juice each
+  peach:         { name: 'Peach',          color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'peach',        category: 'fruit', juiceYield: 7,  paperYield: 3, sceneBg: 'linear-gradient(180deg, #1c1408 0%, #24200e 50%, #2e2814 100%)' },
+  pineapple:     { name: 'Pineapple',      color: '#eab308', bg: 'rgba(234,179,8,0.1)',   cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'pineapple',    category: 'fruit', juiceYield: 8,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1a08 0%, #24220e 50%, #2e2a14 100%)' },
+  passionfruit:  { name: 'Passionfruit',   color: '#a855f7', bg: 'rgba(168,85,247,0.1)',  cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'passionfruit', category: 'fruit', juiceYield: 8,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1a1028 0%, #221634 50%, #2a1c40 100%)' },
 
-  // TRUE RARE — 120 sunshine each (~3 hours focus)
-  monolith:   { name: 'Monolith Cypress', color: '#0f766e', bg: 'rgba(15,118,110,0.1)', cost: 120,   currency: 'sunshine', rarity: 'true rare', weight: 0.15,  shape: 'cypress',   sceneBg: 'linear-gradient(180deg, #0a1610 0%, #0e2016 50%, #122a1c 100%)' },
-  wisteria:   { name: 'Wisteria Cascade', color: '#c084fc', bg: 'rgba(192,132,252,0.1)', cost: 120,   currency: 'sunshine', rarity: 'true rare', weight: 0.15,  shape: 'cascade',   sceneBg: 'linear-gradient(180deg, #18142a 0%, #1e1a34 50%, #24203e 100%)' },
-  hanami:     { name: 'Hanami Sakura',    color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 120,   currency: 'sunshine', rarity: 'true rare', weight: 0.15,  shape: 'sakura',    sceneBg: 'linear-gradient(180deg, #1c1420 0%, #221a26 50%, #28202c 100%)' },
+  // ═══ PAPER TREES — yield lots of paper when cut ═══
 
-  // PREMIUM — 200 sunshine each (~5 hours focus)
-  odyssey:    { name: 'Odyssey Palm',     color: '#eab308', bg: 'rgba(234,179,8,0.1)',   cost: 200,   currency: 'sunshine', rarity: 'premium',   weight: 0.12,  shape: 'palm',      sceneBg: 'linear-gradient(180deg, #141a20 0%, #1a2228 50%, #202a32 100%)' },
-  mythos:     { name: 'Mythos Bloom',     color: '#be185d', bg: 'rgba(190,24,93,0.1)',   cost: 200,   currency: 'sunshine', rarity: 'premium',   weight: 0.12,  shape: 'exotic',    sceneBg: 'linear-gradient(180deg, #1c0a14 0%, #2a0e1e 50%, #381228 100%)' },
-  patience:   { name: 'Patience Bonsai',  color: '#15803d', bg: 'rgba(21,128,61,0.1)',   cost: 200,   currency: 'sunshine', rarity: 'premium',   weight: 0.12,  shape: 'bonsai',    sceneBg: 'linear-gradient(180deg, #101610 0%, #162016 50%, #1c2a1c 100%)' },
+  // COMMON — 5 juice each
+  birch:         { name: 'Birch',          color: '#a3e635', bg: 'rgba(163,230,53,0.1)',  cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'birch',        category: 'paper', juiceYield: 0,  paperYield: 5,  sceneBg: 'linear-gradient(180deg, #161e18 0%, #1c2820 50%, #223228 100%)' },
+  bamboo:        { name: 'Bamboo',         color: '#4d7c0f', bg: 'rgba(77,124,15,0.1)',   cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'bamboo',       category: 'paper', juiceYield: 0,  paperYield: 5,  sceneBg: 'linear-gradient(180deg, #101c10 0%, #162a16 50%, #1c381c 100%)' },
 
-  // EXTINCT — 300 sunshine each (~8 hours focus)
-  thornscript:{ name: 'Thorn Script',     color: '#4c1d95', bg: 'rgba(76,29,149,0.1)',   cost: 300,   currency: 'sunshine', rarity: 'extinct',   weight: 0.1,   shape: 'bramble',   sceneBg: 'linear-gradient(180deg, #14101e 0%, #1a1428 50%, #201a32 100%)' },
-  epoch:      { name: 'Epoch Baobab',     color: '#b85e22', bg: 'rgba(184,94,34,0.1)',   cost: 300,   currency: 'sunshine', rarity: 'extinct',   weight: 0.1,   shape: 'baobab',    sceneBg: 'linear-gradient(180deg, #1c1810 0%, #242014 50%, #2c2618 100%)' },
-  fossil:     { name: 'Fossil Tree',      color: '#bedaf7', bg: 'rgba(190,218,247,0.1)', cost: 300,   currency: 'sunshine', rarity: 'extinct',   weight: 0.1,   shape: 'ancient',   sceneBg: 'linear-gradient(180deg, #101820 0%, #142028 50%, #182830 100%)' },
+  // UNCOMMON — 15 juice each
+  pine:          { name: 'Pine',           color: '#064e3b', bg: 'rgba(6,78,59,0.1)',     cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'conifer',      category: 'paper', juiceYield: 0,  paperYield: 10, sceneBg: 'linear-gradient(180deg, #0a1c18 0%, #0e2a24 50%, #123830 100%)' },
+  oak:           { name: 'Oak',            color: '#8b6914', bg: 'rgba(139,105,20,0.1)',  cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'oak',          category: 'paper', juiceYield: 0,  paperYield: 10, sceneBg: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #222e1a 100%)' },
 
-  // CHROMA — 400 sunshine each (~10 hours focus)
-  reverie:    { name: 'Reverie Wisp',     color: '#e0c3fc', bg: 'rgba(224,195,252,0.1)', cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'ethereal',  sceneBg: 'linear-gradient(180deg, #14161a 0%, #1a1e22 50%, #20242a 100%)' },
-  prism:      { name: 'Prism Crystal',    color: '#67e8f9', bg: 'rgba(103,232,249,0.1)', cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'crystal',   sceneBg: 'linear-gradient(180deg, #181428 0%, #1e1a32 50%, #28203e 100%)' },
-  abyss:      { name: 'Abyss Maw',       color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 400,   currency: 'sunshine', rarity: 'chroma',    weight: 0.1,   shape: 'void',      sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
+  // RARE — 40 juice each
+  cypress:       { name: 'Cypress',        color: '#0f766e', bg: 'rgba(15,118,110,0.1)', cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'cypress',      category: 'paper', juiceYield: 0,  paperYield: 18, sceneBg: 'linear-gradient(180deg, #0a1610 0%, #0e2016 50%, #122a1c 100%)' },
+  redwood:       { name: 'Redwood',        color: '#2d6b3f', bg: 'rgba(45,107,63,0.1)',    cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'redwood',      category: 'paper', juiceYield: 0,  paperYield: 20, sceneBg: 'linear-gradient(180deg, #1c1810 0%, #242014 50%, #2c2618 100%)' },
 
-  spoiled:    { name: 'Spoiled',           color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,     currency: 'sunshine', rarity: 'common',    weight: 0,     shape: 'dead',      sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }
+  // LEGENDARY — 100 juice each
+  sakura:        { name: 'Sakura',         color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'sakura',       category: 'paper', juiceYield: 0,  paperYield: 30, sceneBg: 'linear-gradient(180deg, #1c1420 0%, #221a26 50%, #28202c 100%)' },
+
+  // ═══ GEM TREES — produce gems, extremely rare ═══
+
+  // LEGENDARY — 100 juice each
+  abyss:         { name: 'Abyss Maw',     color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'void',         category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 1, sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
+
+  // ═══ SPECIAL ═══
+  spoiled:       { name: 'Spoiled',        color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'dead',         category: 'none',  juiceYield: 0,  paperYield: 0, sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }
 }
 
 export const XP_LEVELS: { xp: number; name: string }[] = [
@@ -74,14 +73,14 @@ export function getLevel(xp: number): { level: number; name: string; currentXp: 
 }
 
 export const LEADERBOARD_BOTS = [
-  { name: "quillmaster", xp: 22400, sunshine: 4800 },
-  { name: "midnightscribe", xp: 15200, sunshine: 3200 },
-  { name: "inkdragon", xp: 11800, sunshine: 2400 },
-  { name: "papertiger", xp: 8600, sunshine: 1700 },
-  { name: "notanova", xp: 6300, sunshine: 1100 },
-  { name: "draftpunk", xp: 4100, sunshine: 680 },
-  { name: "blankpage_hero", xp: 2700, sunshine: 420 },
-  { name: "lofi_writer", xp: 1500, sunshine: 210 },
-  { name: "penpal99", xp: 800, sunshine: 95 },
-  { name: "newleaf", xp: 200, sunshine: 30 },
+  { name: "quillmaster", xp: 22400, juice: 4800 },
+  { name: "midnightscribe", xp: 15200, juice: 3200 },
+  { name: "inkdragon", xp: 11800, juice: 2400 },
+  { name: "papertiger", xp: 8600, juice: 1700 },
+  { name: "notanova", xp: 6300, juice: 1100 },
+  { name: "draftpunk", xp: 4100, juice: 680 },
+  { name: "blankpage_hero", xp: 2700, juice: 420 },
+  { name: "lofi_writer", xp: 1500, juice: 210 },
+  { name: "penpal99", xp: 800, juice: 95 },
+  { name: "newleaf", xp: 200, juice: 30 },
 ]

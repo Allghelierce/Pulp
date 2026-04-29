@@ -6,10 +6,10 @@ interface LeaderboardViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  sunshine: number
+  juice: number
 }
 
-type Tab = 'sunshine' | 'time'
+type Tab = 'juice' | 'time'
 
 function seededRng(seed: number) {
   let s = Math.abs(seed) || 1
@@ -22,7 +22,7 @@ function generatePlayers(count: number) {
   const nouns = ['quill','moth','ink','fox','owl','cedar','fern','ash','drift','plume','prose','wolf','crow','reed','thorn','spark','rune','veil','tide','stone']
   const avatarColors = ['#e07840','#8b7aaa','#c06878','#5a9a6a','#5a88b0','#b07850','#6a8a5a','#9a6a8a','#5a7aaa','#aa7a5a','#7a9a7a','#8a6aaa','#aa8a5a','#6a7a9a','#9a8a6a']
 
-  const players: { name: string; level: number; sunshine: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
+  const players: { name: string; level: number; juice: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
   const usedNames = new Set<string>()
 
   for (let i = 0; i < count; i++) {
@@ -34,14 +34,14 @@ function generatePlayers(count: number) {
 
     const rank = i + 1
     const base = Math.pow(0.92, rank)
-    const sunshine = Math.round((90000 + rng() * 30000) * base)
+    const juice = Math.round((90000 + rng() * 30000) * base)
     const focusHours = Math.round((420 + rng() * 180) * base)
     const level = Math.max(1, Math.round(10 + (50 - rank) * 0.85 + rng() * 5))
     const streak = Math.max(1, Math.round((90 - rank * 1.2) + rng() * 15))
     const trees = Math.max(3, Math.round((60 - rank * 0.8) + rng() * 10))
     const avatar = avatarColors[Math.floor(rng() * avatarColors.length)]
 
-    players.push({ name, level, sunshine, focusHours, streak, trees, avatar })
+    players.push({ name, level, juice, focusHours, streak, trees, avatar })
   }
   return players
 }
@@ -50,9 +50,9 @@ const ALL_PLAYERS = generatePlayers(50)
 
 const font = '"EB Garamond", Georgia, serif'
 
-export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sunshine }: LeaderboardViewProps) {
+export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, juice }: LeaderboardViewProps) {
   const isDark = theme === "dark"
-  const [tab, setTab] = useState<Tab>('sunshine')
+  const [tab, setTab] = useState<Tab>('juice')
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null)
 
   useEffect(() => {
@@ -79,8 +79,8 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const MEDAL_COLORS = ['#ea580c', '#9a9590', '#a07050']
 
   const formatVal = (p: typeof ALL_PLAYERS[0]) => {
-    if (tab === 'sunshine') {
-      const v = p.sunshine
+    if (tab === 'juice') {
+      const v = p.juice
       return v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)
     }
     return `${p.focusHours}h`
@@ -121,7 +121,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           <div className="flex items-center gap-2">
             {/* Tabs */}
             <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[10px] font-semibold`}>
-              {([['sunshine', 'Sunshine'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
+              {([['juice', 'Juice'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setTab(id)}
@@ -133,8 +133,8 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   style={{ fontFamily: font }}
                 >
                   <span className="opacity-80">
-                    {id === 'sunshine'
-                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    {id === 'juice'
+                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     }
                   </span>
@@ -250,8 +250,8 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
                 <div className="flex items-center gap-1.5">
                   <span className="opacity-70">
-                    {tab === 'sunshine'
-                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    {tab === 'juice'
+                      ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     }
                   </span>
@@ -283,13 +283,13 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             </div>
             <div className="flex items-center gap-1.5">
               <span className="opacity-70">
-                {tab === 'sunshine'
-                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                {tab === 'juice'
+                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                   : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 }
               </span>
               <span className="text-[12px] font-bold tabular-nums" style={{ color: accent, fontFamily: font }}>
-                {sunshine >= 1000 ? `${(sunshine / 1000).toFixed(1)}k` : sunshine}
+                {juice >= 1000 ? `${(juice / 1000).toFixed(1)}k` : juice}
               </span>
             </div>
           </div>
@@ -303,7 +303,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           const rank = selectedPlayer + 1
           const medalColor = rank <= 3 ? MEDAL_COLORS[rank - 1] : accent
           const statItems = [
-            { label: 'Sunshine', value: p.sunshine.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg> },
+            { label: 'Juice', value: p.juice.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
             { label: 'Focus Time', value: `${p.focusHours}h`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
             { label: 'Streak', value: `${p.streak}d`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 .67 2.5 1.73 4.2 3 5.5 2 2.08 2.5 4.5 1 7.5-1 2-3 3.5-5.5 3.5s-4-1-5-3.5c-.56-1.41-.56-3.18 0-4.5"/></svg> },
             { label: 'Trees', value: String(p.trees), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },

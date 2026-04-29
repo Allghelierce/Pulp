@@ -5,7 +5,7 @@ export function SettingSection({ title, children, isDark }: { title?: string; ch
   return (
     <div className="mb-7">
       {title && (
-        <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] mb-2.5 px-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>
           {title}
         </p>
       )}

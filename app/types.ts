@@ -49,7 +49,7 @@ export interface Achievement {
   icon: React.ReactNode
   description: string
   reward: number
-  rewardType: 'gems' | 'sunshine'
+  rewardType: 'gems' | 'juice'
   completed: boolean
   claimed: boolean
   progress?: number
@@ -69,6 +69,7 @@ export interface Tree {
   progress: number
   plantedAt: number
   notebookId?: string
+  lastHarvest?: number
 }
 
 export interface SlashMenuState {

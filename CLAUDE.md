@@ -22,12 +22,12 @@ A digital notebook app with gamification — focus timer, tree growing, achievem
 ## Architecture
 
 ### Core file: `app/page.tsx`
-The main page is a large single-file component managing all top-level state (notes, grove, inventory, achievements, sunshine, gems, XP). State is persisted to localStorage (`pulp-grove`, etc.) and sessionStorage (timer state).
+The main page is a large single-file component managing all top-level state (notes, grove, inventory, achievements, juice, gems, XP). State is persisted to localStorage (`pulp-grove`, etc.) and sessionStorage (timer state).
 
 ### Key types (`app/types.ts`)
 - `NoteData` — notebook with pages, boxes, drawings, lines. Types: notebook, singlepage, flashcard, vault, cornell
 - `Tree` — `{ id, type, stage, progress, plantedAt, notebookId? }` — grown via focus sessions
-- `Achievement` — progress-tracked achievements with gem/sunshine rewards
+- `Achievement` — progress-tracked achievements with gem/juice rewards
 - `DialogConfig` — prompt/confirm/alert dialog system
 
 ### Tree system (`app/constants.ts`)
@@ -62,7 +62,7 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 
 ## State persistence
 
-- `localStorage`: `pulp-grove` (sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics)
+- `localStorage`: `pulp-grove` (juice, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics)
 - `sessionStorage`: `pulp-timer` (elapsed, total, running, done, preset, waterDeadline, selectedSeed)
 - Notes are stored separately in localStorage
 
@@ -71,5 +71,5 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 - Trees get tagged with `notebookId` on timer completion via `activeTabId`
 - Timer sessions always produce a tree — tangerine if no seed selected
 - Water mechanic: sessions >= 10min require watering every 8min or tree dies
-- Giving up a session costs all sunshine; recoverable with gems
+- Giving up a session costs all juice; recoverable with gems
 - Achievement progress is checked via `checkAchievementRef` callback pattern

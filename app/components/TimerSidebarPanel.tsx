@@ -37,9 +37,9 @@ interface TimerSidebarPanelProps {
   onWater: () => void
   onClaim: () => void
   onDismissDead: () => void
-  lostSunshine: number
+  lostJuice: number
   gems: number
-  onRecoverSunshine: () => void
+  onRecoverJuice: () => void
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
@@ -156,7 +156,7 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
-  lostSunshine, gems, onRecoverSunshine,
+  lostJuice, gems, onRecoverJuice,
   inventory, selectedSeed, onSelectSeed,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
@@ -507,7 +507,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                                   if (!info) return null
                                   const isSelected = selectedSeed === type
                                   const count = counts.get(type) || 1
-                                  const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#a78bfa' : info.rarity === 'premium' ? '#fbbf24' : info.rarity === 'chroma' ? '#f472b6' : '#f87171'
+                                  const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'legendary' ? '#f59e0b' : '#a1a1aa'
                                   return (
                                     <motion.button
                                       key={type}
@@ -676,7 +676,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </div>
 
                   <p className="text-center mt-2 text-[11px]" style={{ color: mainColor, fontFamily: serifFont, fontWeight: 600 }}>
-                    +{Math.max(1, Math.round(total / 300))} ☀
+                    +{Math.max(1, Math.round(total / 300))} 🧃
                   </p>
                 </div>
               )}
@@ -719,7 +719,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 {treeDead ? "Try Again" : done ? "Claim Reward" : confirmGiveUp ? "Are you sure?" : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
 
-              {lostSunshine > 0 && !running && !done && (
+              {lostJuice > 0 && !running && !done && (
                 <div
                   className="w-full rounded-[6px] px-3 py-2.5 mt-2 flex flex-col items-center gap-1.5"
                   style={{
@@ -729,15 +729,15 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   }}
                 >
                   <span className="text-[10px] tracking-[0.04em]" style={{ color: isDark ? "#fbbf24" : "#b45309" }}>
-                    You lost {lostSunshine} ☀️
+                    You lost {lostJuice} 🧃
                   </span>
                   <button
-                    onClick={onRecoverSunshine}
-                    disabled={gems < Math.max(5, Math.ceil(lostSunshine * 0.5))}
+                    onClick={onRecoverJuice}
+                    disabled={gems < Math.max(5, Math.ceil(lostJuice * 0.5))}
                     className="text-[9px] font-black uppercase tracking-[0.15em] hover:underline disabled:opacity-30 disabled:no-underline"
                     style={{ color: "#a78bfa" }}
                   >
-                    Recover for {Math.max(5, Math.ceil(lostSunshine * 0.5))} 💎
+                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} 💎
                   </button>
                 </div>
               )}
@@ -805,19 +805,19 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   body: 'A water prompt will appear during longer sessions. Tap it before the countdown expires or your plant will wilt. This keeps you engaged.',
                 },
                 {
-                  icon: '☀️',
-                  title: 'Earn Sunshine & XP',
-                  body: 'Completing a session earns you sunshine and XP. Sunshine is used to buy new seeds in the shop. XP levels up your gardener rank.',
+                  icon: '🧃',
+                  title: 'Earn Juice & XP',
+                  body: 'Completing a session earns you juice and XP. Juice is used to buy new seeds in the shop. XP levels up your gardener rank.',
                 },
                 {
                   icon: '🌿',
                   title: 'Your Orchard',
-                  body: 'Every plant you grow is added to your orchard — a visual garden of all your focus sessions. Mature plants can be harvested for bonus sunshine.',
+                  body: 'Every plant you grow is added to your orchard — a visual garden of all your focus sessions. Mature plants can be harvested for bonus juice.',
                 },
                 {
                   icon: '💎',
                   title: 'Gems & Recovery',
-                  body: 'If a plant dies, you can spend gems to recover lost sunshine. Gems are also used to remove sites from your focus blocker.',
+                  body: 'If a plant dies, you can spend gems to recover lost juice. Gems are also used to remove sites from your focus blocker.',
                 },
                 {
                   icon: '🚫',

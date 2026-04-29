@@ -47,7 +47,7 @@ interface DocumentToolbarProps {
   onStartSidebarDrag: (x: number) => void
   sidebarWidth: number
   isSidebarDragging: boolean
-  sunshine: number
+  juice: number
   gems: number
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
   onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
@@ -121,7 +121,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  sunshine, gems, isVault, isUnlocked, onLock,
+  juice, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail, onOpenVersionHistory
@@ -567,8 +567,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer" title="Open Grove & Leaderboard">
-            <span className="text-[10px] leading-none">☀️</span>
-            <span>{sunshine >= 999999 ? "∞" : sunshine}</span>
+            <span className="text-[10px] leading-none">🧃</span>
+            <span>{juice >= 999999 ? "∞" : juice}</span>
           </div>
           <div className="w-px h-3 bg-zinc-400/30" />
           <div

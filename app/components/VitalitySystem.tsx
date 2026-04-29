@@ -10,12 +10,12 @@ interface VitalitySystemProps {
   sidebarWidth: number
   timerOpen: boolean
   onSetTimerOpen: (open: boolean) => void
-  sunshine: number
+  juice: number
   gems: number
   xp: number
   grove: Tree[]
   achievements: Achievement[]
-  setSunshine: React.Dispatch<React.SetStateAction<number>>
+  setJuice: React.Dispatch<React.SetStateAction<number>>
   setGems: React.Dispatch<React.SetStateAction<number>>
   setXp: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
@@ -31,7 +31,7 @@ interface VitalitySystemProps {
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  sunshine, gems, xp, grove, achievements, setSunshine, setGems, setXp, setGrove, setAchievements,
+  juice, gems, xp, grove, achievements, setJuice, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
   inventory, activeTabId, notes,
@@ -107,7 +107,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   // Tab-close grace period expired — penalize
   useEffect(() => {
     if (_isBackup && _backupExpired) {
-      setSunshine(0)
+      setJuice(0)
       localStorage.removeItem('pulp-timer-backup')
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -184,17 +184,17 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
   }, [timerTotal, activeTabId])
 
-  const [lostSunshine, setLostSunshine] = useState(0)
+  const [lostJuice, setLostJuice] = useState(0)
 
   const giveUp = useCallback(() => {
-    setLostSunshine(sunshine)
-    setSunshine(0)
+    setLostJuice(juice)
+    setJuice(0)
     setTimerRunning(false)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [sunshine, setSunshine])
+  }, [juice, setJuice])
 
   const cancelSession = useCallback(() => {
     setTimerRunning(false)
@@ -204,13 +204,13 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [])
 
-  const recoverSunshine = useCallback(() => {
-    const cost = Math.max(1, Math.ceil(lostSunshine * 0.02))
-    if (gems < cost || lostSunshine <= 0) return
+  const recoverJuice = useCallback(() => {
+    const cost = Math.max(1, Math.ceil(lostJuice * 0.02))
+    if (gems < cost || lostJuice <= 0) return
     setGems(g => g - cost)
-    setSunshine(s => s + lostSunshine)
-    setLostSunshine(0)
-  }, [lostSunshine, gems, setGems, setSunshine])
+    setJuice(s => s + lostJuice)
+    setLostJuice(0)
+  }, [lostJuice, gems, setGems, setJuice])
 
   const waterTree = useCallback(() => {
     if (!timerRunning || treeDead) return
@@ -233,7 +233,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (!timerDone || treeDead) return
     const minutes = timerTotal / 60
     const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
-    setSunshine(s => s + reward)
+    setJuice(s => s + reward)
     const xpGain = Math.max(5, Math.round(minutes * 2))
     setXp(x => x + xpGain)
 
@@ -255,27 +255,27 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setSunshine, setXp, setGrove, checkAchievement, activeTabId])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setJuice, setXp, setGrove, checkAchievement, activeTabId])
 
   const dismissDeadTree = useCallback(() => {
-    setLostSunshine(sunshine)
-    setSunshine(0)
+    setLostJuice(juice)
+    setJuice(0)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [sunshine, setSunshine])
+  }, [juice, setJuice])
 
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
       if (!target || !target.completed || target.claimed) return prev
       if (target.rewardType === 'gems') setGems(g => g + target.reward)
-      else setSunshine(s => s + target.reward)
+      else setJuice(s => s + target.reward)
       setXp(x => x + target.reward * 5)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setSunshine, setXp, setAchievements])
+  }, [setGems, setJuice, setXp, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
@@ -326,11 +326,11 @@ export const VitalitySystem = memo(function VitalitySystem({
         checkAchievement('wordsmith', a => ({ progress: Math.min(200000, (a.progress || 0) + typedDiff) }))
         const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))
         setXp(x => x + xpFromWriting)
-        setSunshine(s => s + Math.max(1, Math.floor(typedDiff / 15)))
+        setJuice(s => s + Math.max(1, Math.floor(typedDiff / 15)))
       }
 
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setSunshine, setLastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setJuice, setLastCharCount])
 
   return (
     <TimerSidebarPanel
@@ -353,9 +353,9 @@ export const VitalitySystem = memo(function VitalitySystem({
       onWater={waterTree}
       onClaim={claimReward}
       onDismissDead={dismissDeadTree}
-      lostSunshine={lostSunshine}
+      lostJuice={lostJuice}
       gems={gems}
-      onRecoverSunshine={recoverSunshine}
+      onRecoverJuice={recoverJuice}
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}

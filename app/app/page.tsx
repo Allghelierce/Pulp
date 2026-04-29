@@ -45,8 +45,8 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
-  const color = "#000000"
-  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 600, fontSize: 15 }
+  const color = "#3f3f46"
+  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
 
   const commit = (val: string) => {
     const n = parseInt(val, 10)
@@ -977,8 +977,8 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sunshine, setSunshine] = useState(50)
   const [gems, setGems] = useState(3)
+  const [juice, setJuice] = useState(50)
   const [xp, setXp] = useState(0)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
@@ -1050,20 +1050,17 @@ export default function NoteApp() {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       const data = JSON.parse(saved)
-      setSunshine(data.sunshine ?? 50)
       setGems(data.gems ?? 3)
-      const allSeeds = ['heartwood','thicket','penny','quill','pebble','ember','sentinel','manuscript','whisper','dusk','parlor','goldleaf','spine','inkcap','monolith','wisteria','hanami','odyssey','mythos','patience','thornscript','epoch','fossil','reverie','prism','abyss']
+      setJuice(data.juice ?? data.sunshine ?? 50)
+      const allSeeds = ['cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','redwood','sakura','abyss']
       setInventory(allSeeds)
       if (data.grove) {
         // TEST: populate orchard with 150 realistic trees
         const pool: [string, number][] = [
-          ['tangerine', 22], ['heartwood', 14], ['thicket', 12], ['penny', 10], ['quill', 10], ['pebble', 8],
-          ['ember', 9], ['sentinel', 7], ['manuscript', 6], ['whisper', 6], ['dusk', 5],
-          ['parlor', 5], ['goldleaf', 4], ['spine', 4], ['inkcap', 3],
-          ['monolith', 3], ['wisteria', 3], ['hanami', 3],
-          ['odyssey', 2], ['mythos', 2], ['patience', 2],
-          ['thornscript', 2], ['epoch', 1], ['fossil', 1],
-          ['reverie', 2], ['prism', 2], ['abyss', 1],
+          ['tangerine', 20], ['cherry', 15], ['lemon', 12], ['birch', 12], ['bamboo', 10],
+          ['apple', 10], ['plum', 8], ['blackberry', 8], ['pine', 8], ['oak', 7],
+          ['peach', 6], ['pineapple', 5], ['passionfruit', 5], ['cypress', 4], ['redwood', 4],
+          ['sakura', 3], ['abyss', 1],
         ]
         const testTypes: string[] = []
         for (const [type, count] of pool) for (let i = 0; i < count; i++) testTypes.push(type)
@@ -2075,8 +2072,8 @@ export default function NoteApp() {
 
   // Save Grove & Inventory to localStorage
   useEffect(() => {
-    localStorage.setItem("pulp-grove", JSON.stringify({ sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics }))
-  }, [sunshine, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics])
+    localStorage.setItem("pulp-grove", JSON.stringify({ gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }))
+  }, [gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics])
 
   // Cloud autosave
   useEffect(() => {
@@ -2627,7 +2624,7 @@ export default function NoteApp() {
               onOpenLeaderboard={() => setLeaderboardOpen(true)}
               onOpenFocus={() => setFocusOpen(true)}
               onOpenStats={() => setStatsOpen(true)}
-              sunshine={sunshine}
+              juice={juice}
               gems={gems}
               xp={xp}
               totalNotes={notes.filter(n => !n.archived).length}
@@ -2781,7 +2778,7 @@ export default function NoteApp() {
                 onStartSidebarDrag={startSidebarDrag}
                 sidebarWidth={sidebarWidth}
                 isSidebarDragging={isSidebarDragging}
-                sunshine={devMode ? 999999 : sunshine}
+                juice={devMode ? 999999 : juice}
                 gems={devMode ? 999999 : gems}
                 userAvatarUrl={user?.user_metadata?.avatar_url}
                 userEmail={user?.email}
@@ -3117,7 +3114,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: "#000000" }}
+                              style={{ color: "#3f3f46" }}
                               title="First Page"
                             >
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 18-6-6 6-6" /><path d="m12 18-6-6 6-6" /></svg>
@@ -3127,7 +3124,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === 0}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: "#000000" }}
+                              style={{ color: "#3f3f46" }}
                               title="Previous Page"
                             >
                               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
@@ -3151,7 +3148,7 @@ export default function NoteApp() {
                                 }
                               }}
                               className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
-                              style={{ color: "#000000" }}
+                              style={{ color: "#3f3f46" }}
                               title="Next Page / Add Page"
                             >
                               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
@@ -3161,7 +3158,7 @@ export default function NoteApp() {
                               disabled={currentPageIdx === activeNote.pages.length - 1}
                               onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                              style={{ color: "#000000" }}
+                              style={{ color: "#3f3f46" }}
                               title="Last Page"
                             >
                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 18 6-6-6-6" /><path d="m12 18 6-6-6-6" /></svg>
@@ -3431,12 +3428,12 @@ export default function NoteApp() {
         onClose={() => setOrchardOpen(false)}
         theme={theme}
         accent={accent}
-        sunshine={sunshine}
+        juice={juice}
         gems={gems}
-        xp={sunshine}
+        xp={juice}
         grove={grove}
         inventory={inventory}
-        setSunshine={setSunshine}
+        setJuice={setJuice}
         setGems={setGems}
         setInventory={setInventory}
         setGrove={setGrove}
@@ -3447,7 +3444,7 @@ export default function NoteApp() {
         isOpen={leaderboardOpen}
         onClose={() => setLeaderboardOpen(false)}
         theme={theme}
-        sunshine={sunshine}
+        juice={juice}
       />
 
       <BoutiqueView
@@ -3455,11 +3452,11 @@ export default function NoteApp() {
         onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
         theme={theme}
         accent={accent}
-        sunshine={devMode ? 999999 : sunshine}
         gems={devMode ? 999999 : gems}
+        juice={devMode ? 999999 : juice}
         inventory={inventory}
-        setSunshine={setSunshine}
         setGems={setGems}
+        setJuice={setJuice}
         setInventory={setInventory}
         setGrove={setGrove}
         unlockedCosmetics={unlockedCosmetics}
@@ -3501,13 +3498,13 @@ export default function NoteApp() {
         sidebarWidth={sidebarWidth}
         timerOpen={timerOpen}
         onSetTimerOpen={setTimerOpen}
-        sunshine={sunshine}
+        juice={juice}
         gems={gems}
         xp={xp}
         setXp={setXp}
         grove={grove}
         achievements={achievements}
-        setSunshine={setSunshine}
+        setJuice={setJuice}
         setGems={setGems}
         setGrove={setGrove}
         setAchievements={setAchievements}
