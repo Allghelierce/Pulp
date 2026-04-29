@@ -127,7 +127,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <span className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: '#e8701a' }}>
+            <span className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: '#d97706' }}>
               Pulp — {notes.length} {notes.length === 1 ? 'notebook' : 'notebooks'}
             </span>
             <button

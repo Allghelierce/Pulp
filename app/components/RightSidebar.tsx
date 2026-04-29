@@ -3,6 +3,7 @@ import { memo, useState, useMemo } from "react"
 
 import { TREE_TYPES, getLevel, LEADERBOARD_BOTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
 interface RightSidebarProps {
   isOpen: boolean
@@ -91,7 +92,7 @@ export const RightSidebar = memo(function RightSidebar({
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${Math.max(2, lvl.progress * 100)}%`,
-                background: `linear-gradient(90deg, #f59e0b, #ea580c)`,
+                background: `linear-gradient(90deg, #f59e0b, #d97706)`,
               }}
             />
           </div>
@@ -131,7 +132,7 @@ export const RightSidebar = memo(function RightSidebar({
                     <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></svg>
                   </div>
                   <span className="text-[18px] font-bold font-serif">{juice}</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Juice</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Sap</span>
                   {juiceTooltip && (
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none bg-zinc-800 text-white">
                       Earned by writing &amp; focus sessions.
@@ -145,7 +146,7 @@ export const RightSidebar = memo(function RightSidebar({
                   onMouseLeave={() => setGemsTooltip(false)}
                 >
                   <div className="w-8 h-8 rounded-full bg-purple-400/20 flex items-center justify-center mb-2">
-                    <span className="text-sm">💎</span>
+                    <GemIcon size={14} />
                   </div>
                   <span className="text-[18px] font-bold font-serif">{gems}</span>
                   <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Gems</span>
@@ -176,7 +177,7 @@ export const RightSidebar = memo(function RightSidebar({
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: TREE_TYPES[type].color }} />
                       </div>
                       <span className="text-[8px] font-bold text-zinc-500">{TREE_TYPES[type].name.split(' ')[0]}</span>
-                      <span className="text-[7px] text-zinc-400">{TREE_TYPES[type].cost} {TREE_TYPES[type].currency === 'juice' ? 'Sun' : 'Gem'}</span>
+                      <span className="text-[7px] text-zinc-400">{TREE_TYPES[type].cost} {TREE_TYPES[type].currency === 'juice' ? 'Sap' : 'Gem'}</span>
                     </button>
                   ))}
                 </div>
@@ -258,7 +259,7 @@ export const RightSidebar = memo(function RightSidebar({
                         </span>
                       </div>
                       <span className={`text-[10px] font-bold tabular-nums ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        🧃 {entry.juice.toLocaleString()}
+                        <PulpIcon size={10} /> {entry.juice.toLocaleString()}
                       </span>
                     </div>
                   )

@@ -29,7 +29,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
   const [linkUrl, setLinkUrl] = useState("")
   const [isDragging, setIsDragging] = useState(false)
 
-  const pulpOrange = "#F5A030"
+  const pulpOrange = "#d97706"
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation() }
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }

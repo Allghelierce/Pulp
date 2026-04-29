@@ -66,7 +66,7 @@ export function AiResultModal({ title, result, loading, onClose, onInsert }: AiR
             <button
               onClick={() => onInsert(result)}
               className="rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all"
-              style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)" }}
+              style={{ background: "linear-gradient(135deg, #d97706, #b45309)" }}
             >
               Insert into note
             </button>

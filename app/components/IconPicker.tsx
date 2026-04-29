@@ -79,6 +79,7 @@ export function IconPicker({ x, y, onSelect, onClose }: IconPickerProps) {
   return (
     <div
       ref={ref}
+      data-icon-picker
       onMouseDown={e => e.stopPropagation()}
       style={{
         position: "fixed", left, top, zIndex: 9999,

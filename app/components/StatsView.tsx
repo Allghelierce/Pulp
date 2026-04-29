@@ -123,9 +123,9 @@ export const StatsView = memo(function StatsView({
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
   const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
-  const focusColor = '#ea580c'
+  const focusColor = '#d97706'
   const writingColor = isDark ? '#60a5fa' : '#3b82f6'
-  const levelColor = '#ea580c'
+  const levelColor = '#d97706'
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
   const heatmapColors = useMemo(() => [
@@ -203,7 +203,7 @@ export const StatsView = memo(function StatsView({
                 <LevelIcon level={lvl.level} size={18} />
               </div>
               <div>
-                <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: textPrimary, fontFamily: '"EB Garamond", Georgia, serif' }}>{lvl.name}</h2>
+                <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: 'var(--font-italiana)' }}>{lvl.name}</h2>
                 <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: '"EB Garamond", Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>
@@ -224,9 +224,9 @@ export const StatsView = memo(function StatsView({
               background: isDark ? 'rgba(251,146,60,0.06)' : 'rgba(251,146,60,0.08)',
               border: `1px solid ${isDark ? 'rgba(251,146,60,0.12)' : 'rgba(251,146,60,0.15)'}`,
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></svg>
               <div>
-                <span className="text-[14px] font-bold tabular-nums block" style={{ color: '#fb923c', lineHeight: 1 }}>{streak}</span>
+                <span className="text-[14px] font-bold tabular-nums block" style={{ color: '#d97706', lineHeight: 1 }}>{streak}</span>
                 <span className="text-[8px] font-medium" style={{ color: isDark ? '#a1856a' : '#b8956a' }}>day streak</span>
               </div>
             </div>

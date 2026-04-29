@@ -29,11 +29,11 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
   const [tab, setTab] = useState<"import" | "draw">("import")
   const [isDragging, setIsDragging] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [drawColor, setDrawColor] = useState("#F5A030")
+  const [drawColor, setDrawColor] = useState("#d97706")
   const [tool, setTool] = useState<"pen" | "eraser">("pen")
   const isDrawingRef = useRef(false)
 
-  const pulpOrange = "#F5A030"
+  const pulpOrange = "#d97706"
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -234,7 +234,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                 </div>
 
                 <div className="flex gap-2 items-center px-4 py-1.5 bg-zinc-900/50 rounded-xl border border-zinc-700">
-                  {["#F5A030", "#EF4444", "#3B82F6", "#10B981", "#FFFFFF"].map((c) => (
+                  {["#d97706", "#EF4444", "#3B82F6", "#10B981", "#FFFFFF"].map((c) => (
                     <button
                       key={c}
                       onClick={() => setDrawColor(c)}

@@ -147,7 +147,7 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
         {/* The Orange Ball */}
         <div style={{
           width: 32, height: 32, borderRadius: "50%",
-          background: "radial-gradient(circle at 35% 35%, #fb923c 0%, #ea580c 100%)",
+          background: "radial-gradient(circle at 35% 35%, #d97706 0%, #d97706 100%)",
           boxShadow: "0 8px 24px rgba(234,88,12,0.3), inset -4px -4px 10px rgba(0,0,0,0.2), inset 4px 4px 8px rgba(255,255,255,0.3)",
           marginTop: -4,
           position: "relative",

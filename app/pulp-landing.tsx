@@ -18,15 +18,15 @@ const SHOWCASE_TREES = [
 
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.' },
-  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest juice and cut trees for paper.' },
+  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.' },
   { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.' },
   { label: 'notebooks', desc: 'multiple types — standard, single page, flashcards, cornell, and encrypted vaults.' },
-  { label: 'achievements', desc: 'unlock milestones as you write. earn juice, gems, and xp to level up.' },
-  { label: 'seed shop', desc: 'spend juice on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.' },
+  { label: 'achievements', desc: 'unlock milestones as you write. earn sap, gems, and xp to level up.' },
+  { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.' },
 ]
 
 const RARITY_COLOR: Record<string, string> = {
-  default: '#ea580c',
+  default: '#d97706',
   common: '#a1a1aa',
   uncommon: '#34d399',
   rare: '#60a5fa',
@@ -48,7 +48,7 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
   }, [charIdx, text.length])
 
   const cursorEl = showCursor ? (
-    <span style={{ display: 'inline-block', width: 3, height: '0.75em', background: '#ea580c', marginLeft: 2, verticalAlign: 'baseline', animation: 'cursorBlink 0.5s step-end infinite' }} />
+    <span style={{ display: 'inline-block', width: 3, height: '0.75em', background: '#d97706', marginLeft: 2, verticalAlign: 'baseline', animation: 'cursorBlink 0.5s step-end infinite' }} />
   ) : null
 
   return (
@@ -215,7 +215,7 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
               }}>
                 <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" style={{ overflow: 'visible' }}>
                   <g>
-                    <circle cx="35" cy="28" r="1.1" fill="#ea580c" />
+                    <circle cx="35" cy="28" r="1.1" fill="#d97706" />
                     <animateTransform attributeName="transform" type="translate" values="0,0; 2,22" dur="1s" fill="freeze" calcMode="spline" keySplines="0.4 0 1 1" />
                     <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="1s" fill="freeze" />
                   </g>
@@ -257,7 +257,7 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
   const [sent, setSent] = useState(false)
   const mono = '"JetBrains Mono", ui-monospace, monospace'
   const serif = '"EB Garamond", Georgia, serif'
-  const accent = '#ea580c'
+  const accent = '#d97706'
   const config = MODAL_CONFIG[type] || MODAL_CONFIG['feedback']
   const canSend = config.hasSubject ? subject.trim().length > 0 : text.trim().length > 0
 
@@ -480,7 +480,7 @@ export default function PulpLanding() {
 
   const mono = '"JetBrains Mono", ui-monospace, monospace'
   const serif = '"EB Garamond", Georgia, serif'
-  const accent = '#ea580c'
+  const accent = '#d97706'
 
   const slideBase: React.CSSProperties = {
     position: 'absolute', inset: 0,
@@ -522,7 +522,7 @@ export default function PulpLanding() {
           style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
         >
           <img src="/pulp_logo.svg" alt="pulp" style={{ width: 22, height: 22 }} />
-          pulp
+          <span style={{ transform: 'translateY(-2px)' }}>pulp</span>
         </span>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 32, marginLeft: 48,

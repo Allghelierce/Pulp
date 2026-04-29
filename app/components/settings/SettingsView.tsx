@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
+import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
 import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
@@ -40,6 +41,7 @@ export const SETTINGS_TABS = [
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "achievements", label: "Achievements", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
+  { id: "focus", label: "Focus Blocker", group: "Writing" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
   { id: "help", label: "Help", group: "Support" },
@@ -48,7 +50,7 @@ export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
 export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: boolean }[] = [
   { hex: "#71717a", name: "Gray" },
-  { hex: "#f97316", name: "Orange", cost: 1 },
+  { hex: "#d97706", name: "Orange", cost: 1 },
   { hex: "#ef4444", name: "Red", cost: 1 },
   { hex: "#ec4899", name: "Pink", cost: 2 },
   { hex: "#a855f7", name: "Purple", cost: 2 },
@@ -121,7 +123,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem }: {
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm }: {
   user: { email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -136,6 +138,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   setGems: React.Dispatch<React.SetStateAction<number>>
   setUnlockedCosmetics: React.Dispatch<React.SetStateAction<string[]>>
   onOpenShopItem?: (itemId: string) => void
+  onSpendGems?: (amount: number) => void
+  openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -198,7 +202,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
               <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-3 mt-3 border-t border-zinc-800" : "pt-3 mt-3 border-t border-zinc-300/40") : "mb-1"}>
-                <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>{group.name}</p>
+                <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
                 {group.tabs.map(tab => {
                   const isPremium = tab.id === "subscription"
                   const isActive = activeTab === tab.id
@@ -209,13 +213,12 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all ${
                         isActive
                           ? isPremium
-                            ? isDark ? "bg-[#ea580c]/10 text-[#ea580c]" : "bg-[#ea580c]/10 text-[#ea580c]"
+                            ? isDark ? "bg-[#d97706]/10 text-[#d97706]" : "bg-[#d97706]/10 text-[#d97706]"
                             : isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
                           : isPremium
-                            ? isDark ? "text-[#ea580c]/70 hover:bg-[#ea580c]/5" : "text-[#ea580c]/70 hover:bg-[#ea580c]/5"
+                            ? isDark ? "text-[#d97706]/70 hover:bg-[#d97706]/5" : "text-[#d97706]/70 hover:bg-[#d97706]/5"
                             : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                       }`}
-                      style={{ fontFamily: 'var(--font-italiana)' }}
                     >
                       <span className="mr-2 w-4 h-4 flex items-center justify-center">{TAB_ICONS[tab.id]}</span>
                       {tab.label}
@@ -236,7 +239,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-            <p className="text-[11px] mt-0.5" style={{ fontFamily: 'var(--font-italiana)', color: isDark ? '#5a5650' : '#a8a4a0' }}>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
               {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
@@ -247,7 +250,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             {activeTab === "general" && (<>
               <SettingSection title="Account" isDark={isDark}>
                 <div className="flex items-center gap-4 px-5 py-4">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: 'linear-gradient(135deg, #ea580c99, #ea580c)' }}>
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: 'linear-gradient(135deg, #d9770699, #d97706)' }}>
                     {user?.email?.[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -662,7 +665,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
-                            {a.rewardType === 'gems' ? '💎' : '🧃'} {a.reward}
+                            {a.rewardType === 'gems' ? <GemIcon size={10} /> : <PulpIcon size={10} />} {a.reward}
                           </div>
                         </div>
                       </div>
@@ -703,6 +706,18 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   )
                 })}
               </div>
+            </>)}
+
+            {/* ── Focus Blocker ── */}
+            {activeTab === "focus" && (<>
+              <FocusBlockerSection
+                isDark={isDark}
+                blockedSites={blockedSites}
+                gems={gems}
+                onUpdateConfig={onUpdateConfig}
+                onSpendGems={onSpendGems}
+                openConfirm={openConfirm}
+              />
             </>)}
 
             {/* ── Data ── */}
@@ -765,7 +780,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                        </div>
                      }
                      isDark={isDark}
-                     description="Grant infinite Juice and Gems for testing"
+                     description="Grant infinite Sap and Gems for testing"
                      control={<SettingToggle checked={devMode} onChange={v => onUpdateConfig({ devMode: v })} isDark={isDark} />}
                    />
                    <div className="px-5 pb-3">
@@ -812,11 +827,11 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
                 {/* Fun doodles */}
                 <svg className="absolute -top-2 -right-4 pointer-events-none" width="80" height="80" viewBox="0 0 80 80" fill="none" style={{ opacity: isDark ? 0.12 : 0.1 }}>
-                  <path d="M20 60 Q25 20 40 15 Q55 10 60 40 Q65 55 50 65 Q35 72 20 60Z" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                  <path d="M35 35 L38 28 M42 33 L44 26" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1" strokeLinecap="round" />
-                  <circle cx="37" cy="42" r="1.5" fill={isDark ? '#ea580c' : '#ea580c'} />
-                  <circle cx="45" cy="40" r="1.5" fill={isDark ? '#ea580c' : '#ea580c'} />
-                  <path d="M38 48 Q41 51 44 48" stroke={isDark ? '#ea580c' : '#ea580c'} strokeWidth="1" fill="none" strokeLinecap="round" />
+                  <path d="M20 60 Q25 20 40 15 Q55 10 60 40 Q65 55 50 65 Q35 72 20 60Z" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                  <path d="M35 35 L38 28 M42 33 L44 26" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1" strokeLinecap="round" />
+                  <circle cx="37" cy="42" r="1.5" fill={isDark ? '#d97706' : '#d97706'} />
+                  <circle cx="45" cy="40" r="1.5" fill={isDark ? '#d97706' : '#d97706'} />
+                  <path d="M38 48 Q41 51 44 48" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1" fill="none" strokeLinecap="round" />
                 </svg>
                 <svg className="absolute top-16 -left-6 pointer-events-none" width="70" height="70" viewBox="0 0 70 70" fill="none" style={{ opacity: isDark ? 0.1 : 0.08 }}>
                   <path d="M35 8 L38 22 L52 18 L42 28 L55 35 L42 38 L48 52 L35 42 L22 52 L28 38 L15 35 L28 28 L18 18 L32 22Z" stroke={isDark ? '#facc15' : '#eab308'} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -832,7 +847,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   <circle cx="78" cy="20" r="2.5" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
                 </svg>
                 <svg className="absolute top-40 right-8 pointer-events-none" width="50" height="50" viewBox="0 0 50 50" fill="none" style={{ opacity: isDark ? 0.09 : 0.07 }}>
-                  <path d="M10 25 Q15 10 25 8 Q35 6 40 20" stroke={isDark ? '#f97316' : '#ea580c'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M10 25 Q15 10 25 8 Q35 6 40 20" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
                   <path d="M25 8 L25 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="1" strokeLinecap="round" />
                   <path d="M25 42 Q22 44 18 42 M25 42 Q28 44 32 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
                 </svg>
@@ -845,14 +860,14 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 <PricingSection
                   className="relative z-10"
                   isDark={isDark}
-                  accentColor="#ea580c"
+                  accentColor="#d97706"
                   tiers={[
                     {
                       name: "Creator",
                       price: { monthly: 4, yearly: 36 },
                       description: "Write smarter with AI",
                       buttonLabel: "Upgrade to Creator",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: '#ea580c' }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
@@ -868,7 +883,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       buttonLabel: "Upgrade to Pro",
                       highlight: true,
                       badge: "Most Popular",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: '#ea580c' }} />,
+                      icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
@@ -908,7 +923,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, title: "Notebooks & Pages", desc: "Create notebooks from the sidebar. Each notebook holds multiple pages you can flip through. Click anywhere on a page to create a text box and start writing." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Juice & Gems", desc: "Juice is earned by writing and completing focus sessions — use it to buy seeds in the shop. Gems are a premium currency for cosmetics, orchard expansion, and accent colors." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Sap & Gems", desc: "Sap is earned by writing and completing focus sessions — use it to buy seeds in the shop. Gems are a premium currency for cosmetics, orchard expansion, and accent colors." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. Removing a site costs 50 gems to discourage impulsive unblocking. Install the Chrome extension for enforcement." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
@@ -928,8 +943,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 <div className="px-5 py-4 space-y-4">
                   {[
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, title: "Growing Plants", desc: "Every completed focus session grows a plant. The plant type depends on the seed you select before starting. Plants are automatically assigned to whichever notebook you had open." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, and legendary. Fruit trees produce juice, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all juice earned that session." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, and legendary. Fruit trees produce sap, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all sap earned that session." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
@@ -975,7 +990,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     </div>
                     <div className="min-w-0">
                       <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>General Support</p>
-                      <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[#ea580c] hover:underline">pulpsupport@gmail.com</a>
+                      <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -986,7 +1001,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Report a Bug</p>
                       <p className={`text-[11.5px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                         Found something broken? Email us at{" "}
-                        <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[#ea580c] hover:underline">pulpsupport@gmail.com</a>
+                        <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
                         {" "}with a description of the issue and steps to reproduce it. Screenshots help!
                       </p>
                     </div>
@@ -1001,7 +1016,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             <button
               onClick={onClose}
               className="px-6 py-2 rounded-xl text-[12.5px] font-bold text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-              style={{ backgroundColor: '#ea580c' }}
+              style={{ backgroundColor: '#d97706' }}
             >Save changes</button>
           </div>
         </div>
@@ -1219,6 +1234,103 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
         </button>
       </div>
     </div>
+  )
+}
+
+function cleanDomain(input: string): string {
+  return input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").replace(/:.*$/, "")
+}
+
+function FocusBlockerSection({ isDark, blockedSites, gems, onUpdateConfig, onSpendGems, openConfirm }: {
+  isDark: boolean; blockedSites: string[]; gems: number
+  onUpdateConfig: (updates: Record<string, any>) => void
+  onSpendGems?: (amount: number) => void
+  openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
+}) {
+  const [input, setInput] = useState("")
+
+  const addSite = () => {
+    const domain = cleanDomain(input)
+    if (domain && !blockedSites.includes(domain)) {
+      onUpdateConfig({ blockedSites: [...blockedSites, domain] })
+      setInput("")
+    }
+  }
+
+  const removeSite = (domain: string) => {
+    if (!onSpendGems || gems < 50) return
+    const doRemove = () => {
+      onSpendGems(50)
+      onUpdateConfig({ blockedSites: blockedSites.filter(s => s !== domain) })
+    }
+    if (openConfirm) {
+      openConfirm("Remove Blocked Site", `Unblocking ${domain} costs 50 gems.`, doRemove, "Pay 50 gems & Remove", true)
+    } else {
+      if (confirm(`Unblocking ${domain} costs 50 gems. Continue?`)) doRemove()
+    }
+  }
+
+  return (
+    <>
+      <SettingSection title="Blocked Sites" isDark={isDark}>
+        <div className="p-5 flex flex-col gap-4">
+          <div className={`rounded-xl px-4 py-3 flex items-start gap-3 ${isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50 border-amber-200/50"} border`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 text-amber-500/70">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p className={`text-[11px] leading-relaxed m-0 ${isDark ? "text-amber-500/60" : "text-amber-700/70"}`}>
+              Once added, removing a site costs <strong><GemIcon size={11} /> 50 gems</strong>.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addSite() }}
+              placeholder="Add a website to block..."
+              className={`flex-1 px-4 py-2.5 text-[12px] rounded-xl outline-none transition-colors ${isDark ? "bg-zinc-900/80 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-600" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
+            />
+            <button onClick={addSite} className="px-5 py-2.5 rounded-xl text-[11px] font-bold text-white transition-all hover:brightness-110" style={{ background: "#e67e22" }}>
+              Block
+            </button>
+          </div>
+
+          {blockedSites.length > 0 ? (
+            <div className={`rounded-xl overflow-hidden border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
+              {blockedSites.map((site, i) => (
+                <div key={site} className={`flex items-center gap-3 px-4 py-3 transition-colors ${i > 0 ? (isDark ? "border-t border-zinc-800/60" : "border-t border-zinc-100") : ""} ${isDark ? "hover:bg-zinc-900/50" : "hover:bg-zinc-50"}`}>
+                  <img src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(site)}&sz=32`} alt="" width={16} height={16} className="shrink-0 rounded" onError={e => { (e.target as HTMLImageElement).style.display = "none" }} />
+                  <span className={`flex-1 text-[12px] min-w-0 truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{site}</span>
+                  <button
+                    onClick={() => removeSite(site)}
+                    disabled={gems < 50}
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                    style={{
+                      background: gems >= 50 ? "rgba(168,85,247,0.1)" : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),
+                      border: `1px solid ${gems >= 50 ? "rgba(168,85,247,0.2)" : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)")}`,
+                      color: gems >= 50 ? "#c084fc" : (isDark ? "#3f3f46" : "#a1a1aa"),
+                      cursor: gems >= 50 ? "pointer" : "not-allowed",
+                      opacity: gems >= 50 ? 1 : 0.5,
+                    }}
+                  >
+                    <GemIcon size={10} /> 50
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={`text-[11px] text-center py-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>No blocked sites yet.</p>
+          )}
+
+          {blockedSites.length > 0 && (
+            <p className={`text-[10px] text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
+              Removing costs <GemIcon size={10} /> 50 · You have <GemIcon size={10} /> {gems}
+            </p>
+          )}
+        </div>
+      </SettingSection>
+    </>
   )
 }
 

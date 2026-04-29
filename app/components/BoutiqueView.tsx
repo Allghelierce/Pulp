@@ -2,6 +2,7 @@
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpIcon, GemIcon, PaperIcon } from '@/app/components/CurrencyIcons'
 import { ACCENT_COLORS, FONT_OPTIONS, HEADING_FONT_OPTIONS, PAGE_STYLE_OPTIONS } from "./settings/SettingsView"
 
 export type TabId = 'shop' | 'gems' | 'bag' | 'catalog'
@@ -56,7 +57,7 @@ const RARITY_BG: Record<string, string> = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  fruit: '🍊 Fruit', paper: '📄 Paper', gem: '💎 Gem', none: '',
+  fruit: '🍊 Fruit', paper: 'Paper', gem: 'Gem', none: '',
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -136,7 +137,7 @@ function RarityScene({ rarity }: { rarity: string }) {
             <circle key={i}
               cx={`${(i * 33 + 15) % 85}%`}
               r={0.6 + (i % 2) * 0.3}
-              fill={i % 2 === 0 ? '#ea580c' : '#c06030'}
+              fill={i % 2 === 0 ? '#d97706' : '#92400e'}
             >
               <animate attributeName="opacity" values="0;0.4;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
               <animate attributeName="cy" values={`${80 + (i * 7) % 15}%;${60 + (i * 5) % 15}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
@@ -307,8 +308,8 @@ export const BoutiqueView = memo(function BoutiqueView({
   const CurrencyPill = ({ type, amount }: { type: 'juice' | 'gems'; amount: number }) => (
     <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
       {type === 'gems'
-        ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>
-        : <span style={{ fontSize: 11 }}>🧃</span>
+        ? <GemIcon size={11} />
+        : <PulpIcon size={11} />
       }
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
@@ -341,7 +342,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => { 
+                onClick={() => {
                   if (tab.id === 'catalog' && activeTab !== 'catalog') {
                     setActiveTab('catalog')
                     setIsRenderingCatalog(true)
@@ -474,7 +475,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                       cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1,
                                     }}
                                   >
-                                    💎 {cosmetic.cost}
+                                    <GemIcon size={11} /> {cosmetic.cost}
                                   </button>
                               }
                             </div>
@@ -574,13 +575,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                       style={{
                         fontFamily: font, cursor: cantAfford ? 'default' : 'pointer', border: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: '#ea580c', color: '#fff',
+                        background: '#d97706', color: '#fff',
                         opacity: cantAfford ? 0.35 : 1,
                       }}
                     >
                       Buy Seed
                       <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
-                      <span className="text-[10px] leading-none">🧃</span>
+                      <PulpIcon size={10} />
                       {previewInfo.cost.toLocaleString()}
                     </button>
                     <span style={{
@@ -611,10 +612,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: item.value }} />}
                       label={item.name}
                       action={(item as any).pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#ea580c' }}>PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ accentColor: item.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {item.cost}</button>
+                        : <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {item.cost}</button>
                       }
                     />
                   )
@@ -629,10 +630,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
                       label={f.label} labelFont={`"${f.value}", serif`}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#ea580c' }}>PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ headingFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
                       }
                     />
                   )
@@ -647,10 +648,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
                       label={f.label} labelFont={`"${f.value}", serif`}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#ea580c' }}>PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ editorFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
                       }
                     />
                   )
@@ -665,10 +666,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                       icon={<span className="text-[12px]">▤</span>}
                       label={f.label}
                       action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#ea580c' }}>PRO</span>
+                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
                         : owned
                         ? <button onClick={() => onUpdateConfig({ paperStyle: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {f.cost}</button>
+                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
                       }
                     />
                   )
@@ -684,7 +685,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       label={cosmetic.name}
                       action={owned
                         ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
+                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {cosmetic.cost}</button>
                       }
                     />
                   )
@@ -700,7 +701,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       label={cosmetic.name}
                       action={owned
                         ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}>💎 {cosmetic.cost}</button>
+                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {cosmetic.cost}</button>
                       }
                     />
                   )
@@ -822,9 +823,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
                               <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div style={{ marginTop: 4 }}>
                                 <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
-                                <span style={{ fontSize: 9, fontWeight: 600, color: CATEGORY_COLOR[t.category], letterSpacing: '0.04em' }}>{CATEGORY_LABEL[t.category]}</span>
                               </div>
                             </div>
                           </button>
@@ -898,7 +898,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
           <span style={{ fontSize: 9, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706' }}>
-            🧃 {t.cost.toLocaleString()}
+            <PulpIcon size={11} /> {t.cost.toLocaleString()}
           </span>
         </div>
       </div>

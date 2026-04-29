@@ -62,6 +62,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const _saved = useRef(_st.current())
   const _isBackup = _saved.current?._source === 'backup'
   const _backupExpired = _isBackup && _saved.current?.timestamp && (Date.now() - _saved.current.timestamp > GRACE_PERIOD_MS)
+  const _wasInCancelWindow = _backupExpired && (_saved.current?.elapsed ?? 0) < 60
 
   const [timerElapsed, setTimerElapsed] = useState(() => {
     const t = _saved.current
@@ -99,15 +100,26 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [treeDead, setTreeDead] = useState(() => {
     const t = _saved.current
     if (!t) return false
+    if (_wasInCancelWindow) return false
     if (_backupExpired) return true
     return !!(t.running && !t.done && t.waterDeadline && Date.now() > t.waterDeadline)
   })
+  const [deathReason, setDeathReason] = useState<string | null>(() => {
+    if (_wasInCancelWindow) return null
+    if (_backupExpired) return "You were away too long"
+    const t = _saved.current
+    if (t && t.running && !t.done && t.waterDeadline && Date.now() > t.waterDeadline) return "Your tree wasn't watered in time"
+    return null
+  })
   const [selectedSeed, setSelectedSeed] = useState<string | null>(() => _backupExpired ? null : (_saved.current?.selectedSeed ?? null))
 
-  // Tab-close grace period expired — penalize
+  // Tab-close grace period expired — penalize (unless was in cancel window)
   useEffect(() => {
     if (_isBackup && _backupExpired) {
-      setJuice(0)
+      if (!_wasInCancelWindow) {
+        setJuice(j => Math.floor(j * 0.5))
+        setDeathReason("You were away too long")
+      }
       localStorage.removeItem('pulp-timer-backup')
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -152,6 +164,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         if (wd && Date.now() > wd) {
           setTimerRunning(false)
           setTreeDead(true)
+          setDeathReason("Your tree wasn't watered in time")
           return
         }
         setTimerElapsed((prev: number) => {
@@ -176,6 +189,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
+    setDeathReason(null)
     setTimerRunning(true)
     if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
       setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
@@ -187,14 +201,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [lostJuice, setLostJuice] = useState(0)
 
   const giveUp = useCallback(() => {
-    setLostJuice(juice)
-    setJuice(0)
     setTimerRunning(false)
-    setTimerElapsed(0)
-    setTimerDone(false)
-    setTreeDead(false)
+    setTreeDead(true)
+    setDeathReason("You gave up on your session")
     setWaterDeadline(null)
-  }, [juice, setJuice])
+  }, [])
 
   const cancelSession = useCallback(() => {
     setTimerRunning(false)
@@ -258,11 +269,13 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerDone, treeDead, timerTotal, selectedSeed, setJuice, setXp, setGrove, checkAchievement, activeTabId])
 
   const dismissDeadTree = useCallback(() => {
-    setLostJuice(juice)
-    setJuice(0)
+    const lost = Math.ceil(juice * 0.5)
+    setLostJuice(lost)
+    setJuice(j => j - lost)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
+    setDeathReason(null)
     setWaterDeadline(null)
   }, [juice, setJuice])
 
@@ -345,6 +358,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       sidebarWidth={sidebarWidth}
       waterDeadline={waterDeadline}
       treeDead={treeDead}
+      deathReason={deathReason}
       onSetTotal={setTimerTotal}
       onSetPreset={setTimerPreset}
       onStart={startSession}

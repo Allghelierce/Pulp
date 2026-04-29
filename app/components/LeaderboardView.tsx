@@ -20,7 +20,7 @@ function generatePlayers(count: number) {
   const rng = seededRng(42069)
   const adjectives = ['midnight','velvet','silent','ember','frost','golden','iron','swift','crimson','lunar','sage','silver','wild','pale','dark','bright','deep','lost','brave','lone']
   const nouns = ['quill','moth','ink','fox','owl','cedar','fern','ash','drift','plume','prose','wolf','crow','reed','thorn','spark','rune','veil','tide','stone']
-  const avatarColors = ['#e07840','#8b7aaa','#c06878','#5a9a6a','#5a88b0','#b07850','#6a8a5a','#9a6a8a','#5a7aaa','#aa7a5a','#7a9a7a','#8a6aaa','#aa8a5a','#6a7a9a','#9a8a6a']
+  const avatarColors = ['#d97706','#8b7aaa','#c06878','#5a9a6a','#5a88b0','#b07850','#6a8a5a','#9a6a8a','#5a7aaa','#aa7a5a','#7a9a7a','#8a6aaa','#aa8a5a','#6a7a9a','#9a8a6a']
 
   const players: { name: string; level: number; juice: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
   const usedNames = new Set<string>()
@@ -68,7 +68,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
     return copy
   }, [tab])
 
-  const accent = '#ea580c'
+  const accent = '#d97706'
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -76,7 +76,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const bgColor = isDark ? '#0c0e10' : '#f5f3ef'
   const hoverBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
 
-  const MEDAL_COLORS = ['#ea580c', '#9a9590', '#a07050']
+  const MEDAL_COLORS = ['#d97706', '#9a9590', '#a07050']
 
   const formatVal = (p: typeof ALL_PLAYERS[0]) => {
     if (tab === 'juice') {
@@ -115,13 +115,13 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
         {/* Header */}
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: textPrimary, fontFamily: font }}>Leaderboard</h2>
+            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: 'var(--font-italiana)' }}>Leaderboard</h2>
             <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>Top writers this season</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Tabs */}
             <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[10px] font-semibold`}>
-              {([['juice', 'Juice'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
+              {([['juice', 'Sap'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setTab(id)}
@@ -303,7 +303,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           const rank = selectedPlayer + 1
           const medalColor = rank <= 3 ? MEDAL_COLORS[rank - 1] : accent
           const statItems = [
-            { label: 'Juice', value: p.juice.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
+            { label: 'Sap', value: p.juice.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
             { label: 'Focus Time', value: `${p.focusHours}h`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
             { label: 'Streak', value: `${p.streak}d`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 .67 2.5 1.73 4.2 3 5.5 2 2.08 2.5 4.5 1 7.5-1 2-3 3.5-5.5 3.5s-4-1-5-3.5c-.56-1.41-.56-3.18 0-4.5"/></svg> },
             { label: 'Trees', value: String(p.trees), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },

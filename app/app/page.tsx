@@ -155,30 +155,90 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
   theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean; paperBg: string
 }) {
   if (!showBinding) return null
+  const isDark = theme === "dark"
+  const wire = isDark ? '#888' : '#D4AF37'
+  const wireHi = isDark ? '#aaa' : '#FFF3A3'
+  const wireShadow = isDark ? '#555' : '#8B6914'
+
   if (!bindingCompact) return (
-    <div className="absolute left-[-24px] top-0 bottom-0 w-16 z-30 pointer-events-none flex flex-col justify-center overflow-visible">
-      {Array.from({ length: 40 }).map((_, i) => (
-        <div key={i} className="relative w-full h-[32px]">
-          <div className="absolute left-[34px] top-2 w-4 h-5 rounded-sm shadow-[inset_2px_3px_5px_rgba(0,0,0,0.5)]" style={{ backgroundColor: paperBg }} />
-          <div className="absolute left-[12px] top-[14px] w-[28px] h-[10px] border-b-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
-          <div className="absolute left-0 top-[10px] w-[42px] h-[15px] border-y-[3.5px] border-r-[3.5px] border-[#D4AF37] rounded-r-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#A67C00 #D4AF37 #8B6914 #D4AF37' }} />
-          <div className="absolute left-[2px] top-[11px] w-[38px] h-[10px] border-y-[1px] border-r-[1.5px] border-[#FFF3A3] rounded-r-full z-20 opacity-50" />
-          <div className="absolute left-[38px] top-[18px] w-[10px] h-[2px] bg-black/10 blur-[2px] z-0" />
-        </div>
-      ))}
+    <div className="absolute left-[-20px] top-0 bottom-0 w-[44px] z-30 pointer-events-none" style={{ overflow: 'visible' }}>
+      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'visible' }} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wire-back" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={wireShadow} />
+            <stop offset="50%" stopColor={wire} />
+            <stop offset="100%" stopColor={wireShadow} />
+          </linearGradient>
+          <linearGradient id="wire-front" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={wire} />
+            <stop offset="30%" stopColor={wireHi} />
+            <stop offset="60%" stopColor={wire} />
+            <stop offset="100%" stopColor={wireShadow} />
+          </linearGradient>
+        </defs>
+        {Array.from({ length: 36 }).map((_, i) => {
+          const cy = 28 + i * 30
+          const holeX = 30
+          const holeW = 12
+          const holeH = 10
+          const ringX = 20
+          const ringRx = 18
+          const ringRy = 7
+          return (
+            <g key={i}>
+              {/* Back half — loops left behind paper */}
+              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,0 ${ringX},${cy + ringRy}`} fill="none" stroke="url(#wire-back)" strokeWidth="3" />
+              <path d={`M ${ringX + 1},${cy - ringRy + 1} A ${ringRx - 1},${ringRy - 1} 0 0,0 ${ringX + 1},${cy + ringRy + 1}`} fill="none" stroke="black" strokeWidth="2" opacity="0.06" />
+              {/* Hole shadow */}
+              <rect x={holeX - holeW / 2 + 1} y={cy - holeH / 2 + 1} width={holeW} height={holeH} rx="2" fill="rgba(0,0,0,0.25)" />
+              {/* Hole */}
+              <rect x={holeX - holeW / 2} y={cy - holeH / 2} width={holeW} height={holeH} rx="2" fill={isDark ? '#0a0a0a' : '#111'} />
+              <rect x={holeX - holeW / 2} y={cy - holeH / 2} width={holeW} height={holeH} rx="2" fill="none" stroke={isDark ? '#222' : '#444'} strokeWidth="0.5" />
+              {/* Front half — loops right over paper */}
+              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,1 ${ringX},${cy + ringRy}`} fill="none" stroke="url(#wire-front)" strokeWidth="3.5" />
+              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,1 ${ringX},${cy + ringRy}`} fill="none" stroke={wireHi} strokeWidth="0.8" opacity="0.35" />
+              <path d={`M ${ringX + 1},${cy - ringRy + 1} A ${ringRx},${ringRy} 0 0,1 ${ringX + 1},${cy + ringRy + 1}`} fill="none" stroke="black" strokeWidth="2" opacity="0.04" />
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
   return (
-    <div className="absolute top-[-28px] left-0 right-0 h-16 z-30 pointer-events-none flex flex-row pl-[32px]">
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div key={i} className="relative h-full w-[32px]">
-          <div className="absolute left-2 top-[34px] w-5 h-4 rounded-sm bg-[#d7d2d0] shadow-[inset_2px_3px_5px_rgba(0,0,0,0.6)] border border-zinc-200" />
-          <div className="absolute left-[14px] top-[12px] w-[10px] h-[28px] border-r-[3px] border-[#8B6914] rounded-full opacity-40 blur-[0.5px]" />
-          <div className="absolute left-[10px] top-0 w-[15px] h-[42px] border-l-[3.5px] border-r-[3.5px] border-b-[3.5px] border-[#D4AF37] rounded-b-full shadow-[3px_4px_6px_rgba(0,0,0,0.3)] z-10" style={{ borderColor: '#D4AF37 #D4AF37 #8B6914 transparent' }} />
-          <div className="absolute left-[11px] top-[2px] w-[10px] h-[38px] border-l-[1px] border-r-[1px] border-b-[1.5px] border-[#FFF3A3] rounded-b-full z-20 opacity-50" />
-          <div className="absolute left-[18px] top-[38px] w-[2px] h-[10px] bg-black/10 blur-[2px] z-0" />
-        </div>
-      ))}
+    <div className="absolute top-[-20px] left-0 right-0 h-[44px] z-30 pointer-events-none" style={{ overflow: 'visible' }}>
+      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'visible' }} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wire-h-back" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0%" stopColor={wireShadow} />
+            <stop offset="50%" stopColor={wire} />
+            <stop offset="100%" stopColor={wireShadow} />
+          </linearGradient>
+          <linearGradient id="wire-h-front" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0%" stopColor={wire} />
+            <stop offset="30%" stopColor={wireHi} />
+            <stop offset="60%" stopColor={wire} />
+            <stop offset="100%" stopColor={wireShadow} />
+          </linearGradient>
+        </defs>
+        {Array.from({ length: 30 }).map((_, i) => {
+          const cx = 40 + i * 30
+          const holeY = 24
+          const holeW = 6
+          const holeH = 10
+          const ringRx = 7
+          const ringRy = 18
+          return (
+            <g key={i}>
+              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,0 ${cx + ringRx},${holeY}`} fill="none" stroke="url(#wire-h-back)" strokeWidth="3" />
+              <rect x={cx - holeW / 2 + 1} y={holeY - holeH / 2 + 1} width={holeW} height={holeH} rx="1.5" fill="rgba(0,0,0,0.2)" />
+              <rect x={cx - holeW / 2} y={holeY - holeH / 2} width={holeW} height={holeH} rx="1.5" fill={isDark ? '#0a0a0a' : '#1a1a1a'} />
+              <rect x={cx - holeW / 2} y={holeY - holeH / 2} width={holeW} height={holeH} rx="1.5" fill="none" stroke={isDark ? '#222' : '#555'} strokeWidth="0.5" />
+              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,1 ${cx + ringRx},${holeY}`} fill="none" stroke="url(#wire-h-front)" strokeWidth="3.5" />
+              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,1 ${cx + ringRx},${holeY}`} fill="none" stroke={wireHi} strokeWidth="0.8" opacity="0.35" />
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 })
@@ -238,9 +298,9 @@ const BoxItem = memo(function BoxItem({
         position: "absolute", left: box.x, top: box.y, width: box.w,
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
+        border: isEmpty ? "1px solid transparent" : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.3)"}`,
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 3, backgroundColor: box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)"),
+        borderRadius: 3, backgroundColor: isEmpty ? "transparent" : (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -443,7 +503,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   const dk = theme === "dark"
   const dropdownBase: React.CSSProperties = {
     position: "absolute", top: "calc(100% + 4px)", left: anchorLeft,
-    background: dk ? "#1f1f23" : "#ffffff", border: `1px solid ${dk ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.09)"}`,
+    background: dk ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}`,
     borderRadius: 6, padding: 3,
     boxShadow: dk ? "0 4px 12px rgba(0,0,0,0.4)" : "0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)",
     zIndex: 400, minWidth: 90,
@@ -1106,7 +1166,7 @@ export default function NoteApp() {
 
   // Settings
   const SETTINGS_DEFAULTS = {
-    accent: "#71717a",
+    accent: "#d97706",
     theme: "dark",
     autoSave: true,
     spellCheck: true,
@@ -2891,10 +2951,10 @@ export default function NoteApp() {
                 />
               </main>
             ) : (
-              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable" }}>
-                <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto" }} className="w-full max-w-5xl shrink-0">
-                  <div style={{ position: "relative" }}>
-                    <div style={{ position: "relative" }}>
+              <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden" }}>
+                <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto", paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
+                  <div style={{ position: "relative", overflow: "visible" }}>
+                    <div style={{ position: "relative", overflow: "visible" }}>
                       <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
                       <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#FAFAFA", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)" }} />
                       <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#F8F8F8", borderRadius: 2, zIndex: -1 }} />
@@ -3328,7 +3388,7 @@ export default function NoteApp() {
                     <button
                       onClick={() => setQuizState(prev => prev ? { ...prev, revealed: true } : null)}
                       className="w-full rounded-xl py-3 text-sm font-semibold transition-all"
-                      style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                      style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                     >
                       Reveal Answer
                     </button>
@@ -3340,7 +3400,7 @@ export default function NoteApp() {
                         <button
                           onClick={() => setQuizState(prev => prev ? { ...prev, current: prev.current + 1, revealed: false } : null)}
                           className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
-                          style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                          style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                         >
                           Next Question
                         </button>
@@ -3348,7 +3408,7 @@ export default function NoteApp() {
                         <button
                           onClick={() => setQuizState(null)}
                           className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
-                          style={{ background: "linear-gradient(135deg, #e8701a, #c04a08)", color: "white" }}
+                          style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                         >
                           Done
                         </button>
@@ -3360,7 +3420,7 @@ export default function NoteApp() {
                     {quizState.questions.map((_, i) => (
                       <div key={i} className="rounded-full transition-all" style={{
                         width: i === quizState.current ? 16 : 6, height: 6,
-                        background: i === quizState.current ? "#e8701a" : i < quizState.current ? "#c4956a" : "#e5e7eb",
+                        background: i === quizState.current ? "#d97706" : i < quizState.current ? "#c4956a" : "#e5e7eb",
                       }} />
                     ))}
                   </div>
@@ -3414,7 +3474,7 @@ export default function NoteApp() {
         {!user && (
           <button
             onClick={() => window.location.href = "/login"}
-            className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#F5A030]/10 hover:bg-[#F5A030]/20 border border-[#F5A030]/20 text-[#F5A030] shadow-lg hover:shadow-xl z-40"
+            className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-40"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
             <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>

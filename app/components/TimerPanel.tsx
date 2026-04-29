@@ -46,7 +46,7 @@ function OrangeFillTimer({ progress, running }: { progress: number, running: boo
       <motion.div 
         animate={{ scale: running ? [1, 1.08, 1] : 1, opacity: running ? [0.2, 0.35, 0.2] : 0.15 }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute w-32 h-32 bg-[#ea580c] blur-[50px] rounded-full z-0"
+        className="absolute w-32 h-32 bg-[#d97706] blur-[50px] rounded-full z-0"
       />
       
       <svg viewBox="0 0 100 100" className="w-full h-full z-10 drop-shadow-[0_20px_40px_rgba(234,88,12,0.2)] overflow-visible">
@@ -64,8 +64,8 @@ function OrangeFillTimer({ progress, running }: { progress: number, running: boo
             />
           </clipPath>
           <linearGradient id="pulp-gradient" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="#ea580c" />
-            <stop offset="100%" stopColor="#fb923c" />
+            <stop offset="0%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#d97706" />
           </linearGradient>
         </defs>
 
@@ -74,7 +74,7 @@ function OrangeFillTimer({ progress, running }: { progress: number, running: boo
         <path 
           d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C70 85 85 70 85 50 C85 30 70 15 50 15 Z" 
           fill="none" 
-          stroke="#ea580c" 
+          stroke="#d97706" 
           strokeOpacity="0.1"
           strokeWidth="1.2"
           filter="url(#hand-drawn)"
@@ -85,7 +85,7 @@ function OrangeFillTimer({ progress, running }: { progress: number, running: boo
             d="M50 15 C30 15 15 30 15 50 C15 70 30 85 50 85 C70 85 85 70 85 50 C85 30 70 15 50 15 Z" 
             fill="url(#pulp-gradient)"
             opacity="0.96"
-            stroke="#ea580c"
+            stroke="#d97706"
             strokeWidth="0.6"
             filter="url(#hand-drawn)"
           />
@@ -207,7 +207,7 @@ export const TimerPanel = memo(function TimerPanel({
                       <button
                         key={p} onClick={() => handlePresetClick(p)}
                         disabled={running}
-                        className={`${btnBase} ${preset === p && !isStopwatch ? "bg-[#ea580c] text-white shadow-lg" : btnInactive} ${running ? "opacity-50" : ""}`}
+                        className={`${btnBase} ${preset === p && !isStopwatch ? "bg-[#d97706] text-white shadow-lg" : btnInactive} ${running ? "opacity-50" : ""}`}
                       >
                         {PRESET_LABELS[p]}
                       </button>
@@ -227,7 +227,7 @@ export const TimerPanel = memo(function TimerPanel({
                          type="range" min="1" max="120" step="1" 
                          value={total / 60}
                          onChange={(e) => handleSliderChange(e.target.value)}
-                         className="flex-1 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#ea580c]"
+                         className="flex-1 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#d97706]"
                        />
                        <span className="text-[10px] text-zinc-500 font-bold whitespace-nowrap">{total / 60}m</span>
                     </div>
@@ -268,11 +268,11 @@ export const TimerPanel = memo(function TimerPanel({
 
                   <button
                     onClick={() => onSetRunning(!running)} disabled={done}
-                    className="w-full relative overflow-hidden group py-3.5 rounded-xl transition-all bg-[#ea580c]"
+                    className="w-full relative overflow-hidden group py-3.5 rounded-xl transition-all bg-[#d97706]"
                   >
                     <motion.div 
                       className="absolute inset-0 opacity-80"
-                      style={{ background: 'linear-gradient(90deg, #ea580c, #fb923c, #ea580c)', backgroundSize: '200% 100%' }}
+                      style={{ background: 'linear-gradient(90deg, #d97706, #d97706, #d97706)', backgroundSize: '200% 100%' }}
                       animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                     />

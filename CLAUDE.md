@@ -53,7 +53,7 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 
 ## Style conventions
 
-- Accent color: `#ea580c` (Pulp orange) everywhere — no `#e07840`
+- Accent color: `#d97706` (Pulp amber) everywhere — the one true orange
 - Fonts: EB Garamond for UI text, system monospace for code
 - All components use `memo()` for performance
 - Inline styles over className when dynamic values are needed

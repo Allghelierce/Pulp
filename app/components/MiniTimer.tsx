@@ -56,7 +56,7 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
             <g clipPath="url(#mini-orange-liquid-clip)">
               <path 
                 d="M50 15 C35 15 15 30 15 50 C15 70 35 85 50 85 C65 85 85 70 85 50 C85 30 65 15 50 15 Z" 
-                fill="#ea580c" 
+                fill="#d97706" 
               />
               <path 
                 d="M50 15 L50 40" stroke="white" strokeOpacity="0.15" strokeWidth="2" strokeLinecap="round"
@@ -82,8 +82,8 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
       {/* Pulsing indicator */}
       {!isComplete && (
         <div className="absolute top-1 right-1 flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ea580c] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ea580c]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d97706] opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d97706]"></span>
         </div>
       )}
     </motion.div>

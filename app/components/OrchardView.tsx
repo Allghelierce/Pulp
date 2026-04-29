@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 
 interface OrchardViewProps {
@@ -427,7 +428,7 @@ export const OrchardView = memo(function OrchardView({
 
           {/* Notebook list */}
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
-            <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
+            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
 
             {activeNotes.map(note => {
               const count = notebookTreeCounts[note.id] || 0
@@ -457,7 +458,7 @@ export const OrchardView = memo(function OrchardView({
             {archivedNotes.length > 0 && archivedNotes.some(n => (notebookTreeCounts[n.id] || 0) > 0) && (
               <>
                 <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
                 </div>
                 {archivedNotes.filter(n => (notebookTreeCounts[n.id] || 0) > 0).map(note => {
                   const count = notebookTreeCounts[note.id] || 0
@@ -489,7 +490,7 @@ export const OrchardView = memo(function OrchardView({
             {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
               <>
                 <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-widest px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
+                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
                 </div>
                 <button
                   onClick={() => setSelectedNotebook('_unassigned')}
@@ -499,7 +500,7 @@ export const OrchardView = memo(function OrchardView({
                       : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
                   }`}
                 >
-                  <span className="text-[13px] shrink-0 opacity-50">🌿</span>
+                  <span className="shrink-0 opacity-50"><LeafIcon size={13} /></span>
                   <span className="flex-1 min-w-0 truncate">Unassigned</span>
                   <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{notebookTreeCounts['_unassigned']}</span>
                 </button>
@@ -516,7 +517,7 @@ export const OrchardView = memo(function OrchardView({
             <div className="h-[2px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: '#ea580c' }}
+                style={{ background: '#d97706' }}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(2, lvl.progress * 100)}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
@@ -524,11 +525,11 @@ export const OrchardView = memo(function OrchardView({
             </div>
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
-                <span className="text-[9px]">🧃</span>
+                <PulpIcon size={9} />
                 <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{juice}</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-[9px]">💎</span>
+                <GemIcon size={9} />
                 <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{gems}</span>
               </div>
             </div>
@@ -599,7 +600,7 @@ export const OrchardView = memo(function OrchardView({
               >
                 {!renderTrees ? (
                   <div className="h-full flex items-center justify-center relative z-10">
-                    <span className="text-[32px] animate-pulse">🌿</span>
+                    <span className="animate-pulse"><LeafIcon size={32} /></span>
                   </div>
                 ) : filteredTrees.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">

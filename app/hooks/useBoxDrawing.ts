@@ -48,6 +48,7 @@ export function useBoxDrawing({
   const accentRef = useRef(accent)
   // Page attaches its selection rect div to this ref for zero-React-state drag updates
   const selectionRectRef = useRef<HTMLDivElement | null>(null)
+  const rafId = useRef<number>(0)
 
   // Update ref + bump version counter (cheap number, not a new Set object in state)
   const setSelectedBoxIds = useCallback((v: Set<string> | ((prev: Set<string>) => Set<string>)) => {
@@ -222,7 +223,8 @@ export function useBoxDrawing({
   const el = useCallback((id: string) => document.getElementById(`box-${id}`), [])
 
   const handleMove = useRef((e: MouseEvent) => {
-    requestAnimationFrame(() => {
+    cancelAnimationFrame(rafId.current)
+    rafId.current = requestAnimationFrame(() => {
       if (selectionRef.current) {
         const { sx, sy } = selectionRef.current
         const dx = e.clientX - sx

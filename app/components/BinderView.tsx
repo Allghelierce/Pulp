@@ -3,6 +3,7 @@ import { memo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
 interface BinderViewProps {
   isOpen: boolean
@@ -115,7 +116,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
               <span className="text-4xl">💰</span>
               <span className="font-black text-xs tracking-widest uppercase">Redeem Estate</span>
               <div className="px-4 py-1 rounded-full bg-white/20 text-[10px] font-bold">
-                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'juice' ? '🧃' : '💎'}
+                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'juice' ? <PulpIcon size={12} /> : <GemIcon size={12} />}
               </div>
             </div>
           </motion.button>
@@ -290,8 +291,8 @@ export const BinderView = memo(function BinderView({
                       <div className="flex flex-col">
                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Yield Balance</span>
                          <div className="flex items-center gap-4 mt-1 font-black text-sm">
-                            <span className="flex items-center gap-1.5"><span className="text-lg">🧃</span> {juice}</span>
-                            <span className="flex items-center gap-1.5"><span className="text-lg">💎</span> {gems}</span>
+                            <span className="flex items-center gap-1.5"><PulpIcon size={18} /> {juice}</span>
+                            <span className="flex items-center gap-1.5"><GemIcon size={18} /> {gems}</span>
                          </div>
                       </div>
                    </div>

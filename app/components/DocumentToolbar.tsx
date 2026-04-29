@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShareButton } from "@/components/ui/share-button"
 import { Link as LinkIcon, ShoppingBag } from "lucide-react"
+import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
 const XIcon = (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
 const FbIcon = (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" /></svg>
@@ -86,8 +87,8 @@ const AiMascotIcon = ({ size = 16 }: { size?: number }) => (
     <circle cx="16" cy="16" r="14" fill="url(#orange-grad)" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
     <defs>
       <radialGradient id="orange-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.2 11.2) rotate(90) scale(22.4)">
-        <stop stopColor="#fb923c" />
-        <stop offset="1" stopColor="#ea580c" />
+        <stop stopColor="#d97706" />
+        <stop offset="1" stopColor="#d97706" />
       </radialGradient>
     </defs>
     {/* Eyes */}
@@ -207,7 +208,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       style={{ transform: "translateZ(0)" }}
     >
 
-      <div className="flex items-center gap-3 relative z-10 min-w-0 overflow-hidden" ref={leftToolsRef}>
+      <div className="flex items-center gap-3 relative z-10 min-w-0 overflow-visible" ref={leftToolsRef}>
         {/* Simple Sidebar Toggle Arrow */}
         <button
           onClick={onSidebarToggle}
@@ -235,7 +236,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {insertOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Elements</div>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky'); setInsertOpen(false) }}
@@ -320,7 +321,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {alignOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
@@ -377,7 +378,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {showDrawToolbar && (
             <div
-              className={`absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 rounded-[8px] border shadow-md z-[100] p-1 ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white/95 border-zinc-200/80 backdrop-blur-xl"}`}
+              className={`absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 rounded-[8px] shadow-md z-[100] p-1`}
+              style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}
               onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-px px-0.5 mb-1">
@@ -499,7 +501,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {aiOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg border p-1 z-[100] ${theme === "dark" ? "bg-[#1f1f23] border-zinc-800" : "bg-white border-zinc-200"}`}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
               {COMMON_PROMPTS.map((item, idx) => (
                 <button
@@ -565,18 +567,18 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
       {/* Currencies Display - Centered */}
       {!hideCurrencies && <div className="relative">
-        <div onClick={onOpenGrove} className="flex items-center gap-2 px-3 py-1 text-[9px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+        <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer" title="Open Grove & Leaderboard">
-            <span className="text-[10px] leading-none">🧃</span>
+            <PulpIcon size={15} />
             <span>{juice >= 999999 ? "∞" : juice}</span>
           </div>
-          <div className="w-px h-3 bg-zinc-400/30" />
+          <div className="w-px h-4 bg-zinc-400/30" />
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onOpenGemStore?.() }}
             title="Get Gems"
           >
-            <span className="text-[10px] leading-none">💎</span>
+            <GemIcon size={15} />
             <span>{gems >= 999999 ? "∞" : gems}</span>
           </div>
           <button

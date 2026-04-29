@@ -14,7 +14,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
     onClose()
   }
 
-  const orange = "#ea580c"
+  const orange = "#d97706"
   const btnColor = config.type === "confirm" && config.danger ? "#ef4444" : orange
 
   // Close on backdrop click (optional, but requested implicitly by "Pulp design language" which is dark/modal-ish)
@@ -44,24 +44,24 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
         }}
       >
         {/* Header Decor */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-[#ea580c]/30 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-[#d97706]/30 to-transparent" />
 
         <div className="px-8 py-6 flex flex-col items-center text-center">
           {/* Icon/Visual feedback based on type */}
           {config.type === "prompt" && (
-            <svg className="w-7 h-7 mb-6 text-[#ea580c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 mb-6 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
           )}
           {config.type === "confirm" && (
-            <svg className="w-7 h-7 mb-6 text-[#ea580c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 mb-6 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 16v-4M12 8h.01" />
             </svg>
           )}
           {config.type === "alert" && (
-            <svg className="w-7 h-7 mb-6 text-[#ea580c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 mb-6 text-[#d97706]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 16v-4M12 8h.01" />
             </svg>
@@ -88,7 +88,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
                 onChange={e => setVal(e.target.value)}
                 placeholder={config.placeholder ?? "Type something..."}
                 style={{ fontFamily: '"EB Garamond", serif' }}
-                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-md px-4 py-2.5 text-base text-white focus:outline-none focus:border-[#ea580c]/50 focus:ring-4 focus:ring-[#ea580c]/10 transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-900/50 border border-zinc-700 rounded-md px-4 py-2.5 text-base text-white focus:outline-none focus:border-[#d97706]/50 focus:ring-4 focus:ring-[#d97706]/10 transition-all placeholder:text-zinc-600"
               />
             </div>
           )}
@@ -97,7 +97,7 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
             <label className="flex items-center gap-3 mb-8 cursor-pointer group select-none">
               <div 
                 onClick={() => setChecked(!checked)}
-                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${checked ? 'bg-[#ea580c] border-[#ea580c] shadow-[0_0_15px_rgba(234,88,12,0.3)]' : 'bg-transparent border-zinc-600 group-hover:border-zinc-500'}`}
+                className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${checked ? 'bg-[#d97706] border-[#d97706] shadow-[0_0_15px_rgba(234,88,12,0.3)]' : 'bg-transparent border-zinc-600 group-hover:border-zinc-500'}`}
               >
                 {checked && (
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">

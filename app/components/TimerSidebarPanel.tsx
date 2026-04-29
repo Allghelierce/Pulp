@@ -3,6 +3,7 @@ import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 
 const QUOTES = [
   "Every moment is a fresh beginning.",
@@ -29,6 +30,7 @@ interface TimerSidebarPanelProps {
   sidebarWidth: number
   waterDeadline: number | null
   treeDead: boolean
+  deathReason: string | null
   onSetTotal: (v: number) => void
   onSetPreset: (v: "focus" | "short" | "long") => void
   onStart: () => void
@@ -155,20 +157,20 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
 
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
-  waterDeadline, treeDead, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
+  waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   lostJuice, gems, onRecoverJuice,
   inventory, selectedSeed, onSelectSeed,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
-  const [confirmGiveUp, setConfirmGiveUp] = useState(false)
+  const [giveUpStage, setGiveUpStage] = useState(0)
   const [seedTrayOpen, setSeedTrayOpen] = useState(false)
   const [seedPage, setSeedPage] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
 
   useEffect(() => {
-    if (!running || done || treeDead) setConfirmGiveUp(false)
+    if (!running || done || treeDead) setGiveUpStage(0)
     if (running) setSeedTrayOpen(false)
     if (!running) setMinimized(false)
   }, [running, done, treeDead])
@@ -178,10 +180,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   }, [isOpen])
 
   useEffect(() => {
-    if (!confirmGiveUp) return
-    const timer = setTimeout(() => setConfirmGiveUp(false), 10000)
+    if (!giveUpStage) return
+    const timer = setTimeout(() => setGiveUpStage(0), 10000)
     return () => clearTimeout(timer)
-  }, [confirmGiveUp])
+  }, [giveUpStage])
 
   // Tick once a second so the water countdown stays fresh
   useEffect(() => {
@@ -337,14 +339,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             userSelect: 'none',
           }}
         >
-          {/* Header */}
+          {/* Header — minimal, no title */}
           <div
-            className="flex items-center justify-between px-3 py-2 shrink-0"
-            style={{ borderBottom: `1px solid ${borderColor}`, fontFamily: 'Inter, system-ui, sans-serif' }}
+            className="flex items-center justify-between px-3 py-1.5 shrink-0"
+            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
           >
             <div className="flex items-center gap-2">
-              {/* Water countdown — small ring + tabular MM:SS */}
-              {showWaterWidget ? (
+              {showWaterWidget && (
                 <div
                   className="flex items-center gap-1.5"
                   title={waterUrgent ? "Water the tree soon!" : "Time until next watering"}
@@ -366,20 +367,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
                   </span>
                 </div>
-              ) : (
-                <>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: dimColor }}>
-                    <circle cx="12" cy="13" r="8" />
-                    <path d="M12 9v4l2 2" />
-                    <path d="M9 2h6" />
-                  </svg>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: dimColor }}>
-                    Focus Timer
-                  </span>
-                </>
               )}
             </div>
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-0.5">
               {running && !done ? (
                 <button
                   onClick={() => setMinimized(true)}
@@ -422,7 +412,28 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           </div>
 
           {/* Body */}
-          <div className="flex-1 flex flex-col px-4 py-6 overflow-visible">
+          <div className="flex-1 flex flex-col px-4 pt-2 pb-6 overflow-visible relative">
+            {(running || done || treeDead) && (() => {
+              const borderColor_ = treeDead ? '#ef4444' : done ? '#22c55e' : '#ea580c'
+              const pct = (1 - progress) * 100
+              return (
+                <>
+                  {/* Track */}
+                  <div className="absolute inset-0 rounded-lg pointer-events-none" style={{ border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, zIndex: 1 }} />
+                  {/* Progress border via conic gradient */}
+                  <div className="absolute inset-0 rounded-lg pointer-events-none" style={{
+                    zIndex: 1,
+                    background: `conic-gradient(from 0deg, ${borderColor_} ${pct}%, transparent ${pct}%)`,
+                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    maskComposite: 'exclude',
+                    WebkitMaskComposite: 'xor',
+                    padding: '1.5px',
+                    transition: 'background 1s linear',
+                  }} />
+                </>
+              )
+            })()}
             <div className="flex flex-col items-center">
               {/* Timer display */}
               <div className="text-center mb-3">
@@ -451,6 +462,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <p className="text-[9px] uppercase tracking-[0.18em] mt-2" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : "ready"}
                 </p>
+                {treeDead && deathReason && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[10px] mt-1 text-center"
+                    style={{ color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', opacity: 0.8 }}
+                  >
+                    {deathReason}
+                  </motion.p>
+                )}
               </div>
 
               {/* Tree view */}
@@ -458,6 +479,21 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
                     </div>
+                    {/* Juice depletion animation on death */}
+                    <AnimatePresence>
+                      {treeDead && (
+                        <motion.div
+                          initial={{ opacity: 1, y: 0 }}
+                          animate={{ opacity: 0, y: -30 }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        >
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                            −50% 🧃
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Seed tray overlay */}
                     <AnimatePresence>
@@ -676,7 +712,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </div>
 
                   <p className="text-center mt-2 text-[11px]" style={{ color: mainColor, fontFamily: serifFont, fontWeight: 600 }}>
-                    +{Math.max(1, Math.round(total / 300))} 🧃
+                    +{Math.max(1, Math.round(total / 300))} <PulpIcon size={11} />
                   </p>
                 </div>
               )}
@@ -688,8 +724,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 onClick={() => {
                   if (running && !done && !treeDead) {
                     if (elapsed < 60) { onCancel(); return }
-                    if (confirmGiveUp) { onGiveUp(); setConfirmGiveUp(false) }
-                    else setConfirmGiveUp(true)
+                    if (giveUpStage === 2) { onGiveUp(); setGiveUpStage(0) }
+                    else setGiveUpStage(s => s + 1)
                   } else {
                     handleMainButton()
                   }
@@ -713,10 +749,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ? "#ef4444"
                         : done ? mainColor : textColor,
                   border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? (isDark ? borderColor : "#d4d4d8") : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
-                  textDecoration: confirmGiveUp ? "underline" : "none",
+                  textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : confirmGiveUp ? "Are you sure?" : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1">You will lose 50% of <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
 
               {lostJuice > 0 && !running && !done && (
@@ -729,7 +765,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   }}
                 >
                   <span className="text-[10px] tracking-[0.04em]" style={{ color: isDark ? "#fbbf24" : "#b45309" }}>
-                    You lost {lostJuice} 🧃
+                    You lost {lostJuice} <PulpIcon size={10} />
                   </span>
                   <button
                     onClick={onRecoverJuice}
@@ -737,7 +773,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     className="text-[9px] font-black uppercase tracking-[0.15em] hover:underline disabled:opacity-30 disabled:no-underline"
                     style={{ color: "#a78bfa" }}
                   >
-                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} 💎
+                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} <GemIcon size={9} />
                   </button>
                 </div>
               )}
@@ -805,19 +841,19 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   body: 'A water prompt will appear during longer sessions. Tap it before the countdown expires or your plant will wilt. This keeps you engaged.',
                 },
                 {
-                  icon: '🧃',
-                  title: 'Earn Juice & XP',
-                  body: 'Completing a session earns you juice and XP. Juice is used to buy new seeds in the shop. XP levels up your gardener rank.',
+                  icon: <PulpIcon size={18} />,
+                  title: 'Earn Sap & XP',
+                  body: 'Completing a session earns you sap and XP. Sap is used to buy new seeds in the shop. XP levels up your gardener rank.',
                 },
                 {
-                  icon: '🌿',
+                  icon: <LeafIcon size={18} />,
                   title: 'Your Orchard',
-                  body: 'Every plant you grow is added to your orchard — a visual garden of all your focus sessions. Mature plants can be harvested for bonus juice.',
+                  body: 'Every plant you grow is added to your orchard — a visual garden of all your focus sessions. Mature plants can be harvested for bonus sap.',
                 },
                 {
-                  icon: '💎',
+                  icon: <GemIcon size={18} />,
                   title: 'Gems & Recovery',
-                  body: 'If a plant dies, you can spend gems to recover lost juice. Gems are also used to remove sites from your focus blocker.',
+                  body: 'If a plant dies, you can spend gems to recover lost sap. Gems are also used to remove sites from your focus blocker.',
                 },
                 {
                   icon: '🚫',

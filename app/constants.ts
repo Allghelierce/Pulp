@@ -2,7 +2,7 @@ export const TREE_TYPES: Record<string, any> = {
   // ═══ FRUIT TREES — produce juice when mature ═══
 
   // DEFAULT — free, always available
-  tangerine:     { name: 'Tangerine',      color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'citrus',       category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1608 0%, #24200e 50%, #2e2814 100%)' },
+  tangerine:     { name: 'Tangerine',      color: '#d97706', bg: 'rgba(234,88,12,0.1)',   cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'citrus',       category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1608 0%, #24200e 50%, #2e2814 100%)' },
 
   // COMMON — 5 juice each
   cherry:        { name: 'Cherry',         color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'cherry',       category: 'fruit', juiceYield: 2,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c0a0a 0%, #2a1010 50%, #381616 100%)' },

@@ -9,7 +9,7 @@ interface AnimatedCreateButtonProps {
   theme: "light" | "dark"
 }
 
-const ORANGE = "#ea580c"
+const ORANGE = "#d97706"
 
 export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateButtonProps) {
   const color = ORANGE
