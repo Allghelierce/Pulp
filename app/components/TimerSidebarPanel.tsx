@@ -168,6 +168,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [seedPage, setSeedPage] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const [justWatered, setJustWatered] = useState(false)
 
   useEffect(() => {
     if (!running || done || treeDead) setGiveUpStage(0)
@@ -206,7 +207,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const seconds = remainingTime % 60
   const progress = total > 0 ? elapsed / total : 0
 
-  const mainColor = "#EA8C55"
+  const mainColor = "#ea580c"
   const isDark = theme === "dark"
   const bgColor = isDark ? "rgba(0,0,0,0.72)" : "rgba(10,10,12,0.68)"
   const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"
@@ -346,27 +347,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           >
             <div className="flex items-center gap-2">
               {showWaterWidget && (
-                <div
-                  className="flex items-center gap-1.5"
-                  title={waterUrgent ? "Water the tree soon!" : "Time until next watering"}
-                >
-                  <div className="relative w-3.5 h-3.5">
-                    <svg viewBox="0 0 24 24" className="w-full h-full -rotate-90">
-                      <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                      <circle
-                        cx="12" cy="12" r="10" fill="none"
-                        stroke={waterUrgent ? "#ef4444" : "#60a5fa"}
-                        strokeWidth="3" strokeLinecap="round"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        strokeDashoffset={1 - Math.min(1, waterMsLeft / (10 * 60 * 1000))}
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-[9px] font-bold tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1" }}>
-                    {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
-                  </span>
-                </div>
+                <span className="text-[9px] font-bold tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1", fontFamily: 'Inter, system-ui, sans-serif' }}>
+                  {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
+                </span>
               )}
             </div>
             <div className="flex items-center gap-0.5">
@@ -413,27 +396,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
           {/* Body */}
           <div className="flex-1 flex flex-col px-4 pt-2 pb-6 overflow-visible relative">
-            {(running || done || treeDead) && (() => {
-              const borderColor_ = treeDead ? '#ef4444' : done ? '#22c55e' : '#ea580c'
-              const pct = (1 - progress) * 100
-              return (
-                <>
-                  {/* Track */}
-                  <div className="absolute inset-0 rounded-lg pointer-events-none" style={{ border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`, zIndex: 1 }} />
-                  {/* Progress border via conic gradient */}
-                  <div className="absolute inset-0 rounded-lg pointer-events-none" style={{
-                    zIndex: 1,
-                    background: `conic-gradient(from 0deg, ${borderColor_} ${pct}%, transparent ${pct}%)`,
-                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    maskComposite: 'exclude',
-                    WebkitMaskComposite: 'xor',
-                    padding: '1.5px',
-                    transition: 'background 1s linear',
-                  }} />
-                </>
-              )
-            })()}
             <div className="flex flex-col items-center">
               {/* Timer display */}
               <div className="text-center mb-3">
@@ -445,7 +407,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     fontSize: 44,
                     lineHeight: 1,
                     ...(running && !done ? {
-                      backgroundImage: 'linear-gradient(90deg, #EA8C55 0%, #EA8C55 38%, #f0a87a 50%, #EA8C55 62%, #EA8C55 100%)',
+                      backgroundImage: 'linear-gradient(90deg, #ea580c 0%, #ea580c 38%, #f59e0b 50%, #ea580c 62%, #ea580c 100%)',
                       backgroundSize: '300% 100%',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
@@ -457,10 +419,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   }}
                 >
                   {String(minutes).padStart(2, "0")}
-                  <span style={{ opacity: running ? undefined : 0.55, ...(running && !done ? { WebkitTextFillColor: 'transparent' } : {}) }}>:{String(seconds).padStart(2, "0")}</span>
+                  <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[9px] uppercase tracking-[0.18em] mt-2" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : "ready"}
+                  {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5" style={{ color: mainColor }}>+{Math.max(1, Math.round(total / 300))} <PulpIcon size={9} /></span>}
                 </p>
                 {treeDead && deathReason && (
                   <motion.p
@@ -597,6 +559,59 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </AnimatePresence>
                   </div>
 
+              {/* Water bar under plot */}
+              {showWaterWidget && !treeDead && (
+                <div className="w-full mt-2 px-1">
+                  <button
+                    onClick={() => { onWater(); setJustWatered(true); setTimeout(() => setJustWatered(false), 1200) }}
+                    className="w-full relative"
+                    title="Water the tree"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* Track */}
+                    <div className="w-full h-[3px] rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(100, (waterMsLeft / (8 * 60 * 1000)) * 100)}%`,
+                          backgroundColor: waterUrgent ? '#ef4444' : '#60a5fa',
+                          transition: 'width 1s linear, background-color 0.3s',
+                        }}
+                      />
+                    </div>
+                    {/* Watering can animation */}
+                    <AnimatePresence>
+                      {justWatered && (
+                        <motion.div
+                          initial={{ opacity: 1, y: 0 }}
+                          animate={{ opacity: 0, y: -20 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 1 }}
+                          className="absolute -top-5 left-1/2 -translate-x-1/2 pointer-events-none"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 11v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6" />
+                            <path d="M3 11h12" />
+                            <path d="M15 13l5-3v8l-5-3" />
+                            <path d="M7 8c0-2 2-3 2-3" />
+                          </svg>
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0, 1, 1, 0] }}
+                            transition={{ duration: 0.8, times: [0, 0.1, 0.6, 1] }}
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5"
+                          >
+                            <span style={{ fontSize: 6, color: '#60a5fa' }}>💧</span>
+                            <span style={{ fontSize: 5, color: '#60a5fa' }}>💧</span>
+                            <span style={{ fontSize: 6, color: '#60a5fa' }}>💧</span>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </div>
+              )}
+
               {/* Change Plant and Notebook Selector */}
               {!running && !done && !treeDead && !seedTrayOpen && (
                 <div className="flex flex-col items-center gap-3 mt-3 relative z-20">
@@ -711,9 +726,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <span>180m</span>
                   </div>
 
-                  <p className="text-center mt-2 text-[11px]" style={{ color: mainColor, fontFamily: serifFont, fontWeight: 600 }}>
-                    +{Math.max(1, Math.round(total / 300))} <PulpIcon size={11} />
-                  </p>
                 </div>
               )}
             </div>
