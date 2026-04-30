@@ -713,20 +713,6 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
             {/* Mid trunk flowers */}
             <ellipse cx="24" cy="20" rx="2.5" ry="2" fill="#f9a8d4" opacity="0.35" />
             <ellipse cx="21" cy="22" rx="2" ry="1.5" fill="#ffc0d8" opacity="0.3" />
-            {/* Scattered petals on ground */}
-            <path d="M18 32 C19.5 30 21 31 20 33 Q19 34 18 32 Z" fill="#f9a8d4" opacity="0.4" transform="rotate(30 18 32)" />
-            <path d="M32 36 C33 34 34.5 35 34 37 Q33 38 32 36 Z" fill="#ffc0d8" opacity="0.3" transform="rotate(-20 32 36)" />
-            <path d="M10 38 C11 37 12 37.5 11.5 39 Q10.5 39.5 10 38 Z" fill="#ffe0ec" opacity="0.25" transform="rotate(10 10 38)" />
-            <path d="M28 42 C29 41 30 41.5 29.5 43 Q28.5 43.5 28 42 Z" fill="#f9a8d4" opacity="0.2" transform="rotate(-35 28 42)" />
-            <path d="M14 44 C15 43 16 43.5 15.5 45 Q14.5 45.5 14 44 Z" fill="#ffc0d8" opacity="0.2" transform="rotate(15 14 44)" />
-            <path d="M36 40 C37 39 38 39.5 37.5 41 Q36.5 41.5 36 40 Z" fill="#ffe0ec" opacity="0.2" transform="rotate(-10 36 40)" />
-            {/* Falling petals */}
-            <path d="M14 4 Q14.5 3.5 15 4 L14.5 4.5 Z" fill="#f9a8d4" opacity="0.45" style={{animation: `sakuraFall-${uid} 5s linear 0s infinite`, '--sf-x': '5px'} as React.CSSProperties} />
-            <path d="M26 2 C26.5 1.5 27 1.5 27 2 C27 2.5 26.5 3 26 2.5 Z" fill="#ffc0d8" opacity="0.4" style={{animation: `sakuraFall-${uid} 6s linear 1.5s infinite`, '--sf-x': '-6px'} as React.CSSProperties} />
-            <path d="M6 8 Q6.5 7.5 7 8 L6.5 8.5 Z" fill="#ffe0ec" opacity="0.45" style={{animation: `sakuraFall-${uid} 4.5s linear 2.8s infinite`, '--sf-x': '4px'} as React.CSSProperties} />
-            <path d="M40 6 C40.5 5.5 41 6 40.5 6.5 Z" fill="#f9a8d4" opacity="0.35" style={{animation: `sakuraFall-${uid} 7s linear 0.5s infinite`, '--sf-x': '-7px'} as React.CSSProperties} />
-            <path d="M20 3 L20.5 2.5 L21 3 L20.5 3.5 Z" fill="#ffc0d8" opacity="0.35" style={{animation: `sakuraFall-${uid} 5.5s linear 3.5s infinite`, '--sf-x': '3px'} as React.CSSProperties} />
-            <path d="M34 2 Q34.5 1.5 35 2 L34.5 2.5 Z" fill="#f9a8d4" opacity="0.4" style={{animation: `sakuraFall-${uid} 6.5s linear 0.8s infinite`, '--sf-x': '-4px'} as React.CSSProperties} />
             {/* Roots */}
             <path d="M22 46 Q19 44.5 16 46" stroke="#5c4a3a" strokeWidth="0.9" fill="none" opacity="0.25" />
             <path d="M24 46 Q27 44.5 30 46" stroke="#5c4a3a" strokeWidth="0.7" fill="none" opacity="0.2" />
