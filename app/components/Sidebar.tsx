@@ -873,21 +873,22 @@ export const Sidebar = memo(function Sidebar({
         <div className="shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           {/* Timer — featured */}
           {onOpenTimer && (
-            <div className="px-2 pb-4 flex justify-center" style={{ marginTop: -6 }}>
+            <div className="px-2 pb-3" style={{ marginTop: -18 }}>
               <button
                 onClick={onOpenTimer}
                 title="Focus timer"
-                className="w-10 h-10 flex items-center justify-center rounded-xl transition-all hover:bg-white/[0.07] active:scale-95"
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors group w-full text-left active:scale-95"
                 style={{
-                  color: timerOpen ? "#d97706" : "#a1a1aa",
+                  background: timerOpen ? "rgba(217,119,6,0.15)" : "rgba(255,255,255,0.04)",
                   boxShadow: timerOpen ? "0 0 12px rgba(217,119,6,0.25)" : "0 0 0 1px rgba(255,255,255,0.08)",
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"} style={{ flexShrink: 0 }}>
                   <circle cx="12" cy="13" r="8" />
                   <path d="M12 9v4l2 2" />
                   <path d="M9 2h6" />
                 </svg>
+                <span className={`text-[12px] font-medium ${timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"}`} style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Focus</span>
               </button>
             </div>
           )}

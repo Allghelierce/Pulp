@@ -461,7 +461,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               </div>
 
               {/* Tree view */}
-              <div className="relative w-full mx-auto" style={{ height: 160 }}>
+              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 84 }}>
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
                     </div>
