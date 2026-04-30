@@ -40,24 +40,27 @@ function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col:
   if (trees.length === 0) return []
 
   const results: { x: number; y: number; tree: any; col: number }[] = []
-  const cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.2))))
+  const cols = Math.min(7, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.1))))
   const rows = Math.ceil(trees.length / cols)
-  const colStart = 10
-  const colEnd = 90
-  const rowStart = 34
+  const colStart = 6
+  const colEnd = 94
+  const rowStart = 44
   const rowEnd = 93
 
   for (let i = 0; i < trees.length; i++) {
     const col = i % cols
     const row = Math.floor(i / cols)
     const colRows = Math.min(rows, Math.ceil((trees.length - col) / cols))
-    const x = cols === 1 ? 50 : colStart + col * ((colEnd - colStart) / (cols - 1))
     const rowSpacing = colRows > 1 ? (rowEnd - rowStart) / (colRows - 1) : 0
     const y = colRows === 1 ? 60 : rowStart + row * rowSpacing
+    const depthT = (y - rowStart) / Math.max(1, rowEnd - rowStart)
+    const trapLeft = colStart + (1 - depthT) * 6
+    const trapRight = colEnd - (1 - depthT) * 6
+    const x = cols === 1 ? 50 : trapLeft + col * ((trapRight - trapLeft) / (cols - 1))
     const rng = seededRng(i * 317 + col * 53 + 991)
     const jx = (rng() - 0.5) * 3
     const jy = (rng() - 0.5) * 2
-    results.push({ x: Math.max(6, Math.min(94, x + jx)), y: Math.max(32, Math.min(94, y + jy)), tree: trees[i], col })
+    results.push({ x: Math.max(6, Math.min(94, x + jx)), y: Math.max(42, Math.min(94, y + jy)), tree: trees[i], col })
   }
 
   return results.sort((a, b) => a.y - b.y)
@@ -76,71 +79,187 @@ function getRarityPlantClass(type: string): string {
 const PLOT_COST = [0, 5, 12]
 
 const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; treeCount: number }) {
-  const sky = isDark
-    ? 'linear-gradient(180deg, #0c1210 0%, #0e1812 15%, #121e14 30%, #162416 50%, #1a2c18 70%, #1e3018 100%)'
-    : 'linear-gradient(180deg, #87CEEB 0%, #a8d8c8 15%, #b8dab0 30%, #a8c48c 50%, #90b470 70%, #7da860 100%)'
-  const groundBase = isDark ? '#1a2c16' : '#7da860'
-  const groundMid = isDark ? '#1e3218' : '#8ab86c'
-  const groundDark = isDark ? '#142210' : '#6e9854'
-  const groundLight = isDark ? '#223a1c' : '#96c474'
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
   const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
 
-  const cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(treeCount * 1.2))))
-  const colStart = 10
-  const colEnd = 90
+  const cols = Math.min(7, Math.max(3, Math.ceil(Math.sqrt(treeCount * 1.1))))
+  const colStart = 6
+  const colEnd = 94
+  const tillCols = cols + 2
 
   return (
     <>
-      <div className="absolute inset-0" style={{ background: sky }} />
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none">
+        <defs>
+          {/* Sky with sunset */}
+          <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#1a0c06' : '#c46820'} />
+            <stop offset="20%" stopColor={isDark ? '#241208' : '#d98030'} />
+            <stop offset="40%" stopColor={isDark ? '#2e1a0a' : '#e89838'} />
+            <stop offset="60%" stopColor={isDark ? '#281608' : '#daa048'} />
+            <stop offset="80%" stopColor={isDark ? '#141a1e' : '#a0b8a0'} />
+            <stop offset="100%" stopColor={isDark ? '#101820' : '#88aaaa'} />
+          </linearGradient>
+          {/* Ocean */}
+          <linearGradient id="ocean-g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#0a1a2a' : '#4a90b8'} />
+            <stop offset="50%" stopColor={isDark ? '#081624' : '#3d7fa8'} />
+            <stop offset="100%" stopColor={isDark ? '#0c1e2e' : '#5a9cc4'} />
+          </linearGradient>
+          {/* Mountain range */}
+          <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#1a1a20' : '#8090a0'} />
+            <stop offset="60%" stopColor={isDark ? '#141418' : '#6a7a8a'} />
+            <stop offset="100%" stopColor={isDark ? '#101014' : '#5a6a7a'} />
+          </linearGradient>
+          <linearGradient id="mtn-snow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#3a3a44' : '#d0d8e0'} />
+            <stop offset="100%" stopColor={isDark ? '#1a1a20' : '#8a94a0'} stopOpacity="0" />
+          </linearGradient>
+          {/* Mid hill */}
+          <linearGradient id="hill-mid" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#142416' : '#5a9a4a'} />
+            <stop offset="100%" stopColor={isDark ? '#101e12' : '#4a8a3a'} />
+          </linearGradient>
+          {/* Near hill */}
+          <linearGradient id="hill-near" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#1a2e18' : '#6aaa58'} />
+            <stop offset="100%" stopColor={isDark ? '#162614' : '#5a9a48'} />
+          </linearGradient>
+          {/* Field */}
+          <linearGradient id="field-g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#1e3218' : '#7db860'} />
+            <stop offset="30%" stopColor={isDark ? '#1a2c16' : '#72aa56'} />
+            <stop offset="70%" stopColor={isDark ? '#1c2e16' : '#6a9e50'} />
+            <stop offset="100%" stopColor={isDark ? '#182812' : '#5e9248'} />
+          </linearGradient>
+        </defs>
 
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {/* Distant hills */}
-        <path d="M-5,28 Q8,22 18,25 Q28,20 38,23 Q48,18 58,22 Q68,17 78,21 Q88,18 98,24 L105,26 L105,100 L-5,100 Z" fill={isDark ? '#0e1a0c' : '#6a9a50'} opacity="0.5" />
-        <path d="M-5,30 Q15,24 30,28 Q45,22 60,26 Q75,20 90,25 Q100,22 105,27 L105,100 L-5,100 Z" fill={groundBase} />
+        {/* Sky */}
+        <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
 
-        {/* Gentle terrain variation */}
-        <ellipse cx="25" cy="50" rx="22" ry="10" fill={groundLight} opacity="0.2" />
-        <ellipse cx="70" cy="65" rx="25" ry="12" fill={groundMid} opacity="0.15" />
-        <ellipse cx="50" cy="85" rx="30" ry="10" fill={groundLight} opacity="0.15" />
-        <ellipse cx="85" cy="45" rx="14" ry="7" fill={groundDark} opacity="0.15" />
-        <ellipse cx="15" cy="75" rx="16" ry="8" fill={groundDark} opacity="0.1" />
+        {/* Sun glow on horizon */}
+        <ellipse cx="100" cy="14" rx="60" ry="10" fill={isDark ? 'rgba(220,140,40,0.12)' : 'rgba(255,180,60,0.35)'} />
+        <ellipse cx="100" cy="14" rx="30" ry="5" fill={isDark ? 'rgba(240,160,50,0.1)' : 'rgba(255,210,80,0.35)'} />
+        <ellipse cx="100" cy="14" rx="12" ry="3" fill={isDark ? 'rgba(255,180,60,0.08)' : 'rgba(255,230,120,0.3)'} />
 
-        {/* Tilled dirt columns */}
-        {Array.from({ length: cols }).map((_, ci) => {
-          const x = cols === 1 ? 50 : colStart + ci * ((colEnd - colStart) / (cols - 1))
+        {/* Ocean band */}
+        <path d="M-5,14 L205,14 L205,28 L-5,28 Z" fill="url(#ocean-g)" />
+        {/* Ocean reflection of sunset */}
+        <ellipse cx="100" cy="18" rx="40" ry="2.5" fill={isDark ? 'rgba(200,120,40,0.06)' : 'rgba(255,180,80,0.15)'} />
+        {/* Ocean shimmer */}
+        <path d="M0,17 Q20,16.2 40,17 Q60,17.8 80,17 Q100,16.2 120,17 Q140,17.8 160,17 Q180,16.2 200,17" fill="none" stroke={isDark ? 'rgba(100,160,220,0.08)' : 'rgba(255,255,255,0.2)'} strokeWidth="0.3" />
+        <path d="M0,20 Q25,19 50,20 Q75,21 100,20 Q125,19 150,20 Q175,21 200,20" fill="none" stroke={isDark ? 'rgba(100,160,220,0.06)' : 'rgba(255,255,255,0.15)'} strokeWidth="0.25" />
+        <path d="M0,23 Q30,22.5 60,23 Q90,23.5 120,23 Q150,22.5 180,23" fill="none" stroke={isDark ? 'rgba(100,160,220,0.04)' : 'rgba(255,255,255,0.1)'} strokeWidth="0.2" />
+        <path d="M0,26 Q40,25.5 80,26 Q120,26.5 160,26 Q200,25.5 205,26" fill="none" stroke={isDark ? 'rgba(100,160,220,0.03)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.2" />
+
+        {/* Mountain range — sharp peaks */}
+        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
+        {/* Snow caps on peaks */}
+        <path d="M15,12 L12,16 L18,16 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.3' : '0.5'} />
+        <path d="M35,10 L32,15 L38,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.25' : '0.45'} />
+        <path d="M50,8 L47,13 L53,13 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.35' : '0.55'} />
+        <path d="M68,11 L65,15 L71,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.2' : '0.4'} />
+        <path d="M105,9 L102,14 L108,14 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.35' : '0.55'} />
+        <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.3' : '0.5'} />
+        {/* Mountain shadow */}
+        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill={isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.04)'} />
+
+        {/* Mid hills — rounder, softer */}
+        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26 L210,28 L210,40 L-10,40 Z" fill="url(#hill-mid)" />
+        {/* Light edge on mid hills */}
+        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke={isDark ? 'rgba(80,140,60,0.15)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.4" />
+
+        {/* Near hills — the foreground ridge before the field */}
+        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30 L210,32 L210,42 L-10,42 Z" fill="url(#hill-near)" />
+        {/* Highlight on near hill crests */}
+        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke={isDark ? 'rgba(100,170,80,0.1)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.5" />
+
+        {/* Main field — soft top edge blends with hills */}
+        <path d="M-5,36 Q20,39 50,37 Q80,35 100,37 Q130,39 160,36 Q185,38 205,37 L205,100 L-5,100 Z" fill="url(#field-g)" />
+
+        {/* Field texture — subtle undulations */}
+        <path d="M0,50 Q50,48 100,50 Q150,52 200,50" fill="none" stroke={isDark ? 'rgba(40,60,30,0.25)' : 'rgba(90,140,60,0.12)'} strokeWidth="0.4" />
+        <path d="M0,62 Q40,60 80,62 Q120,64 160,62 Q180,60 200,62" fill="none" stroke={isDark ? 'rgba(40,60,30,0.2)' : 'rgba(90,140,60,0.1)'} strokeWidth="0.35" />
+        <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke={isDark ? 'rgba(40,60,30,0.15)' : 'rgba(90,140,60,0.08)'} strokeWidth="0.3" />
+        <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke={isDark ? 'rgba(40,60,30,0.12)' : 'rgba(90,140,60,0.06)'} strokeWidth="0.25" />
+
+        {/* Tilled dirt columns — same trapezoid as tree placement, +1 each side */}
+        {Array.from({ length: tillCols }).map((_, ci) => {
+          const colSpacing = (colEnd - colStart) / (cols - 1)
+          const tillIdx = ci - 1
+          const baseCol = colStart + tillIdx * colSpacing
+          const rng = seededRng(ci * 137 + 42)
+          const steps = 8
+          const points: string[] = []
+          for (let s = 0; s <= steps; s++) {
+            const t = s / steps
+            const y = 40 + t * 57
+            const depthT = t
+            const trapL = colStart + (1 - depthT) * 6
+            const trapR = colEnd - (1 - depthT) * 6
+            const tillL = trapL - ((trapR - trapL) / (cols - 1))
+            const tillR = trapR + ((trapR - trapL) / (cols - 1))
+            const x = (tillCols === 1 ? 50 : tillL + ci * ((tillR - tillL) / (tillCols - 1))) * 2
+            const wobble = (rng() - 0.5) * 1.5
+            points.push(`${(x + wobble).toFixed(1)},${y.toFixed(1)}`)
+          }
+          const d = `M${points[0]} ` + points.slice(1).map(p => `L${p}`).join(' ')
           return (
             <g key={`till-${ci}`}>
-              <rect x={x - 0.6} y="32" width={1.2} height="62" rx="0.5" fill={dirtColor} opacity={isDark ? 0.25 : 0.15} />
-              <rect x={x - 0.2} y="33" width={0.4} height="60" rx="0.2" fill={dirtLight} opacity={isDark ? 0.12 : 0.08} />
+              <path d={d} fill="none" stroke={dirtColor} strokeWidth="2.2" opacity={isDark ? 0.18 : 0.1} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.6" opacity={isDark ? 0.08 : 0.05} strokeLinecap="round" transform="translate(0.3, 0.5)" />
             </g>
           )
         })}
 
         {/* Grass tufts */}
-        {Array.from({ length: 40 }).map((_, i) => {
+        {Array.from({ length: 50 }).map((_, i) => {
           const rng = seededRng(i * 53 + 101)
-          const x = 3 + rng() * 94
-          const y = 30 + rng() * 66
-          const h = 0.4 + rng() * 0.7
+          const x = 6 + rng() * 188
+          const y = 40 + rng() * 56
+          const h = 0.4 + rng() * 0.6
           return (
-            <g key={`g${i}`} opacity={isDark ? 0.18 : 0.12}>
-              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.3}`} y2={`${y - h}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.25" />
-              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.2}`} y2={`${y - h * 0.8}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.2" />
+            <g key={`g${i}`} opacity={isDark ? 0.15 : 0.1}>
+              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.4}`} y2={`${y - h}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.3" />
+              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.3}`} y2={`${y - h * 0.8}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.25" />
             </g>
           )
         })}
 
-        {/* Fence posts along edges */}
-        {[5, 20, 35, 50, 65, 80, 95].map(x => (
-          <g key={`fence-${x}`} opacity={isDark ? 0.15 : 0.1}>
-            <rect x={x - 0.3} y="28" width="0.6" height="3" fill={isDark ? '#3a3020' : '#7a6a4a'} />
-          </g>
-        ))}
-        <line x1="5" y1="29" x2="95" y2="29" stroke={isDark ? '#3a3020' : '#7a6a4a'} strokeWidth="0.25" opacity={isDark ? 0.12 : 0.08} />
+        {/* Fence — posts with cross rails, 2 gaps */}
+        {(() => {
+          const fenceColor = isDark ? '#4a3e28' : '#6a5a3a'
+          const fenceLight = isDark ? '#5a4e32' : '#7a6a4a'
+          const fenceOp = isDark ? 0.45 : 0.35
+          const posts = [6, 22, 38, 54, 70, 86, 102, 118, 134, 150, 166, 182, 196]
+          const gapAfter = new Set([54, 134])
+          return (
+            <g>
+              {posts.map(px => (
+                <g key={`fp-${px}`} opacity={fenceOp}>
+                  <rect x={px - 0.5} y="36.5" width="1" height="4.5" rx="0.2" fill={fenceColor} />
+                  <rect x={px - 0.3} y="36.5" width="0.3" height="4.5" fill={fenceLight} opacity="0.4" />
+                  <rect x={px - 0.7} y="36.2" width="1.4" height="0.5" rx="0.15" fill={fenceColor} />
+                </g>
+              ))}
+              {posts.slice(0, -1).map((px, i) => {
+                const nx = posts[i + 1]
+                if (gapAfter.has(px)) return null
+                return (
+                  <g key={`fr-${px}`} opacity={fenceOp * 0.8}>
+                    <line x1={px} y1="38" x2={nx} y2="38" stroke={fenceColor} strokeWidth="0.4" />
+                    <line x1={px} y1="39.5" x2={nx} y2="39.5" stroke={fenceColor} strokeWidth="0.35" />
+                    <line x1={px} y1="38" x2={nx} y2="38" stroke={fenceLight} strokeWidth="0.15" opacity="0.3" />
+                  </g>
+                )
+              })}
+            </g>
+          )
+        })()}
 
-        {/* Dirt path along bottom */}
-        <path d="M-2,97 Q25,94 50,96 Q75,94 102,97 L102,100 L-2,100 Z" fill={dirtColor} opacity="0.25" />
+        {/* Dirt path */}
+        <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
       </svg>
 
       {/* Soft vignette */}
@@ -211,7 +330,7 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
-  const TREES_PER_PLOT = 40
+  const TREES_PER_PLOT = 30
   const MAX_PLOTS = 3
 
   const [unlockedPlots, setUnlockedPlots] = useState<Record<string, number>>(() => {
@@ -259,9 +378,9 @@ export const OrchardView = memo(function OrchardView({
   const textSecondary = isDark ? '#6b6860' : '#9a9590'
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
-  const baseSize = filteredTrees.length <= 6 ? 78 :
-    filteredTrees.length <= 15 ? 70 :
-    filteredTrees.length <= 30 ? 62 : 54
+  const baseSize = filteredTrees.length <= 6 ? 95 :
+    filteredTrees.length <= 15 ? 85 :
+    filteredTrees.length <= 30 ? 75 : 65
 
   return (
     <div
@@ -498,8 +617,10 @@ export const OrchardView = memo(function OrchardView({
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
-                      const depthScale = 0.6 + (y / 100) * 0.45
-                      const treeSize = Math.round(baseSize * depthScale)
+                      const shape = typeInfo?.shape || 'oak'
+                      const shapeScale = ({ oak: 1.25, conifer: 1.3, birch: 1.2, cypress: 1.3, sakura: 1.25, bamboo: 1.15, void: 1.1 } as Record<string, number>)[shape] || 0.95
+                      const depthScale = 0.65 + (y / 100) * 0.3
+                      const treeSize = Math.round(baseSize * depthScale * shapeScale)
                       const depthT = Math.max(0, Math.min(1, (y - 30) / 65))
                       const scaleY = 0.78 + depthT * 0.22
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2

@@ -2692,7 +2692,8 @@ export default function NoteApp() {
             <div
               onMouseDown={(e) => startSidebarDrag(e.clientX)}
               style={{
-                width: 6,
+                width: 12,
+                height: '100%',
                 cursor: 'col-resize',
                 backgroundColor: 'transparent',
                 position: 'relative',
