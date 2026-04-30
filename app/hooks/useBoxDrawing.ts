@@ -391,7 +391,7 @@ export function useBoxDrawing({
             const newBox: TextBox = {
               id, x: x - 100, y: y - 100, w: 200, h: 200, content: '',
               boxHighlightColor: stickyColor,
-              boxFontFamily: '"Bilbo", cursive',
+              boxFontFamily: 'cursive',
               boxFontSize: 24,
               boxOutlineWidth: 0,
               boxRotation: 2,

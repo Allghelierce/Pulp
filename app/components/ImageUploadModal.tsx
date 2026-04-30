@@ -115,7 +115,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           {tab === "upload" ? (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>Insert Media</h3>
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Insert Media</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Photos, GIFs, or short videos.</p>
               </div>
 
@@ -175,7 +175,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           ) : (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>External Link</h3>
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>External Link</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">YouTube, Vimeo, or direct image URL.</p>
               </div>
 

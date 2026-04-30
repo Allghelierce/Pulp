@@ -214,7 +214,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const textColor = "#e4e4e7"
   const dimColor = "#a1a1aa"
   const subtleColor = "#71717a"
-  const serifFont = '"EB Garamond", Georgia, serif'
+  const serifFont = 'Georgia, serif'
 
   const handleMainButton = () => {
     if (treeDead) onDismissDead()
@@ -576,7 +576,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         >
                           <div className="flex flex-col items-center gap-0.5">
                             <span style={{
-                              fontSize: 22, fontWeight: 800, color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif',
+                              fontSize: 22, fontWeight: 800, color: '#ef4444', fontFamily: 'Georgia, serif',
                               textShadow: '0 0 12px rgba(239,68,68,0.5), 0 2px 8px rgba(0,0,0,0.4)',
                               letterSpacing: '-0.02em',
                             }}>
@@ -612,7 +612,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-[12px] mt-2 text-center"
-                  style={{ color: subtleColor, fontFamily: '"EB Garamond", Georgia, serif' }}
+                  style={{ color: subtleColor, fontFamily: 'Georgia, serif' }}
                 >
                   {deathReason}
                 </motion.p>

@@ -96,7 +96,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
       <div
         className={`w-[340px] h-full flex flex-col shadow-2xl border-l ${isDark ? "bg-[#18181b] border-zinc-800" : "bg-white border-zinc-200"}`}
         onClick={e => e.stopPropagation()}
-        style={{ fontFamily: '"EB Garamond", Georgia, serif' }}
+        style={{ fontFamily: 'Georgia, serif' }}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>

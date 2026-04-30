@@ -11,6 +11,7 @@ import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
 import { verifyPasswordAndDelete } from "@/app/actions/deleteAccount"
+import { changePassword } from "@/app/actions/changePassword"
 import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
@@ -62,16 +63,16 @@ export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: bo
 ]
 
 export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
-  { value: "EB Garamond", label: "EB Garamond" },
-  { value: "Playfair Display", label: "Playfair Display", cost: 2 },
-  { value: "Georgia", label: "Georgia", cost: 1 },
+  { value: "Georgia", label: "Georgia" },
+  { value: "Palatino", label: "Palatino", cost: 1 },
   { value: "Arial", label: "Arial", cost: 1 },
+  { value: "Courier New", label: "Mono", cost: 2 },
 ]
 
 export const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
-  { value: "Playfair Display", label: "Playfair Display" },
-  { value: "EB Garamond", label: "EB Garamond", cost: 1 },
-  { value: "Italiana", label: "Italiana", cost: 2 },
+  { value: "Georgia", label: "Georgia" },
+  { value: "Didot", label: "Didot", cost: 1 },
+  { value: "Palatino", label: "Palatino", cost: 2 },
   { value: "Bodoni", label: "Bodoni", pro: true },
 ]
 
@@ -129,7 +130,7 @@ export interface PulpConfig {
 }
 
 export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow }: {
-  user: { email?: string } | null
+  user: { id: string; email?: string } | null
   onClose: () => void
   config: PulpConfig
   onUpdateConfig: (updates: Partial<PulpConfig>) => void
@@ -168,6 +169,12 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
   const [deleteUsername, setDeleteUsername] = useState("")
   const [deletePassword, setDeletePassword] = useState("")
+  const [pwOpen, setPwOpen] = useState(false)
+  const [pwCurrent, setPwCurrent] = useState("")
+  const [pwNew, setPwNew] = useState("")
+  const [pwConfirm, setPwConfirm] = useState("")
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -203,7 +210,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Sidebar ── */}
         <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>Settings</p>
+            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Settings</p>
           </div>
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
@@ -242,10 +249,10 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)', color: isDark ? '#dcd8d0' : '#2a2620' }}>
+            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-            <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: 'Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
               {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
@@ -292,6 +299,67 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                       </button>
                     }
                   />
+                )}
+                {user && (
+                  <div className="px-5 pb-4">
+                    <button
+                      onClick={() => { setPwOpen(!pwOpen); setPwMsg(null) }}
+                      className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}
+                    >
+                      Change Password
+                    </button>
+                    {pwOpen && (
+                      <div className={`mt-3 flex flex-col gap-2 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
+                        <input
+                          type="password"
+                          value={pwCurrent}
+                          onChange={e => setPwCurrent(e.target.value)}
+                          placeholder="Current password"
+                          autoComplete="current-password"
+                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                        />
+                        <input
+                          type="password"
+                          value={pwNew}
+                          onChange={e => setPwNew(e.target.value)}
+                          placeholder="New password (min 6 chars)"
+                          autoComplete="new-password"
+                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                        />
+                        <input
+                          type="password"
+                          value={pwConfirm}
+                          onChange={e => setPwConfirm(e.target.value)}
+                          placeholder="Confirm new password"
+                          autoComplete="new-password"
+                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                        />
+                        {pwMsg && (
+                          <p className={`text-[11px] font-medium ${pwMsg.ok ? "text-emerald-500" : "text-red-500"}`}>{pwMsg.text}</p>
+                        )}
+                        <button
+                          disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
+                          onClick={async () => {
+                            if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: "Passwords don't match" }); return }
+                            if (pwNew.length < 6) { setPwMsg({ ok: false, text: "Min 6 characters" }); return }
+                            setPwLoading(true); setPwMsg(null)
+                            const res = await changePassword(user.id, pwCurrent, pwNew)
+                            setPwLoading(false)
+                            if (res.success) {
+                              setPwMsg({ ok: true, text: "Password updated" })
+                              setPwCurrent(""); setPwNew(""); setPwConfirm("")
+                              setTimeout(() => setPwOpen(false), 1500)
+                            } else {
+                              setPwMsg({ ok: false, text: res.error || "Failed" })
+                            }
+                          }}
+                          className={`text-[11.5px] font-semibold px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                        >
+                          {pwLoading ? "Updating..." : "Update Password"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </SettingSection>
 

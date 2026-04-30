@@ -256,7 +256,7 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
   const [text, setText] = useState('')
   const [sent, setSent] = useState(false)
   const mono = '"JetBrains Mono", ui-monospace, monospace'
-  const serif = '"EB Garamond", Georgia, serif'
+  const serif = '"Georgia", Georgia, serif'
   const accent = '#d97706'
   const config = MODAL_CONFIG[type] || MODAL_CONFIG['feedback']
   const canSend = config.hasSubject ? subject.trim().length > 0 : text.trim().length > 0
@@ -479,7 +479,7 @@ export default function PulpLanding() {
   }, [activeSlide])
 
   const mono = '"JetBrains Mono", ui-monospace, monospace'
-  const serif = '"EB Garamond", Georgia, serif'
+  const serif = '"Georgia", Georgia, serif'
   const accent = '#d97706'
 
   const slideBase: React.CSSProperties = {

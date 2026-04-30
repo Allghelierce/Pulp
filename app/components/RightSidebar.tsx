@@ -76,7 +76,7 @@ export const RightSidebar = memo(function RightSidebar({
         <div className={`mx-4 mt-4 p-3 rounded-xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-gradient-to-r from-amber-50/60 to-orange-50/40 border-orange-100/40'}`}>
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
-              <span className={`text-[18px] font-black tabular-nums ${isDark ? 'text-amber-400' : 'text-amber-600'}`} style={{ fontFamily: '"EB Garamond", serif' }}>
+              <span className={`text-[18px] font-black tabular-nums ${isDark ? 'text-amber-400' : 'text-amber-600'}`} style={{ fontFamily: 'Georgia, serif' }}>
                 Lv.{lvl.level}
               </span>
               <span className={`text-[10px] font-semibold uppercase tracking-[0.08em] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>

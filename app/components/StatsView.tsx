@@ -73,7 +73,7 @@ function getTimeData(entries: DailyEntry[], range: "day" | "week" | "month") {
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-const font = '"EB Garamond", Georgia, serif'
+const font = 'Georgia, serif'
 
 function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
   const s = size
@@ -111,7 +111,7 @@ function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
 }
 
 export const StatsView = memo(function StatsView({
-  isOpen, onClose, theme, xp, streak = 0,
+  isOpen, onClose, theme, accent, xp, streak = 0,
 }: StatsViewProps) {
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week")
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
@@ -124,7 +124,7 @@ export const StatsView = memo(function StatsView({
   const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
   const focusColor = '#d97706'
-  const writingColor = isDark ? '#60a5fa' : '#3b82f6'
+  const writingColor = accent
   const levelColor = '#d97706'
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
@@ -203,8 +203,8 @@ export const StatsView = memo(function StatsView({
                 <LevelIcon level={lvl.level} size={18} />
               </div>
               <div>
-                <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: 'var(--font-italiana)' }}>{lvl.name}</h2>
-                <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: '"EB Garamond", Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
+                <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>{lvl.name}</h2>
+                <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: 'Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>
             <button
@@ -282,7 +282,7 @@ export const StatsView = memo(function StatsView({
           {/* Consistency Heatmap */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", Georgia, serif' }}>Consistency</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: 'Georgia, serif' }}>Consistency</span>
               <span style={{ fontSize: 9, color: textMuted }}>Past year</span>
             </div>
 
@@ -339,7 +339,7 @@ export const StatsView = memo(function StatsView({
           {/* Activity Chart */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", Georgia, serif' }}>Activity</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: 'Georgia, serif' }}>Activity</span>
               <div style={{ display: "flex", gap: 1 }}>
                 {(["day", "week", "month"] as const).map(r => (
                   <button

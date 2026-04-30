@@ -15,7 +15,7 @@ const GEM_PACKS = [
   { id: "chest", amount: 40, price: "$5.99", label: "Chest" },
 ]
 
-const font = '"EB Garamond", Georgia, serif'
+const font = 'Georgia, serif'
 const accent = '#d97706'
 
 function GemShape({ x, y, s = 1 }: { x: number; y: number; s?: number }) {

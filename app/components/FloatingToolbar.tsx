@@ -6,7 +6,7 @@ const COLORS = [
   "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280",
 ]
 
-const font: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: "0.01em" }
+const font: React.CSSProperties = { fontFamily: 'Georgia, serif', letterSpacing: "0.01em" }
 
 export const FloatingToolbar = memo(function FloatingToolbar({
   accent, activeTool, onToolChange, onClearDrawing, isVisible,

@@ -161,7 +161,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
           {tab === "import" ? (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: 'var(--font-italiana)' }}>Notebook Cover</h3>
+                <h3 className="text-xl text-white tracking-widest uppercase" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Notebook Cover</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Supported formats: PNG, JPG, WebP</p>
               </div>
 

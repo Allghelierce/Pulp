@@ -860,7 +860,7 @@ export const SlashMenu = memo(function SlashMenu({
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 7V4h16v3M9 20h6M12 4v16" /></svg>,
       action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }),
       subOptions: [
-        { label: "garamond (elegant)", fontPreview: "'EB Garamond', serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }) },
+        { label: "georgia (elegant)", fontPreview: "Georgia, serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "" }) },
         { label: "georgia (modern)", fontPreview: "Georgia, serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Georgia, serif" }) },
         { label: "arial (clean)", fontPreview: "Arial, sans-serif", action: () => onUpdateBox?.(box.id, { boxFontFamily: "Arial, sans-serif" }) },
         { label: "monospace (code)", fontPreview: '"Courier New", monospace', action: () => onUpdateBox?.(box.id, { boxFontFamily: '"Courier New", monospace' }) },

@@ -579,7 +579,7 @@ export const Sidebar = memo(function Sidebar({
               <circle cx="14" cy="14" r="1.8" fill="#92400e" fillOpacity="0.75" />
               <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
             </svg>
-            <h1 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp</h1>
+            <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp</h1>
           </div>
           <div ref={searchRef} className="relative">
             <div className="relative">
@@ -685,24 +685,24 @@ export const Sidebar = memo(function Sidebar({
           {onOpenShop && (
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Shop</span>
+              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>Shop</span>
             </button>
           )}
           {onOpenStats && (
             <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Stats</span>
+              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
           {onOpenLeaderboard && (
             <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Leaderboard</span>
+              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>Leaderboard</span>
             </button>
           )}
           <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Settings</span>
+            <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>Settings</span>
           </button>
         </div>
 
@@ -711,7 +711,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Binder</p>
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Binder</p>
                 {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
@@ -724,7 +724,7 @@ export const Sidebar = memo(function Sidebar({
                   <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
                     className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-400 bg-zinc-800/60" : "text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
-                    style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}
+                    style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}
                   >
                     + New
                   </button>
@@ -737,7 +737,7 @@ export const Sidebar = memo(function Sidebar({
                     </div>
                   )}
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>+ Folder</button>
               </div>
             </div>
 
@@ -787,7 +787,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Bookmarks</p>
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Bookmarks</p>
             </div>
             {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
@@ -857,7 +857,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Backlinks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Backlinks</p>
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Backlinks</p>
             </div>
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
@@ -898,7 +898,7 @@ export const Sidebar = memo(function Sidebar({
                   <path d="M12 9v4l2 2" />
                   <path d="M9 2h6" />
                 </svg>
-                <span className={`text-[12px] font-medium ${timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"}`} style={{ fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }}>Focus</span>
+                <span className={`text-[12px] font-medium ${timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"}`} style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }}>Focus</span>
               </button>
             </div>
           )}

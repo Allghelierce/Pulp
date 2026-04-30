@@ -73,7 +73,7 @@ function getDropChance(weight: number): string {
   return `${pct.toFixed(2)}%`
 }
 
-const font = '"EB Garamond", Georgia, serif'
+const font = 'Georgia, serif'
 
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
@@ -861,7 +861,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
         backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
         opacity: soldOut ? 0.35 : 1, transition: 'all 0.15s',
-        fontFamily: '"EB Garamond", Georgia, serif',
+        fontFamily: 'Georgia, serif',
       }}
     >
       <div style={{

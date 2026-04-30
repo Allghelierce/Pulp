@@ -66,7 +66,7 @@ export const FocusView = memo(function FocusView({
   const isDark = theme === "dark"
   const extensionInstalled = useExtensionDetected()
   const [input, setInput] = useState("")
-  const font = '"EB Garamond", Georgia, serif'
+  const font = 'Georgia, serif'
 
   useEffect(() => {
     if (!isOpen) return

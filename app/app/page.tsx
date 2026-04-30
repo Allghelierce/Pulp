@@ -20,7 +20,7 @@ function ViewLoader() {
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md">
       <div className="flex flex-col items-center gap-3">
         <div className="w-5 h-5 border-2 border-[#d97706] border-t-transparent rounded-full animate-spin" />
-        <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
+        <span style={{ fontFamily: "Georgia, serif", fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
       </div>
     </div>
   )
@@ -92,7 +92,7 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const color = "#3f3f46"
-  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", Georgia, serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
+  const fontStyle: React.CSSProperties = { color, fontFamily: '"Georgia", Georgia, serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
 
   const commit = (val: string) => {
     const n = parseInt(val, 10)
@@ -410,7 +410,7 @@ const BoxItem = memo(function BoxItem({
               cursor: "pointer", fontSize: 13,
               display: "flex", alignItems: "center", justifyContent: "center",
               lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0,
-              fontFamily: '"Caveat", cursive', fontWeight: 600,
+              fontFamily: 'cursive', fontWeight: 600,
               filter: "url(#handwritten-jitter-subtle)"
             }}>×</button>
         </div>
@@ -425,7 +425,7 @@ const BoxItem = memo(function BoxItem({
             cursor: "pointer", fontSize: 13, width: 17, height: 17,
             display: "flex", alignItems: "center", justifyContent: "center",
             borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)",
-            zIndex: 120, fontFamily: '"Caveat", cursive', fontWeight: 600,
+            zIndex: 120, fontFamily: 'cursive', fontWeight: 600,
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
       )}
@@ -491,12 +491,10 @@ const BoxItem = memo(function BoxItem({
 const BOX_HEADING_SIZES: Record<string, number> = { h1: 42, h2: 28, h3: 22, default: 20, margin: 26 }
 const BOX_HEADING_WEIGHTS: Record<string, number> = { h1: 800, h2: 700, h3: 700, default: 400, margin: 400 }
 const BOX_FONTS = [
-  { value: "'Caveat', cursive", label: "Handwritten" },
-  { value: "'Gochi Hand', cursive", label: "Gochi Hand" },
-  { value: "'Indie Flower', cursive", label: "Marker" },
-  { value: "'Dancing Script', cursive", label: "Script" },
-  { value: "", label: "Garamond" },
-  { value: "Georgia, serif", label: "Georgia" },
+  { value: "cursive", label: "Handwritten" },
+  { value: "'Brush Script MT', cursive", label: "Script" },
+  { value: "", label: "Georgia" },
+  { value: "'Palatino Linotype', Palatino, serif", label: "Palatino" },
   { value: "Arial, sans-serif", label: "Arial" },
   { value: '"Courier New", monospace', label: "Mono" },
 ]
@@ -569,7 +567,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     fontSize: 13, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
     cursor: "pointer", paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6, borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.01em",
-    fontFamily: "'EB Garamond', serif",
+    fontFamily: "Georgia, serif",
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
   // Handlers
@@ -627,7 +625,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           <button ref={styleBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("style") }}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
-          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || "'EB Garamond', serif" }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
+          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || "Georgia, serif" }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
             {currentFont.label.toLowerCase()} {chevron}
           </button>
           <button ref={sizeBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("size") }}>
@@ -679,9 +677,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           {open === "font" && (
             <div style={dropdownBase}>
               {BOX_FONTS.map(f => (
-                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || "'EB Garamond', serif" }} onMouseDown={e => {
+                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || "Georgia, serif" }} onMouseDown={e => {
                   e.preventDefault()
-                  if (!applyInlineCSS(`font-family: ${f.value || "'EB Garamond', serif"}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
+                  if (!applyInlineCSS(`font-family: ${f.value || "Georgia, serif"}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
                   setOpen(null)
                 }}>{f.label.toLowerCase()}</button>
               ))}
@@ -805,7 +803,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Caveat', cursive")
+  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || "Georgia, serif")
   const inkColor = isMarginStyle
     ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
     : getInkColor(paperStyle, theme === "dark")
@@ -1198,8 +1196,8 @@ export default function NoteApp() {
     spellCheck: true,
     autoCorrect: true,
     autoCapitalize: true,
-    editorFont: "EB Garamond",
-    headingFont: "Playfair Display",
+    editorFont: "Georgia",
+    headingFont: "Georgia",
     lineSpacing: "normal",
     paperStyle: "lined",
     showBinding: false,
@@ -1313,7 +1311,7 @@ export default function NoteApp() {
       x: x - 100, y: y - 100, w: 200, h: 200,
       content: '',
       boxHighlightColor: stickyColor,
-      boxFontFamily: '"Bilbo", cursive',
+      boxFontFamily: 'cursive',
       boxFontSize: 16,
       boxOutlineWidth: 0,
       boxRotation: rotation,
@@ -2965,7 +2963,7 @@ export default function NoteApp() {
               <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
                 <div className="text-center max-w-md overflow-hidden">
                   {/* Heading */}
-                  <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+                  <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"Georgia", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                   {/* Primary Button */}
                   <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
@@ -3090,7 +3088,7 @@ export default function NoteApp() {
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                               </div>
                               <div>
-                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: 'var(--font-italiana)' }}>Vault Locked</h3>
+                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Vault Locked</h3>
                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
                               </div>
                               <button
@@ -3148,7 +3146,7 @@ export default function NoteApp() {
                               ref={editorRef}
                               className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
                               style={{
-                                fontFamily: `"${editorFont}", "Indie Flower", Georgia, serif`,
+                                fontFamily: `"${editorFont}", Georgia, serif`,
                                 fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
                                 filter: "url(#handwritten-jitter-subtle)",
                                 fontWeight: 400,
@@ -3165,7 +3163,7 @@ export default function NoteApp() {
                                color: ${getInkColor(paperStyle, theme === "dark")} !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
-                               font-family: "${editorFont}", "Indie Flower", "Caveat", cursive, Georgia, serif !important;
+                               font-family: "${editorFont}", Georgia, serif !important;
                                font-weight: 500 !important;
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
