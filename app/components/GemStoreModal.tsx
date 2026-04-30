@@ -19,10 +19,25 @@ const font = '"EB Garamond", Georgia, serif'
 const accent = '#d97706'
 
 function GemShape({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  const id = `gs-${x}-${y}`
   return (
     <g transform={`translate(${x},${y}) scale(${s})`}>
-      <polygon points="0,-5 -3.5,0 0,5 3.5,0" fill="#0ea5e9" stroke="#0369a1" strokeWidth="0.8"/>
-      <polygon points="0,-5 -3.5,0 0,0" fill="#7dd3fc" opacity="0.5"/>
+      <path d="M0,-4 L-3.5,0 L0,6 L3.5,0 Z" fill={`url(#${id}-b)`}/>
+      <path d="M-3.5,0 L0,-4 L3.5,0" fill={`url(#${id}-t)`}/>
+      <path d="M-3.5,0 L0,1.5 L3.5,0" fill="#7dd3fc" opacity="0.3"/>
+      <path d="M-3.5,0 L0,6 L0,1.5 Z" fill="#38bdf8" opacity="0.4"/>
+      <path d="M3.5,0 L0,6 L0,1.5 Z" fill="#0284c7" opacity="0.3"/>
+      <defs>
+        <linearGradient id={`${id}-b`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#38bdf8"/>
+          <stop offset="50%" stopColor="#0ea5e9"/>
+          <stop offset="100%" stopColor="#0369a1"/>
+        </linearGradient>
+        <linearGradient id={`${id}-t`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7dd3fc"/>
+          <stop offset="100%" stopColor="#38bdf8"/>
+        </linearGradient>
+      </defs>
     </g>
   )
 }
@@ -42,14 +57,19 @@ function HandfulSprite({ size = 36 }: { size?: number }) {
 function PouchSprite({ size = 36 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
-      <ellipse cx="24" cy="32" rx="11" ry="9" fill="#92400e" stroke="#78350f" strokeWidth="1.2"/>
-      <path d="M16 24 C16 20, 19 18, 24 18 C29 18, 32 20, 32 24" fill="#a16207" stroke="#78350f" strokeWidth="1"/>
-      <path d="M18 18 C20 16, 22 17, 24 15 C26 17, 28 16, 30 18" fill="none" stroke="#78350f" strokeWidth="1.2" strokeLinecap="round"/>
-      <path d="M21 15 C19 11, 15 11, 16 15" fill="none" stroke="#78350f" strokeWidth="1" strokeLinecap="round"/>
-      <path d="M27 15 C29 11, 33 11, 32 15" fill="none" stroke="#78350f" strokeWidth="1" strokeLinecap="round"/>
-      <GemShape x={21} y={14} s={0.8}/>
-      <GemShape x={27} y={15} s={0.7}/>
-      <circle cx="24" cy="10" r="0.8" fill="#fff" opacity="0.7"/>
+      {/* Pouch body */}
+      <path d="M15 22 C14 28, 14 34, 16 37 C18 40, 21 42, 24 42 C27 42, 30 40, 32 37 C34 34, 34 28, 33 22 Z" fill="#92400e" stroke="#78350f" strokeWidth="1.2"/>
+      {/* Highlight */}
+      <path d="M19 25 C18 30, 19 36, 24 38 C22 36, 20 32, 19 25 Z" fill="#b45309" opacity="0.5"/>
+      {/* Gathered neck / cinch */}
+      <path d="M15 22 C18 24, 21 25, 24 25 C27 25, 30 24, 33 22" fill="none" stroke="#78350f" strokeWidth="1.2" strokeLinecap="round"/>
+      {/* Drawstring ties */}
+      <path d="M21 22 C19 18, 16 15, 15 13" fill="none" stroke="#78350f" strokeWidth="1" strokeLinecap="round"/>
+      <path d="M27 22 C29 18, 32 15, 33 13" fill="none" stroke="#78350f" strokeWidth="1" strokeLinecap="round"/>
+      {/* Drawstring knot */}
+      <ellipse cx="24" cy="22" rx="2.5" ry="1.5" fill="#78350f"/>
+      {/* Sparkle */}
+      <circle cx="21" cy="30" r="0.7" fill="#fff" opacity="0.4"/>
     </svg>
   )
 }
@@ -57,16 +77,24 @@ function PouchSprite({ size = 36 }: { size?: number }) {
 function ChestSprite({ size = 36 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
-      <rect x="10" y="24" width="28" height="14" rx="2" fill="#92400e" stroke="#78350f" strokeWidth="1.2"/>
-      <rect x="10" y="23" width="28" height="2.5" fill="#d97706" opacity="0.25"/>
-      <GemShape x={17} y={21} s={0.8}/>
-      <GemShape x={24} y={19} s={0.9}/>
-      <GemShape x={31} y={21} s={0.8}/>
-      <path d="M10 24 L8 15 C8 11, 14 8, 24 8 C34 8, 40 11, 40 15 L38 24" fill="#a16207" stroke="#78350f" strokeWidth="1.2"/>
-      <path d="M8 15 C8 11, 14 8, 24 8 C34 8, 40 11, 40 15" fill="#b45309" stroke="#78350f" strokeWidth="0.8"/>
-      <rect x="21" y="23" width="6" height="4" rx="1" fill="#fbbf24" stroke="#d97706" strokeWidth="0.8"/>
-      <circle cx="24" cy="25.5" r="0.8" fill="#92400e"/>
-      <circle cx="24" cy="12" r="0.8" fill="#fff" opacity="0.6"/>
+      {/* Chest bottom box */}
+      <rect x="10" y="26" width="28" height="12" rx="2" fill="#92400e" stroke="#78350f" strokeWidth="1.2"/>
+      {/* Bottom highlight */}
+      <rect x="12" y="28" width="24" height="3" rx="1" fill="#a16207" opacity="0.3"/>
+      {/* Lid - flat rectangle sitting on top */}
+      <rect x="9" y="18" width="30" height="9" rx="2" fill="#a16207" stroke="#78350f" strokeWidth="1.2"/>
+      {/* Lid top face highlight */}
+      <rect x="11" y="19" width="26" height="4" rx="1" fill="#b45309" opacity="0.4"/>
+      {/* Metal band across seam */}
+      <rect x="9" y="25" width="30" height="2.5" rx="0.5" fill="#d97706" opacity="0.3" stroke="#78350f" strokeWidth="0.5"/>
+      {/* Lock/clasp */}
+      <rect x="21" y="24" width="6" height="5" rx="1" fill="#fbbf24" stroke="#d97706" strokeWidth="0.8"/>
+      <circle cx="24" cy="27" r="1" fill="#92400e"/>
+      {/* Corner studs */}
+      <circle cx="12" cy="36" r="1" fill="#d97706" opacity="0.5"/>
+      <circle cx="36" cy="36" r="1" fill="#d97706" opacity="0.5"/>
+      {/* Shine on lid */}
+      <circle cx="18" cy="21" r="0.8" fill="#fff" opacity="0.5"/>
     </svg>
   )
 }
@@ -92,7 +120,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[1100] flex items-start justify-center p-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}
           onMouseDown={onClose}
         >
@@ -104,7 +132,8 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
             onMouseDown={e => e.stopPropagation()}
             className="relative w-full overflow-hidden"
             style={{
-              maxWidth: 380,
+              maxWidth: 440,
+              marginTop: 48,
               borderRadius: 16,
               background: '#0c0e10',
               boxShadow: '0 25px 80px -15px rgba(0,0,0,0.7)',
@@ -139,7 +168,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
                   key={pack.id}
                   className="flex-1 flex flex-col items-center gap-2 rounded-xl transition-all relative overflow-hidden"
                   style={{
-                    padding: '20px 10px 16px',
+                    padding: '24px 12px 18px',
                     background: pack.popular ? `${accent}0a` : 'rgba(255,255,255,0.02)',
                     border: pack.popular ? `1px solid ${accent}25` : '1px solid rgba(255,255,255,0.05)',
                     cursor: 'pointer',
@@ -162,7 +191,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
                       Popular
                     </div>
                   )}
-                  <span style={{ marginTop: pack.popular ? 4 : 0 }}>{(() => { const Sprite = PACK_SPRITES[pack.id]; return Sprite ? <Sprite size={40} /> : <GemIcon size={22} /> })()}</span>
+                  <span style={{ marginTop: pack.popular ? 4 : 0 }}>{(() => { const Sprite = PACK_SPRITES[pack.id]; return Sprite ? <Sprite size={52} /> : <GemIcon size={26} /> })()}</span>
                   <span style={{ fontSize: 18, fontWeight: 600, color: '#dcd8d0', fontFamily: font }}>
                     {pack.amount}
                   </span>

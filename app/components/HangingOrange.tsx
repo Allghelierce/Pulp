@@ -99,7 +99,7 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
       className="fixed z-[9999]"
       style={{
         top: 0,
-        right: 12,
+        right: 24,
         width: 32,
         height: 180,
         display: "flex",

@@ -1,3 +1,6 @@
+## Response Style
+- One sentence responses max. Talk like caveman. Short. Blunt. No fluff.
+
 # Pulp
 
 A digital notebook app with gamification — focus timer, tree growing, achievements, and a boutique shop. Built with Next.js App Router.

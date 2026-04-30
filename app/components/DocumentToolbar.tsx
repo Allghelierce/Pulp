@@ -130,6 +130,30 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [toolbarWidth, setToolbarWidth] = useState(9999)
+  const [displayJuice, setDisplayJuice] = useState(juice)
+  const prevJuiceRef = useRef(juice)
+  const animFrameRef = useRef<number>(undefined)
+
+  useEffect(() => {
+    const prev = prevJuiceRef.current
+    prevJuiceRef.current = juice
+    if (juice >= prev || prev - juice < 2) {
+      setDisplayJuice(juice)
+      return
+    }
+    const diff = prev - juice
+    const steps = Math.min(diff, 30)
+    const stepDuration = Math.min(60, 1200 / steps)
+    let step = 0
+    const tick = () => {
+      step++
+      const t = step / steps
+      setDisplayJuice(Math.round(prev - diff * t))
+      if (step < steps) animFrameRef.current = window.setTimeout(tick, stepDuration) as unknown as number
+    }
+    tick()
+    return () => { if (animFrameRef.current) clearTimeout(animFrameRef.current) }
+  }, [juice])
   const compact = toolbarWidth < 820
   const hideShare = toolbarWidth < 760
   const hideCurrencies = toolbarWidth < 680
@@ -151,6 +175,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const btnIconOnly = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnIconOnlyActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", Georgia, serif', letterSpacing: '0.01em' }
+
+  const [currencyTooltip, setCurrencyTooltip] = useState<'sap' | 'gem' | null>(null)
 
   const NEON_ORANGE = "#d97706"
   const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 6px rgba(217,119,6,0.3), 0 0 2px rgba(217,119,6,0.15)` }
@@ -236,7 +262,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {insertOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Elements</div>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky'); setInsertOpen(false) }}
@@ -321,7 +347,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {alignOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
@@ -379,7 +405,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           {showDrawToolbar && (
             <div
               className={`absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 rounded-[8px] shadow-md z-[100] p-1`}
-              style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}
+              style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}
               onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-px px-0.5 mb-1">
@@ -501,7 +527,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           </button>
 
           {aiOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
+            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
               <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
               {COMMON_PROMPTS.map((item, idx) => (
                 <button
@@ -568,15 +594,19 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       {/* Currencies Display - Centered */}
       {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
-          <div className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer" title="Open Grove & Leaderboard">
+          <div
+            className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
+            title="What is Sap?"
+            onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'sap' ? null : 'sap') }}
+          >
             <PulpIcon size={15} />
-            <span>{juice >= 999999 ? "∞" : juice}</span>
+            <span style={{ color: displayJuice !== juice ? '#ef4444' : undefined, transition: 'color 0.15s' }}>{displayJuice >= 999999 ? "∞" : displayJuice}</span>
           </div>
           <div className="w-px h-4 bg-zinc-400/30" />
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); onOpenGemStore?.() }}
-            title="Get Gems"
+            onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'gem' ? null : 'gem') }}
+            title="What are Gems?"
           >
             <GemIcon size={15} />
             <span>{gems >= 999999 ? "∞" : gems}</span>
@@ -596,6 +626,67 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           ) : null}
         </div>
+
+        {currencyTooltip && (
+          <>
+            <div className="fixed inset-0 z-[90]" onClick={() => setCurrencyTooltip(null)} />
+            <div
+              className="absolute z-[100] overflow-hidden"
+              style={{
+                top: '100%', right: 0, marginTop: 8, width: 260,
+                borderRadius: 12,
+                background: '#18181b',
+                border: '1px solid rgba(255,255,255,0.07)',
+                boxShadow: '0 20px 60px -10px rgba(0,0,0,0.6)',
+              }}
+            >
+              <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2">
+                  {currencyTooltip === 'sap' ? <PulpIcon size={14} /> : <GemIcon size={14} />}
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e4e0d8', fontFamily: '"EB Garamond", Georgia, serif' }}>
+                    {currencyTooltip === 'sap' ? 'Sap' : 'Gems'}
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 py-3 space-y-2">
+                {(currencyTooltip === 'sap' ? [
+                  { icon: '🌳', text: 'Earned by completing focus sessions.' },
+                  { icon: '🛒', text: 'Spend sap to buy seeds in the shop.' },
+                  { icon: '⚠️', text: 'Lose 25% if your plant dies.' },
+                ] : [
+                  { icon: '💎', text: 'Premium currency for recovery and cosmetics.' },
+                  { icon: '🔄', text: 'Recover lost sap after a failed session.' },
+                  { icon: '🛍️', text: 'Purchase from the gem store.' },
+                ]).map((item, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
+                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: '"EB Garamond", Georgia, serif', lineHeight: 1.4, margin: 0 }}>
+                      {item.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="px-4 pb-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCurrencyTooltip(null)
+                    if (currencyTooltip === 'sap') onOpenGrove?.()
+                    else onOpenGemStore?.()
+                  }}
+                  style={{
+                    width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                    fontFamily: '"EB Garamond", Georgia, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
+                  onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
+                >
+                  {currencyTooltip === 'sap' ? 'Open Grove' : 'Get Gems'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
       </div>}
 

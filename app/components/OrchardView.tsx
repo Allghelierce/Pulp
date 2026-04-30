@@ -36,119 +36,28 @@ function seededRng(seed: number) {
   return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return ((s >>> 0) % 10000) / 10000 }
 }
 
-// Road segments (polylines in viewBox 0–100 coords)
-const ROAD_MAIN = [[-2,100],[6,92],[14,84],[22,76],[30,70],[40,65],[50,62],[60,60],[70,58],[80,54],[90,48],[102,42]]
-
-// Lake: ellipse at bottom-right
-const LAKE_CX = 78, LAKE_CY = 80, LAKE_RX = 14, LAKE_RY = 7
-
-function distToPolyline(x: number, y: number, pts: number[][]): number {
-  let minD = Infinity
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [ax, ay] = pts[i], [bx, by] = pts[i + 1]
-    const dx = bx - ax, dy = by - ay
-    const len2 = dx * dx + dy * dy
-    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len2))
-    const d = Math.hypot(x - (ax + t * dx), y - (ay + t * dy))
-    if (d < minD) minD = d
-  }
-  return minD
-}
-
-function inLake(x: number, y: number): boolean {
-  return ((x - LAKE_CX) / (LAKE_RX + 3)) ** 2 + ((y - LAKE_CY) / (LAKE_RY + 3)) ** 2 < 1
-}
-
-function isPlantable(x: number, y: number): boolean {
-  if (y < 30) return false
-  if (y > 96) return false
-  if (x < 3 || x > 97) return false
-  if (distToPolyline(x, y, ROAD_MAIN) < 8) return false
-  if (inLake(x, y)) return false
-  return true
-}
-
-function forestPlacement(trees: any[]): { x: number; y: number; tree: any }[] {
+function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col: number }[] {
   if (trees.length === 0) return []
 
-  const results: { x: number; y: number; tree: any }[] = []
+  const results: { x: number; y: number; tree: any; col: number }[] = []
+  const cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.2))))
+  const rows = Math.ceil(trees.length / cols)
+  const colStart = 10
+  const colEnd = 90
+  const rowStart = 34
+  const rowEnd = 93
 
-  const clusterSeeds = [
-    { cx: 18, cy: 50, r: 16 },
-    { cx: 14, cy: 72, r: 14 },
-    { cx: 38, cy: 80, r: 16 },
-    { cx: 60, cy: 82, r: 12 },
-    { cx: 82, cy: 66, r: 12 },
-    { cx: 70, cy: 42, r: 14 },
-    { cx: 28, cy: 42, r: 12 },
-    { cx: 50, cy: 55, r: 10 },
-    { cx: 8, cy: 90, r: 10 },
-    { cx: 92, cy: 88, r: 8 },
-  ]
-
-  // Group trees by date so same-day trees cluster together
-  const sorted = [...trees].sort((a, b) => (a.plantedAt || 0) - (b.plantedAt || 0))
-  const dayMs = 24 * 60 * 60 * 1000
-  const groups: any[][] = []
-  let currentGroup: any[] = []
-  let currentDay = -1
-  for (const tree of sorted) {
-    const day = Math.floor((tree.plantedAt || 0) / dayMs)
-    if (day !== currentDay && currentGroup.length > 0) {
-      groups.push(currentGroup)
-      currentGroup = []
-    }
-    currentDay = day
-    currentGroup.push(tree)
-  }
-  if (currentGroup.length > 0) groups.push(currentGroup)
-
-  // Assign each date-group a preferred cluster
-  const minSpacing = trees.length > 40 ? 4.5 : trees.length > 20 ? 5.5 : 6.5
-  const usedClusters = new Set<number>()
-
-  for (let gi = 0; gi < groups.length; gi++) {
-    // Pick a cluster for this date group — prefer unused ones
-    const groupRng = seededRng(gi * 7919 + 1301)
-    let bestCi = Math.floor(groupRng() * clusterSeeds.length)
-    for (let t = 0; t < clusterSeeds.length; t++) {
-      const ci = (bestCi + t) % clusterSeeds.length
-      if (!usedClusters.has(ci)) { bestCi = ci; break }
-    }
-    usedClusters.add(bestCi)
-    const primaryCluster = clusterSeeds[bestCi]
-
-    for (let i = 0; i < groups[gi].length; i++) {
-      let placed = false
-      for (let attempt = 0; attempt < 60; attempt++) {
-        const rng = seededRng(gi * 311 + i * 173 + attempt * 59 + 4729)
-        // First 40 attempts try the assigned cluster, rest overflow to any
-        const cluster = attempt < 40 ? primaryCluster : clusterSeeds[Math.floor(rng() * clusterSeeds.length)]
-
-        const a = rng() * Math.PI * 2
-        const dist = cluster.r * Math.sqrt(rng()) * (0.4 + rng() * 0.6)
-        const x = cluster.cx + Math.cos(a) * dist
-        const y = cluster.cy + Math.sin(a) * dist * 0.6
-
-        const cx = Math.max(4, Math.min(96, x))
-        const cy = Math.max(32, Math.min(95, y))
-
-        if (!isPlantable(cx, cy)) continue
-        const tooClose = results.some(r => Math.hypot(r.x - cx, r.y - cy) < minSpacing)
-        if (tooClose) continue
-
-        results.push({ x: cx, y: cy, tree: groups[gi][i] })
-        placed = true
-        break
-      }
-
-      if (!placed) {
-        const rng = seededRng(gi * 997 + i * 331 + 7331)
-        const x = 5 + rng() * 90
-        const y = 34 + rng() * 58
-        results.push({ x, y, tree: groups[gi][i] })
-      }
-    }
+  for (let i = 0; i < trees.length; i++) {
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    const colRows = Math.min(rows, Math.ceil((trees.length - col) / cols))
+    const x = cols === 1 ? 50 : colStart + col * ((colEnd - colStart) / (cols - 1))
+    const rowSpacing = colRows > 1 ? (rowEnd - rowStart) / (colRows - 1) : 0
+    const y = colRows === 1 ? 60 : rowStart + row * rowSpacing
+    const rng = seededRng(i * 317 + col * 53 + 991)
+    const jx = (rng() - 0.5) * 3
+    const jy = (rng() - 0.5) * 2
+    results.push({ x: Math.max(6, Math.min(94, x + jx)), y: Math.max(32, Math.min(94, y + jy)), tree: trees[i], col })
   }
 
   return results.sort((a, b) => a.y - b.y)
@@ -164,149 +73,81 @@ function getRarityPlantClass(type: string): string {
   }
 }
 
-const Terrain = memo(function Terrain({ isDark }: { isDark: boolean }) {
-  const sky1 = isDark ? '#0a0e14' : '#b8cce0'
-  const sky2 = isDark ? '#0c1018' : '#c8daea'
-  const skyHorizon = isDark ? '#101814' : '#d4e0d0'
-  const ground = isDark ? '#141a12' : '#b8c4a0'
-  const groundLight = isDark ? '#1a2216' : '#c4d0ac'
-  const groundDark = isDark ? '#10140e' : '#a8b490'
-  const mtnFar = isDark ? '#0c120e' : '#8a9a80'
-  const mtnMid = isDark ? '#0e160f' : '#98aa8c'
-  const mtnNear = isDark ? '#101a10' : '#a8b898'
-  const mtnSnow = isDark ? '#2a3028' : '#e4e8dc'
-  const roadBase = isDark ? '#1a1814' : '#a09888'
-  const roadCenter = isDark ? '#22201a' : '#b0a898'
-  const roadEdgeLine = isDark ? '#141210' : '#908878'
-  const lakeDeep = isDark ? '#081018' : '#6898b8'
-  const lakeMid = isDark ? '#0c1820' : '#80aac8'
-  const lakeShallow = isDark ? '#102028' : '#98c0d8'
-  const lakeShore = isDark ? '#182418' : '#8aa880'
-  const grass = isDark ? '#2a3a22' : '#90a478'
+const PLOT_COST = [0, 5, 12]
+
+const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; treeCount: number }) {
+  const sky = isDark
+    ? 'linear-gradient(180deg, #0c1210 0%, #0e1812 15%, #121e14 30%, #162416 50%, #1a2c18 70%, #1e3018 100%)'
+    : 'linear-gradient(180deg, #87CEEB 0%, #a8d8c8 15%, #b8dab0 30%, #a8c48c 50%, #90b470 70%, #7da860 100%)'
+  const groundBase = isDark ? '#1a2c16' : '#7da860'
+  const groundMid = isDark ? '#1e3218' : '#8ab86c'
+  const groundDark = isDark ? '#142210' : '#6e9854'
+  const groundLight = isDark ? '#223a1c' : '#96c474'
+  const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
+  const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
+
+  const cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(treeCount * 1.2))))
+  const colStart = 10
+  const colEnd = 90
 
   return (
     <>
-      {/* Sky */}
-      <div className="absolute inset-0" style={{
-        background: isDark
-          ? `linear-gradient(180deg, ${sky1} 0%, ${sky2} 12%, ${skyHorizon} 24%, ${ground} 34%)`
-          : `linear-gradient(180deg, ${sky1} 0%, ${sky2} 12%, ${skyHorizon} 24%, ${ground} 34%)`,
-      }} />
+      <div className="absolute inset-0" style={{ background: sky }} />
 
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="lakeGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={lakeShallow} />
-            <stop offset="40%" stopColor={lakeMid} />
-            <stop offset="100%" stopColor={lakeDeep} />
-          </linearGradient>
-          <linearGradient id="lakeReflect" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#141e14' : '#a0b890'} stopOpacity="0.2" />
-            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="roadSurface" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={roadCenter} />
-            <stop offset="50%" stopColor={roadBase} />
-            <stop offset="100%" stopColor={roadCenter} />
-          </linearGradient>
-        </defs>
+        {/* Distant hills */}
+        <path d="M-5,28 Q8,22 18,25 Q28,20 38,23 Q48,18 58,22 Q68,17 78,21 Q88,18 98,24 L105,26 L105,100 L-5,100 Z" fill={isDark ? '#0e1a0c' : '#6a9a50'} opacity="0.5" />
+        <path d="M-5,30 Q15,24 30,28 Q45,22 60,26 Q75,20 90,25 Q100,22 105,27 L105,100 L-5,100 Z" fill={groundBase} />
 
-        {/* ── Mountain range ── */}
-        {/* Far peaks */}
-        <path d="M-5,24 L6,12 L14,18 L22,7 L30,15 L38,5 L46,14 L52,9 L60,15 L68,6 L76,12 L82,8 L90,14 L96,10 L105,19 L105,28 L-5,28 Z" fill={mtnFar} />
-        {/* Snow caps */}
-        <path d="M22,7 L24.5,11 L19.5,11 Z" fill={mtnSnow} opacity="0.5" />
-        <path d="M38,5 L41,10 L35,10 Z" fill={mtnSnow} opacity="0.6" />
-        <path d="M68,6 L70.5,10 L65.5,10 Z" fill={mtnSnow} opacity="0.45" />
-        {/* Mid range */}
-        <path d="M-5,28 L10,21 L20,25 L32,18 L42,23 L52,19 L64,24 L74,20 L86,25 L95,21 L105,27 L105,34 L-5,34 Z" fill={mtnMid} />
-        {/* Near foothills */}
-        <path d="M-5,33 Q8,28 18,31 Q28,26 38,30 Q50,25 62,29 Q74,26 86,30 Q96,27 105,31 L105,38 L-5,38 Z" fill={mtnNear} />
+        {/* Gentle terrain variation */}
+        <ellipse cx="25" cy="50" rx="22" ry="10" fill={groundLight} opacity="0.2" />
+        <ellipse cx="70" cy="65" rx="25" ry="12" fill={groundMid} opacity="0.15" />
+        <ellipse cx="50" cy="85" rx="30" ry="10" fill={groundLight} opacity="0.15" />
+        <ellipse cx="85" cy="45" rx="14" ry="7" fill={groundDark} opacity="0.15" />
+        <ellipse cx="15" cy="75" rx="16" ry="8" fill={groundDark} opacity="0.1" />
 
-        {/* Ground */}
-        <rect x="-5" y="36" width="110" height="68" fill={ground} />
-
-        {/* Meadow patches */}
-        <ellipse cx="22" cy="54" rx="18" ry="6" fill={groundLight} opacity="0.55" />
-        <ellipse cx="68" cy="66" rx="14" ry="5" fill={groundLight} opacity="0.5" />
-        <ellipse cx="40" cy="84" rx="20" ry="5" fill={groundLight} opacity="0.4" />
-        <ellipse cx="85" cy="44" rx="10" ry="4" fill={groundDark} opacity="0.3" />
-
-        {/* ── Main road — polished with edges and center line ── */}
-        {/* Road bed (wide, dark edge) */}
-        <path
-          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke={roadEdgeLine}
-          strokeWidth="4"
-          fill="none"
-          opacity={isDark ? 0.7 : 0.6}
-          strokeLinecap="round"
-        />
-        {/* Road surface */}
-        <path
-          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke="url(#roadSurface)"
-          strokeWidth="2.8"
-          fill="none"
-          opacity={isDark ? 0.85 : 0.75}
-          strokeLinecap="round"
-        />
-        {/* Center dashes */}
-        <path
-          d="M -2,100 C 6,92 14,84 22,76 C 30,70 40,65 50,62 C 60,60 70,58 80,54 C 90,48 98,44 102,42"
-          stroke={isDark ? '#2a2820' : '#c8c0b0'}
-          strokeWidth="0.35"
-          fill="none"
-          opacity={isDark ? 0.5 : 0.45}
-          strokeDasharray="1.5 3"
-          strokeLinecap="round"
-        />
-
-
-        {/* ── Lake ── */}
-        {/* Shore ring */}
-        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX + 1.5} ry={LAKE_RY + 1.2} fill={lakeShore} opacity="0.5" />
-        {/* Water body */}
-        <ellipse cx={LAKE_CX} cy={LAKE_CY} rx={LAKE_RX} ry={LAKE_RY} fill="url(#lakeGrad)" />
-        {/* Reflection of green */}
-        <ellipse cx={LAKE_CX} cy={LAKE_CY - 1} rx={LAKE_RX - 2} ry={LAKE_RY - 2} fill="url(#lakeReflect)" />
-        {/* Highlight */}
-        <ellipse cx={LAKE_CX - 3} cy={LAKE_CY - 2} rx="5" ry="1.5"
-          fill={isDark ? '#18243a' : '#c8dce8'} opacity="0.2" />
-        {/* Ripples */}
-        <ellipse cx={LAKE_CX + 2} cy={LAKE_CY} rx="3.5" ry="0.8" fill="none"
-          stroke={isDark ? '#182838' : '#a8c8d8'} strokeWidth="0.2" opacity="0.2" />
-
-        {/* ── Grass tufts ── */}
-        {Array.from({ length: 20 }).map((_, i) => {
-          const rng = seededRng(i * 53 + 101)
-          const x = 4 + rng() * 92
-          const y = 36 + rng() * 58
-          if (inLake(x, y)) return null
-          if (distToPolyline(x, y, ROAD_MAIN) < 3) return null
-          const h = 0.4 + rng() * 0.6
+        {/* Tilled dirt columns */}
+        {Array.from({ length: cols }).map((_, ci) => {
+          const x = cols === 1 ? 50 : colStart + ci * ((colEnd - colStart) / (cols - 1))
           return (
-            <g key={`g${i}`} opacity={isDark ? 0.18 + rng() * 0.08 : 0.12 + rng() * 0.06}>
-              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.15}`} y2={`${y - h}`} stroke={grass} strokeWidth="0.3" />
-              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.12}`} y2={`${y - h * 0.8}`} stroke={grass} strokeWidth="0.25" />
+            <g key={`till-${ci}`}>
+              <rect x={x - 0.6} y="32" width={1.2} height="62" rx="0.5" fill={dirtColor} opacity={isDark ? 0.25 : 0.15} />
+              <rect x={x - 0.2} y="33" width={0.4} height="60" rx="0.2" fill={dirtLight} opacity={isDark ? 0.12 : 0.08} />
             </g>
           )
         })}
+
+        {/* Grass tufts */}
+        {Array.from({ length: 40 }).map((_, i) => {
+          const rng = seededRng(i * 53 + 101)
+          const x = 3 + rng() * 94
+          const y = 30 + rng() * 66
+          const h = 0.4 + rng() * 0.7
+          return (
+            <g key={`g${i}`} opacity={isDark ? 0.18 : 0.12}>
+              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.3}`} y2={`${y - h}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.25" />
+              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.2}`} y2={`${y - h * 0.8}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.2" />
+            </g>
+          )
+        })}
+
+        {/* Fence posts along edges */}
+        {[5, 20, 35, 50, 65, 80, 95].map(x => (
+          <g key={`fence-${x}`} opacity={isDark ? 0.15 : 0.1}>
+            <rect x={x - 0.3} y="28" width="0.6" height="3" fill={isDark ? '#3a3020' : '#7a6a4a'} />
+          </g>
+        ))}
+        <line x1="5" y1="29" x2="95" y2="29" stroke={isDark ? '#3a3020' : '#7a6a4a'} strokeWidth="0.25" opacity={isDark ? 0.12 : 0.08} />
+
+        {/* Dirt path along bottom */}
+        <path d="M-2,97 Q25,94 50,96 Q75,94 102,97 L102,100 L-2,100 Z" fill={dirtColor} opacity="0.25" />
       </svg>
 
-      {/* Atmospheric haze over mountains */}
-      <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{
-        height: '30%',
-        background: isDark
-          ? 'linear-gradient(180deg, rgba(10,14,20,0.4) 0%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(184,204,224,0.3) 0%, transparent 100%)',
-      }} />
-
-      {/* Vignette */}
+      {/* Soft vignette */}
       <div className="absolute inset-0 pointer-events-none" style={{
         boxShadow: isDark
-          ? 'inset 0 0 80px 20px rgba(10,14,10,0.5)'
-          : 'inset 0 0 60px 15px rgba(160,170,150,0.2)',
+          ? 'inset 0 0 60px 15px rgba(8,12,8,0.4)'
+          : 'inset 0 0 40px 10px rgba(80,100,60,0.12)',
       }} />
     </>
   )
@@ -322,7 +163,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  juice, gems, xp, grove, notes,
+  juice, gems, xp, grove, notes, setGems,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -370,15 +211,35 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
-  const TREES_PER_PLOT = 120
-  const totalPlots = Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT))
-  
+  const TREES_PER_PLOT = 40
+  const MAX_PLOTS = 3
+
+  const [unlockedPlots, setUnlockedPlots] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem('pulp-unlocked-plots') || '{}') } catch { return {} }
+  })
+
+  const nbUnlocked = unlockedPlots[selectedNotebook] || 1
+  const totalPlots = Math.min(MAX_PLOTS, Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT)))
+  const accessiblePlots = Math.min(totalPlots, nbUnlocked)
+
+  const unlockNextPlot = () => {
+    const nextPlot = nbUnlocked + 1
+    if (nextPlot > MAX_PLOTS) return
+    const cost = PLOT_COST[nextPlot - 1] || 0
+    if (gems < cost) return
+    setGems((g: number) => g - cost)
+    const updated = { ...unlockedPlots, [selectedNotebook]: nextPlot }
+    setUnlockedPlots(updated)
+    localStorage.setItem('pulp-unlocked-plots', JSON.stringify(updated))
+    setPlotPage(nextPlot - 1)
+  }
+
   const currentPlotTrees = useMemo(() => {
     const start = plotPage * TREES_PER_PLOT
     return filteredTrees.slice(start, start + TREES_PER_PLOT)
   }, [filteredTrees, plotPage])
 
-  const placed = useMemo(() => forestPlacement(currentPlotTrees), [currentPlotTrees])
+  const placed = useMemo(() => orchardPlacement(currentPlotTrees), [currentPlotTrees])
 
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -538,11 +399,11 @@ export const OrchardView = memo(function OrchardView({
 
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          <Terrain isDark={isDark} />
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} />
 
           {/* Thin top bar */}
           <div className="relative z-20 flex items-center justify-between px-5 py-2 shrink-0" style={{
-            background: isDark ? 'rgba(14,18,12,0.7)' : 'rgba(200,196,180,0.7)',
+            background: isDark ? 'rgba(14,22,12,0.8)' : 'rgba(120,160,90,0.7)',
             backdropFilter: 'blur(12px)',
             borderBottom: `1px solid ${cardBorder}`,
           }}>
@@ -556,17 +417,34 @@ export const OrchardView = memo(function OrchardView({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {totalPlots > 1 && (
+              {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
                 <div className="flex items-center gap-2 mr-4 rounded-lg px-2 py-1" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
                   <span className="text-[10px] tabular-nums font-bold uppercase tracking-widest" style={{ color: textSecondary }}>
-                    Plot {plotPage + 1} <span className="opacity-50">/ {totalPlots}</span>
+                    Plot {plotPage + 1} <span className="opacity-50">/ {nbUnlocked}</span>
                   </span>
-                  <button onClick={() => setPlotPage(p => Math.min(totalPlots - 1, p + 1))} disabled={plotPage === totalPlots - 1} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-                  </button>
+                  {plotPage + 1 < nbUnlocked ? (
+                    <button onClick={() => setPlotPage(p => Math.min(nbUnlocked - 1, p + 1))} className="p-0.5 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                  ) : nbUnlocked < MAX_PLOTS ? (
+                    <button
+                      onClick={unlockNextPlot}
+                      disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all disabled:opacity-40"
+                      style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)' }}
+                      title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
+                    >
+                      <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </button>
+                  ) : (
+                    <span className="p-0.5 opacity-30" style={{ color: textPrimary }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </span>
+                  )}
                 </div>
               )}
               {RARITY_ORDER.filter(r => rarityCounts[r] && r !== 'common').map(r => (
@@ -620,15 +498,11 @@ export const OrchardView = memo(function OrchardView({
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
-                      const depthScale = 0.55 + (y / 100) * 0.5
+                      const depthScale = 0.6 + (y / 100) * 0.45
                       const treeSize = Math.round(baseSize * depthScale)
-
-                      // Atmospheric perspective: depth 0 = far (y~30), depth 1 = near (y~95)
-                      const depthNorm = Math.max(0, Math.min(1, (y - 30) / 65))
-                      const fogOpacity = 0.5 + depthNorm * 0.5
-                      const blurPx = (1 - depthNorm) * 0.4
-                      const saturate = 0.6 + depthNorm * 0.4
-                      const brightness = 1 + (1 - depthNorm) * 0.12
+                      const depthT = Math.max(0, Math.min(1, (y - 30) / 65))
+                      const scaleY = 0.78 + depthT * 0.22
+                      const skewX = ((x - 50) / 50) * (1 - depthT) * -2
 
                       return (
                         <div
@@ -637,22 +511,14 @@ export const OrchardView = memo(function OrchardView({
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
-                            transform: 'translate(-50%, -85%)',
+                            transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
+                            transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
-                            opacity: fogOpacity,
-                            filter: `blur(${blurPx}px) saturate(${saturate}) brightness(${brightness})`,
                           }}
                         >
                           <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}>
-                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} />
+                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround />
                           </div>
-
-                          <div className="rounded-full -mt-1" style={{
-                            width: Math.round(treeSize * 0.45),
-                            height: Math.max(2, Math.round(treeSize * 0.08)),
-                            backgroundColor: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.08)',
-                            filter: 'blur(2px)',
-                          }} />
 
                           <div className="mt-0.5 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300 }}>
                             <div className="px-2.5 py-1.5 rounded-lg" style={{

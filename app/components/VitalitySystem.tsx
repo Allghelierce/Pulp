@@ -117,7 +117,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   useEffect(() => {
     if (_isBackup && _backupExpired) {
       if (!_wasInCancelWindow) {
-        setJuice(j => Math.floor(j * 0.5))
+        setJuice(j => Math.floor(j * 0.75))
         setDeathReason("You were away too long")
       }
       localStorage.removeItem('pulp-timer-backup')
@@ -269,7 +269,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerDone, treeDead, timerTotal, selectedSeed, setJuice, setXp, setGrove, checkAchievement, activeTabId])
 
   const dismissDeadTree = useCallback(() => {
-    const lost = Math.ceil(juice * 0.5)
+    const lost = Math.ceil(juice * 0.25)
     setLostJuice(lost)
     setJuice(j => j - lost)
     setTimerElapsed(0)

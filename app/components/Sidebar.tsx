@@ -120,6 +120,7 @@ export const Sidebar = memo(function Sidebar({
   const [newMenuOpen, setNewMenuOpen] = useState<string | null>(null)
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set())
   const [devClicks, setDevClicks] = useState(0)
+  const [logoSqueeze, setLogoSqueeze] = useState(false)
   const [hideBookmarks, setHideBookmarks] = useState(false)
   const [hideBacklinks, setHideBacklinks] = useState(false)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -233,7 +234,7 @@ export const Sidebar = memo(function Sidebar({
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       setNewMenuOpen(null)
-      setNoteMenuId(null)
+      if (!(e.target as HTMLElement)?.closest?.('[data-note-menu]')) setNoteMenuId(null)
       setBookmarkMenuId(null)
       const clickedInsidePicker = (e.target as HTMLElement)?.closest?.('[data-icon-picker]')
       if (!clickedInsidePicker) setIconPicker(null)
@@ -247,7 +248,8 @@ export const Sidebar = memo(function Sidebar({
     setHoldProgress(0)
     const start = Date.now()
     holdIntervalRef.current = setInterval(() => {
-      const p = Math.min((Date.now() - start) / 800, 1)
+      const t = (Date.now() - start) / 800
+      const p = Math.min(t < 0.5 ? t * 0.8 : 0.4 + (t - 0.5) * 1.2, 1)
       setHoldProgress(p)
       if (p >= 1) {
         clearInterval(holdIntervalRef.current!)
@@ -499,6 +501,7 @@ export const Sidebar = memo(function Sidebar({
 
       {noteMenuId && menuPos && (
         <div
+          data-note-menu
           className="fixed z-[1000] min-w-max rounded shadow-lg border border-zinc-700 bg-zinc-800 overflow-hidden"
           style={{ left: menuPos.x, top: menuPos.y }}
           onMouseLeave={() => setNoteMenuId(null)}
@@ -550,6 +553,8 @@ export const Sidebar = memo(function Sidebar({
         <div className="relative p-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           <div
             onClick={() => {
+              setLogoSqueeze(true)
+              setTimeout(() => setLogoSqueeze(false), 500)
               const count = devClicks + 1
               if (count >= 7) {
                 onUnlockDev()
@@ -558,9 +563,13 @@ export const Sidebar = memo(function Sidebar({
                 setDevClicks(count)
               }
             }}
-            className="relative flex items-center gap-2.5 mb-5 cursor-default select-none active:scale-[0.98] transition-transform"
+            className="relative flex items-center gap-2.5 mb-5 cursor-default select-none"
+            style={{
+              transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transform: logoSqueeze ? 'scale(0.88) rotate(-8deg)' : 'scale(1) rotate(0deg)',
+            }}
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: logoSqueeze ? 'rotate(15deg)' : 'rotate(0deg)' }}>
               <circle cx="14" cy="14" r="13" fill="#92400e" />
               <circle cx="14" cy="14" r="11" fill="#d97706" />
               <line x1="14" y1="3" x2="14" y2="25" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
@@ -597,7 +606,7 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-[100] rounded-xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }}>
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-xl border border-white/10 bg-[#110d0e] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }} onMouseDown={e => e.stopPropagation()}>
                 {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>

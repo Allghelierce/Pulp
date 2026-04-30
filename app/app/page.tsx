@@ -298,9 +298,9 @@ const BoxItem = memo(function BoxItem({
         position: "absolute", left: box.x, top: box.y, width: box.w,
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: isEmpty ? "1px solid transparent" : (box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.3)"}`,
+        border: isEmpty ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
-        borderRadius: 3, backgroundColor: isEmpty ? "transparent" : (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")),
+        borderRadius: 3, backgroundColor: isEmpty ? "transparent" : isSelected ? (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")) : (box.boxHighlightColor || "transparent"),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -396,9 +396,9 @@ const BoxItem = memo(function BoxItem({
             setSelectedBoxIds(new Set([box.id]))
             startDrag(e, box)
           }}
-          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 40, height: 12, background: accentSolid, opacity: 0.08, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 60, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
-          <div style={{ width: 14, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
+          <div style={{ width: 24, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
         </div>
       )}
 
@@ -1115,15 +1115,7 @@ export default function NoteApp() {
       const allSeeds = ['cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','sakura','abyss']
       setInventory(allSeeds)
       if (data.grove) {
-        // TEST: populate orchard with 150 realistic trees
-        const pool: [string, number][] = [
-          ['tangerine', 20], ['cherry', 15], ['lemon', 12], ['birch', 12], ['bamboo', 10],
-          ['apple', 10], ['plum', 8], ['blackberry', 8], ['pine', 8], ['oak', 7],
-          ['peach', 6], ['pineapple', 5], ['passionfruit', 5], ['cypress', 4],
-          ['sakura', 3], ['abyss', 1],
-        ]
-        const testTypes: string[] = []
-        for (const [type, count] of pool) for (let i = 0; i < count; i++) testTypes.push(type)
+        const testTypes = ['tangerine','cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','sakura','abyss']
         const now = Date.now()
         const savedNotes = localStorage.getItem('pulp-notes')
         const nbIds = savedNotes ? JSON.parse(savedNotes).filter((n: any) => !n.archived && !n.deletedAt).map((n: any) => n.id) : []
