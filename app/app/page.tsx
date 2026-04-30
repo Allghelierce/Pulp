@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
-import { getPaperBg } from "@/app/lib/paperStyle"
+import { getPaperBg, getInkColor } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -290,13 +290,14 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
 })
 
 const BoxItem = memo(function BoxItem({
-  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme, handwrittenEffect,
+  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd
 }: {
   box: TextBoxType; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
+  paperStyle: "lined" | "dotgrid" | "plain" | "steno"
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -345,7 +346,7 @@ const BoxItem = memo(function BoxItem({
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
         border: isEmpty ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}`) : "1px solid transparent",
-        color: (box.boxHeadingStyle as string) === "margin" ? "rgba(0,0,0,0.32)" : (theme === "dark" ? "#ffffff" : "#000000"),
+        color: (box.boxHeadingStyle as string) === "margin" ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
         borderRadius: 3, backgroundColor: isEmpty ? "transparent" : isSelected ? (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")) : (box.boxHighlightColor || "transparent"),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
@@ -478,6 +479,7 @@ const BoxItem = memo(function BoxItem({
             onKeyDown={onKeyDown}
             onInput={onInput}
             theme={theme}
+            paperStyle={paperStyle}
             handwrittenEffect={handwrittenEffect}
           />
         )}
@@ -764,7 +766,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 interface BoxTextareaProps {
   id: string; content: string; textAlign?: "left" | "center" | "right" | "justify"
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
-  isSticky?: boolean; theme: "light" | "dark"; handwrittenEffect: boolean
+  isSticky?: boolean; theme: "light" | "dark"; paperStyle: "lined" | "dotgrid" | "plain" | "steno"; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -772,7 +774,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -806,7 +808,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const resolvedFont = isMarginStyle ? "'Shadows Into Light', cursive" : (boxFontFamily || "'Caveat', cursive")
   const inkColor = isMarginStyle
     ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
-    : "#1a1a1a"
+    : getInkColor(paperStyle, theme === "dark")
 
   return (
     <div
@@ -991,7 +993,7 @@ const BoxTextarea = memo(function BoxTextarea({
         }
 
         e.preventDefault()
-        const plain = `<span style="color:#1a1a1a;">${esc(text).replace(/\n/g, "<br>")}</span>`
+        const plain = `<span style="color:${inkColor};">${esc(text).replace(/\n/g, "<br>")}</span>`
         document.execCommand("insertHTML", false, plain)
         syncState()
       }}
@@ -3140,7 +3142,7 @@ export default function NoteApp() {
 
                             <style>{`
                              #editor-paper [contenteditable] {
-                               color: #1a1a1a !important;
+                               color: ${getInkColor(paperStyle, theme === "dark")} !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
                                font-family: "${editorFont}", "Indie Flower", "Caveat", cursive, Georgia, serif !important;
@@ -3206,6 +3208,7 @@ export default function NoteApp() {
                                 loadingBoxId={boxes.loadingBoxId}
                                 accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
                                 theme={theme}
+                                paperStyle={paperStyle}
                                 startDrag={boxes.startDrag}
                                 startResize={boxes.startResize}
                                 deleteBox={boxes.deleteBox}

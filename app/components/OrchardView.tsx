@@ -93,7 +93,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
 
   return (
     <>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict' }}>
         <defs>
           {/* Sky with sunset */}
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
@@ -566,7 +566,7 @@ export const OrchardView = memo(function OrchardView({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70"
       onClick={onClose}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
     >
@@ -592,7 +592,7 @@ export const OrchardView = memo(function OrchardView({
           }}>
             {/* Notebook switcher overlay */}
             <div className="absolute bottom-4 left-4 z-30 pointer-events-none">
-              <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+              <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.25)' }}>
                 {activeNotes.map(note => {
                   const isSelected = selectedNotebook === note.id
                   const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
@@ -633,7 +633,7 @@ export const OrchardView = memo(function OrchardView({
             {/* Plot switcher overlay */}
             <div className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
               {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
-                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.25)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
@@ -661,7 +661,7 @@ export const OrchardView = memo(function OrchardView({
                   )}
                 </div>
               )}
-              <button onClick={onClose} className="absolute right-3 p-1.5 rounded-full transition-opacity hover:opacity-100 opacity-70 pointer-events-auto" style={{ color: '#fff', backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(8px)' }}>
+              <button onClick={onClose} className="absolute right-3 p-1.5 rounded-full transition-opacity hover:opacity-100 opacity-70 pointer-events-auto" style={{ color: '#fff', backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             </div>
@@ -725,8 +725,7 @@ export const OrchardView = memo(function OrchardView({
 
                           <div className="mt-0.5 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300 }}>
                             <div className="px-2.5 py-1.5 rounded-lg" style={{
-                              backgroundColor: isDark ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.94)',
-                              backdropFilter: 'blur(10px)',
+                              backgroundColor: isDark ? 'rgba(0,0,0,0.92)' : 'rgba(255,255,255,0.96)',
                               border: `1px solid ${cardBorder}`,
                               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                             }}>
