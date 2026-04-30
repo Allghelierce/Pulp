@@ -54,8 +54,8 @@ function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col:
     const rowSpacing = colRows > 1 ? (rowEnd - rowStart) / (colRows - 1) : 0
     const y = colRows === 1 ? 60 : rowStart + row * rowSpacing
     const depthT = (y - rowStart) / Math.max(1, rowEnd - rowStart)
-    const trapLeft = colStart + (1 - depthT) * 6
-    const trapRight = colEnd - (1 - depthT) * 6
+    const trapLeft = colStart + (1 - depthT) * 18
+    const trapRight = colEnd - (1 - depthT) * 18
     const x = cols === 1 ? 50 : trapLeft + col * ((trapRight - trapLeft) / (cols - 1))
     const rng = seededRng(i * 317 + col * 53 + 991)
     const jx = (rng() - 0.5) * 3
@@ -78,14 +78,14 @@ function getRarityPlantClass(type: string): string {
 
 const PLOT_COST = [0, 5, 12]
 
-const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; treeCount: number }) {
+const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[] }) {
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
   const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
 
   const cols = Math.min(7, Math.max(3, Math.ceil(Math.sqrt(treeCount * 1.1))))
   const colStart = 6
   const colEnd = 94
-  const tillCols = cols + 2
+  const tillCols = cols
 
   return (
     <>
@@ -133,6 +133,15 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
             <stop offset="70%" stopColor={isDark ? '#1c2e16' : '#6a9e50'} />
             <stop offset="100%" stopColor={isDark ? '#182812' : '#5e9248'} />
           </linearGradient>
+          {/* Brick pattern */}
+          <pattern id="brick-pat" width="2.4" height="1.2" patternUnits="userSpaceOnUse">
+            <rect width="2.4" height="1.2" fill={isDark ? '#3a2818' : '#8a6a48'} />
+            <rect x="0" y="0" width="1.1" height="0.5" rx="0.05" fill={isDark ? '#4a3420' : '#9a7a55'} />
+            <rect x="1.3" y="0" width="1.1" height="0.5" rx="0.05" fill={isDark ? '#42301c' : '#927252'} />
+            <rect x="0.6" y="0.6" width="1.1" height="0.5" rx="0.05" fill={isDark ? '#46321e' : '#967656'} />
+            <rect x="1.9" y="0.6" width="0.5" height="0.5" rx="0.05" fill={isDark ? '#4a3420' : '#9a7a55'} />
+            <rect x="0" y="0.6" width="0.5" height="0.5" rx="0.05" fill={isDark ? '#42301c' : '#927252'} />
+          </pattern>
         </defs>
 
         {/* Sky */}
@@ -141,7 +150,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
         {/* Sun glow on horizon */}
         <ellipse cx="100" cy="14" rx="60" ry="10" fill={isDark ? 'rgba(220,140,40,0.12)' : 'rgba(255,180,60,0.35)'} />
         <ellipse cx="100" cy="14" rx="30" ry="5" fill={isDark ? 'rgba(240,160,50,0.1)' : 'rgba(255,210,80,0.35)'} />
-        <ellipse cx="100" cy="14" rx="12" ry="3" fill={isDark ? 'rgba(255,180,60,0.08)' : 'rgba(255,230,120,0.3)'} />
+        <ellipse cx="100" cy="14" rx="14" ry="4" fill={isDark ? 'rgba(255,200,80,0.15)' : 'rgba(255,240,140,0.5)'} />
+        <ellipse cx="100" cy="14" rx="6" ry="2" fill={isDark ? 'rgba(255,220,100,0.12)' : 'rgba(255,250,200,0.6)'} />
 
         {/* Ocean band */}
         <path d="M-5,14 L205,14 L205,28 L-5,28 Z" fill="url(#ocean-g)" />
@@ -170,10 +180,42 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
         {/* Light edge on mid hills */}
         <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke={isDark ? 'rgba(80,140,60,0.15)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.4" />
 
+        {/* Dense forest on hills */}
+        {Array.from({ length: 80 }).map((_, i) => {
+          const rng = seededRng(i * 71 + 303)
+          const x = -5 + rng() * 210
+          const baseY = 26 + rng() * 12
+          const h = 2.5 + rng() * 3
+          const w = 1.2 + rng() * 1.5
+          const darkC = rng() > 0.5
+          const fill = isDark
+            ? (darkC ? '#0c1a0e' : '#101e12')
+            : (darkC ? '#2a5a28' : '#3a6a35')
+          return (
+            <polygon key={`ft-${i}`} points={`${x},${baseY} ${x - w},${baseY} ${x - w * 0.5},${baseY - h}`} fill={fill} opacity={isDark ? 0.7 : 0.55} />
+          )
+        })}
+
         {/* Near hills — the foreground ridge before the field */}
         <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30 L210,32 L210,42 L-10,42 Z" fill="url(#hill-near)" />
         {/* Highlight on near hill crests */}
         <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke={isDark ? 'rgba(100,170,80,0.1)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.5" />
+
+        {/* Forest on near hills */}
+        {Array.from({ length: 60 }).map((_, i) => {
+          const rng = seededRng(i * 89 + 707)
+          const x = -5 + rng() * 210
+          const baseY = 32 + rng() * 8
+          const h = 1.8 + rng() * 2.5
+          const w = 1 + rng() * 1.2
+          const shade = rng()
+          const fill = isDark
+            ? (shade > 0.6 ? '#122216' : shade > 0.3 ? '#0e1c10' : '#162a18')
+            : (shade > 0.6 ? '#3a7a38' : shade > 0.3 ? '#2e6a2c' : '#488a42')
+          return (
+            <polygon key={`nft-${i}`} points={`${x},${baseY} ${x - w},${baseY} ${x - w * 0.5},${baseY - h}`} fill={fill} opacity={isDark ? 0.6 : 0.45} />
+          )
+        })}
 
         {/* Main field — soft top edge blends with hills */}
         <path d="M-5,36 Q20,39 50,37 Q80,35 100,37 Q130,39 160,36 Q185,38 205,37 L205,100 L-5,100 Z" fill="url(#field-g)" />
@@ -184,31 +226,40 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke={isDark ? 'rgba(40,60,30,0.15)' : 'rgba(90,140,60,0.08)'} strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke={isDark ? 'rgba(40,60,30,0.12)' : 'rgba(90,140,60,0.06)'} strokeWidth="0.25" />
 
-        {/* Tilled dirt columns — same trapezoid as tree placement, +1 each side */}
+        {/* Tilled dirt columns — match tree columns, bend toward tree bases */}
         {Array.from({ length: tillCols }).map((_, ci) => {
-          const colSpacing = (colEnd - colStart) / (cols - 1)
-          const tillIdx = ci - 1
-          const baseCol = colStart + tillIdx * colSpacing
+          const colTrees = treeBases.filter(t => t.col === ci).sort((a, b) => a.y - b.y)
           const rng = seededRng(ci * 137 + 42)
-          const steps = 8
+          const steps = 12
           const points: string[] = []
           for (let s = 0; s <= steps; s++) {
             const t = s / steps
             const y = 40 + t * 57
             const depthT = t
-            const trapL = colStart + (1 - depthT) * 6
-            const trapR = colEnd - (1 - depthT) * 6
-            const tillL = trapL - ((trapR - trapL) / (cols - 1))
-            const tillR = trapR + ((trapR - trapL) / (cols - 1))
-            const x = (tillCols === 1 ? 50 : tillL + ci * ((tillR - tillL) / (tillCols - 1))) * 2
-            const wobble = (rng() - 0.5) * 1.5
+            const trapL = colStart + (1 - depthT) * 18
+            const trapR = colEnd - (1 - depthT) * 18
+            let x = (tillCols === 1 ? 50 : trapL + ci * ((trapR - trapL) / Math.max(1, tillCols - 1))) * 2
+
+            const nearby = colTrees.find(tb => Math.abs(tb.y - y) < 8)
+            if (nearby) {
+              const pull = (nearby.x * 2 - x) * 0.25
+              x += pull
+            }
+
+            const wobble = (rng() - 0.5) * 1.2
             points.push(`${(x + wobble).toFixed(1)},${y.toFixed(1)}`)
           }
-          const d = `M${points[0]} ` + points.slice(1).map(p => `L${p}`).join(' ')
+          const d = points.length > 1 ? `M${points[0]} ` + points.slice(1).map((p, i) => {
+            if (i === 0) return `L${p}`
+            const prev = points[i].split(',').map(Number)
+            const curr = p.split(',').map(Number)
+            const cpx = ((prev[0] + curr[0]) / 2).toFixed(1)
+            return `Q${points[i]} ${p}`
+          }).join(' ') : ''
           return (
             <g key={`till-${ci}`}>
-              <path d={d} fill="none" stroke={dirtColor} strokeWidth="2.2" opacity={isDark ? 0.18 : 0.1} strokeLinecap="round" strokeLinejoin="round" />
-              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.6" opacity={isDark ? 0.08 : 0.05} strokeLinecap="round" transform="translate(0.3, 0.5)" />
+              <path d={d} fill="none" stroke={dirtColor} strokeWidth="2.4" opacity={isDark ? 0.2 : 0.12} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.7" opacity={isDark ? 0.09 : 0.06} strokeLinecap="round" transform="translate(0.3, 0.5)" />
             </g>
           )
         })}
@@ -231,7 +282,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
         {(() => {
           const fenceColor = isDark ? '#4a3e28' : '#6a5a3a'
           const fenceLight = isDark ? '#5a4e32' : '#7a6a4a'
-          const fenceOp = isDark ? 0.45 : 0.35
+          const fenceOp = 1
           const posts = [6, 22, 38, 54, 70, 86, 102, 118, 134, 150, 166, 182, 196]
           const gapAfter = new Set([54, 134])
           return (
@@ -257,6 +308,80 @@ const Terrain = memo(function Terrain({ isDark, treeCount }: { isDark: boolean; 
             </g>
           )
         })()}
+
+        {/* Windmills */}
+        {[{ x: 178, y: 42, s: 1 }, { x: 190, y: 38, s: 0.75 }].map((wm, wi) => {
+          const wmX = wm.x
+          const wmY = wm.y
+          const sc = wm.s
+          const wmColor = isDark ? '#3a3028' : '#6a5a42'
+          const wmLight = isDark ? '#4a4032' : '#7a6a52'
+          const bladeColor = isDark ? '#4a4236' : '#8a7a66'
+          const bladeLight = isDark ? '#5a5040' : '#a09080'
+          const bw = 3.5 * sc
+          const tw = 1.5 * sc
+          const h = 14 * sc
+          const hubY = wmY + 1.5 * sc
+          const bladeLen = 7 * sc
+          const roofColor = isDark ? '#2a2218' : '#5a4a32'
+          const roofLight = isDark ? '#342a1e' : '#6a5a40'
+          return (
+            <g key={`wm-${wi}`}>
+              {/* Base platform */}
+              <ellipse cx={wmX} cy={wmY + h + 0.5 * sc} rx={bw + 1 * sc} ry={0.8 * sc} fill={isDark ? '#2a2418' : '#5a4a38'} opacity="0.4" />
+              {/* Tower body — brick */}
+              <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#brick-pat)" />
+              {/* Subtle shading */}
+              <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill={isDark ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)'} />
+              {/* Mortar band lines */}
+              {[0.35, 0.55, 0.7, 0.85].map(t => {
+                const bandY = wmY + sc * 2 + (h - sc * 2) * t
+                const bw2 = tw + (bw - tw) * t
+                return <line key={t} x1={wmX - bw2 + 0.3} y1={bandY} x2={wmX + bw2 - 0.3} y2={bandY} stroke={isDark ? 'rgba(60,50,35,0.3)' : 'rgba(100,80,50,0.15)'} strokeWidth={0.2 * sc} />
+              })}
+              {/* Window with frame */}
+              <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill={isDark ? '#1a1410' : '#4a3a28'} />
+              <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill="none" stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.3 * sc} />
+              <line x1={wmX - 0.8 * sc} y1={wmY + h * 0.4} x2={wmX + 0.8 * sc} y2={wmY + h * 0.4} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />
+              <line x1={wmX} y1={wmY + h * 0.4 - 0.8 * sc} x2={wmX} y2={wmY + h * 0.4 + 0.8 * sc} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />
+              {/* Window glow */}
+              <circle cx={wmX} cy={wmY + h * 0.4} r={0.6 * sc} fill={isDark ? 'rgba(255,200,100,0.15)' : 'rgba(255,220,140,0.2)'} />
+              {/* Door with arch */}
+              <path d={`M${wmX - 1 * sc},${wmY + h} L${wmX - 1 * sc},${wmY + h - 2.2 * sc} A${1 * sc},${1 * sc} 0 0 1 ${wmX + 1 * sc},${wmY + h - 2.2 * sc} L${wmX + 1 * sc},${wmY + h} Z`} fill={isDark ? '#1a1410' : '#3a2a1a'} />
+              <line x1={wmX} y1={wmY + h - 2.8 * sc} x2={wmX} y2={wmY + h} stroke={isDark ? '#2a2018' : '#4a3a28'} strokeWidth={0.15 * sc} />
+              {/* Conical roof */}
+              <polygon points={`${wmX - tw - 0.8 * sc},${wmY + sc * 2} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX},${wmY - 1 * sc}`} fill={roofColor} />
+              <polygon points={`${wmX},${wmY - 1 * sc} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX + 0.3 * sc},${wmY + sc * 2}`} fill={roofLight} opacity="0.3" />
+              {/* Hub on roof */}
+              <circle cx={wmX} cy={hubY} r={1.4 * sc} fill={wmLight} />
+              <circle cx={wmX} cy={hubY} r={0.9 * sc} fill={roofColor} />
+              <circle cx={wmX} cy={hubY} r={0.4 * sc} fill={wmLight} />
+              {/* Spinning blades */}
+              <g>
+                <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={wi === 0 ? '8s' : '11s'} repeatCount="indefinite" />
+                {[0, 90, 180, 270].map(angle => (
+                  <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
+                    {/* Blade frame */}
+                    <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill={bladeColor} opacity="0.8" />
+                    {/* Lattice cross-bars */}
+                    {[0.25, 0.5, 0.75].map(t => {
+                      const ly = hubY - bladeLen * t
+                      const lw = (0.4 + (1 - 0.4) * t * 0.6) * sc
+                      return <line key={t} x1={wmX - 0.1 * sc} y1={ly} x2={wmX + lw} y2={ly} stroke={bladeLight} strokeWidth={0.15 * sc} opacity="0.5" />
+                    })}
+                    {/* Spine */}
+                    <line x1={wmX + 0.2 * sc} y1={hubY} x2={wmX + 0.4 * sc} y2={hubY - bladeLen} stroke={bladeLight} strokeWidth={0.2 * sc} opacity="0.35" />
+                  </g>
+                ))}
+              </g>
+            </g>
+          )
+        })}
+
+        {/* Paths between windmills and off-screen */}
+        <path d={`M178,${42 + 14} Q184,${42 + 15} 190,${38 + 14 * 0.75}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.8" opacity="0.25" strokeLinecap="round" />
+        <path d={`M178,${42 + 14} Q184,${42 + 15} 190,${38 + 14 * 0.75}`} fill="none" stroke={isDark ? '#3a3020' : '#8a7a5a'} strokeWidth="0.6" opacity="0.15" strokeLinecap="round" />
+        <path d={`M190,${38 + 14 * 0.75} Q196,${38 + 10} 210,${36}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
 
         {/* Dirt path */}
         <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
@@ -518,7 +643,7 @@ export const OrchardView = memo(function OrchardView({
 
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} />
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} />
 
           {/* Thin top bar */}
           <div className="relative z-20 flex items-center justify-between px-5 py-2 shrink-0" style={{
@@ -619,10 +744,11 @@ export const OrchardView = memo(function OrchardView({
                       const meta = RARITY_META[rarity] || RARITY_META.common
                       const shape = typeInfo?.shape || 'oak'
                       const shapeScale = ({ oak: 1.25, conifer: 1.3, birch: 1.2, cypress: 1.3, sakura: 1.25, bamboo: 1.15, void: 1.1 } as Record<string, number>)[shape] || 0.95
-                      const depthScale = 0.65 + (y / 100) * 0.3
+                      const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
+                      const depthScale = 0.55 + depthT * 0.55
                       const treeSize = Math.round(baseSize * depthScale * shapeScale)
-                      const depthT = Math.max(0, Math.min(1, (y - 30) / 65))
-                      const scaleY = 0.78 + depthT * 0.22
+                      const scaleY = 0.75 + depthT * 0.25
+                      const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
 
                       return (
@@ -637,7 +763,7 @@ export const OrchardView = memo(function OrchardView({
                             zIndex: Math.round(y),
                           }}
                         >
-                          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}>
+                          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{ filter: dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined }}>
                             <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround />
                           </div>
 

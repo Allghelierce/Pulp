@@ -617,35 +617,44 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
                 }
               `}</style>
             </defs>
-            {/* Trunk */}
-            <path d="M23 46 C22 42 21 38 22 34 C22.5 32 23 30 23 28" stroke="#5c4a3a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-            <path d="M23 46 C22 42 21 38 22 34 C22.5 32 23 30 23 28" stroke="#4a3a2a" strokeWidth="1.5" opacity="0.12" strokeLinecap="round" fill="none" />
-            <ellipse cx="22" cy="36" rx="1.5" ry="1" fill="#4a3a2a" opacity="0.2" />
-            {/* Main branches */}
-            <path d="M23 30 Q14 25 5 22" stroke="#5c4a3a" strokeWidth="3" strokeLinecap="round" fill="none" />
-            <path d="M23 28 Q34 20 43 15" stroke="#5c4a3a" strokeWidth="2.8" strokeLinecap="round" fill="none" />
-            <path d="M23 26 Q15 18 10 10" stroke="#5c4a3a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-            <path d="M23 24 Q30 16 36 8" stroke="#5c4a3a" strokeWidth="2" strokeLinecap="round" fill="none" />
-            <path d="M23 27 Q20 22 18 18" stroke="#5c4a3a" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <path d="M23 29 Q28 24 32 20" stroke="#5c4a3a" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-            {/* Sub-branches left */}
-            <path d="M9 24 Q6 22 3 24" stroke="#5c4a3a" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M12 20 Q9 18 6 18" stroke="#5c4a3a" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M14 16 Q11 14 8 14" stroke="#5c4a3a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
-            <path d="M12 12 Q10 10 7 8" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <path d="M15 14 Q13 12 10 13" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M18 18 Q16 16 14 18" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M6 22 Q4 20 2 21" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            {/* Sub-branches right */}
-            <path d="M36 18 Q39 16 42 18" stroke="#5c4a3a" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M34 14 Q37 12 40 12" stroke="#5c4a3a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
-            <path d="M32 20 Q35 18 38 20" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <path d="M38 14 Q41 12 44 14" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M34 10 Q37 8 40 8" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M28 18 Q30 16 33 18" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            {/* Sub-branches top */}
-            <path d="M25 10 Q27 8 30 6" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <path d="M20 10 Q18 8 16 6" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            {/* Trunk — gentle S-curve with taper */}
+            <path d="M23.5 46 C23 43 21.5 40 21 37 C20.5 34 21.5 31 22.5 28 C23 26.5 23.5 25 23 24" stroke="#5c4a3a" strokeWidth="5" strokeLinecap="round" fill="none" />
+            <path d="M23.5 46 C23 43 21.5 40 21 37 C20.5 34 21.5 31 22.5 28 C23 26.5 23.5 25 23 24" stroke="#4a3a2a" strokeWidth="1.8" opacity="0.1" strokeLinecap="round" fill="none" />
+            {/* Bark texture */}
+            <path d="M22 42 Q21.5 40.5 22.5 39" stroke="#4a3a2a" strokeWidth="0.6" opacity="0.15" fill="none" />
+            <path d="M21.5 37 Q22.5 35.5 21.8 34" stroke="#4a3a2a" strokeWidth="0.5" opacity="0.12" fill="none" />
+            <ellipse cx="21.5" cy="36" rx="1.3" ry="0.9" fill="#4a3a2a" opacity="0.18" />
+            <ellipse cx="22.8" cy="32" rx="0.8" ry="0.5" fill="#4a3a2a" opacity="0.12" />
+            <path d="M23 30 L22 30.5" stroke="#4a3a2a" strokeWidth="0.4" opacity="0.1" />
+            {/* Root flare */}
+            <path d="M22 46 C20.5 45 18.5 44.5 16 46" stroke="#5c4a3a" strokeWidth="1.8" strokeLinecap="round" fill="none" opacity="0.35" />
+            <path d="M24.5 46 C26 45 28 44.5 30 46" stroke="#5c4a3a" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.28" />
+            {/* Main branches — sweeping curves with gradual taper */}
+            <path d="M22 32 C18 28 12 25 5 23" stroke="#5c4a3a" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+            <path d="M23 27 C28 22 36 18 43 15" stroke="#5c4a3a" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+            <path d="M22.5 29 C18 23 14 17 10 10" stroke="#5c4a3a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+            <path d="M23 25 C27 20 32 14 36 8" stroke="#5c4a3a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+            <path d="M22.5 30 C20 26 18.5 22 18 18" stroke="#5c4a3a" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+            <path d="M23 28 C26 24 29 21 32 20" stroke="#5c4a3a" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            {/* Sub-branches left — delicate arcs */}
+            <path d="M9 24 C7 22.5 4 22 2 24" stroke="#5c4a3a" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+            <path d="M12 20 C10 18.5 7 18 5 18.5" stroke="#5c4a3a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+            <path d="M14 16 C12 14.5 9 14 7 14.5" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+            <path d="M12 12 C10.5 10.5 8 9 6 8" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            <path d="M15 14 C13.5 12.5 11 12 9 13" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M18 19 C16.5 17 14 16.5 13 18" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M6 23 C4.5 21.5 3 21 1.5 21.5" stroke="#5c4a3a" strokeWidth="0.5" strokeLinecap="round" fill="none" />
+            {/* Sub-branches right — graceful arcs */}
+            <path d="M36 18 C38.5 16 41 16 43 18" stroke="#5c4a3a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+            <path d="M34 14 C36.5 12 39 11.5 41 12" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
+            <path d="M32 20 C34.5 18 37 18 39 20" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            <path d="M38 14 C40.5 12 43 12 45 14" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M34 10 C36 8.5 39 8 41 8.5" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M28 18 C30 16.5 32 16 34 18" stroke="#5c4a3a" strokeWidth="0.5" strokeLinecap="round" fill="none" />
+            {/* Sub-branches top — wispy tips */}
+            <path d="M25 10 C27 8 29 6.5 31 6" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            <path d="M20 10 C18.5 8 17 6.5 15 6" stroke="#5c4a3a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M22 12 C21 10 19 9 17 9.5" stroke="#5c4a3a" strokeWidth="0.5" strokeLinecap="round" fill="none" />
             {/* ──── FLOWER CLUSTERS ──── */}
             {/* Bottom-left branch tip */}
             <ellipse cx="5" cy="21" rx="4" ry="3.5" fill="#f9a8d4" opacity="0.6" />
@@ -713,9 +722,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
             {/* Mid trunk flowers */}
             <ellipse cx="24" cy="20" rx="2.5" ry="2" fill="#f9a8d4" opacity="0.35" />
             <ellipse cx="21" cy="22" rx="2" ry="1.5" fill="#ffc0d8" opacity="0.3" />
-            {/* Roots */}
-            <path d="M22 46 Q19 44.5 16 46" stroke="#5c4a3a" strokeWidth="0.9" fill="none" opacity="0.25" />
-            <path d="M24 46 Q27 44.5 30 46" stroke="#5c4a3a" strokeWidth="0.7" fill="none" opacity="0.2" />
+            {/* Roots — thin tendrils */}
+            <path d="M20 46 C19 45 17 44.5 15 46" stroke="#5c4a3a" strokeWidth="0.7" fill="none" opacity="0.2" />
+            <path d="M25 46 C26 45 28 45 31 46" stroke="#5c4a3a" strokeWidth="0.6" fill="none" opacity="0.15" />
           </g>
         )
 
@@ -1741,27 +1750,37 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
         )
         return (
           <g>
-            {/* Two weathered stakes */}
-            <path d="M10 46 L10 16" stroke={trunk} strokeWidth="2.2" fill="none" />
-            <path d="M38 46 L38 16" stroke={trunk} strokeWidth="2.2" fill="none" />
-            {/* Thin wire supports */}
-            <path d="M10 34 L38 34" stroke={trunk} strokeWidth="0.5" opacity="0.3" />
-            <path d="M10 26 L38 26" stroke={trunk} strokeWidth="0.5" opacity="0.3" />
-            <path d="M10 20 L38 20" stroke={trunk} strokeWidth="0.5" opacity="0.3" />
-            {/* Varied organic vines — thick and thin, S and C curves */}
+            {/* Stakes — pointed tops, wood grain */}
+            <path d="M10 46 L10 16 L11 14 L10 16" stroke={trunk} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            <path d="M38 46 L38 16 L39 14 L38 16" stroke={trunk} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            {/* Wood grain marks */}
+            <path d="M9.5 30 L10.5 30" stroke={dark} strokeWidth="0.3" opacity="0.2" />
+            <path d="M9.5 38 L10.5 38" stroke={dark} strokeWidth="0.3" opacity="0.2" />
+            <path d="M37.5 32 L38.5 32" stroke={dark} strokeWidth="0.3" opacity="0.2" />
+            <path d="M37.5 40 L38.5 40" stroke={dark} strokeWidth="0.3" opacity="0.2" />
+            {/* Wire supports with slight sag */}
+            <path d="M10 34 Q24 35.5 38 34" stroke={trunk} strokeWidth="0.5" opacity="0.35" fill="none" />
+            <path d="M10 26 Q24 27.5 38 26" stroke={trunk} strokeWidth="0.5" opacity="0.35" fill="none" />
+            <path d="M10 20 Q24 21 38 20" stroke={trunk} strokeWidth="0.5" opacity="0.35" fill="none" />
+            {/* Vines wrapping around left post */}
+            <path d="M8.5 36 Q10 35 11.5 36 Q10 37 8.5 36" stroke="#5a8c3f" strokeWidth="0.7" fill="none" opacity="0.5" />
+            <path d="M8.5 28 Q10 27 11.5 28 Q10 29 8.5 28" stroke="#5a8c3f" strokeWidth="0.6" fill="none" opacity="0.45" />
+            <path d="M8.5 22 Q10 21 11.5 22" stroke="#4a7c35" strokeWidth="0.5" fill="none" opacity="0.4" />
+            {/* Vines wrapping around right post */}
+            <path d="M36.5 32 Q38 31 39.5 32 Q38 33 36.5 32" stroke="#5a8c3f" strokeWidth="0.7" fill="none" opacity="0.5" />
+            <path d="M36.5 24 Q38 23 39.5 24 Q38 25 36.5 24" stroke="#4a7c35" strokeWidth="0.6" fill="none" opacity="0.45" />
+            <path d="M36.5 18 Q38 17 39.5 18" stroke="#5a8c3f" strokeWidth="0.5" fill="none" opacity="0.4" />
+            {/* Main vines connecting posts organically */}
             <path d="M10 32 Q14 28 18 24 Q22 20 28 18 Q34 16 38 20" stroke="#5a8c3f" strokeWidth="1.3" strokeLinecap="round" fill="none" />
             <path d="M38 30 Q34 26 28 22 Q22 18 16 18 Q12 18 10 20" stroke="#4a7c35" strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M12 36 C16 34 20 28 24 26 C28 24 34 22 38 24" stroke="#6ab04c" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M38 34 C34 30 28 26 24 24 C20 22 16 22 12 24" stroke="#5a8c3f" strokeWidth="0.9" strokeLinecap="round" fill="none" />
-            <path d="M10 24 C14 22 18 18 24 16 C28 14 32 16 36 18" stroke="#4a7c35" strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            <path d="M14 38 Q18 36 22 32" stroke="#5a8c3f" strokeWidth="0.5" strokeLinecap="round" fill="none" />
-            <path d="M36 32 Q32 28 26 26" stroke="#4a7c35" strokeWidth="0.5" strokeLinecap="round" fill="none" />
-            {/* Tendrils — varied spiral shapes */}
+            <path d="M10 36 C16 34 20 28 24 26 C28 24 34 22 38 24" stroke="#6ab04c" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            <path d="M38 34 C34 30 28 26 24 24 C20 22 16 22 10 24" stroke="#5a8c3f" strokeWidth="0.9" strokeLinecap="round" fill="none" />
+            <path d="M10 24 C14 22 18 18 24 16 C28 14 32 16 38 18" stroke="#4a7c35" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            {/* Tendrils */}
             <path d="M16 26 Q14 24 15 22.5 Q15.5 24 16.5 23.5 Q16 25 17 24" stroke="#5a8c3f" strokeWidth="0.4" fill="none" opacity="0.5" />
             <path d="M30 20 Q32 18 31 17 Q30 19 31.5 19.5" stroke="#4a7c35" strokeWidth="0.35" fill="none" opacity="0.45" />
             <path d="M22 28 Q20 26.5 21 25.5 Q21.5 27 22.5 26" stroke="#6ab04c" strokeWidth="0.3" fill="none" opacity="0.4" />
             <path d="M34 24 Q36 22 35 21 Q34.5 23 36 23" stroke="#5a8c3f" strokeWidth="0.3" fill="none" opacity="0.4" />
-            <path d="M18 32 Q16.5 30.5 17.5 30 Q17 31.5 18.5 31" stroke="#4a7c35" strokeWidth="0.3" fill="none" opacity="0.35" />
             {/* Green lobed leaves — 3-lobed shapes */}
             <path d="M14 26 C12 24 12 22 14 22 C15 22 16 24 14 26 Z" fill="#4a8c3a" opacity="0.6" />
             <path d="M13 25 C11 24 11 22 13 23 Z" fill="#3a6e28" opacity="0.4" />
