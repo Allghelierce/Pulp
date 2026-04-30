@@ -646,104 +646,73 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
             {/* Sub-branches top */}
             <path d="M25 10 Q27 8 30 6" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <path d="M20 10 Q18 8 16 6" stroke="#5c4a3a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            {/* ──── FLOWERS ──── */}
-            {/* Along bottom-left branch (23,30→5,22) */}
-            <path d="M4 22 C3 20 4 19 5 20 C6 19 7 20 6 22 C7 23 6 24 5 23 C4 24 3 23 4 22 Z" fill="#f9a8d4" opacity="0.75" />
-            <circle cx="5" cy="22" r="0.5" fill="#fbbf24" opacity="0.3" />
-            <path d="M7 20 C6 18 7 17 8 18 C9 17 10 18 9 20 C10 21 9 22 8 21 C7 22 6 21 7 20 Z" fill="#ffc0d8" opacity="0.7" />
-            <circle cx="8" cy="20" r="0.5" fill="#fbbf24" opacity="0.25" />
-            <path d="M10 19 C9 17 10 16 11 17 C12 16 13 17 12 19 C13 20 12 21 11 20 C10 21 9 20 10 19 Z" fill="#f9a8d4" opacity="0.65" />
-            <circle cx="11" cy="19" r="0.45" fill="#fbbf24" opacity="0.22" />
-            <path d="M13 22 C12 20 13 19 14 20 C15 19 16 20 15 22 C16 23 15 24 14 23 C13 24 12 23 13 22 Z" fill="#ffe0ec" opacity="0.6" />
-            <circle cx="14" cy="22" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M16 24 C15 22 16 21 17 22 C18 21 19 22 18 24 C19 25 18 26 17 25 C16 26 15 25 16 24 Z" fill="#ffc0d8" opacity="0.55" />
-            <path d="M3 24 C2 23 3 22 3.5 22.5 C4 22 4.5 22.5 4 24 C4.5 24.5 4 25 3.5 24.5 Z" fill="#f9a8d4" opacity="0.5" />
-            <path d="M6 18 C5.5 17 6 16.5 6.5 17 C7 16.5 7.5 17 7 18 C7.5 18.5 7 19 6.5 18.5 Z" fill="#ffe0ec" opacity="0.55" />
-            <path d="M2 21 C1 20 2 19 2.5 19.5 C3 19 3.5 19.5 3 21 C3.5 21.5 3 22 2.5 21.5 Z" fill="#ffc0d8" opacity="0.45" />
-            {/* Along upper-left branch (23,26→10,10) */}
-            <path d="M10 10 C9 8 10 7 11 8 C12 7 13 8 12 10 C13 11 12 12 11 11 C10 12 9 11 10 10 Z" fill="#ffc0d8" opacity="0.8" />
-            <circle cx="11" cy="10" r="0.55" fill="#fbbf24" opacity="0.3" />
-            <path d="M12 12 C11 10 12 9 13 10 C14 9 15 10 14 12 C15 13 14 14 13 13 C12 14 11 13 12 12 Z" fill="#f9a8d4" opacity="0.7" />
-            <circle cx="13" cy="12" r="0.45" fill="#fbbf24" opacity="0.25" />
-            <path d="M14 14 C13 12 14 11 15 12 C16 11 17 12 16 14 C17 15 16 16 15 15 C14 16 13 15 14 14 Z" fill="#ffe0ec" opacity="0.65" />
-            <circle cx="15" cy="14" r="0.45" fill="#fbbf24" opacity="0.22" />
-            <path d="M16 16 C15 14 16 13 17 14 C18 13 19 14 18 16 C19 17 18 18 17 17 C16 18 15 17 16 16 Z" fill="#f9a8d4" opacity="0.6" />
-            <circle cx="17" cy="16" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M18 18 C17 16 18 15 19 16 C20 15 21 16 20 18 C21 19 20 20 19 19 C18 20 17 19 18 18 Z" fill="#ffc0d8" opacity="0.55" />
-            <path d="M8 8 C7 7 8 6 8.5 6.5 C9 6 9.5 6.5 9 8 C9.5 8.5 9 9 8.5 8.5 Z" fill="#f9a8d4" opacity="0.55" />
-            <path d="M7 12 C6 11 7 10 7.5 10.5 C8 10 8.5 10.5 8 12 C8.5 12.5 8 13 7.5 12.5 Z" fill="#ffe0ec" opacity="0.5" />
-            <path d="M10 14 C9 13 10 12 10.5 12.5 C11 12 11.5 12.5 11 14 C11.5 14.5 11 15 10.5 14.5 Z" fill="#ffc0d8" opacity="0.5" />
-            {/* Along sub-branch (12,12→7,8) */}
-            <path d="M7 8 C6 6 7 5 8 6 C9 5 10 6 9 8 C10 9 9 10 8 9 C7 10 6 9 7 8 Z" fill="#f9a8d4" opacity="0.65" />
-            <circle cx="8" cy="8" r="0.4" fill="#fbbf24" opacity="0.2" />
-            {/* Along middle-left branch (23,27→18,18) */}
-            <path d="M19 20 C18 18 19 17 20 18 C21 17 22 18 21 20 C22 21 21 22 20 21 C19 22 18 21 19 20 Z" fill="#f9a8d4" opacity="0.6" />
-            <circle cx="20" cy="20" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M14 18 C13 17 14 16 14.5 16.5 C15 16 15.5 16.5 15 18 C15.5 18.5 15 19 14.5 18.5 Z" fill="#ffc0d8" opacity="0.5" />
-            {/* Along top-right branch (23,24→36,8) */}
-            <path d="M36 8 C35 6 36 5 37 6 C38 5 39 6 38 8 C39 9 38 10 37 9 C36 10 35 9 36 8 Z" fill="#f9a8d4" opacity="0.75" />
-            <circle cx="37" cy="8" r="0.5" fill="#fbbf24" opacity="0.3" />
-            <path d="M34 10 C33 8 34 7 35 8 C36 7 37 8 36 10 C37 11 36 12 35 11 C34 12 33 11 34 10 Z" fill="#ffc0d8" opacity="0.7" />
-            <circle cx="35" cy="10" r="0.5" fill="#fbbf24" opacity="0.25" />
-            <path d="M32 12 C31 10 32 9 33 10 C34 9 35 10 34 12 C35 13 34 14 33 13 C32 14 31 13 32 12 Z" fill="#f9a8d4" opacity="0.65" />
-            <circle cx="33" cy="12" r="0.45" fill="#fbbf24" opacity="0.22" />
-            <path d="M30 14 C29 12 30 11 31 12 C32 11 33 12 32 14 C33 15 32 16 31 15 C30 16 29 15 30 14 Z" fill="#ffe0ec" opacity="0.6" />
-            <circle cx="31" cy="14" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M28 16 C27 14 28 13 29 14 C30 13 31 14 30 16 C31 17 30 18 29 17 C28 18 27 17 28 16 Z" fill="#ffc0d8" opacity="0.55" />
-            <circle cx="29" cy="16" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M26 18 C25 16 26 15 27 16 C28 15 29 16 28 18 C29 19 28 20 27 19 C26 20 25 19 26 18 Z" fill="#f9a8d4" opacity="0.5" />
-            <path d="M38 6 C37.5 5 38 4.5 38.5 5 C39 4.5 39.5 5 39 6 C39.5 6.5 39 7 38.5 6.5 Z" fill="#ffe0ec" opacity="0.55" />
-            {/* Along sub-branch (34,10→40,8) */}
-            <path d="M40 8 C39 6 40 5 41 6 C42 5 43 6 42 8 C43 9 42 10 41 9 C40 10 39 9 40 8 Z" fill="#ffc0d8" opacity="0.6" />
-            <circle cx="41" cy="8" r="0.4" fill="#fbbf24" opacity="0.22" />
-            {/* Along bottom-right branch (23,28→43,15) */}
-            <path d="M42 15 C41 13 42 12 43 13 C44 12 45 13 44 15 C45 16 44 17 43 16 C42 17 41 16 42 15 Z" fill="#f9a8d4" opacity="0.7" />
-            <circle cx="43" cy="15" r="0.5" fill="#fbbf24" opacity="0.28" />
-            <path d="M40 16 C39 14 40 13 41 14 C42 13 43 14 42 16 C43 17 42 18 41 17 C40 18 39 17 40 16 Z" fill="#ffc0d8" opacity="0.65" />
-            <circle cx="41" cy="16" r="0.45" fill="#fbbf24" opacity="0.22" />
-            <path d="M38 18 C37 16 38 15 39 16 C40 15 41 16 40 18 C41 19 40 20 39 19 C38 20 37 19 38 18 Z" fill="#ffe0ec" opacity="0.6" />
-            <circle cx="39" cy="18" r="0.45" fill="#fbbf24" opacity="0.2" />
-            <path d="M36 20 C35 18 36 17 37 18 C38 17 39 18 38 20 C39 21 38 22 37 21 C36 22 35 21 36 20 Z" fill="#f9a8d4" opacity="0.55" />
-            <path d="M34 22 C33 20 34 19 35 20 C36 19 37 20 36 22 C37 23 36 24 35 23 C34 24 33 23 34 22 Z" fill="#ffc0d8" opacity="0.5" />
-            <path d="M44 14 C43.5 13 44 12.5 44.5 13 C45 12.5 45.5 13 45 14 C45.5 14.5 45 15 44.5 14.5 Z" fill="#f9a8d4" opacity="0.45" />
-            {/* Along sub-branch (38,14→44,14) */}
-            <path d="M42 12 C41 11 42 10 42.5 10.5 C43 10 43.5 10.5 43 12 C43.5 12.5 43 13 42.5 12.5 Z" fill="#ffc0d8" opacity="0.5" />
-            {/* Along middle-right branch (23,29→32,20) */}
-            <path d="M30 20 C29 18 30 17 31 18 C32 17 33 18 32 20 C33 21 32 22 31 21 C30 22 29 21 30 20 Z" fill="#ffc0d8" opacity="0.6" />
-            <circle cx="31" cy="20" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M33 18 C32.5 17 33 16.5 33.5 17 C34 16.5 34.5 17 34 18 C34.5 18.5 34 19 33.5 18.5 Z" fill="#f9a8d4" opacity="0.5" />
-            {/* Center crown flowers */}
-            <path d="M22 8 C21 6 22 5 23 6 C24 5 25 6 24 8 C25 9 24 10 23 9 C22 10 21 9 22 8 Z" fill="#ffc0d8" opacity="0.85" />
-            <circle cx="23" cy="8" r="0.6" fill="#fbbf24" opacity="0.35" />
-            <path d="M20 10 C19 8 20 7 21 8 C22 7 23 8 22 10 C23 11 22 12 21 11 C20 12 19 11 20 10 Z" fill="#f9a8d4" opacity="0.7" />
-            <circle cx="21" cy="10" r="0.5" fill="#fbbf24" opacity="0.25" />
-            <path d="M25 10 C24 8 25 7 26 8 C27 7 28 8 27 10 C28 11 27 12 26 11 C25 12 24 11 25 10 Z" fill="#ffe0ec" opacity="0.65" />
-            <circle cx="26" cy="10" r="0.45" fill="#fbbf24" opacity="0.22" />
-            <path d="M22 12 C21 10 22 9 23 10 C24 9 25 10 24 12 C25 13 24 14 23 13 C22 14 21 13 22 12 Z" fill="#f9a8d4" opacity="0.6" />
-            <circle cx="23" cy="12" r="0.45" fill="#fbbf24" opacity="0.2" />
-            <path d="M19 6 C18 5 19 4 19.5 4.5 C20 4 20.5 4.5 20 6 C20.5 6.5 20 7 19.5 6.5 Z" fill="#ffc0d8" opacity="0.55" />
-            <path d="M26 6 C25.5 5 26 4.5 26.5 5 C27 4.5 27.5 5 27 6 C27.5 6.5 27 7 26.5 6.5 Z" fill="#f9a8d4" opacity="0.5" />
-            <path d="M22 4 C21 3 22 2 22.5 2.5 C23 2 23.5 2.5 23 4 C23.5 4.5 23 5 22.5 4.5 Z" fill="#ffe0ec" opacity="0.5" />
-            {/* Along sub-branch (25,10→30,6) */}
-            <path d="M28 6 C27 4 28 3 29 4 C30 3 31 4 30 6 C31 7 30 8 29 7 C28 8 27 7 28 6 Z" fill="#f9a8d4" opacity="0.6" />
-            <circle cx="29" cy="6" r="0.4" fill="#fbbf24" opacity="0.2" />
-            {/* Along sub-branch (20,10→16,6) */}
-            <path d="M16 6 C15 4 16 3 17 4 C18 3 19 4 18 6 C19 7 18 8 17 7 C16 8 15 7 16 6 Z" fill="#ffc0d8" opacity="0.6" />
-            <circle cx="17" cy="6" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M14 8 C13 7 14 6 14.5 6.5 C15 6 15.5 6.5 15 8 C15.5 8.5 15 9 14.5 8.5 Z" fill="#f9a8d4" opacity="0.5" />
-            {/* Extra density — small flowers filling gaps */}
-            <path d="M5 16 C4.5 15 5 14.5 5.5 15 C6 14.5 6.5 15 6 16 C6.5 16.5 6 17 5.5 16.5 Z" fill="#f9a8d4" opacity="0.45" />
-            <path d="M9 16 C8 14 9 13 10 14 C11 13 12 14 11 16 C12 17 11 18 10 17 C9 18 8 17 9 16 Z" fill="#ffe0ec" opacity="0.55" />
-            <circle cx="10" cy="16" r="0.35" fill="#fbbf24" opacity="0.18" />
-            <path d="M20 14 C19 12.5 20 11.5 21 12.5 C22 11.5 23 12.5 22 14 C23 15 22 16 21 15 C20 16 19 15 20 14 Z" fill="#ffc0d8" opacity="0.5" />
-            <circle cx="21" cy="14" r="0.35" fill="#fbbf24" opacity="0.18" />
-            <path d="M25 14 C24 13 25 12 25.5 12.5 C26 12 26.5 12.5 26 14 C26.5 14.5 26 15 25.5 14.5 Z" fill="#f9a8d4" opacity="0.45" />
-            <path d="M32 16 C31.5 15 32 14.5 32.5 15 C33 14.5 33.5 15 33 16 C33.5 16.5 33 17 32.5 16.5 Z" fill="#ffe0ec" opacity="0.45" />
-            <path d="M36 14 C35 12 36 11 37 12 C38 11 39 12 38 14 C39 15 38 16 37 15 C36 16 35 15 36 14 Z" fill="#ffc0d8" opacity="0.55" />
-            <circle cx="37" cy="14" r="0.4" fill="#fbbf24" opacity="0.2" />
-            <path d="M24 20 C23 18 24 17 25 18 C26 17 27 18 26 20 C27 21 26 22 25 21 C24 22 23 21 24 20 Z" fill="#f9a8d4" opacity="0.45" />
-            <path d="M30 6 C29.5 5 30 4.5 30.5 5 C31 4.5 31.5 5 31 6 C31.5 6.5 31 7 30.5 6.5 Z" fill="#ffc0d8" opacity="0.45" />
-            <path d="M12 6 C11.5 5 12 4.5 12.5 5 C13 4.5 13.5 5 13 6 C13.5 6.5 13 7 12.5 6.5 Z" fill="#ffe0ec" opacity="0.4" />
+            {/* ──── FLOWER CLUSTERS ──── */}
+            {/* Bottom-left branch tip */}
+            <ellipse cx="5" cy="21" rx="4" ry="3.5" fill="#f9a8d4" opacity="0.6" />
+            <ellipse cx="4" cy="20" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.55" />
+            <ellipse cx="7" cy="22" rx="2.5" ry="2" fill="#ffe0ec" opacity="0.5" />
+            <circle cx="5" cy="21" r="0.8" fill="#fbbf24" opacity="0.25" />
+            <circle cx="3.5" cy="19.5" r="0.6" fill="#fbbf24" opacity="0.2" />
+            {/* Bottom-left mid */}
+            <ellipse cx="11" cy="20" rx="3.5" ry="3" fill="#ffc0d8" opacity="0.55" />
+            <ellipse cx="13" cy="21" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.5" />
+            <circle cx="11.5" cy="20" r="0.7" fill="#fbbf24" opacity="0.22" />
+            {/* Bottom-left near trunk */}
+            <ellipse cx="17" cy="24" rx="3" ry="2.5" fill="#ffe0ec" opacity="0.45" />
+            <ellipse cx="19" cy="23" rx="2.5" ry="2" fill="#f9a8d4" opacity="0.4" />
+            {/* Upper-left branch tip */}
+            <ellipse cx="10" cy="10" rx="4" ry="3.5" fill="#ffc0d8" opacity="0.7" />
+            <ellipse cx="8" cy="9" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.6" />
+            <ellipse cx="12" cy="11" rx="2.5" ry="2" fill="#ffe0ec" opacity="0.5" />
+            <circle cx="10" cy="10" r="0.8" fill="#fbbf24" opacity="0.28" />
+            <circle cx="8" cy="8.5" r="0.6" fill="#fbbf24" opacity="0.2" />
+            {/* Upper-left mid */}
+            <ellipse cx="15" cy="15" rx="3.5" ry="3" fill="#f9a8d4" opacity="0.55" />
+            <ellipse cx="17" cy="16" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.5" />
+            <circle cx="15.5" cy="15" r="0.7" fill="#fbbf24" opacity="0.22" />
+            {/* Mid-left */}
+            <ellipse cx="19" cy="19" rx="3" ry="2.5" fill="#ffe0ec" opacity="0.45" />
+            <circle cx="19" cy="19" r="0.6" fill="#fbbf24" opacity="0.18" />
+            {/* Top-right branch tip */}
+            <ellipse cx="37" cy="8" rx="4" ry="3.5" fill="#f9a8d4" opacity="0.65" />
+            <ellipse cx="39" cy="7" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.55" />
+            <ellipse cx="35" cy="9" rx="2.5" ry="2" fill="#ffe0ec" opacity="0.5" />
+            <circle cx="37" cy="8" r="0.8" fill="#fbbf24" opacity="0.28" />
+            <circle cx="39.5" cy="7" r="0.6" fill="#fbbf24" opacity="0.2" />
+            {/* Top-right mid */}
+            <ellipse cx="32" cy="12" rx="3.5" ry="3" fill="#ffc0d8" opacity="0.55" />
+            <ellipse cx="30" cy="13" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.5" />
+            <circle cx="31.5" cy="12" r="0.7" fill="#fbbf24" opacity="0.22" />
+            {/* Top-right near trunk */}
+            <ellipse cx="27" cy="16" rx="3" ry="2.5" fill="#ffe0ec" opacity="0.45" />
+            <circle cx="27" cy="16" r="0.6" fill="#fbbf24" opacity="0.18" />
+            {/* Bottom-right branch tip */}
+            <ellipse cx="43" cy="15" rx="3.5" ry="3" fill="#f9a8d4" opacity="0.6" />
+            <ellipse cx="41" cy="14" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.55" />
+            <circle cx="42.5" cy="15" r="0.7" fill="#fbbf24" opacity="0.25" />
+            {/* Bottom-right mid */}
+            <ellipse cx="38" cy="18" rx="3.5" ry="3" fill="#ffe0ec" opacity="0.55" />
+            <ellipse cx="36" cy="19" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.5" />
+            <circle cx="37.5" cy="18" r="0.7" fill="#fbbf24" opacity="0.22" />
+            {/* Bottom-right near trunk */}
+            <ellipse cx="33" cy="21" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.45" />
+            <ellipse cx="31" cy="20" rx="2.5" ry="2" fill="#ffe0ec" opacity="0.4" />
+            {/* Center crown */}
+            <ellipse cx="23" cy="8" rx="4.5" ry="4" fill="#ffc0d8" opacity="0.75" />
+            <ellipse cx="21" cy="7" rx="3.5" ry="3" fill="#f9a8d4" opacity="0.6" />
+            <ellipse cx="25" cy="9" rx="3.5" ry="3" fill="#ffe0ec" opacity="0.55" />
+            <ellipse cx="23" cy="11" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.5" />
+            <circle cx="23" cy="8" r="1" fill="#fbbf24" opacity="0.3" />
+            <circle cx="21" cy="6.5" r="0.7" fill="#fbbf24" opacity="0.22" />
+            <circle cx="25.5" cy="9" r="0.6" fill="#fbbf24" opacity="0.2" />
+            {/* Upper sub-branch tips */}
+            <ellipse cx="17" cy="6" rx="3" ry="2.5" fill="#ffc0d8" opacity="0.55" />
+            <circle cx="17" cy="6" r="0.6" fill="#fbbf24" opacity="0.2" />
+            <ellipse cx="29" cy="6" rx="3" ry="2.5" fill="#f9a8d4" opacity="0.55" />
+            <circle cx="29" cy="6" r="0.6" fill="#fbbf24" opacity="0.2" />
+            {/* Mid trunk flowers */}
+            <ellipse cx="24" cy="20" rx="2.5" ry="2" fill="#f9a8d4" opacity="0.35" />
+            <ellipse cx="21" cy="22" rx="2" ry="1.5" fill="#ffc0d8" opacity="0.3" />
             {/* Scattered petals on ground */}
             <path d="M18 32 C19.5 30 21 31 20 33 Q19 34 18 32 Z" fill="#f9a8d4" opacity="0.4" transform="rotate(30 18 32)" />
             <path d="M32 36 C33 34 34.5 35 34 37 Q33 38 32 36 Z" fill="#ffc0d8" opacity="0.3" transform="rotate(-20 32 36)" />
@@ -1712,10 +1681,10 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
             <path d="M28 32 Q26 30 27 29 Q29 30.5 31 29.5 Q29 31.5 28 32 Z" fill={color} opacity="0.45" />
             {/* Small fruits forming */}
             <path d="M20 28 L20 30" stroke="#5a8c3f" strokeWidth="0.4" strokeLinecap="round" />
-            <circle cx="20" cy="31" r="1.4" fill="#9b1b5e" />
-            <circle cx="19.5" cy="30.5" r="0.35" fill="#ff6b85" opacity="0.3" />
+            <ellipse cx="20" cy="31.2" rx="1.2" ry="1.6" fill="#9b1b5e" />
+            <ellipse cx="19.6" cy="30.6" rx="0.3" ry="0.4" fill="#ff6b85" opacity="0.3" />
             <path d="M33 26 L33 27.5" stroke="#5a8c3f" strokeWidth="0.35" strokeLinecap="round" />
-            <circle cx="33" cy="28.5" r="1.2" fill="#9b1b5e" opacity="0.8" />
+            <ellipse cx="33" cy="28.7" rx="1" ry="1.4" fill="#9b1b5e" opacity="0.8" />
           </g>
         )
         return (
@@ -1753,20 +1722,20 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
             <path d="M20 30 C18 28 18 26 20 26 C21 26 22 28 20 30 Z" fill="#4a8c3a" opacity="0.5" />
             <path d="M36 22 C34 20 35 18 36 19 C37 19 37 21 36 22 Z" fill="#3a6e28" opacity="0.45" />
             <path d="M26 26 C24 24 24 22 26 22 C27 22 28 24 26 26 Z" fill="#4a8c3a" opacity="0.45" />
-            {/* Hanging passion fruits — clean round, #9b1b5e */}
+            {/* Hanging passion fruits — oval, #9b1b5e */}
             <path d="M17 26 L17 28.5" stroke="#5a8c3f" strokeWidth="0.5" strokeLinecap="round" />
-            <circle cx="17" cy="30" r="2" fill="#9b1b5e" />
-            <circle cx="16.3" cy="29.2" r="0.5" fill="#ff6b85" opacity="0.3" />
+            <ellipse cx="17" cy="30.2" rx="1.6" ry="2.2" fill="#9b1b5e" />
+            <ellipse cx="16.3" cy="29.3" rx="0.4" ry="0.55" fill="#ff6b85" opacity="0.3" />
             <path d="M28 22 L28 24.5" stroke="#5a8c3f" strokeWidth="0.5" strokeLinecap="round" />
-            <circle cx="28" cy="26" r="1.8" fill="#9b1b5e" />
-            <circle cx="27.3" cy="25.2" r="0.45" fill="#ff6b85" opacity="0.3" />
+            <ellipse cx="28" cy="26.2" rx="1.5" ry="2" fill="#9b1b5e" />
+            <ellipse cx="27.3" cy="25.3" rx="0.35" ry="0.5" fill="#ff6b85" opacity="0.3" />
             <path d="M22 26 L22 28.5" stroke="#5a8c3f" strokeWidth="0.4" strokeLinecap="round" />
-            <circle cx="22" cy="30" r="1.6" fill="#9b1b5e" opacity="0.85" />
-            <circle cx="21.4" cy="29.3" r="0.4" fill="#ff6b85" opacity="0.25" />
+            <ellipse cx="22" cy="30.2" rx="1.3" ry="1.8" fill="#9b1b5e" opacity="0.85" />
+            <ellipse cx="21.4" cy="29.4" rx="0.3" ry="0.45" fill="#ff6b85" opacity="0.25" />
             <path d="M35 20 L35 22" stroke="#5a8c3f" strokeWidth="0.4" strokeLinecap="round" />
-            <circle cx="35" cy="23.5" r="1.5" fill="#9b1b5e" opacity="0.75" />
+            <ellipse cx="35" cy="23.7" rx="1.2" ry="1.7" fill="#9b1b5e" opacity="0.75" />
             <path d="M13 30 L13 32" stroke="#5a8c3f" strokeWidth="0.35" strokeLinecap="round" />
-            <circle cx="13" cy="33.5" r="1.4" fill="#9b1b5e" opacity="0.7" />
+            <ellipse cx="13" cy="33.7" rx="1.1" ry="1.6" fill="#9b1b5e" opacity="0.7" />
           </g>
         )
 
