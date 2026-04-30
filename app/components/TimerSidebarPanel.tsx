@@ -419,7 +419,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               const counts = new Map<string, number>()
               inventory.forEach(t => counts.set(t, (counts.get(t) || 0) + 1))
               const uniqueTypes = [...counts.keys()]
-              const perPage = 9
+              const perPage = 16
               const totalPages = Math.max(1, Math.ceil(uniqueTypes.length / perPage))
               const page = Math.min(seedPage, totalPages - 1)
               const pageSeeds = uniqueTypes.slice(page * perPage, (page + 1) * perPage)
@@ -454,7 +454,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </div>
 
                   <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-1.5">
                       {pageSeeds.map((type) => {
                         const info = TREE_TYPES[type]
                         if (!info) return null
@@ -479,28 +479,17 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                             }}
                           >
                             <div className="flex-1 flex items-center justify-center">
-                              <PlantIcon type={type} size={52} stage={3} />
+                              <PlantIcon type={type} size={38} stage={3} />
                             </div>
-                            <span style={{
-                              fontSize: 8, fontWeight: 600, letterSpacing: '0.04em',
-                              color: isSelected ? info.color : (isDark ? '#a1a1aa' : '#71717a'),
-                              fontFamily: 'Inter, system-ui, sans-serif',
-                              textTransform: 'capitalize',
-                              lineHeight: 1, marginTop: 2,
-                            }}>
-                              {info.name}
-                            </span>
                             {count > 1 && (
-                              <span className="absolute top-1 right-1 text-[7px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
+                              <span className="absolute bottom-1 right-1 text-[7px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
                                 {count}
                               </span>
                             )}
                             {isSelected && (
                               <div className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
                             )}
-                            <div className="absolute bottom-1 left-0 right-0 flex justify-center">
-                              <div className="w-1 h-1 rounded-full" style={{ backgroundColor: rarityColor, opacity: 0.7 }} />
-                            </div>
+                            <div className="absolute top-1 right-1 w-[6px] h-[6px] rounded-full" style={{ backgroundColor: rarityColor }} />
                           </motion.button>
                         )
                       })}

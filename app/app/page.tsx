@@ -26,8 +26,8 @@ const ImageUploadModal = dynamic(() => import("@/app/components/ImageUploadModal
 const CoverModal = dynamic(() => import("@/app/components/CoverModal").then(m => m.CoverModal), { ssr: false })
 const FlashcardView = dynamic(() => import("@/app/components/FlashcardView").then(m => m.FlashcardView), { ssr: false })
 const AiCommandBar = dynamic(() => import("@/app/components/AiCommandBar").then(m => m.AiCommandBar), { ssr: false })
-const NotebookChat = dynamic(() => import("@/app/components/NotebookChat").then(m => m.NotebookChat), { ssr: false })
-const VersionHistoryPanel = dynamic(() => import("@/app/components/VersionHistoryPanel").then(m => m.VersionHistoryPanel), { ssr: false })
+import { NotebookChat } from "@/app/components/NotebookChat"
+import { VersionHistoryPanel } from "@/app/components/VersionHistoryPanel"
 const OrchardView = dynamic(() => import("@/app/components/OrchardView").then(m => m.OrchardView), { ssr: false })
 const BoutiqueView = dynamic(() => import("@/app/components/BoutiqueView").then(m => m.BoutiqueView), { ssr: false })
 const GemStoreModal = dynamic(() => import("@/app/components/GemStoreModal").then(m => m.GemStoreModal), { ssr: false })
@@ -3476,7 +3476,7 @@ export default function NoteApp() {
 
       </div>
 
-      <OrchardView
+      {orchardOpen && <OrchardView
         isOpen={orchardOpen}
         onClose={() => setOrchardOpen(false)}
         theme={theme}
@@ -3491,16 +3491,16 @@ export default function NoteApp() {
         setInventory={setInventory}
         setGrove={setGrove}
         notes={notes}
-      />
+      />}
 
-      <LeaderboardView
+      {leaderboardOpen && <LeaderboardView
         isOpen={leaderboardOpen}
         onClose={() => setLeaderboardOpen(false)}
         theme={theme}
         juice={juice}
-      />
+      />}
 
-      <BoutiqueView
+      {shopOpen && <BoutiqueView
         isOpen={shopOpen}
         onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
         theme={theme}
@@ -3517,24 +3517,24 @@ export default function NoteApp() {
         onUpdateConfig={updateSettings}
         initialTab={shopInitialTab}
         initialScrollTo={shopScrollTo}
-      />
+      />}
 
-      <GemStoreModal
+      {gemStoreOpen && <GemStoreModal
         isOpen={gemStoreOpen}
         onClose={() => setGemStoreOpen(false)}
         gems={gems}
-      />
+      />}
 
-      <StatsView
+      {statsOpen && <StatsView
         isOpen={statsOpen}
         onClose={() => setStatsOpen(false)}
         theme={theme}
         accent={accent}
         xp={xp}
         streak={streak}
-      />
+      />}
 
-      <FocusView
+      {focusOpen && <FocusView
         isOpen={focusOpen}
         onClose={() => setFocusOpen(false)}
         theme={theme}
@@ -3543,7 +3543,7 @@ export default function NoteApp() {
         onUpdateConfig={updateSettings}
         onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
         openConfirm={openConfirm}
-      />
+      />}
 
       <VitalitySystem
         theme={theme}

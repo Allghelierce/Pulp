@@ -54,13 +54,16 @@ function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col:
     const rowSpacing = colRows > 1 ? (rowEnd - rowStart) / (colRows - 1) : 0
     const y = colRows === 1 ? 60 : rowStart + row * rowSpacing
     const depthT = (y - rowStart) / Math.max(1, rowEnd - rowStart)
-    const trapLeft = colStart + (1 - depthT) * 18
-    const trapRight = colEnd - (1 - depthT) * 18
-    const x = cols === 1 ? 50 : trapLeft + col * ((trapRight - trapLeft) / (cols - 1))
-    const rng = seededRng(i * 317 + col * 53 + 991)
-    const jx = (rng() - 0.5) * 3
-    const jy = (rng() - 0.5) * 2
-    results.push({ x: Math.max(6, Math.min(94, x + jx)), y: Math.max(42, Math.min(94, y + jy)), tree: trees[i], col })
+    const pinch = (1 - depthT) * 18 - depthT * 4
+    const trapLeft = colStart + pinch
+    const trapRight = colEnd - pinch
+    const baseX = cols === 1 ? 50 : trapLeft + col * ((trapRight - trapLeft) / (cols - 1))
+    const farInwardFactor = row === 0 ? 0.12 : row === 1 ? 0.08 : row === 2 ? 0.06 : 0
+    const nearRank = colRows - 1 - row
+    const nearInwardFactor = nearRank === 0 ? 0.1 : nearRank === 1 ? 0.07 : 0
+    const inwardFactor = Math.min(0.24, farInwardFactor + nearInwardFactor)
+    const x = baseX + (50 - baseX) * inwardFactor
+    results.push({ x: Math.max(6, Math.min(94, x)), y: Math.max(42, Math.min(94, y)), tree: trees[i], col })
   }
 
   return results.sort((a, b) => a.y - b.y)
@@ -86,6 +89,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
   const colStart = 6
   const colEnd = 94
   const tillCols = cols
+  const rowLevels = Array.from(new Set(treeBases.map(tb => Math.round(tb.y * 10) / 10))).sort((a, b) => a - b)
 
   return (
     <>
@@ -148,20 +152,28 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
 
         {/* Sun glow on horizon */}
-        <ellipse cx="100" cy="14" rx="60" ry="10" fill={isDark ? 'rgba(220,140,40,0.12)' : 'rgba(255,180,60,0.35)'} />
-        <ellipse cx="100" cy="14" rx="30" ry="5" fill={isDark ? 'rgba(240,160,50,0.1)' : 'rgba(255,210,80,0.35)'} />
-        <ellipse cx="100" cy="14" rx="14" ry="4" fill={isDark ? 'rgba(255,200,80,0.15)' : 'rgba(255,240,140,0.5)'} />
-        <ellipse cx="100" cy="14" rx="6" ry="2" fill={isDark ? 'rgba(255,220,100,0.12)' : 'rgba(255,250,200,0.6)'} />
+        <ellipse cx="100" cy="14" rx="80" ry="12" fill={isDark ? 'rgba(220,140,40,0.1)' : 'rgba(255,180,60,0.25)'} />
+        <ellipse cx="100" cy="14" rx="50" ry="8" fill={isDark ? 'rgba(240,160,50,0.12)' : 'rgba(255,200,60,0.35)'} />
+        <ellipse cx="100" cy="14" rx="25" ry="5" fill={isDark ? 'rgba(255,200,80,0.15)' : 'rgba(255,230,100,0.5)'} />
+        <ellipse cx="100" cy="14" rx="12" ry="3.5" fill={isDark ? 'rgba(255,220,100,0.18)' : 'rgba(255,245,160,0.65)'} />
+        <ellipse cx="100" cy="14" rx="5" ry="2" fill={isDark ? 'rgba(255,240,140,0.15)' : 'rgba(255,255,220,0.8)'} />
+        <ellipse cx="100" cy="14" rx="2" ry="1" fill={isDark ? 'rgba(255,250,200,0.12)' : 'rgba(255,255,245,0.9)'} />
 
         {/* Ocean band */}
         <path d="M-5,14 L205,14 L205,28 L-5,28 Z" fill="url(#ocean-g)" />
-        {/* Ocean reflection of sunset */}
-        <ellipse cx="100" cy="18" rx="40" ry="2.5" fill={isDark ? 'rgba(200,120,40,0.06)' : 'rgba(255,180,80,0.15)'} />
-        {/* Ocean shimmer */}
-        <path d="M0,17 Q20,16.2 40,17 Q60,17.8 80,17 Q100,16.2 120,17 Q140,17.8 160,17 Q180,16.2 200,17" fill="none" stroke={isDark ? 'rgba(100,160,220,0.08)' : 'rgba(255,255,255,0.2)'} strokeWidth="0.3" />
-        <path d="M0,20 Q25,19 50,20 Q75,21 100,20 Q125,19 150,20 Q175,21 200,20" fill="none" stroke={isDark ? 'rgba(100,160,220,0.06)' : 'rgba(255,255,255,0.15)'} strokeWidth="0.25" />
-        <path d="M0,23 Q30,22.5 60,23 Q90,23.5 120,23 Q150,22.5 180,23" fill="none" stroke={isDark ? 'rgba(100,160,220,0.04)' : 'rgba(255,255,255,0.1)'} strokeWidth="0.2" />
-        <path d="M0,26 Q40,25.5 80,26 Q120,26.5 160,26 Q200,25.5 205,26" fill="none" stroke={isDark ? 'rgba(100,160,220,0.03)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.2" />
+        {/* Sun reflection column on water */}
+        <ellipse cx="100" cy="16" rx="8" ry="1.5" fill={isDark ? 'rgba(255,220,120,0.08)' : 'rgba(255,240,160,0.4)'} />
+        <ellipse cx="100" cy="19" rx="12" ry="2" fill={isDark ? 'rgba(255,200,100,0.06)' : 'rgba(255,220,120,0.3)'} />
+        <ellipse cx="100" cy="22" rx="16" ry="2.5" fill={isDark ? 'rgba(255,180,80,0.04)' : 'rgba(255,200,100,0.2)'} />
+        <ellipse cx="100" cy="25" rx="20" ry="2" fill={isDark ? 'rgba(255,160,60,0.03)' : 'rgba(255,180,80,0.12)'} />
+        {/* Broad warm glow on water */}
+        <ellipse cx="100" cy="20" rx="50" ry="5" fill={isDark ? 'rgba(200,120,40,0.05)' : 'rgba(255,180,80,0.1)'} />
+        {/* Ocean shimmer — staggered waves */}
+        <path d="M0,16 Q15,15.4 30,16 Q45,16.6 60,16 Q75,15.4 90,16 Q105,16.6 120,16 Q135,15.4 150,16 Q165,16.6 180,16 Q195,15.4 200,16" fill="none" stroke={isDark ? 'rgba(100,160,220,0.06)' : 'rgba(255,255,255,0.15)'} strokeWidth="0.2" />
+        <path d="M10,18 Q25,17.3 40,18 Q55,18.7 70,18 Q85,17.3 100,18 Q115,18.7 130,18 Q145,17.3 160,18 Q175,18.7 190,18" fill="none" stroke={isDark ? 'rgba(100,160,220,0.07)' : 'rgba(255,255,255,0.18)'} strokeWidth="0.25" />
+        <path d="M5,20.5 Q30,19.8 55,20.5 Q80,21.2 105,20.5 Q130,19.8 155,20.5 Q180,21.2 200,20.5" fill="none" stroke={isDark ? 'rgba(100,160,220,0.05)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.2" />
+        <path d="M0,23 Q35,22.3 70,23 Q105,23.7 140,23 Q175,22.3 200,23" fill="none" stroke={isDark ? 'rgba(100,160,220,0.04)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.18" />
+        <path d="M15,25.5 Q50,25 85,25.5 Q120,26 155,25.5 Q190,25 205,25.5" fill="none" stroke={isDark ? 'rgba(100,160,220,0.03)' : 'rgba(255,255,255,0.06)'} strokeWidth="0.15" />
 
         {/* Mountain range — sharp peaks */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
@@ -174,48 +186,82 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.3' : '0.5'} />
         {/* Mountain shadow */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill={isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.04)'} />
+        {/* Sunlit mountain faces — warm light on sides facing center */}
+        <polygon points="50,8 58,16 50,16" fill={isDark ? 'rgba(255,180,80,0.06)' : 'rgba(255,200,100,0.18)'} />
+        <polygon points="105,9 115,18 105,18" fill={isDark ? 'rgba(255,180,80,0.07)' : 'rgba(255,200,100,0.2)'} />
+        <polygon points="95,22 105,9 100,22" fill={isDark ? 'rgba(255,180,80,0.05)' : 'rgba(255,200,100,0.15)'} />
+        <polygon points="85,14 95,22 88,22" fill={isDark ? 'rgba(255,180,80,0.06)' : 'rgba(255,200,100,0.16)'} />
+        <polygon points="68,11 78,20 70,20" fill={isDark ? 'rgba(255,180,80,0.05)' : 'rgba(255,200,100,0.14)'} />
+        <polygon points="35,10 42,18 37,18" fill={isDark ? 'rgba(255,170,60,0.04)' : 'rgba(255,190,80,0.1)'} />
+        <polygon points="125,13 135,22 128,22" fill={isDark ? 'rgba(255,170,60,0.04)' : 'rgba(255,190,80,0.1)'} />
 
         {/* Mid hills — rounder, softer */}
         <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26 L210,28 L210,40 L-10,40 Z" fill="url(#hill-mid)" />
         {/* Light edge on mid hills */}
         <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke={isDark ? 'rgba(80,140,60,0.15)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.4" />
 
-        {/* Dense forest on hills */}
-        {Array.from({ length: 80 }).map((_, i) => {
-          const rng = seededRng(i * 71 + 303)
-          const x = -5 + rng() * 210
-          const baseY = 26 + rng() * 12
-          const h = 2.5 + rng() * 3
-          const w = 1.2 + rng() * 1.5
-          const darkC = rng() > 0.5
-          const fill = isDark
-            ? (darkC ? '#0c1a0e' : '#101e12')
-            : (darkC ? '#2a5a28' : '#3a6a35')
+        {/* Distant tangerine grove on far hills */}
+        {(() => {
+          const trunks: string[] = []
+          const canopies: string[] = []
+          const fruits: string[] = []
+          for (let i = 0; i < 70; i++) {
+            const rng = seededRng(i * 71 + 303)
+            const x = -5 + rng() * 210
+            const baseY = 26 + rng() * 12
+            const sz = 0.8 + rng() * 1.2
+            const cx = x
+            const cy = baseY - sz * 1.2 - sz * 0.5
+            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+            canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
+            for (let f = 0; f < 2; f++) {
+              const a = rng() * Math.PI * 2
+              const r = sz * 0.35 * rng()
+              fruits.push(`M${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r * 0.8).toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
+            }
+          }
           return (
-            <polygon key={`ft-${i}`} points={`${x},${baseY} ${x - w},${baseY} ${x - w * 0.5},${baseY - h}`} fill={fill} opacity={isDark ? 0.7 : 0.55} />
+            <g opacity={isDark ? 0.6 : 0.5}>
+              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.4" fill="none" />
+              <path d={canopies.join('')} fill={isDark ? '#0e1c10' : '#3a6a35'} />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
+            </g>
           )
-        })}
+        })()}
 
         {/* Near hills — the foreground ridge before the field */}
         <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30 L210,32 L210,42 L-10,42 Z" fill="url(#hill-near)" />
         {/* Highlight on near hill crests */}
         <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke={isDark ? 'rgba(100,170,80,0.1)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.5" />
 
-        {/* Forest on near hills */}
-        {Array.from({ length: 60 }).map((_, i) => {
-          const rng = seededRng(i * 89 + 707)
-          const x = -5 + rng() * 210
-          const baseY = 32 + rng() * 8
-          const h = 1.8 + rng() * 2.5
-          const w = 1 + rng() * 1.2
-          const shade = rng()
-          const fill = isDark
-            ? (shade > 0.6 ? '#122216' : shade > 0.3 ? '#0e1c10' : '#162a18')
-            : (shade > 0.6 ? '#3a7a38' : shade > 0.3 ? '#2e6a2c' : '#488a42')
+        {/* Tangerine grove on near hills */}
+        {(() => {
+          const trunks: string[] = []
+          const canopies: string[] = []
+          const fruits: string[] = []
+          for (let i = 0; i < 50; i++) {
+            const rng = seededRng(i * 89 + 707)
+            const x = -5 + rng() * 210
+            const baseY = 32 + rng() * 8
+            const sz = 1 + rng() * 1.4
+            const cx = x
+            const cy = baseY - sz * 1.3 - sz * 0.5
+            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+            canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
+            for (let f = 0; f < 3; f++) {
+              const a = rng() * Math.PI * 2
+              const r = sz * 0.4 * rng()
+              fruits.push(`M${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r * 0.8).toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
+            }
+          }
           return (
-            <polygon key={`nft-${i}`} points={`${x},${baseY} ${x - w},${baseY} ${x - w * 0.5},${baseY - h}`} fill={fill} opacity={isDark ? 0.6 : 0.45} />
+            <g opacity={isDark ? 0.55 : 0.45}>
+              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.5" fill="none" />
+              <path d={canopies.join('')} fill={isDark ? '#122216' : '#3a7a38'} />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
+            </g>
           )
-        })}
+        })()}
 
         {/* Main field — soft top edge blends with hills */}
         <path d="M-5,36 Q20,39 50,37 Q80,35 100,37 Q130,39 160,36 Q185,38 205,37 L205,100 L-5,100 Z" fill="url(#field-g)" />
@@ -236,17 +282,18 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
             const t = s / steps
             const y = 40 + t * 57
             const depthT = t
-            const trapL = colStart + (1 - depthT) * 18
-            const trapR = colEnd - (1 - depthT) * 18
+            const pinch = (1 - depthT) * 18 - depthT * 4
+            const trapL = colStart + pinch
+            const trapR = colEnd - pinch
             let x = (tillCols === 1 ? 50 : trapL + ci * ((trapR - trapL) / Math.max(1, tillCols - 1))) * 2
 
-            const nearby = colTrees.find(tb => Math.abs(tb.y - y) < 8)
+            const nearby = colTrees.find(tb => Math.abs(tb.y - y) < 10)
             if (nearby) {
-              const pull = (nearby.x * 2 - x) * 0.25
+              const pull = (nearby.x * 2 - x) * 0.5
               x += pull
             }
 
-            const wobble = (rng() - 0.5) * 1.2
+            const wobble = (rng() - 0.5) * 0.8
             points.push(`${(x + wobble).toFixed(1)},${y.toFixed(1)}`)
           }
           const d = points.length > 1 ? `M${points[0]} ` + points.slice(1).map((p, i) => {
@@ -258,25 +305,76 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           }).join(' ') : ''
           return (
             <g key={`till-${ci}`}>
-              <path d={d} fill="none" stroke={dirtColor} strokeWidth="2.4" opacity={isDark ? 0.2 : 0.12} strokeLinecap="round" strokeLinejoin="round" />
-              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.7" opacity={isDark ? 0.09 : 0.06} strokeLinecap="round" transform="translate(0.3, 0.5)" />
+              {/* Shadow/depth side */}
+              <path d={d} fill="none" stroke={isDark ? '#1a1408' : '#5a4a30'} strokeWidth="3" opacity={isDark ? 0.18 : 0.1} strokeLinecap="round" strokeLinejoin="round" />
+              {/* Main furrow */}
+              <path d={d} fill="none" stroke={dirtColor} strokeWidth="1.8" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" strokeLinejoin="round" />
+              {/* Ridge highlight */}
+              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.5" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" transform="translate(-0.4, -0.3)" />
             </g>
           )
         })}
 
-        {/* Grass tufts */}
-        {Array.from({ length: 50 }).map((_, i) => {
-          const rng = seededRng(i * 53 + 101)
-          const x = 6 + rng() * 188
-          const y = 40 + rng() * 56
-          const h = 0.4 + rng() * 0.6
+        {/* Dirt patches under each tree, varied but deterministic */}
+        {treeBases.map((tb, idx) => {
+          const rng = seededRng((idx + 1) * 983 + Math.round(tb.x * 17) + Math.round(tb.y * 29))
+          const depthT = Math.max(0, Math.min(1, (tb.y - 40) / 57))
+          const rowKey = Math.round(tb.y * 10) / 10
+          const rowIdx = rowLevels.indexOf(rowKey)
+          const nearRank = rowLevels.length - 1 - rowIdx
+          const isOuter = tb.col === 0 || tb.col === tillCols - 1
+          const outwardFactor = rowIdx === 0 ? 0.18 : rowIdx === 1 ? 0.12 : rowIdx === 2 ? 0.08 : 0
+          const outwardDelta = (tb.x - 50) * outwardFactor
+          const edgeOutward = isOuter ? (nearRank === 0 ? 2.9 : nearRank === 1 ? 2.0 : 0) : 0
+          const edgeUpward = isOuter ? (nearRank === 0 ? 1.1 : nearRank === 1 ? 0.65 : 0) : 0
+          const edgeDir = tb.x >= 50 ? 1 : -1
+          const backInward = rowIdx === 0 ? 0.85 : rowIdx === 1 ? 0.5 : 0
+          const cx = Math.max(4, Math.min(196, tb.x * 2 + outwardDelta + edgeDir * (edgeOutward - backInward)))
+          const cy = Math.min(98, tb.y - 0.1 + depthT * 0.9 - edgeUpward)
+
+          const rx = 2.3 + depthT * 3.2 + rng() * 1.6
+          const ry = 0.65 + depthT * 1.25 + rng() * 0.45
+          const tilt = (rng() - 0.5) * 20
+
+          const p0 = `${(-1.05 * rx).toFixed(2)},${(0.05 * ry).toFixed(2)}`
+          const c1 = `${(-0.85 * rx).toFixed(2)},${(-1.2 * ry).toFixed(2)}`
+          const p1 = `${(-0.15 * rx).toFixed(2)},${(-1.05 * ry).toFixed(2)}`
+          const c2 = `${(0.3 * rx).toFixed(2)},${(-1.45 * ry).toFixed(2)}`
+          const p2 = `${(0.95 * rx).toFixed(2)},${(-0.15 * ry).toFixed(2)}`
+          const c3 = `${(1.15 * rx).toFixed(2)},${(0.85 * ry).toFixed(2)}`
+          const p3 = `${(0.3 * rx).toFixed(2)},${(1.15 * ry).toFixed(2)}`
+          const c4 = `${(-0.55 * rx).toFixed(2)},${(1.25 * ry).toFixed(2)}`
+          const d = `M${p0} Q${c1} ${p1} Q${c2} ${p2} Q${c3} ${p3} Q${c4} ${p0}Z`
+
           return (
-            <g key={`g${i}`} opacity={isDark ? 0.15 : 0.1}>
-              <line x1={`${x}`} y1={`${y}`} x2={`${x - 0.4}`} y2={`${y - h}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.3" />
-              <line x1={`${x}`} y1={`${y}`} x2={`${x + 0.3}`} y2={`${y - h * 0.8}`} stroke={isDark ? '#3a5a2e' : '#6a9a50'} strokeWidth="0.25" />
+            <g key={`dirt-patch-${idx}`} transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${tilt.toFixed(1)})`}>
+              <path d={d} fill={isDark ? '#1f160d' : '#5e4a31'} opacity={isDark ? 0.38 : 0.26} />
+              <path d={d} fill="none" stroke={isDark ? '#3b2d1b' : '#8f754f'} strokeWidth="0.22" opacity={isDark ? 0.22 : 0.16} />
+              <ellipse cx={-0.1 * rx} cy={-0.25 * ry} rx={0.42 * rx} ry={0.24 * ry} fill={isDark ? '#3a2a18' : '#a28761'} opacity={isDark ? 0.12 : 0.11} />
             </g>
           )
         })}
+
+        {/* Grass tufts — baked */}
+        {(() => {
+          const grassColor = isDark ? '#3a5a2e' : '#6a9a50'
+          const d1: string[] = []
+          const d2: string[] = []
+          for (let i = 0; i < 50; i++) {
+            const rng = seededRng(i * 53 + 101)
+            const x = 6 + rng() * 188
+            const y = 40 + rng() * 56
+            const h = 0.4 + rng() * 0.6
+            d1.push(`M${x.toFixed(1)},${y.toFixed(1)}L${(x-0.4).toFixed(1)},${(y-h).toFixed(1)}`)
+            d2.push(`M${x.toFixed(1)},${y.toFixed(1)}L${(x+0.3).toFixed(1)},${(y-h*0.8).toFixed(1)}`)
+          }
+          return (
+            <g opacity={isDark ? 0.15 : 0.1}>
+              <path d={d1.join('')} stroke={grassColor} strokeWidth="0.3" fill="none" />
+              <path d={d2.join('')} stroke={grassColor} strokeWidth="0.25" fill="none" />
+            </g>
+          )
+        })()}
 
         {/* Fence — posts with cross rails, 2 gaps */}
         {(() => {
@@ -287,21 +385,30 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           const gapAfter = new Set([54, 134])
           return (
             <g>
-              {posts.map(px => (
-                <g key={`fp-${px}`} opacity={fenceOp}>
-                  <rect x={px - 0.5} y="36.5" width="1" height="4.5" rx="0.2" fill={fenceColor} />
-                  <rect x={px - 0.3} y="36.5" width="0.3" height="4.5" fill={fenceLight} opacity="0.4" />
-                  <rect x={px - 0.7} y="36.2" width="1.4" height="0.5" rx="0.15" fill={fenceColor} />
-                </g>
-              ))}
+              {posts.map((px, pi) => {
+                const t = pi / (posts.length - 1)
+                const yOff = t < 0.15 ? (0.15 - t) / 0.15 * 2.5 : t > 0.85 ? (t - 0.85) / 0.15 * 2.5 : 0
+                const py = 38 + yOff
+                return (
+                  <g key={`fp-${px}`} opacity={fenceOp}>
+                    <rect x={px - 0.3} y={py} width="0.6" height="2.2" rx="0.1" fill={fenceColor} />
+                    <rect x={px - 0.15} y={py} width="0.2" height="2.2" fill={fenceLight} opacity="0.4" />
+                    <rect x={px - 0.4} y={py - 0.2} width="0.8" height="0.3" rx="0.08" fill={fenceColor} />
+                  </g>
+                )
+              })}
               {posts.slice(0, -1).map((px, i) => {
                 const nx = posts[i + 1]
                 if (gapAfter.has(px)) return null
+                const t1 = i / (posts.length - 1)
+                const t2 = (i + 1) / (posts.length - 1)
+                const yOff1 = t1 < 0.15 ? (0.15 - t1) / 0.15 * 2.5 : t1 > 0.85 ? (t1 - 0.85) / 0.15 * 2.5 : 0
+                const yOff2 = t2 < 0.15 ? (0.15 - t2) / 0.15 * 2.5 : t2 > 0.85 ? (t2 - 0.85) / 0.15 * 2.5 : 0
                 return (
                   <g key={`fr-${px}`} opacity={fenceOp * 0.8}>
-                    <line x1={px} y1="38" x2={nx} y2="38" stroke={fenceColor} strokeWidth="0.4" />
-                    <line x1={px} y1="39.5" x2={nx} y2="39.5" stroke={fenceColor} strokeWidth="0.35" />
-                    <line x1={px} y1="38" x2={nx} y2="38" stroke={fenceLight} strokeWidth="0.15" opacity="0.3" />
+                    <line x1={px} y1={38.8 + yOff1} x2={nx} y2={38.8 + yOff2} stroke={fenceColor} strokeWidth="0.25" />
+                    <line x1={px} y1={39.6 + yOff1} x2={nx} y2={39.6 + yOff2} stroke={fenceColor} strokeWidth="0.2" />
+                    <line x1={px} y1={38.8 + yOff1} x2={nx} y2={38.8 + yOff2} stroke={fenceLight} strokeWidth="0.1" opacity="0.3" />
                   </g>
                 )
               })}
@@ -413,20 +520,9 @@ export const OrchardView = memo(function OrchardView({
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
   const [selectedNotebook, setSelectedNotebook] = useState<string>(activeNotesForDefault.length > 0 ? activeNotesForDefault[0].id : '_unassigned')
   const [plotPage, setPlotPage] = useState(0)
-  const [renderTrees, setRenderTrees] = useState(false)
-
   useEffect(() => {
     setPlotPage(0)
   }, [selectedNotebook])
-  
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => setRenderTrees(true), 150)
-      return () => clearTimeout(timer)
-    } else {
-      setRenderTrees(false)
-    }
-  }, [isOpen])
 
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
@@ -513,6 +609,7 @@ export const OrchardView = memo(function OrchardView({
       onClick={onClose}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
     >
+      <style>{`@keyframes tree-pop { from { transform: translate(-50%,-85%) scale(0); opacity:0 } }`}</style>
       <div
         onClick={e => e.stopPropagation()}
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
@@ -720,11 +817,7 @@ export const OrchardView = memo(function OrchardView({
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
               >
-                {!renderTrees ? (
-                  <div className="h-full flex items-center justify-center relative z-10">
-                    <span className="animate-pulse"><LeafIcon size={32} /></span>
-                  </div>
-                ) : filteredTrees.length === 0 ? (
+                {filteredTrees.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
                     <span className="text-[32px]">🌱</span>
                     <p className="text-[12px]" style={{ color: textMuted }}>
@@ -761,6 +854,7 @@ export const OrchardView = memo(function OrchardView({
                             transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
+                            animation: `tree-pop 0.2s ease-out ${renderIdx * 15}ms both`,
                           }}
                         >
                           <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{ filter: dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined }}>

@@ -108,23 +108,22 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
         cursor: "grab",
         transformOrigin: "top center",
         rotate: springAngle,
-        y: dragY,
       }}
       initial={{ y: -180, opacity: 0 }}
       animate={timerRunning ? { y: -180, opacity: 0 } : { y: 0, opacity: 1 }}
-      transition={timerRunning ? { type: "spring", stiffness: 120, damping: 18 } : { type: "spring", stiffness: 60, damping: 14, mass: 0.8 }}
+      transition={{ type: "spring", stiffness: 50, damping: 14, mass: 1 }}
       whileHover={timerRunning ? {} : { y: 4 }}
       drag="y"
-      dragConstraints={{ top: 0, bottom: 120 }}
-      dragElastic={0.3}
+      dragConstraints={{ top: 0, bottom: 80 }}
+      dragElastic={0.2}
       onDrag={(_, info) => {
-        if (info.offset.y > 80 && !dragTriggered.current) {
+        if (info.offset.y > 40 && !dragTriggered.current) {
           dragTriggered.current = true
           changeFace()
         }
       }}
       onDragEnd={(_, info) => {
-        if (info.offset.y > 80) {
+        if (info.offset.y > 40) {
           onClick()
         }
         dragTriggered.current = false
