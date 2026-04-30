@@ -15,7 +15,7 @@ function lighten(hex: string, amount: number) {
   return `rgb(${r},${g},${b})`
 }
 
-export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean }) {
+export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5 }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
@@ -2066,6 +2066,30 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
     <div style={{ width: size, height: Math.round(size * 1.3), display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         {!hideGround && renderGround()}
+        {hideGround && dirtSeed > 0 && (() => {
+          let ds = Math.abs(dirtSeed) || 1
+          const dr = () => { ds ^= ds << 13; ds ^= ds >> 17; ds ^= ds << 5; return ((ds >>> 0) % 10000) / 10000 }
+          const dt = dirtDepth
+          const rx = 8 + dt * 12 + dr() * 5
+          const ry = 2.5 + dt * 4.5 + dr() * 1.8
+          const tilt = (dr() - 0.5) * 20
+          const p0 = `${(-1.05 * rx).toFixed(2)},${(0.05 * ry).toFixed(2)}`
+          const c1 = `${(-0.85 * rx).toFixed(2)},${(-1.2 * ry).toFixed(2)}`
+          const p1 = `${(-0.15 * rx).toFixed(2)},${(-1.05 * ry).toFixed(2)}`
+          const c2 = `${(0.3 * rx).toFixed(2)},${(-1.45 * ry).toFixed(2)}`
+          const p2 = `${(0.95 * rx).toFixed(2)},${(-0.15 * ry).toFixed(2)}`
+          const c3 = `${(1.15 * rx).toFixed(2)},${(0.85 * ry).toFixed(2)}`
+          const p3 = `${(0.3 * rx).toFixed(2)},${(1.15 * ry).toFixed(2)}`
+          const c4 = `${(-0.55 * rx).toFixed(2)},${(1.25 * ry).toFixed(2)}`
+          const d = `M${p0} Q${c1} ${p1} Q${c2} ${p2} Q${c3} ${p3} Q${c4} ${p0}Z`
+          return (
+            <g transform={`translate(24 46) rotate(${tilt.toFixed(1)})`}>
+              <path d={d} fill={dirtDark ? '#1f160d' : '#5e4a31'} opacity={dirtDark ? 0.38 : 0.26} />
+              <path d={d} fill="none" stroke={dirtDark ? '#3b2d1b' : '#8f754f'} strokeWidth="0.22" opacity={dirtDark ? 0.22 : 0.16} />
+              <ellipse cx={-0.1 * rx} cy={-0.25 * ry} rx={0.42 * rx} ry={0.24 * ry} fill={dirtDark ? '#3a2a18' : '#a28761'} opacity={dirtDark ? 0.12 : 0.11} />
+            </g>
+          )
+        })()}
         <g style={{
           transformOrigin: '24px 46px',
           animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,

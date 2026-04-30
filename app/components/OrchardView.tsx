@@ -44,8 +44,8 @@ function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col:
   const rows = Math.ceil(trees.length / cols)
   const colStart = 6
   const colEnd = 94
-  const rowStart = 44
-  const rowEnd = 93
+  const rowStart = 46
+  const rowEnd = 95
 
   for (let i = 0; i < trees.length; i++) {
     const col = i % cols
@@ -89,7 +89,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
   const colStart = 6
   const colEnd = 94
   const tillCols = cols
-  const rowLevels = Array.from(new Set(treeBases.map(tb => Math.round(tb.y * 10) / 10))).sort((a, b) => a - b)
+
 
   return (
     <>
@@ -315,45 +315,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           )
         })}
 
-        {/* Dirt patches under each tree, varied but deterministic */}
-        {treeBases.map((tb, idx) => {
-          const rng = seededRng((idx + 1) * 983 + Math.round(tb.x * 17) + Math.round(tb.y * 29))
-          const depthT = Math.max(0, Math.min(1, (tb.y - 40) / 57))
-          const rowKey = Math.round(tb.y * 10) / 10
-          const rowIdx = rowLevels.indexOf(rowKey)
-          const nearRank = rowLevels.length - 1 - rowIdx
-          const isOuter = tb.col === 0 || tb.col === tillCols - 1
-          const outwardFactor = rowIdx === 0 ? 0.18 : rowIdx === 1 ? 0.12 : rowIdx === 2 ? 0.08 : 0
-          const outwardDelta = (tb.x - 50) * outwardFactor
-          const edgeOutward = isOuter ? (nearRank === 0 ? 2.9 : nearRank === 1 ? 2.0 : 0) : 0
-          const edgeUpward = isOuter ? (nearRank === 0 ? 1.1 : nearRank === 1 ? 0.65 : 0) : 0
-          const edgeDir = tb.x >= 50 ? 1 : -1
-          const backInward = rowIdx === 0 ? 0.85 : rowIdx === 1 ? 0.5 : 0
-          const cx = Math.max(4, Math.min(196, tb.x * 2 + outwardDelta + edgeDir * (edgeOutward - backInward)))
-          const cy = Math.min(98, tb.y - 0.1 + depthT * 0.9 - edgeUpward)
-
-          const rx = 2.3 + depthT * 3.2 + rng() * 1.6
-          const ry = 0.65 + depthT * 1.25 + rng() * 0.45
-          const tilt = (rng() - 0.5) * 20
-
-          const p0 = `${(-1.05 * rx).toFixed(2)},${(0.05 * ry).toFixed(2)}`
-          const c1 = `${(-0.85 * rx).toFixed(2)},${(-1.2 * ry).toFixed(2)}`
-          const p1 = `${(-0.15 * rx).toFixed(2)},${(-1.05 * ry).toFixed(2)}`
-          const c2 = `${(0.3 * rx).toFixed(2)},${(-1.45 * ry).toFixed(2)}`
-          const p2 = `${(0.95 * rx).toFixed(2)},${(-0.15 * ry).toFixed(2)}`
-          const c3 = `${(1.15 * rx).toFixed(2)},${(0.85 * ry).toFixed(2)}`
-          const p3 = `${(0.3 * rx).toFixed(2)},${(1.15 * ry).toFixed(2)}`
-          const c4 = `${(-0.55 * rx).toFixed(2)},${(1.25 * ry).toFixed(2)}`
-          const d = `M${p0} Q${c1} ${p1} Q${c2} ${p2} Q${c3} ${p3} Q${c4} ${p0}Z`
-
-          return (
-            <g key={`dirt-patch-${idx}`} transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${tilt.toFixed(1)})`}>
-              <path d={d} fill={isDark ? '#1f160d' : '#5e4a31'} opacity={isDark ? 0.38 : 0.26} />
-              <path d={d} fill="none" stroke={isDark ? '#3b2d1b' : '#8f754f'} strokeWidth="0.22" opacity={isDark ? 0.22 : 0.16} />
-              <ellipse cx={-0.1 * rx} cy={-0.25 * ry} rx={0.42 * rx} ry={0.24 * ry} fill={isDark ? '#3a2a18' : '#a28761'} opacity={isDark ? 0.12 : 0.11} />
-            </g>
-          )
-        })}
 
         {/* Grass tufts — baked */}
         {(() => {
@@ -621,189 +582,89 @@ export const OrchardView = memo(function OrchardView({
           border: `1px solid ${cardBorder}`,
         }}
       >
-        {/* Notebook Sidebar */}
-        <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0 z-30`}>
-          {/* Sidebar header */}
-          <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'var(--font-italiana)' }}>Orchard</p>
-          </div>
-
-          {/* Notebook list */}
-          <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5" style={{ scrollbarWidth: 'thin' }}>
-            <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Notebooks</p>
-
-            {activeNotes.map(note => {
-              const count = notebookTreeCounts[note.id] || 0
-              const isSelected = selectedNotebook === note.id
-              const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
-
-              return (
-                <button
-                  key={note.id}
-                  onClick={() => setSelectedNotebook(note.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
-                    isSelected
-                      ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
-                      : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
-                  }`}
-                >
-                  <span className="text-[13px] shrink-0">{icon}</span>
-                  <span className="flex-1 min-w-0 truncate">{note.subject || 'Untitled'}</span>
-                  {count > 0 && (
-                    <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{count}</span>
-                  )}
-                </button>
-              )
-            })}
-
-            {/* Archived notebooks */}
-            {archivedNotes.length > 0 && archivedNotes.some(n => (notebookTreeCounts[n.id] || 0) > 0) && (
-              <>
-                <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Archived</p>
-                </div>
-                {archivedNotes.filter(n => (notebookTreeCounts[n.id] || 0) > 0).map(note => {
-                  const count = notebookTreeCounts[note.id] || 0
-                  const isSelected = selectedNotebook === note.id
-                  const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
-                  return (
-                    <button
-                      key={note.id}
-                      onClick={() => setSelectedNotebook(note.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
-                        isSelected
-                          ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
-                          : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
-                      }`}
-                      style={{ opacity: isSelected ? 1 : 0.7 }}
-                    >
-                      <span className="text-[13px] shrink-0">{icon}</span>
-                      <span className="flex-1 min-w-0 truncate">{note.subject || 'Untitled'}</span>
-                      {count > 0 && (
-                        <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{count}</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </>
-            )}
-
-            {/* Unassigned trees */}
-            {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
-              <>
-                <div className={`${isDark ? "border-t border-zinc-800" : "border-t border-zinc-300/40"} pt-3 mt-3`}>
-                  <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Other</p>
-                </div>
-                <button
-                  onClick={() => setSelectedNotebook('_unassigned')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all flex items-center gap-2.5 ${
-                    selectedNotebook === '_unassigned'
-                      ? isDark ? "bg-zinc-800 text-white" : "bg-white text-zinc-900 shadow-sm"
-                      : isDark ? "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-800 hover:bg-white/70"
-                  }`}
-                >
-                  <span className="shrink-0 opacity-50"><LeafIcon size={13} /></span>
-                  <span className="flex-1 min-w-0 truncate">Unassigned</span>
-                  <span className={`text-[9px] font-bold tabular-nums shrink-0 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>{notebookTreeCounts['_unassigned']}</span>
-                </button>
-              </>
-            )}
-          </nav>
-
-          {/* Sidebar footer — stats */}
-          <div className={`px-5 py-4 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/60"}`}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className={`text-[9px] font-bold uppercase tracking-wider ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Level {lvl.level}</span>
-              <span className={`text-[10px] font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{lvl.name}</span>
-            </div>
-            <div className="h-[2px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: '#d97706' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.max(2, lvl.progress * 100)}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <div className="flex items-center gap-1">
-                <PulpIcon size={9} />
-                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{juice}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <GemIcon size={9} />
-                <span className={`text-[9px] font-bold tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{gems}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} />
 
-          {/* Thin top bar */}
-          <div className="relative z-20 flex items-center justify-between px-5 py-2 shrink-0" style={{
-            background: isDark ? 'rgba(14,22,12,0.8)' : 'rgba(120,160,90,0.7)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: `1px solid ${cardBorder}`,
+          {/* Orchard scene */}
+          <div className="flex-1 relative overflow-hidden" style={{
+            perspective: '800px',
           }}>
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold" style={{ color: textPrimary }}>
-                {selectedNotebook === '_unassigned' ? 'Unassigned' :
-                 [...activeNotes, ...notes.filter(n => n.archived)].find(n => n.id === selectedNotebook)?.subject || 'Untitled'}
-              </span>
-              <span className="text-[10px] font-medium tabular-nums" style={{ color: textMuted }}>
-                {filteredTrees.length} {filteredTrees.length === 1 ? 'tree' : 'trees'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
-                <div className="flex items-center gap-2 mr-4 rounded-lg px-2 py-1" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)' }}>
-                  <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            {/* Notebook switcher overlay */}
+            <div className="absolute bottom-4 left-4 z-30 pointer-events-none">
+              <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+                {activeNotes.map(note => {
+                  const isSelected = selectedNotebook === note.id
+                  const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
+                  const count = notebookTreeCounts[note.id] || 0
+                  return (
+                    <button
+                      key={note.id}
+                      onClick={() => setSelectedNotebook(note.id)}
+                      className="px-2 py-1 rounded-full text-[10px] font-medium transition-all flex items-center gap-1.5"
+                      style={{
+                        backgroundColor: isSelected ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)') : 'transparent',
+                        color: isSelected ? '#fff' : 'rgba(255,255,255,0.6)',
+                      }}
+                      title={note.subject || 'Untitled'}
+                    >
+                      <span className="text-[11px]">{icon}</span>
+                      {isSelected && <span className="truncate max-w-[80px]">{note.subject || 'Untitled'}</span>}
+                      {isSelected && count > 0 && <span className="opacity-50 text-[9px]">{count}</span>}
+                    </button>
+                  )
+                })}
+                {(notebookTreeCounts['_unassigned'] || 0) > 0 && (
+                  <button
+                    onClick={() => setSelectedNotebook('_unassigned')}
+                    className="px-2 py-1 rounded-full text-[10px] font-medium transition-all flex items-center gap-1.5"
+                    style={{
+                      backgroundColor: selectedNotebook === '_unassigned' ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)') : 'transparent',
+                      color: selectedNotebook === '_unassigned' ? '#fff' : 'rgba(255,255,255,0.6)',
+                    }}
+                  >
+                    <span className="opacity-60"><LeafIcon size={10} /></span>
+                    {selectedNotebook === '_unassigned' && <span>Unassigned</span>}
                   </button>
-                  <span className="text-[10px] tabular-nums font-bold uppercase tracking-widest" style={{ color: textSecondary }}>
+                )}
+              </div>
+            </div>
+
+            {/* Plot switcher overlay */}
+            <div className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
+              {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
+                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+                  <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <span className="text-[9px] tabular-nums font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Plot {plotPage + 1} <span className="opacity-50">/ {nbUnlocked}</span>
                   </span>
                   {plotPage + 1 < nbUnlocked ? (
-                    <button onClick={() => setPlotPage(p => Math.min(nbUnlocked - 1, p + 1))} className="p-0.5 hover:opacity-100 opacity-70 transition-opacity" style={{ color: textPrimary }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    <button onClick={() => setPlotPage(p => Math.min(nbUnlocked - 1, p + 1))} className="p-0.5 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
                   ) : nbUnlocked < MAX_PLOTS ? (
                     <button
                       onClick={unlockNextPlot}
                       disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
                       className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all disabled:opacity-40"
-                      style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)' }}
+                      style={{ color: '#d97706' }}
                       title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
                     >
                       <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </button>
                   ) : (
-                    <span className="p-0.5 opacity-30" style={{ color: textPrimary }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                    <span className="p-0.5 opacity-30" style={{ color: '#fff' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </span>
                   )}
                 </div>
               )}
-              {RARITY_ORDER.filter(r => rarityCounts[r] && r !== 'common').map(r => (
-                <span key={r} className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RARITY_META[r].color }} />
-                  <span className="text-[9px] tabular-nums" style={{ color: RARITY_META[r].color }}>{rarityCounts[r]}</span>
-                </span>
-              ))}
-              <button onClick={onClose} className="ml-2 p-1.5 rounded-full transition-colors" style={{ color: textMuted }} onMouseEnter={e => e.currentTarget.style.color = textPrimary} onMouseLeave={e => e.currentTarget.style.color = textMuted}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              <button onClick={onClose} className="absolute right-3 p-1.5 rounded-full transition-opacity hover:opacity-100 opacity-70 pointer-events-auto" style={{ color: '#fff', backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(8px)' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             </div>
-          </div>
-
-          {/* Orchard scene */}
-          <div className="flex-1 relative overflow-hidden" style={{
-            perspective: '800px',
-          }}>
             <div className="absolute inset-0" style={{
               transform: 'rotateX(8deg)',
               transformOrigin: 'center 40%',
@@ -858,7 +719,7 @@ export const OrchardView = memo(function OrchardView({
                           }}
                         >
                           <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{ filter: dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined }}>
-                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround />
+                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} />
                           </div>
 
                           <div className="mt-0.5 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300 }}>
