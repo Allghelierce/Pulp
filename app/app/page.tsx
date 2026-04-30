@@ -1112,14 +1112,14 @@ export default function NoteApp() {
       const data = JSON.parse(saved)
       setGems(data.gems ?? 3)
       setJuice(data.juice ?? data.sunshine ?? 50)
-      const allSeeds = ['cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','redwood','sakura','abyss']
+      const allSeeds = ['cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','sakura','abyss']
       setInventory(allSeeds)
       if (data.grove) {
         // TEST: populate orchard with 150 realistic trees
         const pool: [string, number][] = [
           ['tangerine', 20], ['cherry', 15], ['lemon', 12], ['birch', 12], ['bamboo', 10],
           ['apple', 10], ['plum', 8], ['blackberry', 8], ['pine', 8], ['oak', 7],
-          ['peach', 6], ['pineapple', 5], ['passionfruit', 5], ['cypress', 4], ['redwood', 4],
+          ['peach', 6], ['pineapple', 5], ['passionfruit', 5], ['cypress', 4],
           ['sakura', 3], ['abyss', 1],
         ]
         const testTypes: string[] = []

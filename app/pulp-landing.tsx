@@ -11,7 +11,7 @@ const SHOWCASE_TREES = [
   { type: 'peach', name: 'peach', rarity: 'rare' },
   { type: 'pineapple', name: 'pineapple', rarity: 'rare' },
   { type: 'passionfruit', name: 'passionfruit', rarity: 'rare' },
-  { type: 'redwood', name: 'redwood', rarity: 'rare' },
+
   { type: 'sakura', name: 'sakura', rarity: 'legendary' },
   { type: 'abyss', name: 'abyss maw', rarity: 'legendary' },
 ]
