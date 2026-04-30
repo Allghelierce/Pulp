@@ -2,17 +2,20 @@
 
 import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || "" // Use service role for admin operations
-)
-
 export async function verifyPasswordAndDelete(
   userId: string,
   password: string,
   deleteType: "account" | "notes"
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
+      return { success: false, error: "Server configuration error" }
+    }
+    const supabase = createClient(url, key, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
     if (!password || typeof password !== "string" || password.length < 1) {
       return { success: false, error: "Invalid password" }
     }
@@ -26,7 +29,10 @@ export async function verifyPasswordAndDelete(
       return { success: false, error: "User not found" }
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const verifyClient = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+    const { error: signInError } = await verifyClient.auth.signInWithPassword({
       email: user.email,
       password,
     })
