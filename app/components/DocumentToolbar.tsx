@@ -230,7 +230,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     <div
       ref={toolbarRef}
       id="document-toolbar"
-      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-10 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
+      className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-3 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
       style={{ transform: "translateZ(0)" }}
     >
 

@@ -102,7 +102,7 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
   }, [reduceMotion])
   return (<>
     <style dangerouslySetInnerHTML={{
-      __html: `@import url('https://fonts.googleapis.com/css2?family=Bilbo&family=Licorice&family=Original+Surfer&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Caveat&family=Gochi+Hand&family=Indie+Flower&family=Dancing+Script&display=swap');@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
+      __html: `${reduceMotion ? "*, *::before, *::after { transition: none !important; animation: none !important; } .anim-slide-up, .anim-fade-in { opacity: 1 !important; transform: none !important; filter: none !important; }" : ""}${reduceVisuals ? " .animate-pulse, .pulp-pulse, [class*='animate-'] { animation: none !important; } .neon-checkbox__effects, .bg-effect, .smear-effect, [class*='effect'] { filter: none !important; box-shadow: none !important; }" : ""} .ls-toolbar { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; letter-spacing: -0.01em; } @keyframes slide-up-fade { 0% { opacity: 0; transform: translateY(12px); filter: blur(2px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } } @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } } @keyframes leaf-sway { 0% { transform: rotate(-2.2deg) translateX(-0.8px); } 25% { transform: rotate(-0.8deg) translateX(-0.3px); } 50% { transform: rotate(2.2deg) translateX(0.8px); } 75% { transform: rotate(0.8deg) translateX(0.3px); } 100% { transform: rotate(-2.2deg) translateX(-0.8px); } } @keyframes bulb-pull { 0% { transform: translateY(0); } 30% { transform: translateY(15px); } 65% { transform: translateY(-4px); } 100% { transform: translateY(0); } } @keyframes orange-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } } @keyframes orange-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .anim-slide-up { opacity: 0; animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .anim-fade-in { opacity: 0; animation: fade-in 0.4s ease-out forwards; }                              @keyframes erase-smudge {
                                0% { opacity: 0.55; transform: scaleX(1) scaleY(1); filter: blur(0px); }
                                25% { opacity: 0.4; transform: scaleX(1.3) scaleY(0.7); filter: blur(1px); }
                                50% { opacity: 0.2; transform: scaleX(1.8) scaleY(0.4); filter: blur(2.5px); }
@@ -2692,12 +2692,15 @@ export default function NoteApp() {
             <div
               onMouseDown={(e) => startSidebarDrag(e.clientX)}
               style={{
-                width: 12,
+                width: 4,
                 height: '100%',
                 cursor: 'col-resize',
                 backgroundColor: 'transparent',
-                position: 'relative',
+                position: 'absolute',
+                right: 0,
+                top: 0,
                 userSelect: 'none',
+                zIndex: 10,
               }}
               className="hover:bg-white/10 transition-colors"
             />
@@ -3091,9 +3094,9 @@ export default function NoteApp() {
                                 display: "none",
                                 position: "absolute",
                                 left: 0, top: 0, width: 0, height: 0,
-                                backgroundColor: "rgba(0, 119, 255, 0.12)",
-                                border: "1.5px solid rgba(0, 119, 255, 0.45)",
-                                boxShadow: "0 0 25px -5px rgba(0, 119, 255, 0.3)",
+                                backgroundColor: "rgba(217, 119, 6, 0.12)",
+                                border: "1.5px solid rgba(217, 119, 6, 0.45)",
+                                boxShadow: "0 0 25px -5px rgba(217, 119, 6, 0.3)",
                                 borderRadius: "4px",
                                 pointerEvents: "none",
                                 zIndex: 10000,

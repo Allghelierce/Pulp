@@ -223,38 +223,39 @@ export function useBoxDrawing({
   const el = useCallback((id: string) => document.getElementById(`box-${id}`), [])
 
   const handleMove = useRef((e: MouseEvent) => {
-    cancelAnimationFrame(rafId.current)
-    rafId.current = requestAnimationFrame(() => {
-      if (selectionRef.current) {
-        const { sx, sy } = selectionRef.current
-        const dx = e.clientX - sx
-        const dy = e.clientY - sy
+    if (selectionRef.current) {
+      const { sx, sy } = selectionRef.current
+      const dx = e.clientX - sx
+      const dy = e.clientY - sy
 
-        if (!selectionRef.current.active && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
-          selectionRef.current.active = true
-          if (selectionRectRef.current) selectionRectRef.current.style.display = 'block'
-        }
+      if (!selectionRef.current.active && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        selectionRef.current.active = true
+        if (selectionRectRef.current) selectionRectRef.current.style.display = 'block'
+      }
 
-        if (selectionRef.current.active) {
-          const paper = paperRef.current?.getBoundingClientRect()
-          if (paper) {
-            const scale = s()
-            const x1 = Math.min(sx, e.clientX)
-            const y1 = Math.min(sy, e.clientY)
-            const x2 = Math.max(sx, e.clientX)
-            const y2 = Math.max(sy, e.clientY)
+      if (selectionRef.current.active) {
+        const paper = paperRef.current?.getBoundingClientRect()
+        if (paper) {
+          const scale = s()
+          const x1 = Math.min(sx, e.clientX)
+          const y1 = Math.min(sy, e.clientY)
+          const x2 = Math.max(sx, e.clientX)
+          const y2 = Math.max(sy, e.clientY)
 
-            const rectX = (x1 - paper.left) / scale
-            const rectY = (y1 - paper.top) / scale
-            const rectW = (x2 - x1) / scale
-            const rectH = (y2 - y1) / scale
+          const rectX = (x1 - paper.left) / scale
+          const rectY = (y1 - paper.top) / scale
+          const rectW = (x2 - x1) / scale
+          const rectH = (y2 - y1) / scale
 
-            if (selectionRectRef.current) {
-              const rs = selectionRectRef.current.style
-              rs.left = rectX + 'px'; rs.top = rectY + 'px'
-              rs.width = rectW + 'px'; rs.height = rectH + 'px'
-            }
+          if (selectionRectRef.current) {
+            const rs = selectionRectRef.current.style
+            rs.left = rectX + 'px'; rs.top = rectY + 'px'
+            rs.width = rectW + 'px'; rs.height = rectH + 'px'
+          }
 
+          cancelAnimationFrame(rafId.current)
+          rafId.current = requestAnimationFrame(() => {
+            if (!selectionRef.current) return
             const boxesToCheck = selectionRef.current.cachedBoxes
             const newPending = new Set<string>()
             const solid = accentRef.current.length > 7 ? accentRef.current.slice(0, 7) : accentRef.current
@@ -284,11 +285,14 @@ export function useBoxDrawing({
               if (hit) pendingDrawings.add(d.id)
             }
             selectedDrawingIdsRef.current = pendingDrawings
-          }
+          })
         }
-        return
       }
+      return
+    }
 
+    cancelAnimationFrame(rafId.current)
+    rafId.current = requestAnimationFrame(() => {
       if (dragRef.current) {
         const { sx, sy, originalBoxes, elements } = dragRef.current
         const scale = s()
