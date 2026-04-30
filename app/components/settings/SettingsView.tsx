@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
+import type { PaperStyle } from "@/app/lib/paperStyle"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
@@ -79,6 +80,10 @@ export const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; 
   { value: "dotgrid", label: "Grid", cost: 1 },
   { value: "plain", label: "Plain", cost: 2 },
   { value: "steno", label: "Steno", pro: true },
+  { value: "dark-lined", label: "Dark Lined", cost: 3 },
+  { value: "dark-grid", label: "Dark Grid", cost: 3 },
+  { value: "dark-plain", label: "Dark Plain", cost: 3 },
+  { value: "dark-steno", label: "Dark Steno", pro: true },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -112,7 +117,7 @@ export interface PulpConfig {
   accentColor: string; theme: "light" | "dark"
   autoSave: boolean; spellCheck: boolean; autoCorrect: boolean; autoCapitalize: boolean
   editorFont: string; headingFont: string
-  lineSpacing: "compact" | "normal" | "relaxed"; paperStyle: "lined" | "dotgrid" | "plain" | "steno"
+  lineSpacing: "compact" | "normal" | "relaxed"; paperStyle: PaperStyle
   showBinding: boolean; reduceMotion: boolean; reduceVisuals: boolean; sidebarOnStart: boolean
   bgEffect: boolean; smearEffect: boolean; handwrittenEffect: boolean
   language: string; defaultSort: string; wordCountVisible: boolean
@@ -123,7 +128,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm }: {
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow }: {
   user: { email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -140,6 +145,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   onOpenShopItem?: (itemId: string) => void
   onSpendGems?: (amount: number) => void
   openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
+  onSyncNow?: () => Promise<{ pushed: number; pulled: number } | null>
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -722,6 +728,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
             {/* ── Data ── */}
             {activeTab === "data" && (<>
+               {user && onSyncNow && <SyncSection isDark={isDark} onSyncNow={onSyncNow} />}
                <SettingSection title="Local Storage" isDark={isDark}>
                  <StorageBar isDark={isDark} />
                </SettingSection>
@@ -1114,6 +1121,50 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         </div>
       )}
     </div>
+  )
+}
+
+function SyncSection({ isDark, onSyncNow }: { isDark: boolean; onSyncNow: () => Promise<{ pushed: number; pulled: number } | null> }) {
+  const [syncing, setSyncing] = useState(false)
+  const [result, setResult] = useState<{ pushed: number; pulled: number } | null>(null)
+
+  const handleSync = async () => {
+    setSyncing(true)
+    setResult(null)
+    try {
+      const r = await onSyncNow()
+      setResult(r)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  return (
+    <SettingSection title="Cloud Sync" isDark={isDark}>
+      <div className="flex flex-col gap-3 p-5">
+        <p className={`text-[11px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
+          Merge local and cloud notebooks. Local edits are preserved — missing notebooks are synced in both directions.
+        </p>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all flex items-center justify-center gap-2 ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 disabled:opacity-50" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm disabled:opacity-50"}`}
+        >
+          {syncing ? (
+            <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Syncing...</>
+          ) : (
+            <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg> Sync Now</>
+          )}
+        </button>
+        {result && (
+          <p className={`text-[11px] text-center ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+            {result.pushed === 0 && result.pulled === 0
+              ? "Everything is in sync."
+              : `Pushed ${result.pushed}, pulled ${result.pulled} notebook${result.pulled !== 1 ? "s" : ""}.`}
+          </p>
+        )}
+      </div>
+    </SettingSection>
   )
 }
 

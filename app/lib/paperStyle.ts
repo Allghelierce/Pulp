@@ -1,19 +1,34 @@
 type LineSpacing = "compact" | "normal" | "relaxed"
-type PaperStyle = "lined" | "dotgrid" | "plain" | "steno"
+export type PaperStyle = "lined" | "dotgrid" | "plain" | "steno" | "dark-lined" | "dark-grid" | "dark-plain" | "dark-steno"
+
+const DARK_STYLES: Record<string, { bg: string; line: string }> = {
+  "dark-lined":  { bg: "#1a1a1e", line: "rgba(255,255,255,0.08)" },
+  "dark-grid":   { bg: "#1a1a1e", line: "rgba(255,255,255,0.08)" },
+  "dark-plain":  { bg: "#1a1a1e", line: "" },
+  "dark-steno":  { bg: "#2e2a1a", line: "rgba(140,180,140,0.2)" },
+}
 
 export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isDark = false, preview = false) {
   const lh = ({ compact: 24, normal: 32, relaxed: 40 } as Record<string, number>)[lineSpacing] ?? 32
 
-  const backgroundColor = isDark
-    ? (paperStyle === "steno" ? "#2e2a1a" : "#1a1a1e")
-    : (paperStyle === "steno" ? "#F5EDB8" : preview ? "#ffffff" : "#FDFCF9")
+  const dark = DARK_STYLES[paperStyle]
+  if (dark) {
+    const dotR = preview ? "1px" : "1.5px"
+    const backgroundImage = paperStyle === "dark-plain" ? "none"
+      : paperStyle === "dark-grid" ? `radial-gradient(circle, ${dark.line} ${dotR}, transparent ${dotR})`
+        : `linear-gradient(transparent ${lh - 1}px, ${dark.line} ${lh}px)`
+    const backgroundSize = paperStyle === "dark-plain" ? "auto"
+      : paperStyle === "dark-grid" ? (preview ? `${lh * 0.75}px ${lh * 0.75}px` : "28px 28px")
+        : `100% ${lh}px`
+    return { backgroundColor: dark.bg, backgroundImage, backgroundSize }
+  }
 
-  const lineColor = isDark
-    ? (preview ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.08)")
-    : (preview ? "#e4e4e7" : "#C2D3E8")
-  const stenoLine = isDark
-    ? (preview ? "rgba(255,255,255,0.12)" : "rgba(140,180,140,0.2)")
-    : (preview ? "#94a3b8" : "#5f9ea066")
+  const backgroundColor =
+    paperStyle === "steno" ? "#F5EDB8" :
+            preview ? "#ffffff" : "#FDFCF9"
+
+  const lineColor = preview ? "#e4e4e7" : "#C2D3E8"
+  const stenoLine = preview ? "#94a3b8" : "#5f9ea066"
 
   const dotR = preview ? "1px" : "1.5px"
 
@@ -32,6 +47,7 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
 }
 
 export function getInkColor(paperStyle: PaperStyle, isDark: boolean): string {
+  if (paperStyle.startsWith("dark-")) return paperStyle === "dark-steno" ? "#e8dfc0" : "#e4e4e7"
   if (isDark) return paperStyle === "steno" ? "#e8dfc0" : "#e4e4e7"
   return paperStyle === "steno" ? "#2d2510" : "#1a1a1a"
 }

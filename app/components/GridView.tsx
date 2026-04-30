@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect } from "react"
 import type { NoteData } from "@/app/types"
-import { getPaperBg } from "@/app/lib/paperStyle"
+import { getPaperBg, type PaperStyle } from "@/app/lib/paperStyle"
 import { sanitizeHTML } from "@/lib/sanitize"
 
 interface GridViewProps {
@@ -9,7 +9,7 @@ interface GridViewProps {
   activeTabId: string | null
   carouselIdx: number
   lineSpacing: "compact" | "normal" | "relaxed"
-  paperStyle: "lined" | "dotgrid" | "plain" | "steno"
+  paperStyle: PaperStyle
   theme: "light" | "dark"
   editorFont: string
   accent: string

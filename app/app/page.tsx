@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
-import { getPaperBg, getInkColor } from "@/app/lib/paperStyle"
+import { getPaperBg, getInkColor, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -297,7 +297,7 @@ const BoxItem = memo(function BoxItem({
   onDragStart, onDragEnd
 }: {
   box: TextBoxType; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
-  paperStyle: "lined" | "dotgrid" | "plain" | "steno"
+  paperStyle: PaperStyle
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -766,7 +766,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 interface BoxTextareaProps {
   id: string; content: string; textAlign?: "left" | "center" | "right" | "justify"
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
-  isSticky?: boolean; theme: "light" | "dark"; paperStyle: "lined" | "dotgrid" | "plain" | "steno"; handwrittenEffect: boolean
+  isSticky?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -2277,21 +2277,23 @@ export default function NoteApp() {
     if (activeTabId) localStorage.setItem("pulp-active-tab", activeTabId)
   }, [activeTabId])
 
-  // Fetch notes from cloud — runs once on mount only
-  // Only hydrates from cloud if localStorage has no data (local always wins)
+  // Fetch notes from cloud and merge with local — cloud notes missing locally get added
   useEffect(() => {
     const fetchNotes = async () => {
       try {
         const { data: { user: u } } = await supabase.auth.getUser()
         if (!u) { setUser(null); return }
         setUser(u)
-        const hasLocal = !!localStorage.getItem("pulp-notes")
-        if (!hasLocal) {
-          const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
-          if (!error && data?.length) {
-            setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined })))
-            if (!activeTabId) setActiveTabId(data[0].id)
-          }
+        const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
+        if (!error && data?.length) {
+          const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+          setNotes(prev => {
+            const localIds = new Set(prev.map(n => n.id))
+            const missing = cloudNotes.filter(n => !localIds.has(n.id))
+            if (missing.length === 0) return prev
+            return [...prev, ...missing]
+          })
+          if (!activeTabId && !localStorage.getItem("pulp-active-tab")) setActiveTabId(data[0].id)
         }
       } catch (err) {
         console.error("[Pulp] Failed to fetch notes from Supabase, falling back to local:", err)
@@ -2302,7 +2304,7 @@ export default function NoteApp() {
     }
     fetchNotes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // [] — run once on mount only, not on every user change
+  }, [])
 
 
   const defaultBoxes = () => ({ 0: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] })
@@ -2680,6 +2682,24 @@ export default function NoteApp() {
               setShopInitialTab('gems')
               setShopScrollTo(itemId)
               setShopOpen(true)
+            }}
+            onSyncNow={async () => {
+              if (!user) return null
+              try {
+                const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id)
+                if (error || !data) return null
+                const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+                const localNotes = notesRef.current
+                const cloudIds = new Set(cloudNotes.map(n => n.id))
+                const localIds = new Set(localNotes.map(n => n.id))
+                const pulled = cloudNotes.filter(n => !localIds.has(n.id))
+                const toPush = localNotes.filter(n => !cloudIds.has(n.id))
+                if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
+                for (const note of toPush) {
+                  await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+                }
+                return { pushed: toPush.length, pulled: pulled.length }
+              } catch { return null }
             }}
           />
         )}
