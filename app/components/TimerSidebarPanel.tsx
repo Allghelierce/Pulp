@@ -442,31 +442,21 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <p className="text-[9px] uppercase tracking-[0.18em] mt-2" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5" style={{ color: mainColor }}>+{Math.max(1, Math.round(total / 300))} <PulpIcon size={9} /></span>}
                 </p>
-                {treeDead && deathReason && (
-                  <>
-                    <motion.p
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-[12px] mt-1.5 text-center"
-                      style={{ color: subtleColor, fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}
-                    >
-                      {deathReason}
-                    </motion.p>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="mt-1.5 flex justify-center"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <line x1="6" y1="7" x2="10" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                        <line x1="10" y1="7" x2="6" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                        <line x1="14" y1="7" x2="18" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                        <line x1="18" y1="7" x2="14" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M7 19 Q12 14 17 19" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </motion.div>
-                  </>
+                {treeDead && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-1.5 flex justify-center"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <line x1="6" y1="7" x2="10" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                      <line x1="10" y1="7" x2="6" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                      <line x1="14" y1="7" x2="18" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                      <line x1="18" y1="7" x2="14" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M7 19 Q12 14 17 19" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </motion.div>
                 )}
               </div>
 
@@ -592,6 +582,29 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       })()}
                     </AnimatePresence>
                   </div>
+
+              {/* Growth timeline */}
+              {(running || done) && !treeDead && (
+                <div className="relative mx-auto" style={{ width: '70%', height: 12, marginTop: 4 }}>
+                  <div style={{ position: 'absolute', top: 5, left: 0, right: 0, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+                  <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, progress * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
+                  {[0.1, 0.3, 0.6, 0.85].map(t => (
+                    <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: progress >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
+                  ))}
+                </div>
+              )}
+
+              {/* Death reason */}
+              {treeDead && deathReason && (
+                <motion.p
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[12px] mt-2 text-center"
+                  style={{ color: subtleColor, fontFamily: '"EB Garamond", Georgia, serif' }}
+                >
+                  {deathReason}
+                </motion.p>
+              )}
 
               {/* Change Plant and Notebook Selector */}
               {!running && !done && !treeDead && !seedTrayOpen && (

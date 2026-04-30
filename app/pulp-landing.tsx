@@ -64,7 +64,7 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
   )
 }
 
-const DEMO_TREES = ['tangerine', 'cherry', 'abyss'] as const
+const DEMO_TREES = ['tangerine', 'birch', 'abyss'] as const
 
 function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
   const total = 10
