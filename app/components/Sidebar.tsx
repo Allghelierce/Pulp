@@ -3,7 +3,8 @@ import { memo, useState, useRef, useCallback, useEffect } from "react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
-import { BackgroundPlus } from "@/components/ui/background-plus"
+import dynamic from "next/dynamic"
+const BackgroundPlus = dynamic(() => import("@/components/ui/background-plus").then(m => m.BackgroundPlus), { ssr: false })
 import type { Bookmark, User } from "@/app/types"
 
 // ─── Archive Panel ────────────────────────────────────────────────────────────

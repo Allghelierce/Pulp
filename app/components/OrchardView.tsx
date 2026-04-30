@@ -570,7 +570,7 @@ export const OrchardView = memo(function OrchardView({
       onClick={onClose}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
     >
-      <style>{`@keyframes tree-pop { from { transform: translate(-50%,-85%) scale(0); opacity:0 } }`}</style>
+      <style>{`@keyframes tree-pop { 0% { transform: translate(-50%,-85%) scale(0); opacity:0 } 60% { transform: translate(-50%,-85%) scale(1.06); opacity:1 } 100% { transform: translate(-50%,-85%) scale(1); opacity:1 } }`}</style>
       <div
         onClick={e => e.stopPropagation()}
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
@@ -715,7 +715,8 @@ export const OrchardView = memo(function OrchardView({
                             transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
-                            animation: `tree-pop 0.2s ease-out ${renderIdx * 15}ms both`,
+                            animation: `tree-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) ${renderIdx * 18}ms both`,
+                            willChange: 'transform, opacity',
                           }}
                         >
                           <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{ filter: dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined }}>

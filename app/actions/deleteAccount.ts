@@ -13,17 +13,21 @@ export async function verifyPasswordAndDelete(
   deleteType: "account" | "notes"
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!password || typeof password !== "string") {
+    if (!password || typeof password !== "string" || password.length < 1) {
       return { success: false, error: "Invalid password" }
     }
 
-    if (password.length < 1) {
-      return { success: false, error: "Invalid password" }
+    if (!userId || typeof userId !== "string") {
+      return { success: false, error: "Invalid user" }
     }
 
-    // Verify the password by attempting to sign in
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId)
+    if (userError || !user?.email) {
+      return { success: false, error: "User not found" }
+    }
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: (await supabase.auth.getUser()).data.user?.email || "",
+      email: user.email,
       password,
     })
 
@@ -32,14 +36,11 @@ export async function verifyPasswordAndDelete(
     }
 
     if (deleteType === "account") {
-      // Delete user account
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
       if (deleteError) {
         return { success: false, error: "Failed to delete account" }
       }
     } else {
-      // Delete user notes (would need to implement in your database)
-      // For now, this is a placeholder
       console.log("Delete notes for user:", userId)
     }
 

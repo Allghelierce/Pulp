@@ -7,11 +7,9 @@ interface RateLimitOptions {
 }
 
 export function getRateLimitKey(req: Request): string {
-  // Use IP address or session ID
-  const ip = req.headers.get("x-forwarded-for") ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  return ip
+  const forwarded = req.headers.get("x-forwarded-for")
+  const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || "unknown"
+  return ip.slice(0, 45)
 }
 
 let lastCleanup = Date.now()

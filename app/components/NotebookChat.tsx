@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect, useCallback, memo } from "react"
 import type { NoteData } from "@/app/types"
+import { extractTextFromHTML } from "@/lib/sanitize"
 
 interface Message {
   id: string
@@ -25,9 +26,7 @@ const QUIZ_PROMPTS = [
 
 function gatherNotebookText(note: NoteData): string {
   const pageTexts = note.pages.map((html, i) => {
-    const div = document.createElement("div")
-    div.innerHTML = html
-    const text = div.textContent?.trim() || ""
+    const text = extractTextFromHTML(html)
     return text ? `[Page ${i + 1}]\n${text}` : ""
   }).filter(Boolean)
 
@@ -35,9 +34,7 @@ function gatherNotebookText(note: NoteData): string {
   for (const [pageIdx, boxes] of Object.entries(note.boxes)) {
     for (const box of boxes) {
       if (!box.content.trim()) continue
-      const div = document.createElement("div")
-      div.innerHTML = box.content
-      const text = div.textContent?.trim()
+      const text = extractTextFromHTML(box.content)
       if (text) boxTexts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
     }
   }
@@ -72,10 +69,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       const parts: string[] = []
 
       for (let i = 0; i < note.pages.length; i++) {
-        const html = note.pages[i]
-        const div = document.createElement("div")
-        div.innerHTML = html
-        const text = div.textContent?.trim() || ""
+        const text = extractTextFromHTML(note.pages[i])
         if (text) parts.push(`[Page ${i + 1}]\n${text}`)
         advance()
         await new Promise(r => setTimeout(r, 60))
@@ -84,9 +78,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       for (const [pageIdx, boxes] of Object.entries(note.boxes)) {
         for (const box of boxes) {
           if (!box.content.trim()) continue
-          const div = document.createElement("div")
-          div.innerHTML = box.content
-          const text = div.textContent?.trim()
+          const text = extractTextFromHTML(box.content)
           if (text) parts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
         }
         advance()

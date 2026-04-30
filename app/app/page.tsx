@@ -10,30 +10,76 @@ import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
 import { useVersionHistory } from "@/app/hooks/useVersionHistory"
 import { AppDialog } from "@/app/components/AppDialog"
-import { SettingsView } from "@/app/components/settings/SettingsView"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
-import { GridView } from "@/app/components/GridView"
-import { SlashMenu } from "@/app/components/SlashMenu"
-import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { AiInlineMenu } from "@/app/components/AiInlineMenu"
-import { AiResultModal } from "@/app/components/AiResultModal"
 import dynamic from "next/dynamic"
 
-const ShelfView = dynamic(() => import("@/app/components/ShelfView").then(m => m.ShelfView), { ssr: false })
+function ViewLoader() {
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-5 h-5 border-2 border-[#d97706] border-t-transparent rounded-full animate-spin" />
+        <span style={{ fontFamily: "'EB Garamond', serif", fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
+      </div>
+    </div>
+  )
+}
+function PanelLoader() {
+  return (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="w-4 h-4 border-2 border-[#d97706] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+const ShelfView = dynamic(() => import("@/app/components/ShelfView").then(m => m.ShelfView), { ssr: false, loading: PanelLoader })
 const ImageUploadModal = dynamic(() => import("@/app/components/ImageUploadModal").then(m => m.ImageUploadModal), { ssr: false })
 const CoverModal = dynamic(() => import("@/app/components/CoverModal").then(m => m.CoverModal), { ssr: false })
-const FlashcardView = dynamic(() => import("@/app/components/FlashcardView").then(m => m.FlashcardView), { ssr: false })
+const FlashcardView = dynamic(() => import("@/app/components/FlashcardView").then(m => m.FlashcardView), { ssr: false, loading: PanelLoader })
 const AiCommandBar = dynamic(() => import("@/app/components/AiCommandBar").then(m => m.AiCommandBar), { ssr: false })
-import { NotebookChat } from "@/app/components/NotebookChat"
-import { VersionHistoryPanel } from "@/app/components/VersionHistoryPanel"
-const OrchardView = dynamic(() => import("@/app/components/OrchardView").then(m => m.OrchardView), { ssr: false })
-const BoutiqueView = dynamic(() => import("@/app/components/BoutiqueView").then(m => m.BoutiqueView), { ssr: false })
-const GemStoreModal = dynamic(() => import("@/app/components/GemStoreModal").then(m => m.GemStoreModal), { ssr: false })
-const StatsView = dynamic(() => import("@/app/components/StatsView").then(m => m.StatsView), { ssr: false })
-const FocusView = dynamic(() => import("@/app/components/FocusView").then(m => m.FocusView), { ssr: false })
-const LeaderboardView = dynamic(() => import("@/app/components/LeaderboardView").then(m => m.LeaderboardView), { ssr: false })
+const NotebookChat = dynamic(() => import("@/app/components/NotebookChat").then(m => m.NotebookChat), { ssr: false })
+const VersionHistoryPanel = dynamic(() => import("@/app/components/VersionHistoryPanel").then(m => m.VersionHistoryPanel), { ssr: false })
+const OrchardView = dynamic(() => import("@/app/components/OrchardView").then(m => m.OrchardView), { ssr: false, loading: ViewLoader })
+const BoutiqueView = dynamic(() => import("@/app/components/BoutiqueView").then(m => m.BoutiqueView), { ssr: false, loading: ViewLoader })
+const GemStoreModal = dynamic(() => import("@/app/components/GemStoreModal").then(m => m.GemStoreModal), { ssr: false, loading: ViewLoader })
+const StatsView = dynamic(() => import("@/app/components/StatsView").then(m => m.StatsView), { ssr: false, loading: ViewLoader })
+const FocusView = dynamic(() => import("@/app/components/FocusView").then(m => m.FocusView), { ssr: false, loading: ViewLoader })
+const LeaderboardView = dynamic(() => import("@/app/components/LeaderboardView").then(m => m.LeaderboardView), { ssr: false, loading: ViewLoader })
+const SettingsView = dynamic(() => import("@/app/components/settings/SettingsView").then(m => m.SettingsView), { ssr: false, loading: PanelLoader })
+const GridView = dynamic(() => import("@/app/components/GridView").then(m => m.GridView), { ssr: false, loading: PanelLoader })
+const SlashMenu = dynamic(() => import("@/app/components/SlashMenu").then(m => m.SlashMenu), { ssr: false })
+const VitalitySystem = dynamic(() => import("@/app/components/VitalitySystem").then(m => m.VitalitySystem), { ssr: false })
+const AiInlineMenu = dynamic(() => import("@/app/components/AiInlineMenu").then(m => m.AiInlineMenu), { ssr: false })
+const AiResultModal = dynamic(() => import("@/app/components/AiResultModal").then(m => m.AiResultModal), { ssr: false })
+// Prefetch all dynamic chunks after initial render
+function usePrefetchViews() {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import("@/app/components/ShelfView")
+      import("@/app/components/OrchardView")
+      import("@/app/components/BoutiqueView")
+      import("@/app/components/GemStoreModal")
+      import("@/app/components/StatsView")
+      import("@/app/components/FocusView")
+      import("@/app/components/LeaderboardView")
+      import("@/app/components/settings/SettingsView")
+      import("@/app/components/FlashcardView")
+      import("@/app/components/GridView")
+      import("@/app/components/ImageUploadModal")
+      import("@/app/components/CoverModal")
+      import("@/app/components/AiCommandBar")
+      import("@/app/components/NotebookChat")
+      import("@/app/components/VersionHistoryPanel")
+      import("@/app/components/SlashMenu")
+      import("@/app/components/VitalitySystem")
+      import("@/app/components/AiInlineMenu")
+      import("@/app/components/AiResultModal")
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [])
+}
+
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
@@ -976,6 +1022,7 @@ const BoxTextarea = memo(function BoxTextarea({
 })
 
 export default function NoteApp() {
+  usePrefetchViews()
   const [notes, setNotes] = useState<NoteData[]>([])
   const [folders, setFolders] = useState<FolderData[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
@@ -1112,23 +1159,8 @@ export default function NoteApp() {
       const data = JSON.parse(saved)
       setGems(data.gems ?? 3)
       setJuice(data.juice ?? data.sunshine ?? 50)
-      const allSeeds = ['cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','sakura','abyss']
-      setInventory(allSeeds)
-      if (data.grove) {
-        const testTypes = ['tangerine','cherry','lemon','apple','plum','blackberry','peach','pineapple','passionfruit','birch','bamboo','pine','oak','cypress','sakura','abyss']
-        const now = Date.now()
-        const savedNotes = localStorage.getItem('pulp-notes')
-        const nbIds = savedNotes ? JSON.parse(savedNotes).filter((n: any) => !n.archived && !n.deletedAt).map((n: any) => n.id) : []
-        const testGrove = testTypes.map((type, i) => ({
-          id: 9000 + i,
-          type,
-          stage: 4,
-          progress: 100,
-          plantedAt: now - ((150 - i) * 2 * 3600000),
-          notebookId: nbIds.length > 0 ? nbIds[i % nbIds.length] : undefined,
-        }))
-        setGrove([...data.grove, ...testGrove])
-      }
+      if (data.inventory) setInventory(data.inventory)
+      if (data.grove) setGrove(data.grove)
       if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
       if (data.achievements) {
@@ -2095,24 +2127,41 @@ export default function NoteApp() {
     return () => window.removeEventListener("click", handler)
   }, [editor])
 
-  // Load settings from cloud (only fills in missing keys — localStorage always wins)
+  // Load settings + folders + grove from cloud (only fills in missing keys — localStorage always wins)
   useEffect(() => {
     if (!user) return
-    const hasLocal = !!localStorage.getItem("pulp-settings")
+    const hasLocalSettings = !!localStorage.getItem("pulp-settings")
+    const hasLocalFolders = !!localStorage.getItem("pulp-folders")
+    const hasLocalGrove = !!localStorage.getItem("pulp-grove")
     supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
       if (!data?.settings) return
       const s = data.settings
-      if (!hasLocal) updateSettings(s)
+      if (!hasLocalSettings) updateSettings(s)
       if (s.trashNotes) setTrashNotes(s.trashNotes)
       if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
+      if (!hasLocalFolders && s.folders) setFolders(s.folders)
+      if (!hasLocalGrove && s.grove) {
+        setGems(s.grove.gems ?? 3)
+        setJuice(s.grove.juice ?? 50)
+        if (s.grove.inventory) setInventory(s.grove.inventory)
+        if (s.grove.grove) setGrove(s.grove.grove)
+        if (s.grove.achievements) setAchievements(s.grove.achievements)
+        if (s.grove.unlockedCosmetics) setUnlockedCosmetics(s.grove.unlockedCosmetics)
+      }
     })
   }, [user])
 
-  // Save settings to localStorage (immediate) and cloud (debounced)
+  // Save settings to localStorage (debounced)
+  const settingsSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
-    const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
-    localStorage.setItem("pulp-settings", JSON.stringify(settings))
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation])
+    clearTimeout(settingsSaveTimer.current)
+    settingsSaveTimer.current = setTimeout(() => {
+      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
+      localStorage.setItem("pulp-settings", JSON.stringify(settings))
+      if (user) supabase.from("user_settings").upsert({ user_id: user.id, settings: { ...settings, folders } })
+    }, 1000)
+    return () => clearTimeout(settingsSaveTimer.current)
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, folders, user])
 
   useEffect(() => {
     localStorage.setItem("pulp-sidebar-width", String(sidebarWidth))
@@ -2122,20 +2171,36 @@ export default function NoteApp() {
     window.postMessage({ type: "pulp-focus-config", blockedSites, focusMode }, "*")
   }, [blockedSites, focusMode])
 
-  // Save Grove & Inventory to localStorage
+  // Save Grove & Inventory to localStorage + cloud (debounced)
+  const groveSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
-    localStorage.setItem("pulp-grove", JSON.stringify({ gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }))
-  }, [gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics])
+    clearTimeout(groveSaveTimer.current)
+    groveSaveTimer.current = setTimeout(() => {
+      const groveData = { gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
+      localStorage.setItem("pulp-grove", JSON.stringify(groveData))
+      if (user) {
+        supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
+          const existing = data?.settings || {}
+          supabase.from("user_settings").upsert({ user_id: user.id, settings: { ...existing, grove: groveData } })
+        })
+      }
+    }, 1000)
+    return () => clearTimeout(groveSaveTimer.current)
+  }, [gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
 
-  // Cloud autosave
+  // Cloud autosave (debounced off notes array, not activeNote object ref)
+  const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
-    if (!autoSave || isLoading || !activeNote || !user) return
-    const timer = setTimeout(async () => {
-      const { error } = await supabase.from("notes").upsert({ id: activeNote.id, subject: activeNote.subject, pages: activeNote.pages, boxes: activeNote.boxes, folder_id: activeNote.folderId, icon: activeNote.icon ?? null, user_id: user.id })
+    if (!autoSave || isLoading || !user || !activeTabId) return
+    clearTimeout(cloudSaveTimer.current)
+    cloudSaveTimer.current = setTimeout(async () => {
+      const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
+      if (!note) return
+      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [activeNote, user])
+    }, 2000)
+    return () => clearTimeout(cloudSaveTimer.current)
+  }, [notes, user, autoSave, isLoading, activeTabId])
 
   // Sync editor DOM with active note/page
   const lastSyncKey = useRef<string>("")
@@ -2193,12 +2258,17 @@ export default function NoteApp() {
     if (savedFolders) setFolders(JSON.parse(savedFolders))
   }, [])
 
-  // Save to localStorage whenever notes, folders, or active tab changes
+  // Save to localStorage whenever notes, folders, or active tab changes (debounced)
   const hasMounted = useRef(false)
+  const notesSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     if (!hasMounted.current) { hasMounted.current = true; return }
-    localStorage.setItem("pulp-notes", JSON.stringify(notes))
-    localStorage.setItem("pulp-folders", JSON.stringify(folders))
+    clearTimeout(notesSaveTimer.current)
+    notesSaveTimer.current = setTimeout(() => {
+      localStorage.setItem("pulp-notes", JSON.stringify(notes))
+      localStorage.setItem("pulp-folders", JSON.stringify(folders))
+    }, 500)
+    return () => clearTimeout(notesSaveTimer.current)
   }, [notes, folders])
 
   useEffect(() => {
@@ -2217,7 +2287,7 @@ export default function NoteApp() {
         if (!hasLocal) {
           const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
           if (!error && data?.length) {
-            setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined })))
+            setNotes(data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined })))
             if (!activeTabId) setActiveTabId(data[0].id)
           }
         }
@@ -2240,19 +2310,23 @@ export default function NoteApp() {
     openPrompt("Name your notebook", "New Notebook", "Notebook name…", "Create", name => {
       const finalName = name.trim() || "New Notebook"
       const id = uid()
-      const newNote = { id, subject: finalName, pages: [""], folderId, boxes: defaultBoxes() }
+      const boxes = defaultBoxes()
+      const newNote = { id, subject: finalName, pages: [""], folderId, boxes }
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
+      if (user) supabase.from("notes").insert({ id, subject: finalName, pages: [""], boxes, folder_id: folderId, user_id: user.id })
     }, "📓")
 
   const addFirstNotebook = () => {
     const id = uid()
-    const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes: defaultBoxes() }
+    const boxes = defaultBoxes()
+    const newNote = { id, subject: "My First Notebook", pages: [""], folderId: null, boxes }
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
     setSidebarOpen(true)
     checkAchievement('first_note')
+    if (user) supabase.from("notes").insert({ id, subject: "My First Notebook", pages: [""], boxes, folder_id: null, user_id: user.id })
   }
 
   const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
@@ -2284,6 +2358,7 @@ export default function NoteApp() {
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
+      if (user) supabase.from("notes").insert({ id, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: folderId, note_type: noteType ?? null, flashcards: newNote.flashcards ?? null, user_id: user.id })
     }
 
     openPrompt(promptTitle, title, placeholder, "Create", name => {
@@ -2397,7 +2472,8 @@ export default function NoteApp() {
 
   const setNoteParent = useCallback((id: string, parentId: string | undefined) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, parentId } : n))
-  }, [])
+    if (user) supabase.from("notes").update({ parent_id: parentId ?? null }).eq("id", id)
+  }, [user])
 
   const changeNoteIcon = useCallback((id: string, icon: string) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, icon } : n))
@@ -3097,7 +3173,7 @@ export default function NoteApp() {
                                 backgroundColor: "rgba(217, 119, 6, 0.12)",
                                 border: "1.5px solid rgba(217, 119, 6, 0.45)",
                                 boxShadow: "0 0 25px -5px rgba(217, 119, 6, 0.3)",
-                                borderRadius: "4px",
+                                borderRadius: 0,
                                 pointerEvents: "none",
                                 zIndex: 10000,
                               }}

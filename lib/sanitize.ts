@@ -1,41 +1,17 @@
-/**
- * Sanitizes HTML to prevent XSS attacks
- * Removes script tags, event handlers, and dangerous attributes
- */
+import DOMPurify from "dompurify"
+
 export function sanitizeHTML(html: string): string {
-  if (!html || typeof html !== "string") {
-    return ""
-  }
-
-  // Create a temporary DOM element
-  const temp = document.createElement("div")
-  temp.innerHTML = html
-
-  // Remove script and style tags
-  const scripts = temp.querySelectorAll("script, style")
-  scripts.forEach(el => el.remove())
-
-  // Remove event handlers and dangerous attributes
-  const allElements = temp.querySelectorAll("*")
-  allElements.forEach(el => {
-    Array.from(el.attributes).forEach(attr => {
-      if (attr.name.toLowerCase().startsWith("on")) {
-        el.removeAttribute(attr.name)
-      }
-      const val = attr.value.replace(/[\s\u0000-\u001f]/g, '').toLowerCase()
-      if (val.includes("javascript:") || val.includes("vbscript:") || val.includes("data:text/html")) {
-        el.removeAttribute(attr.name)
-      }
-    })
+  if (!html || typeof html !== "string") return ""
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["b", "i", "em", "strong", "u", "s", "p", "br", "span", "div", "ul", "ol", "li", "a", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "code", "img", "table", "thead", "tbody", "tr", "td", "th", "sub", "sup", "hr"],
+    ALLOWED_ATTR: ["href", "src", "alt", "class", "style", "target", "rel", "colspan", "rowspan"],
+    ALLOW_DATA_ATTR: false,
+    ADD_ATTR: ["target"],
+    FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input", "textarea", "select", "button"],
+    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
   })
-
-  return temp.innerHTML
 }
 
-/**
- * Escapes HTML special characters to prevent XSS
- * Use this when you need to display user content as text
- */
 export function escapeHTML(text: string): string {
   const map: Record<string, string> = {
     "&": "&amp;",
@@ -45,4 +21,12 @@ export function escapeHTML(text: string): string {
     "'": "&#039;",
   }
   return text.replace(/[&<>"']/g, (char) => map[char] || char)
+}
+
+export function extractTextFromHTML(html: string): string {
+  if (!html || typeof html !== "string") return ""
+  const clean = DOMPurify.sanitize(html, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+  const div = document.createElement("div")
+  div.innerHTML = clean
+  return div.textContent?.trim() || ""
 }
