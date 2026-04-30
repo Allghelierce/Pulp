@@ -1031,7 +1031,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
       {/* Delete confirmation popup */}
       {deleteConfirmType && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl" onMouseDown={e => e.stopPropagation()}>
           <div className={`w-[340px] ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"} border rounded-2xl shadow-2xl p-7 flex flex-col gap-5`}>
             <div className="flex flex-col gap-2">
               <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-1 shrink-0">
