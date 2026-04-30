@@ -210,7 +210,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Sidebar ── */}
         <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Settings</p>
+            <p className={`text-[11px] font-bold tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'Georgia, serif' }}>Settings</p>
           </div>
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
@@ -249,7 +249,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
+            <h2 className="text-[15px] font-bold tracking-widest" style={{ fontFamily: 'Georgia, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
             <p className="text-[11px] mt-0.5" style={{ fontFamily: 'Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
@@ -1152,33 +1152,40 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 onClick={async () => {
                   if (!deleteUsername || !deletePassword) return;
 
-                  const user = (await supabase.auth.getUser()).data.user
-                  if (!user) {
-                    alert("Authentication error. Please try again.");
-                    return;
-                  }
+                  try {
+                    const user = (await supabase.auth.getUser()).data.user
+                    if (!user) {
+                      alert("Authentication error. Please try again.");
+                      return;
+                    }
 
-                  // Verify password server-side
-                  const result = await verifyPasswordAndDelete(
-                    user.id,
-                    deletePassword,
-                    deleteConfirmType as "account" | "notes"
-                  )
+                    const result = await verifyPasswordAndDelete(
+                      user.id,
+                      deletePassword,
+                      deleteConfirmType as "account" | "notes"
+                    )
 
-                  if (!result.success) {
-                    alert(result.error || "Verification failed");
+                    if (!result.success) {
+                      alert(result.error || "Verification failed");
+                      setDeletePassword("");
+                      return;
+                    }
+
+                    if (deleteConfirmType === "notes") {
+                      localStorage.removeItem("pulp-notes");
+                      localStorage.removeItem("pulp-folders");
+                      localStorage.removeItem("pulp-active-tab");
+                      localStorage.removeItem("pulp-pending-deletes");
+                    }
+
+                    setDeleteConfirmType(null);
+                    setDeleteUsername("");
                     setDeletePassword("");
-                    return;
+                    window.location.reload();
+                  } catch (err) {
+                    console.error("Delete failed:", err);
+                    alert("Something went wrong. Check console.");
                   }
-
-                  if (deleteConfirmType === "notes") {
-                    localStorage.clear();
-                  }
-
-                  setDeleteConfirmType(null);
-                  setDeleteUsername("");
-                  setDeletePassword("");
-                  window.location.reload();
                 }}
                 className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
               >
@@ -1318,6 +1325,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
       if (e.altKey) parts.push("alt")
       if (e.shiftKey) parts.push("shift")
 
+      if (!e.key) return
       const isModifierOnly = ["Control", "Meta", "Alt", "Shift"].includes(e.key)
 
       if (!isModifierOnly) {

@@ -130,7 +130,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
                 <div className="absolute top-4 right-5 z-[50] pointer-events-none">
-                  <span className="text-[18px] font-bold text-black transition-colors uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>
+                  <span className="text-[18px] font-bold text-black transition-colors tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>
                     0{idx + 1}
                   </span>
                 </div>

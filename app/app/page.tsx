@@ -84,6 +84,7 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
+import { Boxes } from "@/components/ui/background-boxes"
 
 function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onNavigate: (idx: number) => void
@@ -1764,7 +1765,7 @@ export default function NoteApp() {
     if (isMeta) modParts.push("ctrl")
     if (isAlt) modParts.push("alt")
     if (isShift) modParts.push("shift")
-    if (!["Meta", "Control", "Alt", "Shift", "Escape"].includes(e.key)) {
+    if (e.key && !["Meta", "Control", "Alt", "Shift", "Escape"].includes(e.key)) {
       modParts.push(e.key.toLowerCase())
     }
     const eventKeyStr = modParts.join("+")
@@ -2008,7 +2009,7 @@ export default function NoteApp() {
       if (e.ctrlKey || e.metaKey) parts.push("ctrl")
       if (e.altKey) parts.push("alt")
       if (e.shiftKey) parts.push("shift")
-      if (!["Control", "Meta", "Alt", "Shift"].includes(e.key)) parts.push(e.key.toLowerCase())
+      if (e.key && !["Control", "Meta", "Alt", "Shift"].includes(e.key)) parts.push(e.key.toLowerCase())
       return parts.join("+")
     }
     const handleGlobalKey = (e: KeyboardEvent) => {
@@ -2095,8 +2096,18 @@ export default function NoteApp() {
 
   // Auth
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session: any) => setUser(session?.user ?? null))
+    const flushPendingDeletes = async (uid: string) => {
+      const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
+      if (!pending.length) return
+      for (const id of pending) await supabase.from("notes").delete().eq("id", id).eq("user_id", uid)
+      localStorage.removeItem("pulp-pending-deletes")
+    }
+    supabase.auth.getUser().then(({ data: { user } }) => { setUser(user); if (user) flushPendingDeletes(user.id) })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session: any) => {
+      const u = session?.user ?? null
+      setUser(u)
+      if (u) flushPendingDeletes(u.id)
+    })
     return () => subscription.unsubscribe()
   }, [])
 
@@ -2495,14 +2506,22 @@ export default function NoteApp() {
     setNotes(ns => ns.filter(n => n.id !== id))
     setTrashNotes(ts => [...ts, { ...note, deletedAt: new Date().toISOString() }])
     if (activeTabId === id) setActiveTabId(null)
-    if (user) supabase.from("notes").delete().eq("id", id)
+    if (user) {
+      supabase.from("notes").delete().eq("id", id)
+    } else {
+      const pending = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
+      pending.push(id)
+      localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending))
+    }
   }
 
   const restoreNote = (id: string) => {
     const note = trashNotes.find(n => n.id === id)
     if (!note) return
     setTrashNotes(ts => ts.filter(n => n.id !== id))
-    setNotes(ns => [...ns, { ...note, deletedAt: undefined }])
+    setNotes(ns => ns.some(n => n.id === id) ? ns : [...ns, { ...note, deletedAt: undefined }])
+    const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
+    localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
   }
 
   const permanentlyDeleteNote = (id: string) => {
@@ -2960,8 +2979,10 @@ export default function NoteApp() {
 
           <div className="flex-1 flex overflow-hidden relative">
             {notes.filter(n => !n.archived).length === 0 ? (
-              <main className="flex-1 flex items-center justify-center px-4 overflow-hidden" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6" }}>
-                <div className="text-center max-w-md overflow-hidden">
+              <main className="flex-1 flex items-center justify-center px-4 overflow-hidden relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA" }}>
+                <div className="absolute inset-0 w-full h-full z-[1] pointer-events-none" style={{ maskImage: "radial-gradient(transparent, black)", WebkitMaskImage: "radial-gradient(transparent, black)", backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA" }} />
+                <Boxes />
+                <div className="text-center max-w-md overflow-hidden relative z-10">
                   {/* Heading */}
                   <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"Georgia", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
@@ -3088,7 +3109,7 @@ export default function NoteApp() {
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                               </div>
                               <div>
-                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Vault Locked</h3>
+                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>Vault Locked</h3>
                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
                               </div>
                               <button

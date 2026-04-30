@@ -203,7 +203,7 @@ export const StatsView = memo(function StatsView({
                 <LevelIcon level={lvl.level} size={18} />
               </div>
               <div>
-                <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>{lvl.name}</h2>
+                <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: 'Georgia, serif' }}>{lvl.name}</h2>
                 <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: 'Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>

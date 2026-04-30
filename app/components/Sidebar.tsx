@@ -277,9 +277,10 @@ export const Sidebar = memo(function Sidebar({
     setHoldProgress(0)
   }, [])
 
-  const topLevelNotes = notes.filter(n => n.folderId === null && !n.parentId && !n.archived)
-  const notesInFolder = (fid: number) => notes.filter(n => n.folderId === fid && !n.parentId && !n.archived)
-  const childNotes = (parentId: string) => notes.filter(n => n.parentId === parentId && !n.archived)
+  const uniqueNotes = notes.filter((n, i, a) => a.findIndex(x => x.id === n.id) === i)
+  const topLevelNotes = uniqueNotes.filter(n => n.folderId === null && !n.parentId && !n.archived)
+  const notesInFolder = (fid: number) => uniqueNotes.filter(n => n.folderId === fid && !n.parentId && !n.archived)
+  const childNotes = (parentId: string) => uniqueNotes.filter(n => n.parentId === parentId && !n.archived)
 
   const isDescendant = (ancestorId: string, candidateId: string): boolean => {
     const children = notes.filter(n => n.parentId === ancestorId)
@@ -711,7 +712,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Binder</p>
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>Binder</p>
                 {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
@@ -787,7 +788,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Bookmarks</p>
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>Bookmarks</p>
             </div>
             {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
@@ -857,7 +858,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Backlinks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Backlinks</p>
+              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>Backlinks</p>
             </div>
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
@@ -889,7 +890,7 @@ export const Sidebar = memo(function Sidebar({
                 title="Focus timer"
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors group w-full text-left active:scale-95"
                 style={{
-                  background: timerOpen ? "rgba(217,119,6,0.15)" : "rgba(255,255,255,0.04)",
+                  background: timerOpen ? "rgba(217,119,6,0.15)" : "#1a1517",
                   boxShadow: timerOpen ? "0 0 12px rgba(217,119,6,0.25)" : "0 0 0 1px rgba(255,255,255,0.08)",
                 }}
               >

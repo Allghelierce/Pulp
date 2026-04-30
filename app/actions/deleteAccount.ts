@@ -42,12 +42,16 @@ export async function verifyPasswordAndDelete(
     }
 
     if (deleteType === "account") {
+      await supabase.from("notes").delete().eq("user_id", userId)
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
       if (deleteError) {
         return { success: false, error: "Failed to delete account" }
       }
     } else {
-      console.log("Delete notes for user:", userId)
+      const { error: deleteError } = await supabase.from("notes").delete().eq("user_id", userId)
+      if (deleteError) {
+        return { success: false, error: "Failed to delete notes" }
+      }
     }
 
     return { success: true }

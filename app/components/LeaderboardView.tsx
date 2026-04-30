@@ -115,7 +115,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
         {/* Header */}
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div>
-            <h2 className="text-[15px] font-bold uppercase tracking-widest" style={{ color: textPrimary, fontFamily: '"Didot", "Bodoni MT", "Noto Serif Display", "URW Palladio L", P052, Sylfaen, serif' }}>Leaderboard</h2>
+            <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: 'Georgia, serif' }}>Leaderboard</h2>
             <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>Top writers this season</p>
           </div>
           <div className="flex items-center gap-2">

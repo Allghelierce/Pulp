@@ -680,13 +680,18 @@ export const OrchardView = memo(function OrchardView({
               >
                 {filteredTrees.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
-                    <span className="text-[32px]">🌱</span>
-                    <p className="text-[12px]" style={{ color: textMuted }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
+                      <path d="M7 20h10" />
+                      <path d="M12 20v-8" />
+                      <path d="M12 12C12 8 8 6 4 7c0 4 2.5 7 8 5" />
+                      <path d="M12 12c0-4 4-6 8-5 0 4-2.5 7-8 5" />
+                    </svg>
+                    <p className="text-[12px]" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
                       {selectedNotebook === null ? 'Your orchard is empty.' :
                        selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                        'No trees grown for this notebook yet.'}
                     </p>
-                    <p className="text-[10px]" style={{ color: textMuted }}>
+                    <p className="text-[10px]" style={{ color: isDark ? '#6a6760' : '#9a9690' }}>
                       Complete focus sessions with a seed selected to grow your collection.
                     </p>
                   </div>
