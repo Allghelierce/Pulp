@@ -207,7 +207,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const seconds = remainingTime % 60
   const progress = total > 0 ? elapsed / total : 0
 
-  const mainColor = "#ea580c"
+  const mainColor = "#d97706"
   const isDark = theme === "dark"
   const bgColor = isDark ? "rgba(0,0,0,0.72)" : "rgba(10,10,12,0.68)"
   const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"
@@ -347,9 +347,27 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           >
             <div className="flex items-center gap-2">
               {showWaterWidget && (
-                <span className="text-[9px] font-bold tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1", fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
-                </span>
+                <div
+                  className="flex items-center gap-1.5"
+                  title={waterUrgent ? "Water the tree soon!" : "Time until next watering"}
+                >
+                  <div className="relative w-3.5 h-3.5">
+                    <svg viewBox="0 0 24 24" className="w-full h-full -rotate-90">
+                      <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+                      <circle
+                        cx="12" cy="12" r="10" fill="none"
+                        stroke={waterUrgent ? "#ef4444" : "#60a5fa"}
+                        strokeWidth="3" strokeLinecap="round"
+                        pathLength="1"
+                        strokeDasharray="1"
+                        strokeDashoffset={1 - Math.min(1, waterMsLeft / (8 * 60 * 1000))}
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-[9px] font-bold tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1" }}>
+                    {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
+                  </span>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-0.5">
@@ -407,7 +425,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     fontSize: 44,
                     lineHeight: 1,
                     ...(running && !done ? {
-                      backgroundImage: 'linear-gradient(90deg, #ea580c 0%, #ea580c 38%, #f59e0b 50%, #ea580c 62%, #ea580c 100%)',
+                      backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 38%, #fbbf24 50%, #d97706 62%, #d97706 100%)',
                       backgroundSize: '300% 100%',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
@@ -425,14 +443,30 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5" style={{ color: mainColor }}>+{Math.max(1, Math.round(total / 300))} <PulpIcon size={9} /></span>}
                 </p>
                 {treeDead && deathReason && (
-                  <motion.p
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-[10px] mt-1 text-center"
-                    style={{ color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', opacity: 0.8 }}
-                  >
-                    {deathReason}
-                  </motion.p>
+                  <>
+                    <motion.p
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[12px] mt-1.5 text-center"
+                      style={{ color: subtleColor, fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic' }}
+                    >
+                      {deathReason}
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="mt-1.5 flex justify-center"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <line x1="6" y1="7" x2="10" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                        <line x1="10" y1="7" x2="6" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                        <line x1="14" y1="7" x2="18" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                        <line x1="18" y1="7" x2="14" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                        <path d="M7 19 Q12 14 17 19" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </motion.div>
+                  </>
                 )}
               </div>
 
@@ -450,8 +484,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                           transition={{ duration: 1.5, ease: "easeOut" }}
                           className="absolute inset-0 flex items-center justify-center pointer-events-none"
                         >
-                          <span style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-                            −50% 🧃
+                          <span className="inline-flex items-center gap-1" style={{ fontSize: 14, fontWeight: 700, color: '#ef4444', fontFamily: '"EB Garamond", Georgia, serif', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                            −50% <PulpIcon size={14} />
                           </span>
                         </motion.div>
                       )}
@@ -559,59 +593,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </AnimatePresence>
                   </div>
 
-              {/* Water bar under plot */}
-              {showWaterWidget && !treeDead && (
-                <div className="w-full mt-2 px-1">
-                  <button
-                    onClick={() => { onWater(); setJustWatered(true); setTimeout(() => setJustWatered(false), 1200) }}
-                    className="w-full relative"
-                    title="Water the tree"
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {/* Track */}
-                    <div className="w-full h-[3px] rounded-full" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(100, (waterMsLeft / (8 * 60 * 1000)) * 100)}%`,
-                          backgroundColor: waterUrgent ? '#ef4444' : '#60a5fa',
-                          transition: 'width 1s linear, background-color 0.3s',
-                        }}
-                      />
-                    </div>
-                    {/* Watering can animation */}
-                    <AnimatePresence>
-                      {justWatered && (
-                        <motion.div
-                          initial={{ opacity: 1, y: 0 }}
-                          animate={{ opacity: 0, y: -20 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 1 }}
-                          className="absolute -top-5 left-1/2 -translate-x-1/2 pointer-events-none"
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 11v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6" />
-                            <path d="M3 11h12" />
-                            <path d="M15 13l5-3v8l-5-3" />
-                            <path d="M7 8c0-2 2-3 2-3" />
-                          </svg>
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: [0, 1, 1, 0] }}
-                            transition={{ duration: 0.8, times: [0, 0.1, 0.6, 1] }}
-                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5"
-                          >
-                            <span style={{ fontSize: 6, color: '#60a5fa' }}>💧</span>
-                            <span style={{ fontSize: 5, color: '#60a5fa' }}>💧</span>
-                            <span style={{ fontSize: 6, color: '#60a5fa' }}>💧</span>
-                          </motion.div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                </div>
-              )}
-
               {/* Change Plant and Notebook Selector */}
               {!running && !done && !treeDead && !seedTrayOpen && (
                 <div className="flex flex-col items-center gap-3 mt-3 relative z-20">
@@ -631,7 +612,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             {/* Bottom controls — pushed down */}
             <div className="flex flex-col items-center mt-auto">
-              {/* Watering can — visible during a session that requires it */}
+              {/* Watering can */}
               {showWaterWidget && !treeDead && (
                 <button
                   onClick={onWater}

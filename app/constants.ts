@@ -33,7 +33,7 @@ export const TREE_TYPES: Record<string, any> = {
   redwood:       { name: 'Redwood',        color: '#2d6b3f', bg: 'rgba(45,107,63,0.1)',    cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'redwood',      category: 'paper', juiceYield: 0,  paperYield: 20, sceneBg: 'linear-gradient(180deg, #1c1810 0%, #242014 50%, #2c2618 100%)' },
 
   // LEGENDARY — 100 juice each
-  sakura:        { name: 'Sakura',         color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'sakura',       category: 'paper', juiceYield: 0,  paperYield: 30, sceneBg: 'linear-gradient(180deg, #1c1420 0%, #221a26 50%, #28202c 100%)' },
+  sakura:        { name: 'Cherry Blossom',         color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'sakura',       category: 'paper', juiceYield: 0,  paperYield: 30, sceneBg: 'linear-gradient(180deg, #1c1420 0%, #221a26 50%, #28202c 100%)' },
 
   // ═══ GEM TREES — produce gems, extremely rare ═══
 
