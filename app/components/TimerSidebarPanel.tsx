@@ -215,6 +215,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const dimColor = "#a1a1aa"
   const subtleColor = "#71717a"
   const serifFont = 'Georgia, serif'
+  const monoFont = '"SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace'
 
   const handleMainButton = () => {
     if (treeDead) onDismissDead()
@@ -283,9 +284,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           <button
             onClick={onWater}
             title="Water"
-            className="flex items-center justify-center rounded-md transition-all"
+            className="flex items-center gap-1.5 rounded-md transition-all"
             style={{
-              width: 24, height: 24,
+              height: 24,
+              padding: "0 6px",
               backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.12)",
               color: waterUrgent ? "#fca5a5" : "#93c5fd",
               animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
@@ -294,6 +296,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2c0 0-8 7.5-8 12a8 8 0 0 0 16 0c0-4.5-8-12-8-12z" />
             </svg>
+            <span className="tabular-nums" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.02em' }}>
+              {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
+            </span>
           </button>
         )}
 

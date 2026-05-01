@@ -301,64 +301,69 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   />
                 )}
                 {user && (
-                  <div className="px-5 pb-4">
-                    <button
-                      onClick={() => { setPwOpen(!pwOpen); setPwMsg(null) }}
-                      className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}
-                    >
-                      Change Password
-                    </button>
-                    {pwOpen && (
-                      <div className={`mt-3 flex flex-col gap-2 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
-                        <input
-                          type="password"
-                          value={pwCurrent}
-                          onChange={e => setPwCurrent(e.target.value)}
-                          placeholder="Current password"
-                          autoComplete="current-password"
-                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
-                        />
-                        <input
-                          type="password"
-                          value={pwNew}
-                          onChange={e => setPwNew(e.target.value)}
-                          placeholder="New password (min 6 chars)"
-                          autoComplete="new-password"
-                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
-                        />
-                        <input
-                          type="password"
-                          value={pwConfirm}
-                          onChange={e => setPwConfirm(e.target.value)}
-                          placeholder="Confirm new password"
-                          autoComplete="new-password"
-                          className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
-                        />
-                        {pwMsg && (
-                          <p className={`text-[11px] font-medium ${pwMsg.ok ? "text-emerald-500" : "text-red-500"}`}>{pwMsg.text}</p>
-                        )}
-                        <button
-                          disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
-                          onClick={async () => {
-                            if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: "Passwords don't match" }); return }
-                            if (pwNew.length < 6) { setPwMsg({ ok: false, text: "Min 6 characters" }); return }
-                            setPwLoading(true); setPwMsg(null)
-                            const res = await changePassword(user.id, pwCurrent, pwNew)
-                            setPwLoading(false)
-                            if (res.success) {
-                              setPwMsg({ ok: true, text: "Password updated" })
-                              setPwCurrent(""); setPwNew(""); setPwConfirm("")
-                              setTimeout(() => setPwOpen(false), 1500)
-                            } else {
-                              setPwMsg({ ok: false, text: res.error || "Failed" })
-                            }
-                          }}
-                          className={`text-[11.5px] font-semibold px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
-                        >
-                          {pwLoading ? "Updating..." : "Update Password"}
-                        </button>
-                      </div>
+                  <SettingRow
+                    title="Password"
+                    description="Update your account password"
+                    isDark={isDark}
+                    control={
+                      <button
+                        onClick={() => { setPwOpen(!pwOpen); setPwMsg(null) }}
+                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}
+                      >
+                        {pwOpen ? "Cancel" : "Change"}
+                      </button>
+                    }
+                  />
+                )}
+                {user && pwOpen && (
+                  <div className={`mx-5 mb-4 flex flex-col gap-2 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
+                    <input
+                      type="password"
+                      value={pwCurrent}
+                      onChange={e => setPwCurrent(e.target.value)}
+                      placeholder="Current password"
+                      autoComplete="current-password"
+                      className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                    />
+                    <input
+                      type="password"
+                      value={pwNew}
+                      onChange={e => setPwNew(e.target.value)}
+                      placeholder="New password (min 6 chars)"
+                      autoComplete="new-password"
+                      className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                    />
+                    <input
+                      type="password"
+                      value={pwConfirm}
+                      onChange={e => setPwConfirm(e.target.value)}
+                      placeholder="Confirm new password"
+                      autoComplete="new-password"
+                      className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                    />
+                    {pwMsg && (
+                      <p className={`text-[11px] font-medium ${pwMsg.ok ? "text-emerald-500" : "text-red-500"}`}>{pwMsg.text}</p>
                     )}
+                    <button
+                      disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
+                      onClick={async () => {
+                        if (pwNew !== pwConfirm) { setPwMsg({ ok: false, text: "Passwords don't match" }); return }
+                        if (pwNew.length < 6) { setPwMsg({ ok: false, text: "Min 6 characters" }); return }
+                        setPwLoading(true); setPwMsg(null)
+                        const res = await changePassword(user.id, pwCurrent, pwNew)
+                        setPwLoading(false)
+                        if (res.success) {
+                          setPwMsg({ ok: true, text: "Password updated" })
+                          setPwCurrent(""); setPwNew(""); setPwConfirm("")
+                          setTimeout(() => setPwOpen(false), 1500)
+                        } else {
+                          setPwMsg({ ok: false, text: res.error || "Failed" })
+                        }
+                      }}
+                      className={`text-[11.5px] font-semibold px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                    >
+                      {pwLoading ? "Updating..." : "Update Password"}
+                    </button>
                   </div>
                 )}
               </SettingSection>

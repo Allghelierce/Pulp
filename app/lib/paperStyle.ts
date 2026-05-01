@@ -46,8 +46,6 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
   return { backgroundColor, backgroundImage, backgroundSize }
 }
 
-export function getInkColor(paperStyle: PaperStyle, isDark: boolean): string {
-  if (paperStyle.startsWith("dark-")) return paperStyle === "dark-steno" ? "#e8dfc0" : "#e4e4e7"
-  if (isDark) return paperStyle === "steno" ? "#e8dfc0" : "#e4e4e7"
-  return paperStyle === "steno" ? "#2d2510" : "#1a1a1a"
+export function getInkColor(_paperStyle: PaperStyle, isDark: boolean): string {
+  return isDark ? "#e4e4e7" : "#1a1a1a"
 }

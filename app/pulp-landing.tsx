@@ -6,7 +6,7 @@ import { PlantIcon } from "./components/PlantIcon"
 
 const SHOWCASE_TREES = [
   { type: 'tangerine', name: 'tangerine', rarity: 'default' },
-  { type: 'cherry', name: 'cherry', rarity: 'common' },
+  { type: 'lemon', name: 'lemon', rarity: 'common' },
   { type: 'apple', name: 'apple', rarity: 'uncommon' },
   { type: 'peach', name: 'peach', rarity: 'rare' },
   { type: 'pineapple', name: 'pineapple', rarity: 'rare' },

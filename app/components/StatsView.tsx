@@ -287,17 +287,20 @@ export const StatsView = memo(function StatsView({
             </div>
 
             {/* Month labels */}
-            <div style={{ display: "flex", marginLeft: 28, marginBottom: 4 }}>
-              {heatmapMonths.map((m, i) => {
+            <div style={{ display: "flex", marginLeft: 30, marginBottom: 4, gap: 2 }}>
+              {(() => {
                 const totalCols = Math.ceil(heatmapGrid.length / 7)
-                const nextCol = i < heatmapMonths.length - 1 ? heatmapMonths[i + 1].col : totalCols
-                const span = nextCol - m.col
-                return (
-                  <div key={i} style={{ width: `${(span / totalCols) * 100}%`, minWidth: 0 }}>
-                    <span style={{ fontSize: 8, color: textMuted }}>{m.label}</span>
-                  </div>
-                )
-              })}
+                const elements: React.ReactNode[] = []
+                for (let c = 0; c < totalCols; c++) {
+                  const month = heatmapMonths.find(m => m.col === c)
+                  elements.push(
+                    <div key={c} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                      {month && <span style={{ fontSize: 8, color: textMuted, whiteSpace: "nowrap" }}>{month.label}</span>}
+                    </div>
+                  )
+                }
+                return elements
+              })()}
             </div>
 
             <div style={{ display: "flex", gap: 0 }}>

@@ -49,21 +49,6 @@ const SignIn1: React.FC<SignInProps> = ({
         }} />
       </div>
 
-      {/* App logo — top left */}
-      <div className="absolute top-5 left-6 z-10 flex items-center gap-2.5">
-        <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="14" cy="14" r="13" fill="#92400e" />
-          <circle cx="14" cy="14" r="11" fill="#d97706" />
-          <line x1="14" y1="3" x2="14" y2="25" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-          <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-          <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-          <circle cx="14" cy="14" r="1.8" fill="#92400e" fillOpacity="0.75" />
-          <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
-        </svg>
-        <span className="text-white text-3xl" style={{ fontFamily: "var(--font-dancing), cursive", letterSpacing: "0.02em" }}>
-          Pulp
-        </span>
-      </div>
 
       {/* Glass card */}
       <form

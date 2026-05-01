@@ -316,10 +316,10 @@ const BoxItem = memo(function BoxItem({
   const [localDragging, setLocalDragging] = useState(false)
   const isDark = theme === "dark"
   const resizeHandles: [string, React.CSSProperties][] = [
-    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "nw-resize" }],
-    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "ne-resize" }],
-    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "sw-resize" }],
-    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: "white", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)"}`, cursor: "se-resize" }],
+    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "nw-resize" }],
+    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "ne-resize" }],
+    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "sw-resize" }],
+    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "se-resize" }],
     ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
     ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
     ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
@@ -389,28 +389,26 @@ const BoxItem = memo(function BoxItem({
             }}
             style={{
               width: 17, height: 17, borderRadius: "50%",
-              background: "rgba(0,0,0,0.08)", cursor: "grab",
+              background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", cursor: "grab",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(0,0,0,0.5)", flexShrink: 0,
+              color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)", flexShrink: 0,
               filter: "url(#handwritten-jitter-subtle)"
             }}
           >
-            {/* Wobbly handwritten-style rotate arrow */}
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 2v5h-5" />
               <path d="M2.5 12a10 10 0 0 1 17-7" />
             </svg>
           </div>
-          {/* Delete button (Handwritten style) */}
           <button
             onMouseDown={e => { e.stopPropagation(); deleteBox(box.id) }}
             className="hover:scale-110 active:scale-95 transition-transform"
             style={{
               width: 17, height: 17, borderRadius: "50%",
-              background: "rgba(0,0,0,0.08)", border: "none",
+              background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: "none",
               cursor: "pointer", fontSize: 13,
               display: "flex", alignItems: "center", justifyContent: "center",
-              lineHeight: 1, color: "rgba(0,0,0,0.5)", flexShrink: 0,
+              lineHeight: 1, color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)", flexShrink: 0,
               fontFamily: 'cursive', fontWeight: 600,
               filter: "url(#handwritten-jitter-subtle)"
             }}>×</button>
@@ -422,10 +420,10 @@ const BoxItem = memo(function BoxItem({
           className="hover:scale-110 active:scale-95 transition-transform"
           style={{
             position: "absolute", top: 10, right: 8,
-            background: "rgba(0,0,0,0.08)", border: "none",
+            background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: "none",
             cursor: "pointer", fontSize: 13, width: 17, height: 17,
             display: "flex", alignItems: "center", justifyContent: "center",
-            borderRadius: "50%", lineHeight: 1, color: "rgba(0,0,0,0.5)",
+            borderRadius: "50%", lineHeight: 1, color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
             zIndex: 120, fontFamily: 'cursive', fontWeight: 600,
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
@@ -444,9 +442,9 @@ const BoxItem = memo(function BoxItem({
             setSelectedBoxIds(new Set([box.id]))
             startDrag(e, box)
           }}
-          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: 60, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: "70%", maxWidth: 200, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
-          <div style={{ width: 24, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
+          <div style={{ width: 32, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
         </div>
       )}
 
@@ -474,6 +472,7 @@ const BoxItem = memo(function BoxItem({
             boxFontSize={box.boxFontSize}
             boxHeadingStyle={box.boxHeadingStyle}
             boxHighlightColor={box.boxHighlightColor}
+            boxTextColor={box.boxTextColor}
             isSticky={isSticky}
             onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
@@ -652,6 +651,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
               boxFontSize: 14,
               boxHeadingStyle: "default",
               boxHighlightColor: "transparent",
+              boxTextColor: undefined,
               textAlign: "left"
             });
             setOpen(null)
@@ -709,7 +709,12 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
                     key={c}
                     onMouseDown={(e) => {
                       e.preventDefault()
-                      document.execCommand('foreColor', false, c)
+                      const sel = window.getSelection()
+                      if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+                        document.execCommand('foreColor', false, c)
+                      } else {
+                        onUpdateBox(box.id, { boxTextColor: c })
+                      }
                       setOpen(null)
                     }}
                     style={{ width: 22, height: 22, borderRadius: 4, background: c, border: `1px solid ${dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`, cursor: "pointer" }}
@@ -722,7 +727,13 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
                     type="color"
                     onMouseDown={(e) => e.preventDefault()}
                     onInput={e => {
-                      document.execCommand('foreColor', false, (e.target as HTMLInputElement).value)
+                      const c = (e.target as HTMLInputElement).value
+                      const sel = window.getSelection()
+                      if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+                        document.execCommand('foreColor', false, c)
+                      } else {
+                        onUpdateBox(box.id, { boxTextColor: c })
+                      }
                     }}
                     style={{ width: 16, height: 16, padding: 0, border: "none", borderRadius: 3, cursor: "pointer", background: "transparent" }}
                   />
@@ -764,7 +775,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
 
 interface BoxTextareaProps {
   id: string; content: string; textAlign?: "left" | "center" | "right" | "justify"
-  boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string
+  boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string; boxTextColor?: string
   isSticky?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
@@ -773,7 +784,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -805,9 +816,11 @@ const BoxTextarea = memo(function BoxTextarea({
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
   const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || "Georgia, serif")
-  const inkColor = isMarginStyle
-    ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
-    : getInkColor(paperStyle, theme === "dark")
+  const inkColor = boxTextColor
+    ? boxTextColor
+    : isMarginStyle
+      ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
+      : getInkColor(paperStyle, theme === "dark")
 
   return (
     <div
@@ -2110,6 +2123,17 @@ export default function NoteApp() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  const DEV_EMAILS = ["pvt.trisn@gmail.com"]
+  const ALL_COSMETICS = [
+    "accent_#d97706", "accent_#ef4444", "accent_#ec4899", "accent_#a855f7", "accent_#3b82f6", "accent_#06b6d4", "accent_#22c55e", "accent_#64748b",
+    "bfont_Palatino", "bfont_Arial", "bfont_Courier New",
+    "hfont_Didot", "hfont_Palatino", "hfont_Bodoni",
+    "paper_dotgrid", "paper_plain", "paper_steno", "paper_dark-lined", "paper_dark-grid", "paper_dark-plain", "paper_dark-steno",
+  ]
+  useEffect(() => {
+    if (user?.email && DEV_EMAILS.includes(user.email)) setUnlockedCosmetics(ALL_COSMETICS)
+  }, [user])
 
   // Resize observer for binding layout
   useEffect(() => {
@@ -3711,6 +3735,7 @@ export default function NoteApp() {
           </svg>
         </button>
       )}
+      {user?.email && DEV_EMAILS.includes(user.email) && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
     </>
   )
 }
