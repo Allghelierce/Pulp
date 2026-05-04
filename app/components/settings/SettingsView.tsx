@@ -197,7 +197,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={onClose}>
-      <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#0a0a0c] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
+      <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#09090b] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* Close */}
         <button
@@ -208,9 +208,9 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         </button>
 
         {/* ── Sidebar ── */}
-        <div className={`w-[200px] ${isDark ? "bg-[#060608] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
+        <div className={`w-[200px] ${isDark ? "bg-[#110d0e] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4">
-            <p className={`text-[11px] font-bold tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'Georgia, serif' }}>Settings</p>
+            <p className={`text-[11px] font-bold tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Settings</p>
           </div>
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
@@ -249,15 +249,15 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
         {/* ── Content ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0`}>
-            <h2 className="text-[15px] font-bold tracking-widest" style={{ fontFamily: 'Georgia, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
+            <h2 className="text-[15px] font-bold tracking-widest" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
               {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
             </h2>
-            <p className="text-[11px] mt-0.5" style={{ fontFamily: 'Georgia, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
               {TAB_DESCRIPTIONS[activeTab] ?? ""}
             </p>
           </div>
 
-          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#0a0a0c]" : "bg-[#f5f3f1]"}`}>
+          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#09090b]" : "bg-[#f5f3f1]"}`}>
 
             {/* ── General ── */}
             {activeTab === "general" && (<>

@@ -66,7 +66,7 @@ export const FocusView = memo(function FocusView({
   const isDark = theme === "dark"
   const extensionInstalled = useExtensionDetected()
   const [input, setInput] = useState("")
-  const font = 'Georgia, serif'
+  const font = '"EB Garamond", serif'
 
   useEffect(() => {
     if (!isOpen) return
@@ -106,7 +106,7 @@ export const FocusView = memo(function FocusView({
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[560px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#0a0a0c] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
+        className={`relative w-full max-w-[560px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "bg-[#09090b] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/80"}`}
         style={{ maxHeight: 660 }}
       >
         {/* Header */}

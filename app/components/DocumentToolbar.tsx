@@ -77,6 +77,7 @@ interface DocumentToolbarProps {
   canRedo: boolean
   onClearDrawing: () => void
   onOpenVersionHistory?: () => void
+  darkPaper?: boolean
 }
 
 
@@ -125,7 +126,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   juice, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenVersionHistory
+  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -174,7 +175,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const btnBaseActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnIconOnly = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnIconOnlyActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnFont: React.CSSProperties = { fontFamily: 'Georgia, serif', letterSpacing: '0.01em' }
+  const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }
 
   const [currencyTooltip, setCurrencyTooltip] = useState<'sap' | 'gem' | null>(null)
 
@@ -453,7 +454,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 ))}
               </div>
               <div className="flex items-center gap-0.5 px-0.5 mb-1">
-                {["#000000","#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#8b5cf6","#ec4899"].map(c => (
+                {(darkPaper ? ["#ffffff","#fca5a5","#fdba74","#fde047","#6ee7b7","#93c5fd","#c4b5fd","#f9a8d4"] : ["#000000","#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#8b5cf6","#ec4899"]).map(c => (
                   <button key={c} onMouseDown={e => { e.preventDefault(); onStrokeColorChange(c) }}
                     className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform"
                     style={{
@@ -643,7 +644,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-2">
                   {currencyTooltip === 'sap' ? <PulpIcon size={14} /> : <GemIcon size={14} />}
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e4e0d8', fontFamily: 'Georgia, serif' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e4e0d8', fontFamily: '"EB Garamond", serif' }}>
                     {currencyTooltip === 'sap' ? 'Sap' : 'Gems'}
                   </span>
                 </div>
@@ -660,7 +661,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 ]).map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
-                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: 'Georgia, serif', lineHeight: 1.4, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: '"EB Garamond", serif', lineHeight: 1.4, margin: 0 }}>
                       {item.text}
                     </p>
                   </div>
@@ -676,7 +677,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   }}
                   style={{
                     width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 600,
-                    fontFamily: 'Georgia, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
+                    fontFamily: '"EB Garamond", serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
                   }}
                   onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                   onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
@@ -691,7 +692,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       </div>}
 
       {/* Right: Share */}
-      {!hideShare && <div className="flex items-center gap-3 shrink-0 pl-2 pr-[68px]" style={{ fontFamily: 'Georgia, serif' }}>
+      {!hideShare && <div className="flex items-center gap-3 shrink-0 pl-2 pr-[68px]" style={{ fontFamily: '"EB Garamond", serif' }}>
 
         <ShareButton
           links={[

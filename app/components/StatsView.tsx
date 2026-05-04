@@ -73,7 +73,7 @@ function getTimeData(entries: DailyEntry[], range: "day" | "week" | "month") {
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-const font = 'Georgia, serif'
+const font = '"EB Garamond", serif'
 
 function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
   const s = size
@@ -117,7 +117,7 @@ export const StatsView = memo(function StatsView({
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
 
   const isDark = theme === 'dark'
-  const bg = isDark ? '#0c0e10' : '#f5f3ef'
+  const bg = isDark ? '#09090b' : '#f5f3ef'
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -177,8 +177,7 @@ export const StatsView = memo(function StatsView({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-      onMouseDown={onClose}
+      className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30"
     >
       <div
         onMouseDown={e => e.stopPropagation()}
@@ -203,8 +202,8 @@ export const StatsView = memo(function StatsView({
                 <LevelIcon level={lvl.level} size={18} />
               </div>
               <div>
-                <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: 'Georgia, serif' }}>{lvl.name}</h2>
-                <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: 'Georgia, serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
+                <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif' }}>{lvl.name}</h2>
+                <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: '"EB Garamond", serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>
             <button
@@ -282,7 +281,7 @@ export const StatsView = memo(function StatsView({
           {/* Consistency Heatmap */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: 'Georgia, serif' }}>Consistency</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
               <span style={{ fontSize: 9, color: textMuted }}>Past year</span>
             </div>
 
@@ -342,7 +341,7 @@ export const StatsView = memo(function StatsView({
           {/* Activity Chart */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: 'Georgia, serif' }}>Activity</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Activity</span>
               <div style={{ display: "flex", gap: 1 }}>
                 {(["day", "week", "month"] as const).map(r => (
                   <button

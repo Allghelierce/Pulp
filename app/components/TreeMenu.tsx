@@ -287,7 +287,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
                     {note && (
                       <text x={x+BW/2} y={y+bH/2} textAnchor="middle" dominantBaseline="middle"
                         fill="rgba(255,255,255,0.7)" fontSize="5.5"
-                        fontFamily="Georgia, serif" fontWeight="600"
+                        fontFamily="EB Garamond, serif" fontWeight="600"
                         transform={`rotate(-90, ${x+BW/2}, ${y+bH/2})`}
                         style={{ userSelect:'none', pointerEvents:'none' }}>
                         {(note.subject || "Note").substring(0, 12)}

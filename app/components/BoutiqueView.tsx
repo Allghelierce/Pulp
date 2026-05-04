@@ -73,7 +73,7 @@ function getDropChance(weight: number): string {
   return `${pct.toFixed(2)}%`
 }
 
-const font = 'Georgia, serif'
+const font = '"EB Garamond", serif'
 
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
@@ -189,7 +189,7 @@ export const BoutiqueView = memo(function BoutiqueView({
     }
   }, [isOpen, initialTab, initialScrollTo])
 
-  const bg = isDark ? '#0a0a0c' : '#f5f3f1'
+  const bg = isDark ? '#09090b' : '#f5f3f1'
   const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
   const cardBorder = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
   const textPrimary = isDark ? '#e4e4e7' : '#18181b'
@@ -330,7 +330,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onMouseDown={onClose}>
+    <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30">
       <div
         onMouseDown={e => e.stopPropagation()}
         className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
@@ -861,7 +861,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
         borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
         backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
         opacity: soldOut ? 0.35 : 1, transition: 'all 0.15s',
-        fontFamily: 'Georgia, serif',
+        fontFamily: '"EB Garamond", serif',
       }}
     >
       <div style={{

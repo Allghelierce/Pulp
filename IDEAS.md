@@ -65,6 +65,19 @@
 - Different tree species yield different paper styles
 - Rare trees = unique/premium notebook materials
 
+## Quota System
+
+- Daily focus quota — user picks a tier:
+  - **Easy**: 15min/day, 1.5x sap multiplier
+  - **Medium**: 30min/day, 2x sap multiplier
+  - **Advanced**: 60min/day, 3x sap multiplier
+- No quota = 1x sap, no risk (opt-in system)
+- 7-day lock-in: once you pick a tier, committed for a full week
+- Miss a single day → youngest tree dies
+- Want out early? Costs gems
+- Multiplier applies to all sap earned from focus timer
+- Encourages leaderboard competition
+
 ## Open Questions
 
 - Exact tree species list and rarity assignments?

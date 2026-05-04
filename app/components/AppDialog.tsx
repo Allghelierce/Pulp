@@ -3,7 +3,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
 
-const font = 'Georgia, serif'
+const font = '"EB Garamond", serif'
 
 export function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
   const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")

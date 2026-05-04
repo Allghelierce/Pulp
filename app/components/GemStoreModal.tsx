@@ -15,7 +15,7 @@ const GEM_PACKS = [
   { id: "chest", amount: 40, price: "$5.99", label: "Chest" },
 ]
 
-const font = 'Georgia, serif'
+const font = '"EB Garamond", serif'
 const accent = '#d97706'
 
 function GemShape({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
@@ -135,7 +135,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
               maxWidth: 440,
               marginTop: 48,
               borderRadius: 16,
-              background: '#0c0e10',
+              background: '#09090b',
               boxShadow: '0 25px 80px -15px rgba(0,0,0,0.7)',
               border: '1px solid rgba(255,255,255,0.06)',
             }}

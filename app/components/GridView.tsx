@@ -113,7 +113,7 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                       <div key={box.id} style={{
                         position: 'absolute',
                         left: box.x, top: box.y, width: box.w, height: box.h,
-                        fontFamily: box.boxFontFamily || editorFont || 'Georgia, serif',
+                        fontFamily: box.boxFontFamily || editorFont || '"EB Garamond", serif',
                         fontSize: (box.boxFontSize || 16) + 'px',
                         textAlign: box.textAlign,
                         color: "#1A1A1A",
@@ -130,8 +130,8 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
                 <div className="absolute top-4 right-5 z-[50] pointer-events-none">
-                  <span className="text-[18px] font-bold text-black transition-colors tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>
-                    0{idx + 1}
+                  <span className="text-[18px] font-bold text-black transition-colors tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>
+                    {idx + 1}
                   </span>
                 </div>
               </div>

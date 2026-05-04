@@ -140,7 +140,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       position: "fixed", top: 0, right: 0, bottom: 0, width: 380, zIndex: 9998,
       background: bg, borderLeft: `1px solid ${borderColor}`,
       display: "flex", flexDirection: "column",
-      fontFamily: 'Georgia, serif',
+      fontFamily: '"EB Garamond", serif',
       boxShadow: isDark ? "-8px 0 32px rgba(0,0,0,0.4)" : "-4px 0 24px rgba(0,0,0,0.06)",
       animation: "chat-slide-in 0.2s ease-out",
     }}>
@@ -215,7 +215,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
                     textAlign: "left", fontSize: 12, fontWeight: 500, padding: "8px 12px", borderRadius: 8,
                     border: `1px solid ${borderColor}`, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                     color: subtleText, cursor: "pointer", transition: "all 0.1s",
-                    fontFamily: 'Georgia, serif',
+                    fontFamily: '"EB Garamond", serif',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.color = subtleText }}
@@ -274,7 +274,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
             flex: 1, background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
             border: `1px solid ${borderColor}`, borderRadius: 10, padding: "8px 12px",
             fontSize: 13, color: isDark ? "#e4e4e7" : "#18181b", outline: "none", resize: "none",
-            fontFamily: 'Georgia, serif', lineHeight: 1.5,
+            fontFamily: '"EB Garamond", serif', lineHeight: 1.5,
             maxHeight: 100, overflowY: "auto",
           }}
         />

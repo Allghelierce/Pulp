@@ -46,6 +46,10 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
   return { backgroundColor, backgroundImage, backgroundSize }
 }
 
-export function getInkColor(_paperStyle: PaperStyle, isDark: boolean): string {
-  return isDark ? "#e4e4e7" : "#1a1a1a"
+export function isDarkPaper(paperStyle: PaperStyle): boolean {
+  return paperStyle.startsWith("dark-")
+}
+
+export function getInkColor(paperStyle: PaperStyle, _isDark: boolean): string {
+  return isDarkPaper(paperStyle) ? "#e4e4e7" : "#1a1a1a"
 }

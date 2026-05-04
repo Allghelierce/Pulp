@@ -183,7 +183,7 @@ export function ShelfView({ notes, onOpenNote, onCreateNote, theme }: ShelfViewP
         style={{ maxWidth: 1180 }}>
         <div>
           <h1 style={{
-            fontFamily: 'Georgia, serif', fontStyle: 'italic',
+            fontFamily: '"EB Garamond", serif', fontStyle: 'italic',
             fontSize: 44, lineHeight: 1, marginBottom: 7, margin: 0,
             color: dk ? '#E8701A' : '#C04A08',
           }}>Pulp</h1>
@@ -366,7 +366,7 @@ export function ShelfView({ notes, onOpenNote, onCreateNote, theme }: ShelfViewP
                                           writingMode:'vertical-rl',
                                           transform:'rotate(180deg)',
                                           fontSize:8,
-                                          fontFamily:'Georgia, serif',
+                                          fontFamily:'"EB Garamond", serif',
                                           fontWeight:700,
                                           color:'rgba(255,248,228,0.72)',
                                           userSelect:'none',

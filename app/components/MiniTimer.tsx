@@ -69,7 +69,7 @@ export function MiniTimer({ isRunning, remainingTime, progress, accent, isDark, 
       </div>
 
       <div className="flex flex-col min-w-[56px]">
-        <span className="text-[17px] font-bold tracking-tight tabular-nums leading-tight" style={{ fontFamily: 'Georgia, serif', color: isDark ? "#fff" : "#18181b" }}>
+        <span className="text-[17px] font-bold tracking-tight tabular-nums leading-tight" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? "#fff" : "#18181b" }}>
           {remainingTime}
         </span>
         <span className={`text-[8px] font-black uppercase tracking-[0.2em] transition-colors ${

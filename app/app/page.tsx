@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
-import { getPaperBg, getInkColor, type PaperStyle } from "@/app/lib/paperStyle"
+import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -20,7 +20,7 @@ function ViewLoader() {
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md">
       <div className="flex flex-col items-center gap-3">
         <div className="w-5 h-5 border-2 border-[#d97706] border-t-transparent rounded-full animate-spin" />
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
+        <span style={{ fontFamily: '"EB Garamond", serif', fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
       </div>
     </div>
   )
@@ -84,7 +84,6 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
-import { Boxes } from "@/components/ui/background-boxes"
 
 function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onNavigate: (idx: number) => void
@@ -93,7 +92,7 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const color = "#3f3f46"
-  const fontStyle: React.CSSProperties = { color, fontFamily: '"Georgia", Georgia, serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
+  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
 
   const commit = (val: string) => {
     const n = parseInt(val, 10)
@@ -314,7 +313,7 @@ const BoxItem = memo(function BoxItem({
   onDragStart: () => void; onDragEnd: () => void; handwrittenEffect: boolean
 }) {
   const [localDragging, setLocalDragging] = useState(false)
-  const isDark = theme === "dark"
+  const isDark = isDarkPaper(paperStyle)
   const resizeHandles: [string, React.CSSProperties][] = [
     ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "nw-resize" }],
     ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "ne-resize" }],
@@ -347,7 +346,7 @@ const BoxItem = memo(function BoxItem({
         height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
         transform: `rotate(${box.boxRotation || 0}deg)`,
         border: isEmpty ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}`) : "1px solid transparent",
-        color: (box.boxHeadingStyle as string) === "margin" ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
+        color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
         borderRadius: 3, backgroundColor: isEmpty ? "transparent" : isSelected ? (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")) : (box.boxHighlightColor || "transparent"),
         zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
@@ -429,7 +428,7 @@ const BoxItem = memo(function BoxItem({
           }}>×</button>
       )}
       {isSelected && selectedCount === 1 && !isImage && !isSticky && !isEmpty && (
-        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} paperStyle={paperStyle} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
 
@@ -507,8 +506,8 @@ const BOX_STYLES = [
   { value: "margin", label: "Mg" },
 ]
 
-const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateBox, onRewrite, onImageGen, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
-  box: TextBoxType; accentSolid: string; theme: "light" | "dark"
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyle, onUpdateBox, onRewrite, onImageGen, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
+  box: TextBoxType; accentSolid: string; theme: "light" | "dark"; paperStyle: PaperStyle
   onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
   onRewrite: (text: string, id: string) => void
   onImageGen: (text: string, id: string) => void
@@ -546,7 +545,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
   const currentFont = BOX_FONTS.find(f => f.value === (box.boxFontFamily ?? "")) ?? BOX_FONTS[0]
   const currentSize = box.boxFontSize ?? BOX_HEADING_SIZES[styleKey]
 
-  const dk = theme === "dark"
+  const dk = isDarkPaper(paperStyle)
   const dropdownBase: React.CSSProperties = {
     position: "absolute", top: "calc(100% + 4px)", left: anchorLeft,
     background: dk ? "rgba(31,31,35,0.82)" : "rgba(255,255,255,0.82)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}`,
@@ -567,12 +566,15 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
     fontSize: 13, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
     cursor: "pointer", paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6, borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.01em",
-    fontFamily: "Georgia, serif",
+    fontFamily: '"EB Garamond", serif',
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
   // Handlers
   const highlightColors = ["transparent", "rgba(239,68,68,0.15)", "rgba(249,115,22,0.15)", "rgba(234,179,8,0.15)", "rgba(34,197,94,0.15)", "rgba(14,165,233,0.15)", "rgba(59,130,246,0.15)", "rgba(168,85,247,0.15)", "rgba(236,72,153,0.15)", "rgba(156,163,175,0.15)"]
-  const textColors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#52525b", "#d4d4d8"]
+  const darkPaper = isDarkPaper(paperStyle)
+  const textColors = (dk || darkPaper)
+    ? ["#fca5a5", "#fdba74", "#fde047", "#6ee7b7", "#93c5fd", "#a5b4fc", "#c4b5fd", "#f9a8d4", "#d4d4d8", "#fafafa"]
+    : ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#52525b", "#d4d4d8"]
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => { e.stopPropagation() }, [])
 
   const applyInlineCSS = useCallback((css: string): boolean => {
@@ -625,7 +627,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           <button ref={styleBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("style") }}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
-          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || "Georgia, serif" }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
+          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || '"EB Garamond", serif' }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
             {currentFont.label.toLowerCase()} {chevron}
           </button>
           <button ref={sizeBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("size") }}>
@@ -640,28 +642,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
             </svg>
           </button>
 
-          <button style={{ ...triggerStyle, color: "#a1a1aa", marginLeft: 4 }} onMouseDown={e => {
-            e.preventDefault()
-            const temp = document.createElement("div");
-            temp.innerHTML = box.content;
-            const plain = temp.textContent || temp.innerText || "";
-            onUpdateBox(box.id, {
-              content: plain,
-              boxFontFamily: "",
-              boxFontSize: 14,
-              boxHeadingStyle: "default",
-              boxHighlightColor: "transparent",
-              boxTextColor: undefined,
-              textAlign: "left"
-            });
-            setOpen(null)
-          }} title="Clear formatting">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
-              <path d="M22 21H7"></path>
-              <path d="m5 11 9 9"></path>
-            </svg>
-          </button>
+
 
           {open === "style" && (
             <div style={dropdownBase}>
@@ -678,9 +659,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           {open === "font" && (
             <div style={dropdownBase}>
               {BOX_FONTS.map(f => (
-                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || "Georgia, serif" }} onMouseDown={e => {
+                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || '"EB Garamond", serif' }} onMouseDown={e => {
                   e.preventDefault()
-                  if (!applyInlineCSS(`font-family: ${f.value || "Georgia, serif"}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
+                  if (!applyInlineCSS(`font-family: ${f.value || '"EB Garamond", serif'}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
                   setOpen(null)
                 }}>{f.label.toLowerCase()}</button>
               ))}
@@ -704,6 +685,18 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, onUpdateB
           {open === "textColor" && (
             <div style={{ ...dropdownBase, minWidth: 140, padding: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 5, marginBottom: 8 }}>
+                <button
+                  key="default"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    onUpdateBox(box.id, { boxTextColor: undefined })
+                    setOpen(null)
+                  }}
+                  style={{ width: 22, height: 22, borderRadius: 4, background: "transparent", border: `1px solid ${dk ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'}`, cursor: "pointer", position: "relative", overflow: "hidden" }}
+                  title="Default"
+                >
+                  <div style={{ position: "absolute", top: "50%", left: -2, width: 28, height: 1, background: dk ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)", transform: "rotate(45deg)" }} />
+                </button>
                 {textColors.map(c => (
                   <button
                     key={c}
@@ -815,11 +808,11 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || "Georgia, serif")
+  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || '"EB Garamond", serif')
   const inkColor = boxTextColor
     ? boxTextColor
     : isMarginStyle
-      ? (theme === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
+      ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)")
       : getInkColor(paperStyle, theme === "dark")
 
   return (
@@ -1020,7 +1013,7 @@ const BoxTextarea = memo(function BoxTextarea({
         height: isSticky ? "100%" : undefined,
         minHeight: isSticky ? undefined : "100%",
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
-        lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: theme === "dark" ? "#e4e4e7" : "#18181b",
+        lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
         transform: isMarginStyle ? "rotate(-0.5deg) skewX(-0.8deg)" : undefined,
@@ -1121,6 +1114,7 @@ export default function NoteApp() {
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false) }, [])
   const [gemStoreOpen, setGemStoreOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
@@ -2171,7 +2165,7 @@ export default function NoteApp() {
     supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
       if (!data?.settings) return
       const s = data.settings
-      if (!hasLocalSettings) updateSettings(s)
+      updateSettings(s)
       if (s.trashNotes) setTrashNotes(s.trashNotes)
       if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
       if (!hasLocalFolders && s.folders) setFolders(s.folders)
@@ -2362,6 +2356,7 @@ export default function NoteApp() {
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
     setSidebarOpen(true)
+    setSidebarWidth(256)
     checkAchievement('first_note')
     if (user) supabase.from("notes").insert({ id, subject: "My First Notebook", pages: [""], boxes, folder_id: null, user_id: user.id })
   }
@@ -2722,7 +2717,7 @@ export default function NoteApp() {
               setShowSettings(false)
               setShopInitialTab('gems')
               setShopScrollTo(itemId)
-              setShopOpen(true)
+              closeAllPanels(); setShopOpen(true)
             }}
             onSyncNow={async () => {
               if (!user) return null
@@ -2748,7 +2743,7 @@ export default function NoteApp() {
 
 
 
-        {!gridView && sidebarWidth > 40 && (
+        {!gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -2810,11 +2805,11 @@ export default function NoteApp() {
                 setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: newName } : b))
               }}
               onUnlockDev={handleUnlockDev}
-              onOpenShop={() => setShopOpen(true)}
+              onOpenShop={() => { closeAllPanels(); setShopOpen(true) }}
               onOpenGemStore={() => setGemStoreOpen(true)}
-              onOpenLeaderboard={() => setLeaderboardOpen(true)}
+              onOpenLeaderboard={() => { closeAllPanels(); setLeaderboardOpen(true) }}
               onOpenFocus={() => setFocusOpen(true)}
-              onOpenStats={() => setStatsOpen(true)}
+              onOpenStats={() => { closeAllPanels(); setStatsOpen(true) }}
               juice={juice}
               gems={gems}
               xp={xp}
@@ -2906,7 +2901,7 @@ export default function NoteApp() {
           })()}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && (
-            <div className="relative">
+            <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, filter: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'blur(6px) brightness(0.7)' : undefined, transition: 'filter 0.2s ease' }}>
               <DocumentToolbar
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -2980,7 +2975,7 @@ export default function NoteApp() {
                 sidebarOpen={sidebarWidth > 40}
                 onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
-                onOpenShop={() => setShopOpen(true)}
+                onOpenShop={() => { closeAllPanels(); setShopOpen(true) }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
@@ -2997,18 +2992,17 @@ export default function NoteApp() {
                 canRedo={drawing.canRedo}
                 onClearDrawing={drawing.clearCanvas}
                 onOpenVersionHistory={() => setShowVersionHistory(true)}
+                darkPaper={isDarkPaper(paperStyle)}
               />
             </div>
           )}
 
           <div className="flex-1 flex overflow-hidden relative">
             {notes.filter(n => !n.archived).length === 0 ? (
-              <main className="flex-1 flex items-center justify-center px-4 overflow-hidden relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA" }}>
-                <div className="absolute inset-0 w-full h-full z-[1] pointer-events-none" style={{ maskImage: "radial-gradient(transparent, black)", WebkitMaskImage: "radial-gradient(transparent, black)", backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA" }} />
-                <Boxes />
-                <div className="text-center max-w-md overflow-hidden relative z-10">
+              <main className="flex-1 flex items-center justify-center px-4 overflow-hidden">
+                <div className="text-center max-w-md overflow-hidden">
                   {/* Heading */}
-                  <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"Georgia", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+                  <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                   {/* Primary Button */}
                   <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
@@ -3133,7 +3127,7 @@ export default function NoteApp() {
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                               </div>
                               <div>
-                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>Vault Locked</h3>
+                                <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Vault Locked</h3>
                                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
                               </div>
                               <button
@@ -3191,7 +3185,7 @@ export default function NoteApp() {
                               ref={editorRef}
                               className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
                               style={{
-                                fontFamily: `"${editorFont}", Georgia, serif`,
+                                fontFamily: `"${editorFont}", "EB Garamond", serif`,
                                 fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
                                 filter: "url(#handwritten-jitter-subtle)",
                                 fontWeight: 400,
@@ -3208,7 +3202,7 @@ export default function NoteApp() {
                                color: ${getInkColor(paperStyle, theme === "dark")} !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
-                               font-family: "${editorFont}", Georgia, serif !important;
+                               font-family: "${editorFont}", "EB Garamond", serif !important;
                                font-weight: 500 !important;
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
@@ -3375,8 +3369,60 @@ export default function NoteApp() {
 
           </div>
 
+          {orchardOpen && <div className="absolute inset-0 z-40 overflow-hidden"><OrchardView
+            isOpen={orchardOpen}
+            onClose={() => setOrchardOpen(false)}
+            theme={theme}
+            accent={accent}
+            juice={juice}
+            gems={gems}
+            xp={juice}
+            grove={grove}
+            inventory={inventory}
+            setJuice={setJuice}
+            setGems={setGems}
+            setInventory={setInventory}
+            setGrove={setGrove}
+            notes={notes}
+          /></div>}
+
+          {statsOpen && <div className="absolute inset-0 z-40 overflow-hidden"><StatsView
+            isOpen={statsOpen}
+            onClose={() => setStatsOpen(false)}
+            theme={theme}
+            accent={accent}
+            xp={xp}
+            streak={streak}
+          /></div>}
+
+          {leaderboardOpen && <div className="absolute inset-0 z-40 overflow-hidden"><LeaderboardView
+            isOpen={leaderboardOpen}
+            onClose={() => setLeaderboardOpen(false)}
+            theme={theme}
+            juice={juice}
+          /></div>}
+
+          {shopOpen && <div className="absolute inset-0 z-40 overflow-hidden"><BoutiqueView
+            isOpen={shopOpen}
+            onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
+            theme={theme}
+            accent={accent}
+            gems={devMode ? 999999 : gems}
+            juice={devMode ? 999999 : juice}
+            inventory={inventory}
+            setGems={setGems}
+            setJuice={setJuice}
+            setInventory={setInventory}
+            setGrove={setGrove}
+            unlockedCosmetics={unlockedCosmetics}
+            setUnlockedCosmetics={setUnlockedCosmetics}
+            onUpdateConfig={updateSettings}
+            initialTab={shopInitialTab}
+            initialScrollTo={shopScrollTo}
+          /></div>}
+
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange onClick={() => setOrchardOpen(prev => !prev)} onHover={() => import("@/app/components/OrchardView")} />
+            <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} onHover={() => import("@/app/components/OrchardView")} />
           )}
         </div>
 
@@ -3621,63 +3667,12 @@ export default function NoteApp() {
 
       </div>
 
-      {orchardOpen && <OrchardView
-        isOpen={orchardOpen}
-        onClose={() => setOrchardOpen(false)}
-        theme={theme}
-        accent={accent}
-        juice={juice}
-        gems={gems}
-        xp={juice}
-        grove={grove}
-        inventory={inventory}
-        setJuice={setJuice}
-        setGems={setGems}
-        setInventory={setInventory}
-        setGrove={setGrove}
-        notes={notes}
-      />}
-
-      {leaderboardOpen && <LeaderboardView
-        isOpen={leaderboardOpen}
-        onClose={() => setLeaderboardOpen(false)}
-        theme={theme}
-        juice={juice}
-      />}
-
-      {shopOpen && <BoutiqueView
-        isOpen={shopOpen}
-        onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
-        theme={theme}
-        accent={accent}
-        gems={devMode ? 999999 : gems}
-        juice={devMode ? 999999 : juice}
-        inventory={inventory}
-        setGems={setGems}
-        setJuice={setJuice}
-        setInventory={setInventory}
-        setGrove={setGrove}
-        unlockedCosmetics={unlockedCosmetics}
-        setUnlockedCosmetics={setUnlockedCosmetics}
-        onUpdateConfig={updateSettings}
-        initialTab={shopInitialTab}
-        initialScrollTo={shopScrollTo}
-      />}
-
       {gemStoreOpen && <GemStoreModal
         isOpen={gemStoreOpen}
         onClose={() => setGemStoreOpen(false)}
         gems={gems}
       />}
 
-      {statsOpen && <StatsView
-        isOpen={statsOpen}
-        onClose={() => setStatsOpen(false)}
-        theme={theme}
-        accent={accent}
-        xp={xp}
-        streak={streak}
-      />}
 
       {focusOpen && <FocusView
         isOpen={focusOpen}

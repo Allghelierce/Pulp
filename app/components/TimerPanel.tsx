@@ -180,7 +180,7 @@ export const TimerPanel = memo(function TimerPanel({
               <span className={`text-[10px] font-black uppercase tracking-[0.4em] mb-3 block ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
                 Concentration Sanctuary
               </span>
-              <h2 className="text-2xl font-medium tracking-tighter" style={{ fontFamily: 'Georgia, serif', color: isDark ? "#fff" : "#1a1a1a" }}>
+              <h2 className="text-2xl font-medium tracking-tighter" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? "#fff" : "#1a1a1a" }}>
                 Distraction Blocker
               </h2>
               <div className="h-[1px] w-12 bg-orange-500/40 mx-auto mt-4" />
@@ -190,7 +190,7 @@ export const TimerPanel = memo(function TimerPanel({
               <motion.div
                 animate={{ scale: running ? [1, 1.02, 1] : 1 }}
                 className="text-7xl font-bold tabular-nums mb-8"
-                style={{ fontFamily: 'Georgia, serif', color: isDark ? "#fff" : "#1a1a1a", filter: 'url(#cozy-sketch)' }}
+                style={{ fontFamily: '"EB Garamond", serif', color: isDark ? "#fff" : "#1a1a1a", filter: 'url(#cozy-sketch)' }}
               >
                 {timeText}
               </motion.div>

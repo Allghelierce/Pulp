@@ -48,7 +48,7 @@ function generatePlayers(count: number) {
 
 const ALL_PLAYERS = generatePlayers(50)
 
-const font = 'Georgia, serif'
+const font = '"EB Garamond", serif'
 
 export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, juice }: LeaderboardViewProps) {
   const isDark = theme === "dark"
@@ -73,7 +73,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
   const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
-  const bgColor = isDark ? '#0c0e10' : '#f5f3ef'
+  const bgColor = isDark ? '#09090b' : '#f5f3ef'
   const hoverBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
 
   const MEDAL_COLORS = ['#d97706', '#9a9590', '#a07050']
@@ -97,8 +97,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-      onMouseDown={onClose}
+      className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30"
     >
       <div
         onMouseDown={e => e.stopPropagation()}
@@ -115,7 +114,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
         {/* Header */}
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div>
-            <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: 'Georgia, serif' }}>Leaderboard</h2>
+            <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif' }}>Leaderboard</h2>
             <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>Top writers this season</p>
           </div>
           <div className="flex items-center gap-2">

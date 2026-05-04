@@ -99,7 +99,7 @@ export const FormattingToolbar = memo(function FormattingToolbar({
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: 'Georgia, serif' }}>
+      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", serif' }}>
         
 
         {/* Share Button */}

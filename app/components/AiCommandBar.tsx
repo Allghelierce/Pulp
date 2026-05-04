@@ -58,7 +58,7 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ask AI to write, edit, or generate..."
               className="flex-1 bg-transparent border-none outline-none text-[17px] dark:text-zinc-100 placeholder-zinc-500 italic"
-              style={{ fontFamily: 'Georgia, serif' }}
+              style={{ fontFamily: '"EB Garamond", serif' }}
             />
           <div className="flex items-center gap-2 ml-3">
             <div className="flex items-center gap-1 px-1.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[9px] text-zinc-400 font-black uppercase tracking-tighter">

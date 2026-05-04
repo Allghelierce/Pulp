@@ -106,9 +106,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           </linearGradient>
           {/* Ocean */}
           <linearGradient id="ocean-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#0a1a2a' : '#4a90b8'} />
-            <stop offset="50%" stopColor={isDark ? '#081624' : '#3d7fa8'} />
-            <stop offset="100%" stopColor={isDark ? '#0c1e2e' : '#5a9cc4'} />
+            <stop offset="0%" stopColor={isDark ? '#1a1408' : '#c4a868'} />
+            <stop offset="50%" stopColor={isDark ? '#161006' : '#b89850'} />
+            <stop offset="100%" stopColor={isDark ? '#1e180a' : '#d0b078'} />
           </linearGradient>
           {/* Mountain range */}
           <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1">
@@ -169,11 +169,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         {/* Broad warm glow on water */}
         <ellipse cx="100" cy="20" rx="50" ry="5" fill={isDark ? 'rgba(200,120,40,0.05)' : 'rgba(255,180,80,0.1)'} />
         {/* Ocean shimmer — staggered waves */}
-        <path d="M0,16 Q15,15.4 30,16 Q45,16.6 60,16 Q75,15.4 90,16 Q105,16.6 120,16 Q135,15.4 150,16 Q165,16.6 180,16 Q195,15.4 200,16" fill="none" stroke={isDark ? 'rgba(100,160,220,0.06)' : 'rgba(255,255,255,0.15)'} strokeWidth="0.2" />
-        <path d="M10,18 Q25,17.3 40,18 Q55,18.7 70,18 Q85,17.3 100,18 Q115,18.7 130,18 Q145,17.3 160,18 Q175,18.7 190,18" fill="none" stroke={isDark ? 'rgba(100,160,220,0.07)' : 'rgba(255,255,255,0.18)'} strokeWidth="0.25" />
-        <path d="M5,20.5 Q30,19.8 55,20.5 Q80,21.2 105,20.5 Q130,19.8 155,20.5 Q180,21.2 200,20.5" fill="none" stroke={isDark ? 'rgba(100,160,220,0.05)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.2" />
-        <path d="M0,23 Q35,22.3 70,23 Q105,23.7 140,23 Q175,22.3 200,23" fill="none" stroke={isDark ? 'rgba(100,160,220,0.04)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.18" />
-        <path d="M15,25.5 Q50,25 85,25.5 Q120,26 155,25.5 Q190,25 205,25.5" fill="none" stroke={isDark ? 'rgba(100,160,220,0.03)' : 'rgba(255,255,255,0.06)'} strokeWidth="0.15" />
+        <path d="M0,16 Q15,15.4 30,16 Q45,16.6 60,16 Q75,15.4 90,16 Q105,16.6 120,16 Q135,15.4 150,16 Q165,16.6 180,16 Q195,15.4 200,16" fill="none" stroke={isDark ? 'rgba(200,160,80,0.06)' : 'rgba(255,255,240,0.18)'} strokeWidth="0.2" />
+        <path d="M10,18 Q25,17.3 40,18 Q55,18.7 70,18 Q85,17.3 100,18 Q115,18.7 130,18 Q145,17.3 160,18 Q175,18.7 190,18" fill="none" stroke={isDark ? 'rgba(200,160,80,0.07)' : 'rgba(255,255,240,0.2)'} strokeWidth="0.25" />
+        <path d="M5,20.5 Q30,19.8 55,20.5 Q80,21.2 105,20.5 Q130,19.8 155,20.5 Q180,21.2 200,20.5" fill="none" stroke={isDark ? 'rgba(200,160,80,0.05)' : 'rgba(255,255,240,0.14)'} strokeWidth="0.2" />
+        <path d="M0,23 Q35,22.3 70,23 Q105,23.7 140,23 Q175,22.3 200,23" fill="none" stroke={isDark ? 'rgba(200,160,80,0.04)' : 'rgba(255,255,240,0.1)'} strokeWidth="0.18" />
+        <path d="M15,25.5 Q50,25 85,25.5 Q120,26 155,25.5 Q190,25 205,25.5" fill="none" stroke={isDark ? 'rgba(200,160,80,0.03)' : 'rgba(255,255,240,0.07)'} strokeWidth="0.15" />
 
         {/* Mountain range — sharp peaks */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
@@ -566,24 +566,17 @@ export const OrchardView = memo(function OrchardView({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70"
-      onClick={onClose}
+      className="absolute inset-0 z-40 flex"
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
     >
       <style>{`@keyframes tree-pop { 0% { transform: translate(-50%,-85%) scale(0.5); opacity:0 } 100% { transform: translate(-50%,-85%) scale(1); opacity:1 } }`}</style>
       <div
-        onClick={e => e.stopPropagation()}
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
-        className="relative flex overflow-hidden"
-        style={{
-          width: "96vw", maxWidth: 1060, height: "92vh", maxHeight: 780,
-          borderRadius: 18,
-          boxShadow: isDark ? "0 30px 100px -20px rgba(0,0,0,0.8)" : "0 30px 100px -20px rgba(0,0,0,0.2)",
-          border: `1px solid ${cardBorder}`,
-        }}
+        className="relative flex overflow-hidden w-full h-full"
       >
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
+          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 0 0 30px 10px ${isDark ? 'rgba(9,9,11,0.6)' : 'rgba(240,236,234,0.5)'}` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} />
 
           {/* Orchard scene */}

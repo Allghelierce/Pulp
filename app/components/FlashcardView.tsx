@@ -201,7 +201,7 @@ export function FlashcardView({
       <div className={`border-b ${borderColor} sticky top-0 z-10 backdrop-blur-sm`}>
         <div className="max-w-6xl mx-auto px-8 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif', color: accent }}>
+            <h1 className="text-3xl font-bold" style={{ fontFamily: '"EB Garamond", serif', color: accent }}>
               {noteTitle}
             </h1>
             <p className={`text-sm mt-1 ${mutedColor}`}>Spaced Repetition Study</p>

@@ -1,18 +1,24 @@
 "use client"
 import { useState, useRef, useEffect, memo } from "react"
 
-const COLORS = [
+const COLORS_LIGHT = [
   "#000000", "#ffffff", "#ef4444", "#f97316", "#eab308",
   "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#6b7280",
 ]
 
-const font: React.CSSProperties = { fontFamily: 'Georgia, serif', letterSpacing: "0.01em" }
+const COLORS_DARK = [
+  "#ffffff", "#000000", "#fca5a5", "#fdba74", "#fde047",
+  "#6ee7b7", "#93c5fd", "#c4b5fd", "#f9a8d4", "#d4d4d8",
+]
+
+const font: React.CSSProperties = { fontFamily: '"EB Garamond", serif', letterSpacing: "0.01em" }
 
 export const FloatingToolbar = memo(function FloatingToolbar({
   accent, activeTool, onToolChange, onClearDrawing, isVisible,
   strokeColor, onStrokeColorChange,
   lineWidth, onLineWidthChange,
   onUndo, onRedo, canUndo, canRedo, onClose,
+  darkPaper,
 }: {
   accent: string
   activeTool: string
@@ -36,7 +42,9 @@ export const FloatingToolbar = memo(function FloatingToolbar({
   canRedo: boolean
   onImproveDrawing?: () => void
   onClose: () => void
+  darkPaper?: boolean
 }) {
+  const COLORS = darkPaper ? COLORS_DARK : COLORS_LIGHT
   const rootRef = useRef<HTMLDivElement>(null)
   const [popup, setPopup] = useState<"stroke" | null>(null)
 

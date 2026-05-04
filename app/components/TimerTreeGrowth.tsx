@@ -146,7 +146,7 @@ export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: Time
         className="w-72 h-72 rounded-lg"
         style={{ opacity: 0.95 }}
       />
-      <div className="text-sm opacity-60" style={{ fontFamily: 'Georgia, serif' }}>
+      <div className="text-sm opacity-60" style={{ fontFamily: '"EB Garamond", serif' }}>
         Growth: {Math.round(progress * 100)}%
       </div>
     </div>
