@@ -77,7 +77,7 @@ export default function TermsPage() {
         <h2 className="mt-8 font-semibold text-xl">9. Contact</h2>
         <p>
           Questions about these terms can be sent to{" "}
-          <a href="mailto:ctvillegas@ucsd.edu">ctvillegas@ucsd.edu</a>.
+          <a href="mailto:pulpsupport@gmail.com">pulpsupport@gmail.com</a>.
         </p>
 
         <p className="mt-12 text-sm">

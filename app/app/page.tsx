@@ -343,7 +343,7 @@ const BoxItem = memo(function BoxItem({
       }}
       style={{
         position: "absolute", left: box.x, top: box.y, width: box.w,
-        height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : box.h,
+        height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : 32,
         transform: `rotate(${box.boxRotation || 0}deg)`,
         border: isEmpty ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
@@ -794,14 +794,11 @@ const BoxTextarea = memo(function BoxTextarea({
   const syncState = useCallback(() => {
     if (!ref.current) return
     const v = ref.current.innerHTML
-    // Sticky notes never auto-resize — only save content
     if (isSticky) {
       onUpdate(id, { content: v })
     } else {
-      ref.current.style.height = "0px"
-      const sh = ref.current.scrollHeight
-      ref.current.style.height = ""
-      onUpdate(id, { content: v, h: Math.max(sh, 32) })
+      const h = Math.max(ref.current.scrollHeight, 32)
+      onUpdate(id, { content: v, h })
     }
   }, [id, isSticky, onUpdate])
 
@@ -932,7 +929,7 @@ const BoxTextarea = memo(function BoxTextarea({
                 layer.appendChild(ghost)
               }
               clearTimeout(timerRef.current)
-              timerRef.current = setTimeout(syncState, 200)
+              timerRef.current = setTimeout(syncState, 60)
             }
           }
         }
@@ -1011,7 +1008,7 @@ const BoxTextarea = memo(function BoxTextarea({
       style={{
         width: "100%", outline: "none",
         height: isSticky ? "100%" : undefined,
-        minHeight: isSticky ? undefined : "100%",
+        minHeight: isSticky ? undefined : 32,
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
         lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
@@ -1983,6 +1980,40 @@ export default function NoteApp() {
     slashMenuRef.current = updated
     setSlashMenu(updated)
   }, [editor.syncContent, closeSlashMenu])
+
+  // Auto-capitalize sentences in contenteditable areas (HTML attribute only works on mobile)
+  useEffect(() => {
+    if (!autoCapitalize) return
+    const handler = (e: Event) => {
+      const ie = e as InputEvent
+      if (ie.inputType !== 'insertText' || !ie.data || ie.data.length !== 1) return
+      const ch = ie.data
+      if (ch !== ch.toLowerCase() || ch === ch.toUpperCase()) return
+      if (slashMenuRef.current) return
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0) return
+      const range = sel.getRangeAt(0)
+      const node = range.startContainer
+      if (node.nodeType !== Node.TEXT_NODE) return
+      const text = (node as Text).textContent ?? ""
+      const offset = range.startOffset
+      // The character was already inserted, so it's at offset-1
+      if (offset < 1) return
+      const before = text.slice(0, offset - 1)
+      const trimmed = before.trimEnd()
+      const shouldCap = trimmed.length === 0 || /[.!?]\s*$/.test(before) || /\n\s*$/.test(before)
+      if (!shouldCap) return
+      const textNode = node as Text
+      textNode.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
+      const newRange = document.createRange()
+      newRange.setStart(textNode, offset)
+      newRange.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(newRange)
+    }
+    document.addEventListener('input', handler)
+    return () => document.removeEventListener('input', handler)
+  }, [autoCapitalize])
 
   // Keyboard shortcuts for tools
   useEffect(() => {

@@ -108,7 +108,7 @@ export default function PrivacyPage() {
         <h2 className="mt-8 font-semibold text-xl">10. Contact</h2>
         <p>
           For privacy questions or data requests, contact us at{" "}
-          <a href="mailto:ctvillegas@ucsd.edu">ctvillegas@ucsd.edu</a>.
+          <a href="mailto:pulpsupport@gmail.com">pulpsupport@gmail.com</a>.
         </p>
 
         <p className="mt-12 text-sm">
