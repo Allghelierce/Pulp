@@ -6,7 +6,7 @@ interface UseEditorOptions {
   editorRef: React.RefObject<HTMLDivElement | null>
   activeTabId: string | null
   currentPageIdx: number
-  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
+  setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
   accent: string
 }
 

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
-import { motion } from "framer-motion"
+import { LazyMotion, domAnimation, m } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
@@ -10,6 +10,7 @@ import { useEditor } from "@/app/hooks/useEditor"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
 import { useVersionHistory } from "@/app/hooks/useVersionHistory"
+import { useNotesStore } from "@/app/store/useNotesStore"
 import { AppDialog } from "@/app/components/AppDialog"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
@@ -76,7 +77,7 @@ function usePrefetchViews() {
       import("@/app/components/VitalitySystem")
       import("@/app/components/AiInlineMenu")
       import("@/app/components/AiResultModal")
-    }, 1500)
+    }, 3000)
     return () => clearTimeout(timer)
   }, [])
 }
@@ -1028,10 +1029,14 @@ const BoxTextarea = memo(function BoxTextarea({
 
 export default function NoteApp() {
   usePrefetchViews()
-  const [notes, setNotes] = useState<NoteData[]>([])
-  const [folders, setFolders] = useState<FolderData[]>([])
-  const [activeTabId, setActiveTabId] = useState<string | null>(null)
-  const [currentPageIdx, setCurrentPageIdx] = useState(0)
+  const notes = useNotesStore(s => s.notes)
+  const setNotes = useNotesStore(s => s.setNotes)
+  const folders = useNotesStore(s => s.folders)
+  const setFolders = useNotesStore(s => s.setFolders)
+  const activeTabId = useNotesStore(s => s.activeTabId)
+  const setActiveTabId = useNotesStore(s => s.setActiveTabId)
+  const currentPageIdx = useNotesStore(s => s.currentPageIdx)
+  const setCurrentPageIdx = useNotesStore(s => s.setCurrentPageIdx)
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
@@ -2055,8 +2060,11 @@ export default function NoteApp() {
       preRange.setStart(ce, 0)
       preRange.setEnd(anchor, sel.anchorOffset)
       const fullBefore = preRange.toString()
-      if (fullBefore.length < 2 || fullBefore[fullBefore.length - 1] !== ' ') return
-      const beforeSpace = fullBefore.slice(0, -1)
+      if (fullBefore.length < 2) return
+      const lastCode = fullBefore.charCodeAt(fullBefore.length - 1)
+      if (lastCode !== 32 && lastCode !== 160) return
+      // Replace nbsp with regular space for pattern matching
+      const beforeSpace = fullBefore.slice(0, -1).replace(/ /g, ' ')
       const wordMatch = beforeSpace.match(/(\S+)$/)
       if (!wordMatch) return
       const word = wordMatch[1]
@@ -2314,7 +2322,7 @@ export default function NoteApp() {
   const settingsSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(settingsSaveTimer.current)
-    settingsSaveTimer.current = setTimeout(() => {
+    settingsSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
       const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
       if (user) {
@@ -2330,7 +2338,7 @@ export default function NoteApp() {
         db.upsertFolders(user.id, folders)
         db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId))
       }
-    }, 1000)
+    }), 1000)
     return () => clearTimeout(settingsSaveTimer.current)
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, folders, user])
 
@@ -2346,7 +2354,7 @@ export default function NoteApp() {
   const groveSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
-    groveSaveTimer.current = setTimeout(() => {
+    groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
       const groveData = { gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
@@ -2357,7 +2365,7 @@ export default function NoteApp() {
         db.upsertInventory(user.id, invMap)
         db.upsertAchievements(user.id, achievements)
       }
-    }, 1000)
+    }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
   }, [gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
 
@@ -2438,9 +2446,11 @@ export default function NoteApp() {
     if (!hasMounted.current) { hasMounted.current = true; return }
     clearTimeout(notesSaveTimer.current)
     notesSaveTimer.current = setTimeout(() => {
-      localStorage.setItem("pulp-notes", JSON.stringify(notes))
-      localStorage.setItem("pulp-folders", JSON.stringify(folders))
-    }, 500)
+      requestIdleCallback(() => {
+        localStorage.setItem("pulp-notes", JSON.stringify(notes))
+        localStorage.setItem("pulp-folders", JSON.stringify(folders))
+      })
+    }, 1500)
     return () => clearTimeout(notesSaveTimer.current)
   }, [notes, folders])
 
@@ -2844,6 +2854,7 @@ export default function NoteApp() {
 
 
   return (
+    <LazyMotion features={domAnimation}>
     <>
 
       <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
@@ -2894,7 +2905,7 @@ export default function NoteApp() {
 
 
         {!gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -2988,7 +2999,7 @@ export default function NoteApp() {
               }}
               className="hover:bg-white/10 transition-colors"
             />
-          </motion.div>
+          </m.div>
         )}
 
         {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
@@ -3012,7 +3023,7 @@ export default function NoteApp() {
             const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
             const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
             return (
-              <motion.div
+              <m.div
                 onClick={() => {
                   const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
                   if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
@@ -3046,7 +3057,7 @@ export default function NoteApp() {
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )
           })()}
 
@@ -3195,7 +3206,7 @@ export default function NoteApp() {
                           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth="2" stroke="currentColor" />
                         </svg>
                       </div>
-                      <motion.div
+                      <m.div
                         initial={false}
                         animate={{ x: theme === "dark" ? 36 : 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -3464,7 +3475,7 @@ export default function NoteApp() {
                             {/* Previous */}
                             <button
                               disabled={currentPageIdx === 0}
-                              onClick={() => { editor.flushSync(); setCurrentPageIdx(p => p - 1) }}
+                              onClick={() => { editor.flushSync(); setCurrentPageIdx((p: number) => p - 1) }}
                               className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                               style={{ color: "#3f3f46" }}
                               title="Previous Page"
@@ -3481,7 +3492,7 @@ export default function NoteApp() {
                             <button
                               onClick={() => {
                                 editor.flushSync();
-                                if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx(p => p + 1);
+                                if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx((p: number) => p + 1);
                                 else {
                                   const np = [...activeNote.pages, ""];
                                   const pageIdx = activeNote.pages.length
@@ -3883,5 +3894,6 @@ export default function NoteApp() {
       )}
       {user?.email && DEV_EMAILS.includes(user.email) && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
     </>
+    </LazyMotion>
   )
 }

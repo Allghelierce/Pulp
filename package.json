@@ -38,7 +38,8 @@
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.2",
-    "timescape": "^0.8.0"
+    "timescape": "^0.8.0",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

@@ -100,7 +100,7 @@ export function useVersionHistory(
     return loadVersions(noteId)
   }, [])
 
-  const restoreVersion = useCallback((noteId: string, version: NoteVersion, setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>) => {
+  const restoreVersion = useCallback((noteId: string, version: NoteVersion, setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void) => {
     // Snapshot current state before restoring
     const current = notes.find(n => n.id === noteId)
     if (current) {

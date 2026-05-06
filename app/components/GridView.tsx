@@ -15,8 +15,8 @@ interface GridViewProps {
   accent: string
   setCarouselIdx: React.Dispatch<React.SetStateAction<number>>
   setGridView: React.Dispatch<React.SetStateAction<boolean>>
-  setCurrentPageIdx: React.Dispatch<React.SetStateAction<number>>
-  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
+  setCurrentPageIdx: (idx: number | ((prev: number) => number)) => void
+  setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
 }
 
 export function GridView({ activeNote, theme, accent, setGridView, setCurrentPageIdx, lineSpacing, paperStyle, editorFont, setNotes, activeTabId }: GridViewProps) {

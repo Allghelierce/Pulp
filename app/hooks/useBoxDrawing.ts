@@ -10,7 +10,7 @@ interface UseBoxDrawingOptions {
   zoom: string
   accent: string
   notes: NoteData[]
-  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
+  setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
   paperRef: React.RefObject<HTMLDivElement | null>
   sketchMode: boolean
   sketchPrompt: string

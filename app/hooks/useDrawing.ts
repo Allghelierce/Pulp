@@ -22,7 +22,7 @@ export function useDrawing({
   accent: string
   zoom: string
   currentPageIdx: number
-  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>
+  setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
   activeTabId: string | null
   notes: NoteData[]
   strokeColor: string
