@@ -5,6 +5,7 @@ import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
+import * as db from "@/lib/db"
 
 interface OrchardViewProps {
   isOpen: boolean
@@ -21,6 +22,7 @@ interface OrchardViewProps {
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
+  userId?: string
 }
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
@@ -475,7 +477,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  juice, gems, xp, grove, notes, setGems,
+  juice, gems, xp, grove, notes, setGems, userId,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -519,6 +521,15 @@ export const OrchardView = memo(function OrchardView({
     try { return JSON.parse(localStorage.getItem('pulp-unlocked-plots') || '{}') } catch { return {} }
   })
 
+  useEffect(() => {
+    if (!userId) return
+    db.getUnlockedPlots(userId).then(plots => {
+      const mapped: Record<string, number> = {}
+      for (const [nbId, indices] of Object.entries(plots)) mapped[nbId] = Math.max(...indices, 1)
+      if (Object.keys(mapped).length) setUnlockedPlots(mapped)
+    })
+  }, [userId])
+
   const nbUnlocked = unlockedPlots[selectedNotebook] || 1
   const totalPlots = Math.min(MAX_PLOTS, Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT)))
   const accessiblePlots = Math.min(totalPlots, nbUnlocked)
@@ -532,6 +543,7 @@ export const OrchardView = memo(function OrchardView({
     const updated = { ...unlockedPlots, [selectedNotebook]: nextPlot }
     setUnlockedPlots(updated)
     localStorage.setItem('pulp-unlocked-plots', JSON.stringify(updated))
+    if (userId) db.unlockPlot(userId, selectedNotebook, nextPlot)
     setPlotPage(nextPlot - 1)
   }
 

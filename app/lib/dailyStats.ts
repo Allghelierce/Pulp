@@ -1,3 +1,6 @@
+import * as db from "@/lib/db"
+import { supabase } from "@/lib/supabase"
+
 export interface DailyEntry {
   date: string // YYYY-MM-DD
   charsWritten: number
@@ -31,11 +34,17 @@ function getOrCreateToday(entries: DailyEntry[]): [DailyEntry[], DailyEntry] {
   return [updated, entry]
 }
 
+async function getUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id || null
+}
+
 export function logCharsWritten(count: number) {
   const entries = loadDailyStats()
   const [list, entry] = getOrCreateToday(entries)
   entry.charsWritten += count
   saveDailyStats(list.map(e => e.date === entry.date ? entry : e))
+  getUserId().then(uid => { if (uid) db.incrementDailyStat(uid, 'words_written', count) })
 }
 
 export function logFocusSession(minutes: number, juice: number) {
@@ -45,6 +54,12 @@ export function logFocusSession(minutes: number, juice: number) {
   entry.sessionsCompleted += 1
   entry.juiceEarned += juice
   saveDailyStats(list.map(e => e.date === entry.date ? entry : e))
+  getUserId().then(uid => {
+    if (!uid) return
+    db.incrementDailyStat(uid, 'minutes_focused', Math.round(minutes))
+    db.incrementDailyStat(uid, 'sessions_completed', 1)
+    db.incrementDailyStat(uid, 'trees_grown', 1)
+  })
 }
 
 export function logJuice(amount: number) {

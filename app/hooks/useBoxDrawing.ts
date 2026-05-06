@@ -22,12 +22,17 @@ interface UseBoxDrawingOptions {
   setActiveTool: (v: string) => void
   stickyColor: string
   onError?: (title: string, message: string) => void
+  drawingUndo?: () => void
+  drawingRedo?: () => void
+  drawingCanUndo?: boolean
+  drawingCanRedo?: boolean
 }
 
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
   sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode,
-  activeTool, setActiveTool, stickyColor, onError
+  activeTool, setActiveTool, stickyColor, onError,
+  drawingUndo, drawingRedo, drawingCanUndo, drawingCanRedo
 }: UseBoxDrawingOptions) {
   // Selection is only in a ref. A cheap counter triggers box-list re-renders.
   const selectedBoxIdsRef = useRef<Set<string>>(new Set())
@@ -38,6 +43,11 @@ export function useBoxDrawing({
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
   const aligningRef = useRef(false)
   const undoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
+  const redoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
+  const drawingUndoRef = useRef(drawingUndo)
+  const drawingRedoRef = useRef(drawingRedo)
+  const drawingCanUndoRef = useRef(drawingCanUndo)
+  const drawingCanRedoRef = useRef(drawingCanRedo)
 
   // Stable refs so DOM handlers never have stale closures
   const zoomRef = useRef(zoom)
@@ -62,6 +72,10 @@ export function useBoxDrawing({
 
   useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { accentRef.current = accent }, [accent])
+  useEffect(() => { drawingUndoRef.current = drawingUndo }, [drawingUndo])
+  useEffect(() => { drawingRedoRef.current = drawingRedo }, [drawingRedo])
+  useEffect(() => { drawingCanUndoRef.current = drawingCanUndo }, [drawingCanUndo])
+  useEffect(() => { drawingCanRedoRef.current = drawingCanRedo }, [drawingCanRedo])
   useEffect(() => {
     activeTabIdRef.current = activeTabId
     setSelectedBoxIds(new Set())
@@ -93,18 +107,57 @@ export function useBoxDrawing({
         return
       }
 
-      // Undo — restore previous box/drawing state
+      // Undo — restore previous box/drawing state, then fall through to drawing undo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        const stack = undoStackRef.current
-        if (stack.length === 0) return
-        const snap = stack.pop()!
         e.preventDefault()
-        setNotes(prev => prev.map(n => {
-          if (n.id !== snap.tabId) return n
-          const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
-          if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
-          return { ...n, ...restored }
-        }))
+        const stack = undoStackRef.current
+        if (stack.length > 0) {
+          const snap = stack.pop()!
+          const tid = activeTabIdRef.current
+          const pidx = currentPageIdxRef.current
+          const note = notesRef.current.find(n => n.id === snap.tabId)
+          if (note) {
+            redoStackRef.current.push({
+              tabId: snap.tabId, pageIdx: snap.pageIdx,
+              boxes: [...(note.boxes[snap.pageIdx] || [])],
+              drawings: note.drawings?.[snap.pageIdx] ? [...note.drawings[snap.pageIdx]] : undefined,
+            })
+          }
+          setNotes(prev => prev.map(n => {
+            if (n.id !== snap.tabId) return n
+            const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
+            if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
+            return { ...n, ...restored }
+          }))
+        } else if (drawingCanUndoRef.current) {
+          drawingUndoRef.current?.()
+        }
+        return
+      }
+
+      // Redo — Ctrl+Shift+Z or Ctrl+Y
+      if ((e.ctrlKey || e.metaKey) && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
+        e.preventDefault()
+        const stack = redoStackRef.current
+        if (stack.length > 0) {
+          const snap = stack.pop()!
+          const note = notesRef.current.find(n => n.id === snap.tabId)
+          if (note) {
+            undoStackRef.current.push({
+              tabId: snap.tabId, pageIdx: snap.pageIdx,
+              boxes: [...(note.boxes[snap.pageIdx] || [])],
+              drawings: note.drawings?.[snap.pageIdx] ? [...note.drawings[snap.pageIdx]] : undefined,
+            })
+          }
+          setNotes(prev => prev.map(n => {
+            if (n.id !== snap.tabId) return n
+            const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
+            if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
+            return { ...n, ...restored }
+          }))
+        } else if (drawingCanRedoRef.current) {
+          drawingRedoRef.current?.()
+        }
         return
       }
 

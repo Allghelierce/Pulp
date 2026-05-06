@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
+import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -1147,7 +1148,7 @@ export default function NoteApp() {
   }, [notes, activeTabId])
 
 
-  // Restore Grove from LocalStorage
+  // Restore Grove from localStorage (immediate) — Supabase load happens in user effect below
   useEffect(() => {
     const hour = new Date().getHours()
     const isNightOwl = hour === 3
@@ -1176,22 +1177,71 @@ export default function NoteApp() {
     } else {
       setAchievements(prev => applyTimeChecks(prev))
     }
-
-    // Streak tracking
-    const streakData = JSON.parse(localStorage.getItem('pulp-streak') || '{"count":0,"lastDate":""}')
-    const today = new Date().toISOString().slice(0, 10)
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-    if (streakData.lastDate === today) {
-      setStreak(streakData.count)
-    } else if (streakData.lastDate === yesterday) {
-      const next = streakData.count + 1
-      setStreak(next)
-      localStorage.setItem('pulp-streak', JSON.stringify({ count: next, lastDate: today }))
-    } else {
-      setStreak(1)
-      localStorage.setItem('pulp-streak', JSON.stringify({ count: 1, lastDate: today }))
-    }
   }, [])
+
+  // Load player data from Supabase when user is available
+  useEffect(() => {
+    if (!user) return
+    const loadPlayerData = async () => {
+      const [profile, groveData, inventoryData, achievementRows, cosmetics] = await Promise.all([
+        db.getPlayerProfile(user.id),
+        db.getGrove(user.id),
+        db.getInventory(user.id),
+        db.getAchievements(user.id),
+        db.getUnlockedCosmetics(user.id)
+      ])
+
+      if (profile) {
+        setGems(profile.gems)
+        setJuice(profile.juice)
+        setLastCharCount(profile.last_char_count)
+        setStreak(profile.streak)
+      } else {
+        // First time — create profile from localStorage state, then migrate legacy
+        const saved = localStorage.getItem('pulp-grove')
+        const streakData = JSON.parse(localStorage.getItem('pulp-streak') || '{"count":0,"lastDate":""}')
+        const groveLocal = saved ? JSON.parse(saved) : null
+        const today = new Date().toISOString().slice(0, 10)
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+        let streakCount = 1
+        if (streakData.lastDate === today) streakCount = streakData.count
+        else if (streakData.lastDate === yesterday) streakCount = streakData.count + 1
+
+        await db.upsertPlayerProfile(user.id, {
+          gems: groveLocal?.gems ?? 3,
+          juice: groveLocal?.juice ?? groveLocal?.sunshine ?? 50,
+          last_char_count: groveLocal?.lastCharCount ?? 0,
+          streak: streakCount,
+          last_streak_date: today
+        })
+        // Migrate legacy user_settings blob
+        await db.migrateFromLegacy(user.id)
+      }
+
+      if (groveData.length) setGrove(groveData)
+      if (Object.keys(inventoryData).length) setInventory(Object.keys(inventoryData).flatMap(k => Array(inventoryData[k]).fill(k)))
+      if (achievementRows.length) {
+        setAchievements(prev => prev.map(a => {
+          const row = achievementRows.find(r => r.achievement_id === a.id)
+          if (!row) return a
+          return { ...a, progress: row.progress, completed: row.completed, claimed: row.completed }
+        }))
+      }
+      if (cosmetics.length) setUnlockedCosmetics(cosmetics)
+
+      // Streak: update if new day
+      if (profile) {
+        const today = new Date().toISOString().slice(0, 10)
+        if (profile.last_streak_date !== today) {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+          const newStreak = profile.last_streak_date === yesterday ? profile.streak + 1 : 1
+          setStreak(newStreak)
+          await db.upsertPlayerProfile(user.id, { streak: newStreak, last_streak_date: today })
+        }
+      }
+    }
+    loadPlayerData()
+  }, [user])
 
   // Settings
   const SETTINGS_DEFAULTS = {
@@ -1358,13 +1408,17 @@ export default function NoteApp() {
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
+  const drawingRef = useRef<{ undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }>({ undo: () => {}, redo: () => {}, canUndo: false, canRedo: false })
   const boxes = useBoxDrawing({
     activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
     sketchMode, sketchPrompt, setSketchMode, setSketchPrompt,
     drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor,
-    onError: openAlert
+    onError: openAlert,
+    drawingUndo: () => drawingRef.current.undo(), drawingRedo: () => drawingRef.current.redo(),
+    drawingCanUndo: drawingRef.current.canUndo, drawingCanRedo: drawingRef.current.canRedo
   })
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes, strokeColor, fillColor, lineWidth, opacity: drawOpacity, dash: drawDash })
+  drawingRef.current = drawing
   const versionHistory = useVersionHistory(notes, activeTabId)
 
   // Slash (@ and /) menu
@@ -1981,35 +2035,74 @@ export default function NoteApp() {
     setSlashMenu(updated)
   }, [editor.syncContent, closeSlashMenu])
 
-  // Auto-capitalize sentences in contenteditable areas (HTML attribute only works on mobile)
+  // Auto-capitalize: on input, if space was just typed, capitalize first letter of previous word if it starts a sentence
   useEffect(() => {
     if (!autoCapitalize) return
-    const handler = (e: Event) => {
-      const ie = e as InputEvent
-      if (ie.inputType !== 'insertText' || !ie.data || ie.data.length !== 1) return
-      const ch = ie.data
-      if (ch !== ch.toLowerCase() || ch === ch.toUpperCase()) return
-      if (slashMenuRef.current) return
+    let capitalizing = false
+    const handler = () => {
+      if (capitalizing) return
       const sel = window.getSelection()
-      if (!sel || sel.rangeCount === 0) return
-      const range = sel.getRangeAt(0)
-      const node = range.startContainer
-      if (node.nodeType !== Node.TEXT_NODE) return
-      const text = (node as Text).textContent ?? ""
-      const offset = range.startOffset
-      // The character was already inserted, so it's at offset-1
-      if (offset < 1) return
-      const before = text.slice(0, offset - 1)
-      const trimmed = before.trimEnd()
-      const shouldCap = trimmed.length === 0 || /[.!?]\s*$/.test(before) || /\n\s*$/.test(before)
-      if (!shouldCap) return
-      const textNode = node as Text
-      textNode.textContent = text.slice(0, offset - 1) + ch.toUpperCase() + text.slice(offset)
-      const newRange = document.createRange()
-      newRange.setStart(textNode, offset)
-      newRange.collapse(true)
+      if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return
+      const anchor = sel.anchorNode
+      if (!anchor) return
+      const ce = (anchor.nodeType === Node.TEXT_NODE
+        ? anchor.parentElement?.closest('[contenteditable]')
+        : (anchor as HTMLElement).closest('[contenteditable]')) as HTMLElement | null
+      if (!ce) return
+      if (slashMenuRef.current) return
+      // Use Range to get ALL text before cursor, across any HTML elements/text nodes
+      const preRange = document.createRange()
+      preRange.setStart(ce, 0)
+      preRange.setEnd(anchor, sel.anchorOffset)
+      const fullBefore = preRange.toString()
+      if (fullBefore.length < 2 || fullBefore[fullBefore.length - 1] !== ' ') return
+      const beforeSpace = fullBefore.slice(0, -1)
+      const wordMatch = beforeSpace.match(/(\S+)$/)
+      if (!wordMatch) return
+      const word = wordMatch[1]
+      const firstChar = word[0]
+      if (!firstChar || firstChar !== firstChar.toLowerCase() || firstChar === firstChar.toUpperCase()) return
+      const beforeWord = beforeSpace.slice(0, beforeSpace.length - word.length)
+      const trimmed = beforeWord.trimEnd()
+      if (trimmed.length !== 0 && !/[.!?]\s*$/.test(beforeWord) && !/\n\s*$/.test(beforeWord)) return
+      // Find the text node and offset that contains the first char of the word
+      // Walk text nodes in the contenteditable to find it
+      const walker = document.createTreeWalker(ce, NodeFilter.SHOW_TEXT)
+      let charCount = 0
+      const targetOffset = beforeSpace.length - word.length
+      let targetNode: Text | null = null
+      let targetNodeOffset = 0
+      while (walker.nextNode()) {
+        const tn = walker.currentNode as Text
+        const len = tn.textContent?.length ?? 0
+        if (charCount + len > targetOffset) {
+          targetNode = tn
+          targetNodeOffset = targetOffset - charCount
+          break
+        }
+        charCount += len
+      }
+      if (!targetNode) return
+      capitalizing = true
+      const savedAnchor = sel.anchorNode
+      const savedOffset = sel.anchorOffset
+      const r = document.createRange()
+      r.setStart(targetNode, targetNodeOffset)
+      r.setEnd(targetNode, targetNodeOffset + 1)
       sel.removeAllRanges()
-      sel.addRange(newRange)
+      sel.addRange(r)
+      document.execCommand('insertText', false, firstChar.toUpperCase())
+      // Restore cursor
+      if (savedAnchor) {
+        try {
+          const restore = document.createRange()
+          restore.setStart(savedAnchor, savedOffset)
+          restore.collapse(true)
+          sel.removeAllRanges()
+          sel.addRange(restore)
+        } catch { /* node may have shifted */ }
+      }
+      capitalizing = false
     }
     document.addEventListener('input', handler)
     return () => document.removeEventListener('input', handler)
@@ -2187,38 +2280,56 @@ export default function NoteApp() {
     return () => window.removeEventListener("click", handler)
   }, [editor])
 
-  // Load settings + folders + grove from cloud (only fills in missing keys — localStorage always wins)
+  // Load settings + folders from Supabase
   useEffect(() => {
     if (!user) return
-    const hasLocalSettings = !!localStorage.getItem("pulp-settings")
-    const hasLocalFolders = !!localStorage.getItem("pulp-folders")
-    const hasLocalGrove = !!localStorage.getItem("pulp-grove")
-    supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
-      if (!data?.settings) return
-      const s = data.settings
-      updateSettings(s)
-      if (s.trashNotes) setTrashNotes(s.trashNotes)
-      if (s.skipDeleteConfirmation !== undefined) setSkipDeleteConfirmation(s.skipDeleteConfirmation)
-      if (!hasLocalFolders && s.folders) setFolders(s.folders)
-      if (!hasLocalGrove && s.grove) {
-        setGems(s.grove.gems ?? 3)
-        setJuice(s.grove.juice ?? 50)
-        if (s.grove.inventory) setInventory(s.grove.inventory)
-        if (s.grove.grove) setGrove(s.grove.grove)
-        if (s.grove.achievements) setAchievements(s.grove.achievements)
-        if (s.grove.unlockedCosmetics) setUnlockedCosmetics(s.grove.unlockedCosmetics)
+    const loadSettings = async () => {
+      const [settingsRow, foldersData, bookmarkIds, trashIds] = await Promise.all([
+        db.getSettings(user.id),
+        db.getFolders(user.id),
+        db.getBookmarks(user.id),
+        db.getTrash(user.id)
+      ])
+      if (settingsRow) {
+        updateSettings({
+          accent: settingsRow.accent, theme: settingsRow.theme, autoSave: settingsRow.auto_save,
+          spellCheck: settingsRow.spell_check, autoCorrect: settingsRow.auto_correct, autoCapitalize: settingsRow.auto_capitalize,
+          editorFont: settingsRow.editor_font, headingFont: settingsRow.heading_font, lineSpacing: settingsRow.line_spacing,
+          paperStyle: settingsRow.paper_style, showBinding: settingsRow.show_binding, reduceMotion: settingsRow.reduce_motion,
+          reduceVisuals: settingsRow.reduce_visuals, sidebarOnStart: settingsRow.sidebar_on_start, bgEffect: settingsRow.bg_effect,
+          smearEffect: settingsRow.smear_effect, handwrittenEffect: settingsRow.handwritten_effect, language: settingsRow.language,
+          defaultSort: settingsRow.default_sort, wordCountVisible: settingsRow.word_count_visible, focusMode: settingsRow.focus_mode,
+          baseFontSize: settingsRow.base_font_size, shortcuts: settingsRow.shortcuts, blockedSites: settingsRow.blocked_sites,
+          blockedApps: settingsRow.blocked_apps, skipDeleteConfirmation: settingsRow.skip_delete_confirmation
+        })
+        if (settingsRow.sidebar_width) setSidebarWidth(settingsRow.sidebar_width)
       }
-    })
+      if (foldersData.length) setFolders(foldersData)
+      // trashIds are tracked in Supabase for cross-device sync but trashNotes state holds full NoteData objects (loaded from localStorage)
+    }
+    loadSettings()
   }, [user])
 
-  // Save settings to localStorage (debounced)
+  // Save settings to localStorage + Supabase (debounced)
   const settingsSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(settingsSaveTimer.current)
     settingsSaveTimer.current = setTimeout(() => {
       const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
-      if (user) supabase.from("user_settings").upsert({ user_id: user.id, settings: { ...settings, folders } })
+      if (user) {
+        db.upsertSettings(user.id, {
+          accent, theme, auto_save: autoSave, spell_check: spellCheck, auto_correct: autoCorrect,
+          auto_capitalize: autoCapitalize, editor_font: editorFont, heading_font: headingFont, line_spacing: lineSpacing,
+          paper_style: paperStyle, show_binding: showBinding, reduce_motion: reduceMotion, reduce_visuals: reduceVisuals,
+          sidebar_on_start: sidebarOnStart, bg_effect: bgEffect, smear_effect: smearEffect, handwritten_effect: handwrittenEffect,
+          language, default_sort: defaultSort, word_count_visible: wordCountVisible, focus_mode: focusMode,
+          base_font_size: baseFontSize, shortcuts, blocked_sites: blockedSites, blocked_apps: blockedApps,
+          sidebar_width: sidebarWidth, skip_delete_confirmation: skipDeleteConfirmation, dev_mode: false
+        })
+        db.upsertFolders(user.id, folders)
+        db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId))
+      }
     }, 1000)
     return () => clearTimeout(settingsSaveTimer.current)
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, folders, user])
@@ -2231,7 +2342,7 @@ export default function NoteApp() {
     window.postMessage({ type: "pulp-focus-config", blockedSites, focusMode }, "*")
   }, [blockedSites, focusMode])
 
-  // Save Grove & Inventory to localStorage + cloud (debounced)
+  // Save Grove & Inventory to localStorage + Supabase (debounced)
   const groveSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
@@ -2239,10 +2350,12 @@ export default function NoteApp() {
       const groveData = { gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
-        supabase.from("user_settings").select("settings").eq("user_id", user.id).single().then(({ data }) => {
-          const existing = data?.settings || {}
-          supabase.from("user_settings").upsert({ user_id: user.id, settings: { ...existing, grove: groveData } })
-        })
+        db.upsertPlayerProfile(user.id, { gems, juice, last_char_count: lastCharCount })
+        db.upsertGrove(user.id, grove)
+        const invMap: Record<string, number> = {}
+        for (const item of inventory) invMap[item] = (invMap[item] || 0) + 1
+        db.upsertInventory(user.id, invMap)
+        db.upsertAchievements(user.id, achievements)
       }
     }, 1000)
     return () => clearTimeout(groveSaveTimer.current)
@@ -2558,6 +2671,7 @@ export default function NoteApp() {
     if (activeTabId === id) setActiveTabId(null)
     if (user) {
       supabase.from("notes").delete().eq("id", id)
+      db.addToTrash(user.id, id)
     } else {
       const pending = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
       pending.push(id)
@@ -2570,12 +2684,17 @@ export default function NoteApp() {
     if (!note) return
     setTrashNotes(ts => ts.filter(n => n.id !== id))
     setNotes(ns => ns.some(n => n.id === id) ? ns : [...ns, { ...note, deletedAt: undefined }])
+    if (user) {
+      db.removeFromTrash(user.id, id)
+      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+    }
     const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
     localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
   }
 
   const permanentlyDeleteNote = (id: string) => {
     setTrashNotes(ts => ts.filter(n => n.id !== id))
+    if (user) db.removeFromTrash(user.id, id)
   }
 
   const archiveNote = (id: string) => {
@@ -3415,6 +3534,7 @@ export default function NoteApp() {
             setInventory={setInventory}
             setGrove={setGrove}
             notes={notes}
+            userId={user?.id}
           /></div>}
 
           {statsOpen && <div className="absolute inset-0 z-40 overflow-hidden"><StatsView

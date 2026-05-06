@@ -443,25 +443,7 @@ export function useDrawing({
     render()
   }, [setNotes])
 
-  // Keyboard shortcut for undo/redo
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return
-      if (e.key === 'z' && !e.shiftKey) {
-        const el = document.activeElement as HTMLElement | null
-        if (el?.isContentEditable || el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA') return
-        e.preventDefault()
-        undo()
-      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
-        const el = document.activeElement as HTMLElement | null
-        if (el?.isContentEditable || el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA') return
-        e.preventDefault()
-        redo()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [undo, redo])
+
 
   return useMemo(() => ({
     onPointerDown, onPointerMove, onPointerUp,
