@@ -1,5 +1,5 @@
 "use client"
-import { memo, useState, useRef, useCallback, useEffect } from "react"
+import { memo, useState, useRef, useCallback, useEffect, useMemo } from "react"
 import type { NoteData, FolderData } from "@/app/types"
 import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
@@ -138,7 +138,7 @@ export const Sidebar = memo(function Sidebar({
     return tmp.textContent || tmp.innerText || ""
   }, [])
 
-  const searchResults = (() => {
+  const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (q.length < 2) return []
     const results: { noteId: string; noteName: string; noteIcon?: string; pageIdx: number; snippet: string; matchType: "title" | "content" | "box" }[] = []
@@ -173,7 +173,7 @@ export const Sidebar = memo(function Sidebar({
       if (results.length >= 20) break
     }
     return results
-  })()
+  }, [searchQuery, notes, stripHtml])
 
   useEffect(() => {
     const q = searchQuery.trim()

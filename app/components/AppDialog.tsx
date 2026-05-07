@@ -1,11 +1,11 @@
 "use client"
-import { useState } from "react"
+import { useState, memo } from "react"
 import { motion } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
 
 const font = '"EB Garamond", serif'
 
-export function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
+export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
   const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
   const [checked, setChecked] = useState(false)
 
@@ -137,4 +137,4 @@ export function AppDialog({ config, accent, onClose }: { config: DialogConfig; a
       </motion.div>
     </div>
   )
-}
+})

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react"
-import { Sparkles, Command, CornerDownLeft } from "lucide-react"
+import { Sparkles, CornerDownLeft } from "lucide-react"
 
 interface AiCommandBarProps {
   onClose: () => void

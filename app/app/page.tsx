@@ -54,30 +54,19 @@ const SlashMenu = dynamic(() => import("@/app/components/SlashMenu").then(m => m
 const VitalitySystem = dynamic(() => import("@/app/components/VitalitySystem").then(m => m.VitalitySystem), { ssr: false })
 const AiInlineMenu = dynamic(() => import("@/app/components/AiInlineMenu").then(m => m.AiInlineMenu), { ssr: false })
 const AiResultModal = dynamic(() => import("@/app/components/AiResultModal").then(m => m.AiResultModal), { ssr: false })
-// Prefetch all dynamic chunks after initial render
 function usePrefetchViews() {
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const prefetch = () => {
       import("@/app/components/SlashMenu")
-      import("@/app/components/ShelfView")
-      import("@/app/components/OrchardView")
-      import("@/app/components/BoutiqueView")
-      import("@/app/components/GemStoreModal")
-      import("@/app/components/StatsView")
-      import("@/app/components/FocusView")
-      import("@/app/components/LeaderboardView")
-      import("@/app/components/settings/SettingsView")
-      import("@/app/components/FlashcardView")
-      import("@/app/components/GridView")
-      import("@/app/components/ImageUploadModal")
-      import("@/app/components/CoverModal")
-      import("@/app/components/AiCommandBar")
-      import("@/app/components/NotebookChat")
-      import("@/app/components/VersionHistoryPanel")
       import("@/app/components/VitalitySystem")
-      import("@/app/components/AiInlineMenu")
-      import("@/app/components/AiResultModal")
-    }, 3000)
+      import("@/app/components/GridView")
+      import("@/app/components/settings/SettingsView")
+    }
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(prefetch)
+      return () => cancelIdleCallback(id)
+    }
+    const timer = setTimeout(prefetch, 4000)
     return () => clearTimeout(timer)
   }, [])
 }
@@ -1094,7 +1083,6 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [socials, setSocials] = useState<{ twitter?: string; instagram?: string; github?: string; linkedin?: string; website?: string }>({})
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -1103,7 +1091,6 @@ export default function NoteApp() {
   const [xp, setXp] = useState(0)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
-  const [customSize, setCustomSize] = useState("16")
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
@@ -1170,8 +1157,7 @@ export default function NoteApp() {
       })
 
     const saved = localStorage.getItem('pulp-grove')
-    if (saved) {
-      const data = JSON.parse(saved)
+    if (saved) { let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
       setJuice(data.juice ?? data.sunshine ?? 50)
       if (data.inventory) setInventory(data.inventory)
@@ -1307,8 +1293,11 @@ export default function NoteApp() {
     devMode: true,
     isDevUnlocked: false
   }
-  const _savedSettings = typeof window !== "undefined" ? (() => { try { const s = localStorage.getItem("pulp-settings"); return s ? JSON.parse(s) : null } catch { return null } })() : null
-  const [settings, setSettings] = useState<any>(() => _savedSettings ? { ...SETTINGS_DEFAULTS, ..._savedSettings } : SETTINGS_DEFAULTS)
+  const _savedSettingsRef = useRef<any>(undefined)
+  if (_savedSettingsRef.current === undefined) {
+    _savedSettingsRef.current = typeof window !== "undefined" ? (() => { try { const s = localStorage.getItem("pulp-settings"); return s ? JSON.parse(s) : null } catch { return null } })() : null
+  }
+  const [settings, setSettings] = useState<any>(() => _savedSettingsRef.current ? { ...SETTINGS_DEFAULTS, ..._savedSettingsRef.current } : SETTINGS_DEFAULTS)
 
   const updateSettings = (updates: any) => setSettings((prev: any) => {
     const merged = { ...prev }
@@ -1324,9 +1313,9 @@ export default function NoteApp() {
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
     shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
   } = settings
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettings?.bookmarks) ? _savedSettings.bookmarks : [])
-  const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettings?.trashNotes) ? _savedSettings.trashNotes : [])
-  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => typeof _savedSettings?.skipDeleteConfirmation === "boolean" ? _savedSettings.skipDeleteConfirmation : false)
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
+  const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettingsRef.current?.trashNotes) ? _savedSettingsRef.current.trashNotes : [])
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => typeof _savedSettingsRef.current?.skipDeleteConfirmation === "boolean" ? _savedSettingsRef.current.skipDeleteConfirmation : false)
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
@@ -2357,8 +2346,11 @@ export default function NoteApp() {
     return () => clearTimeout(settingsSaveTimer.current)
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, folders, user])
 
+  const sidebarWidthTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
-    localStorage.setItem("pulp-sidebar-width", String(sidebarWidth))
+    clearTimeout(sidebarWidthTimer.current)
+    sidebarWidthTimer.current = setTimeout(() => localStorage.setItem("pulp-sidebar-width", String(sidebarWidth)), 300)
+    return () => clearTimeout(sidebarWidthTimer.current)
   }, [sidebarWidth])
 
   useEffect(() => {
@@ -2434,24 +2426,25 @@ export default function NoteApp() {
     const saved = localStorage.getItem("pulp-notes")
     const savedFolders = localStorage.getItem("pulp-folders")
     const savedActiveTab = localStorage.getItem("pulp-active-tab")
-    if (saved) {
-      const parsed: NoteData[] = JSON.parse(saved)
-      setNotes(parsed)
-      // Restore last opened note, or fall back to the first note in the list
-      if (parsed.length > 0) {
-        const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
-        setActiveTabId(lastId)
-        const savedSidebarWidth = localStorage.getItem("pulp-sidebar-width")
-        if (savedSidebarWidth !== null) {
-          setSidebarWidth(Number(savedSidebarWidth))
-        } else {
-          const savedSettings = localStorage.getItem("pulp-settings")
-          const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
-          if (sidebarPref !== false) setSidebarWidth(256)
+    try {
+      if (saved) {
+        const parsed: NoteData[] = JSON.parse(saved)
+        setNotes(parsed)
+        if (parsed.length > 0) {
+          const lastId = savedActiveTab && parsed.find(n => n.id === savedActiveTab) ? savedActiveTab : parsed[0].id
+          setActiveTabId(lastId)
+          const savedSidebarWidth = localStorage.getItem("pulp-sidebar-width")
+          if (savedSidebarWidth !== null) {
+            setSidebarWidth(Number(savedSidebarWidth))
+          } else {
+            const savedSettings = localStorage.getItem("pulp-settings")
+            const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
+            if (sidebarPref !== false) setSidebarWidth(256)
+          }
         }
       }
-    }
-    if (savedFolders) setFolders(JSON.parse(savedFolders))
+      if (savedFolders) setFolders(JSON.parse(savedFolders))
+    } catch { }
   }, [])
 
   // Save to localStorage whenever notes, folders, or active tab changes (debounced)
