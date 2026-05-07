@@ -15,7 +15,7 @@ function lighten(hex: string, amount: number) {
   return `rgb(${r},${g},${b})`
 }
 
-export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5 }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number }) {
+export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
@@ -2072,7 +2072,7 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
           const dt = dirtDepth
           const rx = 8 + dt * 12 + dr() * 5
           const ry = 2.5 + dt * 4.5 + dr() * 1.8
-          const tilt = (dr() - 0.5) * 20
+          const tilt = dirtTilt !== undefined ? dirtTilt + (dr() - 0.5) * 4 : (dr() - 0.5) * 20
           const p0 = `${(-1.05 * rx).toFixed(2)},${(0.05 * ry).toFixed(2)}`
           const c1 = `${(-0.85 * rx).toFixed(2)},${(-1.2 * ry).toFixed(2)}`
           const p1 = `${(-0.15 * rx).toFixed(2)},${(-1.05 * ry).toFixed(2)}`

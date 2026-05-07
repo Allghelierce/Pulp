@@ -3,7 +3,8 @@ import { useRef, useCallback, useEffect } from "react"
 import type { NoteData, NoteVersion } from "@/app/types"
 
 const MAX_VERSIONS = 30
-const SNAPSHOT_INTERVAL = 5 * 60 * 1000 // 5 minutes
+const SNAPSHOT_INTERVAL = 5 * 60 * 1000
+const MIN_SNAPSHOT_GAP = 10_000
 const STORAGE_PREFIX = "pulp-versions-"
 
 function extractVersion(note: NoteData): NoteVersion {
@@ -43,71 +44,78 @@ function saveVersions(noteId: string, versions: NoteVersion[]) {
   } catch { /* localStorage full — silently skip */ }
 }
 
+function snapshotNote(note: NoteData, lastHashMap: Map<string, string>): NoteVersion[] {
+  const hash = contentHash(note)
+  const prev = lastHashMap.get(note.id)
+  if (hash === prev) return loadVersions(note.id)
+
+  const versions = loadVersions(note.id)
+  const last = versions[versions.length - 1]
+  if (last && Date.now() - last.timestamp < MIN_SNAPSHOT_GAP) return versions
+
+  lastHashMap.set(note.id, hash)
+  versions.push(extractVersion(note))
+  saveVersions(note.id, versions)
+  return versions
+}
+
 export function useVersionHistory(
   notes: NoteData[],
   activeTabId: string | null,
 ) {
-  const lastHashRef = useRef<string>("")
+  const notesRef = useRef(notes)
+  notesRef.current = notes
+  const activeTabRef = useRef(activeTabId)
+  const hashMapRef = useRef(new Map<string, string>())
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const getActiveNote = useCallback(() => {
-    if (!activeTabId) return null
-    return notes.find(n => n.id === activeTabId) ?? null
-  }, [notes, activeTabId])
-
   const takeSnapshot = useCallback((): NoteVersion[] => {
-    const note = getActiveNote()
+    const tabId = activeTabRef.current
+    if (!tabId) return []
+    const note = notesRef.current.find(n => n.id === tabId)
     if (!note) return []
-    const hash = contentHash(note)
-    const versions = loadVersions(note.id)
-    if (hash !== lastHashRef.current) {
-      lastHashRef.current = hash
-      versions.push(extractVersion(note))
-      saveVersions(note.id, versions)
-    }
-    return versions
-  }, [getActiveNote])
+    return snapshotNote(note, hashMapRef.current)
+  }, [])
 
-  // Auto-snapshot on interval
   useEffect(() => {
     intervalRef.current = setInterval(takeSnapshot, SNAPSHOT_INTERVAL)
     return () => clearInterval(intervalRef.current)
   }, [takeSnapshot])
 
-  // Snapshot when switching away from a note
-  const prevTabRef = useRef(activeTabId)
+  // Seed hash when switching to a note, snapshot when leaving one
   useEffect(() => {
-    if (prevTabRef.current && prevTabRef.current !== activeTabId) {
-      const prev = notes.find(n => n.id === prevTabRef.current)
-      if (prev) {
-        const hash = contentHash(prev)
-        if (hash !== lastHashRef.current) {
-          lastHashRef.current = hash
-          const versions = loadVersions(prev.id)
-          versions.push(extractVersion(prev))
-          saveVersions(prev.id, versions)
-        }
-      }
+    const prevId = activeTabRef.current
+    if (prevId && prevId !== activeTabId) {
+      const prev = notesRef.current.find(n => n.id === prevId)
+      if (prev) snapshotNote(prev, hashMapRef.current)
     }
-    prevTabRef.current = activeTabId
+    activeTabRef.current = activeTabId
     if (activeTabId) {
-      const note = notes.find(n => n.id === activeTabId)
-      if (note) lastHashRef.current = contentHash(note)
+      const note = notesRef.current.find(n => n.id === activeTabId)
+      if (note) hashMapRef.current.set(activeTabId, contentHash(note))
     }
-  }, [activeTabId, notes])
+  }, [activeTabId])
+
+  // Snapshot on page unload
+  useEffect(() => {
+    const handler = () => {
+      const tabId = activeTabRef.current
+      if (!tabId) return
+      const note = notesRef.current.find(n => n.id === tabId)
+      if (note) snapshotNote(note, hashMapRef.current)
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [])
 
   const getVersions = useCallback((noteId: string): NoteVersion[] => {
     return loadVersions(noteId)
   }, [])
 
   const restoreVersion = useCallback((noteId: string, version: NoteVersion, setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void) => {
-    // Snapshot current state before restoring
-    const current = notes.find(n => n.id === noteId)
-    if (current) {
-      const versions = loadVersions(noteId)
-      versions.push(extractVersion(current))
-      saveVersions(noteId, versions)
-    }
+    const current = notesRef.current.find(n => n.id === noteId)
+    if (current) snapshotNote(current, hashMapRef.current)
+
     setNotes(prev => prev.map(n => {
       if (n.id !== noteId) return n
       return {
@@ -120,7 +128,15 @@ export function useVersionHistory(
         flashcards: version.flashcards,
       }
     }))
-  }, [notes])
+    hashMapRef.current.set(noteId, JSON.stringify({
+      pages: version.pages,
+      boxes: version.boxes,
+      lines: version.lines,
+      hlines: version.hlines,
+      drawings: version.drawings,
+      flashcards: version.flashcards,
+    }))
+  }, [])
 
   const deleteVersion = useCallback((noteId: string, timestamp: number) => {
     const versions = loadVersions(noteId).filter(v => v.timestamp !== timestamp)

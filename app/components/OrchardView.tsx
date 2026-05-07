@@ -282,12 +282,12 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke={isDark ? 'rgba(40,60,30,0.15)' : 'rgba(90,140,60,0.08)'} strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke={isDark ? 'rgba(40,60,30,0.12)' : 'rgba(90,140,60,0.06)'} strokeWidth="0.25" />
 
-        {/* Tilled dirt columns — match tree columns, bend toward tree bases */}
+        {/* Tilled dirt columns — smooth curves through actual tree positions */}
         {Array.from({ length: tillCols }).map((_, ci) => {
           const colTrees = treeBases.filter(t => t.col === ci).sort((a, b) => a.y - b.y)
           const rng = seededRng(ci * 137 + 42)
-          const steps = 12
-          const points: string[] = []
+          const steps = 16
+          const pts: [number, number][] = []
           for (let s = 0; s <= steps; s++) {
             const t = s / steps
             const y = 40 + t * 57
@@ -297,30 +297,27 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
             const trapR = colEnd - pinch
             let x = (tillCols === 1 ? 50 : trapL + ci * ((trapR - trapL) / Math.max(1, tillCols - 1))) * 2
 
-            const nearby = colTrees.find(tb => Math.abs(tb.y - y) < 10)
-            if (nearby) {
-              const pull = (nearby.x * 2 - x) * 0.5
-              x += pull
-            }
+            const nearby = colTrees.find(tb => Math.abs(tb.y - y) < 8)
+            if (nearby) x += (nearby.x * 2 - x) * 0.7
 
-            const wobble = (rng() - 0.5) * 0.8
-            points.push(`${(x + wobble).toFixed(1)},${y.toFixed(1)}`)
+            const wobble = (rng() - 0.5) * 0.4
+            pts.push([x + wobble, y])
           }
-          const d = points.length > 1 ? `M${points[0]} ` + points.slice(1).map((p, i) => {
-            if (i === 0) return `L${p}`
-            const prev = points[i].split(',').map(Number)
-            const curr = p.split(',').map(Number)
-            const cpx = ((prev[0] + curr[0]) / 2).toFixed(1)
-            return `Q${points[i]} ${p}`
-          }).join(' ') : ''
+          let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`
+          for (let i = 1; i < pts.length; i++) {
+            const [px, py] = pts[i - 1]
+            const [cx, cy] = pts[i]
+            const mx = ((px + cx) / 2).toFixed(1)
+            const my = ((py + cy) / 2).toFixed(1)
+            d += ` Q${px.toFixed(1)},${py.toFixed(1)} ${mx},${my}`
+          }
+          const [lx, ly] = pts[pts.length - 1]
+          d += ` L${lx.toFixed(1)},${ly.toFixed(1)}`
           return (
             <g key={`till-${ci}`}>
-              {/* Shadow/depth side */}
-              <path d={d} fill="none" stroke={isDark ? '#1a1408' : '#5a4a30'} strokeWidth="3" opacity={isDark ? 0.18 : 0.1} strokeLinecap="round" strokeLinejoin="round" />
-              {/* Main furrow */}
-              <path d={d} fill="none" stroke={dirtColor} strokeWidth="1.8" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" strokeLinejoin="round" />
-              {/* Ridge highlight */}
-              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.5" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" transform="translate(-0.4, -0.3)" />
+              <path d={d} fill="none" stroke={isDark ? '#1a1408' : '#5a4a30'} strokeWidth="2.5" opacity={isDark ? 0.16 : 0.09} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke={dirtColor} strokeWidth="1.5" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.4" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" transform="translate(-0.3, -0.2)" />
             </g>
           )
         })}
@@ -789,7 +786,7 @@ export const OrchardView = memo(function OrchardView({
                               : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
                             transition: 'filter 0.2s',
                           }}>
-                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} />
+                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
                           </div>
 
                           <div className="mt-0.5 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300 }}>
