@@ -3563,7 +3563,7 @@ export default function NoteApp() {
             streak={streak}
           /></div>}
 
-          {leaderboardOpen && <div className="absolute inset-0 z-40 overflow-hidden"><LeaderboardView
+          {leaderboardOpen && <div className="absolute inset-0 z-40 overflow-hidden" onClick={() => setLeaderboardOpen(false)}><LeaderboardView
             isOpen={leaderboardOpen}
             onClose={() => setLeaderboardOpen(false)}
             theme={theme}

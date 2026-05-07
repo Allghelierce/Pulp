@@ -192,6 +192,15 @@ export const StatsView = memo(function StatsView({
         <div className="px-6 pt-4 pb-3 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full transition-colors"
+                style={{ color: textMuted }}
+                onMouseEnter={e => e.currentTarget.style.color = textPrimary}
+                onMouseLeave={e => e.currentTarget.style.color = textMuted}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
               <div
                 style={{
                   width: 32, height: 32, borderRadius: 8,
@@ -206,15 +215,6 @@ export const StatsView = memo(function StatsView({
                 <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: '"EB Garamond", serif' }}>{lvl.currentXp} / {lvl.nextXp} XP to Level {lvl.level + 1}</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-full transition-colors"
-              style={{ color: textMuted }}
-              onMouseEnter={e => e.currentTarget.style.color = textPrimary}
-              onMouseLeave={e => e.currentTarget.style.color = textMuted}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
           </div>
 
           {/* Summary stats */}

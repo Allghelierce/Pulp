@@ -101,6 +101,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
     >
       <div
         onMouseDown={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         className="relative w-full overflow-hidden flex flex-col"
         style={{
           maxWidth: 520,
@@ -113,12 +114,22 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
       >
         {/* Header */}
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <div>
-            <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif' }}>Leaderboard</h2>
-            <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>Top writers this season</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: textMuted }}
+              onMouseEnter={e => e.currentTarget.style.color = textPrimary}
+              onMouseLeave={e => e.currentTarget.style.color = textMuted}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <div>
+              <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif' }}>Leaderboard</h2>
+              <p className="text-[11px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>Top writers this season</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Tabs */}
             <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[10px] font-semibold`}>
               {([['juice', 'Sap'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
                 <button
@@ -141,15 +152,6 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                 </button>
               ))}
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg transition-colors"
-              style={{ color: textMuted }}
-              onMouseEnter={e => e.currentTarget.style.color = textPrimary}
-              onMouseLeave={e => e.currentTarget.style.color = textMuted}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
           </div>
         </div>
 

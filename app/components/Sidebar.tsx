@@ -479,8 +479,8 @@ export const Sidebar = memo(function Sidebar({
             title="More options"
             className={`w-5 h-5 flex items-center justify-center rounded transition-opacity ${noteMenuId === n.id ? "opacity-100 bg-zinc-700 text-white" : "opacity-0 group-hover:opacity-100 hover:bg-zinc-700 text-zinc-400 hover:text-white"}`}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2.5" /><circle cx="12" cy="12" r="2.5" /><circle cx="12" cy="19" r="2.5" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" opacity="0.55">
+              <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
             </svg>
           </button>
         </div>
@@ -827,7 +827,7 @@ export const Sidebar = memo(function Sidebar({
                     onClick={e => { e.stopPropagation(); setBookmarkMenuId(bookmarkMenuId === b.id ? null : b.id) }}
                     className="shrink-0 ml-auto mr-1 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all text-zinc-500 hover:text-zinc-300"
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" opacity="0.55"><circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" /></svg>
                   </button>
                   {bookmarkMenuId === b.id && (
                     <div

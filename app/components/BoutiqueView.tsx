@@ -338,41 +338,43 @@ export const BoutiqueView = memo(function BoutiqueView({
       >
         {/* ── Header ── */}
         <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-          <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (tab.id === 'catalog' && activeTab !== 'catalog') {
-                    setActiveTab('catalog')
-                    setIsRenderingCatalog(true)
-                    setSelectedPlant(null)
-                    setTimeout(() => setIsRenderingCatalog(false), 20)
-                  } else {
-                    setActiveTab(tab.id)
-                    setSelectedPlant(null)
-                  }
-                }}
-                className={`px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
-                  activeTab === tab.id
-                    ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
-                    : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
-                }`}
-              >
-                <span className="opacity-80">{tabIcons[tab.id]}</span>
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    if (tab.id === 'catalog' && activeTab !== 'catalog') {
+                      setActiveTab('catalog')
+                      setIsRenderingCatalog(true)
+                      setSelectedPlant(null)
+                      setTimeout(() => setIsRenderingCatalog(false), 20)
+                    } else {
+                      setActiveTab(tab.id)
+                      setSelectedPlant(null)
+                    }
+                  }}
+                  className={`px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                    activeTab === tab.id
+                      ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+                      : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
+                  }`}
+                >
+                  <span className="opacity-80">{tabIcons[tab.id]}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <CurrencyPill type="juice" amount={juice} />
             <CurrencyPill type="gems" amount={gems} />
-            <button
-              onClick={onClose}
-              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ml-2 ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
           </div>
         </div>
 
