@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
@@ -132,7 +132,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote }: {
   user: { id: string; email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -1031,7 +1031,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 <div className="px-5 py-4 space-y-4">
                   {[
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, title: "Notebooks & Pages", desc: "Create notebooks from the sidebar. Each notebook holds multiple pages you can flip through. Click anywhere on a page to create a text box and start writing." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands or @ to mention notes, insert AI, and more." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Sap & Gems", desc: "Sap is earned by writing and completing focus sessions — use it to buy seeds in the shop. Gems are a premium currency for cosmetics, orchard expansion, and accent colors." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. Removing a site costs 50 gems to discourage impulsive unblocking. Install the Chrome extension for enforcement." },
@@ -1236,7 +1236,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
       )}
     </div>
   )
-}
+})
 
 function SyncSection({ isDark, onSyncNow }: { isDark: boolean; onSyncNow: () => Promise<{ pushed: number; pulled: number } | null> }) {
   const [syncing, setSyncing] = useState(false)

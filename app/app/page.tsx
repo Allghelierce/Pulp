@@ -57,8 +57,8 @@ const AiResultModal = dynamic(() => import("@/app/components/AiResultModal").the
 // Prefetch all dynamic chunks after initial render
 function usePrefetchViews() {
   useEffect(() => {
-    import("@/app/components/SlashMenu")
     const timer = setTimeout(() => {
+      import("@/app/components/SlashMenu")
       import("@/app/components/ShelfView")
       import("@/app/components/OrchardView")
       import("@/app/components/BoutiqueView")
@@ -1307,14 +1307,8 @@ export default function NoteApp() {
     devMode: true,
     isDevUnlocked: false
   }
-  const [settings, setSettings] = useState<any>(() => {
-    if (typeof window === "undefined") return SETTINGS_DEFAULTS
-    try {
-      const saved = localStorage.getItem("pulp-settings")
-      if (saved) return { ...SETTINGS_DEFAULTS, ...JSON.parse(saved) }
-    } catch { }
-    return SETTINGS_DEFAULTS
-  })
+  const _savedSettings = typeof window !== "undefined" ? (() => { try { const s = localStorage.getItem("pulp-settings"); return s ? JSON.parse(s) : null } catch { return null } })() : null
+  const [settings, setSettings] = useState<any>(() => _savedSettings ? { ...SETTINGS_DEFAULTS, ..._savedSettings } : SETTINGS_DEFAULTS)
 
   const updateSettings = (updates: any) => setSettings((prev: any) => {
     const merged = { ...prev }
@@ -1330,21 +1324,9 @@ export default function NoteApp() {
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
     shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
   } = settings
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => {
-    if (typeof window === "undefined") return []
-    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (Array.isArray(p.bookmarks)) return p.bookmarks } } catch { }
-    return []
-  })
-  const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => {
-    if (typeof window === "undefined") return []
-    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (Array.isArray(p.trashNotes)) return p.trashNotes } } catch { }
-    return []
-  })
-  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => {
-    if (typeof window === "undefined") return false
-    try { const s = localStorage.getItem("pulp-settings"); if (s) { const p = JSON.parse(s); if (typeof p.skipDeleteConfirmation === "boolean") return p.skipDeleteConfirmation } } catch { }
-    return false
-  })
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettings?.bookmarks) ? _savedSettings.bookmarks : [])
+  const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettings?.trashNotes) ? _savedSettings.trashNotes : [])
+  const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => typeof _savedSettings?.skipDeleteConfirmation === "boolean" ? _savedSettings.skipDeleteConfirmation : false)
 
   const [activeTool, setActiveTool] = useState('select')
   const [stickyColor, setStickyColor] = useState('#fef08a')
@@ -1370,17 +1352,9 @@ export default function NoteApp() {
     const r = paperRef.current.getBoundingClientRect()
     const scale = Number(zoom) || 1
     const y = (e.clientY - r.top) / scale
-    const id = uid()
-    const width = paperRef.current.clientWidth - 128
-    const newBox: TextBoxType = {
-      id,
-      x: 64, y: y - 4, w: width, h: 8,
-      content: `<div contenteditable="false" style="height:8px;width:100%;display:flex;align-items:center;pointer-events:none;"><svg width="100%" height="6" viewBox="0 0 100 6" preserveAspectRatio="none" style="filter:url(#hand-rule);overflow:visible;"><line x1="0" y1="3" x2="100" y2="3" stroke="#1a1a1a" stroke-width="1.8" stroke-linecap="round" /></svg></div>`,
-      boxHeadingStyle: 'default'
-    }
+    const hline = { id: uid(), x: 64, y, width: paperRef.current.clientWidth - 128 }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n,
-      boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
+      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
     }))
     setActiveTool('select')
   }, [activeTabId, currentPageIdx, setNotes, zoom])
@@ -2267,7 +2241,7 @@ export default function NoteApp() {
     const flushPendingDeletes = async (uid: string) => {
       const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
       if (!pending.length) return
-      for (const id of pending) await supabase.from("notes").delete().eq("id", id).eq("user_id", uid)
+      await Promise.all(pending.map(id => supabase.from("notes").delete().eq("id", id).eq("user_id", uid)))
       localStorage.removeItem("pulp-pending-deletes")
     }
     supabase.auth.getUser().then(({ data: { user }, error }) => {
@@ -2499,8 +2473,9 @@ export default function NoteApp() {
     if (activeTabId) localStorage.setItem("pulp-active-tab", activeTabId)
   }, [activeTabId])
 
-  // Fetch notes from cloud and merge with local — cloud notes missing locally get added
+  // Show local content immediately, merge cloud notes in background
   useEffect(() => {
+    setIsLoading(false)
     const fetchNotes = async () => {
       try {
         const { data: { user: u } } = await supabase.auth.getUser()
@@ -2520,8 +2495,6 @@ export default function NoteApp() {
       } catch (err) {
         console.error("[Pulp] Failed to fetch notes from Supabase, falling back to local:", err)
         setUser(null)
-      } finally {
-        setIsLoading(false)
       }
     }
     fetchNotes()
@@ -2935,9 +2908,7 @@ export default function NoteApp() {
                 const pulled = cloudNotes.filter(n => !localIds.has(n.id))
                 const toPush = localNotes.filter(n => !cloudIds.has(n.id))
                 if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
-                for (const note of toPush) {
-                  await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
-                }
+                if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
                 return { pushed: toPush.length, pulled: pulled.length }
               } catch { return null }
             }}
@@ -3150,7 +3121,13 @@ export default function NoteApp() {
                 setRightSidebarOpen={setTimerOpen}
                 allCompacted={allCompacted}
                 onCompactAll={handleCompactAll}
-                onInsertHR={() => editor.insertHTML('<hr style="all:unset;display:block;height:2px;background:#1a1a1a;width:90%;margin:16px auto;box-sizing:border-box;border-radius:1px"><br>')}
+                onInsertHR={() => {
+                  if (!activeTabId || !paperRef.current) return
+                  const hline = { id: uid(), x: 64, y: 200, width: paperRef.current.clientWidth - 128 }
+                  setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                    ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
+                  }))
+                }}
                 isVault={activeNote?.noteType === "vault"}
                 isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
                 onLock={() => {
@@ -3381,6 +3358,28 @@ export default function NoteApp() {
                               })
                             })()}
 
+                            {/* Render horizontal lines */}
+                            {(() => {
+                              boxes.hlineSelectionVersion
+                              return (activeNote.hlines?.[currentPageIdx] || []).map(hl => {
+                                const isSelected = boxes.selectedHLineIdRef.current === hl.id
+                                return (
+                                  <div key={hl.id} className="absolute z-20" style={{
+                                    left: hl.x, top: hl.y - 4, width: hl.width, height: 8,
+                                    cursor: isSelected ? 'grab' : 'pointer',
+                                  }}>
+                                    <svg width="100%" height="8" style={{ overflow: 'visible', filter: 'url(#hand-rule)' }}>
+                                      <line x1="0" y1="4" x2="100%" y2="4"
+                                        stroke={isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.2)" : "#1a1a1a")}
+                                        strokeWidth={isSelected ? 2.5 : 1.8} strokeLinecap="round"
+                                      />
+                                    </svg>
+                                    {isSelected && <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />}
+                                  </div>
+                                )
+                              })
+                            })()}
+
                             {/* Cover display on first page */}
                             {activeNote.cover && currentPageIdx === 0 && (
                               <div style={{ width: "100%", marginBottom: 16, borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
@@ -3414,12 +3413,6 @@ export default function NoteApp() {
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
                                text-rendering: optimizeLegibility !important;
-                             }
-                             #editor-paper > [contenteditable]:empty::before {
-                               content: "Type @ for commands…";
-                               color: ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.18)"};
-                               font-style: italic;
-                               pointer-events: none;
                              }
                              @keyframes box-ripple {
                                0%   { inset: 0px;   opacity: 0.6; }
@@ -3655,6 +3648,14 @@ export default function NoteApp() {
             toggleScript={editor.toggleScript}
             insertBacklink={insertBacklink}
             onInsertImage={() => { dismissSlashMenu(true); setShowImageModal(true) }}
+            onInsertHLine={() => {
+              if (!activeTabId || !paperRef.current) return
+              const cursorY = slashMenu ? slashMenu.y : 200
+              const hline = { id: uid(), x: 64, y: cursorY, width: paperRef.current.clientWidth - 128 }
+              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
+              }))
+            }}
           />
         )}
 

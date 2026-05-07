@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from "react"
+import React, { useEffect, memo } from "react"
 import type { NoteData } from "@/app/types"
 import { getPaperBg, type PaperStyle } from "@/app/lib/paperStyle"
 import { sanitizeHTML } from "@/lib/sanitize"
@@ -19,7 +19,7 @@ interface GridViewProps {
   setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
 }
 
-export function GridView({ activeNote, theme, accent, setGridView, setCurrentPageIdx, lineSpacing, paperStyle, editorFont, setNotes, activeTabId }: GridViewProps) {
+export const GridView = memo(function GridView({ activeNote, theme, accent, setGridView, setCurrentPageIdx, lineSpacing, paperStyle, editorFont, setNotes, activeTabId }: GridViewProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setGridView(false)
@@ -167,4 +167,4 @@ export function GridView({ activeNote, theme, accent, setGridView, setCurrentPag
       `}</style>
     </div>
   )
-}
+})

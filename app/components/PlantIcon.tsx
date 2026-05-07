@@ -1,4 +1,5 @@
 "use client"
+import { memo } from "react"
 import { TREE_TYPES } from "@/app/constants"
 
 function darken(hex: string, amount: number) {
@@ -15,7 +16,7 @@ function lighten(hex: string, amount: number) {
   return `rgb(${r},${g},${b})`
 }
 
-export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number }) {
+export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
@@ -2086,4 +2087,4 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
       </svg>
     </div>
   )
-}
+})

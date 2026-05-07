@@ -37,15 +37,8 @@ export const VitalitySystem = memo(function VitalitySystem({
   inventory, activeTabId, notes,
 }: VitalitySystemProps) {
 
-  // ─── Marathon tracking (2h continuous session) ───
+  // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
   const sessionStartRef = useRef(Date.now())
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
-      checkAchievementRef.current?.('marathon', a => ({ progress: Math.min(7200, elapsed) }))
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [checkAchievementRef])
 
   // ─── Timer State ───
   const GRACE_PERIOD_MS = 15 * 60 * 1000
@@ -174,6 +167,10 @@ export const VitalitySystem = memo(function VitalitySystem({
             return timerTotal
           }
           const next = prev + 1
+          if (next > 0 && next % 60 === 0) {
+            const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+            checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
+          }
           if (next > 0 && next % 600 === 0 && Math.random() < 0.125) {
             setGems(g => g + 1)
           }

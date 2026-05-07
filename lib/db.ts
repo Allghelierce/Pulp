@@ -316,9 +316,7 @@ export async function migrateFromLegacy(userId: string) {
       await upsertAchievements(userId, groveData.achievements)
     }
     if (groveData.unlockedCosmetics?.length) {
-      for (const c of groveData.unlockedCosmetics) {
-        await unlockCosmetic(userId, c)
-      }
+      await Promise.all(groveData.unlockedCosmetics.map((c: string) => unlockCosmetic(userId, c)))
     }
   }
 
@@ -333,6 +331,6 @@ export async function migrateFromLegacy(userId: string) {
 
   // Migrate trash
   if (s.trashNotes?.length) {
-    for (const noteId of s.trashNotes) await addToTrash(userId, noteId)
+    await Promise.all(s.trashNotes.map((noteId: string) => addToTrash(userId, noteId)))
   }
 }
