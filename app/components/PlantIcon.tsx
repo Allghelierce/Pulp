@@ -2069,27 +2069,11 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
       <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         {!hideGround && renderGround()}
         {hideGround && dirtSeed > 0 && (() => {
-          let ds = Math.abs(dirtSeed) || 1
-          const dr = () => { ds ^= ds << 13; ds ^= ds >> 17; ds ^= ds << 5; return ((ds >>> 0) % 10000) / 10000 }
           const dt = dirtDepth
-          const rx = 8 + dt * 12 + dr() * 5
-          const ry = 2.5 + dt * 4.5 + dr() * 1.8
-          const tilt = dirtTilt !== undefined ? dirtTilt + (dr() - 0.5) * 4 : (dr() - 0.5) * 20
-          const p0 = `${(-1.05 * rx).toFixed(2)},${(0.05 * ry).toFixed(2)}`
-          const c1 = `${(-0.85 * rx).toFixed(2)},${(-1.2 * ry).toFixed(2)}`
-          const p1 = `${(-0.15 * rx).toFixed(2)},${(-1.05 * ry).toFixed(2)}`
-          const c2 = `${(0.3 * rx).toFixed(2)},${(-1.45 * ry).toFixed(2)}`
-          const p2 = `${(0.95 * rx).toFixed(2)},${(-0.15 * ry).toFixed(2)}`
-          const c3 = `${(1.15 * rx).toFixed(2)},${(0.85 * ry).toFixed(2)}`
-          const p3 = `${(0.3 * rx).toFixed(2)},${(1.15 * ry).toFixed(2)}`
-          const c4 = `${(-0.55 * rx).toFixed(2)},${(1.25 * ry).toFixed(2)}`
-          const d = `M${p0} Q${c1} ${p1} Q${c2} ${p2} Q${c3} ${p3} Q${c4} ${p0}Z`
+          const rx = 6 + dt * 10
+          const ry = 1.8 + dt * 3
           return (
-            <g transform={`translate(24 46) rotate(${tilt.toFixed(1)})`}>
-              <path d={d} fill={dirtDark ? '#1f160d' : '#5e4a31'} opacity={dirtDark ? 0.38 : 0.26} />
-              <path d={d} fill="none" stroke={dirtDark ? '#3b2d1b' : '#8f754f'} strokeWidth="0.22" opacity={dirtDark ? 0.22 : 0.16} />
-              <ellipse cx={-0.1 * rx} cy={-0.25 * ry} rx={0.42 * rx} ry={0.24 * ry} fill={dirtDark ? '#3a2a18' : '#a28761'} opacity={dirtDark ? 0.12 : 0.11} />
-            </g>
+            <ellipse cx={24} cy={46} rx={rx} ry={ry} fill="#000" opacity={dirtDark ? 0.22 : 0.14} />
           )
         })()}
         <g style={{

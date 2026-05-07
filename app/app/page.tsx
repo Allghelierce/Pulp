@@ -2244,8 +2244,20 @@ export default function NoteApp() {
       for (const id of pending) await supabase.from("notes").delete().eq("id", id).eq("user_id", uid)
       localStorage.removeItem("pulp-pending-deletes")
     }
-    supabase.auth.getUser().then(({ data: { user } }) => { setUser(user); if (user) flushPendingDeletes(user.id) })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session: any) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error?.message?.includes('Refresh Token') || error?.message?.includes('refresh_token')) {
+        supabase.auth.signOut()
+        setUser(null)
+        return
+      }
+      setUser(user); if (user) flushPendingDeletes(user.id)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session: any) => {
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        supabase.auth.signOut()
+        setUser(null)
+        return
+      }
       const u = session?.user ?? null
       setUser(u)
       if (u) flushPendingDeletes(u.id)

@@ -575,17 +575,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
         {!compact && <div className="w-px h-5 bg-zinc-200 shrink-0" />}
 
-        <button
+        {!ultraCompact && <button
           onClick={onOpenVersionHistory}
           title="Version History"
           className={`${btn(false)} flex items-center gap-1.5`}
           style={btnFont}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
           </svg>
           {!compact && <span>History</span>}
-        </button>
+        </button>}
 
         <select value={zoom} onChange={e => setZoom(e.target.value)} className="text-[12px] font-medium border border-zinc-200 rounded-[5px] px-2.5 py-1 outline-none bg-white shrink-0 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer" style={btnFont}>
           {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}

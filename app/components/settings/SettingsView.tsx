@@ -174,6 +174,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   const [deleteConfirmType, setDeleteConfirmType] = useState<"notes" | "account" | null>(null)
   const [deleteUsername, setDeleteUsername] = useState("")
   const [deletePassword, setDeletePassword] = useState("")
+  const [deleting, setDeleting] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
   const [pwCurrent, setPwCurrent] = useState("")
   const [pwNew, setPwNew] = useState("")
@@ -1157,7 +1158,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     type="text"
                     value={deleteUsername}
                     onChange={(e) => setDeleteUsername(e.target.value)}
-                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-red-500/50" : "bg-white border-zinc-200 focus:border-red-400/50"}`}
+                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-zinc-500/50" : "bg-white border-zinc-200 focus:border-zinc-400/50"}`}
                     placeholder="Enter username"
                     autoComplete="off"
                   />
@@ -1168,7 +1169,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     type="password"
                     value={deletePassword}
                     onChange={(e) => setDeletePassword(e.target.value)}
-                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-red-500/50" : "bg-white border-zinc-200 focus:border-red-400/50"}`}
+                    className={`w-full text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800/50 border-zinc-700 focus:border-zinc-500/50" : "bg-white border-zinc-200 focus:border-zinc-400/50"}`}
                     placeholder="Enter password"
                     autoComplete="new-password"
                   />
@@ -1184,14 +1185,16 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                 Cancel
               </button>
               <button
-                disabled={!deleteUsername || !deletePassword}
+                disabled={!deleteUsername || !deletePassword || deleting}
                 onClick={async () => {
                   if (!deleteUsername || !deletePassword) return;
+                  setDeleting(true);
 
                   try {
                     const user = (await supabase.auth.getUser()).data.user
                     if (!user) {
                       alert("Authentication error. Please try again.");
+                      setDeleting(false);
                       return;
                     }
 
@@ -1204,6 +1207,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                     if (!result.success) {
                       alert(result.error || "Verification failed");
                       setDeletePassword("");
+                      setDeleting(false);
                       return;
                     }
 
@@ -1221,11 +1225,12 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                   } catch (err) {
                     console.error("Delete failed:", err);
                     alert("Something went wrong. Check console.");
+                    setDeleting(false);
                   }
                 }}
-                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
+                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword || deleting) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
               >
-                {deleteConfirmType === "notes" ? "Delete All" : "Delete Account"}
+                {deleting ? "Deleting..." : (deleteConfirmType === "notes" ? "Delete All" : "Delete Account")}
               </button>
             </div>
           </div>
