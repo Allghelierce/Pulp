@@ -729,18 +729,18 @@ export function useBoxDrawing({
         rows.push(currentRow)
 
         let currentY = Math.max(sorted[0].y, 60)
-        const standardMarginX = 128
         const alignedBoxesMap = new Map()
 
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const currentNote = activeTabIdRef.current ? notesRef.current.find(n => n.id === tid) : null
         const noteLines = currentNote?.lines?.[pidx] || []
+        const leftEdge = noteLines.length > 0 ? Math.min(...noteLines) + 32 : 128
         const lines = [112, ...noteLines].sort((a, b) => a - b)
 
         for (const row of rows) {
           row.sort((a, b) => a.x - b.x || a.y - b.y)
-          let currentX = standardMarginX
+          let currentX = leftEdge
           let maxH = 0
           for (let i = 0; i < row.length; i++) {
             const rowBox = row[i]
@@ -782,9 +782,14 @@ export function useBoxDrawing({
         const toAlign = selectedIds.size > 0 ? bs.filter(b => selectedIds.has(b.id)) : bs
         if (toAlign.length === 0) return bs
 
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const noteLines = notesRef.current.find(n => n.id === tid)?.lines?.[pidx] || []
+        const leftEdge = noteLines.length > 0 ? Math.min(...noteLines) + 32 : 0
+
         const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
 
-        const targetX = sorted[0].x
+        const targetX = Math.max(sorted[0].x, leftEdge)
         const startY = toAlign.length === bs.length ? 20 : sorted[0].y
         let tempY = startY
 
@@ -792,7 +797,7 @@ export function useBoxDrawing({
         for (const box of sorted) {
           const height = box.h || 40
           alignedBoxesMap.set(box.id, { ...box, x: targetX, y: tempY })
-          tempY += height + 20 // Standard gap
+          tempY += height + 20
         }
 
         return bs.map(b => alignedBoxesMap.get(b.id) || b)
@@ -814,13 +819,18 @@ export function useBoxDrawing({
 
         const paper = paperRef.current
         const paperW = paper ? paper.clientWidth : 800
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const noteLines = notesRef.current.find(n => n.id === tid)?.lines?.[pidx] || []
+        const leftEdge = noteLines.length > 0 ? Math.min(...noteLines) + 32 : 40
+        const usableW = paperW - leftEdge
         const sorted = [...toAlign].sort((a, b) => a.y - b.y)
 
         let currentY = Math.max(sorted[0].y, 60)
         const map = new Map()
         for (const box of sorted) {
-          const cx = (paperW - box.w) / 2
-          map.set(box.id, { ...box, x: Math.max(40, cx), y: currentY })
+          const cx = leftEdge + (usableW - box.w) / 2
+          map.set(box.id, { ...box, x: Math.max(leftEdge, cx), y: currentY })
           currentY += (box.h || 40) + 20
         }
         return bs.map(b => map.get(b.id) || b)
@@ -840,9 +850,12 @@ export function useBoxDrawing({
 
         const paper = paperRef.current
         const paperW = paper ? paper.clientWidth : 800
-        const margin = 80
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const noteLines = notesRef.current.find(n => n.id === tid)?.lines?.[pidx] || []
+        const leftEdge = noteLines.length > 0 ? Math.min(...noteLines) + 32 : 80
         const gap = 32
-        const colW = (paperW - margin * 2 - gap) / 2
+        const colW = (paperW - leftEdge - gap) / 2
         const sorted = [...toAlign].sort((a, b) => a.y - b.y || a.x - b.x)
 
         const map = new Map()
@@ -850,7 +863,7 @@ export function useBoxDrawing({
         for (let i = 0; i < sorted.length; i++) {
           const box = sorted[i]
           const isLeft = leftY <= rightY
-          const x = isLeft ? margin : margin + colW + gap
+          const x = isLeft ? leftEdge : leftEdge + colW + gap
           const y = isLeft ? leftY : rightY
           map.set(box.id, { ...box, x, y, w: colW })
           if (isLeft) leftY += (box.h || 40) + 20

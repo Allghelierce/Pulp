@@ -325,37 +325,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           </g>
         )}
 
-        {/* Moon — soft organic glow */}
-        {p.moonGlow > 0.05 && (
-          <g opacity={p.moonGlow}>
-            <defs>
-              <radialGradient id="moon-haze" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="rgba(200,215,240,0.12)" />
-                <stop offset="30%" stopColor="rgba(180,200,230,0.06)" />
-                <stop offset="60%" stopColor="rgba(160,180,220,0.02)" />
-                <stop offset="100%" stopColor="rgba(140,160,200,0)" />
-              </radialGradient>
-              <radialGradient id="moon-face" cx="45%" cy="42%" r="55%">
-                <stop offset="0%" stopColor="#f0f4fc" />
-                <stop offset="40%" stopColor="#e4eaf6" />
-                <stop offset="70%" stopColor="#d0d8ea" />
-                <stop offset="100%" stopColor="#b8c4da" />
-              </radialGradient>
-            </defs>
-            <ellipse cx="100" cy={p.moonY} rx="28" ry="14" fill="url(#moon-haze)">
-              <animate attributeName="rx" values="28;30;28" dur="6s" repeatCount="indefinite" />
-              <animate attributeName="ry" values="14;15;14" dur="6s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="100" cy={p.moonY} rx="14" ry="7" fill="rgba(190,205,235,0.04)">
-              <animate attributeName="rx" values="14;16;14" dur="8s" repeatCount="indefinite" />
-            </ellipse>
-            <circle cx="100" cy={p.moonY} r="3.2" fill="url(#moon-face)" />
-            <circle cx="99.3" cy={p.moonY - 0.6} r="0.4" fill="rgba(170,180,200,0.2)" />
-            <circle cx="100.7" cy={p.moonY + 0.5} r="0.55" fill="rgba(160,170,190,0.15)" />
-            <circle cx="99.6" cy={p.moonY + 0.9} r="0.25" fill="rgba(170,180,200,0.12)" />
-            <circle cx="100.3" cy={p.moonY - 0.3} r="0.2" fill="rgba(180,190,210,0.1)" />
-          </g>
-        )}
+        {/* Moon placeholder — actual moon rendered as CSS overlay to avoid viewBox distortion */}
 
         {/* Sun glow — centered, rises/sets vertically */}
         {p.sunGlow > 0.05 && (
@@ -383,10 +353,37 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         )}
         {/* Moon reflection on water */}
         {p.moonGlow > 0.1 && (
-          <g opacity={p.moonGlow * 0.4}>
-            <ellipse cx="100" cy="17" rx="4" ry="1" fill="rgba(200,215,240,0.2)" />
-            <ellipse cx="100" cy="20" rx="8" ry="1.5" fill="rgba(180,200,230,0.1)" />
-            <ellipse cx="100" cy="23" rx="12" ry="2" fill="rgba(160,180,210,0.05)" />
+          <g opacity={p.moonGlow}>
+            <defs>
+              <linearGradient id="moon-refl" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.2" />
+                <stop offset="30%" stopColor="#b0c4e4" stopOpacity="0.1" />
+                <stop offset="60%" stopColor="#90a8d0" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="#7090c0" stopOpacity="0" />
+              </linearGradient>
+              <radialGradient id="moon-refl-fade" cx="50%" cy="0%" r="80%" gradientUnits="objectBoundingBox">
+                <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.25" />
+                <stop offset="40%" stopColor="#b0c4e4" stopOpacity="0.08" />
+                <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* Broad soft glow on water */}
+            <ellipse cx="100" cy="20" rx="20" ry="6" fill="url(#moon-refl-fade)" />
+            {/* Tight bright column */}
+            <ellipse cx="100" cy="16.5" rx="3" ry="1" fill="rgba(210,220,240,0.15)" />
+            <ellipse cx="100" cy="18" rx="4" ry="1.2" fill="rgba(200,215,235,0.1)" />
+            {/* Shimmering broken reflection */}
+            <rect x="98.5" y="15" width="3" height="12" fill="url(#moon-refl)" rx="1.5" />
+            {/* Glints on water surface */}
+            <ellipse cx="99" cy="17" rx="1" ry="0.3" fill="rgba(220,230,245,0.12)">
+              <animate attributeName="opacity" values="0.12;0.04;0.12" dur="3s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="101" cy="20" rx="1.2" ry="0.25" fill="rgba(210,220,240,0.08)">
+              <animate attributeName="opacity" values="0.08;0.02;0.08" dur="4s" begin="1s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="99.5" cy="23" rx="1.5" ry="0.3" fill="rgba(200,215,235,0.05)">
+              <animate attributeName="opacity" values="0.05;0.01;0.05" dur="5s" begin="2s" repeatCount="indefinite" />
+            </ellipse>
           </g>
         )}
         {/* Ocean ripples — animated waves */}
@@ -451,49 +448,88 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           </circle>
         </g>
 
-        {/* Mountain range */}
+        {/* Mountain range — back layer (darker, depth) */}
+        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} opacity="0.6" />
+        {/* Mountain range — main */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
+        {/* Left-facing slopes — shadow for depth */}
+        <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
+        <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
+        <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
+        <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
+        <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
+        {/* Right-facing slopes — lighter for 3D relief */}
+        <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
+        <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
+        <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
+        <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
+        <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
+        <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
+        {/* Ridge highlights — thin bright edge along peaks */}
+        <path d="M15,12 L25,22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+        <path d="M35,10 L42,18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
+        <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
+        <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+        <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
         {/* Snow caps */}
-        <path d="M15,12 L12,16 L18,16 Z" fill="url(#mtn-snow)" opacity="0.4" />
-        <path d="M35,10 L32,15 L38,15 Z" fill="url(#mtn-snow)" opacity="0.35" />
-        <path d="M50,8 L47,13 L53,13 Z" fill="url(#mtn-snow)" opacity="0.45" />
-        <path d="M68,11 L65,15 L71,15 Z" fill="url(#mtn-snow)" opacity="0.3" />
-        <path d="M105,9 L102,14 L108,14 Z" fill="url(#mtn-snow)" opacity="0.45" />
-        <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity="0.4" />
-        {/* Mountain shadow */}
-        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
-        {/* Sunlit mountain faces — intensity and side based on sun position */}
-        {p.mtnLightOpacity > 0.01 && (() => {
-          const faces = [
-                { points: "50,8 58,16 50,16", o: 1 },
-                { points: "105,9 115,18 105,18", o: 1.1 },
-                { points: "85,14 95,22 88,22", o: 0.9 },
-                { points: "68,11 78,20 70,20", o: 0.8 },
-                { points: "35,10 42,18 37,18", o: 0.7 },
-                { points: "155,10 165,20 158,20", o: 0.8 },
-              ]
-          return (
-            <g>
-              {faces.map((f, i) => (
-                <polygon key={i} points={f.points} fill={p.mtnLightColor} opacity={p.mtnLightOpacity * f.o} />
-              ))}
-            </g>
-          )
-        })()}
+        <path d="M15,12 L12,16 L18,16 Z" fill="url(#mtn-snow)" opacity="0.45" />
+        <path d="M35,10 L32,15 L38,15 Z" fill="url(#mtn-snow)" opacity="0.4" />
+        <path d="M50,8 L47,13 L53,13 Z" fill="url(#mtn-snow)" opacity="0.5" />
+        <path d="M68,11 L65,15 L71,15 Z" fill="url(#mtn-snow)" opacity="0.35" />
+        <path d="M105,9 L102,14 L108,14 Z" fill="url(#mtn-snow)" opacity="0.5" />
+        <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity="0.45" />
+        {/* Base shadow — atmospheric haze at mountain feet */}
+        <path d="M-10,30 L210,30 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Sunlit faces — warm light from above */}
+        {p.mtnLightOpacity > 0.01 && (
+          <g>
+            <polygon points="50,8 58,16 50,16" fill={p.mtnLightColor} opacity={p.mtnLightOpacity} />
+            <polygon points="105,9 115,18 105,18" fill={p.mtnLightColor} opacity={p.mtnLightOpacity * 1.1} />
+            <polygon points="85,14 95,22 88,22" fill={p.mtnLightColor} opacity={p.mtnLightOpacity * 0.9} />
+            <polygon points="68,11 78,20 70,20" fill={p.mtnLightColor} opacity={p.mtnLightOpacity * 0.8} />
+            <polygon points="35,10 42,18 37,18" fill={p.mtnLightColor} opacity={p.mtnLightOpacity * 0.7} />
+            <polygon points="155,10 165,20 158,20" fill={p.mtnLightColor} opacity={p.mtnLightOpacity * 0.8} />
+          </g>
+        )}
 
-        {/* Mid hills */}
-        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26 L210,28 L210,40 L-10,40 Z" fill="url(#hill-mid)" />
-        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.4" />
+        {/* Rolling hills — back hill rises on the right, front hill rises on the left */}
+        {/* Back hill — rises from left, peaks center-right, drops off right */}
+        <path d="M-10,36 C20,34 50,32 80,28 C95,25 110,21 130,20 C150,19 170,22 190,24 C200,25 205,27 210,28 L210,42 L-10,42 Z" fill="url(#hill-mid)" />
+        <path d="M-10,36 C20,34 50,32 80,28 C95,25 110,21 130,20 C150,19 170,22 190,24 C200,25 205,27 210,28" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.4" />
 
-        {/* Distant tangerine grove */}
+        {/* Distant tangerine grove — placed on mid-hill contour */}
         {(() => {
+          // Back rolling hill: M-10,36 C20,34 50,32 80,28 C95,25 110,21 130,20 C150,19 170,22 190,24 C200,25 205,27 210,28
+          const midSegs: [number,number,number,number,number,number,number,number][] = [
+            [-10,36, 20,34, 50,32, 80,28],
+            [80,28, 95,25, 110,21, 130,20],
+            [130,20, 150,19, 170,22, 190,24],
+            [190,24, 200,25, 205,27, 210,28],
+          ]
+          const cubicY = (t: number, p0: number, p1: number, p2: number, p3: number) => {
+            const u = 1 - t
+            return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3
+          }
+          const cubicX = cubicY
+          const getHillY = (x: number) => {
+            for (const s of midSegs) {
+              if (x >= Math.min(s[0], s[6]) - 2 && x <= Math.max(s[0], s[6]) + 2) {
+                for (let ti = 0; ti <= 20; ti++) {
+                  const t = ti / 20
+                  const sx = cubicX(t, s[0], s[2], s[4], s[6])
+                  if (Math.abs(sx - x) < 2) return cubicY(t, s[1], s[3], s[5], s[7])
+                }
+              }
+            }
+            return 26
+          }
           const trunks: string[] = []
           const canopies: string[] = []
           const fruits: string[] = []
           for (let i = 0; i < 70; i++) {
             const rng = seededRng(i * 71 + 303)
             const x = -5 + rng() * 210
-            const baseY = 26 + rng() * 12
+            const baseY = getHillY(x) + rng() * 3 - 0.5
             const sz = 0.8 + rng() * 1.2
             const cx = x
             const cy = baseY - sz * 1.2 - sz * 0.5
@@ -507,26 +543,127 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           }
           return (
             <g opacity={p.groveOpacity}>
-              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.4" fill="none" />
-              <path d={canopies.join('')} fill={isDark ? '#0e1c10' : '#3a6a35'} />
+              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.4" fill="none" />
+              <path d={canopies.join('')} fill={isDark ? '#142e18' : '#2a5428'} />
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
             </g>
           )
         })()}
 
-        {/* Near hills */}
-        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30 L210,32 L210,42 L-10,42 Z" fill="url(#hill-near)" />
-        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+        {/* Winding paths on mid hills — follow hill contour */}
+        <path d="M18,31 Q24,28 32,27 Q40,28 48,26 Q54,25 58,26" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.6" opacity="0.3" strokeLinecap="round" />
+        <path d="M88,24 Q96,22 104,24 Q112,26 120,23 Q128,21 136,24" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.5" opacity="0.25" strokeLinecap="round" />
+        <path d="M155,25 Q162,23 170,26 Q176,28 184,25" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.45" opacity="0.22" strokeLinecap="round" />
 
-        {/* Tangerine grove on near hills */}
+        {/* Houses on mid hills — each unique, positioned on hill surface */}
+        {/* House 1 — cottage with chimney, on left valley (hill dips at x~48-60) */}
+        <g opacity={isDark ? 0.75 : 0.85}>
+          {/* Shadow under house */}
+          <ellipse cx="54" cy="25.2" rx="2.8" ry="0.4" fill="rgba(0,0,0,0.08)" />
+          {/* Walls — stone cottage, slightly trapezoidal */}
+          <path d={`M51.8,25.1 L52,23.2 L55.5,23.2 L55.7,25.1 Z`} fill={isDark ? '#3a3028' : '#b0987a'} />
+          {/* Side wall visible — gives depth */}
+          <path d={`M55.5,23.2 L56.8,23.6 L56.9,25.1 L55.7,25.1 Z`} fill={isDark ? '#2e2418' : '#968060'} />
+          {/* Window — warm glow */}
+          <rect x="52.6" y="23.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
+          <rect x="53.8" y="23.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
+          {/* Door */}
+          <rect x="54.8" y="23.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
+          {/* Pitched roof — steep, overhangs */}
+          <polygon points="51.3,23.2 56.2,23.2 53.8,21.2" fill={isDark ? '#2a2018' : '#7a5838'} />
+          {/* Roof right side darker */}
+          <polygon points="53.8,21.2 56.2,23.2 53.8,23.2" fill={isDark ? '#221a14' : '#6a4a30'} />
+          {/* Chimney — on left side of roof */}
+          <rect x="52.3" y="21.4" width="0.6" height="1.8" fill={isDark ? '#3a3028' : '#7a6848'} />
+          <rect x="52.2" y="21.2" width="0.8" height="0.3" fill={isDark ? '#3a3028' : '#7a6848'} />
+          {/* Smoke — drifting wisps */}
+          <g opacity="0.35">
+            <ellipse cx="52.6" cy="20.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="20.6;19.8;19" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.35;0.55;0.7" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.35;0.18;0" dur="4s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="52.8" cy="19.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="19.2;18.2;17.2" dur="5.5s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.3;0.6;0.9" dur="5.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.25;0.1;0" dur="5.5s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="52.4" cy="17.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="17.6;16.4;15.4" dur="7s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.25;0.7;1.2" dur="7s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.15;0.05;0" dur="7s" repeatCount="indefinite" />
+            </ellipse>
+          </g>
+        </g>
+
+        {/* House 2 — tall narrow tower house, on right hill crest (x~125) */}
+        <g opacity={isDark ? 0.7 : 0.8}>
+          <ellipse cx="126" cy="23.8" rx="1.8" ry="0.3" fill="rgba(0,0,0,0.07)" />
+          {/* Tall narrow walls */}
+          <path d={`M124.8,23.7 L124.9,21.3 L127,21.3 L127.1,23.7 Z`} fill={isDark ? '#352a1c' : '#a89070'} />
+          {/* Side face */}
+          <path d={`M127,21.3 L127.8,21.6 L127.9,23.7 L127.1,23.7 Z`} fill={isDark ? '#2a2014' : '#8a7458'} />
+          {/* Small window high up */}
+          <rect x="125.4" y="21.8" width="0.5" height="0.5" rx="0.06" fill={isDark ? '#4a4020' : '#c8b068'} opacity="0.5" />
+          {/* Arched door */}
+          <path d="M125.8,23.7 L125.8,22.8 A0.4,0.4 0 0 1 126.6,22.8 L126.6,23.7 Z" fill={isDark ? '#1a1208' : '#4a3220'} />
+          {/* Steep pointed roof */}
+          <polygon points="124.4,21.3 127.5,21.3 125.95,19.6" fill={isDark ? '#281e14' : '#6a4e30'} />
+          <polygon points="125.95,19.6 127.5,21.3 125.95,21.3" fill={isDark ? '#221812' : '#5e4428'} />
+        </g>
+
+        {/* House 3 — wide low barn, on far right slope (x~172) */}
+        <g opacity={isDark ? 0.6 : 0.7}>
+          <ellipse cx="173" cy="27" rx="2.5" ry="0.35" fill="rgba(0,0,0,0.06)" />
+          {/* Wide low walls */}
+          <path d={`M170.5,26.8 L170.6,25.6 L175.2,25.6 L175.3,26.8 Z`} fill={isDark ? '#38281a' : '#988060'} />
+          {/* Barn door — wide double */}
+          <rect x="172" y="25.9" width="1.2" height="0.9" fill={isDark ? '#1e1408' : '#4a3018'} />
+          <line x1="172.6" y1="25.9" x2="172.6" y2="26.8" stroke={isDark ? '#2a1e10' : '#5a3820'} strokeWidth="0.1" />
+          {/* Hay window */}
+          <polygon points="171.2,25.8 171.8,25.8 171.5,25.5" fill={isDark ? '#1e1408' : '#4a3018'} />
+          {/* Low sloped roof */}
+          <polygon points="170,25.6 175.8,25.6 172.9,24.3" fill={isDark ? '#2a1e12' : '#6a4a2e'} />
+          <polygon points="172.9,24.3 175.8,25.6 172.9,25.6" fill={isDark ? '#241a10' : '#5e4226'} />
+        </g>
+
+        {/* Front hill — rises left, peaks center-left, dips right to reveal back hill */}
+        <path d="M-10,30 C0,28 15,24 30,22 C45,20 55,19 70,21 C85,23 100,28 120,32 C140,35 165,36 190,35 C200,34 205,34 210,34 L210,42 L-10,42 Z" fill="url(#hill-near)" />
+        <path d="M-10,30 C0,28 15,24 30,22 C45,20 55,19 70,21 C85,23 100,28 120,32 C140,35 165,36 190,35 C200,34 205,34 210,34" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+
+        {/* Tangerine grove on near hills — placed on near-hill contour */}
         {(() => {
+          // Front hill: M-10,30 C0,28 15,24 30,22 C45,20 55,19 70,21 C85,23 100,28 120,32 C140,35 165,36 190,35 C200,34 205,34 210,34
+          const nearSegs: [number,number,number,number,number,number,number,number][] = [
+            [-10,30, 0,28, 15,24, 30,22],
+            [30,22, 45,20, 55,19, 70,21],
+            [70,21, 85,23, 100,28, 120,32],
+            [120,32, 140,35, 165,36, 190,35],
+            [190,35, 200,34, 205,34, 210,34],
+          ]
+          const cubicB = (t: number, p0: number, p1: number, p2: number, p3: number) => {
+            const u = 1 - t
+            return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3
+          }
+          const getNearY = (x: number) => {
+            for (const s of nearSegs) {
+              if (x >= Math.min(s[0], s[6]) - 2 && x <= Math.max(s[0], s[6]) + 2) {
+                for (let ti = 0; ti <= 20; ti++) {
+                  const t = ti / 20
+                  const sx = cubicB(t, s[0], s[2], s[4], s[6])
+                  if (Math.abs(sx - x) < 2) return cubicB(t, s[1], s[3], s[5], s[7])
+                }
+              }
+            }
+            return 32
+          }
           const trunks: string[] = []
           const canopies: string[] = []
           const fruits: string[] = []
           for (let i = 0; i < 50; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
-            const baseY = 32 + rng() * 8
+            const baseY = getNearY(x) + rng() * 2.5 - 0.3
             const sz = 1 + rng() * 1.4
             const cx = x
             const cy = baseY - sz * 1.3 - sz * 0.5
@@ -540,8 +677,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           }
           return (
             <g opacity={p.groveOpacity}>
-              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.5" fill="none" />
-              <path d={canopies.join('')} fill={isDark ? '#122216' : '#3a7a38'} />
+              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
+              <path d={canopies.join('')} fill={isDark ? '#1a3420' : '#2e5a2a'} />
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
             </g>
           )
@@ -735,6 +872,45 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         {/* Dirt path */}
         <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
       </svg>
+
+      {/* Moon — rendered as CSS overlay to avoid SVG viewBox distortion */}
+      {p.moonGlow > 0.05 && (
+        <div className="absolute inset-0 pointer-events-none" style={{ overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            top: `${p.moonY}%`,
+            transform: 'translate(-50%, -50%)',
+            opacity: p.moonGlow,
+          }}>
+            <div style={{
+              width: 80, height: 80, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(200,216,240,0.1) 0%, rgba(176,196,228,0.05) 35%, rgba(144,168,208,0.015) 65%, transparent 100%)',
+              position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            }}>
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: '50%',
+                animation: 'moon-pulse 8s ease-in-out infinite',
+              }} />
+            </div>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(220,228,244,0.2) 0%, rgba(192,208,232,0.06) 45%, transparent 100%)',
+              position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+            }} />
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: 'radial-gradient(circle at 40% 38%, #f4f6fc 0%, #eaeff8 25%, #d8e0ec 55%, #c4cedc 80%, #aab6cc 100%)',
+              position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+              boxShadow: '0 0 6px 2px rgba(200,216,240,0.15), 0 0 12px 4px rgba(176,196,228,0.08)',
+            }}>
+              <div style={{ position: 'absolute', width: 3, height: 3, borderRadius: '50%', background: 'rgba(140,155,180,0.18)', top: '30%', left: '38%' }} />
+              <div style={{ position: 'absolute', width: 4, height: 4, borderRadius: '50%', background: 'rgba(130,145,170,0.14)', top: '55%', left: '58%' }} />
+              <div style={{ position: 'absolute', width: 2, height: 2, borderRadius: '50%', background: 'rgba(140,155,180,0.1)', top: '60%', left: '35%' }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Soft vignette */}
       <div className="absolute inset-0 pointer-events-none" style={{
