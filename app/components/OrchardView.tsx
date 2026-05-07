@@ -1,5 +1,5 @@
 "use client"
-import { memo, useEffect, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
@@ -82,6 +82,14 @@ function getRarityPlantClass(type: string): string {
 }
 
 const PLOT_COST = [0, 5, 12]
+
+function getSapYield(tree: any): number {
+  const info = TREE_TYPES[tree.type]
+  if (!info) return 1
+  const base = info.juiceYield || Math.max(1, Math.floor(info.cost * 0.3))
+  const stageBonus = tree.stage >= 4 ? 1.5 : tree.stage >= 3 ? 1.2 : tree.stage >= 2 ? 1 : 0.5
+  return Math.max(1, Math.round(base * stageBonus))
+}
 
 const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[] }) {
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
@@ -477,7 +485,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  juice, gems, xp, grove, notes, setGems, userId,
+  juice, gems, xp, grove, notes, setGems, setJuice, setGrove, userId,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -486,6 +494,9 @@ export const OrchardView = memo(function OrchardView({
   useEffect(() => {
     setPlotPage(0)
   }, [selectedNotebook])
+
+  const [chopMode, setChopMode] = useState(false)
+  const [chopTarget, setChopTarget] = useState<{ tree: any; sap: number } | null>(null)
 
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
@@ -547,6 +558,28 @@ export const OrchardView = memo(function OrchardView({
     setPlotPage(nextPlot - 1)
   }
 
+  const confirmChop = useCallback(() => {
+    if (!chopTarget) return
+    const { tree, sap } = chopTarget
+    setJuice((j: number) => j + sap)
+    setGrove((g: any[]) => g.filter(t => t.id !== tree.id))
+    if (userId) db.deleteTree(userId, tree.id).catch(() => {})
+    setChopTarget(null)
+  }, [chopTarget, setJuice, setGrove, userId])
+
+  // Auto-convert overflow trees to sap
+  useEffect(() => {
+    const maxCapacity = nbUnlocked * TREES_PER_PLOT
+    if (filteredTrees.length <= maxCapacity) return
+    const overflow = filteredTrees.slice(maxCapacity)
+    let totalSap = 0
+    const overflowIds = new Set(overflow.map((t: any) => { totalSap += getSapYield(t); return t.id }))
+    if (overflowIds.size === 0) return
+    setJuice((j: number) => j + totalSap)
+    setGrove((g: any[]) => g.filter(t => !overflowIds.has(t.id)))
+    if (userId) overflow.forEach((t: any) => db.deleteTree(userId, t.id).catch(() => {}))
+  }, [filteredTrees.length, nbUnlocked, selectedNotebook])
+
   const currentPlotTrees = useMemo(() => {
     const start = plotPage * TREES_PER_PLOT
     return filteredTrees.slice(start, start + TREES_PER_PLOT)
@@ -572,9 +605,9 @@ export const OrchardView = memo(function OrchardView({
   const textSecondary = isDark ? '#6b6860' : '#9a9590'
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
-  const baseSize = filteredTrees.length <= 6 ? 95 :
-    filteredTrees.length <= 15 ? 85 :
-    filteredTrees.length <= 30 ? 75 : 65
+  const baseSize = filteredTrees.length <= 6 ? 105 :
+    filteredTrees.length <= 15 ? 95 :
+    filteredTrees.length <= 30 ? 85 : 72
 
   return (
     <div
@@ -669,6 +702,25 @@ export const OrchardView = memo(function OrchardView({
               <button onClick={onClose} className="absolute right-3 p-1.5 rounded-full transition-opacity hover:opacity-100 opacity-70 pointer-events-auto" style={{ color: '#fff', backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
+              {/* Axe / chop mode toggle */}
+              <button
+                onClick={() => { setChopMode(m => !m); setChopTarget(null) }}
+                className="absolute left-3 p-1.5 rounded-full transition-all pointer-events-auto"
+                style={{
+                  color: chopMode ? '#d97706' : '#fff',
+                  backgroundColor: chopMode ? (isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.2)') : (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'),
+                  opacity: chopMode ? 1 : 0.7,
+                  boxShadow: chopMode ? '0 0 8px rgba(217,119,6,0.4)' : 'none',
+                }}
+                title={chopMode ? 'Exit chop mode' : 'Chop trees for sap'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 7L8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13" />
+                  <path d="M8 6l2-2" />
+                  <path d="M18 15l-8-8" />
+                  <path d="M15 18l5.3 2.7a2.41 2.41 0 0 0 3.4-3.4L21 12" />
+                </svg>
+              </button>
             </div>
             <div className="absolute inset-0" style={{
               transform: 'rotateX(8deg)',
@@ -719,6 +771,7 @@ export const OrchardView = memo(function OrchardView({
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           className="absolute flex flex-col items-center group"
+                          onClick={chopMode ? () => setChopTarget({ tree, sap: getSapYield(tree) }) : undefined}
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
@@ -727,9 +780,15 @@ export const OrchardView = memo(function OrchardView({
                             zIndex: Math.round(y),
                             animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both`,
                             willChange: 'transform, opacity',
+                            cursor: chopMode ? 'pointer' : undefined,
                           }}
                         >
-                          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{ filter: dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined }}>
+                          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+                            filter: chopMode
+                              ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
+                              : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
+                            transition: 'filter 0.2s',
+                          }}>
                             <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} />
                           </div>
 
@@ -761,6 +820,68 @@ export const OrchardView = memo(function OrchardView({
             </AnimatePresence>
             </div>
           </div>
+
+          {/* Chop confirmation popup */}
+          <AnimatePresence>
+            {chopTarget && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-0 z-50 flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                onClick={() => setChopTarget(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="rounded-xl p-5 flex flex-col items-center gap-3 min-w-[220px]"
+                  style={{
+                    backgroundColor: isDark ? '#1a1816' : '#faf8f5',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.3)',
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div style={{ transform: 'scale(0.8)' }}>
+                    <PlantIcon type={chopTarget.tree.type} size={80} stage={chopTarget.tree.stage} hideGround />
+                  </div>
+                  <span className="text-[13px] font-bold" style={{ color: isDark ? '#d4d0c8' : '#3a3630', fontFamily: 'EB Garamond, serif' }}>
+                    Chop {TREE_TYPES[chopTarget.tree.type]?.name || chopTarget.tree.type}?
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <PulpIcon size={14} />
+                    <span className="text-[14px] font-bold" style={{ color: '#d97706' }}>+{chopTarget.sap} sap</span>
+                  </div>
+                  <div className="flex gap-2 mt-1 w-full">
+                    <button
+                      onClick={() => setChopTarget(null)}
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                        color: isDark ? '#8a8780' : '#7a7670',
+                      }}
+                    >
+                      Keep
+                    </button>
+                    <button
+                      onClick={confirmChop}
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      style={{
+                        backgroundColor: 'rgba(217,119,6,0.15)',
+                        color: '#d97706',
+                      }}
+                    >
+                      Chop
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
