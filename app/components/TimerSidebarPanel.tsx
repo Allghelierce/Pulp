@@ -798,10 +798,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <button
                     onClick={onRecoverJuice}
                     disabled={gems < Math.max(5, Math.ceil(lostJuice * 0.5))}
-                    className="text-[9px] font-black uppercase tracking-[0.15em] hover:underline disabled:opacity-30 disabled:no-underline"
-                    style={{ color: "#a78bfa" }}
+                    className="text-[11px] font-black uppercase tracking-[0.08em] rounded-md px-4 py-1.5 disabled:opacity-30 transition-colors"
+                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", color: isDark ? "#fafafa" : "#18181b" }}
                   >
-                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} <GemIcon size={9} />
+                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} <GemIcon size={10} />
                   </button>
                 </motion.div>
               )}

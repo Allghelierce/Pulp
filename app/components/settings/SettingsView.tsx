@@ -22,6 +22,7 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
   achievements: "Track your progress and claim rewards",
   editor: "Writing tools, layout, and focus mode",
   focus: "Block distracting websites and apps",
+  archive: "Archived notebooks and notes",
   data: "Storage, exports, and account management",
   subscription: "Manage your plan and billing",
   help: "Welcome guide, support, and bug reports",
@@ -33,6 +34,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
   achievements: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>,
   focus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   editor: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
+  archive: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>,
   data: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>,
   subscription: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>,
   help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
@@ -44,6 +46,7 @@ export const SETTINGS_TABS = [
   { id: "achievements", label: "Achievements", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
   { id: "focus", label: "Focus Blocker", group: "Writing" },
+  { id: "archive", label: "Archive", group: "Advanced" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "subscription", label: "Pro", group: "Premium" },
   { id: "help", label: "Help", group: "Support" },
@@ -129,7 +132,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow }: {
+export function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote }: {
   user: { id: string; email?: string } | null
   onClose: () => void
   config: PulpConfig
@@ -147,6 +150,8 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
   onSpendGems?: (amount: number) => void
   openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
   onSyncNow?: () => Promise<{ pushed: number; pulled: number } | null>
+  archivedNotes?: NoteData[]
+  onUnarchiveNote?: (id: string) => void
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -800,6 +805,32 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
             </>)}
 
             {/* ── Data ── */}
+            {activeTab === "archive" && (<>
+               <SettingSection title="Archived Notes" isDark={isDark}>
+                 {archivedNotes.length === 0 ? (
+                   <div className="px-5 py-8 text-center">
+                     <p className={`text-[12px] italic ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>No archived notes.</p>
+                   </div>
+                 ) : (
+                   <div className={`flex flex-col ${isDark ? "bg-zinc-900/30" : "bg-zinc-100/30"} rounded-lg p-4`}>
+                     {archivedNotes.map(an => (
+                       <div key={`archive-${an.id}`} className={`group flex items-center justify-between gap-3 p-3 rounded border-b ${isDark ? "border-zinc-800/50 hover:bg-zinc-800/30" : "border-zinc-200/50 hover:bg-zinc-50/50"} transition-colors last:border-b-0`}>
+                         <span className={`text-[12px] truncate ${isDark ? "text-zinc-400 group-hover:text-zinc-300" : "text-zinc-600 group-hover:text-zinc-700"}`}>
+                           {an.subject || "Untitled"}
+                         </span>
+                         <button
+                           onClick={() => onUnarchiveNote?.(an.id)}
+                           className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
+                         >
+                           Unarchive
+                         </button>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+               </SettingSection>
+            </>)}
+
             {activeTab === "data" && (<>
                {user && onSyncNow && <SyncSection isDark={isDark} onSyncNow={onSyncNow} />}
                <SettingSection title="Local Storage" isDark={isDark}>
@@ -824,7 +855,7 @@ export function SettingsView({ user, onClose, config, onUpdateConfig, achievemen
                  <SettingSection title="Trash" isDark={isDark}>
                    <div className={`flex flex-col ${isDark ? "bg-zinc-900/30" : "bg-zinc-100/30"} rounded-lg p-4`}>
                      {trashNotes.map(tn => (
-                       <div key={tn.id} className={`group flex items-center justify-between gap-3 p-3 rounded border-b ${isDark ? "border-zinc-800/50 hover:bg-zinc-800/30" : "border-zinc-200/50 hover:bg-zinc-50/50"} transition-colors last:border-b-0`}>
+                       <div key={`trash-${tn.id}`} className={`group flex items-center justify-between gap-3 p-3 rounded border-b ${isDark ? "border-zinc-800/50 hover:bg-zinc-800/30" : "border-zinc-200/50 hover:bg-zinc-50/50"} transition-colors last:border-b-0`}>
                          <span className={`text-[12px] truncate ${isDark ? "text-zinc-400 group-hover:text-zinc-300" : "text-zinc-600 group-hover:text-zinc-700"}`}>
                            {tn.subject || "Untitled"}
                          </span>

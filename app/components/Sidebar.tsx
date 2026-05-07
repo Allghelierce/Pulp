@@ -907,13 +907,6 @@ export const Sidebar = memo(function Sidebar({
           {/* Nav buttons */}
         </div>
 
-        {/* Archive Section */}
-        {archivedNotes.length > 0 && (
-          <ArchiveSection
-            archivedNotes={archivedNotes}
-            onUnarchiveNote={onUnarchiveNote ?? (() => { })}
-          />
-        )}
 
       </div>
     </>

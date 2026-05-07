@@ -296,10 +296,10 @@ const BoxItem = memo(function BoxItem({
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
-  onDragStart, onDragEnd
+  onDragStart, onDragEnd, spellCheck: spellCheckProp
 }: {
   box: TextBoxType; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
-  paperStyle: PaperStyle
+  paperStyle: PaperStyle; spellCheck?: boolean
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
   deleteBox: (id: string) => void
@@ -482,6 +482,7 @@ const BoxItem = memo(function BoxItem({
             theme={theme}
             paperStyle={paperStyle}
             handwrittenEffect={handwrittenEffect}
+            spellCheck={spellCheckProp}
           />
         )}
       </div>
@@ -776,10 +777,11 @@ interface BoxTextareaProps {
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
+  spellCheck?: boolean
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -819,6 +821,7 @@ const BoxTextarea = memo(function BoxTextarea({
       ref={ref}
       contentEditable
       suppressContentEditableWarning
+      spellCheck={spellCheckProp}
       data-box-style={styleKey}
       onKeyDown={e => {
         // Erase animation — applies to both selection and single-char backspace.
@@ -2880,6 +2883,8 @@ export default function NoteApp() {
               setShopScrollTo(itemId)
               closeAllPanels(); setShopOpen(true)
             }}
+            archivedNotes={archivedNotes}
+            onUnarchiveNote={unarchiveNote}
             onSyncNow={async () => {
               if (!user) return null
               try {
@@ -3443,6 +3448,7 @@ export default function NoteApp() {
                                 setAiOpen={setToolbarAiOpen}
                                 onDragStart={noop}
                                 onDragEnd={noop}
+                                spellCheck={spellCheck}
                                 handwrittenEffect={handwrittenEffect}
                               />
                             ))}
