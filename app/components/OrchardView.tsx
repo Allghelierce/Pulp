@@ -507,23 +507,26 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           for (let i = 0; i < 70; i++) {
             const rng = seededRng(i * 71 + 303)
             const x = -5 + rng() * 210
-            const baseY = getHillY(x) + rng() * 3 + 0.5
+            const baseY = getHillY(x) + rng() * 3 + 1.5
             const sz = 0.8 + rng() * 1.2
             const cx = x
             const cy = baseY - sz * 1.2 - sz * 0.5
             trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
             canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 2; f++) {
-              const a = rng() * Math.PI * 2
-              const r = sz * 0.35 * rng()
-              fruits.push(`M${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r * 0.8).toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
+            for (let f = 0; f < 5; f++) {
+              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+              const rDist = sz * (0.2 + rng() * 0.35) * (f < 3 ? 1 : 0.5 + rng() * 0.3)
+              const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+              if (f >= 3 && rng() > 0.5) continue
+              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.4" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#142e18' : '#2a5428'} />
-              <path d={fruits.join('')} fill={isDark ? '#6a4010' : '#b08060'} opacity={0.45} />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
             </g>
           )
         })()}
@@ -762,23 +765,26 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           for (let i = 0; i < 50; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
-            const baseY = getNearY(x) + rng() * 2.5 - 0.3
+            const baseY = getNearY(x) + rng() * 2.5 + 0.8
             const sz = 1 + rng() * 1.4
             const cx = x
             const cy = baseY - sz * 1.3 - sz * 0.5
             trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
             canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 3; f++) {
-              const a = rng() * Math.PI * 2
-              const r = sz * 0.4 * rng()
-              fruits.push(`M${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r * 0.8).toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
+            for (let f = 0; f < 6; f++) {
+              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+              const rDist = sz * (0.25 + rng() * 0.4) * (f < 3 ? 1 : 0.5 + rng() * 0.3)
+              const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+              if (f >= 4 && rng() > 0.5) continue
+              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#1a3420' : '#2e5a2a'} />
-              <path d={fruits.join('')} fill={isDark ? '#6a4010' : '#b08060'} opacity={0.45} />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
             </g>
           )
         })()}
@@ -792,74 +798,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
 
-        {/* Tilled dirt columns — use actual tree x positions for alignment */}
-        {Array.from({ length: tillCols }).map((_, ci) => {
-          const colTrees = treeBases.filter(t => t.col === ci).sort((a, b) => a.y - b.y)
-          const rng = seededRng(ci * 137 + 42)
-          const steps = 12
-          const points: string[] = []
-
-          // Helper: get x at a given y by interpolating/extrapolating from tree positions in this column
-          const getXAtY = (y: number): number => {
-            if (colTrees.length === 0) {
-              // Fallback: use orchardPlacement math directly
-              const depthT = (y - 40) / 57
-              const pinch = (1 - depthT) * 18 - depthT * 4
-              const trapLeft = colStart + pinch
-              const trapRight = colEnd - pinch
-              const baseX = tillCols === 1 ? 50 : trapLeft + ci * ((trapRight - trapLeft) / Math.max(1, tillCols - 1))
-              return baseX * 2
-            }
-            if (colTrees.length === 1) {
-              return colTrees[0].x * 2
-            }
-            // Find surrounding trees for interpolation
-            let below = colTrees[0]
-            let above = colTrees[colTrees.length - 1]
-            for (let i = 0; i < colTrees.length - 1; i++) {
-              if (colTrees[i].y <= y && colTrees[i + 1].y >= y) {
-                below = colTrees[i]
-                above = colTrees[i + 1]
-                const t = (y - below.y) / Math.max(0.1, above.y - below.y)
-                return (below.x + (above.x - below.x) * t) * 2
-              }
-            }
-            // Extrapolate: y is outside tree range
-            if (y < colTrees[0].y) {
-              if (colTrees.length >= 2) {
-                const t = (y - colTrees[0].y) / Math.max(0.1, colTrees[1].y - colTrees[0].y)
-                return (colTrees[0].x + (colTrees[1].x - colTrees[0].x) * t) * 2
-              }
-              return colTrees[0].x * 2
-            }
-            // y > last tree
-            if (colTrees.length >= 2) {
-              const last = colTrees[colTrees.length - 1]
-              const prev = colTrees[colTrees.length - 2]
-              const t = (y - prev.y) / Math.max(0.1, last.y - prev.y)
-              return (prev.x + (last.x - prev.x) * t) * 2
-            }
-            return colTrees[colTrees.length - 1].x * 2
-          }
-
-          for (let s = 0; s <= steps; s++) {
-            const t = s / steps
-            const y = 40 + t * 57
-            const x = getXAtY(y)
-            const wobble = (rng() - 0.5) * 1.2
-            points.push(`${(x + wobble).toFixed(1)},${y.toFixed(1)}`)
-          }
-          const d = points.length > 1 ? `M${points[0]} ` + points.slice(1).map((p, i) => {
-            if (i === 0) return `L${p}`
-            return `Q${points[i]} ${p}`
-          }).join(' ') : ''
-          return (
-            <g key={`till-${ci}`}>
-              <path d={d} fill="none" stroke={dirtColor} strokeWidth="2.4" opacity={isDark ? 0.2 : 0.12} strokeLinecap="round" strokeLinejoin="round" />
-              <path d={d} fill="none" stroke={dirtLight} strokeWidth="0.7" opacity={isDark ? 0.09 : 0.06} strokeLinecap="round" transform="translate(0.3, 0.5)" />
-            </g>
-          )
-        })}
 
         {/* Grass tufts — baked */}
         {(() => {
@@ -996,41 +934,33 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d={`M178,${42 + 14} Q184,${42 + 15} 190,${38 + 14 * 0.75}`} fill="none" stroke={isDark ? '#3a3020' : '#8a7a5a'} strokeWidth="0.6" opacity="0.15" strokeLinecap="round" />
         <path d={`M190,${38 + 14 * 0.75} Q196,${38 + 10} 210,${36}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
 
-        {/* Chopping stump + pine — field left side */}
+        {/* Chopping stump — near windmills */}
         <g
           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           onClick={onToggleChop}
         >
-          {/* === Pine tree — natural conifer, offset left and slightly higher === */}
-          <ellipse cx="11" cy="61.8" rx="2.5" ry="0.4" fill="rgba(0,0,0,0.07)" />
-          <path d="M10.8,61.7 L10.8,53.2 L11.2,53.2 L11.2,61.7 Z" fill={isDark ? '#2e1a0c' : '#5a3a1a'} />
-          <path d="M11,61.2 Q9,59.2 8.5,58.2 Q9.2,58.5 9,57.7 Q8,56.2 8.2,55.7 Q9,56.2 9.5,55.7 Q9,54.7 9.5,54.2 Q10,54.7 10.2,54.4 Q10.5,53.7 11,52.7 Q11.5,53.7 11.8,54.4 Q12,54.7 12.5,54.2 Q13,54.7 13,55.7 Q13,56.2 13.8,55.7 Q14,56.2 13,57.7 Q12.8,58.5 13.5,58.2 Q13,59.2 11,61.2 Z" fill={isDark ? '#1a3818' : '#2a5e2a'} />
-          <path d="M11,61.2 Q9,59.2 8.5,58.2 Q9.2,58.5 9,57.7 Q8,56.2 8.2,55.7 Q9,56.2 9.5,55.7 Q9,54.7 9.5,54.2 Q10,54.7 10.2,54.4 Q10.5,53.7 11,52.7 L11,61.2 Z" fill="rgba(0,0,0,0.06)" />
-          <path d="M11,52.7 Q11.5,53.7 11.8,54.4 Q12,54.7 12.5,54.2 Q13,54.7 13,55.7 Q13,56.2 13.8,55.7 Q14,56.2 13,57.7 Q12.8,58.5 13.5,58.2 Q13,59.2 11,61.2 L11,52.7 Z" fill={isDark ? '#224e22' : '#348034'} opacity="0.3" />
-
           {/* === Stump === */}
-          <ellipse cx="19.5" cy="63.4" rx="2.2" ry="0.4" fill="rgba(0,0,0,0.06)" />
-          <path d="M18,61.8 L18,63.2 Q18.7,63.6 19.5,63.6 Q20.3,63.6 21,63.2 L21,61.8 Z" fill={isDark ? '#3a2818' : '#7a5a38'} />
-          <line x1="18.8" y1="62" x2="18.8" y2="63" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <line x1="20.2" y1="62.1" x2="20.2" y2="62.9" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <ellipse cx="19.5" cy="61.8" rx="1.5" ry="0.5" fill={isDark ? '#4a3820' : '#9a7a55'} />
-          <ellipse cx="19.5" cy="61.8" rx="0.7" ry="0.25" fill="none" stroke={isDark ? '#3e3018' : '#8a6a45'} strokeWidth="0.08" opacity="0.4" />
+          <ellipse cx="170" cy="57.4" rx="2.2" ry="0.4" fill="rgba(0,0,0,0.06)" />
+          <path d="M168.5,55.8 L168.5,57.2 Q169.2,57.6 170,57.6 Q170.8,57.6 171.5,57.2 L171.5,55.8 Z" fill={isDark ? '#3a2818' : '#7a5a38'} />
+          <line x1="169.3" y1="56" x2="169.3" y2="57" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
+          <line x1="170.7" y1="56.1" x2="170.7" y2="56.9" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
+          <ellipse cx="170" cy="55.8" rx="1.5" ry="0.5" fill={isDark ? '#4a3820' : '#9a7a55'} />
+          <ellipse cx="170" cy="55.8" rx="0.7" ry="0.25" fill="none" stroke={isDark ? '#3e3018' : '#8a6a45'} strokeWidth="0.08" opacity="0.4" />
 
-          {/* === Axe — blade embedded in stump top === */}
-          <line x1="19.8" y1="61" x2="22.5" y2="59" stroke={isDark ? '#3a2810' : '#6a4a28'} strokeWidth="0.4" strokeLinecap="round" />
-          {/* Blade head — sharp end down into stump */}
-          <path d="M19.6,60.3 L19.9,62 L20.6,61 Z" fill={isDark ? '#5a5a68' : '#9090a0'} />
-          <path d="M19.9,62 L19.2,61.7 L19.6,60.3 Z" fill={isDark ? '#484855' : '#7a7a88'} />
-          <path d="M19.2,61.7 L19.6,60.3" stroke={isDark ? '#6a6a78' : '#b0b0be'} strokeWidth="0.15" fill="none" />
+          {/* === Axe embedded in stump === */}
+          <line x1="170.3" y1="55" x2="173" y2="53" stroke={isDark ? '#3a2810' : '#6a4a28'} strokeWidth="0.4" strokeLinecap="round" />
+          <path d="M170.1,54.3 L170.4,56 L171.1,55 Z" fill={isDark ? '#5a5a68' : '#9090a0'} />
+          <path d="M170.4,56 L169.7,55.7 L170.1,54.3 Z" fill={isDark ? '#484855' : '#7a7a88'} />
+          <path d="M169.7,55.7 L170.1,54.3" stroke={isDark ? '#6a6a78' : '#b0b0be'} strokeWidth="0.15" fill="none" />
 
           {chopMode && (
             <>
-              <ellipse cx="17" cy="60" rx="6" ry="4" fill="rgba(217,119,6,0.1)" />
-              <ellipse cx="17" cy="60" rx="4" ry="2.5" fill="rgba(217,119,6,0.06)" />
+              <ellipse cx="170" cy="55" rx="6" ry="4" fill="rgba(217,119,6,0.1)" />
+              <ellipse cx="170" cy="55" rx="4" ry="2.5" fill="rgba(217,119,6,0.06)" />
             </>
           )}
 
-          <rect x="10" y="52" width="16" height="12" fill="transparent" />
+          <rect x="162" y="50" width="16" height="12" fill="transparent" />
 
         </g>
 
@@ -1356,6 +1286,80 @@ export const OrchardView = memo(function OrchardView({
                   </div>
                 ) : (
                   <>
+                    {/* Tilled dirt columns — same transform space as trees */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {(() => {
+                        const dirtDark = isDark ? '#1e1a10' : '#6a5a3a'
+                        const dirtMid = isDark ? '#2a2418' : '#8a7a5a'
+                        const dirtLight = isDark ? '#382e1e' : '#9a8a6a'
+                        const centerX = placed.length > 0 ? placed.reduce((s, p) => s + p.x, 0) / placed.length : 50
+                        const cols = new Set(placed.map(p => p.col))
+                        return Array.from(cols).map(ci => {
+                          const colTrees = placed.filter(p => p.col === ci).sort((a, b) => a.y - b.y)
+                          if (colTrees.length === 0) return null
+                          const rng = seededRng(ci * 137 + 42)
+                          const first = colTrees[0]
+                          const last = colTrees[colTrees.length - 1]
+                          const ext = 6
+                          const outwardShift = 1.5
+                          const allPts: { x: number; y: number }[] = []
+                          if (colTrees.length >= 2) {
+                            const dx = first.x - colTrees[1].x
+                            const dy = first.y - colTrees[1].y
+                            const len = Math.sqrt(dx * dx + dy * dy) || 1
+                            allPts.push({ x: first.x + (dx / len) * ext, y: Math.max(38, first.y + (dy / len) * ext) })
+                          } else {
+                            allPts.push({ x: first.x, y: Math.max(38, first.y - ext) })
+                          }
+                          for (const ct of colTrees) {
+                            const shift = ct.x < centerX ? -outwardShift : ct.x > centerX ? outwardShift : 0
+                            allPts.push({ x: ct.x + shift, y: ct.y })
+                          }
+                          if (colTrees.length >= 2) {
+                            const dx = last.x - colTrees[colTrees.length - 2].x
+                            const dy = last.y - colTrees[colTrees.length - 2].y
+                            const len = Math.sqrt(dx * dx + dy * dy) || 1
+                            allPts.push({ x: last.x + (dx / len) * ext, y: Math.min(100, last.y + (dy / len) * ext) })
+                          } else {
+                            allPts.push({ x: last.x, y: Math.min(100, last.y + ext) })
+                          }
+                          const makePath = (pts: { x: number; y: number }[], xOff: number, yOff: number) => {
+                            const r = seededRng(ci * 99 + Math.round(xOff * 100))
+                            const mapped = pts.map(p => ({
+                              x: p.x + xOff + (r() - 0.5) * 0.5,
+                              y: p.y + yOff + (r() - 0.5) * 0.3,
+                            }))
+                            let path = `M${mapped[0].x.toFixed(1)},${mapped[0].y.toFixed(1)}`
+                            for (let i = 1; i < mapped.length; i++) {
+                              if (i < mapped.length - 1) {
+                                const c = mapped[i]
+                                const n = mapped[i + 1]
+                                path += ` Q${c.x.toFixed(1)},${c.y.toFixed(1)} ${((c.x + n.x) / 2).toFixed(1)},${((c.y + n.y) / 2).toFixed(1)}`
+                              } else {
+                                path += ` L${mapped[i].x.toFixed(1)},${mapped[i].y.toFixed(1)}`
+                              }
+                            }
+                            return path
+                          }
+                          const furrows = [
+                            { xOff: -0.8, yOff: -0.2, color: dirtDark, width: 0.5, op: isDark ? 0.3 : 0.16 },
+                            { xOff: -0.3, yOff: 0, color: dirtMid, width: 0.7, op: isDark ? 0.35 : 0.2 },
+                            { xOff: 0, yOff: 0.15, color: dirtDark, width: 0.9, op: isDark ? 0.4 : 0.22 },
+                            { xOff: 0.35, yOff: 0.05, color: dirtMid, width: 0.6, op: isDark ? 0.3 : 0.17 },
+                            { xOff: 0.75, yOff: -0.1, color: dirtDark, width: 0.45, op: isDark ? 0.25 : 0.14 },
+                            { xOff: -0.5, yOff: 0.3, color: dirtLight, width: 0.35, op: isDark ? 0.18 : 0.1 },
+                            { xOff: 0.5, yOff: 0.25, color: dirtLight, width: 0.3, op: isDark ? 0.15 : 0.08 },
+                          ]
+                          return (
+                            <g key={`till-${ci}`}>
+                              {furrows.map((f, fi) => (
+                                <path key={fi} d={makePath(allPts, f.xOff, f.yOff)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
+                              ))}
+                            </g>
+                          )
+                        })
+                      })()}
+                    </svg>
                     {placed.map(({ x, y, tree }, renderIdx) => {
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
@@ -1380,18 +1384,63 @@ export const OrchardView = memo(function OrchardView({
                             transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
-                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both`,
+                            animation: `tree-pop 0.3s ease-out ${(placed.length - 1 - renderIdx) * 12}ms both`,
                             willChange: 'transform, opacity',
                             cursor: chopMode ? 'pointer' : undefined,
                           }}
                         >
-                          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-                            filter: chopMode
-                              ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
-                              : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
-                            transition: 'filter 0.2s',
-                          }}>
-                            <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+                          <div style={{ position: 'relative' }}>
+                            <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+                              filter: chopMode
+                                ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
+                                : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
+                              transition: 'filter 0.2s',
+                            }}>
+                              <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+                            </div>
+                            <div style={{
+                              position: 'absolute',
+                              left: '50%',
+                              bottom: -4,
+                              transform: 'translateX(-50%)',
+                              width: treeSize * 1.2,
+                              height: treeSize * 0.3,
+                              borderRadius: '45% 48% 50% 42%',
+                              zIndex: -1,
+                              opacity: isDark ? 0.45 : 0.28,
+                              background: isDark
+                                ? 'radial-gradient(ellipse 60% 55% at 48% 50%, #1a1608 0%, #1e1a0c 20%, #1c1810 40%, transparent 100%)'
+                                : 'radial-gradient(ellipse 60% 55% at 48% 50%, #6a5a3a 0%, #7a6a4a 20%, #8a7a5a 40%, transparent 100%)',
+                              pointerEvents: 'none',
+                            }} />
+                            <div style={{
+                              position: 'absolute',
+                              left: '48%',
+                              bottom: -3,
+                              transform: 'translateX(-50%)',
+                              width: treeSize * 0.7,
+                              height: treeSize * 0.18,
+                              borderRadius: '40% 55% 45% 50%',
+                              zIndex: -1,
+                              opacity: isDark ? 0.3 : 0.18,
+                              background: isDark
+                                ? 'radial-gradient(ellipse at 55% 45%, #2a2418 0%, #1e1a10 50%, transparent 100%)'
+                                : 'radial-gradient(ellipse at 55% 45%, #8a7a5a 0%, #7a6a4a 50%, transparent 100%)',
+                              pointerEvents: 'none',
+                            }} />
+                            <div style={{
+                              position: 'absolute',
+                              left: '54%',
+                              bottom: -5,
+                              transform: 'translateX(-50%)',
+                              width: treeSize * 0.45,
+                              height: treeSize * 0.12,
+                              borderRadius: '50% 40% 48% 44%',
+                              zIndex: -1,
+                              opacity: isDark ? 0.22 : 0.12,
+                              background: isDark ? '#382e1e' : '#9a8a6a',
+                              pointerEvents: 'none',
+                            }} />
                           </div>
 
                           <div className="mt-0.5 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300 }}>
