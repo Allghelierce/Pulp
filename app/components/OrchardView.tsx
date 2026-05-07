@@ -313,14 +313,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <stop offset="80%" stopColor={p.skyField} />
             <stop offset="100%" stopColor={p.skyBottom} />
           </linearGradient>
-          <linearGradient id="ocean-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={p.oceanTop} />
-            <stop offset="50%" stopColor={p.oceanMid} />
-            <stop offset="100%" stopColor={p.oceanBot} />
-          </linearGradient>
-          <filter id="ocean-soft" x="-5%" y="-5%" width="110%" height="110%">
-            <feGaussianBlur stdDeviation="0.4" />
-          </filter>
           <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.mtnTop} />
             <stop offset="60%" stopColor={p.mtnMid} />
@@ -357,80 +349,57 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         {/* Sky */}
         <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
 
-        {/* Stars — visible at night/dawn/dusk, brightest when moon is highest */}
+        {/* Stars — soft radial dots, brightest when moon is highest */}
         {p.starOpacity > 0.01 && (() => {
           const moonHeight = Math.max(0, 1 - p.moonY / 28)
           const moonBoost = p.moonGlow * moonHeight
-          const masterBrightness = Math.min(1, p.starOpacity + moonBoost * 0.6)
+          const mb = Math.min(1, p.starOpacity + moonBoost * 0.6)
           return (
           <g>
             <defs>
-              <filter id="star-glow">
-                <feGaussianBlur in="SourceGraphic" stdDeviation={0.4 + masterBrightness * 0.6} result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-              <filter id="star-glow-strong">
-                <feGaussianBlur in="SourceGraphic" stdDeviation={0.6 + masterBrightness * 0.8} result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
+              {STAR_POSITIONS.map((s, i) => {
+                const col = s.warm ? '#ffeedd' : '#e8f0ff'
+                const bright = s.brightness > 0.6
+                return (
+                <radialGradient key={`sg${i}`} id={`sg${i}`} cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={col} stopOpacity={bright ? 1 : 0.9} />
+                  <stop offset={bright ? '30%' : '45%'} stopColor={col} stopOpacity={bright ? 0.45 : 0.25} />
+                  <stop offset="100%" stopColor={col} stopOpacity="0" />
+                </radialGradient>
+                )
+              })}
+              <radialGradient id="csg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#e8f0ff" stopOpacity="1" />
+                <stop offset="25%" stopColor="#e8f0ff" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#e8f0ff" stopOpacity="0" />
+              </radialGradient>
             </defs>
             {STAR_POSITIONS.map((s, i) => {
-              const glowIntensity = Math.min(1, 0.6 + masterBrightness * 0.5)
-              const starColor = s.warm ? '#ffeedd' : '#e8f0ff'
-              const isBright = s.brightness > 0.6
-              const dimOp = Math.min(1, 0.55 + masterBrightness * 0.45)
+              const bright = s.brightness > 0.6
+              const sz = bright ? s.r * 2.5 : s.r * 1.5
+              const op = Math.min(1, (bright ? 0.75 : 0.5) + mb * 0.4)
               return (
-                <g key={i} filter={isBright ? 'url(#star-glow)' : undefined} opacity={masterBrightness}>
-                  {isBright ? (
-                    <>
-                      <line x1={s.x - s.r * 2.5} y1={s.y} x2={s.x + s.r * 2.5} y2={s.y} stroke={starColor} strokeWidth={s.r * 0.45} opacity={glowIntensity}>
-                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.35};${glowIntensity}`} dur={`${2 + s.twinkle * 3}s`} repeatCount="indefinite" />
-                      </line>
-                      <line x1={s.x} y1={s.y - s.r * 2.5} x2={s.x} y2={s.y + s.r * 2.5} stroke={starColor} strokeWidth={s.r * 0.45} opacity={glowIntensity}>
-                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.35};${glowIntensity}`} dur={`${2 + s.twinkle * 3}s`} begin={`${s.twinkle * 0.5}s`} repeatCount="indefinite" />
-                      </line>
-                      <circle cx={s.x} cy={s.y} r={s.r * 0.6} fill={starColor} opacity={glowIntensity}>
-                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.45};${glowIntensity}`} dur={`${2.5 + s.twinkle * 2.5}s`} repeatCount="indefinite" />
-                      </circle>
-                    </>
-                  ) : (
-                    <circle cx={s.x} cy={s.y} r={s.r * 0.5} fill={starColor} opacity={dimOp}>
-                      <animate attributeName="opacity" values={`${dimOp};${dimOp * 0.3};${dimOp}`} dur={`${3 + s.twinkle * 4}s`} begin={`${s.twinkle * 2}s`} repeatCount="indefinite" />
-                    </circle>
-                  )}
-                </g>
+                <circle key={i} cx={s.x} cy={s.y} r={sz} fill={`url(#sg${i})`} opacity={op}>
+                  <animate attributeName="opacity" values={`${op};${op * (bright ? 0.3 : 0.4)};${op}`} dur={`${2.5 + s.twinkle * 3.5}s`} begin={`${s.twinkle * 2}s`} repeatCount="indefinite" />
+                </circle>
               )
             })}
             {/* Constellation */}
-            <g filter="url(#star-glow-strong)" opacity={masterBrightness}>
-              {CONSTELLATION_LINES.map(([a, b], i) => (
-                <line key={`cl${i}`} x1={CONSTELLATION_STARS[a].x} y1={CONSTELLATION_STARS[a].y} x2={CONSTELLATION_STARS[b].x} y2={CONSTELLATION_STARS[b].y} stroke="#e8f0ff" strokeWidth="0.12" opacity={0.2 + moonBoost * 0.3}>
-                  <animate attributeName="opacity" values={`${0.2 + moonBoost * 0.3};${0.08 + moonBoost * 0.1};${0.2 + moonBoost * 0.3}`} dur="6s" repeatCount="indefinite" />
-                </line>
-              ))}
-              {CONSTELLATION_STARS.map((s, i) => {
-                const cOp = Math.min(1, 0.8 + moonBoost * 0.3)
-                const rayOp = 0.6 + moonBoost * 0.4
+            <g opacity={mb}>
+              {CONSTELLATION_LINES.map(([a, b], i) => {
+                const lo = 0.1 + moonBoost * 0.2
                 return (
-                <g key={`cs${i}`}>
-                  <circle cx={s.x} cy={s.y} r={0.4} fill="#e8f0ff" opacity={cOp}>
-                    <animate attributeName="opacity" values={`${cOp};${cOp * 0.4};${cOp}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
-                  </circle>
-                  <line x1={s.x - 0.7} y1={s.y} x2={s.x + 0.7} y2={s.y} stroke="#e8f0ff" strokeWidth="0.16" opacity={rayOp}>
-                    <animate attributeName="opacity" values={`${rayOp};${rayOp * 0.3};${rayOp}`} dur={`${3.5 + i * 0.6}s`} repeatCount="indefinite" />
-                  </line>
-                  <line x1={s.x} y1={s.y - 0.7} x2={s.x} y2={s.y + 0.7} stroke="#e8f0ff" strokeWidth="0.16" opacity={rayOp}>
-                    <animate attributeName="opacity" values={`${rayOp};${rayOp * 0.3};${rayOp}`} dur={`${3.5 + i * 0.6}s`} begin={`${i * 0.3}s`} repeatCount="indefinite" />
-                  </line>
-                </g>
+                <line key={`cl${i}`} x1={CONSTELLATION_STARS[a].x} y1={CONSTELLATION_STARS[a].y} x2={CONSTELLATION_STARS[b].x} y2={CONSTELLATION_STARS[b].y} stroke="#e8f0ff" strokeWidth="0.08" opacity={lo}>
+                  <animate attributeName="opacity" values={`${lo};${lo * 0.35};${lo}`} dur="7s" begin={`${i * 0.8}s`} repeatCount="indefinite" />
+                </line>
+                )
+              })}
+              {CONSTELLATION_STARS.map((s, i) => {
+                const co = Math.min(1, 0.8 + moonBoost * 0.3)
+                return (
+                <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#csg)" opacity={co}>
+                  <animate attributeName="opacity" values={`${co};${co * 0.3};${co}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
+                </circle>
                 )
               })}
             </g>
@@ -439,69 +408,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         })()}
 
 
-        {/* Ocean band — rippling top edge */}
-        <path fill="url(#ocean-g)" opacity="0.92">
-          <animate attributeName="d" dur="18s" repeatCount="indefinite" values="
-            M-5,14.2 C20,13.6 45,14.5 70,13.9 C95,13.3 120,14.4 150,13.8 C175,14.3 195,13.7 205,14.1 L205,28 L-5,28 Z;
-            M-5,13.8 C25,14.4 50,13.5 80,14.2 C105,14.6 130,13.4 160,14 C185,13.5 200,14.3 205,13.9 L205,28 L-5,28 Z;
-            M-5,14 C15,14.5 40,13.4 65,14.1 C90,14.5 115,13.6 145,14.3 C170,13.7 190,14.4 205,14 L205,28 L-5,28 Z;
-            M-5,14.2 C20,13.6 45,14.5 70,13.9 C95,13.3 120,14.4 150,13.8 C175,14.3 195,13.7 205,14.1 L205,28 L-5,28 Z
-          " />
-        </path>
-        {/* Ocean shimmer — soft blurred filled bands */}
-        <g filter="url(#ocean-soft)">
-          <path fill="rgba(255,255,250,0.06)" opacity="0.8">
-            <animate attributeName="d" dur="22s" repeatCount="indefinite" values="
-              M-5,15 C30,14.3 60,15.8 100,14.8 C140,15.5 170,14.5 205,15.2 L205,16.2 C170,15.5 140,16.5 100,15.8 C60,16.8 30,15.3 -5,16 Z;
-              M-5,15.3 C25,15.8 55,14.5 95,15.5 C135,14.6 165,15.6 205,14.9 L205,15.9 C165,16.6 135,15.6 95,16.5 C55,15.5 25,16.8 -5,16.3 Z;
-              M-5,14.8 C35,15.4 65,14.2 105,15.2 C145,14.4 175,15.4 205,15 L205,16 C175,16.4 145,15.4 105,16.2 C65,15.2 35,16.4 -5,15.8 Z;
-              M-5,15 C30,14.3 60,15.8 100,14.8 C140,15.5 170,14.5 205,15.2 L205,16.2 C170,15.5 140,16.5 100,15.8 C60,16.8 30,15.3 -5,16 Z
-            " />
-          </path>
-          <path fill="rgba(255,255,250,0.045)" opacity="0.7">
-            <animate attributeName="d" dur="28s" repeatCount="indefinite" values="
-              M-5,17.5 C40,16.8 80,18 120,17.2 C160,17.8 190,17 205,17.5 L205,18.3 C190,17.8 160,18.6 120,18 C80,18.8 40,17.6 -5,18.3 Z;
-              M-5,17.8 C35,18.3 75,17 115,18 C155,17.2 185,18.2 205,17.6 L205,18.4 C185,19 155,18 115,18.8 C75,17.8 35,19.1 -5,18.6 Z;
-              M-5,17.3 C45,17.9 85,17 125,17.8 C165,17.1 195,18 205,17.4 L205,18.2 C195,18.8 165,17.9 125,18.6 C85,17.8 45,18.7 -5,18.1 Z;
-              M-5,17.5 C40,16.8 80,18 120,17.2 C160,17.8 190,17 205,17.5 L205,18.3 C190,17.8 160,18.6 120,18 C80,18.8 40,17.6 -5,18.3 Z
-            " />
-          </path>
-          <path fill="rgba(255,255,250,0.03)" opacity="0.6">
-            <animate attributeName="d" dur="36s" repeatCount="indefinite" values="
-              M-5,20.5 C50,19.8 100,20.8 150,20 C185,20.6 205,20.2 205,20.5 L205,21.2 C185,21.4 150,20.8 100,21.6 C50,20.6 -5,21.5 -5,21.2 Z;
-              M-5,20.8 C45,21.2 95,20 145,20.8 C180,20.2 205,20.9 205,20.8 L205,21.5 C180,21 145,21.6 95,20.8 C45,22 -5,21.2 -5,21.5 Z;
-              M-5,20.3 C55,20.9 105,20.2 155,20.7 C190,20.1 205,20.6 205,20.3 L205,21 C190,20.9 155,21.5 105,21 C55,21.7 -5,21.2 -5,21 Z;
-              M-5,20.5 C50,19.8 100,20.8 150,20 C185,20.6 205,20.2 205,20.5 L205,21.2 C185,21.4 150,20.8 100,21.6 C50,20.6 -5,21.5 -5,21.2 Z
-            " />
-          </path>
-          <path fill="rgba(255,255,250,0.015)" opacity="0.5">
-            <animate attributeName="d" dur="48s" repeatCount="indefinite" values="
-              M-5,23.5 C60,23 120,24 180,23.3 L205,23.5 L205,24.3 C180,24.1 120,24.8 60,23.8 L-5,24.3 Z;
-              M-5,23.8 C55,24.2 115,23.2 175,24 L205,23.8 L205,24.6 C175,24.8 115,24 55,25 L-5,24.6 Z;
-              M-5,23.3 C65,23.8 125,23 185,23.7 L205,23.3 L205,24.1 C185,24.5 125,23.8 65,24.6 L-5,24.1 Z;
-              M-5,23.5 C60,23 120,24 180,23.3 L205,23.5 L205,24.3 C180,24.1 120,24.8 60,23.8 L-5,24.3 Z
-            " />
-          </path>
-        </g>
-        <g filter="url(#ocean-soft)">
-          <circle cx="80" cy="16.5" r="0.5" fill="rgba(255,255,248,0.07)">
-            <animate attributeName="opacity" values="0;0.07;0.02;0.05;0" dur="12s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="80;86;80" dur="20s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="140" cy="18.5" r="0.4" fill="rgba(255,255,248,0.05)">
-            <animate attributeName="opacity" values="0;0.05;0;0.03;0" dur="16s" begin="4s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="140;136;140" dur="24s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="45" cy="20" r="0.35" fill="rgba(255,255,248,0.04)">
-            <animate attributeName="opacity" values="0;0.04;0;0" dur="18s" begin="7s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="45;49;45" dur="28s" repeatCount="indefinite" />
-          </circle>
-        </g>
 
         {/* Mountain range — back layer (darker, depth) */}
-        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} />
+        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
         {/* Mountain range — main */}
-        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
+        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
         {/* Left-facing slopes — shadow for depth */}
         <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
         <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
@@ -545,6 +456,14 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.3" />
         {/* Back hill — shadow band along bottom for depth */}
         <path d="M-10,39 C10,38 40,36 70,33 C90,30 115,28 140,28 C160,29 180,31 200,33 L210,35 L210,42 L-10,42 Z" fill="rgba(0,0,0,0.06)" />
+
+        {/* Winding paths on hills — behind everything */}
+        <path d="M-5,36 Q10,34 25,33 Q35,31 45,30 Q55,30 65,31 Q80,33 95,30 Q110,26 125,22 Q140,20 155,20 Q165,21 175,24 Q185,26 200,28" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.7" opacity={isDark ? 0.5 : 0.35} strokeLinecap="round" />
+        <path d="M-5,36.3 Q10,34.3 25,33.3 Q35,31.3 45,30.3 Q55,30.3 65,31.3 Q80,33.3 95,30.3 Q110,26.3 125,22.3 Q140,20.3 155,20.3 Q165,21.3 175,24.3 Q185,26.3 200,28.3" fill="none" stroke={isDark ? '#1e1a10' : '#7a6040'} strokeWidth="0.2" opacity={isDark ? 0.3 : 0.2} strokeLinecap="round" />
+        <path d="M65,31 Q70,33 75,35 Q80,36 90,37 Q100,37 115,38" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.5" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
+        <path d="M65,31.2 Q70,33.2 75,35.2 Q80,36.2 90,37.2 Q100,37.2 115,38.2" fill="none" stroke={isDark ? '#1e1a10' : '#7a6040'} strokeWidth="0.15" opacity={isDark ? 0.25 : 0.15} strokeLinecap="round" />
+        <path d="M45,30 Q48,30.5 52,31" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.35" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" />
+
         {/* Back hill — organic bushes along ridge */}
         {(() => {
           const bushes: string[] = []
@@ -634,37 +553,42 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Winding paths on mid hills — follow back hill contour */}
-        <path d="M20,35 Q30,33 40,31 Q50,30 60,31" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.6" opacity="0.3" strokeLinecap="round" />
-        <path d="M90,24 Q100,22 110,21 Q120,20 130,20" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.5" opacity="0.25" strokeLinecap="round" />
-        <path d="M155,20 Q162,20 170,22 Q176,23 184,24" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.45" opacity="0.22" strokeLinecap="round" />
-
         {/* Houses on mid hills — each unique, positioned on hill contour */}
-        {/* House 1 — cottage with chimney, on back hill slope (x~54, y~31) */}
+        {/* House 1 — cottage with chimney, on back hill (x~90, y~24) */}
         <g>
-          <ellipse cx="54" cy="31.2" rx="2.8" ry="0.4" fill="rgba(0,0,0,0.08)" />
-          <path d={`M51.8,31.1 L52,29.2 L55.5,29.2 L55.7,31.1 Z`} fill={isDark ? '#3a3028' : '#b0987a'} />
-          <path d={`M55.5,29.2 L56.8,29.6 L56.9,31.1 L55.7,31.1 Z`} fill={isDark ? '#2e2418' : '#968060'} />
-          <rect x="52.6" y="29.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
-          <rect x="53.8" y="29.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
-          <rect x="54.8" y="29.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
-          <polygon points="51.3,29.4 56.2,29.4 53.8,27.2" fill={isDark ? '#2a2018' : '#7a5838'} />
-          <polygon points="53.8,27.2 56.2,29.4 53.8,29.4" fill={isDark ? '#221a14' : '#6a4a30'} />
-          <rect x="52.3" y="27.4" width="0.6" height="1.8" fill={isDark ? '#3a3028' : '#7a6848'} />
-          <rect x="52.2" y="27.2" width="0.8" height="0.3" fill={isDark ? '#3a3028' : '#7a6848'} />
+          <ellipse cx="90" cy="24.2" rx="2.8" ry="0.4" fill="rgba(0,0,0,0.08)" />
+          {/* Stone chimney — behind house */}
+          <rect x="88.3" y="20.4" width="0.6" height="1.8" fill={isDark ? '#3a3a3e' : '#8a8a90'} />
+          <rect x="88.2" y="20.2" width="0.8" height="0.3" fill={isDark ? '#444448' : '#9a9aa0'} />
+          <line x1="88.3" y1="20.8" x2="88.9" y2="20.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="88.3" y1="21.3" x2="88.9" y2="21.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="88.3" y1="21.8" x2="88.9" y2="21.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          {/* Front wall */}
+          <path d="M87.8,24.1 L88,22.2 L91.5,22.2 L91.7,24.1 Z" fill={isDark ? '#3a3028' : '#b0987a'} />
+          {/* Side wall */}
+          <path d="M91.5,22.2 L92.8,22.6 L92.9,24.1 L91.7,24.1 Z" fill={isDark ? '#2e2418' : '#968060'} />
+          {/* Windows */}
+          <rect x="88.6" y="22.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
+          <rect x="89.8" y="22.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
+          {/* Door */}
+          <rect x="90.8" y="22.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
+          {/* Roof — covers front and side walls */}
+          <polygon points="87.3,22.4 93.2,22.4 89.8,20.2" fill={isDark ? '#2a2018' : '#7a5838'} />
+          <polygon points="89.8,20.2 93.2,22.4 89.8,22.4" fill={isDark ? '#221a14' : '#6a4a30'} />
+          {/* Smoke */}
           <g opacity="0.35">
-            <ellipse cx="52.6" cy="26.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="26.6;25.8;25" dur="4s" repeatCount="indefinite" />
+            <ellipse cx="88.6" cy="19.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="19.6;18.8;18" dur="4s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.35;0.55;0.7" dur="4s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.35;0.18;0" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="52.8" cy="25.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="25.2;24.2;23.2" dur="5.5s" repeatCount="indefinite" />
+            <ellipse cx="88.8" cy="18.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="18.2;17.2;16.2" dur="5.5s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.3;0.6;0.9" dur="5.5s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.25;0.1;0" dur="5.5s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="52.4" cy="23.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="23.6;22.4;21.4" dur="7s" repeatCount="indefinite" />
+            <ellipse cx="88.4" cy="16.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="16.6;15.4;14.4" dur="7s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.25;0.7;1.2" dur="7s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.15;0.05;0" dur="7s" repeatCount="indefinite" />
             </ellipse>
@@ -682,15 +606,48 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           <polygon points="130.95,16.3 132.5,18.2 130.95,18.2" fill={isDark ? '#221812' : '#5e4428'} />
         </g>
 
-        {/* House 3 — wide barn, on back hill right slope (x~172, y~26) */}
+        {/* House 3 — wide barn with stone chimney, on back hill right slope (x~172, y~26) */}
         <g>
           <ellipse cx="173" cy="26.5" rx="2.5" ry="0.35" fill="rgba(0,0,0,0.06)" />
-          <path d={`M170.5,26.3 L170.6,25.1 L175.2,25.1 L175.3,26.3 Z`} fill={isDark ? '#38281a' : '#988060'} />
+          {/* Stone chimney — behind house */}
+          <rect x="174.2" y="22.8" width="0.7" height="2.3" fill={isDark ? '#3a3a3e' : '#8a8a90'} />
+          <rect x="174.1" y="22.6" width="0.9" height="0.3" fill={isDark ? '#444448' : '#9a9aa0'} />
+          <line x1="174.2" y1="23.3" x2="174.9" y2="23.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="174.2" y1="23.8" x2="174.9" y2="23.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="174.2" y1="24.3" x2="174.9" y2="24.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="174.55" y1="23" x2="174.55" y2="23.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.06" />
+          <line x1="174.55" y1="23.8" x2="174.55" y2="24.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.06" />
+          {/* Walls */}
+          <path d="M170.5,26.3 L170.6,25.1 L175.2,25.1 L175.3,26.3 Z" fill={isDark ? '#38281a' : '#988060'} />
           <rect x="172" y="25.4" width="1.2" height="0.9" fill={isDark ? '#1e1408' : '#4a3018'} />
           <line x1="172.6" y1="25.4" x2="172.6" y2="26.3" stroke={isDark ? '#2a1e10' : '#5a3820'} strokeWidth="0.1" />
           <polygon points="171.2,25.3 171.8,25.3 171.5,25" fill={isDark ? '#1e1408' : '#4a3018'} />
+          {/* Roof */}
           <polygon points="170,25.3 175.8,25.3 172.9,23.8" fill={isDark ? '#2a1e12' : '#6a4a2e'} />
           <polygon points="172.9,23.8 175.8,25.3 172.9,25.3" fill={isDark ? '#241a10' : '#5e4226'} />
+          {/* Smoke — obvious, trailing up */}
+          <g opacity="0.5">
+            <ellipse cx="174.5" cy="22" rx="0.4" ry="0.3" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="22;21;20" dur="3.5s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.4;0.7;1" dur="3.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.5;0.25;0" dur="3.5s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="174.7" cy="20.5" rx="0.5" ry="0.35" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="20.5;19;17.5" dur="4.5s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.5;0.9;1.4" dur="4.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.4;0.2;0" dur="4.5s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="174.3" cy="18.5" rx="0.6" ry="0.4" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="18.5;16.5;14.5" dur="6s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.6;1.2;1.8" dur="6s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.3;0.1;0" dur="6s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="174.6" cy="15.5" rx="0.7" ry="0.45" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="15.5;13;10.5" dur="7.5s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="0.7;1.5;2.2" dur="7.5s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.2;0.07;0" dur="7.5s" repeatCount="indefinite" />
+            </ellipse>
+          </g>
         </g>
 
         {/* Front hill — steep hump on left, drops low on right to reveal back hill */}
@@ -1169,7 +1126,20 @@ export const OrchardView = memo(function OrchardView({
     if (!isOpen) return
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
+    const preventZoom = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault() }
+    const preventGesture = (e: Event) => e.preventDefault()
+    const preventWheelZoom = (e: WheelEvent) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }
+    document.addEventListener('touchmove', preventZoom, { passive: false })
+    document.addEventListener('gesturestart', preventGesture, { passive: false })
+    document.addEventListener('gesturechange', preventGesture, { passive: false })
+    document.addEventListener('wheel', preventWheelZoom, { passive: false })
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+      document.removeEventListener('touchmove', preventZoom)
+      document.removeEventListener('gesturestart', preventGesture)
+      document.removeEventListener('gesturechange', preventGesture)
+      document.removeEventListener('wheel', preventWheelZoom)
+    }
   }, [onClose, isOpen])
 
   const activeNotes = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -1276,11 +1246,12 @@ export const OrchardView = memo(function OrchardView({
   return (
     <div
       className="absolute inset-0 z-40 flex"
-      onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
+      style={{ touchAction: 'manipulation' }}
+      onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
     >
       <style>{`@keyframes tree-pop { 0% { transform: translate(-50%,-85%) scale(0.5); opacity:0 } 100% { transform: translate(-50%,-85%) scale(1); opacity:1 } }`}</style>
       <div
-        onWheel={(e) => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
+        onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
         className="relative flex overflow-hidden w-full h-full"
       >
         {/* Main orchard area */}
