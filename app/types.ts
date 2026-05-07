@@ -26,7 +26,7 @@ export interface NoteData {
   flashcards?: FlashcardItem[];
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
-  hlines?: { [pageIdx: number]: number[] };
+  hlines?: { [pageIdx: number]: HLine[] };
   drawings?: { [pageIdx: number]: DrawingPath[] };
   deletedAt?: string;
   archived?: boolean;
@@ -41,6 +41,7 @@ export interface DrawingPath {
   points: { x: number; y: number }[];
   width: number;
 }
+export interface HLine { id: string; x: number; y: number; width: number }
 export interface FolderData { id: number; name: string; open: boolean }
 
 export interface Achievement {

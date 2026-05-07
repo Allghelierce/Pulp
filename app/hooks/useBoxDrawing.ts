@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { flushSync } from "react-dom"
 import { uid } from "@/app/lib/uid"
-import type { TextBox, NoteData } from "@/app/types"
+import type { TextBox, NoteData, HLine } from "@/app/types"
 
 interface UseBoxDrawingOptions {
   activeTabId: string | null
@@ -40,6 +40,9 @@ export function useBoxDrawing({
   const [selectionVersion, setSelectionVersion] = useState(0)
   const selectedLineRef = useRef<number | null>(null)
   const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
+  const selectedHLineIdRef = useRef<string | null>(null)
+  const [hlineSelectionVersion, setHlineSelectionVersion] = useState(0)
+  const hlineDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
   const aligningRef = useRef(false)
   const undoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
@@ -210,6 +213,20 @@ export function useBoxDrawing({
       }
 
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
+
+      // Delete selected hline
+      if (selectedHLineIdRef.current !== null) {
+        e.preventDefault()
+        const tid = activeTabIdRef.current
+        const pidx = currentPageIdxRef.current
+        const hid = selectedHLineIdRef.current
+        setNotes(prev => prev.map(n => n.id !== tid ? n : {
+          ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).filter(h => h.id !== hid) }
+        }))
+        selectedHLineIdRef.current = null
+        setHlineSelectionVersion(c => c + 1)
+        return
+      }
 
       // Delete selected line
       if (selectedLineRef.current !== null) {
@@ -608,7 +625,9 @@ export function useBoxDrawing({
     if (!isEditable) e.preventDefault()
 
     const r = paperRef.current.getBoundingClientRect()
-    const x = (e.clientX - r.left) / Number(zoomRef.current)
+    const zoomVal = Number(zoomRef.current)
+    const x = (e.clientX - r.left) / zoomVal
+    const y = (e.clientY - r.top) / zoomVal
     const tid = activeTabIdRef.current
     const pidx = currentPageIdxRef.current
 

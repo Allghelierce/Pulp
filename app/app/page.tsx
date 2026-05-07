@@ -57,6 +57,7 @@ const AiResultModal = dynamic(() => import("@/app/components/AiResultModal").the
 // Prefetch all dynamic chunks after initial render
 function usePrefetchViews() {
   useEffect(() => {
+    import("@/app/components/SlashMenu")
     const timer = setTimeout(() => {
       import("@/app/components/ShelfView")
       import("@/app/components/OrchardView")
@@ -73,7 +74,6 @@ function usePrefetchViews() {
       import("@/app/components/AiCommandBar")
       import("@/app/components/NotebookChat")
       import("@/app/components/VersionHistoryPanel")
-      import("@/app/components/SlashMenu")
       import("@/app/components/VitalitySystem")
       import("@/app/components/AiInlineMenu")
       import("@/app/components/AiResultModal")
@@ -2995,7 +2995,7 @@ export default function NoteApp() {
               onSetRenamingFolder={setRenamingFolder}
               onSetDraggedNoteId={setDraggedNoteId}
               onDropNote={handleDropNote}
-              onOpenSettings={() => setShowSettings(true)}
+              onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { setShowSettings(true) } }}
               onOpenTimer={() => setTimerOpen(t => !t)}
               timerOpen={timerOpen}
               onSetNoteParent={setNoteParent}
@@ -3181,6 +3181,8 @@ export default function NoteApp() {
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
+                onOpenGrove={() => { closeAllPanels(); setOrchardOpen(true) }}
+                onInsertImage={() => setShowImageModal(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
                 isTextActive={isTextActive}
@@ -3412,7 +3414,12 @@ export default function NoteApp() {
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
                                text-rendering: optimizeLegibility !important;
-                               
+                             }
+                             #editor-paper > [contenteditable]:empty::before {
+                               content: "Type @ for commands…";
+                               color: ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.18)"};
+                               font-style: italic;
+                               pointer-events: none;
                              }
                              @keyframes box-ripple {
                                0%   { inset: 0px;   opacity: 0.6; }
