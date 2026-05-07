@@ -650,9 +650,39 @@ export function useBoxDrawing({
       }
     }
 
+    // Check if clicking near a horizontal line
+    const hlines = currentTab?.hlines?.[pidx] || []
+    for (const hl of hlines) {
+      if (x >= hl.x && x <= hl.x + hl.width && Math.abs(y - hl.y) < 8) {
+        selectedHLineIdRef.current = hl.id
+        selectedLineRef.current = null
+        setHlineSelectionVersion(c => c + 1)
+        setLineSelectionVersion(c => c + 1)
+        hlineDragRef.current = { id: hl.id, startX: e.clientX, startY: e.clientY, origX: hl.x, origY: hl.y }
+        const onMove = (ev: MouseEvent) => {
+          if (!hlineDragRef.current) return
+          const dy = (ev.clientY - hlineDragRef.current.startY) / zoomVal
+          const newY = hlineDragRef.current.origY + dy
+          setNotes(prev => prev.map(n => n.id !== tid ? n : {
+            ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).map(h => h.id !== hlineDragRef.current!.id ? h : { ...h, y: newY }) }
+          }))
+        }
+        const onUp = () => {
+          hlineDragRef.current = null
+          window.removeEventListener('mousemove', onMove)
+          window.removeEventListener('mouseup', onUp)
+        }
+        window.addEventListener('mousemove', onMove)
+        window.addEventListener('mouseup', onUp)
+        return
+      }
+    }
+
     // No line clicked, clear line selection and start box selection
     selectedLineRef.current = null
+    selectedHLineIdRef.current = null
     setLineSelectionVersion(c => c + 1)
+    setHlineSelectionVersion(c => c + 1)
 
     const boxes = currentTab?.boxes[pidx] || []
     selectionRef.current = { sx: e.clientX, sy: e.clientY, active: false, pendingSelected: new Set(), cachedBoxes: boxes }
@@ -931,7 +961,8 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
+    hlineSelectionVersion, selectedHLineIdRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
 }

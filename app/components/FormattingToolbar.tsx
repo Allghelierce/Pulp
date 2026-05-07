@@ -13,10 +13,11 @@ interface FormattingToolbarProps {
   // Using a ref so this component NEVER re-renders when selection changes
   selectedBoxIdsRef: React.RefObject<Set<string>>
   editorRef: React.RefObject<HTMLDivElement | null>
+  onInsertHLine?: () => void
 }
 
 export const FormattingToolbar = memo(function FormattingToolbar({
-  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, setBoxAlignment, selectedBoxIdsRef, editorRef,
+  accent, execCmd, saveSelection, toggleScript, insertHTML, openAlert, setBoxAlignment, selectedBoxIdsRef, editorRef, onInsertHLine,
 }: FormattingToolbarProps) {
   // Read from ref at click time — this fn is never used in render so no re-render happens
   const hasBoxes = () => (selectedBoxIdsRef.current?.size ?? 0) > 0
@@ -93,7 +94,7 @@ export const FormattingToolbar = memo(function FormattingToolbar({
         {/* Blocks */}
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
           <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`} title="Blockquote">❝</button>
-          <button onMouseDown={e=>{e.preventDefault();insertHTML('<hr style="border:none;border-top:2px solid #ddd;margin:16px 0"/><br/>')}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
+          <button onMouseDown={e=>{e.preventDefault(); onInsertHLine?.()}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
         </div>
 
       </div>

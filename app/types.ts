@@ -95,7 +95,7 @@ export interface NoteVersion {
   pages: string[]
   boxes: BoxesMap
   lines?: { [pageIdx: number]: number[] }
-  hlines?: { [pageIdx: number]: number[] }
+  hlines?: { [pageIdx: number]: HLine[] }
   drawings?: { [pageIdx: number]: DrawingPath[] }
   flashcards?: FlashcardItem[]
 }

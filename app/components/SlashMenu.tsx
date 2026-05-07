@@ -39,6 +39,7 @@ interface SlashMenuProps {
   toggleScript: (cmd: "superscript" | "subscript") => void
   insertBacklink: () => void
   onInsertImage?: () => void
+  onInsertHLine?: () => void
   mode: "@" | "/"
   theme?: "light" | "dark"
   box?: TextBox
@@ -639,7 +640,7 @@ function CustomMenuFlyoutPortal({ parentEl, ...props }: Omit<React.ComponentProp
 
 export const SlashMenu = memo(function SlashMenu({
   x, y, filter, accent, isSelectionMode, onSelect, onClose, execCmd, insertHTML,
-  toggleScript: _toggleScript, insertBacklink, onInsertImage, mode, theme, box, onUpdateBox
+  toggleScript: _toggleScript, insertBacklink, onInsertImage, onInsertHLine, mode, theme, box, onUpdateBox
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const [prevFilter, setPrevFilter] = useState(filter)
@@ -773,7 +774,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
-      action: () => insertHTML('<div style="height:2px;background:#1a1a1a;margin:12px 0;display:block;filter:url(#handwritten-jitter);">&#8203;</div><br>')
+      action: () => { onInsertHLine?.(); onClose() }
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",
