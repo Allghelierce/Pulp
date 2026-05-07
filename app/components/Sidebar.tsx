@@ -542,16 +542,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`bg-[#110d0e] text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} border-r border-white/5 relative`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width" }}>
-        {/* Lattice background */}
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", opacity: 0.1,
-          backgroundImage: `
-            linear-gradient(45deg, currentColor 1px, transparent 1px),
-            linear-gradient(-45deg, currentColor 1px, transparent 1px)
-          `,
-          backgroundSize: "18px 18px",
-        }} />
+      <div id="app-sidebar" className={`bg-[#110d0e] text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} border-r border-white/5 relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 12px rgba(0,0,0,0.35)" }}>
 
         <div className="relative p-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           <div
@@ -725,7 +716,7 @@ export const Sidebar = memo(function Sidebar({
                 <div className="relative flex items-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
-                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-500 bg-zinc-800/60" : "text-zinc-800 hover:text-zinc-500 hover:bg-zinc-800/40"}`}
+                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-500 bg-zinc-800/60" : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
                     style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}
                   >
                     + New

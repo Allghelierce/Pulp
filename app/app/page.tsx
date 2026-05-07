@@ -1067,7 +1067,8 @@ export default function NoteApp() {
     const onMove = (ev: MouseEvent) => {
       if (!sidebarDragRef.current) return
       const dx = ev.clientX - sidebarDragRef.current.startX
-      setSidebarWidth(Math.max(0, Math.min(400, sidebarDragRef.current.startWidth + dx)))
+      const raw = sidebarDragRef.current.startWidth + dx
+      setSidebarWidth(raw < 200 ? 0 : Math.min(400, Math.max(256, raw)))
     }
     const onUp = (ev: MouseEvent) => {
       sidebarDragRef.current = null
@@ -1076,7 +1077,7 @@ export default function NoteApp() {
       if (dx < 5) {
         setSidebarWidth(prev => prev > 0 ? 0 : 256)
       } else {
-        setSidebarWidth(w => w < 100 ? 0 : w)
+        setSidebarWidth(w => w < 200 ? 0 : Math.max(256, w))
       }
       window.removeEventListener("mousemove", onMove)
       window.removeEventListener("mouseup", onUp)
@@ -2952,7 +2953,7 @@ export default function NoteApp() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
-            style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%' }}
+            style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%', zIndex: 250 }}
           >
             <Sidebar
               notes={notes}
@@ -3037,7 +3038,7 @@ export default function NoteApp() {
                 right: 0,
                 top: 0,
                 userSelect: 'none',
-                zIndex: 10,
+                zIndex: 300,
               }}
               className="hover:bg-white/10 transition-colors"
             />

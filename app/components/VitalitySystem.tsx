@@ -255,12 +255,25 @@ export const VitalitySystem = memo(function VitalitySystem({
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
     const treeType = selectedSeed || 'tangerine'
-    setGrove(g => {
-      const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }]
-      checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-      checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
-      return next
-    })
+    const nbId = selectedNotebookId ?? '_unassigned'
+    let plotsFull = false
+    try {
+      const stored = JSON.parse(localStorage.getItem('pulp-unlocked-plots') || '{}')
+      const unlocked = stored[nbId] || 1
+      const treesInNb = grove.filter(t => (t.notebookId || '_unassigned') === nbId).length
+      if (treesInNb >= unlocked * 30) plotsFull = true
+    } catch {}
+
+    if (plotsFull) {
+      setJuice(s => s + reward)
+    } else {
+      setGrove(g => {
+        const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }]
+        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+        checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
+        return next
+      })
+    }
 
     setTimerElapsed(0)
     setTimerDone(false)

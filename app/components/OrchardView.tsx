@@ -1119,6 +1119,74 @@ export const OrchardView = memo(function OrchardView({
 
   const placed = useMemo(() => orchardPlacement(currentPlotTrees), [currentPlotTrees])
 
+  const tillSvg = useMemo(() => {
+    if (placed.length === 0) return null
+    const dk = isDark
+    const dirtDark = dk ? '#1e1a10' : '#6a5a3a'
+    const dirtMid = dk ? '#2a2418' : '#8a7a5a'
+    const dirtLight = dk ? '#382e1e' : '#9a8a6a'
+    const centerX = placed.reduce((s, p) => s + p.x, 0) / placed.length
+    const cols = new Set(placed.map(p => p.col))
+    const makePath = (pts: { x: number; y: number }[], xOff: number, yOff: number, seed: number) => {
+      const r = seededRng(seed)
+      const mapped = pts.map(p => ({ x: p.x + xOff + (r() - 0.5) * 0.5, y: p.y + yOff + (r() - 0.5) * 0.3 }))
+      let path = `M${mapped[0].x.toFixed(1)},${mapped[0].y.toFixed(1)}`
+      for (let i = 1; i < mapped.length; i++) {
+        if (i < mapped.length - 1) {
+          const c = mapped[i], n = mapped[i + 1]
+          path += ` Q${c.x.toFixed(1)},${c.y.toFixed(1)} ${((c.x + n.x) / 2).toFixed(1)},${((c.y + n.y) / 2).toFixed(1)}`
+        } else {
+          path += ` L${mapped[i].x.toFixed(1)},${mapped[i].y.toFixed(1)}`
+        }
+      }
+      return path
+    }
+    const furrows = [
+      { xOff: -0.7, yOff: -0.15, color: dirtDark, width: 0.6, op: dk ? 0.32 : 0.18 },
+      { xOff: 0, yOff: 0.1, color: dirtMid, width: 0.9, op: dk ? 0.38 : 0.22 },
+      { xOff: 0.4, yOff: 0, color: dirtDark, width: 0.55, op: dk ? 0.28 : 0.15 },
+      { xOff: 0.7, yOff: 0.2, color: dirtLight, width: 0.35, op: dk ? 0.2 : 0.1 },
+    ]
+    return (
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+        {Array.from(cols).map(ci => {
+          const colTrees = placed.filter(p => p.col === ci).sort((a, b) => a.y - b.y)
+          if (colTrees.length === 0) return null
+          const rng = seededRng(ci * 137 + 42)
+          const first = colTrees[0], last = colTrees[colTrees.length - 1]
+          const ext = 6, outwardShift = 1.5
+          const allPts: { x: number; y: number }[] = []
+          if (colTrees.length >= 2) {
+            const dx = first.x - colTrees[1].x, dy = first.y - colTrees[1].y
+            const len = Math.sqrt(dx * dx + dy * dy) || 1
+            allPts.push({ x: first.x + (dx / len) * ext, y: Math.max(38, first.y + (dy / len) * ext) })
+          } else {
+            allPts.push({ x: first.x, y: Math.max(38, first.y - ext) })
+          }
+          for (const ct of colTrees) {
+            const shift = ct.x < centerX ? -outwardShift : ct.x > centerX ? outwardShift : 0
+            allPts.push({ x: ct.x + shift, y: ct.y })
+          }
+          if (colTrees.length >= 2) {
+            const dx = last.x - colTrees[colTrees.length - 2].x, dy = last.y - colTrees[colTrees.length - 2].y
+            const len = Math.sqrt(dx * dx + dy * dy) || 1
+            allPts.push({ x: last.x + (dx / len) * ext, y: Math.min(100, last.y + (dy / len) * ext) })
+          } else {
+            allPts.push({ x: last.x, y: Math.min(100, last.y + ext) })
+          }
+          void rng()
+          return (
+            <g key={`till-${ci}`}>
+              {furrows.map((f, fi) => (
+                <path key={fi} d={makePath(allPts, f.xOff, f.yOff, ci * 99 + fi * 71)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
+              ))}
+            </g>
+          )
+        })}
+      </svg>
+    )
+  }, [placed, isDark])
+
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredTrees.forEach(t => {
@@ -1286,80 +1354,7 @@ export const OrchardView = memo(function OrchardView({
                   </div>
                 ) : (
                   <>
-                    {/* Tilled dirt columns — same transform space as trees */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      {(() => {
-                        const dirtDark = isDark ? '#1e1a10' : '#6a5a3a'
-                        const dirtMid = isDark ? '#2a2418' : '#8a7a5a'
-                        const dirtLight = isDark ? '#382e1e' : '#9a8a6a'
-                        const centerX = placed.length > 0 ? placed.reduce((s, p) => s + p.x, 0) / placed.length : 50
-                        const cols = new Set(placed.map(p => p.col))
-                        return Array.from(cols).map(ci => {
-                          const colTrees = placed.filter(p => p.col === ci).sort((a, b) => a.y - b.y)
-                          if (colTrees.length === 0) return null
-                          const rng = seededRng(ci * 137 + 42)
-                          const first = colTrees[0]
-                          const last = colTrees[colTrees.length - 1]
-                          const ext = 6
-                          const outwardShift = 1.5
-                          const allPts: { x: number; y: number }[] = []
-                          if (colTrees.length >= 2) {
-                            const dx = first.x - colTrees[1].x
-                            const dy = first.y - colTrees[1].y
-                            const len = Math.sqrt(dx * dx + dy * dy) || 1
-                            allPts.push({ x: first.x + (dx / len) * ext, y: Math.max(38, first.y + (dy / len) * ext) })
-                          } else {
-                            allPts.push({ x: first.x, y: Math.max(38, first.y - ext) })
-                          }
-                          for (const ct of colTrees) {
-                            const shift = ct.x < centerX ? -outwardShift : ct.x > centerX ? outwardShift : 0
-                            allPts.push({ x: ct.x + shift, y: ct.y })
-                          }
-                          if (colTrees.length >= 2) {
-                            const dx = last.x - colTrees[colTrees.length - 2].x
-                            const dy = last.y - colTrees[colTrees.length - 2].y
-                            const len = Math.sqrt(dx * dx + dy * dy) || 1
-                            allPts.push({ x: last.x + (dx / len) * ext, y: Math.min(100, last.y + (dy / len) * ext) })
-                          } else {
-                            allPts.push({ x: last.x, y: Math.min(100, last.y + ext) })
-                          }
-                          const makePath = (pts: { x: number; y: number }[], xOff: number, yOff: number) => {
-                            const r = seededRng(ci * 99 + Math.round(xOff * 100))
-                            const mapped = pts.map(p => ({
-                              x: p.x + xOff + (r() - 0.5) * 0.5,
-                              y: p.y + yOff + (r() - 0.5) * 0.3,
-                            }))
-                            let path = `M${mapped[0].x.toFixed(1)},${mapped[0].y.toFixed(1)}`
-                            for (let i = 1; i < mapped.length; i++) {
-                              if (i < mapped.length - 1) {
-                                const c = mapped[i]
-                                const n = mapped[i + 1]
-                                path += ` Q${c.x.toFixed(1)},${c.y.toFixed(1)} ${((c.x + n.x) / 2).toFixed(1)},${((c.y + n.y) / 2).toFixed(1)}`
-                              } else {
-                                path += ` L${mapped[i].x.toFixed(1)},${mapped[i].y.toFixed(1)}`
-                              }
-                            }
-                            return path
-                          }
-                          const furrows = [
-                            { xOff: -0.8, yOff: -0.2, color: dirtDark, width: 0.5, op: isDark ? 0.3 : 0.16 },
-                            { xOff: -0.3, yOff: 0, color: dirtMid, width: 0.7, op: isDark ? 0.35 : 0.2 },
-                            { xOff: 0, yOff: 0.15, color: dirtDark, width: 0.9, op: isDark ? 0.4 : 0.22 },
-                            { xOff: 0.35, yOff: 0.05, color: dirtMid, width: 0.6, op: isDark ? 0.3 : 0.17 },
-                            { xOff: 0.75, yOff: -0.1, color: dirtDark, width: 0.45, op: isDark ? 0.25 : 0.14 },
-                            { xOff: -0.5, yOff: 0.3, color: dirtLight, width: 0.35, op: isDark ? 0.18 : 0.1 },
-                            { xOff: 0.5, yOff: 0.25, color: dirtLight, width: 0.3, op: isDark ? 0.15 : 0.08 },
-                          ]
-                          return (
-                            <g key={`till-${ci}`}>
-                              {furrows.map((f, fi) => (
-                                <path key={fi} d={makePath(allPts, f.xOff, f.yOff)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
-                              ))}
-                            </g>
-                          )
-                        })
-                      })()}
-                    </svg>
+                    {tillSvg}
                     {placed.map(({ x, y, tree }, renderIdx) => {
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
@@ -1409,36 +1404,8 @@ export const OrchardView = memo(function OrchardView({
                               zIndex: -1,
                               opacity: isDark ? 0.45 : 0.28,
                               background: isDark
-                                ? 'radial-gradient(ellipse 60% 55% at 48% 50%, #1a1608 0%, #1e1a0c 20%, #1c1810 40%, transparent 100%)'
-                                : 'radial-gradient(ellipse 60% 55% at 48% 50%, #6a5a3a 0%, #7a6a4a 20%, #8a7a5a 40%, transparent 100%)',
-                              pointerEvents: 'none',
-                            }} />
-                            <div style={{
-                              position: 'absolute',
-                              left: '48%',
-                              bottom: -3,
-                              transform: 'translateX(-50%)',
-                              width: treeSize * 0.7,
-                              height: treeSize * 0.18,
-                              borderRadius: '40% 55% 45% 50%',
-                              zIndex: -1,
-                              opacity: isDark ? 0.3 : 0.18,
-                              background: isDark
-                                ? 'radial-gradient(ellipse at 55% 45%, #2a2418 0%, #1e1a10 50%, transparent 100%)'
-                                : 'radial-gradient(ellipse at 55% 45%, #8a7a5a 0%, #7a6a4a 50%, transparent 100%)',
-                              pointerEvents: 'none',
-                            }} />
-                            <div style={{
-                              position: 'absolute',
-                              left: '54%',
-                              bottom: -5,
-                              transform: 'translateX(-50%)',
-                              width: treeSize * 0.45,
-                              height: treeSize * 0.12,
-                              borderRadius: '50% 40% 48% 44%',
-                              zIndex: -1,
-                              opacity: isDark ? 0.22 : 0.12,
-                              background: isDark ? '#382e1e' : '#9a8a6a',
+                                ? 'radial-gradient(ellipse 35% 40% at 52% 48%, #2a2418 0%, transparent 100%), radial-gradient(ellipse 50% 50% at 46% 52%, #1e1a10 0%, transparent 100%), radial-gradient(ellipse 60% 55% at 48% 50%, #1a1608 0%, #1c1810 40%, transparent 100%)'
+                                : 'radial-gradient(ellipse 35% 40% at 52% 48%, #8a7a5a 0%, transparent 100%), radial-gradient(ellipse 50% 50% at 46% 52%, #7a6a4a 0%, transparent 100%), radial-gradient(ellipse 60% 55% at 48% 50%, #6a5a3a 0%, #8a7a5a 40%, transparent 100%)',
                               pointerEvents: 'none',
                             }} />
                           </div>
