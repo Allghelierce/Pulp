@@ -94,12 +94,14 @@ function getSapYield(tree: any): number {
 // Time-of-day phases: night(0-5), dawn(5-7), morning(7-10), day(10-16), dusk(16-19), night(19-24)
 function getTimePhase(hourOverride?: number): { phase: string; t: number; hour: number } {
   const hour = hourOverride ?? (new Date().getHours() + new Date().getMinutes() / 60)
-  if (hour < 5) return { phase: 'night', t: hour / 5, hour }
-  if (hour < 7) return { phase: 'dawn', t: (hour - 5) / 2, hour }
-  if (hour < 10) return { phase: 'morning', t: (hour - 7) / 3, hour }
-  if (hour < 16) return { phase: 'day', t: (hour - 10) / 6, hour }
-  if (hour < 19) return { phase: 'dusk', t: (hour - 16) / 3, hour }
-  return { phase: 'night', t: (hour - 19) / 5, hour }
+  if (hour < 4) return { phase: 'night', t: 0, hour }
+  if (hour < 6) return { phase: 'night', t: (hour - 4) / 2, hour }
+  if (hour < 8) return { phase: 'dawn', t: (hour - 6) / 2, hour }
+  if (hour < 10) return { phase: 'morning', t: (hour - 8) / 2, hour }
+  if (hour < 16) return { phase: 'day', t: 0, hour }
+  if (hour < 18) return { phase: 'day', t: (hour - 16) / 2, hour }
+  if (hour < 20) return { phase: 'dusk', t: (hour - 18) / 2, hour }
+  return { phase: 'night', t: 0, hour }
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -138,10 +140,10 @@ interface SkyPalette {
 
 const PALETTES: Record<string, SkyPalette> = {
   night: {
-    skyTop: '#0a0a14', skyMid: '#0e0e1a', skyLow: '#121220', skyHorizon: '#141424', skyField: '#101018', skyBottom: '#0c0c14',
-    oceanTop: '#0a0a18', oceanMid: '#080814', oceanBot: '#0c0c1a',
-    mtnTop: '#12121a', mtnMid: '#0e0e14', mtnBot: '#0a0a10',
-    snowTop: '#2a2a34', snowFade: '#12121a',
+    skyTop: '#080808', skyMid: '#0a0a08', skyLow: '#0e0c0a', skyHorizon: '#12100c', skyField: '#0e0c08', skyBottom: '#0a0a08',
+    oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
+    mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
+    snowTop: '#2a2820', snowFade: '#10100c',
     hillMidTop: '#0c180e', hillMidBot: '#0a140c',
     hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
     fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
@@ -150,13 +152,13 @@ const PALETTES: Record<string, SkyPalette> = {
     starOpacity: 1,
     mtnLightOpacity: 0, mtnLightColor: 'rgba(0,0,0,0)',
     groveOpacity: 0.8,
-    ambientOverlay: 'rgba(10,10,30,0.3)', ambientOpacity: 0.3,
+    ambientOverlay: 'rgba(10,8,5,0.3)', ambientOpacity: 0.3,
   },
   dawn: {
-    skyTop: '#1a1028', skyMid: '#2a1830', skyLow: '#4a2030', skyHorizon: '#8a4830', skyField: '#2a2028', skyBottom: '#1a1820',
-    oceanTop: '#3a2828', oceanMid: '#2a1c20', oceanBot: '#3a2a28',
-    mtnTop: '#1a1820', mtnMid: '#141418', mtnBot: '#101014',
-    snowTop: '#3a3040', snowFade: '#1a1820',
+    skyTop: '#1a1208', skyMid: '#2a1c0c', skyLow: '#4a2c10', skyHorizon: '#8a4820', skyField: '#2a2010', skyBottom: '#1a1608',
+    oceanTop: '#3a2818', oceanMid: '#2a1c10', oceanBot: '#3a2a18',
+    mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
+    snowTop: '#3a3020', snowFade: '#1a1610',
     hillMidTop: '#142016', hillMidBot: '#101a12',
     hillNearTop: '#1a2818', hillNearBot: '#162214',
     fieldTop: '#1a2c16', fieldMid1: '#182814', fieldMid2: '#1a2814', fieldBot: '#162210',
@@ -165,7 +167,7 @@ const PALETTES: Record<string, SkyPalette> = {
     starOpacity: 0.15,
     mtnLightOpacity: 0.08, mtnLightColor: 'rgba(217,119,6,0.08)',
     groveOpacity: 0.85,
-    ambientOverlay: 'rgba(40,20,30,0.15)', ambientOpacity: 0.15,
+    ambientOverlay: 'rgba(40,20,8,0.15)', ambientOpacity: 0.15,
   },
   morning: {
     skyTop: '#8a5828', skyMid: '#a06830', skyLow: '#b07838', skyHorizon: '#a08040', skyField: '#788a78', skyBottom: '#6a8080',
@@ -198,10 +200,10 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   dusk: {
-    skyTop: '#1a0c06', skyMid: '#241208', skyLow: '#2e1a0a', skyHorizon: '#281608', skyField: '#141a1e', skyBottom: '#101820',
+    skyTop: '#1a0c06', skyMid: '#241208', skyLow: '#2e1a0a', skyHorizon: '#281608', skyField: '#14120c', skyBottom: '#100e08',
     oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
-    mtnTop: '#1a1a20', mtnMid: '#141418', mtnBot: '#101014',
-    snowTop: '#3a3a44', snowFade: '#1a1a20',
+    mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
+    snowTop: '#3a3428', snowFade: '#1a1610',
     hillMidTop: '#142416', hillMidBot: '#101e12',
     hillNearTop: '#1a2e18', hillNearBot: '#162614',
     fieldTop: '#1e3218', fieldMid1: '#1a2c16', fieldMid2: '#1c2e16', fieldBot: '#182812',
@@ -215,10 +217,9 @@ const PALETTES: Record<string, SkyPalette> = {
 }
 
 function interpolatePalette(phase: string, t: number): SkyPalette {
-  const order = ['night', 'dawn', 'morning', 'day', 'dusk', 'night']
-  const idx = order.indexOf(phase)
+  const transitions: Record<string, string> = { night: 'dawn', dawn: 'morning', morning: 'day', day: 'dusk', dusk: 'night' }
   const from = PALETTES[phase] || PALETTES.day
-  const nextPhase = order[Math.min(idx + 1, order.length - 1)]
+  const nextPhase = transitions[phase] || 'day'
   const to = PALETTES[nextPhase] || PALETTES.day
 
   const result: any = {}
@@ -252,42 +253,12 @@ const CONSTELLATION_LINES: [number, number][] = [
 ]
 
 const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, onToggleChop, showChopHint }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean }) {
-  const [timeOverride, setTimeOverride] = useState<number | null>(null)
-  const timeOverrideRef = useRef<number | null>(null)
   const [timeState, setTimeState] = useState(getTimePhase)
 
   useEffect(() => {
-    timeOverrideRef.current = timeOverride
-    if (timeOverride !== null) {
-      setTimeState(getTimePhase(timeOverride))
-      return
-    }
     setTimeState(getTimePhase())
     const id = setInterval(() => setTimeState(getTimePhase()), 60000)
     return () => clearInterval(id)
-  }, [timeOverride])
-
-  const onCelestialDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const startX = e.clientX
-    const startHour = timeOverrideRef.current ?? getTimePhase().hour
-    const onMove = (ev: MouseEvent) => {
-      const deltaX = ev.clientX - startX
-      let newHour = startHour + deltaX * 0.05
-      newHour = ((newHour % 24) + 24) % 24
-      setTimeOverride(newHour)
-    }
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }, [])
-
-  const onCelestialDblClick = useCallback(() => {
-    setTimeOverride(null)
   }, [])
 
   const p = useMemo(() => interpolatePalette(timeState.phase, timeState.t), [timeState.phase, timeState.t])
@@ -463,6 +434,10 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M65,31 Q70,33 75,35 Q80,36 90,37 Q100,37 115,38" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.5" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
         <path d="M65,31.2 Q70,33.2 75,35.2 Q80,36.2 90,37.2 Q100,37.2 115,38.2" fill="none" stroke={isDark ? '#1e1a10' : '#7a6040'} strokeWidth="0.15" opacity={isDark ? 0.25 : 0.15} strokeLinecap="round" />
         <path d="M45,30 Q48,30.5 52,31" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.35" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" />
+        {/* Path branch to House 1 door */}
+        <path d="M95,30 C94,29 92.5,28.8 91.1,28.1" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.45" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
+        {/* Path branch to House 2 door */}
+        <path d="M125,22 C127,22.5 129,23.5 131.2,24.4" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.4" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
 
         {/* Back hill — organic bushes along ridge */}
         {(() => {
@@ -548,62 +523,68 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.4" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#142e18' : '#2a5428'} />
-              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
+              <path d={fruits.join('')} fill={isDark ? '#6a4010' : '#b08060'} opacity={0.45} />
             </g>
           )
         })()}
 
         {/* Houses on mid hills — each unique, positioned on hill contour */}
-        {/* House 1 — cottage with chimney, on back hill (x~90, y~24) */}
+        {/* House 1 — cottage with chimney, on back hill (x~90, y~28) */}
         <g>
-          <ellipse cx="90" cy="24.2" rx="2.8" ry="0.4" fill="rgba(0,0,0,0.08)" />
+          <ellipse cx="90" cy="28.2" rx="2.8" ry="0.4" fill="rgba(0,0,0,0.08)" />
           {/* Stone chimney — behind house */}
-          <rect x="88.3" y="20.4" width="0.6" height="1.8" fill={isDark ? '#3a3a3e' : '#8a8a90'} />
-          <rect x="88.2" y="20.2" width="0.8" height="0.3" fill={isDark ? '#444448' : '#9a9aa0'} />
-          <line x1="88.3" y1="20.8" x2="88.9" y2="20.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
-          <line x1="88.3" y1="21.3" x2="88.9" y2="21.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
-          <line x1="88.3" y1="21.8" x2="88.9" y2="21.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <rect x="88.3" y="24.4" width="0.6" height="1.8" fill={isDark ? '#3a3a3e' : '#8a8a90'} />
+          <rect x="88.2" y="24.2" width="0.8" height="0.3" fill={isDark ? '#444448' : '#9a9aa0'} />
+          <line x1="88.3" y1="24.8" x2="88.9" y2="24.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="88.3" y1="25.3" x2="88.9" y2="25.3" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
+          <line x1="88.3" y1="25.8" x2="88.9" y2="25.8" stroke={isDark ? '#2e2e32' : '#7a7a80'} strokeWidth="0.08" />
           {/* Front wall */}
-          <path d="M87.8,24.1 L88,22.2 L91.5,22.2 L91.7,24.1 Z" fill={isDark ? '#3a3028' : '#b0987a'} />
+          <path d="M87.8,28.1 L88,26.2 L91.5,26.2 L91.7,28.1 Z" fill={isDark ? '#3a3028' : '#b0987a'} />
           {/* Side wall */}
-          <path d="M91.5,22.2 L92.8,22.6 L92.9,24.1 L91.7,24.1 Z" fill={isDark ? '#2e2418' : '#968060'} />
+          <path d="M91.5,26.2 L92.8,26.6 L92.9,28.1 L91.7,28.1 Z" fill={isDark ? '#2e2418' : '#968060'} />
           {/* Windows */}
-          <rect x="88.6" y="22.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
-          <rect x="89.8" y="22.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
+          <rect x="88.6" y="26.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
+          <rect x="89.8" y="26.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
           {/* Door */}
-          <rect x="90.8" y="22.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
+          <rect x="90.8" y="26.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
           {/* Roof — covers front and side walls */}
-          <polygon points="87.3,22.4 93.2,22.4 89.8,20.2" fill={isDark ? '#2a2018' : '#7a5838'} />
-          <polygon points="89.8,20.2 93.2,22.4 89.8,22.4" fill={isDark ? '#221a14' : '#6a4a30'} />
+          <polygon points="87.3,26.4 93.2,26.4 89.8,24.2" fill={isDark ? '#2a2018' : '#7a5838'} />
+          <polygon points="89.8,24.2 93.2,26.4 89.8,26.4" fill={isDark ? '#221a14' : '#6a4a30'} />
           {/* Smoke */}
           <g opacity="0.35">
-            <ellipse cx="88.6" cy="19.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="19.6;18.8;18" dur="4s" repeatCount="indefinite" />
+            <ellipse cx="88.6" cy="23.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="23.6;22.8;22" dur="4s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.35;0.55;0.7" dur="4s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.35;0.18;0" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="88.8" cy="18.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="18.2;17.2;16.2" dur="5.5s" repeatCount="indefinite" />
+            <ellipse cx="88.8" cy="22.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="22.2;21.2;20.2" dur="5.5s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.3;0.6;0.9" dur="5.5s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.25;0.1;0" dur="5.5s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="88.4" cy="16.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="16.6;15.4;14.4" dur="7s" repeatCount="indefinite" />
+            <ellipse cx="88.4" cy="20.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
+              <animate attributeName="cy" values="20.6;19.4;18.4" dur="7s" repeatCount="indefinite" />
               <animate attributeName="rx" values="0.25;0.7;1.2" dur="7s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.15;0.05;0" dur="7s" repeatCount="indefinite" />
             </ellipse>
           </g>
         </g>
 
-        {/* House 2 — tall tower, on back hill crest (x~130, y~20) */}
+        {/* House 2 — tall tower, on back hill (x~130, y~24) */}
         <g>
-          <ellipse cx="131" cy="20.5" rx="1.8" ry="0.3" fill="rgba(0,0,0,0.07)" />
-          <path d={`M129.8,20.4 L129.9,18 L132,18 L132.1,20.4 Z`} fill={isDark ? '#352a1c' : '#a89070'} />
-          <path d={`M132,18 L132.8,18.3 L132.9,20.4 L132.1,20.4 Z`} fill={isDark ? '#2a2014' : '#8a7458'} />
-          <rect x="130.4" y="18.5" width="0.5" height="0.5" rx="0.06" fill={isDark ? '#4a4020' : '#c8b068'} opacity="0.5" />
-          <path d="M130.8,20.4 L130.8,19.5 A0.4,0.4 0 0 1 131.6,19.5 L131.6,20.4 Z" fill={isDark ? '#1a1208' : '#4a3220'} />
-          <polygon points="129.4,18.2 132.5,18.2 130.95,16.3" fill={isDark ? '#281e14' : '#6a4e30'} />
-          <polygon points="130.95,16.3 132.5,18.2 130.95,18.2" fill={isDark ? '#221812' : '#5e4428'} />
+          <ellipse cx="131" cy="24.5" rx="1.8" ry="0.3" fill="rgba(0,0,0,0.07)" />
+          {/* Front wall */}
+          <path d="M129.8,24.4 L129.9,22 L132,22 L132.1,24.4 Z" fill={isDark ? '#352a1c' : '#a89070'} />
+          {/* Side wall */}
+          <path d="M132,22 L132.8,22.3 L132.9,24.4 L132.1,24.4 Z" fill={isDark ? '#2a2014' : '#8a7458'} />
+          {/* Window */}
+          <rect x="130.4" y="22.5" width="0.5" height="0.5" rx="0.06" fill={isDark ? '#4a4020' : '#c8b068'} opacity="0.5" />
+          {/* Door */}
+          <path d="M130.8,24.4 L130.8,23.5 A0.4,0.4 0 0 1 131.6,23.5 L131.6,24.4 Z" fill={isDark ? '#1a1208' : '#4a3220'} />
+          {/* Roof front face */}
+          <polygon points="129.3,22 132.2,22 130.95,20" fill={isDark ? '#281e14' : '#6a4e30'} />
+          {/* Roof side face */}
+          <polygon points="132.2,22 133,22.3 130.95,20" fill={isDark ? '#221812' : '#5e4428'} />
         </g>
 
         {/* House 3 — wide barn with stone chimney, on back hill right slope (x~172, y~26) */}
@@ -692,8 +673,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
         })()}
 
-        {/* Drag overlay for sky — scrub time left/right */}
-        <rect x="0" y="0" width="200" height="30" fill="transparent" style={{ cursor: 'grab', pointerEvents: 'auto' }} onMouseDown={onCelestialDown} onDoubleClick={onCelestialDblClick} />
         {/* Sun on arc */}
         {(() => {
           const sunT = Math.max(0, Math.min(1, (timeState.hour - 6) / 12))
@@ -799,7 +778,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#1a3420' : '#2e5a2a'} />
-              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
+              <path d={fruits.join('')} fill={isDark ? '#6a4010' : '#b08060'} opacity={0.45} />
             </g>
           )
         })()}
@@ -992,7 +971,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               <circle cx={wmX} cy={hubY} r={0.4 * sc} fill={wmLight} />
               {/* Spinning blades */}
               <g>
-                <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={wi === 0 ? '8s' : '11s'} repeatCount="indefinite" />
+                <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={wi === 0 ? '20s' : '27s'} repeatCount="indefinite" />
                 {[0, 90, 180, 270].map(angle => (
                   <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
                     {/* Blade frame */}
@@ -1061,23 +1040,12 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
       {/* (sun and moon now rendered inside SVG before mountains) */}
 
-      {/* Time override indicator */}
-      {timeOverride !== null && (
-        <div
-          className="absolute top-2 right-2 z-[46] flex items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ backgroundColor: 'rgba(0,0,0,0.45)', pointerEvents: 'auto', cursor: 'pointer', fontFamily: 'EB Garamond, serif', fontSize: 11, color: 'rgba(255,255,255,0.7)' }}
-          onClick={onCelestialDblClick}
-        >
-          <span>{`${Math.floor(timeOverride)}:${String(Math.floor((timeOverride % 1) * 60)).padStart(2, '0')}`}</span>
-          <span style={{ fontSize: 9, opacity: 0.5 }}>✕</span>
-        </div>
-      )}
 
       {/* Soft vignette — heavier on left for sidebar blend */}
       <div className="absolute inset-0 pointer-events-none" style={{
         boxShadow: isDark
-          ? 'inset 40px 0 50px -8px rgba(8,10,8,0.5), inset 0 0 40px 10px rgba(8,12,8,0.25)'
-          : 'inset 30px 0 40px -5px rgba(40,35,25,0.15), inset 0 0 30px 8px rgba(80,100,60,0.08)',
+          ? 'inset 25px 0 35px -10px rgba(8,10,8,0.3), inset 0 0 25px 8px rgba(8,12,8,0.15)'
+          : 'inset 20px 0 30px -8px rgba(40,35,25,0.1), inset 0 0 20px 6px rgba(80,100,60,0.05)',
       }} />
       {/* Time-of-day ambient overlay */}
       {p.ambientOpacity > 0.01 && (
@@ -1256,7 +1224,7 @@ export const OrchardView = memo(function OrchardView({
       >
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 30px 0 40px -10px ${isDark ? 'rgba(9,9,11,0.7)' : 'rgba(60,50,40,0.25)'}, inset 0 0 20px 5px ${isDark ? 'rgba(9,9,11,0.3)' : 'rgba(240,236,234,0.3)'}` }} />
+          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={chopMode} showChopHint={showChopHint} onToggleChop={() => { setChopMode(m => !m); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
 

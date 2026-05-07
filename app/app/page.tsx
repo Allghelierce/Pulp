@@ -1187,29 +1187,8 @@ export default function NoteApp() {
     }
   }, [])
 
-  // DEV: inject 70 tangerines into LIFE notebook for testing
-  useEffect(() => {
-    const key = 'pulp-dev-life-trees-injected'
-    if (localStorage.getItem(key)) return
-    const notesRaw = localStorage.getItem('pulp-notes')
-    if (!notesRaw) return
-    const allNotes = JSON.parse(notesRaw)
-    const life = allNotes.find((n: any) => n.subject?.toUpperCase() === 'LIFE')
-    if (!life) return
-    const groveRaw = localStorage.getItem('pulp-grove')
-    const data = groveRaw ? JSON.parse(groveRaw) : {}
-    const existing = data.grove || []
-    const maxId = existing.reduce((m: number, t: any) => Math.max(m, t.id), 0)
-    const stages = [3, 4, 5]
-    const newTrees = Array.from({ length: 70 }, (_, i) => ({
-      id: maxId + i + 1, type: 'tangerine', stage: stages[Math.floor(Math.random() * 3)],
-      progress: 100, plantedAt: Date.now() - Math.floor(Math.random() * 2592000000), notebookId: life.id,
-    }))
-    data.grove = [...existing, ...newTrees]
-    localStorage.setItem('pulp-grove', JSON.stringify(data))
-    localStorage.setItem(key, '1')
-    setGrove(data.grove)
-  }, [])
+  // DEV: inject flag — actual injection happens after Supabase load
+  const devTreesInjectedRef = useRef(false)
 
   // Load player data from Supabase when user is available
   useEffect(() => {
@@ -1251,6 +1230,28 @@ export default function NoteApp() {
       }
 
       if (groveData.length) setGrove(groveData)
+
+      // DEV: inject 70 tangerines into LIFE notebook
+      if (!devTreesInjectedRef.current) {
+        devTreesInjectedRef.current = true
+        const notesRaw = localStorage.getItem('pulp-notes')
+        if (notesRaw) {
+          const allNotes = JSON.parse(notesRaw)
+          const life = allNotes.find((n: any) => n.subject?.toUpperCase() === 'LIFE')
+          if (life) {
+            const base = groveData.length ? groveData : []
+            if (base.filter((t: any) => t.notebookId === life.id).length < 70) {
+              const maxId = base.reduce((m: number, t: any) => Math.max(m, t.id ?? 0), 0)
+              const stages = [3, 4, 5]
+              const newTrees = Array.from({ length: 70 }, (_, i) => ({
+                id: maxId + i + 1, type: 'tangerine', stage: stages[Math.floor(Math.random() * 3)],
+                progress: 100, plantedAt: Date.now() - Math.floor(Math.random() * 2592000000), notebookId: life.id,
+              }))
+              setGrove(prev => [...prev, ...newTrees])
+            }
+          }
+        }
+      }
       if (Object.keys(inventoryData).length) setInventory(Object.keys(inventoryData).flatMap(k => Array(inventoryData[k]).fill(k)))
       if (achievementRows.length) {
         setAchievements(prev => prev.map(a => {
