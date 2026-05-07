@@ -78,6 +78,7 @@ interface DocumentToolbarProps {
   onClearDrawing: () => void
   onOpenVersionHistory?: () => void
   darkPaper?: boolean
+  selectedBoxCount: number
 }
 
 
@@ -126,7 +127,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   juice, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper
+  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper, selectedBoxCount
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -372,11 +373,12 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 Center on Page
               </button>
               <button
-                onMouseDown={e => { e.preventDefault(); twoColumnGrid(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                onMouseDown={e => { e.preventDefault(); if (selectedBoxCount === 2) { twoColumnGrid(); setAlignOpen(false) } }}
+                disabled={selectedBoxCount !== 2}
+                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] block transition-colors ${selectedBoxCount === 2 ? `cursor-pointer ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}` : `cursor-default ${theme === "dark" ? "text-zinc-600" : "text-zinc-400"}`}`}
                 style={btnFont}
               >
-                Two-Column Grid
+                Two-Column Grid{selectedBoxCount !== 2 ? ' (select 2 boxes)' : ''}
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); distributeEvenly(); setAlignOpen(false) }}

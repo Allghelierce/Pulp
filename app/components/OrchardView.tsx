@@ -147,7 +147,7 @@ const PALETTES: Record<string, SkyPalette> = {
     fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
     moonGlow: 0.7, moonY: 4,
-    starOpacity: 0.8,
+    starOpacity: 1,
     mtnLightOpacity: 0, mtnLightColor: 'rgba(0,0,0,0)',
     groveOpacity: 0.8,
     ambientOverlay: 'rgba(10,10,30,0.3)', ambientOpacity: 0.3,
@@ -243,6 +243,14 @@ const STAR_POSITIONS = Array.from({ length: 80 }, (_, i) => {
   return { x: rng() * 200, y: rng() * 28, r: 0.12 + rng() * 0.28, twinkle: rng(), brightness, warm: rng() > 0.7 }
 })
 
+const CONSTELLATION_STARS = [
+  { x: 60, y: 5 }, { x: 63, y: 3.5 }, { x: 67, y: 4.2 }, { x: 70, y: 2 },
+  { x: 72, y: 5.5 }, { x: 68, y: 7.5 }, { x: 64, y: 8 },
+]
+const CONSTELLATION_LINES: [number, number][] = [
+  [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0],
+]
+
 const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, onToggleChop, showChopHint }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean }) {
   const [timeOverride, setTimeOverride] = useState<number | null>(null)
   const timeOverrideRef = useRef<number | null>(null)
@@ -262,15 +270,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
   const onCelestialDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const startY = e.clientY
+    const startX = e.clientX
     const startHour = timeOverrideRef.current ?? getTimePhase().hour
     const onMove = (ev: MouseEvent) => {
-      const deltaY = ev.clientY - startY
-      if (deltaY >= 0) {
-        setTimeOverride(startHour)
-        return
-      }
-      let newHour = startHour - deltaY * 0.03
+      const deltaX = ev.clientX - startX
+      let newHour = startHour + deltaX * 0.05
       newHour = ((newHour % 24) + 24) % 24
       setTimeOverride(newHour)
     }
@@ -314,6 +318,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <stop offset="50%" stopColor={p.oceanMid} />
             <stop offset="100%" stopColor={p.oceanBot} />
           </linearGradient>
+          <filter id="ocean-soft" x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur stdDeviation="0.4" />
+          </filter>
           <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.mtnTop} />
             <stop offset="60%" stopColor={p.mtnMid} />
@@ -350,210 +357,149 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         {/* Sky */}
         <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
 
-        {/* Stars — visible at night/dawn/dusk */}
-        {p.starOpacity > 0.01 && (
-          <g opacity={p.starOpacity}>
+        {/* Stars — visible at night/dawn/dusk, brightest when moon is highest */}
+        {p.starOpacity > 0.01 && (() => {
+          const moonHeight = Math.max(0, 1 - p.moonY / 28)
+          const moonBoost = p.moonGlow * moonHeight
+          const masterBrightness = Math.min(1, p.starOpacity + moonBoost * 0.6)
+          return (
+          <g>
             <defs>
               <filter id="star-glow">
-                <feGaussianBlur in="SourceGraphic" stdDeviation={0.3 + p.starOpacity * 0.4} result="blur" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation={0.4 + masterBrightness * 0.6} result="blur" />
                 <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="star-glow-strong">
+                <feGaussianBlur in="SourceGraphic" stdDeviation={0.6 + masterBrightness * 0.8} result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
             </defs>
             {STAR_POSITIONS.map((s, i) => {
-              const glowIntensity = 0.4 + p.starOpacity * 0.6
+              const glowIntensity = Math.min(1, 0.6 + masterBrightness * 0.5)
               const starColor = s.warm ? '#ffeedd' : '#e8f0ff'
               const isBright = s.brightness > 0.6
+              const dimOp = Math.min(1, 0.55 + masterBrightness * 0.45)
               return (
-                <g key={i} filter={isBright ? 'url(#star-glow)' : undefined}>
+                <g key={i} filter={isBright ? 'url(#star-glow)' : undefined} opacity={masterBrightness}>
                   {isBright ? (
                     <>
-                      <line x1={s.x - s.r * 1.8} y1={s.y} x2={s.x + s.r * 1.8} y2={s.y} stroke={starColor} strokeWidth={s.r * 0.35} opacity={glowIntensity}>
-                        {s.twinkle > 0.5 && <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.3};${glowIntensity}`} dur={`${2.5 + s.twinkle * 3}s`} repeatCount="indefinite" />}
+                      <line x1={s.x - s.r * 2.5} y1={s.y} x2={s.x + s.r * 2.5} y2={s.y} stroke={starColor} strokeWidth={s.r * 0.45} opacity={glowIntensity}>
+                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.35};${glowIntensity}`} dur={`${2 + s.twinkle * 3}s`} repeatCount="indefinite" />
                       </line>
-                      <line x1={s.x} y1={s.y - s.r * 1.8} x2={s.x} y2={s.y + s.r * 1.8} stroke={starColor} strokeWidth={s.r * 0.35} opacity={glowIntensity}>
-                        {s.twinkle > 0.5 && <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.3};${glowIntensity}`} dur={`${2.5 + s.twinkle * 3}s`} repeatCount="indefinite" />}
+                      <line x1={s.x} y1={s.y - s.r * 2.5} x2={s.x} y2={s.y + s.r * 2.5} stroke={starColor} strokeWidth={s.r * 0.45} opacity={glowIntensity}>
+                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.35};${glowIntensity}`} dur={`${2 + s.twinkle * 3}s`} begin={`${s.twinkle * 0.5}s`} repeatCount="indefinite" />
                       </line>
-                      <circle cx={s.x} cy={s.y} r={s.r * 0.5} fill={starColor} opacity={glowIntensity} />
+                      <circle cx={s.x} cy={s.y} r={s.r * 0.6} fill={starColor} opacity={glowIntensity}>
+                        <animate attributeName="opacity" values={`${glowIntensity};${glowIntensity * 0.45};${glowIntensity}`} dur={`${2.5 + s.twinkle * 2.5}s`} repeatCount="indefinite" />
+                      </circle>
                     </>
                   ) : (
-                    <circle cx={s.x} cy={s.y} r={s.r * 0.4} fill={starColor} opacity={0.5 + p.starOpacity * 0.4}>
-                      {s.twinkle > 0.7 && <animate attributeName="opacity" values={`${0.5 + p.starOpacity * 0.4};0.15;${0.5 + p.starOpacity * 0.4}`} dur={`${3 + s.twinkle * 4}s`} repeatCount="indefinite" />}
+                    <circle cx={s.x} cy={s.y} r={s.r * 0.5} fill={starColor} opacity={dimOp}>
+                      <animate attributeName="opacity" values={`${dimOp};${dimOp * 0.3};${dimOp}`} dur={`${3 + s.twinkle * 4}s`} begin={`${s.twinkle * 2}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                 </g>
               )
             })}
-          </g>
-        )}
-
-        {/* Sun */}
-        {p.sunGlow > 0.05 && (() => {
-          const sunFade = p.sunY > 18 ? Math.max(0, 1 - (p.sunY - 18) / 12) : 1
-          return (
-          <g opacity={p.sunGlow * sunFade}>
-            <defs>
-              <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={p.sunColor} stopOpacity="0.9" />
-                <stop offset="15%" stopColor={p.sunColor} stopOpacity="0.5" />
-                <stop offset="35%" stopColor={p.sunColor} stopOpacity="0.2" />
-                <stop offset="60%" stopColor={p.sunColor} stopOpacity="0.08" />
-                <stop offset="100%" stopColor={p.sunColor} stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <ellipse cx="100" cy={p.sunY} rx="60" ry="18" fill="url(#sun-glow)" />
-            <ellipse cx="100" cy={p.sunY} rx="20" ry="7" fill={p.sunColor} opacity="0.25" />
-            <ellipse cx="100" cy={p.sunY} rx="6" ry="3" fill={p.sunColor} opacity="0.4" />
-            <g style={{ cursor: 'grab', pointerEvents: 'auto' }} onMouseDown={onCelestialDown} onDoubleClick={onCelestialDblClick}>
-              <ellipse cx="100" cy={p.sunY} rx="30" ry="12" fill="transparent" />
-            </g>
-          </g>
-          )
-        })()}
-        {/* Moon */}
-        {p.moonGlow > 0.05 && (() => {
-          const moonFade = p.moonY > 18 ? Math.max(0, 1 - (p.moonY - 18) / 12) : 1
-          return (
-          <g opacity={p.moonGlow * moonFade}>
-            <defs>
-              <radialGradient id="moon-glow-bg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.5" />
-                <stop offset="30%" stopColor="#b0c4e4" stopOpacity="0.2" />
-                <stop offset="60%" stopColor="#a0b8d8" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="moon-face-bg" cx="40%" cy="38%" r="58%">
-                <stop offset="0%" stopColor="#f4f6fc" />
-                <stop offset="30%" stopColor="#eaeff8" />
-                <stop offset="60%" stopColor="#d8e0ec" />
-                <stop offset="100%" stopColor="#aab6cc" />
-              </radialGradient>
-            </defs>
-            <ellipse cx="100" cy={p.moonY} rx="12" ry="8" fill="url(#moon-glow-bg)" />
-            <ellipse cx="100" cy={p.moonY} rx="5" ry="3.5" fill="url(#moon-glow-bg)" opacity="0.7" />
-            <ellipse cx="100" cy={p.moonY} rx="1.8" ry="1.8" fill="url(#moon-face-bg)" />
-            <circle cx="99.7" cy={p.moonY - 0.2} r="0.15" fill="rgba(140,155,180,0.18)" />
-            <circle cx="100.4" cy={p.moonY + 0.3} r="0.2" fill="rgba(130,145,170,0.14)" />
-            <g style={{ cursor: 'grab', pointerEvents: 'auto' }} onMouseDown={onCelestialDown} onDoubleClick={onCelestialDblClick}>
-              <ellipse cx="100" cy={p.moonY} rx="15" ry="8" fill="transparent" />
+            {/* Constellation */}
+            <g filter="url(#star-glow-strong)" opacity={masterBrightness}>
+              {CONSTELLATION_LINES.map(([a, b], i) => (
+                <line key={`cl${i}`} x1={CONSTELLATION_STARS[a].x} y1={CONSTELLATION_STARS[a].y} x2={CONSTELLATION_STARS[b].x} y2={CONSTELLATION_STARS[b].y} stroke="#e8f0ff" strokeWidth="0.12" opacity={0.2 + moonBoost * 0.3}>
+                  <animate attributeName="opacity" values={`${0.2 + moonBoost * 0.3};${0.08 + moonBoost * 0.1};${0.2 + moonBoost * 0.3}`} dur="6s" repeatCount="indefinite" />
+                </line>
+              ))}
+              {CONSTELLATION_STARS.map((s, i) => {
+                const cOp = Math.min(1, 0.8 + moonBoost * 0.3)
+                const rayOp = 0.6 + moonBoost * 0.4
+                return (
+                <g key={`cs${i}`}>
+                  <circle cx={s.x} cy={s.y} r={0.4} fill="#e8f0ff" opacity={cOp}>
+                    <animate attributeName="opacity" values={`${cOp};${cOp * 0.4};${cOp}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
+                  </circle>
+                  <line x1={s.x - 0.7} y1={s.y} x2={s.x + 0.7} y2={s.y} stroke="#e8f0ff" strokeWidth="0.16" opacity={rayOp}>
+                    <animate attributeName="opacity" values={`${rayOp};${rayOp * 0.3};${rayOp}`} dur={`${3.5 + i * 0.6}s`} repeatCount="indefinite" />
+                  </line>
+                  <line x1={s.x} y1={s.y - 0.7} x2={s.x} y2={s.y + 0.7} stroke="#e8f0ff" strokeWidth="0.16" opacity={rayOp}>
+                    <animate attributeName="opacity" values={`${rayOp};${rayOp * 0.3};${rayOp}`} dur={`${3.5 + i * 0.6}s`} begin={`${i * 0.3}s`} repeatCount="indefinite" />
+                  </line>
+                </g>
+                )
+              })}
             </g>
           </g>
           )
         })()}
 
-        {/* Ocean band */}
-        <path d="M-5,14 L205,14 L205,28 L-5,28 Z" fill="url(#ocean-g)" />
-        {/* Sun reflection on water */}
-        {p.sunGlow > 0.1 && (
-          <g opacity={p.sunGlow * 0.6}>
-            <ellipse cx="100" cy="16" rx="8" ry="1.5" fill="rgba(255,240,160,0.4)" />
-            <ellipse cx="100" cy="19" rx="12" ry="2" fill="rgba(255,220,120,0.3)" />
-            <ellipse cx="100" cy="22" rx="16" ry="2.5" fill="rgba(255,200,100,0.2)" />
-            <ellipse cx="100" cy="25" rx="20" ry="2" fill="rgba(255,180,80,0.12)" />
-            <ellipse cx="100" cy="20" rx="50" ry="5" fill="rgba(255,180,80,0.1)" />
-          </g>
-        )}
-        {/* Moon reflection on water */}
-        {p.moonGlow > 0.1 && (
-          <g opacity={p.moonGlow}>
-            <defs>
-              <linearGradient id="moon-refl" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.2" />
-                <stop offset="30%" stopColor="#b0c4e4" stopOpacity="0.1" />
-                <stop offset="60%" stopColor="#90a8d0" stopOpacity="0.04" />
-                <stop offset="100%" stopColor="#7090c0" stopOpacity="0" />
-              </linearGradient>
-              <radialGradient id="moon-refl-fade" cx="50%" cy="0%" r="80%" gradientUnits="objectBoundingBox">
-                <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.25" />
-                <stop offset="40%" stopColor="#b0c4e4" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            {/* Broad soft glow on water */}
-            <ellipse cx="100" cy="20" rx="20" ry="6" fill="url(#moon-refl-fade)" />
-            {/* Tight bright column */}
-            <ellipse cx="100" cy="16.5" rx="3" ry="1" fill="rgba(210,220,240,0.15)" />
-            <ellipse cx="100" cy="18" rx="4" ry="1.2" fill="rgba(200,215,235,0.1)" />
-            {/* Shimmering broken reflection */}
-            <rect x="98.5" y="15" width="3" height="12" fill="url(#moon-refl)" rx="1.5" />
-            {/* Glints on water surface */}
-            <ellipse cx="99" cy="17" rx="1" ry="0.3" fill="rgba(220,230,245,0.12)">
-              <animate attributeName="opacity" values="0.12;0.04;0.12" dur="3s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="101" cy="20" rx="1.2" ry="0.25" fill="rgba(210,220,240,0.08)">
-              <animate attributeName="opacity" values="0.08;0.02;0.08" dur="4s" begin="1s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="99.5" cy="23" rx="1.5" ry="0.3" fill="rgba(200,215,235,0.05)">
-              <animate attributeName="opacity" values="0.05;0.01;0.05" dur="5s" begin="2s" repeatCount="indefinite" />
-            </ellipse>
-          </g>
-        )}
-        {/* Ocean ripples — animated waves */}
-        <g>
-          {/* Wave 1 — near surface */}
-          <path fill="none" stroke="rgba(255,255,240,0.12)" strokeWidth="0.25">
-            <animate attributeName="d" dur="20s" repeatCount="indefinite" values="
-              M-5,15.8 Q15,15.2 35,15.8 Q55,16.4 75,15.8 Q95,15.2 115,15.8 Q135,16.4 155,15.8 Q175,15.2 195,15.8 L205,15.8;
-              M-5,15.8 Q20,16.3 40,15.6 Q60,14.9 80,15.8 Q100,16.7 120,15.6 Q140,14.9 160,15.8 Q180,16.5 200,15.4 L205,15.8;
-              M-5,15.8 Q10,15 30,15.9 Q50,16.8 70,15.7 Q90,14.8 110,15.8 Q130,16.6 150,15.5 Q170,15 190,15.8 L205,15.8;
-              M-5,15.8 Q15,15.2 35,15.8 Q55,16.4 75,15.8 Q95,15.2 115,15.8 Q135,16.4 155,15.8 Q175,15.2 195,15.8 L205,15.8
+
+        {/* Ocean band — rippling top edge */}
+        <path fill="url(#ocean-g)" opacity="0.92">
+          <animate attributeName="d" dur="18s" repeatCount="indefinite" values="
+            M-5,14.2 C20,13.6 45,14.5 70,13.9 C95,13.3 120,14.4 150,13.8 C175,14.3 195,13.7 205,14.1 L205,28 L-5,28 Z;
+            M-5,13.8 C25,14.4 50,13.5 80,14.2 C105,14.6 130,13.4 160,14 C185,13.5 200,14.3 205,13.9 L205,28 L-5,28 Z;
+            M-5,14 C15,14.5 40,13.4 65,14.1 C90,14.5 115,13.6 145,14.3 C170,13.7 190,14.4 205,14 L205,28 L-5,28 Z;
+            M-5,14.2 C20,13.6 45,14.5 70,13.9 C95,13.3 120,14.4 150,13.8 C175,14.3 195,13.7 205,14.1 L205,28 L-5,28 Z
+          " />
+        </path>
+        {/* Ocean shimmer — soft blurred filled bands */}
+        <g filter="url(#ocean-soft)">
+          <path fill="rgba(255,255,250,0.06)" opacity="0.8">
+            <animate attributeName="d" dur="22s" repeatCount="indefinite" values="
+              M-5,15 C30,14.3 60,15.8 100,14.8 C140,15.5 170,14.5 205,15.2 L205,16.2 C170,15.5 140,16.5 100,15.8 C60,16.8 30,15.3 -5,16 Z;
+              M-5,15.3 C25,15.8 55,14.5 95,15.5 C135,14.6 165,15.6 205,14.9 L205,15.9 C165,16.6 135,15.6 95,16.5 C55,15.5 25,16.8 -5,16.3 Z;
+              M-5,14.8 C35,15.4 65,14.2 105,15.2 C145,14.4 175,15.4 205,15 L205,16 C175,16.4 145,15.4 105,16.2 C65,15.2 35,16.4 -5,15.8 Z;
+              M-5,15 C30,14.3 60,15.8 100,14.8 C140,15.5 170,14.5 205,15.2 L205,16.2 C170,15.5 140,16.5 100,15.8 C60,16.8 30,15.3 -5,16 Z
             " />
           </path>
-          {/* Wave 2 */}
-          <path fill="none" stroke="rgba(255,255,240,0.14)" strokeWidth="0.3">
-            <animate attributeName="d" dur="25s" repeatCount="indefinite" values="
-              M-5,17.5 Q20,17 45,17.5 Q70,18 95,17.5 Q120,17 145,17.5 Q170,18 195,17.5 L205,17.5;
-              M-5,17.5 Q25,18.1 50,17.3 Q75,16.8 100,17.6 Q125,18.2 150,17.4 Q175,16.9 200,17.5 L205,17.5;
-              M-5,17.5 Q15,16.9 40,17.7 Q65,18.3 90,17.4 Q115,16.8 140,17.6 Q165,18.1 190,17.3 L205,17.5;
-              M-5,17.5 Q20,17 45,17.5 Q70,18 95,17.5 Q120,17 145,17.5 Q170,18 195,17.5 L205,17.5
+          <path fill="rgba(255,255,250,0.045)" opacity="0.7">
+            <animate attributeName="d" dur="28s" repeatCount="indefinite" values="
+              M-5,17.5 C40,16.8 80,18 120,17.2 C160,17.8 190,17 205,17.5 L205,18.3 C190,17.8 160,18.6 120,18 C80,18.8 40,17.6 -5,18.3 Z;
+              M-5,17.8 C35,18.3 75,17 115,18 C155,17.2 185,18.2 205,17.6 L205,18.4 C185,19 155,18 115,18.8 C75,17.8 35,19.1 -5,18.6 Z;
+              M-5,17.3 C45,17.9 85,17 125,17.8 C165,17.1 195,18 205,17.4 L205,18.2 C195,18.8 165,17.9 125,18.6 C85,17.8 45,18.7 -5,18.1 Z;
+              M-5,17.5 C40,16.8 80,18 120,17.2 C160,17.8 190,17 205,17.5 L205,18.3 C190,17.8 160,18.6 120,18 C80,18.8 40,17.6 -5,18.3 Z
             " />
           </path>
-          {/* Wave 3 */}
-          <path fill="none" stroke="rgba(255,255,240,0.1)" strokeWidth="0.22">
-            <animate attributeName="d" dur="32s" repeatCount="indefinite" values="
-              M-5,20 Q30,19.4 60,20 Q90,20.6 120,20 Q150,19.4 180,20 L205,20;
-              M-5,20 Q25,20.5 55,19.5 Q85,19 115,20.2 Q145,20.8 175,19.6 L205,20;
-              M-5,20 Q35,19.2 65,20.3 Q95,20.9 125,19.7 Q155,19.1 185,20.1 L205,20;
-              M-5,20 Q30,19.4 60,20 Q90,20.6 120,20 Q150,19.4 180,20 L205,20
+          <path fill="rgba(255,255,250,0.03)" opacity="0.6">
+            <animate attributeName="d" dur="36s" repeatCount="indefinite" values="
+              M-5,20.5 C50,19.8 100,20.8 150,20 C185,20.6 205,20.2 205,20.5 L205,21.2 C185,21.4 150,20.8 100,21.6 C50,20.6 -5,21.5 -5,21.2 Z;
+              M-5,20.8 C45,21.2 95,20 145,20.8 C180,20.2 205,20.9 205,20.8 L205,21.5 C180,21 145,21.6 95,20.8 C45,22 -5,21.2 -5,21.5 Z;
+              M-5,20.3 C55,20.9 105,20.2 155,20.7 C190,20.1 205,20.6 205,20.3 L205,21 C190,20.9 155,21.5 105,21 C55,21.7 -5,21.2 -5,21 Z;
+              M-5,20.5 C50,19.8 100,20.8 150,20 C185,20.6 205,20.2 205,20.5 L205,21.2 C185,21.4 150,20.8 100,21.6 C50,20.6 -5,21.5 -5,21.2 Z
             " />
           </path>
-          {/* Wave 4 — deep */}
-          <path fill="none" stroke="rgba(255,255,240,0.07)" strokeWidth="0.18">
-            <animate attributeName="d" dur="40s" repeatCount="indefinite" values="
-              M-5,22.5 Q40,22 80,22.5 Q120,23 160,22.5 Q190,22 205,22.5;
-              M-5,22.5 Q35,23 75,22.2 Q115,21.8 155,22.6 Q185,23.1 205,22.5;
-              M-5,22.5 Q45,21.9 85,22.8 Q125,23.2 165,22.3 Q195,22 205,22.5;
-              M-5,22.5 Q40,22 80,22.5 Q120,23 160,22.5 Q190,22 205,22.5
+          <path fill="rgba(255,255,250,0.015)" opacity="0.5">
+            <animate attributeName="d" dur="48s" repeatCount="indefinite" values="
+              M-5,23.5 C60,23 120,24 180,23.3 L205,23.5 L205,24.3 C180,24.1 120,24.8 60,23.8 L-5,24.3 Z;
+              M-5,23.8 C55,24.2 115,23.2 175,24 L205,23.8 L205,24.6 C175,24.8 115,24 55,25 L-5,24.6 Z;
+              M-5,23.3 C65,23.8 125,23 185,23.7 L205,23.3 L205,24.1 C185,24.5 125,23.8 65,24.6 L-5,24.1 Z;
+              M-5,23.5 C60,23 120,24 180,23.3 L205,23.5 L205,24.3 C180,24.1 120,24.8 60,23.8 L-5,24.3 Z
             " />
           </path>
-          {/* Wave 5 — deepest, slow swell */}
-          <path fill="none" stroke="rgba(255,255,240,0.05)" strokeWidth="0.15">
-            <animate attributeName="d" dur="50s" repeatCount="indefinite" values="
-              M-5,25 Q50,24.5 100,25 Q150,25.5 200,25 L205,25;
-              M-5,25 Q45,25.4 95,24.7 Q145,24.3 195,25.2 L205,25;
-              M-5,25 Q55,24.6 105,25.3 Q155,25.7 200,24.8 L205,25;
-              M-5,25 Q50,24.5 100,25 Q150,25.5 200,25 L205,25
-            " />
-          </path>
-          {/* Glints — tiny bright spots that catch light */}
-          <circle cx="80" cy="17" r="0.3" fill="rgba(255,255,240,0.15)">
-            <animate attributeName="opacity" values="0;0.15;0;0" dur="10s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="80;84;80" dur="18s" repeatCount="indefinite" />
+        </g>
+        <g filter="url(#ocean-soft)">
+          <circle cx="80" cy="16.5" r="0.5" fill="rgba(255,255,248,0.07)">
+            <animate attributeName="opacity" values="0;0.07;0.02;0.05;0" dur="12s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="80;86;80" dur="20s" repeatCount="indefinite" />
           </circle>
-          <circle cx="120" cy="19" r="0.25" fill="rgba(255,255,240,0.12)">
-            <animate attributeName="opacity" values="0;0.12;0;0" dur="14s" begin="3s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="120;117;120" dur="22s" repeatCount="indefinite" />
+          <circle cx="140" cy="18.5" r="0.4" fill="rgba(255,255,248,0.05)">
+            <animate attributeName="opacity" values="0;0.05;0;0.03;0" dur="16s" begin="4s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="140;136;140" dur="24s" repeatCount="indefinite" />
           </circle>
-          <circle cx="60" cy="21" r="0.2" fill="rgba(255,255,240,0.1)">
-            <animate attributeName="opacity" values="0;0.1;0;0" dur="16s" begin="6s" repeatCount="indefinite" />
-            <animate attributeName="cx" values="60;63;60" dur="26s" repeatCount="indefinite" />
+          <circle cx="45" cy="20" r="0.35" fill="rgba(255,255,248,0.04)">
+            <animate attributeName="opacity" values="0;0.04;0;0" dur="18s" begin="7s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="45;49;45" dur="28s" repeatCount="indefinite" />
           </circle>
         </g>
 
         {/* Mountain range — back layer (darker, depth) */}
-        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} opacity="0.6" />
+        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} />
         {/* Mountain range — main */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
         {/* Left-facing slopes — shadow for depth */}
@@ -702,8 +648,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           <rect x="52.6" y="29.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.6" />
           <rect x="53.8" y="29.7" width="0.7" height="0.7" rx="0.08" fill={isDark ? '#5a4a20' : '#d4b870'} opacity="0.45" />
           <rect x="54.8" y="29.8" width="0.6" height="1.3" rx="0.08" fill={isDark ? '#241a10' : '#5a4028'} />
-          <polygon points="51.3,29.2 56.2,29.2 53.8,27.2" fill={isDark ? '#2a2018' : '#7a5838'} />
-          <polygon points="53.8,27.2 56.2,29.2 53.8,29.2" fill={isDark ? '#221a14' : '#6a4a30'} />
+          <polygon points="51.3,29.4 56.2,29.4 53.8,27.2" fill={isDark ? '#2a2018' : '#7a5838'} />
+          <polygon points="53.8,27.2 56.2,29.4 53.8,29.4" fill={isDark ? '#221a14' : '#6a4a30'} />
           <rect x="52.3" y="27.4" width="0.6" height="1.8" fill={isDark ? '#3a3028' : '#7a6848'} />
           <rect x="52.2" y="27.2" width="0.8" height="0.3" fill={isDark ? '#3a3028' : '#7a6848'} />
           <g opacity="0.35">
@@ -732,8 +678,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           <path d={`M132,18 L132.8,18.3 L132.9,20.4 L132.1,20.4 Z`} fill={isDark ? '#2a2014' : '#8a7458'} />
           <rect x="130.4" y="18.5" width="0.5" height="0.5" rx="0.06" fill={isDark ? '#4a4020' : '#c8b068'} opacity="0.5" />
           <path d="M130.8,20.4 L130.8,19.5 A0.4,0.4 0 0 1 131.6,19.5 L131.6,20.4 Z" fill={isDark ? '#1a1208' : '#4a3220'} />
-          <polygon points="129.4,18 132.5,18 130.95,16.3" fill={isDark ? '#281e14' : '#6a4e30'} />
-          <polygon points="130.95,16.3 132.5,18 130.95,18" fill={isDark ? '#221812' : '#5e4428'} />
+          <polygon points="129.4,18.2 132.5,18.2 130.95,16.3" fill={isDark ? '#281e14' : '#6a4e30'} />
+          <polygon points="130.95,16.3 132.5,18.2 130.95,18.2" fill={isDark ? '#221812' : '#5e4428'} />
         </g>
 
         {/* House 3 — wide barn, on back hill right slope (x~172, y~26) */}
@@ -743,8 +689,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           <rect x="172" y="25.4" width="1.2" height="0.9" fill={isDark ? '#1e1408' : '#4a3018'} />
           <line x1="172.6" y1="25.4" x2="172.6" y2="26.3" stroke={isDark ? '#2a1e10' : '#5a3820'} strokeWidth="0.1" />
           <polygon points="171.2,25.3 171.8,25.3 171.5,25" fill={isDark ? '#1e1408' : '#4a3018'} />
-          <polygon points="170,25.1 175.8,25.1 172.9,23.8" fill={isDark ? '#2a1e12' : '#6a4a2e'} />
-          <polygon points="172.9,23.8 175.8,25.1 172.9,25.1" fill={isDark ? '#241a10' : '#5e4226'} />
+          <polygon points="170,25.3 175.8,25.3 172.9,23.8" fill={isDark ? '#2a1e12' : '#6a4a2e'} />
+          <polygon points="172.9,23.8 175.8,25.3 172.9,25.3" fill={isDark ? '#241a10' : '#5e4226'} />
         </g>
 
         {/* Front hill — steep hump on left, drops low on right to reveal back hill */}
@@ -787,6 +733,66 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
           }
           return <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
+        })()}
+
+        {/* Drag overlay for sky — scrub time left/right */}
+        <rect x="0" y="0" width="200" height="30" fill="transparent" style={{ cursor: 'grab', pointerEvents: 'auto' }} onMouseDown={onCelestialDown} onDoubleClick={onCelestialDblClick} />
+        {/* Sun on arc */}
+        {(() => {
+          const sunT = Math.max(0, Math.min(1, (timeState.hour - 6) / 12))
+          const t = sunT
+          const sx = (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
+          const sy = (1-t)*(1-t)*16 + 2*(1-t)*t*0 + t*t*20
+          const visible = timeState.hour >= 6 && timeState.hour < 18
+          if (!visible) return null
+          const horizonFade = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
+          const reflOpacity = horizonFade * (1 - p.sunGlow * 0.3)
+          return (
+            <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
+              <defs>
+                <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={p.sunColor} stopOpacity="0.9" />
+                  <stop offset="20%" stopColor={p.sunColor} stopOpacity="0.4" />
+                  <stop offset="50%" stopColor={p.sunColor} stopOpacity="0.1" />
+                  <stop offset="100%" stopColor={p.sunColor} stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <ellipse cx={sx} cy={sy} rx="18" ry="8" fill="url(#sun-glow)" />
+              <circle cx="0" cy="0" r="1.2" fill={p.sunColor} opacity="0.7" transform={`translate(${sx},${sy}) scale(2.5,2)`} />
+              <circle cx="0" cy="0" r="0.8" fill="#fff4d0" opacity="0.9" transform={`translate(${sx},${sy}) scale(2.5,2)`} />
+            </g>
+          )
+        })()}
+        {/* Moon on arc */}
+        {(() => {
+          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+          const moonT = Math.max(0, Math.min(1, nightHour / 12))
+          const t = moonT
+          const mx = (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
+          const my = (1-t)*(1-t)*16 + 2*(1-t)*t*0 + t*t*20
+          const visible = timeState.hour >= 18 || timeState.hour < 6
+          if (!visible) return null
+          const horizonFade = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
+          return (
+            <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
+              <defs>
+                <radialGradient id="moon-glow-bg" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.4" />
+                  <stop offset="40%" stopColor="#b0c4e4" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="moon-face-bg" cx="40%" cy="38%" r="58%">
+                  <stop offset="0%" stopColor="#f4f6fc" />
+                  <stop offset="40%" stopColor="#eaeff8" />
+                  <stop offset="100%" stopColor="#c0c8d8" />
+                </radialGradient>
+              </defs>
+              <ellipse cx={mx} cy={my} rx="8" ry="5" fill="url(#moon-glow-bg)" />
+              <circle cx="0" cy="0" r="0.9" fill="url(#moon-face-bg)" transform={`translate(${mx},${my}) scale(2.5,2)`} />
+              <circle cx="0" cy="0" r="0.12" fill="rgba(140,155,180,0.2)" transform={`translate(${mx - 0.3},${my - 0.3}) scale(2.5,2)`} />
+              <circle cx="0" cy="0" r="0.15" fill="rgba(130,145,170,0.15)" transform={`translate(${mx + 0.2},${my + 0.2}) scale(2.5,2)`} />
+            </g>
+          )
         })()}
 
         {/* Tangerine grove on near hills — placed on near-hill contour */}
@@ -1059,28 +1065,27 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           onClick={onToggleChop}
         >
-          {/* === Axe — blade wedged into stump, handle angled out === */}
-          {/* Handle */}
-          <line x1="19.8" y1="60.8" x2="23.5" y2="56.5" stroke={isDark ? '#3a2810' : '#6a4a28'} strokeWidth="0.5" strokeLinecap="round" />
-          {/* Blade — sharp crescent wedged into stump */}
-          <path d="M19.8,60.8 C19.2,60.2 18.5,59.5 18,58.6 C18.6,58.8 19.2,59.6 19.8,60.8 Z" fill={isDark ? '#484855' : '#7a7a88'} />
-          <path d="M18,58.6 C17.6,58 17.4,57.5 17.5,57 C18,57.8 18.5,58.5 19.8,60.8 C19.2,59.6 18.6,58.8 18,58.6 Z" fill={isDark ? '#5a5a68' : '#9090a0'} />
-          <path d="M17.5,57 C17.6,57.5 17.6,58 18,58.6" fill="none" stroke={isDark ? '#6a6a78' : '#b0b0be'} strokeWidth="0.15" />
+          {/* === Pine tree — natural conifer, offset left and slightly higher === */}
+          <ellipse cx="11" cy="61.8" rx="2.5" ry="0.4" fill="rgba(0,0,0,0.07)" />
+          <path d="M10.8,61.7 L10.8,53.2 L11.2,53.2 L11.2,61.7 Z" fill={isDark ? '#2e1a0c' : '#5a3a1a'} />
+          <path d="M11,61.2 Q9,59.2 8.5,58.2 Q9.2,58.5 9,57.7 Q8,56.2 8.2,55.7 Q9,56.2 9.5,55.7 Q9,54.7 9.5,54.2 Q10,54.7 10.2,54.4 Q10.5,53.7 11,52.7 Q11.5,53.7 11.8,54.4 Q12,54.7 12.5,54.2 Q13,54.7 13,55.7 Q13,56.2 13.8,55.7 Q14,56.2 13,57.7 Q12.8,58.5 13.5,58.2 Q13,59.2 11,61.2 Z" fill={isDark ? '#1a3818' : '#2a5e2a'} />
+          <path d="M11,61.2 Q9,59.2 8.5,58.2 Q9.2,58.5 9,57.7 Q8,56.2 8.2,55.7 Q9,56.2 9.5,55.7 Q9,54.7 9.5,54.2 Q10,54.7 10.2,54.4 Q10.5,53.7 11,52.7 L11,61.2 Z" fill="rgba(0,0,0,0.06)" />
+          <path d="M11,52.7 Q11.5,53.7 11.8,54.4 Q12,54.7 12.5,54.2 Q13,54.7 13,55.7 Q13,56.2 13.8,55.7 Q14,56.2 13,57.7 Q12.8,58.5 13.5,58.2 Q13,59.2 11,61.2 L11,52.7 Z" fill={isDark ? '#224e22' : '#348034'} opacity="0.3" />
 
-          {/* === Pine tree — natural conifer === */}
-          <ellipse cx="14" cy="62.6" rx="2.5" ry="0.4" fill="rgba(0,0,0,0.07)" />
-          <path d="M13.8,62.5 L13.8,54 L14.2,54 L14.2,62.5 Z" fill={isDark ? '#2e1a0c' : '#5a3a1a'} />
-          <path d="M14,62 Q12,60 11.5,59 Q12.2,59.3 12,58.5 Q11,57 11.2,56.5 Q12,57 12.5,56.5 Q12,55.5 12.5,55 Q13,55.5 13.2,55.2 Q13.5,54.5 14,53.5 Q14.5,54.5 14.8,55.2 Q15,55.5 15.5,55 Q16,55.5 16,56.5 Q16,57 16.8,56.5 Q17,57 16,58.5 Q15.8,59.3 16.5,59 Q16,60 14,62 Z" fill={isDark ? '#1a3818' : '#2a5e2a'} />
-          <path d="M14,62 Q12,60 11.5,59 Q12.2,59.3 12,58.5 Q11,57 11.2,56.5 Q12,57 12.5,56.5 Q12,55.5 12.5,55 Q13,55.5 13.2,55.2 Q13.5,54.5 14,53.5 L14,62 Z" fill="rgba(0,0,0,0.06)" />
-          <path d="M14,53.5 Q14.5,54.5 14.8,55.2 Q15,55.5 15.5,55 Q16,55.5 16,56.5 Q16,57 16.8,56.5 Q17,57 16,58.5 Q15.8,59.3 16.5,59 Q16,60 14,62 L14,53.5 Z" fill={isDark ? '#224e22' : '#348034'} opacity="0.3" />
+          {/* === Stump === */}
+          <ellipse cx="19.5" cy="63.4" rx="2.2" ry="0.4" fill="rgba(0,0,0,0.06)" />
+          <path d="M18,61.8 L18,63.2 Q18.7,63.6 19.5,63.6 Q20.3,63.6 21,63.2 L21,61.8 Z" fill={isDark ? '#3a2818' : '#7a5a38'} />
+          <line x1="18.8" y1="62" x2="18.8" y2="63" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
+          <line x1="20.2" y1="62.1" x2="20.2" y2="62.9" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
+          <ellipse cx="19.5" cy="61.8" rx="1.5" ry="0.5" fill={isDark ? '#4a3820' : '#9a7a55'} />
+          <ellipse cx="19.5" cy="61.8" rx="0.7" ry="0.25" fill="none" stroke={isDark ? '#3e3018' : '#8a6a45'} strokeWidth="0.08" opacity="0.4" />
 
-          {/* === Stump — smaller === */}
-          <ellipse cx="19.5" cy="62.6" rx="1.8" ry="0.35" fill="rgba(0,0,0,0.06)" />
-          <path d="M18.5,61 L18.5,62.4 Q19,62.7 19.5,62.7 Q20,62.7 20.5,62.4 L20.5,61 Z" fill={isDark ? '#3a2818' : '#7a5a38'} />
-          <line x1="19" y1="61.2" x2="19" y2="62.2" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <line x1="20" y1="61.3" x2="20" y2="62.1" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <ellipse cx="19.5" cy="61" rx="1" ry="0.4" fill={isDark ? '#4a3820' : '#9a7a55'} />
-          <ellipse cx="19.5" cy="61" rx="0.5" ry="0.2" fill="none" stroke={isDark ? '#3e3018' : '#8a6a45'} strokeWidth="0.08" opacity="0.4" />
+          {/* === Axe — blade embedded in stump top === */}
+          <line x1="19.8" y1="61" x2="22.5" y2="59" stroke={isDark ? '#3a2810' : '#6a4a28'} strokeWidth="0.4" strokeLinecap="round" />
+          {/* Blade head — sharp end down into stump */}
+          <path d="M19.6,60.3 L19.9,62 L20.6,61 Z" fill={isDark ? '#5a5a68' : '#9090a0'} />
+          <path d="M19.9,62 L19.2,61.7 L19.6,60.3 Z" fill={isDark ? '#484855' : '#7a7a88'} />
+          <path d="M19.2,61.7 L19.6,60.3" stroke={isDark ? '#6a6a78' : '#b0b0be'} strokeWidth="0.15" fill="none" />
 
           {chopMode && (
             <>
@@ -1091,23 +1096,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
           <rect x="10" y="52" width="16" height="12" fill="transparent" />
 
-          {/* Tiny jagged hint — scale+shake pulse every ~8s */}
-          {showChopHint && !chopMode && (
-            <g style={{ transformOrigin: '22.8px 54px' }}>
-              <animateTransform attributeName="transform" type="scale" values="1;1;1;1;1;1;1;1.2;0.95;1.15;0.98;1;1;1;1;1" dur="8s" repeatCount="indefinite" />
-              <g style={{ transformOrigin: '22.8px 54px' }}>
-                <animateTransform attributeName="transform" type="rotate" values="0;0;0;0;0;0;0;-4;5;-3;2;0;0;0;0;0" dur="8s" repeatCount="indefinite" />
-                <polygon
-                  points="20.5,57 20.2,56.3 20.8,55.8 20.3,55.2 20.9,54.7 20.5,54 21.2,53.7 21,53.1 21.8,53 21.7,52.5 22.5,52.5 22.3,52 23,52.2 23.3,51.7 23.8,52.2 24.2,51.8 24.5,52.3 25,52 25,52.7 25.6,52.8 25.3,53.3 25.8,53.8 25.2,54 25.5,54.6 24.8,54.7 25,55.2 24.3,55.2 24.3,55.8 23.7,55.5 23.3,56 22.8,55.6 22.3,56 22,55.5 21.5,55.8 21.2,55.3 20.8,55.8 20.5,57"
-                  fill={isDark ? '#e8e0d4' : '#fff'}
-                  stroke={isDark ? '#a09080' : '#ccc0b0'}
-                  strokeWidth="0.12"
-                  opacity="0.92"
-                />
-                <text x="22.8" y="55" textAnchor="middle" fontSize="2.8" fontWeight="900" fill="#d97706" style={{ fontFamily: 'EB Garamond, serif' }}>!</text>
-              </g>
-            </g>
-          )}
         </g>
 
         {/* Dirt path */}
@@ -1321,7 +1309,7 @@ export const OrchardView = memo(function OrchardView({
                     return (
                       <>
                         <span className="text-[11px]">{icon}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[100px]" style={{ color: 'rgba(255,255,255,0.8)' }}>{label}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest truncate max-w-[160px]" style={{ color: 'rgba(255,255,255,0.8)' }}>{label}</span>
                         {count > 0 && <span className="text-[9px] tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{count}</span>}
                         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,0.5)', transform: nbDropOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}><path d="M6 9l6 6 6-6"/></svg>
                       </>
@@ -1331,7 +1319,7 @@ export const OrchardView = memo(function OrchardView({
                 {nbDropOpen && (
                   <>
                     <div className="fixed inset-0 z-20" onClick={() => setNbDropOpen(false)} />
-                    <div className="absolute top-full left-0 mt-1 z-30 rounded-lg overflow-hidden py-1 min-w-[160px]" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}>
+                    <div className="absolute top-full left-0 mt-1 z-30 rounded-lg overflow-hidden py-1 min-w-[220px]" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}>
                       {activeNotes.map(note => {
                         const isSelected = selectedNotebook === note.id
                         const icon = note.icon || NOTE_TYPE_ICONS[note.noteType || 'notebook'] || '📓'
@@ -1395,9 +1383,6 @@ export const OrchardView = memo(function OrchardView({
                   )}
                 </div>
               )}
-              <button onClick={onClose} className="absolute right-4 top-0 p-2 rounded-full transition-opacity hover:opacity-100 opacity-70 pointer-events-auto" style={{ color: '#fff', backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)' }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </button>
               {/* Axe chop toggle is now the stump in the terrain */}
             </div>
             <div className="absolute inset-0" style={{

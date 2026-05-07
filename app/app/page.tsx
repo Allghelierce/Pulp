@@ -1187,6 +1187,30 @@ export default function NoteApp() {
     }
   }, [])
 
+  // DEV: inject 70 tangerines into LIFE notebook for testing
+  useEffect(() => {
+    const key = 'pulp-dev-life-trees-injected'
+    if (localStorage.getItem(key)) return
+    const notesRaw = localStorage.getItem('pulp-notes')
+    if (!notesRaw) return
+    const allNotes = JSON.parse(notesRaw)
+    const life = allNotes.find((n: any) => n.subject?.toUpperCase() === 'LIFE')
+    if (!life) return
+    const groveRaw = localStorage.getItem('pulp-grove')
+    const data = groveRaw ? JSON.parse(groveRaw) : {}
+    const existing = data.grove || []
+    const maxId = existing.reduce((m: number, t: any) => Math.max(m, t.id), 0)
+    const stages = [3, 4, 5]
+    const newTrees = Array.from({ length: 70 }, (_, i) => ({
+      id: maxId + i + 1, type: 'tangerine', stage: stages[Math.floor(Math.random() * 3)],
+      progress: 100, plantedAt: Date.now() - Math.floor(Math.random() * 2592000000), notebookId: life.id,
+    }))
+    data.grove = [...existing, ...newTrees]
+    localStorage.setItem('pulp-grove', JSON.stringify(data))
+    localStorage.setItem(key, '1')
+    setGrove(data.grove)
+  }, [])
+
   // Load player data from Supabase when user is available
   useEffect(() => {
     if (!user) return
@@ -3171,6 +3195,7 @@ export default function NoteApp() {
                 onClearDrawing={drawing.clearCanvas}
                 onOpenVersionHistory={() => setShowVersionHistory(true)}
                 darkPaper={isDarkPaper(paperStyle)}
+                selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
               />
             </div>
           )}

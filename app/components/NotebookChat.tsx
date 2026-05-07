@@ -130,7 +130,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
     setLoading(false)
   }, [loading, messages, note])
 
-  const bg = isDark ? "#0f0f12" : "#ffffff"
+  const bg = isDark ? "#18181b" : "#ffffff"
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
   const mutedText = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)"
   const subtleText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)"
@@ -142,11 +142,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       display: "flex", flexDirection: "column",
       fontFamily: '"EB Garamond", serif',
       boxShadow: isDark ? "-8px 0 32px rgba(0,0,0,0.4)" : "-4px 0 24px rgba(0,0,0,0.06)",
-      animation: "chat-slide-in 0.2s ease-out",
     }}>
-      <style>{`
-        @keyframes chat-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
-      `}</style>
 
       {/* Header */}
       <div style={{
