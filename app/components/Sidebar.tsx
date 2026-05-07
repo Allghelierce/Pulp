@@ -685,19 +685,19 @@ export const Sidebar = memo(function Sidebar({
         {/* Nav buttons — top */}
         <div className="px-2 pt-2 pb-1 flex flex-col gap-px z-10 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           {onOpenShop && (
-            <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+            <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
             </button>
           )}
           {onOpenStats && (
-            <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+            <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
           {onOpenLeaderboard && (
-            <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left">
+            <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Leaderboard</span>
             </button>

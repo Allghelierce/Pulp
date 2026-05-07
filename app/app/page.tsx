@@ -2983,11 +2983,11 @@ export default function NoteApp() {
                 setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: newName } : b))
               }}
               onUnlockDev={handleUnlockDev}
-              onOpenShop={() => { closeAllPanels(); setShopOpen(true) }}
+              onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
               onOpenGemStore={() => setGemStoreOpen(true)}
-              onOpenLeaderboard={() => { closeAllPanels(); setLeaderboardOpen(true) }}
+              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { closeAllPanels(); setLeaderboardOpen(true) } }}
               onOpenFocus={() => setFocusOpen(true)}
-              onOpenStats={() => { closeAllPanels(); setStatsOpen(true) }}
+              onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { closeAllPanels(); setStatsOpen(true) } }}
               juice={juice}
               gems={gems}
               xp={xp}
@@ -3153,7 +3153,7 @@ export default function NoteApp() {
                 sidebarOpen={sidebarWidth > 40}
                 onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
-                onOpenShop={() => { closeAllPanels(); setShopOpen(true) }}
+                onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
