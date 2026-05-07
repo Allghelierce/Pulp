@@ -25,8 +25,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
   const uid = `plant-${type}-${size}-${stage}`
 
   const swayHash = (type.charCodeAt(0) + (type.charCodeAt(1) || 0)) % 10
-  const swayDuration = 6 + (swayHash % 4)
+  const swayDuration = stage >= 4 ? 8 + (swayHash % 3) : stage >= 3 ? 6 + (swayHash % 3) : 4 + (swayHash % 2)
   const swayDelay = -(swayHash * 0.7)
+  const swayDeg = stage >= 4 ? 0.6 : stage >= 3 ? 1.0 : stage >= 2 ? 1.5 : 2.0
 
   if (isSeed) {
     return (
@@ -40,8 +41,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
         <g style={{
           transformOrigin: '24px 38px',
+          '--sway-deg': `${swayDeg}deg`,
           animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
-        }}>
+        } as React.CSSProperties}>
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
           <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
@@ -2092,8 +2094,9 @@ export function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGrou
         })()}
         <g style={{
           transformOrigin: '24px 46px',
+          '--sway-deg': `${swayDeg}deg`,
           animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
-        }}>
+        } as React.CSSProperties}>
           {renderShape()}
         </g>
       </svg>

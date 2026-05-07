@@ -248,8 +248,8 @@ details.toggle-block summary:focus {
 }
 
 @keyframes plantSway {
-  0%, 100% { transform: rotate(0.2deg); }
-  50% { transform: rotate(-0.2deg); }
+  0%, 100% { transform: rotate(var(--sway-deg, 0.6deg)); }
+  50% { transform: rotate(calc(-1 * var(--sway-deg, 0.6deg))); }
 }
 
 /* Boutique stage slider */

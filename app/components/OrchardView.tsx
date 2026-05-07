@@ -91,7 +91,167 @@ function getSapYield(tree: any): number {
   return Math.max(1, Math.round(base * stageBonus))
 }
 
+// Time-of-day phases: night(0-5), dawn(5-7), morning(7-10), day(10-16), dusk(16-19), night(19-24)
+function getTimePhase(): { phase: string; t: number; hour: number } {
+  const now = new Date()
+  const hour = now.getHours() + now.getMinutes() / 60
+  if (hour < 5) return { phase: 'night', t: hour / 5, hour }
+  if (hour < 7) return { phase: 'dawn', t: (hour - 5) / 2, hour }
+  if (hour < 10) return { phase: 'morning', t: (hour - 7) / 3, hour }
+  if (hour < 16) return { phase: 'day', t: (hour - 10) / 6, hour }
+  if (hour < 19) return { phase: 'dusk', t: (hour - 16) / 3, hour }
+  return { phase: 'night', t: (hour - 19) / 5, hour }
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
+}
+
+function lerpColor(a: string, b: string, t: number): string {
+  const [ar, ag, ab] = hexToRgb(a)
+  const [br, bg, bb] = hexToRgb(b)
+  const r = Math.round(ar + (br - ar) * t)
+  const g = Math.round(ag + (bg - ag) * t)
+  const bl = Math.round(ab + (bb - ab) * t)
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bl.toString(16).padStart(2, '0')}`
+}
+
+function lerpNum(a: number, b: number, t: number): number {
+  return a + (b - a) * t
+}
+
+interface SkyPalette {
+  skyTop: string; skyMid: string; skyLow: string; skyHorizon: string; skyField: string; skyBottom: string
+  oceanTop: string; oceanMid: string; oceanBot: string
+  mtnTop: string; mtnMid: string; mtnBot: string
+  snowTop: string; snowFade: string
+  hillMidTop: string; hillMidBot: string
+  hillNearTop: string; hillNearBot: string
+  fieldTop: string; fieldMid1: string; fieldMid2: string; fieldBot: string
+  sunGlow: number; sunColor: string; sunY: number
+  moonGlow: number; moonY: number
+  starOpacity: number
+  mtnLightOpacity: number; mtnLightColor: string
+  groveOpacity: number
+  ambientOverlay: string; ambientOpacity: number
+}
+
+const PALETTES: Record<string, SkyPalette> = {
+  night: {
+    skyTop: '#0a0a14', skyMid: '#0e0e1a', skyLow: '#121220', skyHorizon: '#141424', skyField: '#101018', skyBottom: '#0c0c14',
+    oceanTop: '#0a0a18', oceanMid: '#080814', oceanBot: '#0c0c1a',
+    mtnTop: '#12121a', mtnMid: '#0e0e14', mtnBot: '#0a0a10',
+    snowTop: '#2a2a34', snowFade: '#12121a',
+    hillMidTop: '#0c180e', hillMidBot: '#0a140c',
+    hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
+    fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
+    sunGlow: 0, sunColor: '#000000', sunY: 30,
+    moonGlow: 0.7, moonY: 4,
+    starOpacity: 0.8,
+    mtnLightOpacity: 0, mtnLightColor: 'rgba(0,0,0,0)',
+    groveOpacity: 0.8,
+    ambientOverlay: 'rgba(10,10,30,0.3)', ambientOpacity: 0.3,
+  },
+  dawn: {
+    skyTop: '#1a1028', skyMid: '#2a1830', skyLow: '#4a2030', skyHorizon: '#8a4830', skyField: '#2a2028', skyBottom: '#1a1820',
+    oceanTop: '#3a2828', oceanMid: '#2a1c20', oceanBot: '#3a2a28',
+    mtnTop: '#1a1820', mtnMid: '#141418', mtnBot: '#101014',
+    snowTop: '#3a3040', snowFade: '#1a1820',
+    hillMidTop: '#142016', hillMidBot: '#101a12',
+    hillNearTop: '#1a2818', hillNearBot: '#162214',
+    fieldTop: '#1a2c16', fieldMid1: '#182814', fieldMid2: '#1a2814', fieldBot: '#162210',
+    sunGlow: 0.5, sunColor: '#d97706', sunY: 16,
+    moonGlow: 0.2, moonY: 20,
+    starOpacity: 0.15,
+    mtnLightOpacity: 0.08, mtnLightColor: 'rgba(217,119,6,0.08)',
+    groveOpacity: 0.85,
+    ambientOverlay: 'rgba(40,20,30,0.15)', ambientOpacity: 0.15,
+  },
+  morning: {
+    skyTop: '#c46820', skyMid: '#d98030', skyLow: '#e89838', skyHorizon: '#daa048', skyField: '#a0b8a0', skyBottom: '#88aaaa',
+    oceanTop: '#c4a868', oceanMid: '#b89850', oceanBot: '#d0b078',
+    mtnTop: '#8090a0', mtnMid: '#6a7a8a', mtnBot: '#5a6a7a',
+    snowTop: '#d0d8e0', snowFade: '#8a94a0',
+    hillMidTop: '#5a9a4a', hillMidBot: '#4a8a3a',
+    hillNearTop: '#6aaa58', hillNearBot: '#5a9a48',
+    fieldTop: '#7db860', fieldMid1: '#72aa56', fieldMid2: '#6a9e50', fieldBot: '#5e9248',
+    sunGlow: 0.8, sunColor: '#d97706', sunY: 8,
+    moonGlow: 0, moonY: 30,
+    starOpacity: 0,
+    mtnLightOpacity: 0.18, mtnLightColor: 'rgba(255,200,100,0.18)',
+    groveOpacity: 0.9,
+    ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
+  },
+  day: {
+    skyTop: '#5a9aca', skyMid: '#6aaad0', skyLow: '#88bcd8', skyHorizon: '#a0cce0', skyField: '#90c0a8', skyBottom: '#80b8b0',
+    oceanTop: '#5898b8', oceanMid: '#4888a8', oceanBot: '#68a0c0',
+    mtnTop: '#7888a0', mtnMid: '#687890', mtnBot: '#586878',
+    snowTop: '#d8e0e8', snowFade: '#8a98a8',
+    hillMidTop: '#5aa04a', hillMidBot: '#4a903a',
+    hillNearTop: '#68b058', hillNearBot: '#58a048',
+    fieldTop: '#7ec062', fieldMid1: '#72b058', fieldMid2: '#6aa450', fieldBot: '#5e9848',
+    sunGlow: 0.6, sunColor: '#f0c860', sunY: 3,
+    moonGlow: 0, moonY: 30,
+    starOpacity: 0,
+    mtnLightOpacity: 0.08, mtnLightColor: 'rgba(255,255,200,0.08)',
+    groveOpacity: 0.9,
+    ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
+  },
+  dusk: {
+    skyTop: '#1a0c06', skyMid: '#241208', skyLow: '#2e1a0a', skyHorizon: '#281608', skyField: '#141a1e', skyBottom: '#101820',
+    oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
+    mtnTop: '#1a1a20', mtnMid: '#141418', mtnBot: '#101014',
+    snowTop: '#3a3a44', snowFade: '#1a1a20',
+    hillMidTop: '#142416', hillMidBot: '#101e12',
+    hillNearTop: '#1a2e18', hillNearBot: '#162614',
+    fieldTop: '#1e3218', fieldMid1: '#1a2c16', fieldMid2: '#1c2e16', fieldBot: '#182812',
+    sunGlow: 1, sunColor: '#d97706', sunY: 14,
+    moonGlow: 0.1, moonY: 18,
+    starOpacity: 0.1,
+    mtnLightOpacity: 0.15, mtnLightColor: 'rgba(255,180,80,0.15)',
+    groveOpacity: 0.85,
+    ambientOverlay: 'rgba(20,10,5,0.1)', ambientOpacity: 0.1,
+  },
+}
+
+function interpolatePalette(phase: string, t: number): SkyPalette {
+  const order = ['night', 'dawn', 'morning', 'day', 'dusk', 'night']
+  const idx = order.indexOf(phase)
+  const from = PALETTES[phase] || PALETTES.day
+  const nextPhase = order[Math.min(idx + 1, order.length - 1)]
+  const to = PALETTES[nextPhase] || PALETTES.day
+
+  const result: any = {}
+  for (const key of Object.keys(from) as (keyof SkyPalette)[]) {
+    const a = from[key]
+    const b = to[key]
+    if (typeof a === 'string' && typeof b === 'string') {
+      if (a.startsWith('#') && b.startsWith('#')) result[key] = lerpColor(a, b, t)
+      else result[key] = t < 0.5 ? a : b
+    } else if (typeof a === 'number' && typeof b === 'number') {
+      result[key] = lerpNum(a, b, t)
+    } else {
+      result[key] = a
+    }
+  }
+  return result as SkyPalette
+}
+
+const STAR_POSITIONS = Array.from({ length: 60 }, (_, i) => {
+  const rng = seededRng(i * 47 + 199)
+  return { x: rng() * 200, y: rng() * 26, r: 0.15 + rng() * 0.3, twinkle: rng() }
+})
+
 const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[] }) {
+  const [timeState, setTimeState] = useState(getTimePhase)
+  useEffect(() => {
+    const id = setInterval(() => setTimeState(getTimePhase()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
+  const p = useMemo(() => interpolatePalette(timeState.phase, timeState.t), [timeState.phase, timeState.t])
+
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
   const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
 
@@ -103,51 +263,44 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
 
   return (
     <>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict' }}>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
         <defs>
-          {/* Sky with sunset */}
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#1a0c06' : '#c46820'} />
-            <stop offset="20%" stopColor={isDark ? '#241208' : '#d98030'} />
-            <stop offset="40%" stopColor={isDark ? '#2e1a0a' : '#e89838'} />
-            <stop offset="60%" stopColor={isDark ? '#281608' : '#daa048'} />
-            <stop offset="80%" stopColor={isDark ? '#141a1e' : '#a0b8a0'} />
-            <stop offset="100%" stopColor={isDark ? '#101820' : '#88aaaa'} />
+            <stop offset="0%" stopColor={p.skyTop} />
+            <stop offset="20%" stopColor={p.skyMid} />
+            <stop offset="40%" stopColor={p.skyLow} />
+            <stop offset="60%" stopColor={p.skyHorizon} />
+            <stop offset="80%" stopColor={p.skyField} />
+            <stop offset="100%" stopColor={p.skyBottom} />
           </linearGradient>
-          {/* Ocean */}
           <linearGradient id="ocean-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#1a1408' : '#c4a868'} />
-            <stop offset="50%" stopColor={isDark ? '#161006' : '#b89850'} />
-            <stop offset="100%" stopColor={isDark ? '#1e180a' : '#d0b078'} />
+            <stop offset="0%" stopColor={p.oceanTop} />
+            <stop offset="50%" stopColor={p.oceanMid} />
+            <stop offset="100%" stopColor={p.oceanBot} />
           </linearGradient>
-          {/* Mountain range */}
           <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#1a1a20' : '#8090a0'} />
-            <stop offset="60%" stopColor={isDark ? '#141418' : '#6a7a8a'} />
-            <stop offset="100%" stopColor={isDark ? '#101014' : '#5a6a7a'} />
+            <stop offset="0%" stopColor={p.mtnTop} />
+            <stop offset="60%" stopColor={p.mtnMid} />
+            <stop offset="100%" stopColor={p.mtnBot} />
           </linearGradient>
           <linearGradient id="mtn-snow" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#3a3a44' : '#d0d8e0'} />
-            <stop offset="100%" stopColor={isDark ? '#1a1a20' : '#8a94a0'} stopOpacity="0" />
+            <stop offset="0%" stopColor={p.snowTop} />
+            <stop offset="100%" stopColor={p.snowFade} stopOpacity="0" />
           </linearGradient>
-          {/* Mid hill */}
           <linearGradient id="hill-mid" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#142416' : '#5a9a4a'} />
-            <stop offset="100%" stopColor={isDark ? '#101e12' : '#4a8a3a'} />
+            <stop offset="0%" stopColor={p.hillMidTop} />
+            <stop offset="100%" stopColor={p.hillMidBot} />
           </linearGradient>
-          {/* Near hill */}
           <linearGradient id="hill-near" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#1a2e18' : '#6aaa58'} />
-            <stop offset="100%" stopColor={isDark ? '#162614' : '#5a9a48'} />
+            <stop offset="0%" stopColor={p.hillNearTop} />
+            <stop offset="100%" stopColor={p.hillNearBot} />
           </linearGradient>
-          {/* Field */}
           <linearGradient id="field-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#1e3218' : '#7db860'} />
-            <stop offset="30%" stopColor={isDark ? '#1a2c16' : '#72aa56'} />
-            <stop offset="70%" stopColor={isDark ? '#1c2e16' : '#6a9e50'} />
-            <stop offset="100%" stopColor={isDark ? '#182812' : '#5e9248'} />
+            <stop offset="0%" stopColor={p.fieldTop} />
+            <stop offset="30%" stopColor={p.fieldMid1} />
+            <stop offset="70%" stopColor={p.fieldMid2} />
+            <stop offset="100%" stopColor={p.fieldBot} />
           </linearGradient>
-          {/* Brick pattern */}
           <pattern id="brick-pat" width="2.4" height="1.2" patternUnits="userSpaceOnUse">
             <rect width="2.4" height="1.2" fill={isDark ? '#3a2818' : '#8a6a48'} />
             <rect x="0" y="0" width="1.1" height="0.5" rx="0.05" fill={isDark ? '#4a3420' : '#9a7a55'} />
@@ -161,56 +314,178 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
         {/* Sky */}
         <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
 
-        {/* Sun glow on horizon */}
-        <ellipse cx="100" cy="14" rx="80" ry="12" fill={isDark ? 'rgba(220,140,40,0.1)' : 'rgba(255,180,60,0.25)'} />
-        <ellipse cx="100" cy="14" rx="50" ry="8" fill={isDark ? 'rgba(240,160,50,0.12)' : 'rgba(255,200,60,0.35)'} />
-        <ellipse cx="100" cy="14" rx="25" ry="5" fill={isDark ? 'rgba(255,200,80,0.15)' : 'rgba(255,230,100,0.5)'} />
-        <ellipse cx="100" cy="14" rx="12" ry="3.5" fill={isDark ? 'rgba(255,220,100,0.18)' : 'rgba(255,245,160,0.65)'} />
-        <ellipse cx="100" cy="14" rx="5" ry="2" fill={isDark ? 'rgba(255,240,140,0.15)' : 'rgba(255,255,220,0.8)'} />
-        <ellipse cx="100" cy="14" rx="2" ry="1" fill={isDark ? 'rgba(255,250,200,0.12)' : 'rgba(255,255,245,0.9)'} />
+        {/* Stars — visible at night/dawn/dusk */}
+        {p.starOpacity > 0.01 && (
+          <g opacity={p.starOpacity}>
+            {STAR_POSITIONS.map((s, i) => (
+              <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff">
+                {s.twinkle > 0.6 && <animate attributeName="opacity" values="1;0.3;1" dur={`${2 + s.twinkle * 3}s`} repeatCount="indefinite" />}
+              </circle>
+            ))}
+          </g>
+        )}
+
+        {/* Moon — soft organic glow */}
+        {p.moonGlow > 0.05 && (
+          <g opacity={p.moonGlow}>
+            <defs>
+              <radialGradient id="moon-haze" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(200,215,240,0.12)" />
+                <stop offset="30%" stopColor="rgba(180,200,230,0.06)" />
+                <stop offset="60%" stopColor="rgba(160,180,220,0.02)" />
+                <stop offset="100%" stopColor="rgba(140,160,200,0)" />
+              </radialGradient>
+              <radialGradient id="moon-face" cx="45%" cy="42%" r="55%">
+                <stop offset="0%" stopColor="#f0f4fc" />
+                <stop offset="40%" stopColor="#e4eaf6" />
+                <stop offset="70%" stopColor="#d0d8ea" />
+                <stop offset="100%" stopColor="#b8c4da" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="100" cy={p.moonY} rx="28" ry="14" fill="url(#moon-haze)">
+              <animate attributeName="rx" values="28;30;28" dur="6s" repeatCount="indefinite" />
+              <animate attributeName="ry" values="14;15;14" dur="6s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="100" cy={p.moonY} rx="14" ry="7" fill="rgba(190,205,235,0.04)">
+              <animate attributeName="rx" values="14;16;14" dur="8s" repeatCount="indefinite" />
+            </ellipse>
+            <circle cx="100" cy={p.moonY} r="3.2" fill="url(#moon-face)" />
+            <circle cx="99.3" cy={p.moonY - 0.6} r="0.4" fill="rgba(170,180,200,0.2)" />
+            <circle cx="100.7" cy={p.moonY + 0.5} r="0.55" fill="rgba(160,170,190,0.15)" />
+            <circle cx="99.6" cy={p.moonY + 0.9} r="0.25" fill="rgba(170,180,200,0.12)" />
+            <circle cx="100.3" cy={p.moonY - 0.3} r="0.2" fill="rgba(180,190,210,0.1)" />
+          </g>
+        )}
+
+        {/* Sun glow — centered, rises/sets vertically */}
+        {p.sunGlow > 0.05 && (
+          <g opacity={p.sunGlow}>
+            <ellipse cx="100" cy={p.sunY} rx="80" ry="12" fill="rgba(220,140,40,0.15)" />
+            <ellipse cx="100" cy={p.sunY} rx="50" ry="8" fill="rgba(240,160,50,0.2)" />
+            <ellipse cx="100" cy={p.sunY} rx="25" ry="5" fill="rgba(255,200,80,0.3)" />
+            <ellipse cx="100" cy={p.sunY} rx="12" ry="3.5" fill="rgba(255,220,100,0.4)" />
+            <ellipse cx="100" cy={p.sunY} rx="5" ry="2" fill="rgba(255,240,140,0.5)" />
+            <ellipse cx="100" cy={p.sunY} rx="2" ry="1" fill="rgba(255,250,200,0.6)" />
+          </g>
+        )}
 
         {/* Ocean band */}
         <path d="M-5,14 L205,14 L205,28 L-5,28 Z" fill="url(#ocean-g)" />
-        {/* Sun reflection column on water */}
-        <ellipse cx="100" cy="16" rx="8" ry="1.5" fill={isDark ? 'rgba(255,220,120,0.08)' : 'rgba(255,240,160,0.4)'} />
-        <ellipse cx="100" cy="19" rx="12" ry="2" fill={isDark ? 'rgba(255,200,100,0.06)' : 'rgba(255,220,120,0.3)'} />
-        <ellipse cx="100" cy="22" rx="16" ry="2.5" fill={isDark ? 'rgba(255,180,80,0.04)' : 'rgba(255,200,100,0.2)'} />
-        <ellipse cx="100" cy="25" rx="20" ry="2" fill={isDark ? 'rgba(255,160,60,0.03)' : 'rgba(255,180,80,0.12)'} />
-        {/* Broad warm glow on water */}
-        <ellipse cx="100" cy="20" rx="50" ry="5" fill={isDark ? 'rgba(200,120,40,0.05)' : 'rgba(255,180,80,0.1)'} />
-        {/* Ocean shimmer — staggered waves */}
-        <path d="M0,16 Q15,15.4 30,16 Q45,16.6 60,16 Q75,15.4 90,16 Q105,16.6 120,16 Q135,15.4 150,16 Q165,16.6 180,16 Q195,15.4 200,16" fill="none" stroke={isDark ? 'rgba(200,160,80,0.06)' : 'rgba(255,255,240,0.18)'} strokeWidth="0.2" />
-        <path d="M10,18 Q25,17.3 40,18 Q55,18.7 70,18 Q85,17.3 100,18 Q115,18.7 130,18 Q145,17.3 160,18 Q175,18.7 190,18" fill="none" stroke={isDark ? 'rgba(200,160,80,0.07)' : 'rgba(255,255,240,0.2)'} strokeWidth="0.25" />
-        <path d="M5,20.5 Q30,19.8 55,20.5 Q80,21.2 105,20.5 Q130,19.8 155,20.5 Q180,21.2 200,20.5" fill="none" stroke={isDark ? 'rgba(200,160,80,0.05)' : 'rgba(255,255,240,0.14)'} strokeWidth="0.2" />
-        <path d="M0,23 Q35,22.3 70,23 Q105,23.7 140,23 Q175,22.3 200,23" fill="none" stroke={isDark ? 'rgba(200,160,80,0.04)' : 'rgba(255,255,240,0.1)'} strokeWidth="0.18" />
-        <path d="M15,25.5 Q50,25 85,25.5 Q120,26 155,25.5 Q190,25 205,25.5" fill="none" stroke={isDark ? 'rgba(200,160,80,0.03)' : 'rgba(255,255,240,0.07)'} strokeWidth="0.15" />
+        {/* Sun reflection on water */}
+        {p.sunGlow > 0.1 && (
+          <g opacity={p.sunGlow * 0.6}>
+            <ellipse cx="100" cy="16" rx="8" ry="1.5" fill="rgba(255,240,160,0.4)" />
+            <ellipse cx="100" cy="19" rx="12" ry="2" fill="rgba(255,220,120,0.3)" />
+            <ellipse cx="100" cy="22" rx="16" ry="2.5" fill="rgba(255,200,100,0.2)" />
+            <ellipse cx="100" cy="25" rx="20" ry="2" fill="rgba(255,180,80,0.12)" />
+            <ellipse cx="100" cy="20" rx="50" ry="5" fill="rgba(255,180,80,0.1)" />
+          </g>
+        )}
+        {/* Moon reflection on water */}
+        {p.moonGlow > 0.1 && (
+          <g opacity={p.moonGlow * 0.4}>
+            <ellipse cx="100" cy="17" rx="4" ry="1" fill="rgba(200,215,240,0.2)" />
+            <ellipse cx="100" cy="20" rx="8" ry="1.5" fill="rgba(180,200,230,0.1)" />
+            <ellipse cx="100" cy="23" rx="12" ry="2" fill="rgba(160,180,210,0.05)" />
+          </g>
+        )}
+        {/* Ocean ripples — animated waves */}
+        <g>
+          {/* Wave 1 — near surface */}
+          <path fill="none" stroke="rgba(255,255,240,0.12)" strokeWidth="0.25">
+            <animate attributeName="d" dur="7s" repeatCount="indefinite" values="
+              M-5,15.8 Q15,15.2 35,15.8 Q55,16.4 75,15.8 Q95,15.2 115,15.8 Q135,16.4 155,15.8 Q175,15.2 195,15.8 L205,15.8;
+              M-5,15.8 Q20,16.3 40,15.6 Q60,14.9 80,15.8 Q100,16.7 120,15.6 Q140,14.9 160,15.8 Q180,16.5 200,15.4 L205,15.8;
+              M-5,15.8 Q10,15 30,15.9 Q50,16.8 70,15.7 Q90,14.8 110,15.8 Q130,16.6 150,15.5 Q170,15 190,15.8 L205,15.8;
+              M-5,15.8 Q15,15.2 35,15.8 Q55,16.4 75,15.8 Q95,15.2 115,15.8 Q135,16.4 155,15.8 Q175,15.2 195,15.8 L205,15.8
+            " />
+          </path>
+          {/* Wave 2 */}
+          <path fill="none" stroke="rgba(255,255,240,0.14)" strokeWidth="0.3">
+            <animate attributeName="d" dur="9s" repeatCount="indefinite" values="
+              M-5,17.5 Q20,17 45,17.5 Q70,18 95,17.5 Q120,17 145,17.5 Q170,18 195,17.5 L205,17.5;
+              M-5,17.5 Q25,18.1 50,17.3 Q75,16.8 100,17.6 Q125,18.2 150,17.4 Q175,16.9 200,17.5 L205,17.5;
+              M-5,17.5 Q15,16.9 40,17.7 Q65,18.3 90,17.4 Q115,16.8 140,17.6 Q165,18.1 190,17.3 L205,17.5;
+              M-5,17.5 Q20,17 45,17.5 Q70,18 95,17.5 Q120,17 145,17.5 Q170,18 195,17.5 L205,17.5
+            " />
+          </path>
+          {/* Wave 3 */}
+          <path fill="none" stroke="rgba(255,255,240,0.1)" strokeWidth="0.22">
+            <animate attributeName="d" dur="12s" repeatCount="indefinite" values="
+              M-5,20 Q30,19.4 60,20 Q90,20.6 120,20 Q150,19.4 180,20 L205,20;
+              M-5,20 Q25,20.5 55,19.5 Q85,19 115,20.2 Q145,20.8 175,19.6 L205,20;
+              M-5,20 Q35,19.2 65,20.3 Q95,20.9 125,19.7 Q155,19.1 185,20.1 L205,20;
+              M-5,20 Q30,19.4 60,20 Q90,20.6 120,20 Q150,19.4 180,20 L205,20
+            " />
+          </path>
+          {/* Wave 4 — deep */}
+          <path fill="none" stroke="rgba(255,255,240,0.07)" strokeWidth="0.18">
+            <animate attributeName="d" dur="16s" repeatCount="indefinite" values="
+              M-5,22.5 Q40,22 80,22.5 Q120,23 160,22.5 Q190,22 205,22.5;
+              M-5,22.5 Q35,23 75,22.2 Q115,21.8 155,22.6 Q185,23.1 205,22.5;
+              M-5,22.5 Q45,21.9 85,22.8 Q125,23.2 165,22.3 Q195,22 205,22.5;
+              M-5,22.5 Q40,22 80,22.5 Q120,23 160,22.5 Q190,22 205,22.5
+            " />
+          </path>
+          {/* Wave 5 — deepest, slow swell */}
+          <path fill="none" stroke="rgba(255,255,240,0.05)" strokeWidth="0.15">
+            <animate attributeName="d" dur="20s" repeatCount="indefinite" values="
+              M-5,25 Q50,24.5 100,25 Q150,25.5 200,25 L205,25;
+              M-5,25 Q45,25.4 95,24.7 Q145,24.3 195,25.2 L205,25;
+              M-5,25 Q55,24.6 105,25.3 Q155,25.7 200,24.8 L205,25;
+              M-5,25 Q50,24.5 100,25 Q150,25.5 200,25 L205,25
+            " />
+          </path>
+          {/* Glints — tiny bright spots that catch light */}
+          <circle cx="80" cy="17" r="0.3" fill="rgba(255,255,240,0.15)">
+            <animate attributeName="opacity" values="0;0.15;0;0" dur="4s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="80;84;80" dur="7s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="120" cy="19" r="0.25" fill="rgba(255,255,240,0.12)">
+            <animate attributeName="opacity" values="0;0.12;0;0" dur="5s" begin="1.5s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="120;117;120" dur="9s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="60" cy="21" r="0.2" fill="rgba(255,255,240,0.1)">
+            <animate attributeName="opacity" values="0;0.1;0;0" dur="6s" begin="3s" repeatCount="indefinite" />
+            <animate attributeName="cx" values="60;63;60" dur="11s" repeatCount="indefinite" />
+          </circle>
+        </g>
 
-        {/* Mountain range — sharp peaks */}
+        {/* Mountain range */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" />
-        {/* Snow caps on peaks */}
-        <path d="M15,12 L12,16 L18,16 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.3' : '0.5'} />
-        <path d="M35,10 L32,15 L38,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.25' : '0.45'} />
-        <path d="M50,8 L47,13 L53,13 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.35' : '0.55'} />
-        <path d="M68,11 L65,15 L71,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.2' : '0.4'} />
-        <path d="M105,9 L102,14 L108,14 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.35' : '0.55'} />
-        <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity={isDark ? '0.3' : '0.5'} />
+        {/* Snow caps */}
+        <path d="M15,12 L12,16 L18,16 Z" fill="url(#mtn-snow)" opacity="0.4" />
+        <path d="M35,10 L32,15 L38,15 Z" fill="url(#mtn-snow)" opacity="0.35" />
+        <path d="M50,8 L47,13 L53,13 Z" fill="url(#mtn-snow)" opacity="0.45" />
+        <path d="M68,11 L65,15 L71,15 Z" fill="url(#mtn-snow)" opacity="0.3" />
+        <path d="M105,9 L102,14 L108,14 Z" fill="url(#mtn-snow)" opacity="0.45" />
+        <path d="M155,10 L152,15 L158,15 Z" fill="url(#mtn-snow)" opacity="0.4" />
         {/* Mountain shadow */}
-        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill={isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.04)'} />
-        {/* Sunlit mountain faces — warm light on sides facing center */}
-        <polygon points="50,8 58,16 50,16" fill={isDark ? 'rgba(255,180,80,0.06)' : 'rgba(255,200,100,0.18)'} />
-        <polygon points="105,9 115,18 105,18" fill={isDark ? 'rgba(255,180,80,0.07)' : 'rgba(255,200,100,0.2)'} />
-        <polygon points="95,22 105,9 100,22" fill={isDark ? 'rgba(255,180,80,0.05)' : 'rgba(255,200,100,0.15)'} />
-        <polygon points="85,14 95,22 88,22" fill={isDark ? 'rgba(255,180,80,0.06)' : 'rgba(255,200,100,0.16)'} />
-        <polygon points="68,11 78,20 70,20" fill={isDark ? 'rgba(255,180,80,0.05)' : 'rgba(255,200,100,0.14)'} />
-        <polygon points="35,10 42,18 37,18" fill={isDark ? 'rgba(255,170,60,0.04)' : 'rgba(255,190,80,0.1)'} />
-        <polygon points="125,13 135,22 128,22" fill={isDark ? 'rgba(255,170,60,0.04)' : 'rgba(255,190,80,0.1)'} />
+        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Sunlit mountain faces — intensity and side based on sun position */}
+        {p.mtnLightOpacity > 0.01 && (() => {
+          const faces = [
+                { points: "50,8 58,16 50,16", o: 1 },
+                { points: "105,9 115,18 105,18", o: 1.1 },
+                { points: "85,14 95,22 88,22", o: 0.9 },
+                { points: "68,11 78,20 70,20", o: 0.8 },
+                { points: "35,10 42,18 37,18", o: 0.7 },
+                { points: "155,10 165,20 158,20", o: 0.8 },
+              ]
+          return (
+            <g>
+              {faces.map((f, i) => (
+                <polygon key={i} points={f.points} fill={p.mtnLightColor} opacity={p.mtnLightOpacity * f.o} />
+              ))}
+            </g>
+          )
+        })()}
 
-        {/* Mid hills — rounder, softer */}
+        {/* Mid hills */}
         <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26 L210,28 L210,40 L-10,40 Z" fill="url(#hill-mid)" />
-        {/* Light edge on mid hills */}
-        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke={isDark ? 'rgba(80,140,60,0.15)' : 'rgba(255,255,255,0.12)'} strokeWidth="0.4" />
+        <path d="M-10,32 C8,28 18,23 30,26 C40,28 48,22 60,24 C72,26 80,20 95,23 C108,25 116,21 130,24 C142,26 152,22 165,25 C176,27 186,23 200,26" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.4" />
 
-        {/* Distant tangerine grove on far hills */}
+        {/* Distant tangerine grove */}
         {(() => {
           const trunks: string[] = []
           const canopies: string[] = []
@@ -231,7 +506,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
             }
           }
           return (
-            <g opacity={isDark ? 0.6 : 0.5}>
+            <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.4" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#0e1c10' : '#3a6a35'} />
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
@@ -239,10 +514,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           )
         })()}
 
-        {/* Near hills — the foreground ridge before the field */}
+        {/* Near hills */}
         <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30 L210,32 L210,42 L-10,42 Z" fill="url(#hill-near)" />
-        {/* Highlight on near hill crests */}
-        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke={isDark ? 'rgba(100,170,80,0.1)' : 'rgba(255,255,255,0.08)'} strokeWidth="0.5" />
+        <path d="M-10,37 C10,33 25,30 40,32 C52,33.5 60,28 75,30 C88,31.5 96,27 112,29 C126,30.5 135,27 150,29.5 C162,31 172,28 188,30" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
 
         {/* Tangerine grove on near hills */}
         {(() => {
@@ -265,7 +539,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
             }
           }
           return (
-            <g opacity={isDark ? 0.55 : 0.45}>
+            <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#6a4a2a'} strokeWidth="0.5" fill="none" />
               <path d={canopies.join('')} fill={isDark ? '#122216' : '#3a7a38'} />
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#ea580c'} />
@@ -273,14 +547,14 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           )
         })()}
 
-        {/* Main field — soft top edge blends with hills */}
+        {/* Main field */}
         <path d="M-5,36 Q20,39 50,37 Q80,35 100,37 Q130,39 160,36 Q185,38 205,37 L205,100 L-5,100 Z" fill="url(#field-g)" />
 
-        {/* Field texture — subtle undulations */}
-        <path d="M0,50 Q50,48 100,50 Q150,52 200,50" fill="none" stroke={isDark ? 'rgba(40,60,30,0.25)' : 'rgba(90,140,60,0.12)'} strokeWidth="0.4" />
-        <path d="M0,62 Q40,60 80,62 Q120,64 160,62 Q180,60 200,62" fill="none" stroke={isDark ? 'rgba(40,60,30,0.2)' : 'rgba(90,140,60,0.1)'} strokeWidth="0.35" />
-        <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke={isDark ? 'rgba(40,60,30,0.15)' : 'rgba(90,140,60,0.08)'} strokeWidth="0.3" />
-        <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke={isDark ? 'rgba(40,60,30,0.12)' : 'rgba(90,140,60,0.06)'} strokeWidth="0.25" />
+        {/* Field texture */}
+        <path d="M0,50 Q50,48 100,50 Q150,52 200,50" fill="none" stroke="rgba(40,60,30,0.15)" strokeWidth="0.4" />
+        <path d="M0,62 Q40,60 80,62 Q120,64 160,62 Q180,60 200,62" fill="none" stroke="rgba(40,60,30,0.12)" strokeWidth="0.35" />
+        <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
+        <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
 
         {/* Tilled dirt columns — smooth curves through actual tree positions */}
         {Array.from({ length: tillCols }).map((_, ci) => {
@@ -468,6 +742,14 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases }: { isDark
           ? 'inset 0 0 60px 15px rgba(8,12,8,0.4)'
           : 'inset 0 0 40px 10px rgba(80,100,60,0.12)',
       }} />
+      {/* Time-of-day ambient overlay */}
+      {p.ambientOpacity > 0.01 && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundColor: p.ambientOverlay,
+          opacity: p.ambientOpacity,
+          transition: 'opacity 10s, background-color 10s',
+        }} />
+      )}
     </>
   )
 })

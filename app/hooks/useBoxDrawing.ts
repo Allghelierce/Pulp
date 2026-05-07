@@ -704,6 +704,7 @@ export function useBoxDrawing({
   const autoAlign = useCallback(() => {
     if (aligningRef.current) return
     aligningRef.current = true
+    pushUndo()
     try {
       updateBoxes(bs => {
         if (bs.length === 0) return bs
@@ -769,11 +770,12 @@ export function useBoxDrawing({
     } finally {
       aligningRef.current = false
     }
-  }, [updateBoxes])
+  }, [pushUndo, updateBoxes])
 
   const verticalAlign = useCallback(() => {
     if (aligningRef.current) return
     aligningRef.current = true
+    pushUndo()
     try {
       updateBoxes(bs => {
         const selectedIds = selectedBoxIdsRef.current
@@ -798,11 +800,12 @@ export function useBoxDrawing({
     } finally {
       aligningRef.current = false
     }
-  }, [updateBoxes])
+  }, [pushUndo, updateBoxes])
 
   const centerStack = useCallback(() => {
     if (aligningRef.current) return
     aligningRef.current = true
+    pushUndo()
     try {
       updateBoxes(bs => {
         const selectedIds = selectedBoxIdsRef.current
@@ -823,11 +826,12 @@ export function useBoxDrawing({
         return bs.map(b => map.get(b.id) || b)
       })
     } finally { aligningRef.current = false }
-  }, [updateBoxes])
+  }, [pushUndo, updateBoxes])
 
   const twoColumnGrid = useCallback(() => {
     if (aligningRef.current) return
     aligningRef.current = true
+    pushUndo()
     try {
       updateBoxes(bs => {
         const selectedIds = selectedBoxIdsRef.current
@@ -855,11 +859,12 @@ export function useBoxDrawing({
         return bs.map(b => map.get(b.id) || b)
       })
     } finally { aligningRef.current = false }
-  }, [updateBoxes])
+  }, [pushUndo, updateBoxes])
 
   const distributeEvenly = useCallback(() => {
     if (aligningRef.current) return
     aligningRef.current = true
+    pushUndo()
     try {
       updateBoxes(bs => {
         const selectedIds = selectedBoxIdsRef.current
@@ -880,7 +885,7 @@ export function useBoxDrawing({
         return bs.map(b => map.get(b.id) || b)
       })
     } finally { aligningRef.current = false }
-  }, [updateBoxes])
+  }, [pushUndo, updateBoxes])
 
   const selectBox = useCallback((id: string) => { pruneEmpty(); setSelectedBoxIds(new Set([id])) }, [pruneEmpty, setSelectedBoxIds])
 
