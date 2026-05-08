@@ -86,6 +86,23 @@ export async function unlockCosmetic(userId: string, cosmeticId: string) {
   return supabase.from('player_profiles').upsert({ user_id: userId, unlocked_cosmetics: [...existing, cosmeticId] })
 }
 
+// ─── Chat Personalities (stored as JSONB on player_profiles) ───
+
+export interface ChatPersonality {
+  id: string
+  name: string
+  systemPrompt: string
+}
+
+export async function getChatPersonalities(userId: string): Promise<ChatPersonality[]> {
+  const { data } = await supabase.from('player_profiles').select('chat_personalities').eq('user_id', userId).single()
+  return data?.chat_personalities || []
+}
+
+export async function upsertChatPersonalities(userId: string, personalities: ChatPersonality[]) {
+  return supabase.from('player_profiles').upsert({ user_id: userId, chat_personalities: personalities })
+}
+
 // ─── Unlocked Plots (stored as JSONB on player_profiles) ───
 
 export async function getUnlockedPlots(userId: string): Promise<Record<string, number[]>> {

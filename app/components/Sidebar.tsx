@@ -8,6 +8,27 @@ import type { Bookmark, User } from "@/app/types"
 import { apiFetch } from "@/lib/apiFetch"
 import { GlassFilter } from "@/components/ui/liquid-glass-button"
 
+const ShopCountdown = memo(function ShopCountdown() {
+  const [cd, setCd] = useState('')
+  useEffect(() => {
+    const THREE_H = 3 * 60 * 60 * 1000
+    const tick = () => {
+      const next = (Math.floor(Date.now() / THREE_H) + 1) * THREE_H
+      const diff = next - Date.now()
+      if (diff <= 0) { setCd('0:00'); return }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setCd(`${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+  if (!cd) return null
+  return <span className="ml-auto mr-8 text-[10px] text-zinc-600" style={{ fontFamily: 'monospace', letterSpacing: '0.03em' }}>{cd}</span>
+})
+
 // ─── Archive Panel ────────────────────────────────────────────────────────────
 function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
   archivedNotes: NoteData[]
@@ -188,39 +209,30 @@ export const Sidebar = memo(function Sidebar({
     setAiSearching(true)
     aiDebounceRef.current = setTimeout(async () => {
       try {
-        const activeNotes = notes.filter(n => !n.archived)
-        const noteSummaries = activeNotes.map(n => ({
-          id: n.id,
-          name: n.subject,
-          pages: n.pages.map((p, pi) => {
-            const text = stripHtml(p).slice(0, 200)
-            const boxes = (n.boxes[pi] || []).map(b => stripHtml(b.content).slice(0, 100)).join(" | ")
-            return text + (boxes ? " [boxes: " + boxes + "]" : "")
-          }),
-        }))
-        const res = await apiFetch("/api/search", {
+        const res = await apiFetch("/api/semantic-search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: q, notes: noteSummaries }),
+          body: JSON.stringify({ query: q }),
         })
         if (!res.ok) { setAiSearching(false); return }
         const data = await res.json()
+        const activeNotes = notes.filter(n => !n.archived)
         const mapped = (data.results || [])
-          .filter((r: { noteIdx: number; pageIdx: number }) => r.noteIdx >= 0 && r.noteIdx < activeNotes.length)
-          .map((r: { noteIdx: number; pageIdx: number; reason: string }) => {
-            const note = activeNotes[r.noteIdx]
+          .filter((r: { note_id: string }) => activeNotes.some(n => n.id === r.note_id))
+          .map((r: { note_id: string; page_index: number; chunk_text: string; similarity: number }) => {
+            const note = activeNotes.find(n => n.id === r.note_id)!
             return {
-              noteId: note.id,
+              noteId: r.note_id,
               noteName: note.subject,
               noteIcon: note.icon,
-              pageIdx: Math.min(r.pageIdx, note.pages.length - 1),
-              reason: r.reason,
+              pageIdx: Math.min(r.page_index, note.pages.length - 1),
+              reason: r.chunk_text.slice(0, 80) + (r.chunk_text.length > 80 ? "…" : ""),
             }
           })
         setAiResults(mapped)
       } catch { /* ignore */ }
       setAiSearching(false)
-    }, 600)
+    }, 400)
     return () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current) }
   }, [searchQuery, notes, stripHtml])
 
@@ -700,6 +712,7 @@ export const Sidebar = memo(function Sidebar({
                             className="w-full text-left px-3.5 py-2.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
                             onClick={() => {
                               onSearchNavigate?.(r.noteId, r.pageIdx)
+                              apiFetch("/api/search-click", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: searchQuery, noteId: r.noteId, pageIndex: r.pageIdx }) }).catch(() => {})
                               setSearchQuery(""); setSearchFocused(false)
                             }}
                           >
@@ -709,7 +722,7 @@ export const Sidebar = memo(function Sidebar({
                               <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
                             </div>
                             <p className="text-[10px] text-orange-400/60 leading-relaxed truncate">{r.reason}</p>
-                            <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5 text-orange-400/50">AI match</span>
+                            <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5 text-orange-400/50">Semantic match</span>
                           </button>
                         ))}
                       </>
@@ -727,6 +740,7 @@ export const Sidebar = memo(function Sidebar({
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
+              <ShopCountdown />
             </button>
           )}
           {onOpenStats && (
@@ -745,7 +759,7 @@ export const Sidebar = memo(function Sidebar({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Settings</span>
           </button>
-          <div className="mr-2.5 mt-1.5 border-b border-white/5" />
+          <div className="mt-1.5 mx-[-8px] border-b border-white/5" />
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-visible px-0 py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>

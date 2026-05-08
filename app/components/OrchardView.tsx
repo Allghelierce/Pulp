@@ -40,37 +40,48 @@ function seededRng(seed: number) {
   return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return ((s >>> 0) % 10000) / 10000 }
 }
 
-function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col: number }[] {
+const GRID_COLS = 5
+const GRID_SLOTS_PER_COL = 2
+const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
+const GRID_ROWS = Math.ceil(48 / GRID_TOTAL_SLOTS)
+const GRID_COL_START = 10
+const GRID_COL_END = 84
+const GRID_ROW_START = 50
+const GRID_ROW_END = 88
+const GRID_TILL_OFFSET = 2.5
+
+function gridSlotPos(slotIndex: number): { x: number; y: number; col: number; side: number; row: number } {
+  const slot = slotIndex % GRID_TOTAL_SLOTS
+  const row = Math.floor(slotIndex / GRID_TOTAL_SLOTS)
+  const col = Math.floor(slot / GRID_SLOTS_PER_COL)
+  const side = slot % GRID_SLOTS_PER_COL
+  const rowSpacing = GRID_ROWS > 1 ? (GRID_ROW_END - GRID_ROW_START) / (GRID_ROWS - 1) : 0
+  const y = GRID_ROWS === 1 ? 65 : GRID_ROW_START + row * rowSpacing
+  const depthT = (y - GRID_ROW_START) / Math.max(1, GRID_ROW_END - GRID_ROW_START)
+  const pinch = (1 - depthT) * 10 - depthT * 2
+  const trapLeft = GRID_COL_START + pinch
+  const trapRight = GRID_COL_END - pinch
+  const tillX = trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
+  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET)
+  return { x: Math.max(4, Math.min(96, x)), y: Math.max(42, Math.min(94, y)), col, side, row }
+}
+
+function getTillX(col: number, y: number): number {
+  const depthT = (y - GRID_ROW_START) / Math.max(1, GRID_ROW_END - GRID_ROW_START)
+  const pinch = (1 - depthT) * 10 - depthT * 2
+  const trapLeft = GRID_COL_START + pinch
+  const trapRight = GRID_COL_END - pinch
+  return trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
+}
+
+const ALL_SLOTS = Array.from({ length: 48 }, (_, i) => ({ ...gridSlotPos(i), slotIndex: i }))
+
+function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col: number; slotIndex: number }[] {
   if (trees.length === 0) return []
-
-  const results: { x: number; y: number; tree: any; col: number }[] = []
-  const cols = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.1))))
-  const rows = Math.ceil(trees.length / cols)
-  const colStart = 6
-  const colEnd = 94
-  const rowStart = 46
-  const rowEnd = 82
-
-  for (let i = 0; i < trees.length; i++) {
-    const col = i % cols
-    const row = Math.floor(i / cols)
-    const colRows = Math.min(rows, Math.ceil((trees.length - col) / cols))
-    const rowSpacing = colRows > 1 ? (rowEnd - rowStart) / (colRows - 1) : 0
-    const y = colRows === 1 ? 60 : rowStart + row * rowSpacing
-    const depthT = (y - rowStart) / Math.max(1, rowEnd - rowStart)
-    const pinch = (1 - depthT) * 18 - depthT * 4
-    const trapLeft = colStart + pinch
-    const trapRight = colEnd - pinch
-    const baseX = cols === 1 ? 50 : trapLeft + col * ((trapRight - trapLeft) / (cols - 1))
-    const farInwardFactor = row === 0 ? 0.12 : row === 1 ? 0.08 : row === 2 ? 0.06 : 0
-    const nearRank = colRows - 1 - row
-    const nearInwardFactor = nearRank === 0 ? 0.1 : nearRank === 1 ? 0.07 : 0
-    const inwardFactor = Math.min(0.24, farInwardFactor + nearInwardFactor)
-    const x = baseX + (50 - baseX) * inwardFactor
-    results.push({ x: Math.max(6, Math.min(94, x)), y: Math.max(42, Math.min(94, y)), tree: trees[i], col })
-  }
-
-  return results.sort((a, b) => a.y - b.y)
+  return trees.map((tree, i) => {
+    const slot = ALL_SLOTS[i]
+    return { x: slot.x, y: slot.y, tree, col: slot.col, slotIndex: slot.slotIndex }
+  }).sort((a, b) => a.y - b.y)
 }
 
 function getRarityPlantClass(type: string): string {
@@ -433,6 +444,40 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.3" />
         {/* Back hill — shadow band along bottom for depth */}
         <path d="M-10,39 C10,38 40,36 70,33 C90,30 115,28 140,28 C160,29 180,31 200,33 L210,35 L210,42 L-10,42 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Back hill — contour lines for rolling terrain detail */}
+        <path d="M-10,35 C20,33 50,29 80,25 C100,22 120,20 145,20 C165,21 185,24 210,28" fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'} strokeWidth="0.2" />
+        <path d="M-10,37 C20,35 50,31 80,28 C100,25 120,23 145,23 C165,24 185,27 210,30" fill="none" stroke={isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.025)'} strokeWidth="0.15" />
+        {/* Back hill — scattered rocks */}
+        {(() => {
+          const rocks: string[] = []
+          for (let i = 0; i < 12; i++) {
+            const rng = seededRng(i * 89 + 713)
+            const rx = 5 + rng() * 195
+            const ry = (() => {
+              if (rx < 70) return 36 - (rx + 10) * 10 / 80
+              if (rx < 140) return 26 - (rx - 70) * 7 / 70
+              return 19 + (rx - 140) * 10 / 70
+            })() + 1 + rng() * 2
+            const w = 0.3 + rng() * 0.5, h = 0.2 + rng() * 0.3
+            rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * 0.3).toFixed(1)},${(ry - h).toFixed(1)} ${rx.toFixed(1)},${(ry - h * 0.8).toFixed(1)}Q${(rx + w * 0.4).toFixed(1)},${(ry - h).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
+          }
+          return <path d={rocks.join('')} fill={isDark ? '#1a1a1c' : '#8a8a80'} opacity="0.25" />
+        })()}
+        {/* Back hill — wildflower patches */}
+        {(() => {
+          const dots: string[] = []
+          for (let i = 0; i < 40; i++) {
+            const rng = seededRng(i * 53 + 877)
+            const fx = 5 + rng() * 195
+            const fy = (() => {
+              if (fx < 70) return 36 - (fx + 10) * 10 / 80
+              if (fx < 140) return 26 - (fx - 70) * 7 / 70
+              return 19 + (fx - 140) * 10 / 70
+            })() + 0.5 + rng() * 3
+            dots.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.12,0.12 0 1 1 0.01,0Z`)
+          }
+          return <path d={dots.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.3" />
+        })()}
 
         {/* Winding paths on hills — behind everything */}
         <path d="M-5,36 Q10,34 25,33 Q35,31 45,30 Q55,30 65,31 Q80,33 95,30 Q110,26 125,22 Q140,20 155,20 Q165,21 175,24 Q185,26 200,28" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.7" opacity={isDark ? 0.5 : 0.35} strokeLinecap="round" />
@@ -445,24 +490,40 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         {/* Path branch to House 2 door */}
         <path d="M125,22 C127,22.5 129,23.5 131.2,24.4" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.4" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
 
-        {/* Back hill — organic bushes along ridge */}
+        {/* Back hill — orange trees along ridge */}
         {(() => {
-          const bushes: string[] = []
+          const trunks: string[] = []
+          const canopies: string[] = []
+          const fruits: string[] = []
           const bushSeeds = [12,28,45,62,78,95,108,122,138,152,168,185]
+          const trunkC = isDark ? '#2a1a0e' : '#5a3a1a'
           bushSeeds.forEach((bx, i) => {
             const rng = seededRng(i * 53 + 191)
-            const sz = 0.6 + rng() * 0.8
+            const sz = 0.7 + rng() * 0.9
             const by = (() => {
               if (bx < 70) return 36 - (bx + 10) * 10 / 80
               if (bx < 140) return 26 - (bx - 70) * 7 / 70
               return 19 + (bx - 140) * 10 / 70
             })() + 0.5
-            const l = bx - sz, r = bx + sz, h = sz * 0.7
-            const m1 = l + (r - l) * (0.25 + rng() * 0.15)
-            const m2 = l + (r - l) * (0.55 + rng() * 0.2)
-            bushes.push(`M${l.toFixed(1)},${by.toFixed(1)}C${(l + 0.2).toFixed(1)},${(by - h * 0.6).toFixed(1)} ${(m1 - 0.3).toFixed(1)},${(by - h * (0.8 + rng() * 0.3)).toFixed(1)} ${m1.toFixed(1)},${(by - h).toFixed(1)}C${(m1 + 0.3).toFixed(1)},${(by - h * (0.7 + rng() * 0.2)).toFixed(1)} ${(m2 - 0.2).toFixed(1)},${(by - h * (0.9 + rng() * 0.2)).toFixed(1)} ${m2.toFixed(1)},${(by - h * 0.85).toFixed(1)}C${(m2 + 0.3).toFixed(1)},${(by - h * 0.5).toFixed(1)} ${(r - 0.1).toFixed(1)},${(by - h * 0.3).toFixed(1)} ${r.toFixed(1)},${by.toFixed(1)}Z`)
+            const th = sz * 1.1
+            const cy = by - th
+            const lean = (rng() - 0.5) * 0.2
+            const tx = bx + lean
+            trunks.push(`M${bx.toFixed(1)},${by.toFixed(1)}Q${(bx + lean * 0.5).toFixed(1)},${(by - th * 0.5).toFixed(1)} ${tx.toFixed(1)},${(cy + sz * 0.2).toFixed(1)}`)
+            const r1 = sz * 0.9, r2 = sz * 0.7
+            canopies.push(`M${(tx + r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx - r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx + r1).toFixed(1)},${cy.toFixed(1)}Z`)
+            for (let f = 0; f < 2; f++) {
+              const a = rng() * Math.PI * 2
+              const d = r1 * (0.2 + rng() * 0.4)
+              const fx = tx + Math.cos(a) * d, fy = cy + Math.sin(a) * d * (r2 / r1)
+              fruits.push(`M${(fx + 0.12).toFixed(2)},${fy.toFixed(2)}a0.12,0.12 0 1 1 -0.24,0a0.12,0.12 0 1 1 0.24,0Z`)
+            }
           })
-          return <path d={bushes.join('')} fill={isDark ? '#1a3018' : '#3a6a30'} opacity="0.5" />
+          return <g opacity="0.55">
+            <path d={trunks.join('')} stroke={trunkC} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+            <path d={canopies.join('')} fill={isDark ? '#1a3018' : '#3a6a30'} />
+            <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.6} />
+          </g>
         })()}
         {/* Back hill — grass tufts along contour */}
         {(() => {
@@ -481,81 +542,80 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.4" />
         })()}
 
-        {/* Distant tangerine grove — placed on mid-hill contour */}
+        {/* Distant orange grove — all orange trees on mid-hill contour */}
         {(() => {
-          // Back rolling hill: M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29
           const midSegs: [number,number,number,number,number,number,number,number][] = [
             [-10,36, 10,34, 40,30, 70,26],
             [70,26, 90,22, 115,19, 140,19],
             [140,19, 160,20, 180,23, 200,26],
             [200,26, 205,27, 208,28, 210,29],
           ]
-          const cubicY = (t: number, p0: number, p1: number, p2: number, p3: number) => {
+          const cubic = (t: number, p0: number, p1: number, p2: number, p3: number) => {
             const u = 1 - t
             return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3
           }
-          const cubicX = cubicY
           const getHillY = (x: number) => {
             for (const s of midSegs) {
               if (x >= Math.min(s[0], s[6]) - 2 && x <= Math.max(s[0], s[6]) + 2) {
                 for (let ti = 0; ti <= 20; ti++) {
                   const t = ti / 20
-                  const sx = cubicX(t, s[0], s[2], s[4], s[6])
-                  if (Math.abs(sx - x) < 2) return cubicY(t, s[1], s[3], s[5], s[7])
+                  const sx = cubic(t, s[0], s[2], s[4], s[6])
+                  if (Math.abs(sx - x) < 2) return cubic(t, s[1], s[3], s[5], s[7])
                 }
               }
             }
             return 26
           }
+          const shadows: string[] = []
           const trunks: string[] = []
-          const canopyPaths: { d: string; fill: string }[] = []
+          const canopies: string[] = []
+          const highlights: string[] = []
           const fruits: string[] = []
-          const canopyFills = isDark
-            ? ['#142e18', '#16301a', '#122a14', '#1a3420', '#10280e', '#18321c']
-            : ['#2a5428', '#2e5a2c', '#265020', '#346030', '#224a1e', '#3a6834']
-          for (let i = 0; i < 120; i++) {
+          const trunkColor = isDark ? '#2a1a0e' : '#5a3a1a'
+          const canopyBase = isDark ? [20,46,24] : [42,90,40]
+          for (let i = 0; i < 100; i++) {
             const rng = seededRng(i * 71 + 303)
             const x = -5 + rng() * 210
             const baseY = getHillY(x) + rng() * 3 + 1.5
-            const sz = 0.6 + rng() * 1.4
-            const shape = rng()
-            const cx = x
-            const fill = canopyFills[Math.floor(rng() * canopyFills.length)]
-            let canopy: string
-            if (shape < 0.3) {
-              const cy = baseY - sz * 1.6
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.1).toFixed(1)}L${(cx - sz * 0.5).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.5).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
-            } else if (shape < 0.5) {
-              const cy = baseY - sz * 1.0
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz * 1.1).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.1).toFixed(1)},${(sz * 0.65).toFixed(1)} 0 1 1 ${(cx - sz * 1.1).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.1).toFixed(1)},${(sz * 0.65).toFixed(1)} 0 1 1 ${(cx + sz * 1.1).toFixed(1)},${cy.toFixed(1)}Z`
-            } else if (shape < 0.7) {
-              const cy = baseY - sz * 0.5
-              canopy = `M${(cx + sz * 0.7).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.7).toFixed(1)},${(sz * 0.5).toFixed(1)} 0 1 1 ${(cx - sz * 0.7).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.7).toFixed(1)},${(sz * 0.5).toFixed(1)} 0 1 1 ${(cx + sz * 0.7).toFixed(1)},${cy.toFixed(1)}Z`
-            } else {
-              const cy = baseY - sz * 1.2 - sz * 0.5
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
+            const sz = 0.8 + rng() * 1.2
+            const trunkH = sz * (1.2 + rng() * 0.4)
+            const cy = baseY - trunkH
+            const lean = (rng() - 0.5) * 0.3
+            const tx = x + lean
+            shadows.push(`M${(x - sz * 0.8).toFixed(1)},${baseY.toFixed(1)}a${(sz * 0.8).toFixed(1)},${(sz * 0.2).toFixed(1)} 0 1 0 ${(sz * 1.6).toFixed(1)},0a${(sz * 0.8).toFixed(1)},${(sz * 0.2).toFixed(1)} 0 1 0 ${(-sz * 1.6).toFixed(1)},0Z`)
+            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}Q${(x + lean * 0.5).toFixed(1)},${(baseY - trunkH * 0.5).toFixed(1)} ${tx.toFixed(1)},${(cy + sz * 0.3).toFixed(1)}`)
+            if (sz > 1.2) {
+              const bx = tx + (rng() > 0.5 ? 1 : -1) * sz * 0.4
+              const by = cy + sz * 0.1
+              trunks.push(`M${(tx + lean * 0.3).toFixed(1)},${(cy + sz * 0.6).toFixed(1)}Q${(bx - lean).toFixed(1)},${(by + sz * 0.2).toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}`)
             }
-            canopyPaths.push({ d: canopy, fill })
-            if (shape > 0.6) {
-              for (let f = 0; f < 3; f++) {
-                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-                const cy = baseY - sz * 1.2 - sz * 0.5
-                const rDist = sz * (0.2 + rng() * 0.3)
-                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-                if (rng() > 0.6) continue
-                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
-              }
+            const cv = Math.floor(rng() * 20) - 10
+            const cf = `rgb(${canopyBase[0] + cv},${canopyBase[1] + cv},${canopyBase[2] + cv})`
+            const r1 = sz * (0.9 + rng() * 0.3)
+            const r2 = sz * (0.7 + rng() * 0.2)
+            canopies.push(`M${(tx + r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx - r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx + r1).toFixed(1)},${cy.toFixed(1)}Z`)
+            const lx = tx + r1 * 0.55, ly1 = cy - r2 * 0.3, ly2 = cy + r2 * 0.15
+            canopies.push(`M${lx.toFixed(1)},${ly1.toFixed(1)}A${(r1 * 0.55).toFixed(1)},${(r2 * 0.5).toFixed(1)} 0 1 1 ${(lx - r1 * 0.7).toFixed(1)},${ly2.toFixed(1)}`)
+            const hx = tx - r1 * 0.3, hy = cy - r2 * 0.6
+            highlights.push(`M${hx.toFixed(1)},${hy.toFixed(1)}a${(r1 * 0.3).toFixed(1)},${(r2 * 0.25).toFixed(1)} 0 1 1 ${(r1 * 0.5).toFixed(1)},${(r2 * 0.1).toFixed(1)}`)
+            const fruitCount = 2 + Math.floor(rng() * 3)
+            for (let f = 0; f < fruitCount; f++) {
+              const a = rng() * Math.PI * 2
+              const dist = (0.3 + rng() * 0.5) * r1
+              const fx = tx + Math.cos(a) * dist
+              const fy = cy + Math.sin(a) * dist * (r2 / r1) * 0.8
+              const fr = 0.12 + rng() * 0.08
+              fruits.push(`M${(fx + fr).toFixed(2)},${fy.toFixed(2)}a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 -${(fr * 2).toFixed(2)},0a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 ${(fr * 2).toFixed(2)},0Z`)
             }
           }
           return (
             <g opacity={p.groveOpacity}>
-              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.4" fill="none" />
-              {canopyPaths.map((c, i) => <path key={i} d={c.d} fill={c.fill} />)}
-              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
+              <path d={shadows.join('')} fill="rgba(0,0,0,0.06)" />
+              <path d={trunks.join('')} stroke={trunkColor} strokeWidth="0.35" fill="none" strokeLinecap="round" />
+              <path d={canopies.join('')} fill={isDark ? '#163018' : '#2e5a2c'} />
+              <path d={highlights.join('')} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.7} />
+              <path d={fruits.join('')} fill="none" stroke={isDark ? '#8a4e08' : '#b56a04'} strokeWidth="0.08" opacity={0.4} />
             </g>
           )
         })()}
@@ -669,24 +729,77 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="0.3" />
         {/* Front hill — shadow band */}
         <path d="M-10,37 C0,36 15,34 35,33 C50,32 60,33 75,35 C90,37 110,39 140,40 L210,40 L210,42 L-10,42 Z" fill="rgba(0,0,0,0.05)" />
-        {/* Front hill — organic bushes */}
+        {/* Front hill — contour texture lines */}
+        <path d="M-10,35 C5,33 20,31 40,29 C55,28 65,29 80,32 C95,35 115,38 145,39" fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'} strokeWidth="0.2" />
+        <path d="M-10,36 C5,35 20,33 40,31 C55,30 65,31 80,34 C95,36 115,39 145,40" fill="none" stroke={isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.15" />
+        {/* Front hill — rocks and wildflowers */}
         {(() => {
-          const bushes: string[] = []
+          const rocks: string[] = []
+          const flowers: string[] = []
+          for (let i = 0; i < 8; i++) {
+            const rng = seededRng(i * 97 + 941)
+            const rx = rng() * 130
+            const ry = (() => {
+              if (rx < 35) return 34 - (rx + 10) * 7 / 45
+              if (rx < 75) return 27 + (rx - 35) * 3 / 40
+              return 30 + (rx - 75) * 8 / 65
+            })() + 0.5 + rng() * 2
+            const w = 0.4 + rng() * 0.6, h = 0.25 + rng() * 0.35
+            rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * 0.2).toFixed(1)},${(ry - h).toFixed(1)} ${rx.toFixed(1)},${(ry - h * 0.9).toFixed(1)}Q${(rx + w * 0.3).toFixed(1)},${(ry - h).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 30; i++) {
+            const rng = seededRng(i * 61 + 1013)
+            const fx = rng() * 120
+            const fy = (() => {
+              if (fx < 35) return 34 - (fx + 10) * 7 / 45
+              if (fx < 75) return 27 + (fx - 35) * 3 / 40
+              return 30 + (fx - 75) * 8 / 65
+            })() + 0.3 + rng() * 2.5
+            flowers.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.14,0.14 0 1 1 0.01,0Z`)
+          }
+          return <>
+            <path d={rocks.join('')} fill={isDark ? '#1c1c1e' : '#929288'} opacity="0.22" />
+            <path d={flowers.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.25" />
+          </>
+        })()}
+        {/* Front hill — orange trees */}
+        {(() => {
+          const trunks: string[] = []
+          const canopies: string[] = []
+          const fruits: string[] = []
           const seeds = [5,18,30,42,55,68,82,96]
+          const trunkC = isDark ? '#2a1a0e' : '#5a3a1a'
           seeds.forEach((bx, i) => {
             const rng = seededRng(i * 67 + 331)
-            const sz = 0.7 + rng() * 1.0
+            const sz = 0.9 + rng() * 1.1
             const by = (() => {
               if (bx < 35) return 34 - (bx + 10) * 7 / 45
               if (bx < 75) return 27 + (bx - 35) * 3 / 40
               return 30 + (bx - 75) * 8 / 65
             })() + 0.3
-            const l = bx - sz, r = bx + sz, h = sz * 0.65
-            const m1 = l + (r - l) * (0.3 + rng() * 0.1)
-            const m2 = l + (r - l) * (0.6 + rng() * 0.15)
-            bushes.push(`M${l.toFixed(1)},${by.toFixed(1)}C${(l + 0.15).toFixed(1)},${(by - h * 0.5).toFixed(1)} ${(m1 - 0.3).toFixed(1)},${(by - h * (0.7 + rng() * 0.4)).toFixed(1)} ${m1.toFixed(1)},${(by - h).toFixed(1)}C${(m1 + 0.25).toFixed(1)},${(by - h * (0.6 + rng() * 0.3)).toFixed(1)} ${(m2 - 0.2).toFixed(1)},${(by - h * (0.85 + rng() * 0.25)).toFixed(1)} ${m2.toFixed(1)},${(by - h * 0.8).toFixed(1)}C${(m2 + 0.25).toFixed(1)},${(by - h * 0.4).toFixed(1)} ${(r - 0.15).toFixed(1)},${(by - h * 0.25).toFixed(1)} ${r.toFixed(1)},${by.toFixed(1)}Z`)
+            const th = sz * 1.3
+            const cy = by - th
+            const lean = (rng() - 0.5) * 0.3
+            const tx = bx + lean
+            trunks.push(`M${bx.toFixed(1)},${by.toFixed(1)}Q${(bx + lean * 0.4).toFixed(1)},${(by - th * 0.5).toFixed(1)} ${tx.toFixed(1)},${(cy + sz * 0.25).toFixed(1)}`)
+            if (sz > 1.3) {
+              const bdir = rng() > 0.5 ? 1 : -1
+              trunks.push(`M${(tx + lean * 0.2).toFixed(1)},${(cy + sz * 0.55).toFixed(1)}Q${(tx + bdir * sz * 0.3).toFixed(1)},${(cy + sz * 0.3).toFixed(1)} ${(tx + bdir * sz * 0.5).toFixed(1)},${(cy + sz * 0.1).toFixed(1)}`)
+            }
+            const r1 = sz * 1.0, r2 = sz * 0.8
+            canopies.push(`M${(tx + r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx - r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx + r1).toFixed(1)},${cy.toFixed(1)}Z`)
+            for (let f = 0; f < 3; f++) {
+              const a = rng() * Math.PI * 2
+              const d = r1 * (0.25 + rng() * 0.45)
+              const fx = tx + Math.cos(a) * d, fy = cy + Math.sin(a) * d * (r2 / r1)
+              fruits.push(`M${(fx + 0.15).toFixed(2)},${fy.toFixed(2)}a0.15,0.15 0 1 1 -0.3,0a0.15,0.15 0 1 1 0.3,0Z`)
+            }
           })
-          return <path d={bushes.join('')} fill={isDark ? '#1c3820' : '#3e7236'} opacity="0.45" />
+          return <g opacity="0.5">
+            <path d={trunks.join('')} stroke={trunkC} strokeWidth="0.35" fill="none" strokeLinecap="round" />
+            <path d={canopies.join('')} fill={isDark ? '#1c3820' : '#3e7236'} />
+            <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.65} />
+          </g>
         })()}
         {/* Front hill — grass tufts */}
         {(() => {
@@ -803,29 +916,52 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const trunks: string[] = []
           const canopyPaths: string[] = []
           const fruits: string[] = []
-          const canopyFill = isDark ? '#2a4a1a' : '#4a8a2a'
+          const nearFills = isDark
+            ? ['#1a3420', '#1c3622', '#16301c', '#203a26', '#142c18', '#1e3824']
+            : ['#2e5a2a', '#326030', '#2a5424', '#386834', '#264e20', '#3c6c38']
           for (let i = 0; i < 85; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
             const baseY = getNearY(x) + rng() * 2.5 + 0.8
             const sz = 0.8 + rng() * 1.6
-            const cy = baseY - sz * 1.3 - sz * 0.5
-            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${x.toFixed(1)},${cy.toFixed(1)}`)
-            canopyPaths.push(`M${(x + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(x - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(x + sz).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 4; f++) {
-              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-              const rDist = sz * (0.25 + rng() * 0.35)
-              const fx = x + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-              if (rng() > 0.5) continue
-              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.25,0.25 0 1 1 0.01,0Z`)
+            const cx = x
+            const shape = rng()
+            const fill = nearFills[Math.floor(rng() * nearFills.length)]
+            let canopy: string
+            if (shape < 0.25) {
+              const cy = baseY - sz * 1.8
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.2).toFixed(1)}L${(cx - sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
+            } else if (shape < 0.45) {
+              const cy = baseY - sz * 1.1
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx - sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}Z`
+            } else if (shape < 0.6) {
+              const cy = baseY - sz * 0.6
+              canopy = `M${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx - sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}Z`
+            } else {
+              const cy = baseY - sz * 1.3 - sz * 0.5
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
+            }
+            canopyPaths.push(canopy)
+            if (shape > 0.5) {
+              for (let f = 0; f < 4; f++) {
+                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+                const cy = baseY - sz * 1.3 - sz * 0.5
+                const rDist = sz * (0.25 + rng() * 0.35)
+                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+                if (rng() > 0.6) continue
+                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
+              }
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
-              <path d={canopyPaths.join('')} fill={canopyFill} />
-              <path d={fruits.join('')} fill="#d97706" opacity={0.6} />
+              {canopyPaths.map((c, i) => <path key={i} d={c} fill={nearFills[i % nearFills.length]} />)}
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
             </g>
           )
         })()}
@@ -838,7 +974,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M0,62 Q40,60 80,62 Q120,64 160,62 Q180,60 200,62" fill="none" stroke="rgba(40,60,30,0.12)" strokeWidth="0.35" />
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
-
 
         {/* Grass tufts — baked */}
         {(() => {
@@ -902,11 +1037,10 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         })()}
 
         {/* Windmills */}
-        {[{ x: 178, y: 42, s: 1 }, { x: 190, y: 38, s: 0.75 }].map((wm, wi) => {
+        {[{ x: 178, y: 44, s: 0.7 }, { x: 190, y: 40, s: 0.5 }].map((wm, wi) => {
           const wmX = wm.x
           const wmY = wm.y
           const sc = wm.s
-          const wmColor = isDark ? '#3a3028' : '#6a5a42'
           const wmLight = isDark ? '#4a4032' : '#7a6a52'
           const bladeColor = isDark ? '#4a4236' : '#8a7a66'
           const bladeLight = isDark ? '#5a5040' : '#a09080'
@@ -917,51 +1051,39 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const bladeLen = 7 * sc
           const roofColor = isDark ? '#2a2218' : '#5a4a32'
           const roofLight = isDark ? '#342a1e' : '#6a5a40'
+          const fenceColor = isDark ? '#4a3e28' : '#6a5a3a'
           return (
             <g key={`wm-${wi}`}>
-              {/* Base platform */}
               <ellipse cx={wmX} cy={wmY + h + 0.5 * sc} rx={bw + 1 * sc} ry={0.8 * sc} fill={isDark ? '#2a2418' : '#5a4a38'} opacity="0.4" />
-              {/* Tower body — brick */}
               <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#brick-pat)" />
-              {/* Subtle shading */}
               <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill={isDark ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)'} />
-              {/* Mortar band lines */}
               {[0.35, 0.55, 0.7, 0.85].map(t => {
                 const bandY = wmY + sc * 2 + (h - sc * 2) * t
                 const bw2 = tw + (bw - tw) * t
                 return <line key={t} x1={wmX - bw2 + 0.3} y1={bandY} x2={wmX + bw2 - 0.3} y2={bandY} stroke={isDark ? 'rgba(60,50,35,0.3)' : 'rgba(100,80,50,0.15)'} strokeWidth={0.2 * sc} />
               })}
-              {/* Window with frame */}
               <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill={isDark ? '#1a1410' : '#4a3a28'} />
-              <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill="none" stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.3 * sc} />
-              <line x1={wmX - 0.8 * sc} y1={wmY + h * 0.4} x2={wmX + 0.8 * sc} y2={wmY + h * 0.4} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />
-              <line x1={wmX} y1={wmY + h * 0.4 - 0.8 * sc} x2={wmX} y2={wmY + h * 0.4 + 0.8 * sc} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />
-              {/* Window glow */}
+              <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill="none" stroke={fenceColor} strokeWidth={0.3 * sc} />
+              <line x1={wmX - 0.8 * sc} y1={wmY + h * 0.4} x2={wmX + 0.8 * sc} y2={wmY + h * 0.4} stroke={fenceColor} strokeWidth={0.2 * sc} />
+              <line x1={wmX} y1={wmY + h * 0.4 - 0.8 * sc} x2={wmX} y2={wmY + h * 0.4 + 0.8 * sc} stroke={fenceColor} strokeWidth={0.2 * sc} />
               <circle cx={wmX} cy={wmY + h * 0.4} r={0.6 * sc} fill={isDark ? 'rgba(255,200,100,0.15)' : 'rgba(255,220,140,0.2)'} />
-              {/* Door with arch */}
               <path d={`M${wmX - 1 * sc},${wmY + h} L${wmX - 1 * sc},${wmY + h - 2.2 * sc} A${1 * sc},${1 * sc} 0 0 1 ${wmX + 1 * sc},${wmY + h - 2.2 * sc} L${wmX + 1 * sc},${wmY + h} Z`} fill={isDark ? '#1a1410' : '#3a2a1a'} />
               <line x1={wmX} y1={wmY + h - 2.8 * sc} x2={wmX} y2={wmY + h} stroke={isDark ? '#2a2018' : '#4a3a28'} strokeWidth={0.15 * sc} />
-              {/* Conical roof */}
               <polygon points={`${wmX - tw - 0.8 * sc},${wmY + sc * 2} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX},${wmY - 1 * sc}`} fill={roofColor} />
               <polygon points={`${wmX},${wmY - 1 * sc} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX + 0.3 * sc},${wmY + sc * 2}`} fill={roofLight} opacity="0.3" />
-              {/* Hub on roof */}
               <circle cx={wmX} cy={hubY} r={1.4 * sc} fill={wmLight} />
               <circle cx={wmX} cy={hubY} r={0.9 * sc} fill={roofColor} />
               <circle cx={wmX} cy={hubY} r={0.4 * sc} fill={wmLight} />
-              {/* Spinning blades */}
               <g>
                 <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={wi === 0 ? '20s' : '27s'} repeatCount="indefinite" />
                 {[0, 90, 180, 270].map(angle => (
                   <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
-                    {/* Blade frame */}
                     <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill={bladeColor} opacity="0.8" />
-                    {/* Lattice cross-bars */}
                     {[0.25, 0.5, 0.75].map(t => {
                       const ly = hubY - bladeLen * t
                       const lw = (0.4 + (1 - 0.4) * t * 0.6) * sc
                       return <line key={t} x1={wmX - 0.1 * sc} y1={ly} x2={wmX + lw} y2={ly} stroke={bladeLight} strokeWidth={0.15 * sc} opacity="0.5" />
                     })}
-                    {/* Spine */}
                     <line x1={wmX + 0.2 * sc} y1={hubY} x2={wmX + 0.4 * sc} y2={hubY - bladeLen} stroke={bladeLight} strokeWidth={0.2 * sc} opacity="0.35" />
                   </g>
                 ))}
@@ -970,40 +1092,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })}
 
-        {/* Paths between windmills and off-screen */}
         <path d={`M178,${42 + 14} Q184,${42 + 15} 190,${38 + 14 * 0.75}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.8" opacity="0.25" strokeLinecap="round" />
         <path d={`M178,${42 + 14} Q184,${42 + 15} 190,${38 + 14 * 0.75}`} fill="none" stroke={isDark ? '#3a3020' : '#8a7a5a'} strokeWidth="0.6" opacity="0.15" strokeLinecap="round" />
         <path d={`M190,${38 + 14 * 0.75} Q196,${38 + 10} 210,${36}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
-
-        {/* Chopping stump — near windmills */}
-        <g
-          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-          onClick={onToggleChop}
-        >
-          {/* === Stump === */}
-          <ellipse cx="170" cy="57.4" rx="2.2" ry="0.4" fill="rgba(0,0,0,0.06)" />
-          <path d="M168.5,55.8 L168.5,57.2 Q169.2,57.6 170,57.6 Q170.8,57.6 171.5,57.2 L171.5,55.8 Z" fill={isDark ? '#3a2818' : '#7a5a38'} />
-          <line x1="169.3" y1="56" x2="169.3" y2="57" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <line x1="170.7" y1="56.1" x2="170.7" y2="56.9" stroke={isDark ? '#2e1e10' : '#6a4a28'} strokeWidth="0.1" opacity="0.3" />
-          <ellipse cx="170" cy="55.8" rx="1.5" ry="0.5" fill={isDark ? '#4a3820' : '#9a7a55'} />
-          <ellipse cx="170" cy="55.8" rx="0.7" ry="0.25" fill="none" stroke={isDark ? '#3e3018' : '#8a6a45'} strokeWidth="0.08" opacity="0.4" />
-
-          {/* === Axe embedded in stump === */}
-          <line x1="170.3" y1="55" x2="173" y2="53" stroke={isDark ? '#3a2810' : '#6a4a28'} strokeWidth="0.4" strokeLinecap="round" />
-          <path d="M170.1,54.3 L170.4,56 L171.1,55 Z" fill={isDark ? '#5a5a68' : '#9090a0'} />
-          <path d="M170.4,56 L169.7,55.7 L170.1,54.3 Z" fill={isDark ? '#484855' : '#7a7a88'} />
-          <path d="M169.7,55.7 L170.1,54.3" stroke={isDark ? '#6a6a78' : '#b0b0be'} strokeWidth="0.15" fill="none" />
-
-          {chopMode && (
-            <>
-              <ellipse cx="170" cy="55" rx="6" ry="4" fill="rgba(217,119,6,0.1)" />
-              <ellipse cx="170" cy="55" rx="4" ry="2.5" fill="rgba(217,119,6,0.06)" />
-            </>
-          )}
-
-          <rect x="162" y="50" width="16" height="12" fill="transparent" />
-
-        </g>
 
         {/* Dirt path */}
         <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
@@ -1305,7 +1396,7 @@ export const OrchardView = memo(function OrchardView({
     })
   }, [filteredTrees, sapReadyMap, setJuice])
 
-  const TREES_PER_PLOT = 24
+  const TREES_PER_PLOT = 48
   const MAX_PLOTS = 3
 
   const [unlockedPlots, setUnlockedPlots] = useState<Record<string, number>>(() => {
@@ -1367,17 +1458,21 @@ export const OrchardView = memo(function OrchardView({
 
   const placed = useMemo(() => orchardPlacement(currentPlotTrees), [currentPlotTrees])
 
+  const occupiedSlots = useMemo(() => new Set(placed.map(p => p.slotIndex)), [placed])
+
+  const emptySlots = useMemo(() => ALL_SLOTS.filter(s => !occupiedSlots.has(s.slotIndex)), [occupiedSlots])
+
   const tillSvg = useMemo(() => {
-    if (placed.length === 0) return null
     const dk = isDark
     const dirtDark = dk ? '#1e1a10' : '#6a5a3a'
     const dirtMid = dk ? '#2a2418' : '#8a7a5a'
     const dirtLight = dk ? '#382e1e' : '#9a8a6a'
-    const centerX = placed.reduce((s, p) => s + p.x, 0) / placed.length
-    const cols = new Set(placed.map(p => p.col))
+    const yTop = 44
+    const yBot = 94
+    const steps = 16
     const makePath = (pts: { x: number; y: number }[], xOff: number, yOff: number, seed: number) => {
       const r = seededRng(seed)
-      const mapped = pts.map(p => ({ x: p.x + xOff + (r() - 0.5) * 0.5, y: p.y + yOff + (r() - 0.5) * 0.3 }))
+      const mapped = pts.map(p => ({ x: p.x + xOff + (r() - 0.5) * 0.15, y: p.y + yOff + (r() - 0.5) * 0.1 }))
       let path = `M${mapped[0].x.toFixed(1)},${mapped[0].y.toFixed(1)}`
       for (let i = 1; i < mapped.length; i++) {
         if (i < mapped.length - 1) {
@@ -1390,50 +1485,29 @@ export const OrchardView = memo(function OrchardView({
       return path
     }
     const furrows = [
-      { xOff: -0.7, yOff: -0.15, color: dirtDark, width: 0.6, op: dk ? 0.32 : 0.18 },
-      { xOff: 0, yOff: 0.1, color: dirtMid, width: 0.9, op: dk ? 0.38 : 0.22 },
-      { xOff: 0.4, yOff: 0, color: dirtDark, width: 0.55, op: dk ? 0.28 : 0.15 },
-      { xOff: 0.7, yOff: 0.2, color: dirtLight, width: 0.35, op: dk ? 0.2 : 0.1 },
+      { xOff: -0.3, yOff: -0.1, color: dirtDark, width: 0.6, op: dk ? 0.32 : 0.18 },
+      { xOff: 0, yOff: 0.05, color: dirtMid, width: 0.9, op: dk ? 0.38 : 0.22 },
+      { xOff: 0.2, yOff: 0, color: dirtDark, width: 0.55, op: dk ? 0.28 : 0.15 },
+      { xOff: 0.35, yOff: 0.1, color: dirtLight, width: 0.35, op: dk ? 0.2 : 0.1 },
     ]
     return (
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {Array.from(cols).map(ci => {
-          const colTrees = placed.filter(p => p.col === ci).sort((a, b) => a.y - b.y)
-          if (colTrees.length === 0) return null
-          const rng = seededRng(ci * 137 + 42)
-          const first = colTrees[0], last = colTrees[colTrees.length - 1]
-          const ext = 6, outwardShift = 1.5
-          const allPts: { x: number; y: number }[] = []
-          if (colTrees.length >= 2) {
-            const dx = first.x - colTrees[1].x, dy = first.y - colTrees[1].y
-            const len = Math.sqrt(dx * dx + dy * dy) || 1
-            allPts.push({ x: first.x + (dx / len) * ext, y: Math.max(38, first.y + (dy / len) * ext) })
-          } else {
-            allPts.push({ x: first.x, y: Math.max(38, first.y - ext) })
-          }
-          for (const ct of colTrees) {
-            const shift = ct.x < centerX ? -outwardShift : ct.x > centerX ? outwardShift : 0
-            allPts.push({ x: ct.x + shift, y: ct.y })
-          }
-          if (colTrees.length >= 2) {
-            const dx = last.x - colTrees[colTrees.length - 2].x, dy = last.y - colTrees[colTrees.length - 2].y
-            const len = Math.sqrt(dx * dx + dy * dy) || 1
-            allPts.push({ x: last.x + (dx / len) * ext, y: Math.min(100, last.y + (dy / len) * ext) })
-          } else {
-            allPts.push({ x: last.x, y: Math.min(100, last.y + ext) })
-          }
-          void rng()
+        {Array.from({ length: GRID_COLS }, (_, ci) => {
+          const pts = Array.from({ length: steps + 1 }, (_, si) => {
+            const y = yTop + si * (yBot - yTop) / steps
+            return { x: getTillX(ci, y), y }
+          })
           return (
             <g key={`till-${ci}`}>
               {furrows.map((f, fi) => (
-                <path key={fi} d={makePath(allPts, f.xOff, f.yOff, ci * 99 + fi * 71)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
+                <path key={fi} d={makePath(pts, f.xOff, f.yOff, ci * 99 + fi * 71)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
               ))}
             </g>
           )
         })}
       </svg>
     )
-  }, [placed, isDark])
+  }, [isDark])
 
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -1455,7 +1529,8 @@ export const OrchardView = memo(function OrchardView({
 
   const baseSize = filteredTrees.length <= 6 ? 105 :
     filteredTrees.length <= 15 ? 95 :
-    filteredTrees.length <= 24 ? 85 : 72
+    filteredTrees.length <= 24 ? 85 :
+    filteredTrees.length <= 36 ? 75 : 65
 
   return (
     <div
@@ -1465,9 +1540,7 @@ export const OrchardView = memo(function OrchardView({
     >
       <style>{`
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
-        @keyframes sap-drip { 0% { transform: translateY(0); opacity:0.8 } 60% { opacity:0.6 } 100% { transform: translateY(12px); opacity:0 } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
-        @keyframes sap-pulse { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.15) } }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
@@ -1588,26 +1661,44 @@ export const OrchardView = memo(function OrchardView({
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
               >
-                {filteredTrees.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center gap-2 relative z-10">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
-                      <path d="M7 20h10" />
-                      <path d="M12 20v-8" />
-                      <path d="M12 12C12 8 8 6 4 7c0 4 2.5 7 8 5" />
-                      <path d="M12 12c0-4 4-6 8-5 0 4-2.5 7-8 5" />
-                    </svg>
-                    <p className="text-[12px]" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
-                      {selectedNotebook === null ? 'Your orchard is empty.' :
-                       selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
-                       'No trees grown for this notebook yet.'}
-                    </p>
-                    <p className="text-[10px]" style={{ color: isDark ? '#6a6760' : '#9a9690' }}>
-                      Complete focus sessions to grow your collection.
-                    </p>
-                  </div>
-                ) : (
+                {(() => { return (
                   <>
                     {tillSvg}
+                    {filteredTrees.length === 0 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
+                        <p className="text-[11px] font-medium" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
+                          {selectedNotebook === null ? 'Tap a spot to plant.' :
+                           selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
+                           'Pick a spot for your first tree.'}
+                        </p>
+                      </div>
+                    )}
+                    {emptySlots.map(slot => {
+                      const depthT = Math.max(0, Math.min(1, (slot.y - 40) / 55))
+                      const spotSize = 10 + depthT * 14
+                      return (
+                        <div
+                          key={`empty-${slot.slotIndex}`}
+                          className="absolute flex items-center justify-center cursor-pointer transition-opacity hover:opacity-80"
+                          style={{
+                            left: `${slot.x}%`,
+                            top: `${slot.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                            width: spotSize,
+                            height: spotSize,
+                            zIndex: Math.round(slot.y) - 1,
+                          }}
+                        >
+                          <div style={{
+                            width: '100%',
+                            height: '60%',
+                            borderRadius: '50%',
+                            border: `1.5px dashed ${isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.3)'}`,
+                            background: isDark ? 'rgba(217,119,6,0.04)' : 'rgba(217,119,6,0.06)',
+                          }} />
+                        </div>
+                      )
+                    })}
                     {placed.map(({ x, y, tree }, renderIdx) => {
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
@@ -1649,43 +1740,14 @@ export const OrchardView = memo(function OrchardView({
                           <div style={{ position: 'relative', animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both` }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
                               filter: activeTool === 'axe'
-                                ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
-                                : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
-                              transition: 'filter 0.2s',
+                                ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(239,68,68,0.5))`
+                                : sapReady > 0
+                                  ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 ${3 + sapFill * 5}px rgba(217,119,6,${0.2 + sapFill * 0.4}))`
+                                  : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
+                              transition: 'filter 0.3s',
                             }}>
                               <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
                             </div>
-                            {/* Sap drip animation */}
-                            {sapReady > 0 && (
-                              <div className="absolute pointer-events-none" style={{ left: '50%', bottom: 4, transform: 'translateX(-50%)' }}>
-                                <div style={{
-                                  width: 4, height: 4, borderRadius: '50% 50% 50% 0',
-                                  transform: 'rotate(-45deg)',
-                                  background: '#d97706',
-                                  animation: 'sap-drip 2s ease-in infinite',
-                                  opacity: 0.7,
-                                }} />
-                              </div>
-                            )}
-                            {/* Sap meter */}
-                            {sapReady > 0 && (
-                              <div className="absolute pointer-events-none" style={{
-                                right: -4, top: '30%',
-                                width: 3, height: treeSize * 0.35,
-                                borderRadius: 2,
-                                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                                overflow: 'hidden',
-                              }}>
-                                <div style={{
-                                  position: 'absolute', bottom: 0, width: '100%',
-                                  height: `${sapFill * 100}%`,
-                                  borderRadius: 2,
-                                  background: sapFill >= 1 ? '#d97706' : '#c88a30',
-                                  transition: 'height 0.5s ease',
-                                  animation: sapFill >= 1 ? 'sap-pulse 1.5s ease-in-out infinite' : undefined,
-                                }} />
-                              </div>
-                            )}
                             <div style={{
                               position: 'absolute',
                               left: '50%',
@@ -1738,7 +1800,7 @@ export const OrchardView = memo(function OrchardView({
                       </div>
                     ))}
                   </>
-                )}
+                ); })()}
               </motion.div>
             </AnimatePresence>
             </div>

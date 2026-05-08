@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback, memo } from "react"
 import type { NoteData } from "@/app/types"
 import { extractTextFromHTML } from "@/lib/sanitize"
 import { apiFetch } from "@/lib/apiFetch"
+import { supabase } from "@/lib/supabase"
 
 interface Message {
   id: string
@@ -10,10 +11,17 @@ interface Message {
   content: string
 }
 
+interface Personality {
+  id: string
+  name: string
+  systemPrompt: string
+}
+
 interface NotebookChatProps {
   note: NoteData
   theme: "light" | "dark"
   accent: string
+  userId?: string
   onClose: () => void
 }
 
@@ -21,8 +29,13 @@ const QUIZ_PROMPTS = [
   "Quiz me on this material with 5 questions",
   "Give me a practice test on key concepts",
   "Ask me fill-in-the-blank questions",
-  "Create true/false questions from this content",
-  "Quiz me with increasing difficulty",
+]
+
+const PRESET_PERSONALITIES: Personality[] = [
+  { id: "default", name: "Default", systemPrompt: "" },
+  { id: "8th-grader", name: "8th Grader", systemPrompt: "Write like an 8th grader. Use simple vocabulary and short sentences. Make complex ideas sound approachable. Never use dashes or semicolons." },
+  { id: "professor", name: "Professor", systemPrompt: "Write like an academic professor. Be thorough, precise, and use proper terminology. Cite reasoning and provide depth." },
+  { id: "concise", name: "Concise", systemPrompt: "Be extremely concise. Bullet points over paragraphs. No filler words. Get to the point immediately." },
 ]
 
 function gatherNotebookText(note: NoteData): string {
@@ -43,7 +56,7 @@ function gatherNotebookText(note: NoteData): string {
   return [...pageTexts, ...boxTexts].join("\n\n")
 }
 
-export const NotebookChat = memo(function NotebookChat({ note, theme, accent, onClose }: NotebookChatProps) {
+export const NotebookChat = memo(function NotebookChat({ note, theme, accent, userId, onClose }: NotebookChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -53,6 +66,54 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isDark = theme === "dark"
+
+  const [personalities, setPersonalities] = useState<Personality[]>(PRESET_PERSONALITIES)
+  const [activePersonality, setActivePersonality] = useState<Personality>(PRESET_PERSONALITIES[0])
+  const [showPersonalityPanel, setShowPersonalityPanel] = useState(false)
+  const [editingPersonality, setEditingPersonality] = useState<Personality | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editPrompt, setEditPrompt] = useState("")
+
+  useEffect(() => {
+    if (!userId) return
+    supabase.from("player_profiles").select("chat_personalities").eq("user_id", userId).single().then(({ data }) => {
+      if (data?.chat_personalities?.length) {
+        setPersonalities([...PRESET_PERSONALITIES, ...data.chat_personalities])
+      }
+    })
+  }, [userId])
+
+  const savePersonalities = useCallback(async (custom: Personality[]) => {
+    if (!userId) return
+    await supabase.from("player_profiles").upsert({ user_id: userId, chat_personalities: custom })
+  }, [userId])
+
+  const handleSavePersonality = useCallback(() => {
+    if (!editName.trim() || !editPrompt.trim()) return
+    const isEdit = editingPersonality && !PRESET_PERSONALITIES.some(p => p.id === editingPersonality.id)
+    let custom: Personality[]
+    if (isEdit && editingPersonality) {
+      custom = personalities.filter(p => !PRESET_PERSONALITIES.some(pp => pp.id === p.id)).map(p =>
+        p.id === editingPersonality.id ? { ...p, name: editName.trim(), systemPrompt: editPrompt.trim() } : p
+      )
+    } else {
+      const newP: Personality = { id: crypto.randomUUID(), name: editName.trim(), systemPrompt: editPrompt.trim() }
+      custom = [...personalities.filter(p => !PRESET_PERSONALITIES.some(pp => pp.id === p.id)), newP]
+    }
+    setPersonalities([...PRESET_PERSONALITIES, ...custom])
+    savePersonalities(custom)
+    setEditingPersonality(null)
+    setEditName("")
+    setEditPrompt("")
+  }, [editName, editPrompt, editingPersonality, personalities, savePersonalities])
+
+  const handleDeletePersonality = useCallback((id: string) => {
+    if (PRESET_PERSONALITIES.some(p => p.id === id)) return
+    const custom = personalities.filter(p => !PRESET_PERSONALITIES.some(pp => pp.id === p.id) && p.id !== id)
+    setPersonalities([...PRESET_PERSONALITIES, ...custom])
+    savePersonalities(custom)
+    if (activePersonality.id === id) setActivePersonality(PRESET_PERSONALITIES[0])
+  }, [personalities, activePersonality, savePersonalities])
 
   useEffect(() => {
     let cancelled = false
@@ -112,14 +173,28 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
     setLoading(true)
 
     try {
+      let ragContext = ""
+      try {
+        const ragRes = await apiFetch("/api/semantic-search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text.trim() }) })
+        if (ragRes.ok) {
+          const ragData = await ragRes.json()
+          const chunks = (ragData.results || []).slice(0, 6).map((r: { chunk_text: string; note_id: string }) => r.chunk_text)
+          if (chunks.length) ragContext = `\n\n[RELATED KNOWLEDGE FROM ALL NOTEBOOKS]:\n${chunks.join("\n---\n")}`
+        }
+      } catch { /* RAG optional */ }
+
       const notebookContent = notebookTextRef.current || gatherNotebookText(note)
       const history = [...messages, userMsg].slice(-10).map(m => `${m.role}: ${m.content}`).join("\n")
-      const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}\n\n[CONVERSATION HISTORY]:\n${history}`
+      const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}${ragContext}\n\n[CONVERSATION HISTORY]:\n${history}`
 
-      const response = await apiFetch("/api/ai", {
+      const response = await apiFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text.trim(), text: contextPayload.length > 9500 ? contextPayload.slice(0, contextPayload.lastIndexOf("\n", 9500) || 9500) + "\n[...truncated]" : contextPayload })
+        body: JSON.stringify({
+          prompt: text.trim(),
+          text: contextPayload.length > 12000 ? contextPayload.slice(0, contextPayload.lastIndexOf("\n", 12000) || 12000) + "\n[...truncated]" : contextPayload,
+          personality: activePersonality.systemPrompt || undefined,
+        })
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Request failed")
@@ -129,7 +204,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}` }])
     }
     setLoading(false)
-  }, [loading, messages, note])
+  }, [loading, messages, note, activePersonality, indexing])
 
   const bg = isDark ? "#09090b" : "#ffffff"
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
@@ -150,23 +225,149 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
         padding: "14px 16px", borderBottom: `1px solid ${borderColor}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? "#e4e4e7" : "#18181b", letterSpacing: "0.01em" }}>
             Notebook Chat
           </div>
-          <div style={{ fontSize: 11, color: mutedText, marginTop: 2 }}>
-            Ask anything about "{note.subject}"
+          <div style={{ fontSize: 11, color: mutedText, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>"{note.subject}"</span>
+            <button
+              onClick={() => setShowPersonalityPanel(v => !v)}
+              style={{
+                background: activePersonality.id !== "default" ? `${accent}20` : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                border: activePersonality.id !== "default" ? `1px solid ${accent}40` : `1px solid ${borderColor}`,
+                borderRadius: 4, padding: "1px 6px", fontSize: 9, fontWeight: 700,
+                color: activePersonality.id !== "default" ? accent : mutedText,
+                cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em",
+                fontFamily: '"EB Garamond", serif', whiteSpace: "nowrap",
+              }}
+            >
+              {activePersonality.name}
+            </button>
           </div>
         </div>
         <button
           onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: mutedText, borderRadius: 4 }}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: mutedText, borderRadius: 4, flexShrink: 0 }}
           onMouseEnter={e => { e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }}
           onMouseLeave={e => { e.currentTarget.style.background = "none" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
+
+      {/* Personality panel */}
+      {showPersonalityPanel && (
+        <div style={{ borderBottom: `1px solid ${borderColor}`, padding: "10px 16px", maxHeight: 320, overflowY: "auto" }}>
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, marginBottom: 8 }}>
+            AI Personality
+          </div>
+
+          {editingPersonality !== null ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <input
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Personality name..."
+                style={{
+                  background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                  border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px",
+                  fontSize: 12, color: isDark ? "#e4e4e7" : "#18181b", outline: "none",
+                  fontFamily: '"EB Garamond", serif',
+                }}
+              />
+              <textarea
+                value={editPrompt}
+                onChange={e => setEditPrompt(e.target.value)}
+                placeholder="Instructions for the AI... e.g. 'Write like an 8th grader. No dashes. Simple words.'"
+                rows={3}
+                style={{
+                  background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                  border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px",
+                  fontSize: 12, color: isDark ? "#e4e4e7" : "#18181b", outline: "none", resize: "none",
+                  fontFamily: '"EB Garamond", serif', lineHeight: 1.5,
+                }}
+              />
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={handleSavePersonality}
+                  disabled={!editName.trim() || !editPrompt.trim()}
+                  style={{
+                    flex: 1, padding: "5px 0", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 700,
+                    background: editName.trim() && editPrompt.trim() ? accent : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                    color: editName.trim() && editPrompt.trim() ? "#fff" : mutedText, cursor: "pointer",
+                    fontFamily: '"EB Garamond", serif',
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => { setEditingPersonality(null); setEditName(""); setEditPrompt("") }}
+                  style={{
+                    padding: "5px 12px", borderRadius: 6, border: `1px solid ${borderColor}`, fontSize: 11,
+                    background: "transparent", color: subtleText, cursor: "pointer",
+                    fontFamily: '"EB Garamond", serif',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {personalities.map(p => (
+                  <div
+                    key={p.id}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 6,
+                      background: activePersonality.id === p.id ? `${accent}15` : "transparent",
+                      border: activePersonality.id === p.id ? `1px solid ${accent}30` : "1px solid transparent",
+                      cursor: "pointer", transition: "all 0.1s",
+                    }}
+                    onClick={() => { setActivePersonality(p); setShowPersonalityPanel(false) }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: activePersonality.id === p.id ? accent : (isDark ? "#d4d4d8" : "#3f3f46") }}>{p.name}</div>
+                      {p.systemPrompt && (
+                        <div style={{ fontSize: 10, color: mutedText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.systemPrompt}</div>
+                      )}
+                    </div>
+                    {!PRESET_PERSONALITIES.some(pp => pp.id === p.id) && (
+                      <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); setEditingPersonality(p); setEditName(p.name); setEditPrompt(p.systemPrompt) }}
+                          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: mutedText, fontSize: 10 }}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDeletePersonality(p.id) }}
+                          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: mutedText, fontSize: 10 }}
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => { setEditingPersonality({ id: "", name: "", systemPrompt: "" }); setEditName(""); setEditPrompt("") }}
+                style={{
+                  width: "100%", marginTop: 8, padding: "6px 0", borderRadius: 6,
+                  border: `1px dashed ${borderColor}`, background: "transparent",
+                  fontSize: 11, fontWeight: 600, color: subtleText, cursor: "pointer",
+                  fontFamily: '"EB Garamond", serif', display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Personality
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
@@ -201,10 +402,9 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
               <div style={{ fontSize: 11, color: mutedText, maxWidth: 220, lineHeight: 1.5 }}>Ask questions, get summaries, or quiz yourself on your notes.</div>
             </div>
 
-            {/* Quiz Me shortcuts */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", marginTop: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, paddingLeft: 2 }}>Quick Actions</div>
-              {QUIZ_PROMPTS.slice(0, 3).map((p, i) => (
+              {QUIZ_PROMPTS.map((p, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(p)}
@@ -264,7 +464,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
-          placeholder="Ask about your notes..."
+          placeholder={activePersonality.id !== "default" ? `Ask (${activePersonality.name})...` : "Ask about your notes..."}
           disabled={loading}
           rows={1}
           style={{

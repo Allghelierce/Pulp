@@ -27,7 +27,7 @@ interface VitalitySystemProps {
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
   inventory: string[]
   activeTabId: string | null
-  notes: any[]
+  initialNotes: any[]
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -35,7 +35,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   juice, gems, xp, grove, achievements, setJuice, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory, activeTabId, notes,
+  inventory, activeTabId, initialNotes,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -68,7 +68,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
     return t.elapsed ?? 0
   })
-  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(activeTabId || (notes.length > 0 ? notes[0].id : null))
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(activeTabId || (initialNotes.length > 0 ? initialNotes[0].id : null))
   const [timerTotal, setTimerTotal] = useState(() => _backupExpired ? 25 * 60 : (_saved.current?.total ?? 25 * 60))
   const [timerRunning, setTimerRunning] = useState(() => {
     const t = _saved.current
@@ -285,6 +285,8 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [timerDone, treeDead, timerTotal, selectedSeed, setJuice, setXp, setGrove, checkAchievement, activeTabId])
 
+  const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
+
   const dismissDeadTree = useCallback(() => {
     const lost = Math.ceil(juice * 0.25)
     setLostJuice(lost)
@@ -365,7 +367,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   return (
     <TimerSidebarPanel
       isOpen={timerOpen}
-      onClose={() => onSetTimerOpen(false)}
+      onClose={handleClose}
       elapsed={timerElapsed}
       total={timerTotal}
       running={timerRunning}
