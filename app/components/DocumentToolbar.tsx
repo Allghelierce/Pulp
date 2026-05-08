@@ -80,6 +80,7 @@ interface DocumentToolbarProps {
   onOpenVersionHistory?: () => void
   darkPaper?: boolean
   selectedBoxCount: number
+  unlockedCosmetics?: string[]
 }
 
 
@@ -128,7 +129,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   juice, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper, selectedBoxCount
+  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -457,15 +458,31 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 ))}
               </div>
               <div className="flex items-center gap-0.5 px-0.5 mb-1">
-                {(darkPaper ? ["#ffffff","#fca5a5","#fdba74","#fde047","#6ee7b7","#93c5fd","#c4b5fd","#f9a8d4"] : ["#000000","#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#8b5cf6","#ec4899"]).map(c => (
-                  <button key={c} onMouseDown={e => { e.preventDefault(); onStrokeColorChange(c) }}
-                    className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform"
+                <button key="bw" onMouseDown={e => { e.preventDefault(); onStrokeColorChange(darkPaper ? '#ffffff' : '#000000') }}
+                  className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform"
+                  style={{
+                    backgroundColor: darkPaper ? '#ffffff' : '#000000',
+                    boxShadow: strokeColor === (darkPaper ? '#ffffff' : '#000000') ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${darkPaper ? '#ffffff' : '#000000'}` : "none",
+                  }}
+                />
+                {ACCENT_COLORS.map(({ hex, cost, pro }) => {
+                  const cosmeticId = `accent_${hex}`
+                  const isOwned = !cost && !pro ? true : unlockedCosmetics.includes(cosmeticId)
+                  return (
+                  <button key={hex} onMouseDown={e => { e.preventDefault(); if (isOwned) onStrokeColorChange(hex) }}
+                    className="w-4 h-4 rounded-full transition-transform relative"
                     style={{
-                      backgroundColor: c,
-                      boxShadow: strokeColor === c ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${c}` : "none",
+                      backgroundColor: hex,
+                      boxShadow: strokeColor === hex ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${hex}` : "none",
+                      cursor: isOwned ? 'pointer' : 'not-allowed',
+                      opacity: isOwned ? 1 : 0.4,
                     }}
-                  />
-                ))}
+                    title={isOwned ? undefined : `Locked — unlock in Settings`}
+                  >
+                    {!isOwned && <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="absolute inset-0 m-auto" style={{ color: theme === 'dark' ? '#fff' : '#000', opacity: 0.6 }}><path d="M12 2C9.24 2 7 4.24 7 7v3H5v12h14V10h-2V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>}
+                  </button>
+                  )
+                })}
               </div>
               <div className={`h-px mx-0.5 mb-1 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
               <div className="flex items-center gap-px px-0.5">

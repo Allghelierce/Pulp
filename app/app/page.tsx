@@ -3993,19 +3993,32 @@ export default function NoteApp() {
         <button
           onClick={() => setTimerOpen(!timerOpen)}
           title="Focus timer  (⌘⌥T)"
-          className="fixed bottom-3 left-3 z-[60] w-10 h-10 flex items-center justify-center rounded-lg transition-colors"
+          className={`fixed bottom-3 left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer ${timerOpen ? "" : "hover:scale-[1.04] active:scale-[0.97]"}`}
           style={{
-            backgroundColor: theme === "dark" ? "rgba(20,20,22,0.85)" : "rgba(255,255,255,0.9)",
-            border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
-            color: timerOpen ? "#e4e4e7" : "#71717a",
+            width: 56,
+            height: 56,
+            background: timerOpen
+              ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))'
+              : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+            boxShadow: timerOpen
+              ? '0 0 20px rgba(217,119,6,0.15), inset 0 1px 0 rgba(217,119,6,0.15)'
+              : '0 0 12px rgba(217,119,6,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+            border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
             backdropFilter: "blur(12px)",
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="13" r="8" />
-            <path d="M12 9v4l2 2" />
-            <path d="M9 2h6" />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={`mb-0.5 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60"}`}>
+            <ellipse cx="12" cy="21" rx="7" ry="1.5" fill="currentColor" opacity="0.25" />
+            <path d="M12 20 C12 16 11.5 14 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M12 14 C9 12 7 10.5 7 8.5 C7 8.5 9.5 9 12 12" fill="currentColor" opacity="0.7" />
+            <path d="M8.5 10 L10 11.5" stroke="currentColor" strokeWidth="0.6" opacity="0.4" strokeLinecap="round" />
+            <path d="M12 11 C15 9 17 7.5 17 5.5 C17 5.5 14.5 6 12 9" fill="currentColor" opacity="0.7" />
+            <path d="M15.5 7 L14 8.5" stroke="currentColor" strokeWidth="0.6" opacity="0.4" strokeLinecap="round" />
+            <circle cx="12" cy="11" r="1" fill="currentColor" opacity="0.5" />
+            <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
+            <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
           </svg>
+          <span className={`text-[8px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
         </button>
       )}
       {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
