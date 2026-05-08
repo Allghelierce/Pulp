@@ -43,9 +43,9 @@ function seededRng(seed: number) {
 const GRID_COLS = 5
 const GRID_SLOTS_PER_COL = 2
 const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
-const GRID_ROWS = Math.ceil(48 / GRID_TOTAL_SLOTS)
-const GRID_COL_START = 10
-const GRID_COL_END = 84
+const GRID_ROWS = 4
+const GRID_COL_START = 17
+const GRID_COL_END = 83
 const GRID_ROW_START = 50
 const GRID_ROW_END = 88
 const GRID_TILL_OFFSET = 2.5
@@ -62,7 +62,9 @@ function gridSlotPos(slotIndex: number): { x: number; y: number; col: number; si
   const trapLeft = GRID_COL_START + pinch
   const trapRight = GRID_COL_END - pinch
   const tillX = trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
-  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET)
+  const midCol = (GRID_COLS - 1) / 2
+  const inwardShift = col === midCol ? 0 : (col < midCol ? 0.5 : -0.5)
+  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET) + inwardShift
   return { x: Math.max(4, Math.min(96, x)), y: Math.max(42, Math.min(94, y)), col, side, row }
 }
 
@@ -74,7 +76,7 @@ function getTillX(col: number, y: number): number {
   return trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
 }
 
-const ALL_SLOTS = Array.from({ length: 48 }, (_, i) => ({ ...gridSlotPos(i), slotIndex: i }))
+const ALL_SLOTS = Array.from({ length: 40 }, (_, i) => ({ ...gridSlotPos(i), slotIndex: i }))
 
 function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col: number; slotIndex: number }[] {
   if (trees.length === 0) return []
@@ -1372,11 +1374,14 @@ export const OrchardView = memo(function OrchardView({
     return () => clearInterval(interval)
   }, [isOpen, filteredTrees])
 
+  const [collectBounce, setCollectBounce] = useState<Record<string, boolean>>({})
   const collectSap = useCallback((tree: any, x: number, y: number) => {
     const amount = sapReadyMap[tree.id] || 0
     if (amount <= 0) return
     setJuice((j: number) => j + amount)
     setSapReadyMap(prev => ({ ...prev, [tree.id]: 0 }))
+    setCollectBounce(prev => ({ ...prev, [tree.id]: true }))
+    setTimeout(() => setCollectBounce(prev => ({ ...prev, [tree.id]: false })), 500)
     const animId = `${tree.id}-${Date.now()}`
     setCollectAnimations(prev => [...prev, { id: animId, x, y, amount }])
     setTimeout(() => setCollectAnimations(prev => prev.filter(a => a.id !== animId)), 1200)
@@ -1396,7 +1401,7 @@ export const OrchardView = memo(function OrchardView({
     })
   }, [filteredTrees, sapReadyMap, setJuice])
 
-  const TREES_PER_PLOT = 48
+  const TREES_PER_PLOT = 40
   const MAX_PLOTS = 3
 
   const [unlockedPlots, setUnlockedPlots] = useState<Record<string, number>>(() => {
@@ -1541,6 +1546,8 @@ export const OrchardView = memo(function OrchardView({
       <style>{`
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
+        @keyframes sap-bounce { 0% { transform: scale(1) } 20% { transform: scale(0.92) translateY(2px) } 50% { transform: scale(1.06) translateY(-3px) } 100% { transform: scale(1) } }
+        @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
@@ -1660,6 +1667,7 @@ export const OrchardView = memo(function OrchardView({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
+                style={{ paddingLeft: 0 }}
               >
                 {(() => { return (
                   <>
@@ -1675,27 +1683,30 @@ export const OrchardView = memo(function OrchardView({
                     )}
                     {emptySlots.map(slot => {
                       const depthT = Math.max(0, Math.min(1, (slot.y - 40) / 55))
-                      const spotSize = 10 + depthT * 14
+                      const s = 20 + depthT * 16
                       return (
                         <div
                           key={`empty-${slot.slotIndex}`}
-                          className="absolute flex items-center justify-center cursor-pointer transition-opacity hover:opacity-80"
+                          className="absolute cursor-pointer group/spot"
                           style={{
                             left: `${slot.x}%`,
-                            top: `${slot.y}%`,
+                            top: `${slot.y - 3}%`,
+                            width: s,
+                            height: s * 0.45,
                             transform: 'translate(-50%, -50%)',
-                            width: spotSize,
-                            height: spotSize,
                             zIndex: Math.round(slot.y) - 1,
                           }}
                         >
-                          <div style={{
-                            width: '100%',
-                            height: '60%',
-                            borderRadius: '50%',
-                            border: `1.5px dashed ${isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.3)'}`,
-                            background: isDark ? 'rgba(217,119,6,0.04)' : 'rgba(217,119,6,0.06)',
-                          }} />
+                          <svg viewBox="0 0 40 18" className="w-full h-full overflow-visible">
+                            <ellipse
+                              cx={20} cy={9} rx={18} ry={7}
+                              fill={isDark ? 'rgba(217,119,6,0.05)' : 'rgba(217,119,6,0.07)'}
+                              stroke={isDark ? 'rgba(217,119,6,0.28)' : 'rgba(217,119,6,0.33)'}
+                              strokeWidth={1.2}
+                              strokeDasharray="3 2.5"
+                              className="group-hover/spot:animate-[dash-spin_4s_linear_infinite]"
+                            />
+                          </svg>
                         </div>
                       )
                     })}
@@ -1737,7 +1748,7 @@ export const OrchardView = memo(function OrchardView({
                             cursor: activeTool === 'axe' ? 'crosshair' : activeTool === 'bucket' && sapReady > 0 ? 'pointer' : undefined,
                           }}
                         >
-                          <div style={{ position: 'relative', animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both` }}>
+                          <div style={{ position: 'relative', animation: collectBounce[tree.id] ? 'sap-bounce 0.5s ease-out' : `tree-pop 0.3s ease-out ${renderIdx * 12}ms both` }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
                               filter: activeTool === 'axe'
                                 ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(239,68,68,0.5))`
