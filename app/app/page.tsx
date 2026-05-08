@@ -186,6 +186,10 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
         <feTurbulence type="fractalNoise" baseFrequency="0.015 0.08" numOctaves="3" result="noise" />
         <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
       </filter>
+      <filter id="hand-rule-v" colorInterpolationFilters="sRGB" x="-30%" y="-2%" width="160%" height="104%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.08 0.015" numOctaves="3" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
     </svg>
   </>)
 })
@@ -1339,6 +1343,20 @@ export default function NoteApp() {
     setActiveTool('select')
   }, [activeTabId, currentPageIdx, setNotes, zoom])
 
+  const placeVerticalLine = useCallback((e: React.MouseEvent) => {
+    if (!paperRef.current || !activeTabId) return
+    e.preventDefault()
+    const r = paperRef.current.getBoundingClientRect()
+    const scale = Number(zoom) || 1
+    const x = (e.clientX - r.left) / scale
+    const y = (e.clientY - r.top) / scale
+    const vline = { id: uid(), x, y, width: 300, direction: "vertical" as const }
+    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
+    }))
+    setActiveTool('select')
+  }, [activeTabId, currentPageIdx, setNotes, zoom])
+
   // ─── Sticky note placement — handled directly in page to avoid stale hook state ─
   const placeStickyNote = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current || !activeTabId) return
@@ -1676,32 +1694,44 @@ export default function NoteApp() {
         return
       }
     }
-    if (slashMenuRef.current?.type === "textarea" && slashMenuRef.current?.mode === "@" && !slashMenuRef.current?.isSelectionMode) {
+    if (slashMenuRef.current?.mode === "@" && !slashMenuRef.current?.isSelectionMode) {
       if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
         closeSlashMenu()
-        // fall through to let cursor move
       } else if (e.key === "Backspace") {
         e.preventDefault()
         const f = slashMenuRef.current.filter ?? ""
         if (f.length > 0) {
           const newFilter = f.slice(0, -1)
-          if (slashFilterSpanRef.current) {
+          if (slashMenuRef.current.type === "textarea" && slashFilterSpanRef.current) {
             if (newFilter === "") {
               slashFilterSpanRef.current.remove()
               slashFilterSpanRef.current = null
             } else {
               slashFilterSpanRef.current.textContent = newFilter
             }
+          } else if (slashMenuRef.current.type === "editor") {
+            const anchor = slashAnchorRef.current
+            if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
+              const textNode = anchor.node as Text
+              const delPos = anchor.offset + 1 + f.length - 1
+              if (delPos < textNode.length) {
+                const r = document.createRange()
+                r.setStart(textNode, delPos)
+                r.setEnd(textNode, delPos + 1)
+                const sel = window.getSelection()
+                sel?.removeAllRanges()
+                sel?.addRange(r)
+                document.execCommand("delete")
+              }
+            }
           }
           const updated = { ...slashMenuRef.current, filter: newFilter }
           slashMenuRef.current = updated
           setSlashMenu(updated)
         } else {
-          // Filter empty — Backspace deletes "@" and closes menu
           const anchor = slashAnchorRef.current
           if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
             const textNode = anchor.node as Text
-            // Handle the case where @ was inserted: delete the character right after anchor.offset
             if (anchor.offset <= textNode.length) {
               const r = document.createRange()
               r.setStart(textNode, anchor.offset)
@@ -1712,34 +1742,49 @@ export default function NoteApp() {
               document.execCommand("delete")
             }
           }
-          closeSlashMenu()
+          dismissSlashMenu(false)
         }
         return
       } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault()
         const newFilter = (slashMenuRef.current.filter ?? "") + e.key
-        if (!slashFilterSpanRef.current) {
+        if (slashMenuRef.current.type === "textarea") {
+          if (!slashFilterSpanRef.current) {
+            const anchor = slashAnchorRef.current
+            if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
+              const textNode = anchor.node as Text
+              const span = document.createElement("span")
+              span.setAttribute("contenteditable", "false")
+              span.setAttribute("data-slash-ghost", "1")
+              span.style.cssText = "color:rgba(0,0,0,0.32);pointer-events:none;"
+              slashFilterSpanRef.current = span
+              const r = document.createRange()
+              r.setStart(textNode, Math.min(anchor.offset + 1, textNode.length))
+              r.collapse(true)
+              r.insertNode(span)
+              const s = window.getSelection()
+              const after = document.createRange()
+              after.setStartAfter(span)
+              after.collapse(true)
+              s?.removeAllRanges()
+              s?.addRange(after)
+            }
+          }
+          if (slashFilterSpanRef.current) slashFilterSpanRef.current.textContent = newFilter
+        } else {
           const anchor = slashAnchorRef.current
           if (anchor && anchor.node.nodeType === Node.TEXT_NODE) {
             const textNode = anchor.node as Text
-            const span = document.createElement("span")
-            span.setAttribute("contenteditable", "false")
-            span.setAttribute("data-slash-ghost", "1")
-            span.style.cssText = "color:rgba(0,0,0,0.32);pointer-events:none;"
-            slashFilterSpanRef.current = span
+            const insertPos = anchor.offset + 1 + (slashMenuRef.current.filter ?? "").length
+            textNode.insertData(Math.min(insertPos, textNode.length), e.key)
             const r = document.createRange()
-            r.setStart(textNode, Math.min(anchor.offset + 1, textNode.length))
+            r.setStart(textNode, Math.min(insertPos + 1, textNode.length))
             r.collapse(true)
-            r.insertNode(span)
-            const s = window.getSelection()
-            const after = document.createRange()
-            after.setStartAfter(span)
-            after.collapse(true)
-            s?.removeAllRanges()
-            s?.addRange(after)
+            const sel = window.getSelection()
+            sel?.removeAllRanges()
+            sel?.addRange(r)
           }
         }
-        if (slashFilterSpanRef.current) slashFilterSpanRef.current.textContent = newFilter
         const updated = { ...slashMenuRef.current, filter: newFilter }
         slashMenuRef.current = updated
         setSlashMenu(updated)
@@ -3129,6 +3174,13 @@ export default function NoteApp() {
                     ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
                   }))
                 }}
+                onInsertVR={() => {
+                  if (!activeTabId || !paperRef.current) return
+                  const vline = { id: uid(), x: paperRef.current.clientWidth / 2, y: 64, width: 300, direction: "vertical" as const }
+                  setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                    ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
+                  }))
+                }}
                 isVault={activeNote?.noteType === "vault"}
                 isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
                 onLock={() => {
@@ -3279,9 +3331,9 @@ export default function NoteApp() {
                       <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'textbox' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                      <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                         onMouseDown={e => {
-                          if (activeTool === 'sticky' || activeTool === 'hr') {
+                          if (activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr') {
                             // Handled by onClick below to ensure clean single-click placement
                             return
                           }
@@ -3303,6 +3355,8 @@ export default function NoteApp() {
                             placeStickyNote(e)
                           } else if (activeTool === 'hr') {
                             placeHorizontalLine(e)
+                          } else if (activeTool === 'vr') {
+                            placeVerticalLine(e)
                           }
                         }}
                       >
@@ -3364,7 +3418,7 @@ export default function NoteApp() {
                             {(() => {
                               boxes.hlineSelectionVersion
                               return (activeNote.hlines?.[currentPageIdx] || []).map(hl => {
-                                const isSelected = boxes.selectedHLineIdRef.current === hl.id
+                                const isSelected = boxes.selectedHLineIdsRef.current.has(hl.id)
                                 const isVertical = hl.direction === "vertical"
                                 const lineColor = isSelected ? accent : getInkColor(paperStyle, theme === "dark")
                                 const lineW = isSelected ? 2.5 : 1.8
@@ -3375,7 +3429,7 @@ export default function NoteApp() {
                                       left: hl.x - 4, top: hl.y, width: 8, height: hl.width,
                                       cursor: isSelected ? 'grab' : 'pointer',
                                     }}>
-                                      <svg width="8" height="100%" style={{ overflow: 'visible', filter: 'url(#hand-rule)' }}>
+                                      <svg width="8" height="100%" style={{ overflow: 'visible', filter: 'url(#hand-rule-v)' }}>
                                         <line x1="4" y1="0" x2="4" y2="100%"
                                           stroke={lineColor} strokeWidth={lineW} strokeLinecap="round"
                                         />
@@ -3383,16 +3437,18 @@ export default function NoteApp() {
                                       {isSelected && <>
                                         <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
                                         <div className="absolute left-1/2 -translate-x-1/2" style={{ top: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'n-resize', border: '2px solid white' }}
-                                          onMouseDown={e => { e.stopPropagation(); const startY = e.clientY; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
-                                            const onMove = (ev: MouseEvent) => { const dy = (ev.clientY - startY) / scale; const newY = origY + dy; const newW = origW - dy; if (newW < 20) return
-                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, y: newY, width: newW }) } })) }
+                                          onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
+                                            const onMove = (ev: MouseEvent) => { let dy = (ev.clientY - startY) / scale; const dx = (ev.clientX - startX) / scale; const newY = origY + dy; const newW = origW - dy; if (newW < 20) return
+                                              const newX = ev.shiftKey ? origX : origX + dx
+                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, y: newY, width: newW }) } })) }
                                             const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                                             window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
                                         />
                                         <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 's-resize', border: '2px solid white' }}
-                                          onMouseDown={e => { e.stopPropagation(); const startY = e.clientY; const origW = hl.width; const scale = Number(zoom) || 1
-                                            const onMove = (ev: MouseEvent) => { const dy = (ev.clientY - startY) / scale; const newW = origW + dy; if (newW < 20) return
-                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, width: newW }) } })) }
+                                          onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origW = hl.width; const scale = Number(zoom) || 1
+                                            const onMove = (ev: MouseEvent) => { const dy = (ev.clientY - startY) / scale; const dx = (ev.clientX - startX) / scale; const newW = origW + dy; if (newW < 20) return
+                                              const newX = ev.shiftKey ? origX : origX + dx
+                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, width: newW }) } })) }
                                             const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                                             window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
                                         />
@@ -3414,16 +3470,18 @@ export default function NoteApp() {
                                     {isSelected && <>
                                       <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
                                       <div className="absolute top-1/2 -translate-y-1/2" style={{ left: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'w-resize', border: '2px solid white' }}
-                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const origX = hl.x; const origW = hl.width; const scale = Number(zoom) || 1
-                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const newX = origX + dx; const newW = origW - dx; if (newW < 20) return
-                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, width: newW }) } })) }
+                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
+                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const dy = (ev.clientY - startY) / scale; const newX = origX + dx; const newW = origW - dx; if (newW < 20) return
+                                            const newY = ev.shiftKey ? origY : origY + dy
+                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, y: newY, width: newW }) } })) }
                                           const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                                           window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
                                       />
                                       <div className="absolute top-1/2 -translate-y-1/2" style={{ right: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'e-resize', border: '2px solid white' }}
-                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const origW = hl.width; const scale = Number(zoom) || 1
-                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const newW = origW + dx; if (newW < 20) return
-                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, width: newW }) } })) }
+                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
+                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const dy = (ev.clientY - startY) / scale; const newW = origW + dx; if (newW < 20) return
+                                            const newY = ev.shiftKey ? origY : origY + dy
+                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, y: newY, width: newW }) } })) }
                                           const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
                                           window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
                                       />
@@ -3503,7 +3561,7 @@ export default function NoteApp() {
                                 position: "absolute",
                                 left: 0,
                                 top: 0,
-                                pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hline'].includes(activeTool) ? 'all' : 'none',
+                                pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hline', 'vr'].includes(activeTool) ? 'all' : 'none',
                                 cursor: drawing.getCursor(),
                                 zIndex: showDrawToolbar ? 200 : 5,
                                 touchAction: "none",

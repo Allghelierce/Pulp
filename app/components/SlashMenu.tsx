@@ -3,6 +3,7 @@ import { createPortal } from "react-dom"
 import { format } from "date-fns"
 import katex from "katex"
 import { DatetimePicker } from "@/components/ui/datetime-picker"
+import { GlassFilter } from "@/components/ui/liquid-glass-button"
 import type { TextBox } from "@/app/types"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -810,22 +811,6 @@ export const SlashMenu = memo(function SlashMenu({
       }} onClose={onClose} mode={mode} accent={accent} />
     },
     {
-      id: "table", label: "Table", group: "Blocks",
-      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>,
-      action: () => { },
-      customContent: <TableGridPicker accent={accent} onInsert={(html, cols) => {
-        onSelect(() => {
-          insertHTML(html)
-          if (box && onUpdateBox) {
-            const requiredW = (cols * 100) + 48
-            if ((box.w || 0) < requiredW) {
-              onUpdateBox(box.id, { w: requiredW })
-            }
-          }
-        })
-      }} onClose={onClose} />
-    },
-    {
       id: "equation", label: "Equation", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h9" /></svg>,
       action: () => { },
@@ -1029,7 +1014,8 @@ export const SlashMenu = memo(function SlashMenu({
   // Ensure menu doesn't go off right side
   const adjustedX = x + 220 > window.innerWidth - 20 ? window.innerWidth - 240 : Math.max(8, x)
 
-  const isLight = theme ? theme === "light" : mode === "/"
+  const isAtMode = mode === "@"
+  const isLight = isAtMode ? false : (theme ? theme === "light" : true)
 
   return (
     <div
@@ -1038,24 +1024,49 @@ export const SlashMenu = memo(function SlashMenu({
       role="menu"
       aria-label={mode === "/" ? "Insert content menu" : "Insert reference menu"}
       style={{
-        position: "fixed", 
-        left: adjustedX, 
-        top: adjustedY, 
+        position: "fixed",
+        left: adjustedX,
+        top: adjustedY,
         zIndex: 9999,
-        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(20px) saturate(120%)",
-        WebkitBackdropFilter: "blur(20px) saturate(120%)",
-        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        background: "transparent",
         borderRadius: 14,
         width: 260,
-        boxShadow: isLight
-          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
-          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
         animation: "slash-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         overflow: "hidden",
       }}
     >
+      {isAtMode && <GlassFilter />}
+      <div className="absolute inset-0 z-0 overflow-hidden" style={{
+        borderRadius: 14,
+        backdropFilter: isAtMode
+          ? 'url("#liquid-glass-filter") blur(24px) saturate(1.4)'
+          : 'blur(20px) saturate(120%)',
+        WebkitBackdropFilter: isAtMode
+          ? 'url("#liquid-glass-filter") blur(24px) saturate(1.4)'
+          : 'blur(20px) saturate(120%)',
+      }} />
+      <div className="absolute inset-0 z-0" style={{
+        borderRadius: 14,
+        background: isAtMode
+          ? 'rgba(35,33,33,0.92)'
+          : isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
+      }} />
+      {isAtMode && <div className="absolute inset-0 z-0 pointer-events-none" style={{
+        borderRadius: 14,
+        boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)',
+      }} />}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{
+        borderRadius: 14,
+        border: isAtMode
+          ? '1px solid rgba(255,255,255,0.06)'
+          : isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        boxShadow: isAtMode
+          ? '0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)'
+          : isLight
+            ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
+            : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
+      }} />
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slash-pop {
           from { opacity: 0; transform: translateY(8px) scale(0.96); }
@@ -1063,7 +1074,7 @@ export const SlashMenu = memo(function SlashMenu({
         }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        .slash-item-active { background: ${isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"} !important; }
+        .slash-item-active { background: ${isAtMode || !isLight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} !important; }
       ` }} />
       <div
         className="hide-scroll"
@@ -1073,7 +1084,7 @@ export const SlashMenu = memo(function SlashMenu({
           if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current)
           scrollTimerRef.current = setTimeout(() => { scrollingRef.current = false }, 150)
         }}
-        style={{ maxHeight: 340, overflowY: "auto", overscrollBehavior: "contain" }}
+        style={{ maxHeight: 340, overflowY: "auto", overscrollBehavior: "contain", position: "relative", zIndex: 10 }}
       >
         <div style={{ padding: "6px 0" }}>
           {filtered.length === 0 ? (

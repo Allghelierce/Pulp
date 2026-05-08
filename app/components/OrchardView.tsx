@@ -44,12 +44,12 @@ function orchardPlacement(trees: any[]): { x: number; y: number; tree: any; col:
   if (trees.length === 0) return []
 
   const results: { x: number; y: number; tree: any; col: number }[] = []
-  const cols = Math.min(7, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.1))))
+  const cols = Math.min(5, Math.max(3, Math.ceil(Math.sqrt(trees.length * 1.1))))
   const rows = Math.ceil(trees.length / cols)
   const colStart = 6
   const colEnd = 94
   const rowStart = 46
-  const rowEnd = 95
+  const rowEnd = 82
 
   for (let i = 0; i < trees.length; i++) {
     const col = i % cols
@@ -745,20 +745,32 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
               <defs>
                 <radialGradient id="moon-glow-bg" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.4" />
-                  <stop offset="40%" stopColor="#b0c4e4" stopOpacity="0.12" />
+                  <stop offset="0%" stopColor="#c8d8f0" stopOpacity="0.5" />
+                  <stop offset="40%" stopColor="#b0c4e4" stopOpacity="0.15" />
                   <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
                 </radialGradient>
-                <radialGradient id="moon-face-bg" cx="40%" cy="38%" r="58%">
+                <radialGradient id="moon-face-bg" cx="35%" cy="35%" r="60%">
                   <stop offset="0%" stopColor="#f4f6fc" />
-                  <stop offset="40%" stopColor="#eaeff8" />
+                  <stop offset="45%" stopColor="#eaeff8" />
                   <stop offset="100%" stopColor="#c0c8d8" />
                 </radialGradient>
+                <mask id="moon-crescent-mask">
+                  <circle cx={mx} cy={my} r="2.2" fill="white" />
+                  <circle cx={mx + 1.1} cy={my - 0.5} r="1.8" fill="black" />
+                </mask>
               </defs>
-              <ellipse cx={mx} cy={my} rx="8" ry="5" fill="url(#moon-glow-bg)" />
-              <circle cx="0" cy="0" r="0.9" fill="url(#moon-face-bg)" transform={`translate(${mx},${my}) scale(2.5,2)`} />
-              <circle cx="0" cy="0" r="0.12" fill="rgba(140,155,180,0.2)" transform={`translate(${mx - 0.3},${my - 0.3}) scale(2.5,2)`} />
-              <circle cx="0" cy="0" r="0.15" fill="rgba(130,145,170,0.15)" transform={`translate(${mx + 0.2},${my + 0.2}) scale(2.5,2)`} />
+              <ellipse cx={mx} cy={my} rx="10" ry="6" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="2.2" fill="url(#moon-face-bg)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.6} cy={my - 0.3} r="0.12" fill="rgba(140,155,180,0.25)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.3} cy={my + 0.5} r="0.15" fill="rgba(130,145,170,0.2)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.9} cy={my + 0.1} r="0.08" fill="rgba(150,160,185,0.22)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.5} cy={my - 0.7} r="0.1" fill="rgba(135,150,175,0.18)" mask="url(#moon-crescent-mask)" />
+              {/* Wispy clouds around moon */}
+              <ellipse cx={mx - 3.5} cy={my + 0.8} rx="3" ry="0.7" fill="rgba(180,195,220,0.08)" />
+              <ellipse cx={mx - 2} cy={my + 0.5} rx="2.2" ry="0.5" fill="rgba(170,185,210,0.1)" />
+              <ellipse cx={mx + 2.5} cy={my - 0.3} rx="2.8" ry="0.6" fill="rgba(175,190,215,0.07)" />
+              <ellipse cx={mx + 1.5} cy={my + 1.2} rx="3.5" ry="0.8" fill="rgba(165,180,205,0.09)" />
+              <ellipse cx={mx - 1} cy={my - 1.5} rx="2" ry="0.45" fill="rgba(180,192,218,0.06)" />
             </g>
           )
         })()}
@@ -789,54 +801,31 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             return 32
           }
           const trunks: string[] = []
-          const canopyPaths: { d: string; fill: string }[] = []
+          const canopyPaths: string[] = []
           const fruits: string[] = []
-          const nearFills = isDark
-            ? ['#1a3420', '#1c3622', '#16301c', '#203a26', '#142c18', '#1e3824']
-            : ['#2e5a2a', '#326030', '#2a5424', '#386834', '#264e20', '#3c6c38']
+          const canopyFill = isDark ? '#2a4a1a' : '#4a8a2a'
           for (let i = 0; i < 85; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
             const baseY = getNearY(x) + rng() * 2.5 + 0.8
             const sz = 0.8 + rng() * 1.6
-            const cx = x
-            const shape = rng()
-            const fill = nearFills[Math.floor(rng() * nearFills.length)]
-            let canopy: string
-            if (shape < 0.25) {
-              const cy = baseY - sz * 1.8
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.2).toFixed(1)}L${(cx - sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
-            } else if (shape < 0.45) {
-              const cy = baseY - sz * 1.1
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx - sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}Z`
-            } else if (shape < 0.6) {
-              const cy = baseY - sz * 0.6
-              canopy = `M${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx - sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}Z`
-            } else {
-              const cy = baseY - sz * 1.3 - sz * 0.5
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
-            }
-            canopyPaths.push({ d: canopy, fill })
-            if (shape > 0.5) {
-              for (let f = 0; f < 4; f++) {
-                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-                const cy = baseY - sz * 1.3 - sz * 0.5
-                const rDist = sz * (0.25 + rng() * 0.35)
-                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-                if (rng() > 0.6) continue
-                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
-              }
+            const cy = baseY - sz * 1.3 - sz * 0.5
+            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${x.toFixed(1)},${cy.toFixed(1)}`)
+            canopyPaths.push(`M${(x + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(x - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(x + sz).toFixed(1)},${cy.toFixed(1)}Z`)
+            for (let f = 0; f < 4; f++) {
+              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+              const rDist = sz * (0.25 + rng() * 0.35)
+              const fx = x + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+              if (rng() > 0.5) continue
+              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.25,0.25 0 1 1 0.01,0Z`)
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
-              {canopyPaths.map((c, i) => <path key={i} d={c.d} fill={c.fill} />)}
-              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
+              <path d={canopyPaths.join('')} fill={canopyFill} />
+              <path d={fruits.join('')} fill="#d97706" opacity={0.6} />
             </g>
           )
         })()}
@@ -1024,7 +1013,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
       {/* ── Ambient animations ── */}
       {/* Clouds */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.15 : 0.5 }}>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.45 : 0.5 }}>
         {[0,1,2,3,4].map(i => {
           const r = seededRng(i * 41 + 77)
           const y = 2 + r() * 14
@@ -1038,9 +1027,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
               opacity: 0.4 + r() * 0.3,
             }} viewBox="0 0 100 30" preserveAspectRatio="none">
-              <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#1a1e22' : '#c8c4ba'} />
-              <ellipse cx="35" cy="14" rx="28" ry="12" fill={isDark ? '#1e2226' : '#d0ccc2'} />
-              <ellipse cx="65" cy="15" rx="24" ry="9" fill={isDark ? '#1c2024' : '#ccc8be'} />
+              <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#2a3040' : '#c8c4ba'} />
+              <ellipse cx="35" cy="14" rx="28" ry="12" fill={isDark ? '#303848' : '#d0ccc2'} />
+              <ellipse cx="65" cy="15" rx="24" ry="9" fill={isDark ? '#2d3544' : '#ccc8be'} />
             </svg>
           )
         })}
@@ -1217,6 +1206,22 @@ export const OrchardView = memo(function OrchardView({
     if (typeof window === 'undefined') return true
     return !localStorage.getItem('pulp-chop-hint-dismissed')
   })
+  const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
+  const [sapReadyMap, setSapReadyMap] = useState<Record<string, number>>({})
+  const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
+
+  const getSapInterval = (stage: number) => {
+    if (stage >= 4) return 3 * 60 * 1000
+    if (stage >= 3) return 5 * 60 * 1000
+    if (stage >= 2) return 8 * 60 * 1000
+    return 15 * 60 * 1000
+  }
+
+  const getSapPerTick = (tree: any) => {
+    const info = TREE_TYPES[tree.type]
+    if (!info) return 1
+    return tree.stage >= 4 ? 2 : 1
+  }
 
   const lvl = getLevel(xp)
   const isDark = theme === 'dark'
@@ -1258,7 +1263,49 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
-  const TREES_PER_PLOT = 30
+  useEffect(() => {
+    if (!isOpen) return
+    const interval = setInterval(() => {
+      setSapReadyMap(prev => {
+        const next = { ...prev }
+        for (const tree of filteredTrees) {
+          const current = next[tree.id] || 0
+          const max = getSapPerTick(tree) * 5
+          if (current < max) {
+            next[tree.id] = current + getSapPerTick(tree)
+          }
+        }
+        return next
+      })
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [isOpen, filteredTrees])
+
+  const collectSap = useCallback((tree: any, x: number, y: number) => {
+    const amount = sapReadyMap[tree.id] || 0
+    if (amount <= 0) return
+    setJuice((j: number) => j + amount)
+    setSapReadyMap(prev => ({ ...prev, [tree.id]: 0 }))
+    const animId = `${tree.id}-${Date.now()}`
+    setCollectAnimations(prev => [...prev, { id: animId, x, y, amount }])
+    setTimeout(() => setCollectAnimations(prev => prev.filter(a => a.id !== animId)), 1200)
+  }, [sapReadyMap, setJuice])
+
+  const collectAllSap = useCallback(() => {
+    let total = 0
+    for (const tree of filteredTrees) {
+      total += sapReadyMap[tree.id] || 0
+    }
+    if (total <= 0) return
+    setJuice((j: number) => j + total)
+    setSapReadyMap(prev => {
+      const next = { ...prev }
+      for (const tree of filteredTrees) next[tree.id] = 0
+      return next
+    })
+  }, [filteredTrees, sapReadyMap, setJuice])
+
+  const TREES_PER_PLOT = 24
   const MAX_PLOTS = 3
 
   const [unlockedPlots, setUnlockedPlots] = useState<Record<string, number>>(() => {
@@ -1408,7 +1455,7 @@ export const OrchardView = memo(function OrchardView({
 
   const baseSize = filteredTrees.length <= 6 ? 105 :
     filteredTrees.length <= 15 ? 95 :
-    filteredTrees.length <= 30 ? 85 : 72
+    filteredTrees.length <= 24 ? 85 : 72
 
   return (
     <div
@@ -1416,7 +1463,12 @@ export const OrchardView = memo(function OrchardView({
       style={{ touchAction: 'manipulation' }}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
     >
-      <style>{`@keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }`}</style>
+      <style>{`
+        @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
+        @keyframes sap-drip { 0% { transform: translateY(0); opacity:0.8 } 60% { opacity:0.6 } 100% { transform: translateY(12px); opacity:0 } }
+        @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
+        @keyframes sap-pulse { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.15) } }
+      `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
         className="relative flex overflow-hidden w-full h-full"
@@ -1425,7 +1477,7 @@ export const OrchardView = memo(function OrchardView({
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
-          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={chopMode} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setChopMode(m => !m); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
 
           {/* Orchard scene */}
           <div className="flex-1 relative overflow-hidden" style={{
@@ -1568,12 +1620,22 @@ export const OrchardView = memo(function OrchardView({
                       const scaleY = 0.75 + depthT * 0.25
                       const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
+                      const sapReady = sapReadyMap[tree.id] || 0
+                      const sapMax = getSapPerTick(tree) * 5
+                      const sapFill = Math.min(1, sapReady / sapMax)
 
                       return (
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           className="absolute flex flex-col items-center group"
-                          onClick={chopMode ? () => setChopTarget({ tree, sap: getSapYield(tree) }) : undefined}
+                          onClick={(e) => {
+                            if (activeTool === 'axe') {
+                              setChopTarget({ tree, sap: getSapYield(tree) })
+                            } else if (activeTool === 'bucket' && sapReady > 0) {
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              collectSap(tree, rect.left + rect.width / 2, rect.top)
+                            }
+                          }}
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
@@ -1581,18 +1643,49 @@ export const OrchardView = memo(function OrchardView({
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
                             willChange: 'opacity',
-                            cursor: chopMode ? 'pointer' : undefined,
+                            cursor: activeTool === 'axe' ? 'crosshair' : activeTool === 'bucket' && sapReady > 0 ? 'pointer' : undefined,
                           }}
                         >
                           <div style={{ position: 'relative', animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both` }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-                              filter: chopMode
+                              filter: activeTool === 'axe'
                                 ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
                                 : dimAmount > 2 ? `brightness(${100 - dimAmount}%)` : undefined,
                               transition: 'filter 0.2s',
                             }}>
                               <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
                             </div>
+                            {/* Sap drip animation */}
+                            {sapReady > 0 && (
+                              <div className="absolute pointer-events-none" style={{ left: '50%', bottom: 4, transform: 'translateX(-50%)' }}>
+                                <div style={{
+                                  width: 4, height: 4, borderRadius: '50% 50% 50% 0',
+                                  transform: 'rotate(-45deg)',
+                                  background: '#d97706',
+                                  animation: 'sap-drip 2s ease-in infinite',
+                                  opacity: 0.7,
+                                }} />
+                              </div>
+                            )}
+                            {/* Sap meter */}
+                            {sapReady > 0 && (
+                              <div className="absolute pointer-events-none" style={{
+                                right: -4, top: '30%',
+                                width: 3, height: treeSize * 0.35,
+                                borderRadius: 2,
+                                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                                overflow: 'hidden',
+                              }}>
+                                <div style={{
+                                  position: 'absolute', bottom: 0, width: '100%',
+                                  height: `${sapFill * 100}%`,
+                                  borderRadius: 2,
+                                  background: sapFill >= 1 ? '#d97706' : '#c88a30',
+                                  transition: 'height 0.5s ease',
+                                  animation: sapFill >= 1 ? 'sap-pulse 1.5s ease-in-out infinite' : undefined,
+                                }} />
+                              </div>
+                            )}
                             <div style={{
                               position: 'absolute',
                               left: '50%',
@@ -1620,6 +1713,11 @@ export const OrchardView = memo(function OrchardView({
                               <span className="text-[8px] font-semibold uppercase tracking-widest whitespace-nowrap block mt-0.5" style={{ color: meta.color }}>
                                 {meta.label}
                               </span>
+                              {sapReady > 0 && (
+                                <span className="text-[8px] font-bold block mt-0.5" style={{ color: '#d97706' }}>
+                                  🍯 {sapReady} sap ready
+                                </span>
+                              )}
                               {tree.stage < 4 && (
                                 <div className="w-full h-[2px] rounded-full mt-1 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
                                   <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: '#8ba870' }} />
@@ -1630,11 +1728,69 @@ export const OrchardView = memo(function OrchardView({
                         </div>
                       )
                     })}
+                    {/* Sap collection floating numbers */}
+                    {collectAnimations.map(anim => (
+                      <div key={anim.id} className="fixed pointer-events-none" style={{
+                        left: anim.x, top: anim.y, zIndex: 9999,
+                        animation: 'sap-collect 1.2s ease-out forwards',
+                      }}>
+                        <span className="text-sm font-bold" style={{ color: '#d97706', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>+{anim.amount}</span>
+                      </div>
+                    ))}
                   </>
                 )}
               </motion.div>
             </AnimatePresence>
             </div>
+          </div>
+
+          {/* Tool tray */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 rounded-full px-2 py-1.5" style={{
+            background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(12px)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.15)'}`,
+          }}>
+            <button
+              onClick={() => setActiveTool(t => t === 'bucket' ? 'none' : 'bucket')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all"
+              style={{
+                background: activeTool === 'bucket' ? 'rgba(217,119,6,0.25)' : 'transparent',
+                border: activeTool === 'bucket' ? '1px solid rgba(217,119,6,0.4)' : '1px solid transparent',
+              }}
+            >
+              <span className="text-[13px]">🪣</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: activeTool === 'bucket' ? '#d97706' : 'rgba(255,255,255,0.6)' }}>Collect</span>
+              {(() => {
+                const totalReady = filteredTrees.reduce((s, t) => s + (sapReadyMap[t.id] || 0), 0)
+                return totalReady > 0 ? (
+                  <span className="text-[9px] font-bold tabular-nums px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(217,119,6,0.2)', color: '#d97706' }}>{totalReady}</span>
+                ) : null
+              })()}
+            </button>
+            {activeTool === 'bucket' && (
+              <button
+                onClick={collectAllSap}
+                className="px-2.5 py-1.5 rounded-full transition-all text-[9px] font-bold uppercase tracking-wider"
+                style={{ background: 'rgba(217,119,6,0.15)', color: '#d97706' }}
+              >
+                All
+              </button>
+            )}
+            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
+            <button
+              onClick={() => {
+                setActiveTool(t => t === 'axe' ? 'none' : 'axe')
+                setChopTarget(null)
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all"
+              style={{
+                background: activeTool === 'axe' ? 'rgba(239,68,68,0.2)' : 'transparent',
+                border: activeTool === 'axe' ? '1px solid rgba(239,68,68,0.3)' : '1px solid transparent',
+              }}
+            >
+              <span className="text-[13px]">🪓</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: activeTool === 'axe' ? '#ef4444' : 'rgba(255,255,255,0.6)' }}>Chop</span>
+            </button>
           </div>
 
           {/* Chop confirmation popup */}

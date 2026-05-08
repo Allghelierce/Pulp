@@ -548,10 +548,54 @@ export const Sidebar = memo(function Sidebar({
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)' }} />
-        {/* Bamboo lines */}
-        <div className="absolute inset-0 z-0 pointer-events-none" style={{
-          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 29px, transparent 29px, transparent 44px, rgba(255,255,255,0.012) 44px, rgba(255,255,255,0.012) 45px, transparent 45px, transparent 67px, rgba(255,255,255,0.015) 67px, rgba(255,255,255,0.015) 68px, transparent 68px, transparent 95px, rgba(255,255,255,0.01) 95px, rgba(255,255,255,0.01) 96px, transparent 96px, transparent 130px, rgba(255,255,255,0.013) 130px, rgba(255,255,255,0.013) 131px, transparent 131px, transparent 160px, rgba(255,255,255,0.009) 160px, rgba(255,255,255,0.009) 161px, transparent 161px, transparent 190px, rgba(255,255,255,0.014) 190px, rgba(255,255,255,0.014) 191px)`,
-        }} />
+        {/* Bamboo stalks */}
+        <svg className="absolute inset-0 z-0 pointer-events-none" viewBox="0 0 220 1000" width="100%" height="100%" preserveAspectRatio="none">
+          <defs><symbol id="bnode" viewBox="0 0 6 3"><ellipse cx="3" cy="1.5" rx="3" ry="1.5" /></symbol></defs>
+          <line x1="28" y1="0" x2="28" y2="1000" stroke="rgba(140,120,80,0.035)" strokeWidth="1.8" />
+          <use href="#bnode" x="25" y="80" width="6" height="3" fill="rgba(140,120,80,0.04)" />
+          <use href="#bnode" x="25" y="220" width="6" height="3" fill="rgba(140,120,80,0.035)" />
+          <use href="#bnode" x="25" y="390" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="25" y="540" width="6" height="3" fill="rgba(140,120,80,0.04)" />
+          <use href="#bnode" x="25" y="710" width="6" height="3" fill="rgba(140,120,80,0.035)" />
+          <use href="#bnode" x="25" y="880" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <line x1="44" y1="0" x2="44" y2="1000" stroke="rgba(130,115,70,0.025)" strokeWidth="0.7" />
+          <use href="#bnode" x="41.5" y="130" width="5" height="2.5" fill="rgba(130,115,70,0.03)" />
+          <use href="#bnode" x="41.5" y="310" width="5" height="2.5" fill="rgba(130,115,70,0.025)" />
+          <use href="#bnode" x="41.5" y="500" width="5" height="2.5" fill="rgba(130,115,70,0.03)" />
+          <use href="#bnode" x="41.5" y="680" width="5" height="2.5" fill="rgba(130,115,70,0.025)" />
+          <use href="#bnode" x="41.5" y="870" width="5" height="2.5" fill="rgba(130,115,70,0.03)" />
+          <line x1="67" y1="0" x2="67" y2="1000" stroke="rgba(140,120,80,0.03)" strokeWidth="1.2" />
+          <use href="#bnode" x="64" y="60" width="6" height="3" fill="rgba(140,120,80,0.035)" />
+          <use href="#bnode" x="64" y="250" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="64" y="430" width="6" height="3" fill="rgba(140,120,80,0.035)" />
+          <use href="#bnode" x="64" y="620" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="64" y="790" width="6" height="3" fill="rgba(140,120,80,0.025)" />
+          <use href="#bnode" x="64" y="940" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <line x1="95" y1="0" x2="95" y2="1000" stroke="rgba(120,110,75,0.02)" strokeWidth="0.6" />
+          <use href="#bnode" x="92.5" y="170" width="5" height="2.5" fill="rgba(120,110,75,0.025)" />
+          <use href="#bnode" x="92.5" y="380" width="5" height="2.5" fill="rgba(120,110,75,0.02)" />
+          <use href="#bnode" x="92.5" y="560" width="5" height="2.5" fill="rgba(120,110,75,0.025)" />
+          <use href="#bnode" x="92.5" y="750" width="5" height="2.5" fill="rgba(120,110,75,0.02)" />
+          <line x1="130" y1="0" x2="130" y2="1000" stroke="rgba(140,120,80,0.028)" strokeWidth="1.5" />
+          <use href="#bnode" x="127" y="100" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="127" y="290" width="6" height="3" fill="rgba(140,120,80,0.028)" />
+          <use href="#bnode" x="127" y="470" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="127" y="660" width="6" height="3" fill="rgba(140,120,80,0.025)" />
+          <use href="#bnode" x="127" y="850" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <line x1="160" y1="0" x2="160" y2="1000" stroke="rgba(130,115,70,0.018)" strokeWidth="0.5" />
+          <use href="#bnode" x="157.5" y="200" width="5" height="2.5" fill="rgba(130,115,70,0.022)" />
+          <use href="#bnode" x="157.5" y="420" width="5" height="2.5" fill="rgba(130,115,70,0.018)" />
+          <use href="#bnode" x="157.5" y="630" width="5" height="2.5" fill="rgba(130,115,70,0.022)" />
+          <use href="#bnode" x="157.5" y="860" width="5" height="2.5" fill="rgba(130,115,70,0.018)" />
+          <line x1="190" y1="0" x2="190" y2="1000" stroke="rgba(140,120,80,0.03)" strokeWidth="1.0" />
+          <use href="#bnode" x="187" y="150" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="187" y="350" width="6" height="3" fill="rgba(140,120,80,0.028)" />
+          <use href="#bnode" x="187" y="530" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <use href="#bnode" x="187" y="720" width="6" height="3" fill="rgba(140,120,80,0.025)" />
+          <use href="#bnode" x="187" y="910" width="6" height="3" fill="rgba(140,120,80,0.03)" />
+          <path d="M67,45 Q78,28 85,18" stroke="rgba(110,130,70,0.03)" strokeWidth="0.8" fill="none" strokeLinecap="round" />
+          <path d="M130,55 Q120,35 115,24" stroke="rgba(110,130,70,0.025)" strokeWidth="0.6" fill="none" strokeLinecap="round" />
+        </svg>
         <GlassFilter />
 
         <div className="relative px-3.5 py-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 220 }}>

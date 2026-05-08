@@ -41,7 +41,7 @@ export function useBoxDrawing({
   const [selectionVersion, setSelectionVersion] = useState(0)
   const selectedLineRef = useRef<number | null>(null)
   const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
-  const selectedHLineIdRef = useRef<string | null>(null)
+  const selectedHLineIdsRef = useRef<Set<string>>(new Set())
   const [hlineSelectionVersion, setHlineSelectionVersion] = useState(0)
   const hlineDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
   const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
@@ -215,16 +215,16 @@ export function useBoxDrawing({
 
       if (e.key !== 'Delete' && e.key !== 'Backspace') return
 
-      // Delete selected hline
-      if (selectedHLineIdRef.current !== null) {
+      // Delete selected hlines
+      if (selectedHLineIdsRef.current.size > 0) {
         e.preventDefault()
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
-        const hid = selectedHLineIdRef.current
+        const hids = selectedHLineIdsRef.current
         setNotes(prev => prev.map(n => n.id !== tid ? n : {
-          ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).filter(h => h.id !== hid) }
+          ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).filter(h => !hids.has(h.id)) }
         }))
-        selectedHLineIdRef.current = null
+        selectedHLineIdsRef.current = new Set()
         setHlineSelectionVersion(c => c + 1)
         return
       }
@@ -356,6 +356,19 @@ export function useBoxDrawing({
               if (hit) pendingDrawings.add(d.id)
             }
             selectedDrawingIdsRef.current = pendingDrawings
+
+            const hlines = note?.hlines?.[currentPageIdxRef.current] || []
+            const pendingHLines = new Set<string>()
+            for (const hl of hlines) {
+              const isVert = hl.direction === "vertical"
+              const hlMinX = hl.x, hlMinY = hl.y
+              const hlMaxX = isVert ? hl.x : hl.x + hl.width
+              const hlMaxY = isVert ? hl.y + hl.width : hl.y
+              const hit = hlMinX < rectX + rectW && hlMaxX > rectX && hlMinY < rectY + rectH && (hlMaxY + 8) > rectY
+              if (hit) pendingHLines.add(hl.id)
+            }
+            selectedHLineIdsRef.current = pendingHLines
+            setHlineSelectionVersion(c => c + 1)
           })
         }
       }
@@ -659,15 +672,22 @@ export function useBoxDrawing({
         ? (Math.abs(x - hl.x) < 8 && y >= hl.y && y <= hl.y + hl.width)
         : (x >= hl.x && x <= hl.x + hl.width && Math.abs(y - hl.y) < 8)
       if (hit) {
-        selectedHLineIdRef.current = hl.id
+        if (e.metaKey || e.ctrlKey || e.shiftKey) {
+          const next = new Set(selectedHLineIdsRef.current)
+          if (next.has(hl.id)) next.delete(hl.id); else next.add(hl.id)
+          selectedHLineIdsRef.current = next
+        } else {
+          selectedHLineIdsRef.current = new Set([hl.id])
+        }
         selectedLineRef.current = null
         setHlineSelectionVersion(c => c + 1)
         setLineSelectionVersion(c => c + 1)
         hlineDragRef.current = { id: hl.id, startX: e.clientX, startY: e.clientY, origX: hl.x, origY: hl.y }
         const onMove = (ev: MouseEvent) => {
           if (!hlineDragRef.current) return
-          const dx = (ev.clientX - hlineDragRef.current.startX) / zoomVal
-          const dy = (ev.clientY - hlineDragRef.current.startY) / zoomVal
+          let dx = (ev.clientX - hlineDragRef.current.startX) / zoomVal
+          let dy = (ev.clientY - hlineDragRef.current.startY) / zoomVal
+          if (ev.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0 }
           const newX = hlineDragRef.current.origX + dx
           const newY = hlineDragRef.current.origY + dy
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
@@ -687,7 +707,7 @@ export function useBoxDrawing({
 
     // No line clicked, clear line selection and start box selection
     selectedLineRef.current = null
-    selectedHLineIdRef.current = null
+    selectedHLineIdsRef.current = new Set()
     setLineSelectionVersion(c => c + 1)
     setHlineSelectionVersion(c => c + 1)
 
@@ -968,7 +988,7 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
-    hlineSelectionVersion, selectedHLineIdRef,
+    hlineSelectionVersion, selectedHLineIdsRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox
   }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])

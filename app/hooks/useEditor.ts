@@ -186,25 +186,14 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
   }, [])
 
   const insertTable = useCallback((rows: number, cols: number) => {
-    const cellStyle = "border:1px solid #e4e4e7;padding:8px 12px;min-width:60px;"
-    const table = document.createElement("table")
-    table.style.cssText = "border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed"
-    const tbody = document.createElement("tbody")
-    for (let r = 0; r < rows; r++) {
-      const tr = document.createElement("tr")
-      for (let c = 0; c < cols; c++) {
-        const td = document.createElement("td"); td.style.cssText = cellStyle; td.appendChild(document.createElement("br")); tr.appendChild(td)
-      }
-      tbody.appendChild(tr)
-    }
-    table.appendChild(tbody)
-    const spacer = document.createElement("p"); spacer.appendChild(document.createElement("br"))
-    restoreSelection()
-    const range = getRangeAtSaved()
-    range.deleteContents(); range.insertNode(spacer); range.insertNode(table)
-    focusFirstCell(table.querySelector("td"))
-    restoreSelection()
-  }, [focusFirstCell, getRangeAtSaved, restoreSelection])
+    const cellStyle = "border:1.5px solid rgba(0,0,0,0.15);padding:8px 12px;font-size:13px;min-width:80px;outline:none;"
+    const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="${cellStyle}font-weight:600;text-align:left;"><br></th>`).join("")}</tr>`
+    const bodyRows = Array.from({ length: rows - 1 }, () =>
+      `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="${cellStyle}"><br></td>`).join("")}</tr>`
+    ).join("")
+    const html = `<table style="border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed;">${headerRow}${bodyRows}</table><p><br></p>`
+    insertHTML(html)
+  }, [insertHTML])
 
   const insertColumns = useCallback((num: number) => {
     const grid = document.createElement("div")
