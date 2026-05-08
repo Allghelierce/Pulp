@@ -114,8 +114,8 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
       transition={{ type: "spring", stiffness: 50, damping: 14, mass: 1 }}
       whileHover={timerRunning ? {} : { y: 4 }}
       drag="y"
-      dragConstraints={{ top: 0, bottom: 80 }}
-      dragElastic={0.2}
+      dragConstraints={{ top: 0, bottom: 45 }}
+      dragElastic={0.05}
       onDrag={(_, info) => {
         if (info.offset.y > 40 && !dragTriggered.current) {
           dragTriggered.current = true

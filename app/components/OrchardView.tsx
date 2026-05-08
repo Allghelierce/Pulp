@@ -23,6 +23,8 @@ interface OrchardViewProps {
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
   userId?: string
+  activeTabId?: string | null
+  orchardTimeMode?: "theme" | "realtime"
 }
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
@@ -185,14 +187,14 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   day: {
-    skyTop: '#4a7898', skyMid: '#5a88a0', skyLow: '#6a94a8', skyHorizon: '#7aa0b0', skyField: '#6a8a78', skyBottom: '#608880',
-    oceanTop: '#3e6a80', oceanMid: '#345e74', oceanBot: '#4a7488',
-    mtnTop: '#586878', mtnMid: '#4a5a6a', mtnBot: '#3e4e5e',
-    snowTop: '#b8c0c8', snowFade: '#6a7888',
-    hillMidTop: '#3a6a32', hillMidBot: '#305c28',
-    hillNearTop: '#44723a', hillNearBot: '#3a6430',
-    fieldTop: '#4a7238', fieldMid1: '#446a34', fieldMid2: '#3e6230', fieldBot: '#385a2c',
-    sunGlow: 0.4, sunColor: '#d0a848', sunY: 3,
+    skyTop: '#3e5868', skyMid: '#4a6470', skyLow: '#566e74', skyHorizon: '#647a74', skyField: '#5a6858', skyBottom: '#566458',
+    oceanTop: '#3a4e4c', oceanMid: '#324642', oceanBot: '#445a54',
+    mtnTop: '#3e4a48', mtnMid: '#364240', mtnBot: '#2e3a38',
+    snowTop: '#8a8e88', snowFade: '#4e5450',
+    hillMidTop: '#2e4828', hillMidBot: '#284222',
+    hillNearTop: '#365030', hillNearBot: '#304a2a',
+    fieldTop: '#344c2e', fieldMid1: '#30482a', fieldMid2: '#2e4428', fieldBot: '#2a4024',
+    sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
     mtnLightOpacity: 0.05, mtnLightColor: 'rgba(255,255,200,0.05)',
@@ -252,14 +254,18 @@ const CONSTELLATION_LINES: [number, number][] = [
   [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0],
 ]
 
-const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, onToggleChop, showChopHint }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean }) {
-  const [timeState, setTimeState] = useState(getTimePhase)
-
+const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
+  const [realtimeState, setRealtimeState] = useState(getTimePhase)
   useEffect(() => {
-    setTimeState(getTimePhase())
-    const id = setInterval(() => setTimeState(getTimePhase()), 60000)
+    if (orchardTimeMode !== 'realtime') return
+    setRealtimeState(getTimePhase())
+    const id = setInterval(() => setRealtimeState(getTimePhase()), 60000)
     return () => clearInterval(id)
-  }, [])
+  }, [orchardTimeMode])
+
+  const timeState = orchardTimeMode === 'realtime'
+    ? realtimeState
+    : isDark ? { phase: 'night', t: 0, hour: 0 } : { phase: 'day', t: 0.5, hour: 13 }
 
   const p = useMemo(() => interpolatePalette(timeState.phase, timeState.t), [timeState.phase, timeState.t])
 
@@ -502,30 +508,53 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             return 26
           }
           const trunks: string[] = []
-          const canopies: string[] = []
+          const canopyPaths: { d: string; fill: string }[] = []
           const fruits: string[] = []
-          for (let i = 0; i < 70; i++) {
+          const canopyFills = isDark
+            ? ['#142e18', '#16301a', '#122a14', '#1a3420', '#10280e', '#18321c']
+            : ['#2a5428', '#2e5a2c', '#265020', '#346030', '#224a1e', '#3a6834']
+          for (let i = 0; i < 120; i++) {
             const rng = seededRng(i * 71 + 303)
             const x = -5 + rng() * 210
             const baseY = getHillY(x) + rng() * 3 + 1.5
-            const sz = 0.8 + rng() * 1.2
+            const sz = 0.6 + rng() * 1.4
+            const shape = rng()
             const cx = x
-            const cy = baseY - sz * 1.2 - sz * 0.5
-            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-            canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 5; f++) {
-              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-              const rDist = sz * (0.2 + rng() * 0.35) * (f < 3 ? 1 : 0.5 + rng() * 0.3)
-              const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-              if (f >= 3 && rng() > 0.5) continue
-              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
+            const fill = canopyFills[Math.floor(rng() * canopyFills.length)]
+            let canopy: string
+            if (shape < 0.3) {
+              const cy = baseY - sz * 1.6
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.1).toFixed(1)}L${(cx - sz * 0.5).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.5).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
+            } else if (shape < 0.5) {
+              const cy = baseY - sz * 1.0
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz * 1.1).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.1).toFixed(1)},${(sz * 0.65).toFixed(1)} 0 1 1 ${(cx - sz * 1.1).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.1).toFixed(1)},${(sz * 0.65).toFixed(1)} 0 1 1 ${(cx + sz * 1.1).toFixed(1)},${cy.toFixed(1)}Z`
+            } else if (shape < 0.7) {
+              const cy = baseY - sz * 0.5
+              canopy = `M${(cx + sz * 0.7).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.7).toFixed(1)},${(sz * 0.5).toFixed(1)} 0 1 1 ${(cx - sz * 0.7).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.7).toFixed(1)},${(sz * 0.5).toFixed(1)} 0 1 1 ${(cx + sz * 0.7).toFixed(1)},${cy.toFixed(1)}Z`
+            } else {
+              const cy = baseY - sz * 1.2 - sz * 0.5
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
+            }
+            canopyPaths.push({ d: canopy, fill })
+            if (shape > 0.6) {
+              for (let f = 0; f < 3; f++) {
+                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+                const cy = baseY - sz * 1.2 - sz * 0.5
+                const rDist = sz * (0.2 + rng() * 0.3)
+                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+                if (rng() > 0.6) continue
+                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.18,0.18 0 1 1 0.01,0Z`)
+              }
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.4" fill="none" />
-              <path d={canopies.join('')} fill={isDark ? '#142e18' : '#2a5428'} />
+              {canopyPaths.map((c, i) => <path key={i} d={c.d} fill={c.fill} />)}
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
             </g>
           )
@@ -760,30 +789,53 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             return 32
           }
           const trunks: string[] = []
-          const canopies: string[] = []
+          const canopyPaths: { d: string; fill: string }[] = []
           const fruits: string[] = []
-          for (let i = 0; i < 50; i++) {
+          const nearFills = isDark
+            ? ['#1a3420', '#1c3622', '#16301c', '#203a26', '#142c18', '#1e3824']
+            : ['#2e5a2a', '#326030', '#2a5424', '#386834', '#264e20', '#3c6c38']
+          for (let i = 0; i < 85; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
             const baseY = getNearY(x) + rng() * 2.5 + 0.8
-            const sz = 1 + rng() * 1.4
+            const sz = 0.8 + rng() * 1.6
             const cx = x
-            const cy = baseY - sz * 1.3 - sz * 0.5
-            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-            canopies.push(`M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 6; f++) {
-              const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-              const rDist = sz * (0.25 + rng() * 0.4) * (f < 3 ? 1 : 0.5 + rng() * 0.3)
-              const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-              const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-              if (f >= 4 && rng() > 0.5) continue
-              fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
+            const shape = rng()
+            const fill = nearFills[Math.floor(rng() * nearFills.length)]
+            let canopy: string
+            if (shape < 0.25) {
+              const cy = baseY - sz * 1.8
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.2).toFixed(1)}L${(cx - sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
+            } else if (shape < 0.45) {
+              const cy = baseY - sz * 1.1
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx - sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}Z`
+            } else if (shape < 0.6) {
+              const cy = baseY - sz * 0.6
+              canopy = `M${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx - sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}Z`
+            } else {
+              const cy = baseY - sz * 1.3 - sz * 0.5
+              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
+              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
+            }
+            canopyPaths.push({ d: canopy, fill })
+            if (shape > 0.5) {
+              for (let f = 0; f < 4; f++) {
+                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
+                const cy = baseY - sz * 1.3 - sz * 0.5
+                const rDist = sz * (0.25 + rng() * 0.35)
+                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
+                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
+                if (rng() > 0.6) continue
+                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
+              }
             }
           }
           return (
             <g opacity={p.groveOpacity}>
               <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
-              <path d={canopies.join('')} fill={isDark ? '#1a3420' : '#2e5a2a'} />
+              {canopyPaths.map((c, i) => <path key={i} d={c.d} fill={c.fill} />)}
               <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
             </g>
           )
@@ -970,6 +1022,147 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
       {/* (sun and moon now rendered inside SVG before mountains) */}
 
+      {/* ── Ambient animations ── */}
+      {/* Clouds */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.15 : 0.5 }}>
+        {[0,1,2,3,4].map(i => {
+          const r = seededRng(i * 41 + 77)
+          const y = 2 + r() * 14
+          const w = 40 + r() * 50
+          const h = 6 + r() * 6
+          const dur = 180 + r() * 120
+          const delay = -(r() * dur)
+          return (
+            <svg key={`cloud-${i}`} className="absolute" style={{
+              top: `${y}%`, width: `${w}px`, height: `${h}px`,
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
+              opacity: 0.4 + r() * 0.3,
+            }} viewBox="0 0 100 30" preserveAspectRatio="none">
+              <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#1a1e22' : '#c8c4ba'} />
+              <ellipse cx="35" cy="14" rx="28" ry="12" fill={isDark ? '#1e2226' : '#d0ccc2'} />
+              <ellipse cx="65" cy="15" rx="24" ry="9" fill={isDark ? '#1c2024' : '#ccc8be'} />
+            </svg>
+          )
+        })}
+      </div>
+
+      {/* Fireflies — night only */}
+      {(timeState.phase === 'night' || (timeState.phase === 'dusk' && timeState.t > 0.5)) && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 18 }, (_, i) => {
+            const r = seededRng(i * 59 + 131)
+            const x = 5 + r() * 90
+            const y = 30 + r() * 55
+            const dur = 3 + r() * 4
+            const delay = r() * 6
+            const driftX = -8 + r() * 16
+            const driftY = -6 + r() * 12
+            return (
+              <div key={`fly-${i}`} className="absolute rounded-full" style={{
+                left: `${x}%`, top: `${y}%`,
+                width: 3, height: 3,
+                background: 'radial-gradient(circle, rgba(200,220,100,0.9) 0%, rgba(180,200,60,0) 70%)',
+                boxShadow: '0 0 4px 1px rgba(200,220,100,0.4)',
+                animation: `firefly-glow ${dur}s ease-in-out ${delay}s infinite, firefly-drift ${dur * 1.5}s ease-in-out ${delay}s infinite`,
+                '--drift-x': `${driftX}px`, '--drift-y': `${driftY}px`,
+              } as React.CSSProperties} />
+            )
+          })}
+        </div>
+      )}
+
+      {/* Birds — day only */}
+      {(timeState.phase === 'day' || timeState.phase === 'morning') && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[0,1,2].map(i => {
+            const r = seededRng(i * 47 + 211)
+            const y = 5 + r() * 18
+            const dur = 20 + r() * 15
+            const delay = -(r() * dur)
+            const sz = 8 + r() * 6
+            return (
+              <svg key={`bird-${i}`} className="absolute" style={{
+                top: `${y}%`, width: sz, height: sz * 0.5,
+                animation: `bird-fly ${dur}s linear ${delay}s infinite`,
+                opacity: 0.35 + r() * 0.25,
+              }} viewBox="0 0 20 10">
+                <path d="M0,5 Q5,0 10,4 Q15,0 20,5" fill="none" stroke={isDark ? '#3a3a3a' : '#4a4440'} strokeWidth="1.5" strokeLinecap="round">
+                  <animate attributeName="d" values="M0,5 Q5,0 10,4 Q15,0 20,5;M0,4 Q5,3 10,4 Q15,3 20,4;M0,5 Q5,0 10,4 Q15,0 20,5" dur="0.6s" repeatCount="indefinite" />
+                </path>
+              </svg>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Falling leaves */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 6 }, (_, i) => {
+          const r = seededRng(i * 37 + 519)
+          const x = 10 + r() * 80
+          const dur = 12 + r() * 10
+          const delay = -(r() * dur)
+          const sz = 4 + r() * 3
+          const leafColors = isDark
+            ? ['#3a5030', '#4a3820', '#2e4428']
+            : ['#7a9a50', '#a08040', '#6a8a3a']
+          const fill = leafColors[Math.floor(r() * leafColors.length)]
+          return (
+            <svg key={`leaf-${i}`} className="absolute" style={{
+              left: `${x}%`, top: '-3%',
+              width: sz, height: sz,
+              animation: `leaf-fall ${dur}s linear ${delay}s infinite`,
+              opacity: 0.5 + r() * 0.3,
+            }} viewBox="0 0 10 10">
+              <path d="M5,0 Q8,3 7,7 Q5,10 3,7 Q2,3 5,0Z" fill={fill} />
+              <line x1="5" y1="1" x2="5" y2="8" stroke={fill} strokeWidth="0.3" opacity="0.5" />
+            </svg>
+          )
+        })}
+      </div>
+
+      {/* Butterflies — day only */}
+      {(timeState.phase === 'day' || timeState.phase === 'morning') && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[0,1,2].map(i => {
+            const r = seededRng(i * 67 + 389)
+            const x = 15 + r() * 70
+            const y = 35 + r() * 40
+            const dur = 8 + r() * 6
+            const delay = r() * 8
+            const sz = 6 + r() * 3
+            const colors = ['#d4a050', '#a0805a', '#c09060', '#8a6a40']
+            const fill = colors[Math.floor(r() * colors.length)]
+            return (
+              <svg key={`bfly-${i}`} className="absolute" style={{
+                left: `${x}%`, top: `${y}%`,
+                width: sz, height: sz,
+                animation: `butterfly-path ${dur}s ease-in-out ${delay}s infinite`,
+                opacity: 0.55 + r() * 0.25,
+              }} viewBox="0 0 14 10">
+                <g>
+                  <ellipse cx="5" cy="5" rx="3.5" ry="4" fill={fill} opacity="0.7">
+                    <animate attributeName="rx" values="3.5;1;3.5" dur="0.3s" repeatCount="indefinite" />
+                  </ellipse>
+                  <ellipse cx="9" cy="5" rx="3.5" ry="4" fill={fill} opacity="0.7">
+                    <animate attributeName="rx" values="3.5;1;3.5" dur="0.3s" repeatCount="indefinite" />
+                  </ellipse>
+                  <rect x="6.5" y="2" width="1" height="7" rx="0.5" fill={isDark ? '#1a1610' : '#3a3020'} />
+                </g>
+              </svg>
+            )
+          })}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes cloud-drift { 0% { left: -15%; } 100% { left: 105%; } }
+        @keyframes firefly-glow { 0%, 100% { opacity: 0; } 30%, 70% { opacity: 1; } }
+        @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
+        @keyframes bird-fly { 0% { left: -5%; } 100% { left: 105%; } }
+        @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
+        @keyframes butterfly-path { 0% { transform: translate(0, 0); } 20% { transform: translate(20px, -12px); } 40% { transform: translate(-10px, -20px); } 60% { transform: translate(15px, 8px); } 80% { transform: translate(-15px, -5px); } 100% { transform: translate(0, 0); } }
+      `}</style>
 
       {/* Soft vignette — heavier on left for sidebar blend */}
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -999,11 +1192,19 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  juice, gems, xp, grove, notes, setGems, setJuice, setGrove, userId,
+  juice, gems, xp, grove, notes, setGems, setJuice, setGrove, userId, activeTabId, orchardTimeMode,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
-  const [selectedNotebook, setSelectedNotebook] = useState<string>(activeNotesForDefault.length > 0 ? activeNotesForDefault[0].id : '_unassigned')
+  const defaultNb = activeTabId && activeNotesForDefault.some(n => n.id === activeTabId) ? activeTabId : (activeNotesForDefault.length > 0 ? activeNotesForDefault[0].id : '_unassigned')
+  const [selectedNotebook, setSelectedNotebook] = useState<string>(defaultNb)
+  const prevOpenRef = useRef(isOpen)
+  useEffect(() => {
+    if (isOpen && !prevOpenRef.current && activeTabId && activeNotesForDefault.some(n => n.id === activeTabId)) {
+      setSelectedNotebook(activeTabId)
+    }
+    prevOpenRef.current = isOpen
+  }, [isOpen, activeTabId, activeNotesForDefault])
   const [plotPage, setPlotPage] = useState(0)
   useEffect(() => {
     setPlotPage(0)
@@ -1215,7 +1416,7 @@ export const OrchardView = memo(function OrchardView({
       style={{ touchAction: 'manipulation' }}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
     >
-      <style>{`@keyframes tree-pop { 0% { transform: translate(-50%,-85%) scale(0.5); opacity:0 } 100% { transform: translate(-50%,-85%) scale(1); opacity:1 } }`}</style>
+      <style>{`@keyframes tree-pop { 0% { opacity:0; transform: scale(0.85); } 60% { opacity:1; transform: scale(1.04); } 100% { opacity:1; transform: scale(1); } }`}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
         className="relative flex overflow-hidden w-full h-full"
@@ -1224,7 +1425,7 @@ export const OrchardView = memo(function OrchardView({
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
-          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={chopMode} showChopHint={showChopHint} onToggleChop={() => { setChopMode(m => !m); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={chopMode} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setChopMode(m => !m); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
 
           {/* Orchard scene */}
           <div className="flex-1 relative overflow-hidden" style={{
@@ -1349,13 +1550,16 @@ export const OrchardView = memo(function OrchardView({
                        'No trees grown for this notebook yet.'}
                     </p>
                     <p className="text-[10px]" style={{ color: isDark ? '#6a6760' : '#9a9690' }}>
-                      Complete focus sessions with a seed selected to grow your collection.
+                      Complete focus sessions to grow your collection.
                     </p>
                   </div>
                 ) : (
                   <>
                     {tillSvg}
-                    {placed.map(({ x, y, tree }, renderIdx) => {
+                    {(() => {
+                      const spawnRanks = placed.map((p, i) => ({ i, rank: -p.y + p.x })).sort((a, b) => a.rank - b.rank)
+                      const spawnOrderMap = new Map(spawnRanks.map((s, order) => [s.i, order]))
+                      return placed.map(({ x, y, tree }, renderIdx) => {
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
@@ -1367,6 +1571,7 @@ export const OrchardView = memo(function OrchardView({
                       const scaleY = 0.75 + depthT * 0.25
                       const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
+                      const spawnOrder = spawnOrderMap.get(renderIdx) ?? renderIdx
 
                       return (
                         <div
@@ -1379,12 +1584,11 @@ export const OrchardView = memo(function OrchardView({
                             transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
-                            animation: `tree-pop 0.3s ease-out ${(placed.length - 1 - renderIdx) * 12}ms both`,
-                            willChange: 'transform, opacity',
+                            willChange: 'opacity',
                             cursor: chopMode ? 'pointer' : undefined,
                           }}
                         >
-                          <div style={{ position: 'relative' }}>
+                          <div style={{ position: 'relative', animation: `tree-pop 0.25s ease-out ${spawnOrder * 18}ms both` }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
                               filter: chopMode
                                 ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
@@ -1396,16 +1600,14 @@ export const OrchardView = memo(function OrchardView({
                             <div style={{
                               position: 'absolute',
                               left: '50%',
-                              bottom: -4,
+                              bottom: -6,
                               transform: 'translateX(-50%)',
-                              width: treeSize * 1.2,
-                              height: treeSize * 0.3,
-                              borderRadius: '45% 48% 50% 42%',
+                              width: treeSize * 1.8,
+                              height: treeSize * 0.5,
                               zIndex: -1,
-                              opacity: isDark ? 0.45 : 0.28,
                               background: isDark
-                                ? 'radial-gradient(ellipse 35% 40% at 52% 48%, #2a2418 0%, transparent 100%), radial-gradient(ellipse 50% 50% at 46% 52%, #1e1a10 0%, transparent 100%), radial-gradient(ellipse 60% 55% at 48% 50%, #1a1608 0%, #1c1810 40%, transparent 100%)'
-                                : 'radial-gradient(ellipse 35% 40% at 52% 48%, #8a7a5a 0%, transparent 100%), radial-gradient(ellipse 50% 50% at 46% 52%, #7a6a4a 0%, transparent 100%), radial-gradient(ellipse 60% 55% at 48% 50%, #6a5a3a 0%, #8a7a5a 40%, transparent 100%)',
+                                ? `radial-gradient(ellipse 50% 50% at 50% 50%, rgba(26,22,12,0.5) 0%, rgba(26,22,12,0.3) 25%, rgba(20,18,10,0.12) 50%, rgba(16,14,8,0.04) 75%, transparent 100%)`
+                                : `radial-gradient(ellipse 50% 50% at 50% 50%, rgba(90,70,40,0.3) 0%, rgba(90,70,40,0.18) 25%, rgba(80,65,35,0.07) 50%, rgba(70,60,30,0.02) 75%, transparent 100%)`,
                               pointerEvents: 'none',
                             }} />
                           </div>
@@ -1431,7 +1633,8 @@ export const OrchardView = memo(function OrchardView({
                           </div>
                         </div>
                       )
-                    })}
+                    })
+                    })()}
                   </>
                 )}
               </motion.div>
@@ -1456,7 +1659,7 @@ export const OrchardView = memo(function OrchardView({
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="rounded-xl p-5 flex flex-col items-center gap-3 min-w-[220px]"
+                  className="rounded-lg p-5 flex flex-col items-center gap-3 min-w-[220px]"
                   style={{
                     backgroundColor: isDark ? '#1a1816' : '#faf8f5',
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,

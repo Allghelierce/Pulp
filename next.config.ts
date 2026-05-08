@@ -4,6 +4,16 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  experimental: {
+    optimizePackageImports: [
+      "framer-motion",
+      "lucide-react",
+      "date-fns",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-label",
+      "@radix-ui/react-slot",
+    ],
+  },
   headers: async () => [
     {
       source: "/(.*)",

@@ -3,6 +3,7 @@ import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon, PaperIcon } from '@/app/components/CurrencyIcons'
+import { LiquidButton } from '@/components/ui/liquid-glass-button'
 import { ACCENT_COLORS, FONT_OPTIONS, HEADING_FONT_OPTIONS, PAGE_STYLE_OPTIONS } from "./settings/SettingsView"
 
 export type TabId = 'shop' | 'gems' | 'bag' | 'catalog'
@@ -345,31 +346,47 @@ export const BoutiqueView = memo(function BoutiqueView({
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-            <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id === 'catalog' && activeTab !== 'catalog') {
-                      setActiveTab('catalog')
-                      setIsRenderingCatalog(true)
-                      setSelectedPlant(null)
-                      setTimeout(() => setIsRenderingCatalog(false), 20)
-                    } else {
-                      setActiveTab(tab.id)
-                      setSelectedPlant(null)
-                    }
-                  }}
-                  className={`px-3.5 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
-                    activeTab === tab.id
-                      ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
-                      : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
-                  }`}
-                >
-                  <span className="opacity-80">{tabIcons[tab.id]}</span>
-                  {tab.label}
-                </button>
-              ))}
+            <div className={`flex rounded-lg overflow-hidden p-1 gap-1 text-[11px] font-semibold`} style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+              {tabs.map(tab => {
+                const isActive = activeTab === tab.id
+                const handleClick = () => {
+                  if (tab.id === 'catalog' && activeTab !== 'catalog') {
+                    setActiveTab('catalog')
+                    setIsRenderingCatalog(true)
+                    setSelectedPlant(null)
+                    setTimeout(() => setIsRenderingCatalog(false), 20)
+                  } else {
+                    setActiveTab(tab.id)
+                    setSelectedPlant(null)
+                  }
+                }
+                return isActive ? (
+                  <LiquidButton
+                    key={tab.id}
+                    size="sm"
+                    onClick={handleClick}
+                    className="!rounded-lg"
+                    style={{ color: isDark ? '#f4f4f5' : '#18181b' }}
+                  >
+                    <span className="opacity-80">{tabIcons[tab.id]}</span>
+                    {tab.label}
+                  </LiquidButton>
+                ) : (
+                  <button
+                    key={tab.id}
+                    onClick={handleClick}
+                    className="px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                    style={{
+                      background: 'transparent',
+                      color: isDark ? '#71717a' : '#a1a1aa',
+                      border: '1px solid transparent',
+                    }}
+                  >
+                    <span className="opacity-80">{tabIcons[tab.id]}</span>
+                    {tab.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -560,7 +577,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 const stock = shopStock[selectedPlant!] || 0
                 const cantAfford = juice < previewInfo.cost
                 if (stock <= 0) return (
-                  <div className="mt-5 px-6 py-2.5 rounded-xl text-[13px] font-bold" style={{
+                  <div className="mt-5 px-6 py-2.5 rounded-lg text-[13px] font-bold" style={{
                     fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
                     color: isDark ? '#71717a' : '#a1a1aa',
@@ -573,7 +590,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     <button
                       onClick={() => buySeed(selectedPlant!)}
                       disabled={cantAfford}
-                      className="px-6 py-2.5 rounded-xl text-[13px] font-bold transition-all hover:brightness-110"
+                      className="px-6 py-2.5 rounded-lg text-[13px] font-bold transition-all hover:brightness-110"
                       style={{
                         fontFamily: font, cursor: cantAfford ? 'default' : 'pointer', border: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,

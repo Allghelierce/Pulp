@@ -94,7 +94,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
     >
       <div className="flex-1" />
       <div
-        className={`w-[340px] h-full flex flex-col shadow-2xl border-l ${isDark ? "bg-[#18181b] border-zinc-800" : "bg-white border-zinc-200"}`}
+        className={`w-[340px] h-full flex flex-col shadow-2xl border-l ${isDark ? "bg-[#09090b] border-zinc-800" : "bg-white border-zinc-200"}`}
         onClick={e => e.stopPropagation()}
         style={{ fontFamily: '"EB Garamond", serif' }}
       >
@@ -112,13 +112,13 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
             <button
               onClick={() => { const updated = onSaveSnapshot(); setLocalVersions(updated) }}
               title="Save snapshot now"
-              className={`text-[10px] font-semibold px-2 py-1 rounded-md transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
+              className={`text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
             >
               Save now
             </button>
           <button
             onClick={onClose}
-            className={`p-1 rounded-md transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-zinc-100 text-zinc-400"}`}
+            className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-zinc-100 text-zinc-400"}`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
@@ -141,13 +141,13 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => { onRestore(previewVersion); onClose() }}
-                className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer"
+                className="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer"
               >
                 Restore this version
               </button>
               <button
                 onClick={() => setPreviewIdx(null)}
-                className={`text-[10px] font-medium px-2 py-1 rounded-md transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
+                className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
               >
                 Cancel
               </button>

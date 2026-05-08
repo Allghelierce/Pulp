@@ -41,7 +41,7 @@ export interface DrawingPath {
   points: { x: number; y: number }[];
   width: number;
 }
-export interface HLine { id: string; x: number; y: number; width: number }
+export interface HLine { id: string; x: number; y: number; width: number; direction?: "horizontal" | "vertical" }
 export interface FolderData { id: number; name: string; open: boolean }
 
 export interface Achievement {

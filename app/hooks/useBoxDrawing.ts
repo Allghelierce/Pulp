@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { flushSync } from "react-dom"
 import { uid } from "@/app/lib/uid"
 import type { TextBox, NoteData, HLine } from "@/app/types"
+import { apiFetch } from "@/lib/apiFetch"
 
 interface UseBoxDrawingOptions {
   activeTabId: string | null
@@ -397,7 +398,7 @@ export function useBoxDrawing({
     if (!prompt.trim() || !activeTabIdRef.current) return
     setLoadingBoxId(boxId)
     try {
-      const res = await fetch('/api/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: prompt.trim() }) })
+      const res = await apiFetch('/api/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: prompt.trim() }) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (!data.url) { onError?.("Sketch Error", "No image was generated. Try a different prompt."); return }
@@ -417,7 +418,7 @@ export function useBoxDrawing({
     if (!text.trim() || !activeTabIdRef.current) return
     setLoadingBoxId(boxId)
     try {
-      const res = await fetch('/api/rewrite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text.trim() }) })
+      const res = await apiFetch('/api/rewrite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text.trim() }) })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (!data.rewritten) throw new Error('No rewritten text returned')
@@ -650,10 +651,14 @@ export function useBoxDrawing({
       }
     }
 
-    // Check if clicking near a horizontal line
+    // Check if clicking near a line (horizontal or vertical)
     const hlines = currentTab?.hlines?.[pidx] || []
     for (const hl of hlines) {
-      if (x >= hl.x && x <= hl.x + hl.width && Math.abs(y - hl.y) < 8) {
+      const isVert = hl.direction === "vertical"
+      const hit = isVert
+        ? (Math.abs(x - hl.x) < 8 && y >= hl.y && y <= hl.y + hl.width)
+        : (x >= hl.x && x <= hl.x + hl.width && Math.abs(y - hl.y) < 8)
+      if (hit) {
         selectedHLineIdRef.current = hl.id
         selectedLineRef.current = null
         setHlineSelectionVersion(c => c + 1)
@@ -661,10 +666,12 @@ export function useBoxDrawing({
         hlineDragRef.current = { id: hl.id, startX: e.clientX, startY: e.clientY, origX: hl.x, origY: hl.y }
         const onMove = (ev: MouseEvent) => {
           if (!hlineDragRef.current) return
+          const dx = (ev.clientX - hlineDragRef.current.startX) / zoomVal
           const dy = (ev.clientY - hlineDragRef.current.startY) / zoomVal
+          const newX = hlineDragRef.current.origX + dx
           const newY = hlineDragRef.current.origY + dy
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).map(h => h.id !== hlineDragRef.current!.id ? h : { ...h, y: newY }) }
+            ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).map(h => h.id !== hlineDragRef.current!.id ? h : { ...h, x: newX, y: newY }) }
           }))
         }
         const onUp = () => {

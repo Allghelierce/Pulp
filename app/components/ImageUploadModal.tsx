@@ -85,7 +85,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative bg-zinc-800 border border-zinc-700/50 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-sm overflow-hidden"
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-sm overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-orange-500/20 to-transparent" />
 
@@ -127,7 +127,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={cn(
-                    "flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed transition-all",
+                    "flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed transition-all",
                     isDragging
                       ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
                       : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
@@ -143,7 +143,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                 </div>
               ) : (
                 <div className="relative group">
-                  <div className="relative h-48 overflow-hidden rounded-2xl border border-zinc-700 group shadow-2xl">
+                  <div className="relative h-48 overflow-hidden rounded-lg border border-zinc-700 group shadow-2xl">
                     {fileName?.match(/\.(mp4|webm|ogg|mov)$/i) || previewUrl.startsWith("data:video") ? (
                       <video src={previewUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} autoPlay muted loop />
                     ) : (
@@ -157,13 +157,13 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <button
                         onClick={handleThumbnailClick}
-                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all border border-white/20"
+                        className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all border border-white/20"
                       >
                         <Upload className="h-4 w-4 text-white" />
                       </button>
                       <button
                         onClick={handleRemove}
-                        className="w-10 h-10 rounded-xl bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 transition-all border border-red-400/20"
+                        className="w-10 h-10 rounded-lg bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 transition-all border border-red-400/20"
                       >
                         <Trash2 className="h-4 w-4 text-white" />
                       </button>
@@ -187,7 +187,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="Paste URL here..."
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-12 pr-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/10 transition-all placeholder:text-zinc-600"
                   onKeyDown={e => e.key === "Enter" && triggerLinkEmbed()}
                 />
               </div>
@@ -211,7 +211,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                 triggerLinkEmbed()
               }
             }}
-            className="w-full py-4 rounded-xl text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            className="w-full py-4 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
             style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
           >
             Insert Selection

@@ -1,6 +1,7 @@
 // app/api/sketch/route.ts
 import { NextResponse } from "next/server";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit";
+import { getAuthUser } from "@/lib/auth";
 
 const HF_TOKEN = process.env.HUGGINGFACE_API_TOKEN;
 const MAX_PROMPT_LENGTH = 500;
@@ -19,6 +20,9 @@ export async function POST(req: Request) {
         { status: 429 }
       );
     }
+
+    const user = await getAuthUser(req);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { prompt } = await req.json();
 

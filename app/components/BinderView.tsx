@@ -29,7 +29,7 @@ const RARITY_CARD_STYLES: Record<string, string> = {
 
 const Card = ({ card, idx, sellCard, theme }: any) => {
   if (!card) return (
-    <div className={`group relative rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all duration-500 hover:border-emerald-500/30 ${
+    <div className={`group relative rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all duration-500 hover:border-emerald-500/30 ${
       theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/20' : 'border-zinc-200 bg-zinc-50/50'
     }`}>
       <div className="w-12 h-12 rounded-full bg-zinc-400/5 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -50,7 +50,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ y: -5, scale: 1.02 }}
       transition={{ type: "spring", damping: 15, stiffness: 200 }}
-      className={`group relative rounded-2xl p-5 flex flex-col items-center justify-between overflow-hidden shadow-2xl transition-all duration-500 ${styleClass}`}
+      className={`group relative rounded-lg p-5 flex flex-col items-center justify-between overflow-hidden shadow-2xl transition-all duration-500 ${styleClass}`}
     >
       {/* Decorative Corner Accents */}
       <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-black/5 rounded-tl-2xl pointer-events-none" />
@@ -110,7 +110,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
             initial={{ opacity: 0, y: 10 }}
             whileHover={{ opacity: 1, y: 0 }}
             onClick={(e) => { e.stopPropagation(); sellCard(idx); }}
-            className="absolute inset-0 bg-emerald-600/95 backdrop-blur-sm text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 rounded-2xl"
+            className="absolute inset-0 bg-emerald-600/95 backdrop-blur-sm text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 rounded-lg"
           >
             <div className="flex flex-col items-center gap-2 -mt-4">
               <span className="text-4xl">💰</span>
@@ -310,7 +310,7 @@ export const BinderView = memo(function BinderView({
           </div>
 
           {/* Control Dock */}
-          <div className="h-28 bg-[#18181b] flex items-center px-16 justify-between z-40 relative shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+          <div className="h-28 bg-[#09090b] flex items-center px-16 justify-between z-40 relative shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
              <button 
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
@@ -324,7 +324,7 @@ export const BinderView = memo(function BinderView({
                 <div className="text-[10px] font-black text-black bg-black/20 px-4 py-2 rounded-full uppercase tracking-[0.2em]">{page + 1} / {totalPages}</div>
                 <button
                   onClick={() => setPlantingPlot(-1)}
-                  className="flex items-center gap-4 px-10 py-4 rounded-2xl bg-[#fbf9f6] text-[#121214] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white active:scale-95 transition-all group"
+                  className="flex items-center gap-4 px-10 py-4 rounded-lg bg-[#fbf9f6] text-[#121214] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white active:scale-95 transition-all group"
                 >
                   <span className="text-xl -mt-1 group-hover:rotate-90 transition-transform">+</span> 
                   Deposit Asset
@@ -377,7 +377,7 @@ export const BinderView = memo(function BinderView({
                           onClick={() => plantFromInventory(type, idx)}
                           className="flex items-center gap-5 p-5 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 hover:bg-black/5 dark:hover:bg-white/5 hover:border-emerald-500/30 transition-all text-left group"
                         >
-                          <div className="w-14 h-14 rounded-2xl bg-black/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <div className="w-14 h-14 rounded-lg bg-black/5 flex items-center justify-center group-hover:scale-110 transition-transform">
                              <PlantIcon type={type} size={40} />
                           </div>
                           <div className="flex flex-col">

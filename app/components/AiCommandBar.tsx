@@ -68,7 +68,7 @@ export const AiCommandBar = memo(function AiCommandBar({ onClose, onSubmit }: Ai
             </div>
             <button 
               type="submit"
-              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-orange-600"
+              className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-orange-600"
             >
               <CornerDownLeft className="w-4 h-4" />
             </button>

@@ -40,6 +40,7 @@ interface SlashMenuProps {
   insertBacklink: () => void
   onInsertImage?: () => void
   onInsertHLine?: () => void
+  onInsertVLine?: () => void
   mode: "@" | "/"
   theme?: "light" | "dark"
   box?: TextBox
@@ -640,7 +641,7 @@ function CustomMenuFlyoutPortal({ parentEl, ...props }: Omit<React.ComponentProp
 
 export const SlashMenu = memo(function SlashMenu({
   x, y, filter, accent, isSelectionMode, onSelect, onClose, execCmd, insertHTML,
-  toggleScript: _toggleScript, insertBacklink, onInsertImage, onInsertHLine, mode, theme, box, onUpdateBox
+  toggleScript: _toggleScript, insertBacklink, onInsertImage, onInsertHLine, onInsertVLine, mode, theme, box, onUpdateBox
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const [prevFilter, setPrevFilter] = useState(filter)
@@ -775,6 +776,11 @@ export const SlashMenu = memo(function SlashMenu({
       id: "divider", label: "Separator", shortcut: "---", group: "Structure",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg>,
       action: () => { onInsertHLine?.(); onClose() }
+    },
+    {
+      id: "vline", label: "Vertical Line", shortcut: "|||", group: "Structure",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /></svg>,
+      action: () => { onInsertVLine?.(); onClose() }
     },
     {
       id: "backlink", label: "Create Backlink", shortcut: "@", group: "Reference",

@@ -65,7 +65,7 @@ export function FlashcardView({
     return () => clearInterval(timer)
   }, [])
 
-  const bgColor = theme === "dark" ? "bg-[#0f0f12]" : "bg-[#fdfcf9]"
+  const bgColor = theme === "dark" ? "bg-[#09090b]" : "bg-[#fdfcf9]"
   const cardBg = theme === "dark" ? "bg-zinc-900/50" : "bg-white"
   const borderColor = theme === "dark" ? "border-zinc-700/50" : "border-zinc-200"
   const textColor = theme === "dark" ? "text-white" : "text-zinc-900"
@@ -226,15 +226,15 @@ export function FlashcardView({
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-3 gap-4 mb-8"
           >
-            <div className={`${cardBg} rounded-2xl p-6 border ${borderColor}`}>
+            <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
               <div className="text-sm font-semibold opacity-60 mb-1">New</div>
               <div className="text-3xl font-bold">{stats.new}</div>
             </div>
-            <div className={`${cardBg} rounded-2xl p-6 border ${borderColor}`}>
+            <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
               <div className="text-sm font-semibold opacity-60 mb-1">Learning</div>
               <div className="text-3xl font-bold">{stats.learning}</div>
             </div>
-            <div className={`${cardBg} rounded-2xl p-6 border ${borderColor}`}>
+            <div className={`${cardBg} rounded-lg p-6 border ${borderColor}`}>
               <div className="text-sm font-semibold opacity-60 mb-1">Due Today</div>
               <div className="text-3xl font-bold" style={{ color: accent }}>{dueCount}</div>
             </div>
@@ -248,7 +248,7 @@ export function FlashcardView({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className={`${cardBg} rounded-2xl p-8 border-2 ${borderColor}`}
+                className={`${cardBg} rounded-lg p-8 border-2 ${borderColor}`}
               >
                 <div className="mb-6">
                   <h2 className="text-lg font-semibold mb-4">Edit Card {currentIdx + 1} of {cardCount}</h2>
@@ -321,7 +321,7 @@ export function FlashcardView({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   key={currentCard?.id}
-                  className={`${cardBg} rounded-2xl border-2 ${borderColor} overflow-hidden mb-8 cursor-pointer transition-all`}
+                  className={`${cardBg} rounded-lg border-2 ${borderColor} overflow-hidden mb-8 cursor-pointer transition-all`}
                   onClick={() => setIsFlipped(!isFlipped)}
                   style={{
                     perspective: "1000px",
@@ -361,28 +361,28 @@ export function FlashcardView({
                     <button
                       onClick={() => rateCard(0)}
                       disabled={feedback?.show}
-                      className="py-3 rounded-xl font-semibold transition-all disabled:opacity-50 text-white bg-red-500 hover:bg-red-600 active:scale-95"
+                      className="py-3 rounded-lg font-semibold transition-all disabled:opacity-50 text-white bg-red-500 hover:bg-red-600 active:scale-95"
                     >
                       Again
                     </button>
                     <button
                       onClick={() => rateCard(2)}
                       disabled={feedback?.show}
-                      className="py-3 rounded-xl font-semibold transition-all disabled:opacity-50 text-white bg-orange-500 hover:bg-orange-600 active:scale-95"
+                      className="py-3 rounded-lg font-semibold transition-all disabled:opacity-50 text-white bg-orange-500 hover:bg-orange-600 active:scale-95"
                     >
                       Hard
                     </button>
                     <button
                       onClick={() => rateCard(3)}
                       disabled={feedback?.show}
-                      className="py-3 rounded-xl font-semibold transition-all disabled:opacity-50 text-white bg-blue-500 hover:bg-blue-600 active:scale-95"
+                      className="py-3 rounded-lg font-semibold transition-all disabled:opacity-50 text-white bg-blue-500 hover:bg-blue-600 active:scale-95"
                     >
                       Good
                     </button>
                     <button
                       onClick={() => rateCard(5)}
                       disabled={feedback?.show}
-                      className="py-3 rounded-xl font-semibold transition-all disabled:opacity-50 text-white bg-green-500 hover:bg-green-600 active:scale-95"
+                      className="py-3 rounded-lg font-semibold transition-all disabled:opacity-50 text-white bg-green-500 hover:bg-green-600 active:scale-95"
                     >
                       Easy
                     </button>
@@ -398,7 +398,7 @@ export function FlashcardView({
                       exit={{ opacity: 0, y: 20 }}
                       className="text-center mb-4"
                     >
-                      <div className="inline-block px-6 py-3 rounded-xl font-semibold text-white"
+                      <div className="inline-block px-6 py-3 rounded-lg font-semibold text-white"
                         style={{
                           backgroundColor: feedback.type === "again" ? "#ef4444" :
                             feedback.type === "hard" ? "#f97316" :
@@ -459,7 +459,7 @@ export function FlashcardView({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className={`${cardBg} rounded-xl border ${borderColor} p-4 mt-8 text-center`}
+                    className={`${cardBg} rounded-lg border ${borderColor} p-4 mt-8 text-center`}
                   >
                     <div className="text-sm opacity-70">Progress</div>
                     <div className="text-lg font-semibold mt-1">
@@ -481,7 +481,7 @@ export function FlashcardView({
             <p className={`${mutedColor} mb-6`}>Create your first flashcard to get started</p>
             <button
               onClick={addCard}
-              className="px-8 py-3 rounded-xl font-semibold text-white transition-all hover:scale-105 active:scale-95"
+              className="px-8 py-3 rounded-lg font-semibold text-white transition-all hover:scale-105 active:scale-95"
               style={{ backgroundColor: accent }}
             >
               + Create Your First Card

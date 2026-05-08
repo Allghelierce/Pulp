@@ -135,7 +135,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                 <button
                   key={id}
                   onClick={() => setTab(id)}
-                  className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
                     tab === id
                       ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
                       : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
@@ -224,7 +224,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             return (
               <div
                 key={p.name}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl mb-1 transition-colors cursor-pointer"
+                className="flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors cursor-pointer"
                 style={{ background: 'transparent' }}
                 onMouseEnter={e => e.currentTarget.style.background = hoverBg}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
@@ -268,7 +268,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
         {/* You — sticky bottom */}
         <div className="px-4 py-3 shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
           <div
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
             style={{ background: isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.05)', border: `1px solid ${isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.12)'}` }}
           >
             <span className="text-[12px] font-bold w-6 text-center" style={{ color: textMuted, fontFamily: font }}>—</span>
@@ -374,7 +374,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   )}
                   {/* Rank badge */}
                   <div
-                    className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[10px] font-bold"
+                    className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-bold"
                     style={{ background: `${medalColor}20`, color: medalColor, fontFamily: font }}
                   >
                     #{rank}
@@ -410,7 +410,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     {statItems.slice(0, 3).map(s => (
                       <div
                         key={s.label}
-                        className="flex flex-col items-center gap-1.5 py-3 rounded-xl"
+                        className="flex flex-col items-center gap-1.5 py-3 rounded-lg"
                         style={{
                           background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
                           border: `1px solid ${cardBorder}`,
@@ -426,7 +426,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     {statItems.slice(3).map(s => (
                       <div
                         key={s.label}
-                        className="flex flex-col items-center gap-1.5 py-3 rounded-xl"
+                        className="flex flex-col items-center gap-1.5 py-3 rounded-lg"
                         style={{
                           background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
                           border: `1px solid ${cardBorder}`,
@@ -444,7 +444,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                 <div className="px-5 pb-4">
                   <button
                     onClick={() => setSelectedPlayer(null)}
-                    className="w-full py-2 rounded-xl text-[11px] font-semibold transition-all"
+                    className="w-full py-2 rounded-lg text-[11px] font-semibold transition-all"
                     style={{
                       background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                       color: textSecondary,

@@ -284,7 +284,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           <button
             onClick={onWater}
             title="Water"
-            className="flex items-center gap-1.5 rounded-md transition-all"
+            className="flex items-center gap-1.5 rounded-lg transition-all"
             style={{
               height: 24,
               padding: "0 6px",
@@ -304,7 +304,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
         <button
           onClick={() => setMinimized(false)}
-          className="flex items-center justify-center rounded-md transition-colors hover:bg-white/10"
+          className="flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
           style={{ width: 24, height: 24, color: subtleColor }}
           title="Expand"
         >
@@ -649,7 +649,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <button
                   onClick={onWater}
                   title="Water the tree"
-                  className="mb-3 px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all"
+                  className="mb-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
                   style={{
                     backgroundColor: waterUrgent ? "rgba(239,68,68,0.12)" : "rgba(96,165,250,0.1)",
                     border: `1px solid ${waterUrgent ? "rgba(239,68,68,0.35)" : "rgba(96,165,250,0.3)"}`,
@@ -695,7 +695,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       <button
                         key={m}
                         onClick={() => onSetTotal(m * 60)}
-                        className="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
                         style={{
                           fontFamily: 'Inter, system-ui, sans-serif',
                           color: Math.floor(total / 60) === m ? textColor : subtleColor,
@@ -798,7 +798,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <button
                     onClick={onRecoverJuice}
                     disabled={gems < Math.max(5, Math.ceil(lostJuice * 0.5))}
-                    className="text-[11px] font-black uppercase tracking-[0.08em] rounded-md px-4 py-1.5 disabled:opacity-30 transition-colors"
+                    className="text-[11px] font-black uppercase tracking-[0.08em] rounded-lg px-4 py-1.5 disabled:opacity-30 transition-colors"
                     style={{ backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", color: isDark ? "#fafafa" : "#18181b" }}
                   >
                     Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} <GemIcon size={10} />
@@ -832,7 +832,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             style={{
               maxWidth: 300,
               borderRadius: 12,
-              background: isDark ? '#18181b' : '#fafaf8',
+              background: isDark ? '#09090b' : '#fafaf8',
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
               boxShadow: '0 20px 60px -10px rgba(0,0,0,0.6)',
             }}

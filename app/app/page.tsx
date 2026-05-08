@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
 import { LazyMotion, domAnimation, m } from "framer-motion"
 import { supabase } from "@/lib/supabase"
+import { apiFetch } from "@/lib/apiFetch"
+import { sanitizeHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { uid } from "@/app/lib/uid"
@@ -305,16 +307,19 @@ const BoxItem = memo(function BoxItem({
 }) {
   const [localDragging, setLocalDragging] = useState(false)
   const isDark = isDarkPaper(paperStyle)
-  const resizeHandles: [string, React.CSSProperties][] = [
-    ["nw", { top: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "nw-resize" }],
-    ["ne", { top: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "ne-resize" }],
-    ["sw", { bottom: -4, left: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "sw-resize" }],
-    ["se", { bottom: -4, right: -4, width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`, cursor: "se-resize" }],
-    ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
-    ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
-    ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
-    ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
-  ]
+  const resizeHandles = useMemo<[string, React.CSSProperties][]>(() => {
+    const dot = { width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}` }
+    return [
+      ["nw", { top: -4, left: -4, ...dot, cursor: "nw-resize" }],
+      ["ne", { top: -4, right: -4, ...dot, cursor: "ne-resize" }],
+      ["sw", { bottom: -4, left: -4, ...dot, cursor: "sw-resize" }],
+      ["se", { bottom: -4, right: -4, ...dot, cursor: "se-resize" }],
+      ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
+      ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
+      ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
+      ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
+    ]
+  }, [isDark])
   const isImage = box.content.includes("http") || box.content.startsWith("data:image")
   const isSticky = !!box.boxHighlightColor
   const isEmpty = !isSticky && !isImage && box.content.trim() === ''
@@ -779,7 +784,7 @@ const BoxTextarea = memo(function BoxTextarea({
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== content) {
       if (ref.current.contains(document.activeElement) || ref.current === document.activeElement) return
-      ref.current.innerHTML = content
+      ref.current.innerHTML = sanitizeHTML(content)
       prevContentRef.current = content
     }
   }, [content])
@@ -1044,7 +1049,9 @@ export default function NoteApp() {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window === "undefined") return 0
     const saved = localStorage.getItem("pulp-sidebar-width")
-    return saved !== null ? Number(saved) : 0
+    if (saved === null) return 0
+    const val = Number(saved)
+    return val > 0 && val < 240 ? 240 : val
   })
   const [isSidebarDragging, setIsSidebarDragging] = useState(false)
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
@@ -1057,16 +1064,16 @@ export default function NoteApp() {
       if (!sidebarDragRef.current) return
       const dx = ev.clientX - sidebarDragRef.current.startX
       const raw = sidebarDragRef.current.startWidth + dx
-      setSidebarWidth(raw < 200 ? 0 : Math.min(400, Math.max(256, raw)))
+      setSidebarWidth(raw < 200 ? 0 : Math.min(400, Math.max(240, raw)))
     }
     const onUp = (ev: MouseEvent) => {
       sidebarDragRef.current = null
       setIsSidebarDragging(false)
       const dx = Math.abs(ev.clientX - startX)
       if (dx < 5) {
-        setSidebarWidth(prev => prev > 0 ? 0 : 256)
+        setSidebarWidth(prev => prev > 0 ? 0 : 240)
       } else {
-        setSidebarWidth(w => w < 200 ? 0 : Math.max(256, w))
+        setSidebarWidth(w => w < 200 ? 0 : Math.max(240, w))
       }
       window.removeEventListener("mousemove", onMove)
       window.removeEventListener("mouseup", onUp)
@@ -1181,19 +1188,31 @@ export default function NoteApp() {
   useEffect(() => {
     if (!user) return
     const loadPlayerData = async () => {
-      const [profile, groveData, inventoryData, achievementRows, cosmetics] = await Promise.all([
+      const [profile, achievementRows] = await Promise.all([
         db.getPlayerProfile(user.id),
-        db.getGrove(user.id),
-        db.getInventory(user.id),
         db.getAchievements(user.id),
-        db.getUnlockedCosmetics(user.id)
       ])
 
       if (profile) {
         setGems(profile.gems)
         setJuice(profile.juice)
         setLastCharCount(profile.last_char_count)
-        setStreak(profile.streak)
+        if (profile.grove?.length) setGrove(profile.grove)
+        if (profile.inventory) {
+          const items: string[] = []
+          for (const [k, qty] of Object.entries(profile.inventory)) for (let i = 0; i < qty; i++) items.push(k)
+          if (items.length) setInventory(items)
+        }
+        if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
+        const today = new Date().toISOString().slice(0, 10)
+        if (profile.last_streak_date === today) {
+          setStreak(profile.streak)
+        } else {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+          const newStreak = profile.last_streak_date === yesterday ? profile.streak + 1 : 1
+          setStreak(newStreak)
+          db.upsertPlayerProfile(user.id, { streak: newStreak, last_streak_date: today })
+        }
       } else {
         // First time — create profile from localStorage state, then migrate legacy
         const saved = localStorage.getItem('pulp-grove')
@@ -1216,30 +1235,6 @@ export default function NoteApp() {
         await db.migrateFromLegacy(user.id)
       }
 
-      if (groveData.length) setGrove(groveData)
-
-      // DEV: inject 70 tangerines into LIFE notebook
-      if (!devTreesInjectedRef.current) {
-        devTreesInjectedRef.current = true
-        const notesRaw = localStorage.getItem('pulp-notes')
-        if (notesRaw) {
-          const allNotes = JSON.parse(notesRaw)
-          const life = allNotes.find((n: any) => n.subject?.toUpperCase() === 'LIFE')
-          if (life) {
-            const base = groveData.length ? groveData : []
-            if (base.filter((t: any) => t.notebookId === life.id).length < 70) {
-              const maxId = base.reduce((m: number, t: any) => Math.max(m, t.id ?? 0), 0)
-              const stages = [3, 4, 5]
-              const newTrees = Array.from({ length: 70 }, (_, i) => ({
-                id: maxId + i + 1, type: 'tangerine', stage: stages[Math.floor(Math.random() * 3)],
-                progress: 100, plantedAt: Date.now() - Math.floor(Math.random() * 2592000000), notebookId: life.id,
-              }))
-              setGrove(prev => [...prev, ...newTrees])
-            }
-          }
-        }
-      }
-      if (Object.keys(inventoryData).length) setInventory(Object.keys(inventoryData).flatMap(k => Array(inventoryData[k]).fill(k)))
       if (achievementRows.length) {
         setAchievements(prev => prev.map(a => {
           const row = achievementRows.find(r => r.achievement_id === a.id)
@@ -1247,18 +1242,7 @@ export default function NoteApp() {
           return { ...a, progress: row.progress, completed: row.completed, claimed: row.completed }
         }))
       }
-      if (cosmetics.length) setUnlockedCosmetics(cosmetics)
 
-      // Streak: update if new day
-      if (profile) {
-        const today = new Date().toISOString().slice(0, 10)
-        if (profile.last_streak_date !== today) {
-          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-          const newStreak = profile.last_streak_date === yesterday ? profile.streak + 1 : 1
-          setStreak(newStreak)
-          await db.upsertPlayerProfile(user.id, { streak: newStreak, last_streak_date: today })
-        }
-      }
     }
     loadPlayerData()
   }, [user])
@@ -1290,7 +1274,8 @@ export default function NoteApp() {
     shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d", cycleHeader: "alt+1" },
     blockedSites: [],
     blockedApps: [],
-    devMode: true,
+    orchardTimeMode: "theme",
+    devMode: false,
     isDevUnlocked: false
   }
   const _savedSettingsRef = useRef<any>(undefined)
@@ -1311,8 +1296,9 @@ export default function NoteApp() {
     accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
     lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
+    shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
   } = settings
+  const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
   const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettingsRef.current?.trashNotes) ? _savedSettingsRef.current.trashNotes : [])
   const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => typeof _savedSettingsRef.current?.skipDeleteConfirmation === "boolean" ? _savedSettingsRef.current.skipDeleteConfirmation : false)
@@ -1341,7 +1327,7 @@ export default function NoteApp() {
     const r = paperRef.current.getBoundingClientRect()
     const scale = Number(zoom) || 1
     const y = (e.clientY - r.top) / scale
-    const hline = { id: uid(), x: 64, y, width: paperRef.current.clientWidth - 128 }
+    const hline = { id: uid(), x: 64, y, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
       ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
     }))
@@ -1543,7 +1529,7 @@ export default function NoteApp() {
         ? `[HIGHLIGHTED TEXT TO MODIFY]:\n${targetText}\n\n[SURROUNDING CONTEXT - do not modify, use for understanding only]:\n${contextText}`
         : targetText
 
-      const response = await fetch("/api/ai", {
+      const response = await apiFetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, text: apiText })
@@ -2188,7 +2174,7 @@ export default function NoteApp() {
 
       if (keyStr === shortcuts.toggleSidebar) {
         e.preventDefault()
-        setSidebarWidth((w: number) => w > 40 ? 0 : 256)
+        setSidebarWidth((w: number) => w > 40 ? 0 : 240)
       }
 
       if (keyStr === shortcuts.drawMode) {
@@ -2254,7 +2240,7 @@ export default function NoteApp() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const DEV_EMAILS = ["pvt.trisn@gmail.com"]
+  const isAdmin = user?.email === 'pvt.trisn@gmail.com'
   const ALL_COSMETICS = [
     "accent_#d97706", "accent_#ef4444", "accent_#ec4899", "accent_#a855f7", "accent_#3b82f6", "accent_#06b6d4", "accent_#22c55e", "accent_#64748b",
     "bfont_Palatino", "bfont_Arial", "bfont_Courier New",
@@ -2262,7 +2248,7 @@ export default function NoteApp() {
     "paper_dotgrid", "paper_plain", "paper_steno", "paper_dark-lined", "paper_dark-grid", "paper_dark-plain", "paper_dark-steno",
   ]
   useEffect(() => {
-    if (user?.email && DEV_EMAILS.includes(user.email)) setUnlockedCosmetics(ALL_COSMETICS)
+    if (isAdmin) setUnlockedCosmetics(ALL_COSMETICS)
   }, [user])
 
   // Resize observer for binding layout
@@ -2322,12 +2308,12 @@ export default function NoteApp() {
     loadSettings()
   }, [user])
 
-  // Save settings to localStorage + Supabase (debounced)
+  // Save settings to localStorage + Supabase (debounced, split by concern)
   const settingsSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(settingsSaveTimer.current)
     settingsSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation }
+      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
       if (user) {
         db.upsertSettings(user.id, {
@@ -2339,12 +2325,24 @@ export default function NoteApp() {
           base_font_size: baseFontSize, shortcuts, blocked_sites: blockedSites, blocked_apps: blockedApps,
           sidebar_width: sidebarWidth, skip_delete_confirmation: skipDeleteConfirmation, dev_mode: false
         })
-        db.upsertFolders(user.id, folders)
-        db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId))
       }
     }), 1000)
     return () => clearTimeout(settingsSaveTimer.current)
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, folders, user])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, user])
+
+  const folderSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => {
+    clearTimeout(folderSaveTimer.current)
+    folderSaveTimer.current = setTimeout(() => { if (user) db.upsertFolders(user.id, folders) }, 1000)
+    return () => clearTimeout(folderSaveTimer.current)
+  }, [folders, user])
+
+  const bookmarkSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => {
+    clearTimeout(bookmarkSaveTimer.current)
+    bookmarkSaveTimer.current = setTimeout(() => { if (user) db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId)) }, 1000)
+    return () => clearTimeout(bookmarkSaveTimer.current)
+  }, [bookmarks, user])
 
   const sidebarWidthTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
@@ -2365,11 +2363,9 @@ export default function NoteApp() {
       const groveData = { gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
-        db.upsertPlayerProfile(user.id, { gems, juice, last_char_count: lastCharCount })
-        db.upsertGrove(user.id, grove)
         const invMap: Record<string, number> = {}
         for (const item of inventory) invMap[item] = (invMap[item] || 0) + 1
-        db.upsertInventory(user.id, invMap)
+        db.upsertPlayerProfile(user.id, { gems, juice, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
         db.upsertAchievements(user.id, achievements)
       }
     }), 1000)
@@ -2396,7 +2392,7 @@ export default function NoteApp() {
     if (!activeTabId || gridView) return
     const key = `${activeTabId}:${currentPageIdx}:${gridView}`
     if (!gridView && editorRef.current && lastSyncKey.current !== key) {
-      editorRef.current.innerHTML = activeNote?.pages[currentPageIdx] || ""
+      editorRef.current.innerHTML = sanitizeHTML(activeNote?.pages[currentPageIdx] || "")
       lastSyncKey.current = key
     }
   }, [activeTabId, currentPageIdx, gridView, activeNote?.pages])
@@ -2439,7 +2435,7 @@ export default function NoteApp() {
           } else {
             const savedSettings = localStorage.getItem("pulp-settings")
             const sidebarPref = savedSettings ? JSON.parse(savedSettings).sidebarOnStart : true
-            if (sidebarPref !== false) setSidebarWidth(256)
+            if (sidebarPref !== false) setSidebarWidth(240)
           }
         }
       }
@@ -2517,7 +2513,7 @@ export default function NoteApp() {
     setNotes(prev => [...prev, newNote])
     setActiveTabId(id); setCurrentPageIdx(0)
     setSidebarOpen(true)
-    setSidebarWidth(256)
+    setSidebarWidth(240)
     checkAchievement('first_note')
     if (user) supabase.from("notes").insert({ id, subject: "My First Notebook", pages: [""], boxes, folder_id: null, user_id: user.id })
   }
@@ -2588,7 +2584,7 @@ export default function NoteApp() {
     if (action === "quiz") {
       setQuizState({ questions: [], current: 0, revealed: false, loading: true })
       try {
-        const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
+        const res = await apiFetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
         if (!res.ok) throw new Error("API error")
         const data = await res.json()
         const raw = data.result || ""
@@ -2614,7 +2610,7 @@ export default function NoteApp() {
 
     setAiResult({ title: actionLabel, result: "", loading: true })
     try {
-      const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
+      const res = await apiFetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
       if (!res.ok) throw new Error("API error")
       const data = await res.json()
       setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
@@ -2723,7 +2719,7 @@ export default function NoteApp() {
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: false } : n))
   }
 
-  const archivedNotes = notes.filter(n => n.archived)
+  const archivedNotes = useMemo(() => notes.filter(n => n.archived), [notes])
 
   // Periodic cleanup of trash older than 30 days
   useEffect(() => {
@@ -2850,7 +2846,7 @@ export default function NoteApp() {
   if (isLoading) return <PulpLoadingScreen />
 
   const handleUnlockDev = () => {
-    updateSettings({ isDevUnlocked: true })
+    if (isAdmin) updateSettings({ isDevUnlocked: true })
   }
 
   const handleOpenShop = () => {
@@ -3116,7 +3112,7 @@ export default function NoteApp() {
                 onCompactAll={handleCompactAll}
                 onInsertHR={() => {
                   if (!activeTabId || !paperRef.current) return
-                  const hline = { id: uid(), x: 64, y: 200, width: paperRef.current.clientWidth - 128 }
+                  const hline = { id: uid(), x: 64, y: 200, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
                   setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
                     ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
                   }))
@@ -3142,12 +3138,12 @@ export default function NoteApp() {
                 onStartSidebarDrag={startSidebarDrag}
                 sidebarWidth={sidebarWidth}
                 isSidebarDragging={isSidebarDragging}
-                juice={devMode ? 999999 : juice}
-                gems={devMode ? 999999 : gems}
+                juice={isAdmin ? 999999 : juice}
+                gems={isAdmin ? 999999 : gems}
                 userAvatarUrl={user?.user_metadata?.avatar_url}
                 userEmail={user?.email}
                 sidebarOpen={sidebarWidth > 40}
-                onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 256)}
+                onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
@@ -3351,11 +3347,47 @@ export default function NoteApp() {
                               })
                             })()}
 
-                            {/* Render horizontal lines */}
+                            {/* Render lines (horizontal and vertical) */}
                             {(() => {
                               boxes.hlineSelectionVersion
                               return (activeNote.hlines?.[currentPageIdx] || []).map(hl => {
                                 const isSelected = boxes.selectedHLineIdRef.current === hl.id
+                                const isVertical = hl.direction === "vertical"
+                                const lineColor = isSelected ? accent : getInkColor(paperStyle, theme === "dark")
+                                const lineW = isSelected ? 2.5 : 1.8
+
+                                if (isVertical) {
+                                  return (
+                                    <div key={hl.id} className="absolute z-20" style={{
+                                      left: hl.x - 4, top: hl.y, width: 8, height: hl.width,
+                                      cursor: isSelected ? 'grab' : 'pointer',
+                                    }}>
+                                      <svg width="8" height="100%" style={{ overflow: 'visible', filter: 'url(#hand-rule)' }}>
+                                        <line x1="4" y1="0" x2="4" y2="100%"
+                                          stroke={lineColor} strokeWidth={lineW} strokeLinecap="round"
+                                        />
+                                      </svg>
+                                      {isSelected && <>
+                                        <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
+                                        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'n-resize', border: '2px solid white' }}
+                                          onMouseDown={e => { e.stopPropagation(); const startY = e.clientY; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
+                                            const onMove = (ev: MouseEvent) => { const dy = (ev.clientY - startY) / scale; const newY = origY + dy; const newW = origW - dy; if (newW < 20) return
+                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, y: newY, width: newW }) } })) }
+                                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                                            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
+                                        />
+                                        <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 's-resize', border: '2px solid white' }}
+                                          onMouseDown={e => { e.stopPropagation(); const startY = e.clientY; const origW = hl.width; const scale = Number(zoom) || 1
+                                            const onMove = (ev: MouseEvent) => { const dy = (ev.clientY - startY) / scale; const newW = origW + dy; if (newW < 20) return
+                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, width: newW }) } })) }
+                                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                                            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
+                                        />
+                                      </>}
+                                    </div>
+                                  )
+                                }
+
                                 return (
                                   <div key={hl.id} className="absolute z-20" style={{
                                     left: hl.x, top: hl.y - 4, width: hl.width, height: 8,
@@ -3363,11 +3395,26 @@ export default function NoteApp() {
                                   }}>
                                     <svg width="100%" height="8" style={{ overflow: 'visible', filter: 'url(#hand-rule)' }}>
                                       <line x1="0" y1="4" x2="100%" y2="4"
-                                        stroke={isSelected ? accent : (theme === "dark" ? "rgba(255,255,255,0.2)" : "#1a1a1a")}
-                                        strokeWidth={isSelected ? 2.5 : 1.8} strokeLinecap="round"
+                                        stroke={lineColor} strokeWidth={lineW} strokeLinecap="round"
                                       />
                                     </svg>
-                                    {isSelected && <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />}
+                                    {isSelected && <>
+                                      <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
+                                      <div className="absolute top-1/2 -translate-y-1/2" style={{ left: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'w-resize', border: '2px solid white' }}
+                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const origX = hl.x; const origW = hl.width; const scale = Number(zoom) || 1
+                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const newX = origX + dx; const newW = origW - dx; if (newW < 20) return
+                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, width: newW }) } })) }
+                                          const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                                          window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
+                                      />
+                                      <div className="absolute top-1/2 -translate-y-1/2" style={{ right: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'e-resize', border: '2px solid white' }}
+                                        onMouseDown={e => { e.stopPropagation(); const startX = e.clientX; const origW = hl.width; const scale = Number(zoom) || 1
+                                          const onMove = (ev: MouseEvent) => { const dx = (ev.clientX - startX) / scale; const newW = origW + dx; if (newW < 20) return
+                                            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, width: newW }) } })) }
+                                          const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                                          window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp) }}
+                                      />
+                                    </>}
                                   </div>
                                 )
                               })
@@ -3461,7 +3508,7 @@ export default function NoteApp() {
                                 isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                                 selectedCount={boxes.selectedBoxIdsRef.current.size}
                                 loadingBoxId={boxes.loadingBoxId}
-                                accentSolid={accent.length > 7 ? accent.slice(0, 7) : accent}
+                                accentSolid={accentSolid}
                                 theme={theme}
                                 paperStyle={paperStyle}
                                 startDrag={boxes.startDrag}
@@ -3474,9 +3521,9 @@ export default function NoteApp() {
                                 onInput={handleEditorInput}
                                 onRewrite={boxes.rewriteBox}
                                 onImageGen={boxes.generateSketch}
-                                formattingOpen={toolbarFormattingOpen}
+                                formattingOpen={boxes.selectedBoxIdsRef.current.has(box.id) && toolbarFormattingOpen}
                                 setFormattingOpen={setToolbarFormattingOpen}
-                                aiOpen={toolbarAiOpen}
+                                aiOpen={boxes.selectedBoxIdsRef.current.has(box.id) && toolbarAiOpen}
                                 setAiOpen={setToolbarAiOpen}
                                 onDragStart={noop}
                                 onDragEnd={noop}
@@ -3584,6 +3631,8 @@ export default function NoteApp() {
             setGrove={setGrove}
             notes={notes}
             userId={user?.id}
+            activeTabId={activeTabId}
+            orchardTimeMode={orchardTimeMode || "theme"}
           /></div>}
 
           {statsOpen && <div className="absolute inset-0 z-40 overflow-hidden"><StatsView
@@ -3607,8 +3656,8 @@ export default function NoteApp() {
             onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
             theme={theme}
             accent={accent}
-            gems={devMode ? 999999 : gems}
-            juice={devMode ? 999999 : juice}
+            gems={isAdmin ? 999999 : gems}
+            juice={isAdmin ? 999999 : juice}
             inventory={inventory}
             setGems={setGems}
             setJuice={setJuice}
@@ -3644,9 +3693,17 @@ export default function NoteApp() {
             onInsertHLine={() => {
               if (!activeTabId || !paperRef.current) return
               const cursorY = slashMenu ? slashMenu.y : 200
-              const hline = { id: uid(), x: 64, y: cursorY, width: paperRef.current.clientWidth - 128 }
+              const hline = { id: uid(), x: 64, y: cursorY, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
               setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
                 ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
+              }))
+            }}
+            onInsertVLine={() => {
+              if (!activeTabId || !paperRef.current) return
+              const cursorY = slashMenu ? slashMenu.y : 200
+              const vline = { id: uid(), x: slashMenu ? slashMenu.x : paperRef.current.clientWidth / 2, y: cursorY, width: 300, direction: "vertical" as const }
+              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
               }))
             }}
           />
@@ -3685,7 +3742,7 @@ export default function NoteApp() {
               setAiMenu(null)
 
               try {
-                const response = await fetch("/api/ai", {
+                const response = await apiFetch("/api/ai", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ prompt, text: selectedText || "" })
@@ -3829,7 +3886,7 @@ export default function NoteApp() {
               setShowAiCommandBar(false)
               setAiResult({ title: "AI Generation", result: "", loading: true })
               try {
-                const res = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) })
+                const res = await apiFetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) })
                 if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Request failed") }
                 const data = await res.json()
                 setAiResult(prev => prev ? { ...prev, result: data.result || "", loading: false } : null)
@@ -3938,7 +3995,7 @@ export default function NoteApp() {
           </svg>
         </button>
       )}
-      {user?.email && DEV_EMAILS.includes(user.email) && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
+      {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
     </>
     </LazyMotion>
   )

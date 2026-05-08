@@ -5,6 +5,8 @@ import { ItemMenu } from "./ItemMenu"
 import { IconPicker } from "./IconPicker"
 import dynamic from "next/dynamic"
 import type { Bookmark, User } from "@/app/types"
+import { apiFetch } from "@/lib/apiFetch"
+import { GlassFilter } from "@/components/ui/liquid-glass-button"
 
 // ─── Archive Panel ────────────────────────────────────────────────────────────
 function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
@@ -196,7 +198,7 @@ export const Sidebar = memo(function Sidebar({
             return text + (boxes ? " [boxes: " + boxes + "]" : "")
           }),
         }))
-        const res = await fetch("/api/search", {
+        const res = await apiFetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: q, notes: noteSummaries }),
@@ -542,9 +544,13 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`bg-[#110d0e] text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} border-r border-white/5 relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 12px rgba(0,0,0,0.35)" }}>
+      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
+        <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
+        <div className="absolute inset-0 z-0" style={{ background: 'rgba(11,9,10,0.72)' }} />
+        <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)' }} />
+        <GlassFilter />
 
-        <div className="relative p-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+        <div className="relative px-3.5 py-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 220 }}>
           <div
             onClick={() => {
               setLogoSqueeze(true)
@@ -591,7 +597,7 @@ export const Sidebar = memo(function Sidebar({
                   }
                 }}
                 placeholder="Search notes…"
-                className="relative w-full bg-zinc-900/60 border border-white/10 rounded-full pl-8 pr-3 py-1.5 text-xs outline-none focus:border-white/30 transition-colors text-zinc-300 placeholder:text-zinc-600"
+                className="relative w-full bg-zinc-900/40 border border-white/[0.06] rounded-lg pl-7 pr-2.5 py-1 text-[11px] outline-none focus:border-white/20 transition-colors text-zinc-400 placeholder:text-zinc-600"
               />
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(""); searchInputRef.current?.focus() }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400 transition-colors">
@@ -600,7 +606,7 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-xl border border-white/10 bg-[#110d0e] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }} onMouseDown={e => e.stopPropagation()}>
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-lg border border-white/10 bg-[#09090b] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }} onMouseDown={e => e.stopPropagation()}>
                 {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>
@@ -676,24 +682,24 @@ export const Sidebar = memo(function Sidebar({
         {/* Nav buttons — top */}
         <div className="px-2 pt-2 pb-1 flex flex-col gap-px z-10 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           {onOpenShop && (
-            <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
+            <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
             </button>
           )}
           {onOpenStats && (
-            <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
+            <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
           {onOpenLeaderboard && (
-            <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
+            <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
               <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Leaderboard</span>
             </button>
           )}
-          <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors hover:bg-white/[0.05] group w-full text-left focus:outline-none">
+          <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] group w-full text-left focus:outline-none">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Settings</span>
           </button>
@@ -880,7 +886,7 @@ export const Sidebar = memo(function Sidebar({
               <button
                 onClick={onOpenTimer}
                 title="Focus timer"
-                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md transition-colors group w-full text-left active:scale-95"
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors group w-full text-left active:scale-95"
                 style={{
                   background: timerOpen ? "rgba(217,119,6,0.15)" : "#1a1517",
                   boxShadow: timerOpen ? "0 0 12px rgba(217,119,6,0.25)" : "0 0 0 1px rgba(255,255,255,0.08)",

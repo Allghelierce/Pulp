@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
+import { getAuthUser } from "@/lib/auth"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
     if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 30 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
+
+    const user = await getAuthUser(request)
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })

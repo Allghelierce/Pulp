@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, memo, useCallback } from "react"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, Tree } from "@/app/types"
 import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
+import { apiFetch } from "@/lib/apiFetch"
 
 interface VitalitySystemProps {
   theme: "light" | "dark"
@@ -237,39 +238,45 @@ export const VitalitySystem = memo(function VitalitySystem({
     }))
   }, [setAchievements])
 
-  const claimReward = useCallback(() => {
+  const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
     const minutes = timerTotal / 60
-    const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
-    setJuice(s => s + reward)
-    const xpGain = Math.max(5, Math.round(minutes * 2))
-    setXp(x => x + xpGain)
+    const treeType = selectedSeed || 'tangerine'
 
-    logFocusSession(minutes, reward)
+    logFocusSession(minutes, 0)
 
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
-    const treeType = selectedSeed || 'tangerine'
-    const nbId = selectedNotebookId ?? '_unassigned'
-    let plotsFull = false
     try {
-      const stored = JSON.parse(localStorage.getItem('pulp-unlocked-plots') || '{}')
-      const unlocked = stored[nbId] || 1
-      const treesInNb = grove.filter(t => (t.notebookId || '_unassigned') === nbId).length
-      if (treesInNb >= unlocked * 30) plotsFull = true
-    } catch {}
-
-    if (plotsFull) {
-      setJuice(s => s + reward)
-    } else {
-      setGrove(g => {
-        const next = [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }]
-        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-        checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
-        return next
+      const res = await apiFetch('/api/grove', {
+        method: 'POST',
+        body: JSON.stringify({ treeType, notebookId: selectedNotebookId, timerDuration: timerTotal }),
       })
+      if (res.ok) {
+        const data = await res.json()
+        setJuice(data.juice)
+        setXp(x => x + data.xpReward)
+        if (data.tree) {
+          setGrove(g => {
+            const next = [...g, data.tree]
+            checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+            checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
+            return next
+          })
+        }
+      } else {
+        const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
+        setJuice(s => s + reward)
+        setXp(x => x + Math.max(5, Math.round(minutes * 2)))
+        setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
+      }
+    } catch {
+      const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
+      setJuice(s => s + reward)
+      setXp(x => x + Math.max(5, Math.round(minutes * 2)))
+      setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
     }
 
     setTimerElapsed(0)

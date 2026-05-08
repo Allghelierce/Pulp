@@ -73,7 +73,7 @@ export const RightSidebar = memo(function RightSidebar({
         </div>
 
         {/* XP / Level Banner */}
-        <div className={`mx-4 mt-4 p-3 rounded-xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-gradient-to-r from-amber-50/60 to-orange-50/40 border-orange-100/40'}`}>
+        <div className={`mx-4 mt-4 p-3 rounded-lg border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-gradient-to-r from-amber-50/60 to-orange-50/40 border-orange-100/40'}`}>
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
               <span className={`text-[18px] font-black tabular-nums ${isDark ? 'text-amber-400' : 'text-amber-600'}`} style={{ fontFamily: '"EB Garamond", serif' }}>
@@ -124,7 +124,7 @@ export const RightSidebar = memo(function RightSidebar({
               {/* Wallet / Currencies */}
               <div className="grid grid-cols-2 gap-3">
                 <div
-                  className={`p-4 rounded-2xl border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-orange-50/30 border-orange-100/50 hover:bg-orange-50/50'}`}
+                  className={`p-4 rounded-lg border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-orange-50/30 border-orange-100/50 hover:bg-orange-50/50'}`}
                   onMouseEnter={() => setJuiceTooltip(true)}
                   onMouseLeave={() => setJuiceTooltip(false)}
                 >
@@ -141,7 +141,7 @@ export const RightSidebar = memo(function RightSidebar({
                   )}
                 </div>
                 <div
-                  className={`p-4 rounded-2xl border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-purple-50/30 border-purple-100/50 hover:bg-purple-50/50'}`}
+                  className={`p-4 rounded-lg border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-purple-50/30 border-purple-100/50 hover:bg-purple-50/50'}`}
                   onMouseEnter={() => setGemsTooltip(true)}
                   onMouseLeave={() => setGemsTooltip(false)}
                 >
@@ -171,7 +171,7 @@ export const RightSidebar = memo(function RightSidebar({
                       className="flex flex-col items-center group disabled:opacity-30"
                     >
                       <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center border-2 border-dashed border-zinc-200 group-hover:border-zinc-300 transition-all mb-1 overflow-hidden relative"
+                        className="w-11 h-11 rounded-lg flex items-center justify-center border-2 border-dashed border-zinc-200 group-hover:border-zinc-300 transition-all mb-1 overflow-hidden relative"
                         style={{ backgroundColor: TREE_TYPES[type].bg }}
                       >
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: TREE_TYPES[type].color }} />
@@ -189,13 +189,13 @@ export const RightSidebar = memo(function RightSidebar({
                   <h2 className="text-[9px] font-black uppercase tracking-widest text-zinc-300">Your Grove</h2>
                   <span className="text-[9px] font-medium text-zinc-400 italic">{grove.filter(Boolean).length}/9</span>
                 </div>
-                <div className={`grid grid-cols-3 gap-3 p-4 rounded-3xl border shadow-inner ${isDark ? 'bg-[#0f0f12] border-zinc-800' : 'bg-emerald-50/10 border-emerald-100/30'}`}>
+                <div className={`grid grid-cols-3 gap-3 p-4 rounded-2xl border shadow-inner ${isDark ? 'bg-[#09090b] border-zinc-800' : 'bg-emerald-50/10 border-emerald-100/30'}`}>
                   {[...Array(9)].map((_, i) => {
                     const tree = grove[i]
                     return (
                       <div
                         key={i}
-                        className={`aspect-square rounded-2xl flex items-center justify-center relative border shadow-sm ${isDark ? 'bg-zinc-900/50 border-zinc-800/50' : 'bg-white/80 border-emerald-100/40'}`}
+                        className={`aspect-square rounded-lg flex items-center justify-center relative border shadow-sm ${isDark ? 'bg-zinc-900/50 border-zinc-800/50' : 'bg-white/80 border-emerald-100/40'}`}
                       >
                         {!tree ? (
                           <div className="w-1 h-1 rounded-full bg-zinc-200" />

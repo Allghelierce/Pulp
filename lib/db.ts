@@ -13,6 +13,10 @@ export interface PlayerProfile {
   pro_access: boolean
   pro_expires_at: string | null
   last_char_count: number
+  grove: Tree[]
+  inventory: Record<string, number>
+  unlocked_cosmetics: string[]
+  unlocked_plots: Record<string, number[]>
 }
 
 export async function getPlayerProfile(userId: string): Promise<PlayerProfile | null> {
@@ -24,55 +28,30 @@ export async function upsertPlayerProfile(userId: string, profile: Partial<Playe
   return supabase.from('player_profiles').upsert({ user_id: userId, ...profile })
 }
 
-// ─── Grove (Trees) ───
+// ─── Grove (stored as JSONB on player_profiles) ───
 
 export async function getGrove(userId: string): Promise<Tree[]> {
-  const { data } = await supabase.from('grove').select('*').eq('user_id', userId)
-  if (!data) return []
-  return data.map(row => ({
-    id: row.id,
-    type: row.tree_type,
-    stage: parseInt(row.stage) || 0,
-    progress: row.progress,
-    plantedAt: new Date(row.planted_at).getTime(),
-    notebookId: row.notebook_id || undefined,
-    dead: row.dead
-  }))
-}
-
-export async function upsertTree(userId: string, tree: Tree & { dead?: boolean }) {
-  return supabase.from('grove').upsert({
-    id: String(tree.id),
-    user_id: userId,
-    tree_type: tree.type,
-    stage: String(tree.stage),
-    progress: tree.progress,
-    planted_at: new Date(tree.plantedAt).toISOString(),
-    notebook_id: tree.notebookId || null,
-    dead: tree.dead || false
-  })
+  const { data } = await supabase.from('player_profiles').select('grove').eq('user_id', userId).single()
+  return data?.grove || []
 }
 
 export async function upsertGrove(userId: string, trees: Tree[]) {
-  if (!trees.length) return
-  const rows = trees.map(t => ({
-    id: String(t.id),
-    user_id: userId,
-    tree_type: t.type,
-    stage: String(t.stage),
-    progress: t.progress,
-    planted_at: new Date(t.plantedAt).toISOString(),
-    notebook_id: t.notebookId || null,
-    dead: (t as any).dead || false
-  }))
-  return supabase.from('grove').upsert(rows)
+  return supabase.from('player_profiles').upsert({ user_id: userId, grove: trees })
+}
+
+export async function upsertTree(userId: string, tree: Tree & { dead?: boolean }) {
+  const existing = await getGrove(userId)
+  const idx = existing.findIndex(t => String(t.id) === String(tree.id))
+  if (idx >= 0) existing[idx] = tree; else existing.push(tree)
+  return upsertGrove(userId, existing)
 }
 
 export async function deleteTree(userId: string, treeId: string | number) {
-  return supabase.from('grove').delete().eq('id', String(treeId)).eq('user_id', userId)
+  const existing = await getGrove(userId)
+  return upsertGrove(userId, existing.filter(t => String(t.id) !== String(treeId)))
 }
 
-// ─── Inventory ───
+// ─── Inventory (stored as JSONB on player_profiles) ───
 
 export interface InventoryItem {
   item_type: string
@@ -80,26 +59,45 @@ export interface InventoryItem {
 }
 
 export async function getInventory(userId: string): Promise<Record<string, number>> {
-  const { data } = await supabase.from('inventory').select('*').eq('user_id', userId)
-  if (!data) return {}
-  const map: Record<string, number> = {}
-  for (const row of data) map[row.item_type] = row.quantity
-  return map
+  const { data } = await supabase.from('player_profiles').select('inventory').eq('user_id', userId).single()
+  return data?.inventory || {}
 }
 
 export async function upsertInventory(userId: string, inventory: Record<string, number>) {
-  const rows = Object.entries(inventory)
-    .filter(([, qty]) => qty > 0)
-    .map(([item_type, quantity]) => ({ user_id: userId, item_type, quantity }))
-  if (!rows.length) return
-  return supabase.from('inventory').upsert(rows)
+  return supabase.from('player_profiles').upsert({ user_id: userId, inventory })
 }
 
 export async function updateInventoryItem(userId: string, itemType: string, quantity: number) {
-  if (quantity <= 0) {
-    return supabase.from('inventory').delete().eq('user_id', userId).eq('item_type', itemType)
-  }
-  return supabase.from('inventory').upsert({ user_id: userId, item_type: itemType, quantity })
+  const inv = await getInventory(userId)
+  if (quantity <= 0) delete inv[itemType]; else inv[itemType] = quantity
+  return upsertInventory(userId, inv)
+}
+
+// ─── Unlocked Cosmetics (stored as JSONB on player_profiles) ───
+
+export async function getUnlockedCosmetics(userId: string): Promise<string[]> {
+  const { data } = await supabase.from('player_profiles').select('unlocked_cosmetics').eq('user_id', userId).single()
+  return data?.unlocked_cosmetics || []
+}
+
+export async function unlockCosmetic(userId: string, cosmeticId: string) {
+  const existing = await getUnlockedCosmetics(userId)
+  if (existing.includes(cosmeticId)) return
+  return supabase.from('player_profiles').upsert({ user_id: userId, unlocked_cosmetics: [...existing, cosmeticId] })
+}
+
+// ─── Unlocked Plots (stored as JSONB on player_profiles) ───
+
+export async function getUnlockedPlots(userId: string): Promise<Record<string, number[]>> {
+  const { data } = await supabase.from('player_profiles').select('unlocked_plots').eq('user_id', userId).single()
+  return data?.unlocked_plots || {}
+}
+
+export async function unlockPlot(userId: string, notebookId: string, plotIndex: number) {
+  const plots = await getUnlockedPlots(userId)
+  if (!plots[notebookId]) plots[notebookId] = []
+  if (!plots[notebookId].includes(plotIndex)) plots[notebookId].push(plotIndex)
+  return supabase.from('player_profiles').upsert({ user_id: userId, unlocked_plots: plots })
 }
 
 // ─── Achievements ───
@@ -257,34 +255,6 @@ export async function removeFromTrash(userId: string, noteId: string) {
   return supabase.from('trash').delete().eq('user_id', userId).eq('note_id', noteId)
 }
 
-// ─── Unlocked Cosmetics ───
-
-export async function getUnlockedCosmetics(userId: string): Promise<string[]> {
-  const { data } = await supabase.from('unlocked_cosmetics').select('cosmetic_id').eq('user_id', userId)
-  return data?.map(r => r.cosmetic_id) || []
-}
-
-export async function unlockCosmetic(userId: string, cosmeticId: string) {
-  return supabase.from('unlocked_cosmetics').upsert({ user_id: userId, cosmetic_id: cosmeticId })
-}
-
-// ─── Unlocked Plots ───
-
-export async function getUnlockedPlots(userId: string): Promise<Record<string, number[]>> {
-  const { data } = await supabase.from('unlocked_plots').select('*').eq('user_id', userId)
-  if (!data) return {}
-  const map: Record<string, number[]> = {}
-  for (const row of data) {
-    if (!map[row.notebook_id]) map[row.notebook_id] = []
-    map[row.notebook_id].push(row.plot_index)
-  }
-  return map
-}
-
-export async function unlockPlot(userId: string, notebookId: string, plotIndex: number) {
-  return supabase.from('unlocked_plots').upsert({ user_id: userId, notebook_id: notebookId, plot_index: plotIndex })
-}
-
 // ─── Migration helper: move existing user_settings blob to new tables ───
 
 export async function migrateFromLegacy(userId: string) {
@@ -305,18 +275,28 @@ export async function migrateFromLegacy(userId: string) {
   // Migrate grove data
   if (s.grove) {
     const groveData = s.grove
-    await upsertPlayerProfile(userId, {
+    const profileUpdate: Partial<PlayerProfile> = {
       gems: groveData.gems ?? 3,
       juice: groveData.juice ?? 50,
-      last_char_count: groveData.lastCharCount ?? 0
-    })
-    if (groveData.grove?.length) await upsertGrove(userId, groveData.grove)
-    if (groveData.inventory) await upsertInventory(userId, groveData.inventory)
-    if (groveData.achievements?.length) {
-      await upsertAchievements(userId, groveData.achievements)
+      last_char_count: groveData.lastCharCount ?? 0,
+    }
+    if (groveData.grove?.length) profileUpdate.grove = groveData.grove
+    if (groveData.inventory) {
+      const invMap: Record<string, number> = {}
+      if (Array.isArray(groveData.inventory)) {
+        for (const item of groveData.inventory) invMap[item] = (invMap[item] || 0) + 1
+      } else {
+        Object.assign(invMap, groveData.inventory)
+      }
+      profileUpdate.inventory = invMap
     }
     if (groveData.unlockedCosmetics?.length) {
-      await Promise.all(groveData.unlockedCosmetics.map((c: string) => unlockCosmetic(userId, c)))
+      profileUpdate.unlocked_cosmetics = groveData.unlockedCosmetics
+    }
+    await upsertPlayerProfile(userId, profileUpdate)
+
+    if (groveData.achievements?.length) {
+      await upsertAchievements(userId, groveData.achievements)
     }
   }
 

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from "react"
 import type { NoteData } from "@/app/types"
 import { extractTextFromHTML } from "@/lib/sanitize"
+import { apiFetch } from "@/lib/apiFetch"
 
 interface Message {
   id: string
@@ -115,7 +116,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
       const history = [...messages, userMsg].slice(-10).map(m => `${m.role}: ${m.content}`).join("\n")
       const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}\n\n[CONVERSATION HISTORY]:\n${history}`
 
-      const response = await fetch("/api/ai", {
+      const response = await apiFetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: text.trim(), text: contextPayload.length > 9500 ? contextPayload.slice(0, contextPayload.lastIndexOf("\n", 9500) || 9500) + "\n[...truncated]" : contextPayload })
@@ -130,7 +131,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, on
     setLoading(false)
   }, [loading, messages, note])
 
-  const bg = isDark ? "#18181b" : "#ffffff"
+  const bg = isDark ? "#09090b" : "#ffffff"
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
   const mutedText = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)"
   const subtleText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)"

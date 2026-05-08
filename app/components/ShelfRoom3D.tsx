@@ -2,7 +2,7 @@
 import { useRef, useState, Suspense, useEffect } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Text, RoundedBox } from "@react-three/drei"
-import * as THREE from "three"
+import { Vector3, Color, MathUtils, DoubleSide, BackSide, type Group } from "three"
 import type { NoteData } from "@/app/types"
 import { Plus, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -25,16 +25,16 @@ const BOOK_COLORS = [
 
 // Camera positions — close, intimate
 const VIEWS = [
-  { pos: new THREE.Vector3( 2.8, 0.15, -0.3), look: new THREE.Vector3(-5, 0.6, -0.8) },
-  { pos: new THREE.Vector3( 0,   0.15,  1.1), look: new THREE.Vector3( 0, 0.6, -4.0) },
-  { pos: new THREE.Vector3(-2.8, 0.15, -0.3), look: new THREE.Vector3( 5, 0.6, -0.8) },
+  { pos: new Vector3( 2.8, 0.15, -0.3), look: new Vector3(-5, 0.6, -0.8) },
+  { pos: new Vector3( 0,   0.15,  1.1), look: new Vector3( 0, 0.6, -4.0) },
+  { pos: new Vector3(-2.8, 0.15, -0.3), look: new Vector3( 5, 0.6, -0.8) },
 ]
 const VIEW_LABELS = ["Left Wall", "Front Wall", "Right Wall"]
 
 // ── Camera rig ──────────────────────────────────────────────────────────────
 function CameraRig({ viewIdx }: { viewIdx: number }) {
   const { camera } = useThree()
-  const lookTarget = useRef(new THREE.Vector3(0, 0.6, -4))
+  const lookTarget = useRef(new Vector3(0, 0.6, -4))
   const initialized = useRef(false)
   useEffect(() => {
     if (!initialized.current) {
@@ -58,13 +58,13 @@ function Book({ x, y, z, rotY = 0, w, h, d, color, label, onClick }: {
   x: number; y: number; z: number; rotY?: number
   w: number; h: number; d: number; color: string; label: string; onClick: () => void
 }) {
-  const ref = useRef<THREE.Group>(null)
+  const ref = useRef<Group>(null)
   const [hov, setHov] = useState(false)
   useFrame((_, dt) => {
     if (!ref.current) return
-    ref.current.position.y = THREE.MathUtils.lerp(ref.current.position.y, y + (hov ? 0.12 : 0), dt * 9)
+    ref.current.position.y = MathUtils.lerp(ref.current.position.y, y + (hov ? 0.12 : 0), dt * 9)
   })
-  const col = new THREE.Color(color)
+  const col = new Color(color)
   return (
     <group ref={ref} position={[x, y, z]} rotation={[0, rotY, 0]}>
       <RoundedBox args={[w, h, d]} radius={0.012} smoothness={2}
@@ -269,7 +269,7 @@ function FloorLamp({ x, z }: { x: number; z: number }) {
       {/* Shade housing */}
       <mesh position={[0, 2.28, 0]}>
         <cylinderGeometry args={[0.2, 0.12, 0.28, 14, 1, true]} />
-        <meshStandardMaterial color="#f0e8d8" side={THREE.DoubleSide} roughness={0.9} opacity={0.85} transparent />
+        <meshStandardMaterial color="#f0e8d8" side={DoubleSide} roughness={0.9} opacity={0.85} transparent />
       </mesh>
       {/* Shade cap */}
       <mesh position={[0, 2.42, 0]}>
@@ -295,7 +295,7 @@ function PendantLight({ x = 0, y = 3.0, z = -1.5 }: { x?: number; y?: number; z?
       </mesh>
       <mesh position={[0, -0.75, 0]}>
         <sphereGeometry args={[0.18, 14, 7, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#1e1e1e" metalness={0.75} roughness={0.3} side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#1e1e1e" metalness={0.75} roughness={0.3} side={DoubleSide} />
       </mesh>
       <mesh position={[0, -0.74, 0]}>
         <sphereGeometry args={[0.13, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -618,7 +618,7 @@ function EntranceWall() {
     <group>
       <mesh position={[0, 0.5, 3.0]} receiveShadow>
         <planeGeometry args={[10, 5.5]} />
-        <meshStandardMaterial color="#ede5cf" roughness={0.95} side={THREE.BackSide} />
+        <meshStandardMaterial color="#ede5cf" roughness={0.95} side={BackSide} />
       </mesh>
       {/* Large arched window — evening glow */}
       <group position={[0, 0.9, 2.98]}>
@@ -652,7 +652,7 @@ function EntranceWall() {
         <group key={i} position={[wx, 1.2, 2.96]}>
           <mesh position={[0, 0.3, 0.06]}>
             <cylinderGeometry args={[0.08, 0.04, 0.3, 10, 1, true]} />
-            <meshStandardMaterial color="#e8e0d0" side={THREE.DoubleSide} roughness={0.85} opacity={0.8} transparent />
+            <meshStandardMaterial color="#e8e0d0" side={DoubleSide} roughness={0.85} opacity={0.8} transparent />
           </mesh>
           <mesh position={[0, 0.08, 0.06]}>
             <boxGeometry args={[0.06, 0.18, 0.08]} />

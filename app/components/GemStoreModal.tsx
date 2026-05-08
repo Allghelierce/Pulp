@@ -166,7 +166,7 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
               {GEM_PACKS.map(pack => (
                 <button
                   key={pack.id}
-                  className="flex-1 flex flex-col items-center gap-2 rounded-xl transition-all relative overflow-hidden"
+                  className="flex-1 flex flex-col items-center gap-2 rounded-lg transition-all relative overflow-hidden"
                   style={{
                     padding: '24px 12px 18px',
                     background: pack.popular ? `${accent}0a` : 'rgba(255,255,255,0.02)',

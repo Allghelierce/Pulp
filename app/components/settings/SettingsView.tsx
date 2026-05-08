@@ -129,6 +129,7 @@ export interface PulpConfig {
   pageLayout: "paginated" | "scroll"
   shortcuts: Record<string, string>
   blockedSites: string[]; blockedApps: string[]
+  orchardTimeMode: "theme" | "realtime"
   devMode: boolean; isDevUnlocked: boolean
 }
 
@@ -157,7 +158,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
     lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    pageLayout, shortcuts, blockedSites, blockedApps, devMode, isDevUnlocked
+    pageLayout, shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
   } = config
   const isDark = theme === "dark"
   const isPremium = user?.email?.includes("pro") || false
@@ -441,6 +442,14 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   control={<SettingToggle checked={bgEffect} onChange={v => onUpdateConfig({ bgEffect: v })} isDark={isDark} />}
                 />
                 {/* Moved to Paper & Page section for better relevance */}
+              </SettingSection>
+              <SettingSection title="Orchard" isDark={isDark}>
+                <SettingRow
+                  title="Time of day"
+                  isDark={isDark}
+                  description="Set orchard lighting based on your theme or real clock"
+                  control={<SegmentedControl options={[["theme", "Theme"], ["realtime", "Clock"]]} value={orchardTimeMode || "theme"} onChange={v => onUpdateConfig({ orchardTimeMode: v as "theme" | "realtime" })} isDark={isDark} />}
+                />
               </SettingSection>
 
               <SettingSection title="Personalization" isDark={isDark}>

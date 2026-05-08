@@ -78,7 +78,7 @@ const SignIn1: React.FC<SignInProps> = ({
             value={email}
             required
             onChange={e => onEmailChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl text-white placeholder-zinc-600 text-sm focus:outline-none"
+            className="w-full px-4 py-3 rounded-lg text-white placeholder-zinc-600 text-sm focus:outline-none"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -93,7 +93,7 @@ const SignIn1: React.FC<SignInProps> = ({
             value={password}
             required
             onChange={e => onPasswordChange(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl text-white placeholder-zinc-600 text-sm focus:outline-none"
+            className="w-full px-4 py-3 rounded-lg text-white placeholder-zinc-600 text-sm focus:outline-none"
             style={{
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -193,9 +193,6 @@ const SignIn1: React.FC<SignInProps> = ({
             </div>
           ))}
         </div>
-        <p className="text-xs text-zinc-600">
-          Join <span className="text-zinc-400 font-medium">thousands</span> of others already using Pulp.
-        </p>
       </div>
     </div>
   )

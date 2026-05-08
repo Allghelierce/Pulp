@@ -104,7 +104,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
       <button
         onClick={() => setOpen(v => !v)}
         title="Pulp shelf"
-        className="flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors hover:bg-white/5 group"
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors hover:bg-white/5 group"
       >
         {/* Mini orange icon */}
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -122,7 +122,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
       {/* ── POPOVER PANEL ──────────────────────────────── */}
       {open && (
         <div
-          className="absolute bottom-full left-0 mb-2 z-[100] rounded-2xl shadow-2xl border border-white/8 overflow-hidden"
+          className="absolute bottom-full left-0 mb-2 z-[100] rounded-lg shadow-2xl border border-white/8 overflow-hidden"
           style={{ width: 340, background: '#1c1208' }}
         >
           {/* Header */}

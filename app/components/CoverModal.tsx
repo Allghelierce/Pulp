@@ -132,7 +132,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="relative bg-zinc-800 border border-zinc-700/50 rounded-3xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-xl overflow-hidden"
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-xl overflow-hidden"
       >
         {/* Header */}
         <div className="px-8 pt-8 pb-4 flex items-center justify-between border-b border-white/5">
@@ -173,7 +173,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={cn(
-                    "flex h-72 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed transition-all",
+                    "flex h-72 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed transition-all",
                     isDragging
                       ? "border-orange-500 bg-orange-500/5 shadow-[0_0_40px_rgba(245,160,48,0.1)]"
                       : "border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600"
@@ -189,7 +189,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                 </div>
               ) : (
                 <div className="relative group">
-                  <div className="relative h-72 overflow-hidden rounded-2xl border border-zinc-700 group shadow-2xl">
+                  <div className="relative h-72 overflow-hidden rounded-lg border border-zinc-700 group shadow-2xl">
                     <NextImage
                       src={previewUrl}
                       alt="Cover Preview"
@@ -199,13 +199,13 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <button
                         onClick={handleThumbnailClick}
-                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all border border-white/20"
+                        className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all border border-white/20"
                       >
                         <ImageIcon className="h-4 w-4 text-white" />
                       </button>
                       <button
                         onClick={handleRemove}
-                        className="w-10 h-10 rounded-xl bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 hover:scale-110 transition-all border border-red-400/20 shadow-lg shadow-red-500/20"
+                        className="w-10 h-10 rounded-lg bg-red-500/80 backdrop-blur-md flex items-center justify-center hover:bg-red-500 hover:scale-110 transition-all border border-red-400/20 shadow-lg shadow-red-500/20"
                       >
                         <Trash2 className="h-4 w-4 text-white" />
                       </button>
@@ -218,7 +218,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
           ) : (
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between">
-                <div className="flex gap-1.5 p-1 bg-zinc-900/50 rounded-xl border border-zinc-700">
+                <div className="flex gap-1.5 p-1 bg-zinc-900/50 rounded-lg border border-zinc-700">
                   <button
                     onClick={() => setTool("pen")}
                     className={cn("p-2 rounded-lg transition-all", tool === "pen" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-zinc-500 hover:text-zinc-300")}
@@ -233,7 +233,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                   </button>
                 </div>
 
-                <div className="flex gap-2 items-center px-4 py-1.5 bg-zinc-900/50 rounded-xl border border-zinc-700">
+                <div className="flex gap-2 items-center px-4 py-1.5 bg-zinc-900/50 rounded-lg border border-zinc-700">
                   {["#d97706", "#EF4444", "#3B82F6", "#10B981", "#FFFFFF"].map((c) => (
                     <button
                       key={c}
@@ -256,7 +256,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                 onPointerDown={(e) => handleCanvasPointer(e, "down")}
                 onPointerMove={(e) => handleCanvasPointer(e, "move")}
                 onPointerUp={(e) => handleCanvasPointer(e, "up")}
-                className="w-full h-[288px] rounded-2xl border border-zinc-700 bg-zinc-900 shadow-inner cursor-crosshair touch-none"
+                className="w-full h-[288px] rounded-lg border border-zinc-700 bg-zinc-900 shadow-inner cursor-crosshair touch-none"
               />
             </div>
           )}
@@ -270,7 +270,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
               if (tab === "import" && previewUrl) onConfirm(previewUrl)
               else if (tab === "draw" && canvasRef.current) onConfirm(canvasRef.current.toDataURL("image/png"))
             }}
-            className="w-full py-4 rounded-xl text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            className="w-full py-4 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
             style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
           >
             Apply Cover Decoration

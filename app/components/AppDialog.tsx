@@ -40,7 +40,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
         style={{
           maxWidth: 320,
           borderRadius: 12,
-          background: '#18181b',
+          background: '#09090b',
           border: '1px solid rgba(255,255,255,0.07)',
           boxShadow: '0 20px 60px -10px rgba(0,0,0,0.6)',
         }}
