@@ -63,6 +63,7 @@ export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: bo
   { hex: "#06b6d4", name: "Cyan", cost: 2 },
   { hex: "#22c55e", name: "Green", pro: true },
   { hex: "#64748b", name: "Slate", pro: true },
+  { hex: "#2B1D21", name: "Obsidian", cost: 500 },
 ]
 
 export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
@@ -207,7 +208,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
       <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#09090b] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* ── Sidebar ── */}
-        <div className={`w-[200px] ${isDark ? "bg-[#110d0e] border-zinc-800/80" : "bg-[#ece8e5] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
+        <div className={`w-[200px] ${isDark ? "bg-[#09090b] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4 flex items-center gap-2.5">
             <button
               onClick={onClose}

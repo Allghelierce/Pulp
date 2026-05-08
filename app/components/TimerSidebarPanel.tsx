@@ -209,7 +209,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
   const mainColor = "#d97706"
   const isDark = theme === "dark"
-  const bgColor = isDark ? "rgba(0,0,0,0.72)" : "rgba(10,10,12,0.68)"
+  const bgColor = isDark ? "rgba(0,0,0,0.55)" : "rgba(10,10,12,0.50)"
   const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"
   const textColor = "#e4e4e7"
   const dimColor = "#a1a1aa"

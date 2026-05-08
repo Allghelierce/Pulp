@@ -21,7 +21,7 @@ import dynamic from "next/dynamic"
 
 function ViewLoader() {
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70">
       <div className="flex flex-col items-center gap-3">
         <div className="w-5 h-5 border-2 border-[#d97706] border-t-transparent rounded-full animate-spin" />
         <span style={{ fontFamily: '"EB Garamond", serif', fontSize: 13, color: '#a1a1aa', letterSpacing: '0.02em' }}>Loading...</span>
@@ -63,6 +63,11 @@ function usePrefetchViews() {
       import("@/app/components/VitalitySystem")
       import("@/app/components/GridView")
       import("@/app/components/settings/SettingsView")
+      import("@/app/components/OrchardView")
+      import("@/app/components/BoutiqueView")
+      import("@/app/components/StatsView")
+      import("@/app/components/LeaderboardView")
+      import("@/app/components/FocusView")
     }
     if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(prefetch)
@@ -1284,13 +1289,13 @@ export default function NoteApp() {
   }
   const [settings, setSettings] = useState<any>(() => _savedSettingsRef.current ? { ...SETTINGS_DEFAULTS, ..._savedSettingsRef.current } : SETTINGS_DEFAULTS)
 
-  const updateSettings = (updates: any) => setSettings((prev: any) => {
+  const updateSettings = useCallback((updates: any) => setSettings((prev: any) => {
     const merged = { ...prev }
     for (const key in updates) {
       if (updates[key] !== undefined) merged[key] = updates[key]
     }
     return merged
-  })
+  }), [])
 
   const {
     accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -2692,7 +2697,7 @@ export default function NoteApp() {
     }
   }
 
-  const restoreNote = (id: string) => {
+  const restoreNote = useCallback((id: string) => {
     const note = trashNotes.find(n => n.id === id)
     if (!note) return
     setTrashNotes(ts => ts.filter(n => n.id !== id))
@@ -2703,21 +2708,22 @@ export default function NoteApp() {
     }
     const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
     localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
-  const permanentlyDeleteNote = (id: string) => {
+  const permanentlyDeleteNote = useCallback((id: string) => {
     setTrashNotes(ts => ts.filter(n => n.id !== id))
     if (user) db.removeFromTrash(user.id, id)
-  }
+  }, [user])
 
-  const archiveNote = (id: string) => {
+  const archiveNote = useCallback((id: string) => {
     if (activeTabId === id) setActiveTabId(null)
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: true } : n))
-  }
+  }, [activeTabId])
 
-  const unarchiveNote = (id: string) => {
+  const unarchiveNote = useCallback((id: string) => {
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: false } : n))
-  }
+  }, [])
 
   const archivedNotes = useMemo(() => notes.filter(n => n.archived), [notes])
 
@@ -2843,6 +2849,33 @@ export default function NoteApp() {
   }
 
 
+  const settingsConfig = useMemo(() => ({ ...settings, accentColor: accent }), [settings, accent])
+  const handleSettingsUpdate = useCallback((updates: any) => updateSettings({ ...updates, accent: updates.accentColor || accent }), [updateSettings, accent])
+  const handleCloseSettings = useCallback(() => setShowSettings(false), [])
+  const handleOpenShopItem = useCallback((itemId: string) => {
+    setShowSettings(false)
+    setShopInitialTab('gems')
+    setShopScrollTo(itemId)
+    closeAllPanels(); setShopOpen(true)
+  }, [closeAllPanels])
+  const handleSyncNow = useCallback(async () => {
+    if (!user) return null
+    try {
+      const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id)
+      if (error || !data) return null
+      const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+      const localNotes = notesRef.current
+      const cloudIds = new Set(cloudNotes.map(n => n.id))
+      const localIds = new Set(localNotes.map(n => n.id))
+      const pulled = cloudNotes.filter(n => !localIds.has(n.id))
+      const toPush = localNotes.filter(n => !cloudIds.has(n.id))
+      if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
+      if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
+      return { pushed: toPush.length, pulled: pulled.length }
+    } catch { return null }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   if (isLoading) return <PulpLoadingScreen />
 
   const handleUnlockDev = () => {
@@ -2855,7 +2888,6 @@ export default function NoteApp() {
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
 
-
   return (
     <LazyMotion features={domAnimation}>
     <>
@@ -2865,9 +2897,9 @@ export default function NoteApp() {
         {showSettings && (
           <SettingsView
             user={user}
-            onClose={() => setShowSettings(false)}
-            config={{ ...settings, accentColor: accent }}
-            onUpdateConfig={updates => updateSettings({ ...updates, accent: updates.accentColor || accent })}
+            onClose={handleCloseSettings}
+            config={settingsConfig}
+            onUpdateConfig={handleSettingsUpdate}
             achievements={achievements}
             onClaimAchievement={claimAchievement}
             trashNotes={trashNotes}
@@ -2877,30 +2909,10 @@ export default function NoteApp() {
             gems={gems}
             setGems={setGems}
             setUnlockedCosmetics={setUnlockedCosmetics}
-            onOpenShopItem={(itemId: string) => {
-              setShowSettings(false)
-              setShopInitialTab('gems')
-              setShopScrollTo(itemId)
-              closeAllPanels(); setShopOpen(true)
-            }}
+            onOpenShopItem={handleOpenShopItem}
             archivedNotes={archivedNotes}
             onUnarchiveNote={unarchiveNote}
-            onSyncNow={async () => {
-              if (!user) return null
-              try {
-                const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id)
-                if (error || !data) return null
-                const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
-                const localNotes = notesRef.current
-                const cloudIds = new Set(cloudNotes.map(n => n.id))
-                const localIds = new Set(localNotes.map(n => n.id))
-                const pulled = cloudNotes.filter(n => !localIds.has(n.id))
-                const toPush = localNotes.filter(n => !cloudIds.has(n.id))
-                if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
-                if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
-                return { pushed: toPush.length, pulled: pulled.length }
-              } catch { return null }
-            }}
+            onSyncNow={handleSyncNow}
           />
         )}
         <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
@@ -3065,7 +3077,7 @@ export default function NoteApp() {
           })()}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && (
-            <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, filter: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'blur(6px) brightness(0.7)' : undefined, transition: 'filter 0.2s ease' }}>
+            <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0.3 : undefined, transition: 'opacity 0.15s ease' }}>
               <DocumentToolbar
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -3166,6 +3178,7 @@ export default function NoteApp() {
                 onOpenVersionHistory={() => setShowVersionHistory(true)}
                 darkPaper={isDarkPaper(paperStyle)}
                 selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
+                unlockedCosmetics={unlockedCosmetics}
               />
             </div>
           )}

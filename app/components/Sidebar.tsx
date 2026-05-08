@@ -20,7 +20,7 @@ function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
           <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
         </svg>
-        <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest leading-none">Archive</span>
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Archive</span>
         <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({archivedNotes.length})</span>
       </div>
       {/* Scrollable list */}
@@ -546,15 +546,17 @@ export const Sidebar = memo(function Sidebar({
 
       <div id="app-sidebar" className={`text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
-        <div className="absolute inset-0 z-0" style={{ background: 'rgba(11,9,10,0.72)' }} />
+        <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)' }} />
+        {/* Bamboo lines */}
+        <div className="absolute inset-0 z-0 pointer-events-none" style={{
+          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 29px, transparent 29px, transparent 44px, rgba(255,255,255,0.012) 44px, rgba(255,255,255,0.012) 45px, transparent 45px, transparent 67px, rgba(255,255,255,0.015) 67px, rgba(255,255,255,0.015) 68px, transparent 68px, transparent 95px, rgba(255,255,255,0.01) 95px, rgba(255,255,255,0.01) 96px, transparent 96px, transparent 130px, rgba(255,255,255,0.013) 130px, rgba(255,255,255,0.013) 131px, transparent 131px, transparent 160px, rgba(255,255,255,0.009) 160px, rgba(255,255,255,0.009) 161px, transparent 161px, transparent 190px, rgba(255,255,255,0.014) 190px, rgba(255,255,255,0.014) 191px)`,
+        }} />
         <GlassFilter />
 
         <div className="relative px-3.5 py-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 220 }}>
           <div
             onClick={() => {
-              setLogoSqueeze(true)
-              setTimeout(() => setLogoSqueeze(false), 500)
               const count = devClicks + 1
               if (count >= 7) {
                 onUnlockDev()
@@ -564,12 +566,8 @@ export const Sidebar = memo(function Sidebar({
               }
             }}
             className="relative flex items-center gap-2.5 mb-5 cursor-default select-none"
-            style={{
-              transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              transform: logoSqueeze ? 'scale(0.88) rotate(-8deg)' : 'scale(1) rotate(0deg)',
-            }}
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: logoSqueeze ? 'rotate(15deg)' : 'rotate(0deg)' }}>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="14" cy="14" r="13" fill="#92400e" />
               <circle cx="14" cy="14" r="11" fill="#d97706" />
               <line x1="14" y1="3" x2="14" y2="25" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
@@ -683,25 +681,25 @@ export const Sidebar = memo(function Sidebar({
         <div className="px-2 pt-2 pb-1 flex flex-col gap-px z-10 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
           {onOpenShop && (
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
             </button>
           )}
           {onOpenStats && (
             <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
           {onOpenLeaderboard && (
             <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
-              <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Leaderboard</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
+              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Leaderboard</span>
             </button>
           )}
           <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] group w-full text-left focus:outline-none">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-zinc-400 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span className="text-[12px] font-medium text-zinc-500 group-hover:text-zinc-300" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Settings</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Settings</span>
           </button>
         </div>
 
@@ -710,7 +708,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
                 {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
@@ -722,7 +720,7 @@ export const Sidebar = memo(function Sidebar({
                 <div className="relative flex items-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); setNewMenuOpen(newMenuOpen === "ROOT" ? null : "ROOT") }}
-                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-500 bg-zinc-800/60" : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40"}`}
+                    className={`text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium ${newMenuOpen === "ROOT" ? "text-zinc-400 bg-zinc-800/60" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40"}`}
                     style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}
                   >
                     + New
@@ -736,7 +734,7 @@ export const Sidebar = memo(function Sidebar({
                     </div>
                   )}
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>+ Folder</button>
               </div>
             </div>
 
@@ -786,7 +784,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Bookmarks</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Bookmarks</p>
             </div>
             {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
@@ -856,7 +854,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Backlinks Section */}
           <div className="mb-6 pt-4 border-t border-white/5">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Backlinks</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Backlinks</p>
             </div>
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
@@ -879,30 +877,38 @@ export const Sidebar = memo(function Sidebar({
           </div>
         </div>
 
-        <div className="shrink-0 z-10 relative bg-[#110d0e]" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
-          {/* Timer — featured */}
-          {onOpenTimer && (
-            <div className="px-2 pb-3" style={{ marginTop: -18 }}>
-              <button
-                onClick={onOpenTimer}
-                title="Focus timer"
-                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors group w-full text-left active:scale-95"
-                style={{
-                  background: timerOpen ? "rgba(217,119,6,0.15)" : "#1a1517",
-                  boxShadow: timerOpen ? "0 0 12px rgba(217,119,6,0.25)" : "0 0 0 1px rgba(255,255,255,0.08)",
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"} style={{ flexShrink: 0 }}>
-                  <circle cx="12" cy="13" r="8" />
-                  <path d="M12 9v4l2 2" />
-                  <path d="M9 2h6" />
-                </svg>
-                <span className={`text-[12px] font-medium ${timerOpen ? "text-amber-500" : "text-zinc-400 group-hover:text-zinc-300"}`} style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Focus</span>
-              </button>
-            </div>
-          )}
-          {/* Nav buttons */}
-        </div>
+        {/* Focus — dock button */}
+        {onOpenTimer && (
+          <div className="shrink-0 z-10 relative px-3 pb-4 pt-3" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease" }}>
+            <button
+              onClick={onOpenTimer}
+              title="Focus timer"
+              className={`flex flex-col items-center justify-center w-full py-3 rounded-xl transition-all group cursor-pointer ${timerOpen ? "" : "hover:scale-[1.02] active:scale-[0.98]"}`}
+              style={{
+                background: timerOpen
+                  ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))'
+                  : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+                boxShadow: timerOpen
+                  ? '0 0 20px rgba(217,119,6,0.15), inset 0 1px 0 rgba(217,119,6,0.15)'
+                  : '0 0 12px rgba(217,119,6,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
+                border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60 group-hover:text-amber-500/80"}`}>
+                <ellipse cx="12" cy="21" rx="7" ry="1.5" fill="currentColor" opacity="0.25" />
+                <path d="M12 20 C12 16 11.5 14 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M12 14 C9 12 7 10.5 7 8.5 C7 8.5 9.5 9 12 12" fill="currentColor" opacity="0.7" />
+                <path d="M8.5 10 L10 11.5" stroke="currentColor" strokeWidth="0.6" opacity="0.4" strokeLinecap="round" />
+                <path d="M12 11 C15 9 17 7.5 17 5.5 C17 5.5 14.5 6 12 9" fill="currentColor" opacity="0.7" />
+                <path d="M15.5 7 L14 8.5" stroke="currentColor" strokeWidth="0.6" opacity="0.4" strokeLinecap="round" />
+                <circle cx="12" cy="11" r="1" fill="currentColor" opacity="0.5" />
+                <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
+                <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
+              </svg>
+              <span className={`text-[11px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
+            </button>
+          </div>
+        )}
 
 
       </div>
