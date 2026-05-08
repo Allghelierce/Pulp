@@ -1416,7 +1416,7 @@ export const OrchardView = memo(function OrchardView({
       style={{ touchAction: 'manipulation' }}
       onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
     >
-      <style>{`@keyframes tree-pop { 0% { opacity:0; transform: scale(0.85); } 60% { opacity:1; transform: scale(1.04); } 100% { opacity:1; transform: scale(1); } }`}</style>
+      <style>{`@keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }`}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
         className="relative flex overflow-hidden w-full h-full"
@@ -1556,10 +1556,7 @@ export const OrchardView = memo(function OrchardView({
                 ) : (
                   <>
                     {tillSvg}
-                    {(() => {
-                      const spawnRanks = placed.map((p, i) => ({ i, rank: -p.y + p.x })).sort((a, b) => a.rank - b.rank)
-                      const spawnOrderMap = new Map(spawnRanks.map((s, order) => [s.i, order]))
-                      return placed.map(({ x, y, tree }, renderIdx) => {
+                    {placed.map(({ x, y, tree }, renderIdx) => {
                       const typeInfo = TREE_TYPES[tree.type]
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
@@ -1571,7 +1568,6 @@ export const OrchardView = memo(function OrchardView({
                       const scaleY = 0.75 + depthT * 0.25
                       const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
-                      const spawnOrder = spawnOrderMap.get(renderIdx) ?? renderIdx
 
                       return (
                         <div
@@ -1588,7 +1584,7 @@ export const OrchardView = memo(function OrchardView({
                             cursor: chopMode ? 'pointer' : undefined,
                           }}
                         >
-                          <div style={{ position: 'relative', animation: `tree-pop 0.25s ease-out ${spawnOrder * 18}ms both` }}>
+                          <div style={{ position: 'relative', animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both` }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
                               filter: chopMode
                                 ? `brightness(${100 - dimAmount}%) drop-shadow(0 0 6px rgba(217,119,6,0.6))`
@@ -1633,8 +1629,7 @@ export const OrchardView = memo(function OrchardView({
                           </div>
                         </div>
                       )
-                    })
-                    })()}
+                    })}
                   </>
                 )}
               </motion.div>
