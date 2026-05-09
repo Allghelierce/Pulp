@@ -9,6 +9,9 @@ interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  query?: string
+  chunkNoteIds?: string[]
+  rating?: 1 | -1
 }
 
 interface Personality {
@@ -174,11 +177,14 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
 
     try {
       let ragContext = ""
+      let chunkNoteIds: string[] = []
       try {
         const ragRes = await apiFetch("/api/semantic-search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text.trim() }) })
         if (ragRes.ok) {
           const ragData = await ragRes.json()
-          const chunks = (ragData.results || []).slice(0, 6).map((r: { chunk_text: string; note_id: string }) => r.chunk_text)
+          const results = (ragData.results || []).slice(0, 6)
+          const chunks = results.map((r: { chunk_text: string }) => r.chunk_text)
+          chunkNoteIds = [...new Set(results.map((r: { note_id: string }) => r.note_id))] as string[]
           if (chunks.length) ragContext = `\n\n[RELATED KNOWLEDGE FROM ALL NOTEBOOKS]:\n${chunks.join("\n---\n")}`
         }
       } catch { /* RAG optional */ }
@@ -199,12 +205,22 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Request failed")
       const result = data.result || "I couldn't generate a response."
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: result }])
+      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: result, query: text.trim(), chunkNoteIds }])
     } catch (err) {
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}` }])
     }
     setLoading(false)
   }, [loading, messages, note, activePersonality, indexing])
+
+  const rateMessage = useCallback((msgId: string, rating: 1 | -1) => {
+    setMessages(prev => {
+      const msg = prev.find(m => m.id === msgId)
+      if (msg) {
+        apiFetch("/api/chat-feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: msg.query || "", response: msg.content, chunkNoteIds: msg.chunkNoteIds || [], rating }) }).catch(() => {})
+      }
+      return prev.map(m => m.id === msgId ? { ...m, rating } : m)
+    })
+  }, [])
 
   const bg = isDark ? "#09090b" : "#ffffff"
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
@@ -425,18 +441,51 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
         ) : null}
 
         {messages.map(msg => (
-          <div key={msg.id} style={{
+          <div key={msg.id} className="group/msg" style={{
             alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-            maxWidth: "85%",
-            padding: "8px 12px",
-            borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-            background: msg.role === "user"
-              ? accent
-              : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-            color: msg.role === "user" ? "#fff" : (isDark ? "#d4d4d8" : "#27272a"),
-            fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            maxWidth: "85%", position: "relative",
           }}>
-            {msg.content}
+            <div style={{
+              padding: "8px 12px",
+              borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+              background: msg.role === "user"
+                ? accent
+                : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+              color: msg.role === "user" ? "#fff" : (isDark ? "#d4d4d8" : "#27272a"),
+              fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
+            }}>
+              {msg.content}
+            </div>
+            {msg.role === "assistant" && !msg.content.startsWith("Error:") && (
+              <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity" style={{ display: "flex", gap: 2, marginTop: 3 }}>
+                <button
+                  onClick={() => rateMessage(msg.id, 1)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
+                    color: msg.rating === 1 ? accent : mutedText, opacity: msg.rating === 1 ? 1 : 0.6,
+                    transition: "all 0.15s",
+                  }}
+                  title="Helpful"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill={msg.rating === 1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => rateMessage(msg.id, -1)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
+                    color: msg.rating === -1 ? "#ef4444" : mutedText, opacity: msg.rating === -1 ? 1 : 0.6,
+                    transition: "all 0.15s",
+                  }}
+                  title="Not helpful"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill={msg.rating === -1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         ))}
 

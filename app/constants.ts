@@ -31,13 +31,18 @@ export const TREE_TYPES: Record<string, any> = {
   cypress:       { name: 'Cypress',        color: '#0f766e', bg: 'rgba(15,118,110,0.1)', cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'cypress',      category: 'paper', juiceYield: 0,  paperYield: 18, sceneBg: 'linear-gradient(180deg, #0a1610 0%, #0e2016 50%, #122a1c 100%)' },
 
 
+  // ═══ EPIC — 65 juice each ═══
+
+  // FRUIT
+  pomegranate:   { name: 'Pomegranate',   color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   cost: 65,  currency: 'juice', rarity: 'epic',      weight: 0.15, shape: 'pomegranate',  category: 'fruit', juiceYield: 10, paperYield: 4, sceneBg: 'linear-gradient(180deg, #1c0e0e 0%, #281414 50%, #341a1a 100%)' },
+  fig:           { name: 'Fig',           color: '#6d28d9', bg: 'rgba(109,40,217,0.1)',  cost: 65,  currency: 'juice', rarity: 'epic',      weight: 0.15, shape: 'fig',          category: 'fruit', juiceYield: 10, paperYield: 4, sceneBg: 'linear-gradient(180deg, #140e20 0%, #1e1430 50%, #281a40 100%)' },
   // LEGENDARY — 100 juice each
-  sakura:        { name: 'Cherry Blossom',         color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'sakura',       category: 'paper', juiceYield: 0,  paperYield: 30, sceneBg: 'linear-gradient(180deg, #1c1420 0%, #221a26 50%, #28202c 100%)' },
+  sakura:        { name: 'Cherry Blossom',         color: '#f9a8d4', bg: 'rgba(249,168,212,0.1)', cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'sakura',       category: 'paper', juiceYield: 0,  paperYield: 30, sceneBg: 'linear-gradient(180deg, #05050f 0%, #0a0a1a 50%, #0f0f25 100%)' },
 
   // ═══ GEM TREES — produce gems, extremely rare ═══
 
   // LEGENDARY — 100 juice each
-  abyss:         { name: 'Abyss Maw',     color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'void',         category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 1, sceneBg: 'linear-gradient(180deg, #0a0a0e 0%, #0e0e14 50%, #12121a 100%)' },
+  abyss:         { name: 'Abyss Maw',     color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'void',         category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 1, sceneBg: 'linear-gradient(180deg, #05050f 0%, #0a0a1a 50%, #0f0f25 100%)' },
 
   // ═══ SPECIAL ═══
   spoiled:       { name: 'Spoiled',        color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'dead',         category: 'none',  juiceYield: 0,  paperYield: 0, sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }

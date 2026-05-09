@@ -40,20 +40,21 @@ const GEM_COSMETICS = [
   { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 4 },
 ]
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary']
 
 const RARITY_LABEL: Record<string, string> = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary',
+  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary',
 }
 
 const RARITY_COLOR: Record<string, string> = {
-  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', legendary: '#f59e0b',
+  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', epic: '#c084fc', legendary: '#f59e0b',
 }
 
 const RARITY_BG: Record<string, string> = {
   common: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #22301a 100%)',
   uncommon: 'linear-gradient(180deg, #0e1a16 0%, #122820 50%, #163228 100%)',
   rare: 'linear-gradient(180deg, #0e1420 0%, #121e30 50%, #162840 100%)',
+  epic: 'linear-gradient(180deg, #14102a 0%, #1a1636 50%, #201c42 100%)',
   legendary: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
 }
 
@@ -80,6 +81,7 @@ function rarityPlantClass(rarity: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
     case 'rare': return 'rarity-rare'
+    case 'epic': return 'rarity-rare'
     case 'legendary': return 'rarity-premium'
     default: return ''
   }
@@ -88,13 +90,14 @@ function rarityPlantClass(rarity: string): string {
 function rarityCardClass(rarity: string): string {
   switch (rarity) {
     case 'rare': return 'rarity-card-rare'
+    case 'epic': return 'rarity-card-rare'
     case 'legendary': return 'rarity-card-premium'
     default: return ''
   }
 }
 
 function Sparkles({ rarity, count }: { rarity: string; count: number }) {
-  if (rarity !== 'legendary') return null
+  if (rarity !== 'legendary' && rarity !== 'epic') return null
   const cls = 'sparkle-premium'
   return (
     <div className="sparkle-container">
@@ -116,6 +119,23 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
 }
 
 function RarityScene({ rarity }: { rarity: string }) {
+  if (rarity === 'epic') {
+    return (
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <radialGradient id="epic-glow" cx="50%" cy="75%">
+              <stop offset="0%" stopColor="rgba(192,132,252,0.1)">
+                <animate attributeName="stopColor" values="rgba(192,132,252,0.06);rgba(192,132,252,0.14);rgba(192,132,252,0.06)" dur="6s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#epic-glow)" />
+        </svg>
+      </div>
+    )
+  }
   if (rarity === 'legendary') {
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>

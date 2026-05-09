@@ -1243,7 +1243,7 @@ export default function NoteApp() {
     shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d", cycleHeader: "alt+1" },
     blockedSites: [],
     blockedApps: [],
-    orchardTimeMode: "theme",
+    orchardTimeMode: "realtime",
     devMode: false,
     isDevUnlocked: false
   }
@@ -3661,65 +3661,65 @@ export default function NoteApp() {
 
           </div>
 
-          <div className="absolute inset-0 z-40 overflow-hidden" style={{ display: orchardOpen ? undefined : 'none' }}><OrchardView
-            isOpen={orchardOpen}
-            onClose={() => setOrchardOpen(false)}
-            theme={theme}
-            accent={accent}
-            juice={juice}
-            gems={gems}
-            xp={juice}
-            grove={grove}
-            inventory={inventory}
-            setJuice={setJuice}
-            setGems={setGems}
-            setInventory={setInventory}
-            setGrove={setGrove}
-            notes={notes}
-            userId={user?.id}
-            activeTabId={activeTabId}
-            orchardTimeMode={orchardTimeMode || "theme"}
-          /></div>
-
-          <div className="absolute inset-0 z-40 overflow-hidden" style={{ display: statsOpen ? undefined : 'none' }}><StatsView
-            isOpen={statsOpen}
-            onClose={() => setStatsOpen(false)}
-            theme={theme}
-            accent={accent}
-            xp={xp}
-            streak={streak}
-          /></div>
-
-          <div className="absolute inset-0 z-40 overflow-hidden" style={{ display: leaderboardOpen ? undefined : 'none' }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
-            isOpen={leaderboardOpen}
-            onClose={() => setLeaderboardOpen(false)}
-            theme={theme}
-            juice={juice}
-          /></div>
-
-          <div className="absolute inset-0 z-40 overflow-hidden" style={{ display: shopOpen ? undefined : 'none' }}><BoutiqueView
-            isOpen={shopOpen}
-            onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
-            theme={theme}
-            accent={accent}
-            gems={isAdmin ? 999999 : gems}
-            juice={isAdmin ? 999999 : juice}
-            inventory={inventory}
-            setGems={setGems}
-            setJuice={setJuice}
-            setInventory={setInventory}
-            setGrove={setGrove}
-            unlockedCosmetics={unlockedCosmetics}
-            setUnlockedCosmetics={setUnlockedCosmetics}
-            onUpdateConfig={updateSettings}
-            initialTab={shopInitialTab}
-            initialScrollTo={shopScrollTo}
-          /></div>
-
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
           )}
         </div>
+
+        <div style={{ display: orchardOpen ? undefined : 'none', position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}><OrchardView
+          isOpen={orchardOpen}
+          onClose={() => setOrchardOpen(false)}
+          theme={theme}
+          accent={accent}
+          juice={juice}
+          gems={gems}
+          xp={juice}
+          grove={grove}
+          inventory={inventory}
+          setJuice={setJuice}
+          setGems={setGems}
+          setInventory={setInventory}
+          setGrove={setGrove}
+          notes={notes}
+          userId={user?.id}
+          activeTabId={activeTabId}
+          orchardTimeMode={orchardTimeMode || "theme"}
+        /></div>
+
+        <div style={{ display: statsOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
+          isOpen={statsOpen}
+          onClose={() => setStatsOpen(false)}
+          theme={theme}
+          accent={accent}
+          xp={xp}
+          streak={streak}
+        /></div>
+
+        <div style={{ display: leaderboardOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
+          isOpen={leaderboardOpen}
+          onClose={() => setLeaderboardOpen(false)}
+          theme={theme}
+          juice={juice}
+        /></div>
+
+        <div style={{ display: shopOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
+          isOpen={shopOpen}
+          onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
+          theme={theme}
+          accent={accent}
+          gems={isAdmin ? 999999 : gems}
+          juice={isAdmin ? 999999 : juice}
+          inventory={inventory}
+          setGems={setGems}
+          setJuice={setJuice}
+          setInventory={setInventory}
+          setGrove={setGrove}
+          unlockedCosmetics={unlockedCosmetics}
+          setUnlockedCosmetics={setUnlockedCosmetics}
+          onUpdateConfig={updateSettings}
+          initialTab={shopInitialTab}
+          initialScrollTo={shopScrollTo}
+        /></div>
 
 
         {slashMenu && (

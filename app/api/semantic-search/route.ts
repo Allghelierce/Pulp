@@ -44,9 +44,25 @@ export async function POST(request: Request) {
       }
     }
 
+    const { data: feedback } = await supabaseAdmin
+      .from("chat_feedback")
+      .select("chunk_note_ids, rating")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100)
+
+    const feedbackScores: Record<string, number> = {}
+    if (feedback) {
+      for (const f of feedback) {
+        for (const nid of (f.chunk_note_ids || [])) {
+          feedbackScores[nid] = Math.max(-0.3, Math.min(0.3, (feedbackScores[nid] || 0) + f.rating * 0.03))
+        }
+      }
+    }
+
     const boosted = (matches || []).map((m: { note_id: string; page_index: number; chunk_text: string; similarity: number }) => ({
       ...m,
-      score: m.similarity + (clickCounts[m.note_id] || 0) * 0.02,
+      score: m.similarity + (clickCounts[m.note_id] || 0) * 0.02 + (feedbackScores[m.note_id] || 0),
     }))
 
     boosted.sort((a: { score: number }, b: { score: number }) => b.score - a.score)

@@ -41,6 +41,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
 }
 
 export const SETTINGS_TABS = [
+  { id: "subscription", label: "Pro", group: "Premium" },
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "achievements", label: "Achievements", group: "App" },
@@ -48,7 +49,6 @@ export const SETTINGS_TABS = [
   { id: "focus", label: "Focus Blocker", group: "Writing" },
   { id: "archive", label: "Archive", group: "Advanced" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
-  { id: "subscription", label: "Pro", group: "Premium" },
   { id: "help", label: "Help", group: "Support" },
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]

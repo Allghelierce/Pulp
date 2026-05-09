@@ -7,6 +7,7 @@ const VALID_TREE_TYPES = new Set([
   'tangerine', 'lemon', 'apple', 'plum', 'blackberry', 'peach',
   'pineapple', 'passionfruit', 'birch', 'bamboo', 'pine', 'oak',
   'cypress', 'sakura', 'abyss', 'spoiled',
+  'pomegranate', 'fig',
 ])
 
 const JUICE_FORMULA = (minutes: number) => Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))

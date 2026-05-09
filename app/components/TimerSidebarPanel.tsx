@@ -260,8 +260,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="fixed z-50 flex items-center gap-2 select-none shadow-lg"
         style={{
-          left: sidebarWidth + 10,
+          left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
           bottom: 12,
+          transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
           backgroundColor: bgColor,
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
@@ -330,8 +331,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           className="fixed z-50 flex flex-col select-none shadow-2xl"
           style={{
-            left: sidebarWidth + 10,
+            left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
             bottom: 12,
+            transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
             width: 250,
             height: "auto",
             minHeight: 560,
@@ -401,17 +403,18 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                   </button>
-                  <button
-                    onClick={onClose}
-                    className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-                    style={{ color: subtleColor }}
-                    title="Close (⌘⌥T)"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
+                  {(elapsed > 0 || done) && (
+                    <button
+                      onClick={() => setMinimized(true)}
+                      className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
+                      style={{ color: subtleColor }}
+                      title="Minimize"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 15l6 6 6-6" />
+                      </svg>
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -465,7 +468,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         if (!info) return null
                         const isSelected = selectedSeed === type
                         const count = counts.get(type) || 1
-                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'legendary' ? '#f59e0b' : '#a1a1aa'
+                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'epic' ? '#c084fc' : info.rarity === 'legendary' ? '#f59e0b' : '#a1a1aa'
                         return (
                           <motion.button
                             key={type}

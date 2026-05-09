@@ -157,14 +157,11 @@ details.toggle-block summary:focus {
   50% { transform: rotate(0.3deg); }
 }
 
-/* RARE: gentle glow, no movement */
-.rarity-rare {
-  filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.12));
-}
+/* RARE: no glow */
+.rarity-rare {}
 
-/* TRUE RARE: soft purple glow */
+/* TRUE RARE */
 .rarity-true-rare {
-  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.15));
   transform-origin: bottom center;
   animation: true-rare-sway 6s ease-in-out infinite;
 }
@@ -173,9 +170,8 @@ details.toggle-block summary:focus {
   50% { transform: rotate(0.25deg); }
 }
 
-/* PREMIUM: warm golden glow */
+/* PREMIUM */
 .rarity-premium {
-  filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.15));
   transform-origin: bottom center;
   animation: premium-sway 5s ease-in-out infinite;
 }
@@ -184,9 +180,8 @@ details.toggle-block summary:focus {
   50% { transform: rotate(-0.2deg); }
 }
 
-/* CHROMA: soft color glow, no hue rotation */
+/* CHROMA */
 .rarity-chroma {
-  filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.35));
   transform-origin: bottom center;
   animation: chroma-sway 5.5s ease-in-out infinite;
 }
@@ -195,9 +190,8 @@ details.toggle-block summary:focus {
   50% { transform: rotate(0.25deg); }
 }
 
-/* EXTINCT: subtle dark glow */
+/* EXTINCT */
 .rarity-extinct {
-  filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.18));
   transform-origin: bottom center;
   animation: extinct-sway 7s ease-in-out infinite;
 }
