@@ -47,8 +47,8 @@ const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
 const GRID_ROWS = 4
 const GRID_COL_START = 17
 const GRID_COL_END = 83
-const GRID_ROW_START = 44
-const GRID_ROW_END = 82
+const GRID_ROW_START = 47
+const GRID_ROW_END = 85
 const GRID_TILL_OFFSET = 2.5
 
 function gridSlotPos(slotIndex: number): { x: number; y: number; col: number; side: number; row: number } {
@@ -201,10 +201,10 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   day: {
-    skyTop: '#3e5868', skyMid: '#4a6470', skyLow: '#566e74', skyHorizon: '#647a74', skyField: '#5a6858', skyBottom: '#566458',
-    oceanTop: '#3a4e4c', oceanMid: '#324642', oceanBot: '#445a54',
-    mtnTop: '#3e4a48', mtnMid: '#364240', mtnBot: '#2e3a38',
-    snowTop: '#8a8e88', snowFade: '#4e5450',
+    skyTop: '#5a7a90', skyMid: '#6a8898', skyLow: '#7a96a0', skyHorizon: '#8aa498', skyField: '#7a8a74', skyBottom: '#728470',
+    oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
+    mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
+    snowTop: '#a0a4a0', snowFade: '#6a7070',
     hillMidTop: '#2e4828', hillMidBot: '#284222',
     hillNearTop: '#365030', hillNearBot: '#304a2a',
     fieldTop: '#344c2e', fieldMid1: '#30482a', fieldMid2: '#2e4428', fieldBot: '#2a4024',
@@ -355,7 +355,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
   return (
     <>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
         <defs>
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.skyTop} />
@@ -464,8 +464,32 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
 
 
+        {/* Shooting stars — night only */}
+        {p.starOpacity > 0.3 && (() => {
+          return [0,1,2].map(i => {
+            const r = seededRng(i * 131 + 7919)
+            const x1 = 10 + r() * 150
+            const y1 = 1 + r() * 8
+            const angle = 0.3 + r() * 0.4
+            const len = 12 + r() * 18
+            const x2 = x1 + Math.cos(angle) * len
+            const y2 = y1 + Math.sin(angle) * len
+            const dur = 0.6 + r() * 0.4
+            const pause = 20 + r() * 40
+            return (
+              <line key={`shoot-${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke="url(#csg)" strokeWidth="0.3" strokeLinecap="round"
+                opacity="0">
+                <animate attributeName="opacity" values="0;0;0.9;0" keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.3) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
+                <animate attributeName="x2" values={`${x1};${x1};${x2};${x2}`} keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.2) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
+                <animate attributeName="y2" values={`${y1};${y1};${y2};${y2}`} keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.2) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
+              </line>
+            )
+          })
+        })()}
+
         {/* Distant cliff hills — behind mountains, angular and steep */}
-        <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#0a0c10' : '#8898a8'} opacity={isDark ? 0.5 : 0.25} />
+        <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
         {/* Cliff face shadows — steep left drops */}
         <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
         <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
@@ -1931,8 +1955,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               <div key={`fly-${i}`} className="absolute rounded-full" style={{
                 left: `${x}%`, top: `${y}%`,
                 width: 3, height: 3,
-                background: 'radial-gradient(circle, rgba(200,220,100,0.9) 0%, rgba(180,200,60,0) 70%)',
-                boxShadow: '0 0 4px 1px rgba(200,220,100,0.4)',
+                background: 'radial-gradient(circle, rgba(57,255,20,0.95) 0%, rgba(57,255,20,0) 70%)',
+                boxShadow: '0 0 6px 2px rgba(57,255,20,0.5)',
                 animation: `firefly-glow ${dur}s ease-in-out ${delay}s infinite, firefly-drift ${dur * 1.5}s ease-in-out ${delay}s infinite`,
                 '--drift-x': `${driftX}px`, '--drift-y': `${driftY}px`,
               } as React.CSSProperties} />
@@ -1944,20 +1968,21 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       {/* Birds — swoop in/out of trees */}
       {(timeState.phase === 'day' || timeState.phase === 'morning') && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[0,1,2,3].map(i => {
+          {/* Swooping birds — fly across, dip to trees, fly out */}
+          {[0,1,2,3,4,5].map(i => {
             const r = seededRng(i * 47 + 211)
-            const sz = 9 + r() * 5
-            const dur = 14 + r() * 10
+            const sz = 8 + r() * 6
+            const dur = 14 + r() * 12
             const delay = r() * dur
             const fromRight = r() > 0.5
-            const treeY = 45 + r() * 25
-            const skyY = 5 + r() * 15
-            const treeX = 20 + r() * 60
+            const treeY = 42 + r() * 28
+            const skyY = 3 + r() * 18
+            const treeX = 15 + r() * 70
             const name = `bird-swoop-${i}`
             return (
               <svg key={`bird-${i}`} className="absolute" style={{
                 width: sz, height: sz * 0.5,
-                opacity: 0.4 + r() * 0.2,
+                opacity: 0.35 + r() * 0.25,
                 animation: `${name} ${dur}s ease-in-out ${delay}s infinite`,
                 transform: fromRight ? 'scaleX(-1)' : undefined,
               }} viewBox="0 0 20 10">
@@ -1977,6 +2002,126 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               </svg>
             )
           })}
+          {/* High soaring birds — slow lazy circles in the sky */}
+          {[0,1,2].map(i => {
+            const r = seededRng(i * 83 + 771)
+            const sz = 5 + r() * 4
+            const cx = 20 + r() * 60
+            const cy = 5 + r() * 12
+            const rx = 8 + r() * 12
+            const ry = 3 + r() * 4
+            const dur = 20 + r() * 15
+            const delay = r() * 10
+            const name = `bird-soar-${i}`
+            return (
+              <svg key={`soar-${i}`} className="absolute" style={{
+                width: sz, height: sz * 0.45,
+                opacity: 0.2 + r() * 0.15,
+                animation: `${name} ${dur}s linear ${delay}s infinite`,
+              }} viewBox="0 0 20 10">
+                <path d="M0,5 Q5,1 10,4 Q15,1 20,5" fill="none" stroke={isDark ? '#2e2e2e' : '#5a5650'} strokeWidth="1.2" strokeLinecap="round">
+                  <animate attributeName="d" values="M0,5 Q5,1 10,4 Q15,1 20,5;M0,4.5 Q5,3 10,4 Q15,3 20,4.5;M0,5 Q5,1 10,4 Q15,1 20,5" dur="0.7s" repeatCount="indefinite" />
+                </path>
+                <style>{`
+                  @keyframes ${name} {
+                    0% { left: ${cx - rx}%; top: ${cy}%; }
+                    25% { left: ${cx}%; top: ${cy - ry}%; }
+                    50% { left: ${cx + rx}%; top: ${cy}%; }
+                    75% { left: ${cx}%; top: ${cy + ry}%; }
+                    100% { left: ${cx - rx}%; top: ${cy}%; }
+                  }
+                `}</style>
+              </svg>
+            )
+          })}
+          {/* Distant flock — tiny V formation drifting across */}
+          {[0,1].map(i => {
+            const r = seededRng(i * 113 + 997)
+            const dur = 35 + r() * 20
+            const delay = r() * 20
+            const skyY = 4 + r() * 8
+            const fromRight = i % 2 === 0
+            const name = `flock-${i}`
+            const birdC = isDark ? '#2a2a2a' : '#6a6460'
+            return (
+              <div key={`flock-${i}`} className="absolute" style={{
+                opacity: 0.2 + r() * 0.1,
+                animation: `${name} ${dur}s linear ${delay}s infinite`,
+              }}>
+                <svg width="30" height="12" viewBox="0 0 50 20">
+                  {[[-8,2],[- 4,0],[0,1],[4,0],[8,2]].map(([ox, oy], bi) => (
+                    <path key={bi} d={`M${22 + ox * 2},${10 + oy * 2} q2,-2 4,0 q2,-2 4,0`} fill="none" stroke={birdC} strokeWidth="0.8" strokeLinecap="round">
+                      <animate attributeName="d" values={`M${22 + ox * 2},${10 + oy * 2} q2,-2 4,0 q2,-2 4,0;M${22 + ox * 2},${10 + oy * 2} q2,-0.5 4,0 q2,-0.5 4,0;M${22 + ox * 2},${10 + oy * 2} q2,-2 4,0 q2,-2 4,0`} dur={`${0.4 + bi * 0.05}s`} repeatCount="indefinite" />
+                    </path>
+                  ))}
+                </svg>
+                <style>{`
+                  @keyframes ${name} {
+                    0% { left: ${fromRight ? '110%' : '-15%'}; top: ${skyY}%; }
+                    100% { left: ${fromRight ? '-15%' : '110%'}; top: ${skyY + 2}%; }
+                  }
+                `}</style>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Easter egg UFO — erratic night flyby */}
+      {(timeState.phase === 'night' || (timeState.phase === 'dusk' && timeState.t > 0.7)) && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div style={{
+            position: 'absolute',
+            width: 14, height: 7,
+            animation: 'ufo-path 12s ease-in-out 300s infinite, ufo-appear 300s ease-in-out 0s infinite',
+            opacity: 0,
+          }}>
+            <svg width="14" height="7" viewBox="0 0 20 10" style={{ animation: 'ufo-spin 0.8s linear infinite' }}>
+              <ellipse cx="10" cy="5" rx="9" ry="3" fill="#3a3a4a" />
+              <ellipse cx="10" cy="3.5" rx="4.5" ry="3" fill="#4a4a5a" opacity="0.6" />
+              <ellipse cx="10" cy="5.5" rx="9" ry="1.2" fill="rgba(100,200,255,0.2)" />
+              <circle cx="5" cy="5.5" r="0.7" fill="#4af" opacity="0.8">
+                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.15s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="10" cy="6" r="0.7" fill="#4af" opacity="0.8">
+                <animate attributeName="opacity" values="0.2;0.8;0.2" dur="0.15s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="15" cy="5.5" r="0.7" fill="#4af" opacity="0.8">
+                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.15s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+          </div>
+          <style>{`
+            @keyframes ufo-path {
+              0%   { left: -5%; top: 8%; }
+              8%   { left: 25%; top: 3%; }
+              15%  { left: 22%; top: 12%; }
+              22%  { left: 55%; top: 5%; }
+              30%  { left: 40%; top: 15%; }
+              38%  { left: 70%; top: 3%; }
+              45%  { left: 65%; top: 18%; }
+              52%  { left: 85%; top: 6%; }
+              60%  { left: 50%; top: 10%; }
+              68%  { left: 30%; top: 4%; }
+              76%  { left: 60%; top: 14%; }
+              85%  { left: 90%; top: 8%; }
+              92%  { left: 95%; top: 3%; }
+              100% { left: 110%; top: 6%; }
+            }
+            @keyframes ufo-appear {
+              0%, 95% { opacity: 0; }
+              96% { opacity: 0.55; }
+              99.5% { opacity: 0.55; }
+              100% { opacity: 0; }
+            }
+            @keyframes ufo-spin {
+              0%   { transform: rotateY(0deg) rotateZ(0deg); }
+              25%  { transform: rotateY(90deg) rotateZ(8deg); }
+              50%  { transform: rotateY(180deg) rotateZ(-5deg); }
+              75%  { transform: rotateY(270deg) rotateZ(10deg); }
+              100% { transform: rotateY(360deg) rotateZ(0deg); }
+            }
+          `}</style>
         </div>
       )}
 
@@ -2052,8 +2197,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       {/* Soft vignette — heavier on left for sidebar blend */}
       <div className="absolute inset-0 pointer-events-none" style={{
         boxShadow: isDark
-          ? 'inset 25px 0 35px -10px rgba(8,10,8,0.3), inset 0 0 25px 8px rgba(8,12,8,0.15)'
-          : 'inset 20px 0 30px -8px rgba(40,35,25,0.1), inset 0 0 20px 6px rgba(80,100,60,0.05)',
+          ? 'inset 25px 0 35px -10px rgba(8,10,8,0.3)'
+          : 'inset 20px 0 30px -8px rgba(40,35,25,0.1)',
       }} />
       {/* Time-of-day ambient overlay */}
       {p.ambientOpacity > 0.01 && (
@@ -2095,10 +2240,13 @@ export const OrchardView = memo(function OrchardView({
   })
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
+  const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
   const [sapReadyMap, setSapReadyMap] = useState<Record<string, number>>({})
   const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
   const [sapFlyAnim, setSapFlyAnim] = useState<{ amount: number; phase: 'pop' | 'fly' | 'none' }>({ amount: 0, phase: 'none' })
+  const [sapParticles, setSapParticles] = useState<{ id: number; startX: number; startY: number; phase: 'fly' | 'done' }[]>([])
+  const [btnFillLevel, setBtnFillLevel] = useState(0)
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
 
@@ -2204,25 +2352,48 @@ export const OrchardView = memo(function OrchardView({
       if (amt > 0) { total += amt; treesWithSap.push(tree) }
     }
     if (total <= 0) return
+
     const bucketState: Record<string, 'bucket' | 'fill' | 'done'> = {}
     for (const tree of treesWithSap) bucketState[tree.id] = 'bucket'
     setTapAnim(prev => ({ ...prev, ...bucketState }))
+
+    const orchardEl = orchardRef.current
+    const btnEl = collectBtnRef.current
+    if (orchardEl && btnEl) {
+      const oRect = orchardEl.getBoundingClientRect()
+      const particles: { id: number; startX: number; startY: number; phase: 'fly' | 'done' }[] = []
+      const placedTrees = (placedRef.current ?? []).filter((p: any) => treesWithSap.some((t: any) => t.id === p.tree.id))
+      placedTrees.forEach((p, i) => {
+        const sx = oRect.left + (p.x / 100) * oRect.width
+        const sy = oRect.top + (p.y / 100) * oRect.height
+        particles.push({ id: Date.now() + i, startX: sx, startY: sy, phase: 'fly' })
+      })
+      setSapParticles(particles)
+      requestAnimationFrame(() => setSapParticles(prev => prev.map(p => ({ ...p, phase: 'fly' }))))
+    }
+
+    setBtnFillLevel(0)
+    setTimeout(() => setBtnFillLevel(0.3), 300)
+    setTimeout(() => setBtnFillLevel(0.6), 500)
+    setTimeout(() => setBtnFillLevel(1), 700)
+
     setCollectAllAnim({ total, current: 0, active: true })
-    setSapFlyAnim({ amount: total, phase: 'pop' })
-    setTimeout(() => setSapFlyAnim(prev => ({ ...prev, phase: 'fly' })), 600)
-    setTimeout(() => setSapFlyAnim({ amount: 0, phase: 'none' }), 1400)
-    const steps = 15
-    const stepTime = 600 / steps
+    const steps = 20
+    const stepTime = 800 / steps
     for (let i = 1; i <= steps; i++) {
       setTimeout(() => {
         setCollectAllAnim(prev => ({ ...prev, current: Math.round(total * (i / steps)) }))
-      }, 200 + i * stepTime)
+      }, 400 + i * stepTime)
     }
+
     setTimeout(() => {
       const fillState: Record<string, 'bucket' | 'fill' | 'done'> = {}
       for (const tree of treesWithSap) fillState[tree.id] = 'fill'
       setTapAnim(prev => ({ ...prev, ...fillState }))
     }, 200)
+
+    setTimeout(() => setSapParticles([]), 1000)
+
     setTimeout(() => {
       setJuice((j: number) => j + total)
       setSapReadyMap(prev => {
@@ -2233,6 +2404,7 @@ export const OrchardView = memo(function OrchardView({
       const doneState: Record<string, 'bucket' | 'fill' | 'done'> = {}
       for (const tree of treesWithSap) doneState[tree.id] = 'done'
       setTapAnim(prev => ({ ...prev, ...doneState }))
+      setBtnFillLevel(0)
       setTimeout(() => {
         setTapAnim(prev => {
           const n = { ...prev }
@@ -2241,7 +2413,7 @@ export const OrchardView = memo(function OrchardView({
         })
         setCollectAllAnim({ total: 0, current: 0, active: false })
       }, 400)
-    }, 800)
+    }, 1200)
   }, [filteredTrees, sapReadyMap, setJuice])
 
   const TREES_PER_PLOT = 40
@@ -2456,25 +2628,38 @@ export const OrchardView = memo(function OrchardView({
     }
     return (
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        {crossHatches.map((h, i) => (
-          <line key={`xh-${i}`} x1={h.x1} y1={h.y1} x2={h.x2} y2={h.y2} stroke={h.color} strokeWidth={0.25} opacity={h.op} strokeDasharray="0.8 1.5" />
-        ))}
-        {clumps.map((c, i) => (
-          <ellipse key={`clump-${i}`} cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} fill={c.color} opacity={c.op} />
-        ))}
-        {Array.from({ length: GRID_COLS }, (_, ci) => {
-          const pts = Array.from({ length: steps + 1 }, (_, si) => {
-            const y = yTop + si * (yBot - yTop) / steps
-            return { x: getTillX(ci, y), y }
-          })
-          return (
-            <g key={`till-${ci}`}>
-              {furrows.map((f, fi) => (
-                <path key={fi} d={makePath(pts, f.xOff, f.yOff, ci * 99 + fi * 71)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
-              ))}
-            </g>
-          )
-        })}
+        <defs>
+          <linearGradient id="till-fade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="white" stopOpacity="0" />
+            <stop offset="8%" stopColor="white" stopOpacity="1" />
+            <stop offset="90%" stopColor="white" stopOpacity="1" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </linearGradient>
+          <mask id="till-mask">
+            <rect x="0" y={yTop} width="100" height={yBot - yTop} fill="url(#till-fade)" />
+          </mask>
+        </defs>
+        <g mask="url(#till-mask)">
+          {crossHatches.map((h, i) => (
+            <line key={`xh-${i}`} x1={h.x1} y1={h.y1} x2={h.x2} y2={h.y2} stroke={h.color} strokeWidth={0.25} opacity={h.op} strokeDasharray="0.8 1.5" />
+          ))}
+          {clumps.map((c, i) => (
+            <ellipse key={`clump-${i}`} cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} fill={c.color} opacity={c.op} />
+          ))}
+          {Array.from({ length: GRID_COLS }, (_, ci) => {
+            const pts = Array.from({ length: steps + 1 }, (_, si) => {
+              const y = yTop + si * (yBot - yTop) / steps
+              return { x: getTillX(ci, y), y }
+            })
+            return (
+              <g key={`till-${ci}`}>
+                {furrows.map((f, fi) => (
+                  <path key={fi} d={makePath(pts, f.xOff, f.yOff, ci * 99 + fi * 71)} fill="none" stroke={f.color} strokeWidth={f.width} opacity={f.op} strokeLinecap="round" strokeLinejoin="round" />
+                ))}
+              </g>
+            )
+          })}
+        </g>
       </svg>
     )
   }, [isDark])
@@ -2528,7 +2713,112 @@ export const OrchardView = memo(function OrchardView({
       >
         {/* Main orchard area */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
+          {/* Topbar with sap count */}
+          <div className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
+            backgroundColor: isDark ? 'rgba(18,18,20,0.7)' : 'rgba(250,250,248,0.7)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          }}>
+            <div className="grid items-center w-full h-full" style={{ fontFamily: '"EB Garamond", serif', gridTemplateColumns: '1fr auto 1fr' }}>
+              <div className="flex items-center gap-2 justify-end pr-3">
+                <div ref={sapCounterRef} className="flex items-center gap-2">
+                  <PulpIcon size={18} />
+                  <span className="text-[16px] font-semibold tabular-nums" style={{ color: isDark ? '#d4d0c8' : '#3a3630' }}>{juice}</span>
+                  {collectAllAnim.active && (
+                    <span className="text-[14px] font-bold tabular-nums" style={{ color: '#d97706', animation: 'sap-ramp 0.8s ease-out forwards' }}>+{collectAllAnim.current}</span>
+                  )}
+                </div>
+              </div>
+              <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
+              <div className="flex items-center pl-3">
+              <div style={{ position: 'relative' }}>
+                <button
+                  ref={collectBtnRef}
+                  onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
+                  className="relative flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold overflow-hidden"
+                  style={{
+                    padding: '4px 10px',
+                    backgroundColor: isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)',
+                    color: '#d97706',
+                    border: '1px solid rgba(217,119,6,0.3)',
+                  }}
+                >
+                  {btnFillLevel > 0 && (
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                      background: `linear-gradient(to top, rgba(217,119,6,${isDark ? 0.4 : 0.3}) 0%, rgba(217,119,6,${isDark ? 0.15 : 0.1}) 60%, transparent 100%)`,
+                      transform: `translateY(${(1 - btnFillLevel) * 100}%)`,
+                      transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      borderRadius: 'inherit',
+                    }} />
+                  )}
+                  <span className="relative z-10">Collect All Sap</span>
+                  {(() => {
+                    const totalReady = filteredTrees.reduce((s, t) => s + (sapReadyMap[t.id] || 0), 0)
+                    return totalReady > 0 ? <span className="relative z-10 ml-1 text-[10px] tabular-nums font-bold">{totalReady}</span> : null
+                  })()}
+                </button>
+                {sapFlyAnim.phase !== 'none' && (() => {
+                  const btnRect = collectBtnRef.current?.getBoundingClientRect()
+                  const counterRect = sapCounterRef.current?.getBoundingClientRect()
+                  if (!btnRect || !counterRect) return null
+                  const dx = counterRect.left + counterRect.width / 2 - (btnRect.left + btnRect.width / 2)
+                  const dy = counterRect.top + counterRect.height / 2 - (btnRect.top - 20)
+                  return (
+                    <div style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: -20,
+                      transform: sapFlyAnim.phase === 'pop'
+                        ? 'translate(-50%, 0) scale(1.8)'
+                        : `translate(calc(-50% + ${dx}px), ${dy}px) scale(0.6)`,
+                      opacity: sapFlyAnim.phase === 'pop' ? 1 : 0.4,
+                      transition: sapFlyAnim.phase === 'fly' ? 'all 0.7s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none',
+                      pointerEvents: 'none',
+                      zIndex: 999,
+                      fontFamily: '"EB Garamond", serif',
+                      fontWeight: 800,
+                      fontSize: 18,
+                      color: '#d97706',
+                      textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                      animation: sapFlyAnim.phase === 'pop' ? 'sap-pop 0.5s ease-out forwards' : undefined,
+                    }}>
+                      +{sapFlyAnim.amount}
+                    </div>
+                  )
+                })()}
+              </div>
+              </div>
+            </div>
+          </div>
+          {/* Flying sap particles */}
+          {sapParticles.map((p, i) => {
+            const btnRect = collectBtnRef.current?.getBoundingClientRect()
+            if (!btnRect) return null
+            const targetX = btnRect.left + btnRect.width / 2
+            const targetY = btnRect.top + btnRect.height / 2
+            return (
+              <div key={p.id} className="fixed pointer-events-none z-[9999]" style={{
+                left: 0, top: 0,
+                width: 8, height: 8,
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, #d97706 40%, rgba(217,119,6,0) 100%)',
+                boxShadow: '0 0 6px 2px rgba(217,119,6,0.4)',
+                transform: `translate(${targetX - 4}px, ${targetY - 4}px) scale(0.2)`,
+                opacity: 0,
+                animation: `sap-p-${p.id} ${0.6 + i * 0.03}s cubic-bezier(0.3, 0.8, 0.3, 1) ${i * 0.05}s forwards`,
+              }}>
+                <style>{`
+                  @keyframes sap-p-${p.id} {
+                    0% { transform: translate(${p.startX - 4}px, ${p.startY - 4}px) scale(1); opacity: 1; }
+                    70% { opacity: 0.8; }
+                    100% { transform: translate(${targetX - 4}px, ${targetY - 4}px) scale(0.2); opacity: 0; }
+                  }
+                `}</style>
+              </div>
+            )
+          })}
+          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
           <div style={{
             opacity: (activeTool !== 'none' || editMode) ? 0.4 : 1,
@@ -2537,18 +2827,6 @@ export const OrchardView = memo(function OrchardView({
             <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
           </div>
 
-          {/* Sap count */}
-          <div ref={sapCounterRef} className="absolute top-3 left-3 z-50 flex items-center gap-1.5 rounded-md px-2 py-1" style={{
-            background: isDark ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.85)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-            fontFamily: '"EB Garamond", serif',
-          }}>
-            <PulpIcon size={12} />
-            <span className="text-[11px] tabular-nums" style={{ color: isDark ? '#d4d0c8' : '#3a3630' }}>{juice}</span>
-            {collectAllAnim.active && (
-              <span className="text-[11px] font-bold tabular-nums" style={{ color: '#d97706', animation: 'sap-ramp 0.8s ease-out forwards' }}>+{collectAllAnim.current}</span>
-            )}
-          </div>
 
           {/* Orchard scene */}
           <div className="flex-1 relative overflow-hidden" style={{
@@ -2769,8 +3047,7 @@ export const OrchardView = memo(function OrchardView({
                               collectSap(tree, rect.left + rect.width / 2, rect.top)
                               return
                             }
-                            e.preventDefault()
-                            handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+                            setFocusedTree({ tree, x, y })
                           }}
                           style={{
                             left: `${x}%`,
@@ -2871,10 +3148,8 @@ export const OrchardView = memo(function OrchardView({
                             return (
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
                               zIndex: 300, position: 'absolute',
-                              bottom: '105%',
-                              ...(popLeft
-                                ? { right: 0 }
-                                : { left: 0 }),
+                              top: '100%', left: '50%', transform: 'translateX(-50%)',
+                              marginTop: 4,
                             }}>
                               <div className="px-3 py-2 rounded-lg" style={{
                                 backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
@@ -2931,89 +3206,34 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
 
-          {/* Tool buttons */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
+          {/* Tool buttons — left center */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center gap-1.5 rounded-[6px] transition-all text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold"
               style={{
-                padding: '6px 14px',
-                letterSpacing: '0.01em',
-                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : '#f4f4f5'),
+                width: 36, height: 36,
+                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
                 color: activeTool === 'axe' ? '#ef4444' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.25)' : (isDark ? 'rgba(255,255,255,0.06)' : '#d4d4d8')}`,
+                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.3)' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
               }}
+              title="Chop"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 12l-8.5 8.5a2.12 2.12 0 01-3-3L11 9"/><path d="M15 13L9 7l4-4 6 6h3a8 8 0 01-7 4z"/></svg>
-              Chop
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
             </button>
-
-            <div style={{ position: 'relative' }}>
-              <button
-                ref={collectBtnRef}
-                onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                className="flex flex-col items-center justify-center rounded-[8px] transition-all font-semibold"
-                style={{
-                  padding: '8px 24px 7px',
-                  letterSpacing: '0.01em',
-                  backgroundColor: isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)',
-                  color: '#d97706',
-                  border: '1px solid rgba(217,119,6,0.25)',
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 2 }}><path d="M12 2v6l3-3"/><path d="M12 8l-3-3"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
-                <span className="text-[12px] flex items-center gap-1">
-                  Collect All
-                  {(() => {
-                    const totalReady = filteredTrees.reduce((s, t) => s + (sapReadyMap[t.id] || 0), 0)
-                    return totalReady > 0 ? <span className="text-[10px] tabular-nums font-bold">{totalReady}</span> : null
-                  })()}
-                </span>
-              </button>
-              {sapFlyAnim.phase !== 'none' && (() => {
-                const btnRect = collectBtnRef.current?.getBoundingClientRect()
-                const counterRect = sapCounterRef.current?.getBoundingClientRect()
-                if (!btnRect || !counterRect) return null
-                const dx = counterRect.left + counterRect.width / 2 - (btnRect.left + btnRect.width / 2)
-                const dy = counterRect.top + counterRect.height / 2 - (btnRect.top - 20)
-                return (
-                  <div style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: -20,
-                    transform: sapFlyAnim.phase === 'pop'
-                      ? 'translate(-50%, 0) scale(1.8)'
-                      : `translate(calc(-50% + ${dx}px), ${dy}px) scale(0.6)`,
-                    opacity: sapFlyAnim.phase === 'pop' ? 1 : 0.4,
-                    transition: sapFlyAnim.phase === 'fly' ? 'all 0.7s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none',
-                    pointerEvents: 'none',
-                    zIndex: 999,
-                    fontFamily: '"EB Garamond", serif',
-                    fontWeight: 800,
-                    fontSize: 18,
-                    color: '#d97706',
-                    textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                    animation: sapFlyAnim.phase === 'pop' ? 'sap-pop 0.5s ease-out forwards' : undefined,
-                  }}>
-                    +{sapFlyAnim.amount}
-                  </div>
-                )
-              })()}
-            </div>
 
             <button
               onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center gap-1.5 rounded-[6px] transition-all text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold"
               style={{
-                padding: '6px 14px',
-                letterSpacing: '0.01em',
-                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)') : (isDark ? 'rgba(255,255,255,0.04)' : '#f4f4f5'),
+                width: 36, height: 36,
+                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
                 color: editMode ? '#d97706' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${editMode ? 'rgba(217,119,6,0.25)' : (isDark ? 'rgba(255,255,255,0.06)' : '#d4d4d8')}`,
+                border: `1px solid ${editMode ? 'rgba(217,119,6,0.3)' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
               }}
+              title="Edit layout"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
           </div>
 
@@ -3077,6 +3297,103 @@ export const OrchardView = memo(function OrchardView({
                 </motion.div>
               </motion.div>
             )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {focusedTree && (() => {
+              const ft = focusedTree.tree
+              const typeInfo = TREE_TYPES[ft.type]
+              const rarity = typeInfo?.rarity || 'common'
+              const meta = RARITY_META[rarity] || RARITY_META.common
+              const planted = ft.plantedAt ? new Date(ft.plantedAt) : null
+              const plantedStr = planted ? planted.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : null
+              const ageMs = planted ? Date.now() - planted.getTime() : 0
+              const ageDays = Math.floor(ageMs / 86400000)
+              const ageHrs = Math.floor(ageMs / 3600000)
+              const ageMins = Math.floor(ageMs / 60000)
+              const ageStr = ageDays > 0 ? `${ageDays} day${ageDays > 1 ? 's' : ''} old` : ageHrs > 0 ? `${ageHrs} hour${ageHrs > 1 ? 's' : ''} old` : `${ageMins} min old`
+              const stageNames = ['Seed', 'Sprout', 'Sapling', 'Young', 'Mature']
+              const sapPerTick = getSapPerTick(ft)
+              const notebook = ft.notebookId ? notes.find(n => n.id === ft.notebookId) : null
+              return (
+                <motion.div
+                  key="tree-focus"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 z-50 flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+                  onClick={() => setFocusedTree(null)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.85, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="rounded-xl flex flex-col items-center gap-4"
+                    style={{
+                      padding: '28px 32px 24px',
+                      backgroundColor: isDark ? '#141316' : '#fdfcfa',
+                      border: `1.5px solid ${meta.border}`,
+                      boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
+                      minWidth: 240, maxWidth: 300,
+                      fontFamily: '"EB Garamond", serif',
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <PlantIcon type={ft.type} size={100} stage={ft.stage} hideGround />
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: meta.color }} />
+                      <span className="text-[16px] font-bold tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
+                        {typeInfo?.name || ft.type}
+                      </span>
+                    </div>
+                    <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
+                      <div className="flex justify-between">
+                        <span>Stage</span>
+                        <span style={{ color: meta.color, fontWeight: 600 }}>{stageNames[ft.stage] || 'Unknown'}</span>
+                      </div>
+                      {ft.stage < 4 && (
+                        <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+                          <div className="h-full rounded-full" style={{ width: `${Math.min(100, ft.progress)}%`, background: meta.color }} />
+                        </div>
+                      )}
+                      {plantedStr && (
+                        <div className="flex justify-between">
+                          <span>Planted</span>
+                          <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{plantedStr}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span>Age</span>
+                        <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{ageStr}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Sap rate</span>
+                        <span style={{ color: '#d97706', fontWeight: 600 }}>{sapPerTick}/tick</span>
+                      </div>
+                      {notebook && (
+                        <div className="flex justify-between">
+                          <span>Notebook</span>
+                          <span className="truncate max-w-[120px]" style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{notebook.subject || 'Untitled'}</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setFocusedTree(null)}
+                      className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        color: isDark ? '#6a6860' : '#9a9690',
+                      }}
+                    >
+                      Close
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )
+            })()}
           </AnimatePresence>
         </div>
       </div>

@@ -209,11 +209,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
   const mainColor = "#d97706"
   const isDark = theme === "dark"
-  const bgColor = isDark ? "rgba(0,0,0,0.55)" : "rgba(10,10,12,0.50)"
-  const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)"
-  const textColor = "#e4e4e7"
-  const dimColor = "#a1a1aa"
-  const subtleColor = "#71717a"
+  const bgColor = isDark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.75)"
+  const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)"
+  const textColor = isDark ? "#e4e4e7" : "#27272a"
+  const dimColor = isDark ? "#a1a1aa" : "#71717a"
+  const subtleColor = isDark ? "#71717a" : "#a1a1aa"
   const serifFont = '"EB Garamond", serif'
   const monoFont = '"SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace'
 
@@ -769,14 +769,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ? "rgba(239,68,68,0.1)"
                         : done
                           ? `${mainColor}1a`
-                          : isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5",
+                          : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.06)",
                   color: treeDead ? "#ef4444"
                     : running && !done && elapsed < 60
                       ? dimColor
                       : running && !done
                         ? "#ef4444"
                         : done ? mainColor : textColor,
-                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? (isDark ? borderColor : "#d4d4d8") : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? borderColor : "#d4d4d8"}`,
+                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : borderColor}`,
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >

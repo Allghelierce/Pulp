@@ -380,12 +380,15 @@ export function useBoxDrawing({
       if (dragRef.current) {
         const { sx, sy, originalBoxes, elements } = dragRef.current
         const scale = s()
+        const dx = (e.clientX - sx) / scale
+        const dy = (e.clientY - sy) / scale
         for (const id in elements) {
           const node = elements[id]
           const orig = originalBoxes[id]
           if (node && orig) {
-            node.style.left = (orig.x + (e.clientX - sx) / scale) + 'px'
-            node.style.top = (orig.y + (e.clientY - sy) / scale) + 'px'
+            const nx = orig.x + dx, ny = orig.y + dy
+            node.style.left = nx + 'px'
+            node.style.top = ny + 'px'
           }
         }
       }
