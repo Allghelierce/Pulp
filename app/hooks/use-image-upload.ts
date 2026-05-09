@@ -19,33 +19,26 @@ export function useImageUpload({ onUpload }: UseImageUploadProps = {}) {
       const file = event.target.files?.[0];
       if (file) {
         setFileName(file.name);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        previewRef.current = url;
-        onUpload?.(url);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          setPreviewUrl(dataUrl);
+          previewRef.current = dataUrl;
+          onUpload?.(dataUrl);
+        };
+        reader.readAsDataURL(file);
       }
     },
     [onUpload],
   );
 
   const handleRemove = useCallback(() => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
     setPreviewUrl(null);
     setFileName(null);
     previewRef.current = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, [previewUrl]);
-
-  useEffect(() => {
-    return () => {
-      if (previewRef.current) {
-        URL.revokeObjectURL(previewRef.current);
-      }
-    };
   }, []);
 
   return {

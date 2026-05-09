@@ -922,7 +922,7 @@ export const Sidebar = memo(function Sidebar({
 
         {/* Focus — dock button */}
         {onOpenTimer && (
-          <div className="shrink-0 z-10 relative px-3 pb-4 pt-3" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
+          <div className="shrink-0 z-10 relative px-3 pb-1 pt-3" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
             <button
               onClick={onOpenTimer}
               title="Focus timer"
@@ -954,7 +954,7 @@ export const Sidebar = memo(function Sidebar({
         )}
 
         {/* Socials */}
-        <div className="shrink-0 border-t border-white/5 flex items-center justify-center gap-3 pb-3 pt-3 z-10 relative" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
+        <div className="shrink-0 flex items-center justify-start gap-3 pb-3 pt-1.5 px-3.5 z-10 relative" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
           <a href="#" title="Instagram" className="text-zinc-600 hover:text-zinc-400 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
           </a>

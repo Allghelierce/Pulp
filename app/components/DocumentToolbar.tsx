@@ -24,7 +24,7 @@ interface DocumentToolbarProps {
   setSketchMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
   setDrawLineMode: (v: boolean) => void
-  insertTable: () => void
+  insertTable: (rows: number, cols: number) => void
   insertColumns: (num: number) => void
   openAlert: (title: string, message?: string) => void
   clearPage: () => void
@@ -195,6 +195,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const [alignOpen, setAlignOpen] = useState(false)
   const [drawOpen, setDrawOpen] = useState(false)
   const [insertOpen, setInsertOpen] = useState(false)
+  const [tablePickerOpen, setTablePickerOpen] = useState(false)
+  const [tableHover, setTableHover] = useState<[number, number]>([0, 0])
+  const tablePickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!alignOpen) return
@@ -219,6 +222,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [insertOpen])
+
+  useEffect(() => {
+    if (!tablePickerOpen) return
+    const handler = (e: MouseEvent) => { if (!tablePickerRef.current?.contains(e.target as Node)) { setTablePickerOpen(false); setTableHover([0, 0]) } }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [tablePickerOpen])
 
   useEffect(() => {
     if (!aiOpen) return
@@ -315,14 +325,53 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 Image
               </button>
               <div className={`h-px mx-1.5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
-              <button
-                onMouseDown={e => { e.preventDefault(); insertTable(); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                style={btnFont}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
-                Table
-              </button>
+              <div ref={tablePickerRef} className="relative">
+                <button
+                  onMouseDown={e => { e.preventDefault(); setTablePickerOpen(!tablePickerOpen); setInsertOpen(false) }}
+                  className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                  style={btnFont}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
+                  Table
+                </button>
+                {tablePickerOpen && (
+                  <div
+                    style={{
+                      position: "absolute", top: "100%", left: 0, marginTop: 4, zIndex: 999,
+                      borderRadius: 12, padding: 12,
+                      background: theme === "dark" ? "rgba(20,20,22,0.92)" : "rgba(255,255,255,0.92)",
+                      backdropFilter: "blur(20px) saturate(120%)",
+                      border: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
+                      boxShadow: theme === "dark" ? "0 12px 40px -10px rgba(0,0,0,0.7)" : "0 12px 40px -10px rgba(0,0,0,0.12)",
+                    }}
+                    onMouseLeave={() => setTableHover([0, 0])}
+                  >
+                    <div style={{ fontSize: 10, color: theme === "dark" ? "#a1a1aa" : "#71717a", marginBottom: 8, textAlign: "center", fontWeight: 600 }}>
+                      {tableHover[0] > 0 ? `${tableHover[0]} × ${tableHover[1]}` : "Select size"}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 20px)", gap: 3 }}>
+                      {Array.from({ length: 25 }, (_, i) => {
+                        const r = Math.floor(i / 5) + 1
+                        const c = (i % 5) + 1
+                        const active = r <= tableHover[0] && c <= tableHover[1]
+                        return (
+                          <div
+                            key={i}
+                            onMouseEnter={() => setTableHover([r, c])}
+                            onClick={() => { insertTable(r, c); setTablePickerOpen(false); setTableHover([0, 0]) }}
+                            style={{
+                              width: 20, height: 20, borderRadius: 3, cursor: "pointer",
+                              background: active ? "rgba(217,119,6,0.5)" : "rgba(217,119,6,0.12)",
+                              border: active ? "1.5px solid rgba(217,119,6,0.8)" : "1px solid rgba(217,119,6,0.25)",
+                              transition: "all 0.05s",
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

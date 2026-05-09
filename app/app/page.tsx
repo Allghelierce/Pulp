@@ -21,8 +21,7 @@ const _preloadShelf = () => import("@/app/components/ShelfView")
 const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 const _preloadFlashcard = () => import("@/app/components/FlashcardView")
-const _preloadSlashMenu = () => import("@/app/components/SlashMenu")
-const SlashMenu = lazy(() => _preloadSlashMenu().then(m => ({ default: m.SlashMenu })))
+import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 
@@ -306,7 +305,7 @@ const BoxItem = memo(function BoxItem({
       ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
     ]
   }, [isDark])
-  const isImage = box.content.includes("http") || box.content.startsWith("data:image")
+  const isImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
   const isSticky = !!box.boxHighlightColor
   const isTitle = !!box.isTitle
   const isEmpty = !isSticky && !isImage && !isTitle && box.content.trim() === ''
@@ -314,6 +313,10 @@ const BoxItem = memo(function BoxItem({
     <div
       id={`box-${box.id}`}
       onMouseDown={e => {
+        const target = e.target as HTMLElement
+        const isEditing = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+        if (isEditing && isSelected) return
+        e.preventDefault()
         const el = e.currentTarget as HTMLElement
         el.style.transition = 'none'
         el.style.willChange = 'left, top'
@@ -1116,7 +1119,7 @@ export default function NoteApp() {
     const id = requestIdleCallback(() => {
       _preloadOrchard(); _preloadBoutique(); _preloadStats()
       _preloadLeaderboard(); _preloadFocus(); _preloadSettings()
-      _preloadGemStore(); _preloadGrid(); _preloadSlashMenu()
+      _preloadGemStore(); _preloadGrid()
       _preloadShelf(); _preloadFlashcard(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
     return () => cancelIdleCallback(id)
@@ -1397,17 +1400,18 @@ export default function NoteApp() {
     setShowImageModal(true)
   }, [activeTabId, currentPageIdx, setNotes, zoom])
 
-  const insertTableBox = useCallback(() => {
+  const insertTableBox = useCallback((rows = 3, cols = 3) => {
     if (!paperRef.current || !activeTabId) return
     const scale = Number(zoom) || 1
     const paperW = paperRef.current.clientWidth / scale
     const scrollTop = paperRef.current.closest('.overflow-y-scroll')?.scrollTop ?? 0
-    const x = (paperW - 400) / 2
+    const w = Math.min(cols * 130, paperW - 80)
+    const x = (paperW - w) / 2
     const y = scrollTop / scale + 100
     const id = uid()
     const mkRow = (cells: number, tag: string) => `<tr>${Array.from({ length: cells }, () => `<${tag} style="border:1.5px solid rgba(0,0,0,0.25);padding:6px 10px;font-size:13px;min-width:80px;outline:none;${tag === 'th' ? 'font-weight:600;' : ''}"><br></${tag}>`).join('')}</tr>`
-    const tableHtml = `<table style="border-collapse:collapse;width:100%">${mkRow(3, 'th')}${mkRow(3, 'td')}${mkRow(3, 'td')}</table>`
-    const tableBox: TextBoxType = { id, x, y, w: 400, h: 160, content: tableHtml }
+    const tableHtml = `<table style="border-collapse:collapse;width:100%">${mkRow(cols, 'th')}${Array.from({ length: rows - 1 }, () => mkRow(cols, 'td')).join('')}</table>`
+    const tableBox: TextBoxType = { id, x, y, w, h: rows * 40 + 20, content: tableHtml }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
       ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), tableBox] }
     }))
@@ -3615,16 +3619,13 @@ export default function NoteApp() {
                              }
                              #editor-paper [contenteditable]:empty:focus::after,
                              #editor-paper [contenteditable]:has(> br:only-child):focus::after {
-                               content: "Type / for commands  ·  @ for mentions";
-                               color: ${theme === "dark" ? "rgba(161,161,170,0.5)" : "rgba(0,0,0,0.3)"};
+                               content: "@ tools  ·  \\\\ AI";
+                               color: ${theme === "dark" ? "rgba(161,161,170,0.6)" : "rgba(0,0,0,0.35)"};
                                font-style: italic;
                                font-size: 13px;
                                font-weight: 400;
                                pointer-events: none;
                                user-select: none;
-                               position: absolute;
-                               left: 0;
-                               top: 0;
                                font-family: "${editorFont}", "EB Garamond", serif;
                              }
                              #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
@@ -3848,7 +3849,7 @@ export default function NoteApp() {
             <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
-          {slashMenu && (<Suspense fallback={null}>
+          {slashMenu && (
             <SlashMenu
               {...slashMenu}
               accent={accent}
@@ -3898,7 +3899,7 @@ export default function NoteApp() {
                 }, 50)
               }}
             />
-          </Suspense>)}
+          )}
 
           {showImageModal && (<Suspense fallback={null}>
             <ImageUploadModal

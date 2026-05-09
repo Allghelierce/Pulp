@@ -52,20 +52,13 @@ interface SlashMenuProps {
 
 // ─── Shared icon style ──────────────────────────────────────────────────────
 
-function OIcon({ children, isActive, mode, accent }: { children: React.ReactNode; isActive: boolean; mode: "@" | "/"; accent: string }) {
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : "184,94,34"
-  }
-  const rgb = hexToRgb(accent)
+function OIcon({ children, isActive }: { children: React.ReactNode; isActive: boolean; mode: "@" | "/"; accent: string }) {
   return (
     <div style={{
       width: 24, height: 24, borderRadius: 6, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: isActive
-        ? `rgba(${rgb},0.15)`
-        : "transparent",
-      color: isActive ? "rgba(150,150,150,1)" : "rgba(150,150,150,0.6)",
+      background: isActive ? "rgba(217,119,6,0.15)" : "transparent",
+      color: isActive ? "#d97706" : "rgba(217,119,6,0.6)",
       transition: "all 0.1s ease",
     }}>
       {children}
