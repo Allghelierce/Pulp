@@ -26,8 +26,8 @@ export function PulpLoadingScreen() {
       <DotLoader
         frames={frames}
         duration={90}
-        dotClassName="pulp-dot bg-orange-500/25 size-2"
-        className="gap-1"
+        dotClassName="pulp-dot bg-orange-500/25 size-1.5"
+        className="gap-0.5"
       />
       <style>{`
         .pulp-dot.active {
@@ -35,7 +35,7 @@ export function PulpLoadingScreen() {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 8px;
+          font-size: 6px;
           line-height: 1;
           animation: pulp-spin 2s linear infinite;
         }
@@ -47,7 +47,6 @@ export function PulpLoadingScreen() {
           to   { transform: rotate(360deg); }
         }
       `}</style>
-      <p className="text-[11px] font-medium tracking-widest uppercase text-white/20">Pulp</p>
     </div>
   )
 }

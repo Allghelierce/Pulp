@@ -46,8 +46,8 @@ const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
 const GRID_ROWS = 4
 const GRID_COL_START = 17
 const GRID_COL_END = 83
-const GRID_ROW_START = 47
-const GRID_ROW_END = 85
+const GRID_ROW_START = 44
+const GRID_ROW_END = 82
 const GRID_TILL_OFFSET = 2.5
 
 function gridSlotPos(slotIndex: number): { x: number; y: number; col: number; side: number; row: number } {
@@ -1602,41 +1602,41 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return (
             <g>
               <defs>
-                {/* Tight lantern glow */}
-                <radialGradient id="lamp-glow" cx="50%" cy="40%" r="60%">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.25" />
-                  <stop offset="40%" stopColor={glass} stopOpacity="0.1" />
+                <radialGradient id="lamp-glow" cx="50%" cy="45%" r="50%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.3" />
+                  <stop offset="50%" stopColor={glass} stopOpacity="0.1" />
                   <stop offset="100%" stopColor={glass} stopOpacity="0" />
                 </radialGradient>
-                {/* Wide ambient wash — elliptical, shifted right toward windmills */}
-                <radialGradient id="lamp-ambient" cx="35%" cy="40%" r="55%">
-                  <stop offset="0%" stopColor={glass} stopOpacity="0.07" />
-                  <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
-                  <stop offset="70%" stopColor={glass} stopOpacity="0.015" />
+                <radialGradient id="lamp-wash-a" cx="30%" cy="45%" r="55%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.09" />
+                  <stop offset="30%" stopColor={glass} stopOpacity="0.05" />
+                  <stop offset="65%" stopColor={glass} stopOpacity="0.02" />
                   <stop offset="100%" stopColor={glass} stopOpacity="0" />
                 </radialGradient>
-                {/* Ground reflection — warm bounce */}
-                <radialGradient id="lamp-ground" cx="40%" cy="20%" r="60%">
-                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.06" />
-                  <stop offset="50%" stopColor="#92400e" stopOpacity="0.025" />
+                <radialGradient id="lamp-wash-b" cx="55%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.07" />
+                  <stop offset="40%" stopColor={glass} stopOpacity="0.03" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="lamp-ground" cx="40%" cy="25%" r="55%">
+                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.07" />
+                  <stop offset="40%" stopColor="#92400e" stopOpacity="0.03" />
                   <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
                 </radialGradient>
-                {/* Volumetric cone down from lantern */}
                 <linearGradient id="lamp-cone" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.12" />
-                  <stop offset="30%" stopColor={glass} stopOpacity="0.04" />
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.14" />
+                  <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
                   <stop offset="100%" stopColor={glass} stopOpacity="0" />
                 </linearGradient>
               </defs>
               {isNight && <>
-              <ellipse cx={lx + 15} cy={ly - 2} rx="35" ry="18" fill="url(#lamp-ambient)" />
-              <ellipse cx={lx + 22} cy={ly} rx="28" ry="14" fill="url(#lamp-ambient)" opacity="0.6" />
-              <ellipse cx={lx + 10} cy={ly + 8} rx="30" ry="8" fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 14} cy={ly} rx="42" ry="17" fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx + 22} cy={ly + 1} rx="30" ry="13" fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx + 8} cy={ly + 6} rx="20" ry="6" fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 20} cy={ly + 5} rx="16" ry="5" fill="url(#lamp-ground)" opacity="0.7" />
               <path d={`M${lx + 0.5},${ly - 7} L${lx - 4},${ly + 4} L${lx + 6},${ly + 4} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              <ellipse cx={lx + 2} cy={ly + 1} rx="6" ry="1.5" fill={glass} opacity="0.03" />
-              <ellipse cx={lx + 8} cy={ly + 2} rx="8" ry="1.8" fill={glass} opacity="0.02" />
-              <circle cx={lx + 1.5} cy={ly - 7.5} r="4" fill="url(#lamp-glow)" />
-              <circle cx={lx + 1.5} cy={ly - 7.5} r="2" fill={glassL} opacity="0.06" />
+              <circle cx={lx + 1.5} cy={ly - 7.5} r="5" fill="url(#lamp-glow)" />
+              <circle cx={lx + 1.5} cy={ly - 7.5} r="2" fill={glassL} opacity="0.08" />
               </>}
               {/* Pole */}
               <rect x={lx - 0.3} y={ly - 8} width="0.6" height="9" rx="0.15" fill={iron} />
@@ -1696,10 +1696,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
           }
           return <g>
-            <path d={areaPath} fill={dirtC} opacity={isDark ? 0.12 : 0.08} />
-            <path d={patches.join('')} fill={dirtD} opacity={isDark ? 0.08 : 0.05} />
-            <path d={pebbles.join('')} fill={isDark ? '#2a2620' : '#9a8a6a'} opacity={isDark ? 0.15 : 0.1} />
-            <path d={cracks.join('')} stroke={dirtD} strokeWidth="0.12" fill="none" opacity={isDark ? 0.08 : 0.05} />
+            <path d={patches.join('')} fill={dirtD} opacity={isDark ? 0.04 : 0.02} />
+            <path d={pebbles.join('')} fill={isDark ? '#2a2620' : '#9a8a6a'} opacity={isDark ? 0.08 : 0.04} />
+            <path d={cracks.join('')} stroke={dirtD} strokeWidth="0.12" fill="none" opacity={isDark ? 0.04 : 0.02} />
             <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.2 : 0.12} />
           </g>
         })()}
@@ -1894,24 +1893,39 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         </div>
       )}
 
-      {/* Birds — day only */}
+      {/* Birds — swoop in/out of trees */}
       {(timeState.phase === 'day' || timeState.phase === 'morning') && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[0,1,2].map(i => {
+          {[0,1,2,3].map(i => {
             const r = seededRng(i * 47 + 211)
-            const y = 5 + r() * 18
-            const dur = 20 + r() * 15
-            const delay = -(r() * dur)
-            const sz = 8 + r() * 6
+            const sz = 9 + r() * 5
+            const dur = 14 + r() * 10
+            const delay = r() * dur
+            const fromRight = r() > 0.5
+            const treeY = 45 + r() * 25
+            const skyY = 5 + r() * 15
+            const treeX = 20 + r() * 60
+            const name = `bird-swoop-${i}`
             return (
               <svg key={`bird-${i}`} className="absolute" style={{
-                top: `${y}%`, width: sz, height: sz * 0.5,
-                animation: `bird-fly ${dur}s linear ${delay}s infinite`,
-                opacity: 0.35 + r() * 0.25,
+                width: sz, height: sz * 0.5,
+                opacity: 0.4 + r() * 0.2,
+                animation: `${name} ${dur}s ease-in-out ${delay}s infinite`,
+                transform: fromRight ? 'scaleX(-1)' : undefined,
               }} viewBox="0 0 20 10">
                 <path d="M0,5 Q5,0 10,4 Q15,0 20,5" fill="none" stroke={isDark ? '#3a3a3a' : '#4a4440'} strokeWidth="1.5" strokeLinecap="round">
-                  <animate attributeName="d" values="M0,5 Q5,0 10,4 Q15,0 20,5;M0,4 Q5,3 10,4 Q15,3 20,4;M0,5 Q5,0 10,4 Q15,0 20,5" dur="0.6s" repeatCount="indefinite" />
+                  <animate attributeName="d" values="M0,5 Q5,0 10,4 Q15,0 20,5;M0,4 Q5,3 10,4 Q15,3 20,4;M0,5 Q5,0 10,4 Q15,0 20,5" dur="0.5s" repeatCount="indefinite" />
                 </path>
+                <style>{`
+                  @keyframes ${name} {
+                    0% { left: ${fromRight ? '105%' : '-5%'}; top: ${skyY}%; }
+                    25% { left: ${treeX}%; top: ${skyY + 5}%; }
+                    35% { left: ${treeX + (fromRight ? -3 : 3)}%; top: ${treeY}%; }
+                    55% { left: ${treeX + (fromRight ? -2 : 2)}%; top: ${treeY - 1}%; }
+                    70% { left: ${treeX + (fromRight ? -5 : 5)}%; top: ${skyY + 8}%; }
+                    100% { left: ${fromRight ? '-5%' : '105%'}; top: ${skyY - 3}%; }
+                  }
+                `}</style>
               </svg>
             )
           })}
@@ -1982,8 +1996,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
         @keyframes firefly-glow { 0%, 100% { opacity: 0; } 30%, 70% { opacity: 1; } }
         @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
-        @keyframes bird-fly { 0% { left: -5%; } 100% { left: 105%; } }
-        @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
+@keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
         @keyframes butterfly-path { 0% { transform: translate(0, 0); } 20% { transform: translate(20px, -12px); } 40% { transform: translate(-10px, -20px); } 60% { transform: translate(15px, 8px); } 80% { transform: translate(-15px, -5px); } 100% { transform: translate(0, 0); } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
@@ -2340,7 +2353,7 @@ export const OrchardView = memo(function OrchardView({
     const dirtMid = dk ? '#2a2418' : '#8a7a5a'
     const dirtLight = dk ? '#382e1e' : '#9a8a6a'
     const yTop = 44
-    const yBot = 94
+    const yBot = 88
     const steps = 16
     const makePath = (pts: { x: number; y: number }[], xOff: number, yOff: number, seed: number) => {
       const r = seededRng(seed)
@@ -2429,6 +2442,12 @@ export const OrchardView = memo(function OrchardView({
 
   const archivedNotes = useMemo(() => notes.filter(n => n.archived && !n.deletedAt), [notes])
 
+  const handleToggleChop = useCallback(() => {
+    setActiveTool(t => t === 'axe' ? 'none' : 'axe')
+    setChopTarget(null)
+    if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') }
+  }, [showChopHint])
+
   if (!isOpen) return null
 
   const cardBorder = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
@@ -2464,10 +2483,10 @@ export const OrchardView = memo(function OrchardView({
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
           <div style={{
-            filter: (activeTool !== 'none' || editMode) ? 'blur(2px) brightness(0.7)' : 'none',
-            transition: 'filter 0.3s ease',
+            opacity: (activeTool !== 'none' || editMode) ? 0.4 : 1,
+            transition: 'opacity 0.3s ease',
           }}>
-            <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
+            <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
           </div>
 
           {/* Sap count */}

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect, memo, useCallback, useMemo } from "react"
+import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense } from "react"
 import { LazyMotion, domAnimation, m } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
@@ -21,24 +21,23 @@ import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 import { CoverModal } from "@/app/components/CoverModal"
 import { FlashcardView } from "@/app/components/FlashcardView"
-import { AiCommandBar } from "@/app/components/AiCommandBar"
-import { NotebookChat } from "@/app/components/NotebookChat"
-import { VersionHistoryPanel } from "@/app/components/VersionHistoryPanel"
-import { OrchardView } from "@/app/components/OrchardView"
-import { BoutiqueView } from "@/app/components/BoutiqueView"
-import { GemStoreModal } from "@/app/components/GemStoreModal"
-import { StatsView } from "@/app/components/StatsView"
-import { FocusView } from "@/app/components/FocusView"
-import { LeaderboardView } from "@/app/components/LeaderboardView"
-import { SettingsView } from "@/app/components/settings/SettingsView"
-import { GridView } from "@/app/components/GridView"
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { AiInlineMenu } from "@/app/components/AiInlineMenu"
-import { AiResultModal } from "@/app/components/AiResultModal"
-
-
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
+
+import { OrchardView } from "@/app/components/OrchardView"
+const BoutiqueView = lazy(() => import("@/app/components/BoutiqueView").then(m => ({ default: m.BoutiqueView })))
+const StatsView = lazy(() => import("@/app/components/StatsView").then(m => ({ default: m.StatsView })))
+const LeaderboardView = lazy(() => import("@/app/components/LeaderboardView").then(m => ({ default: m.LeaderboardView })))
+const FocusView = lazy(() => import("@/app/components/FocusView").then(m => ({ default: m.FocusView })))
+const SettingsView = lazy(() => import("@/app/components/settings/SettingsView").then(m => ({ default: m.SettingsView })))
+const GemStoreModal = lazy(() => import("@/app/components/GemStoreModal").then(m => ({ default: m.GemStoreModal })))
+const AiCommandBar = lazy(() => import("@/app/components/AiCommandBar").then(m => ({ default: m.AiCommandBar })))
+const NotebookChat = lazy(() => import("@/app/components/NotebookChat").then(m => ({ default: m.NotebookChat })))
+const VersionHistoryPanel = lazy(() => import("@/app/components/VersionHistoryPanel").then(m => ({ default: m.VersionHistoryPanel })))
+const GridView = lazy(() => import("@/app/components/GridView").then(m => ({ default: m.GridView })))
+const AiInlineMenu = lazy(() => import("@/app/components/AiInlineMenu").then(m => ({ default: m.AiInlineMenu })))
+const AiResultModal = lazy(() => import("@/app/components/AiResultModal").then(m => ({ default: m.AiResultModal })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
@@ -1078,16 +1077,13 @@ export default function NoteApp() {
   const [streak, setStreak] = useState(0)
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
-  const [orchardVisible, setOrchardVisible] = useState(false)
-  const [orchardTransit, setOrchardTransit] = useState<'idle' | 'warp-out' | 'warp-in' | 'close-out' | 'close-in'>('idle')
-
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'gems' | 'bag' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setOrchardVisible(false); setOrchardTransit('idle'); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
 
   useEffect(() => {
     if (!orchardOpen) return
@@ -1290,20 +1286,6 @@ export default function NoteApp() {
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
     shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
   } = settings
-
-  const openOrchard = useCallback(() => {
-    if (reduceMotion) { setOrchardOpen(true); setOrchardVisible(true); return }
-    setOrchardTransit('warp-out')
-    setTimeout(() => { setOrchardOpen(true); setOrchardVisible(true); setOrchardTransit('warp-in') }, 400)
-    setTimeout(() => setOrchardTransit('idle'), 850)
-  }, [reduceMotion])
-
-  const closeOrchard = useCallback(() => {
-    if (reduceMotion) { setOrchardOpen(false); setOrchardVisible(false); return }
-    setOrchardTransit('close-out')
-    setTimeout(() => { setOrchardOpen(false); setOrchardTransit('close-in') }, 400)
-    setTimeout(() => { setOrchardVisible(false); setOrchardTransit('idle') }, 850)
-  }, [reduceMotion])
 
   const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
@@ -2938,27 +2920,29 @@ export default function NoteApp() {
 
       <div className="flex h-screen overflow-hidden font-sans relative select-none" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
         {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-        <div style={{ display: showSettings ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}>
-          <SettingsView
-            user={user}
-            onClose={handleCloseSettings}
-            config={settingsConfig}
-            onUpdateConfig={handleSettingsUpdate}
-            achievements={achievements}
-            onClaimAchievement={claimAchievement}
-            trashNotes={trashNotes}
-            onRestoreNote={restoreNote}
-            onPermanentlyDeleteNote={permanentlyDeleteNote}
-            unlockedCosmetics={unlockedCosmetics}
-            gems={gems}
-            setGems={setGems}
-            setUnlockedCosmetics={setUnlockedCosmetics}
-            onOpenShopItem={handleOpenShopItem}
-            archivedNotes={archivedNotes}
-            onUnarchiveNote={unarchiveNote}
-            onSyncNow={handleSyncNow}
-          />
-        </div>
+        {showSettings && <Suspense fallback={null}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
+            <SettingsView
+              user={user}
+              onClose={handleCloseSettings}
+              config={settingsConfig}
+              onUpdateConfig={handleSettingsUpdate}
+              achievements={achievements}
+              onClaimAchievement={claimAchievement}
+              trashNotes={trashNotes}
+              onRestoreNote={restoreNote}
+              onPermanentlyDeleteNote={permanentlyDeleteNote}
+              unlockedCosmetics={unlockedCosmetics}
+              gems={gems}
+              setGems={setGems}
+              setUnlockedCosmetics={setUnlockedCosmetics}
+              onOpenShopItem={handleOpenShopItem}
+              archivedNotes={archivedNotes}
+              onUnarchiveNote={unarchiveNote}
+              onSyncNow={handleSyncNow}
+            />
+          </div>
+        </Suspense>}
         <GlobalStyles reduceMotion={reduceMotion} reduceVisuals={reduceVisuals} theme={theme} handwrittenEffect={handwrittenEffect} />
 
 
@@ -3074,13 +3058,7 @@ export default function NoteApp() {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{
-          display: currentView === "shelf" ? "none" : undefined,
-          transform: orchardTransit === 'warp-out' ? 'translateX(-120%) skewX(3deg)' : orchardTransit === 'close-in' ? 'translateX(0)' : orchardTransit === 'close-out' || orchardTransit === 'warp-in' ? 'translateX(-120%)' : 'translateX(0)',
-          opacity: orchardTransit === 'warp-out' || orchardTransit === 'close-out' ? 0 : 1,
-          transition: orchardTransit === 'idle' ? 'none' : 'transform 0.4s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.25s ease',
-          willChange: orchardTransit !== 'idle' ? 'transform, opacity' : undefined,
-        }}>
+        <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
 
           {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
@@ -3127,7 +3105,7 @@ export default function NoteApp() {
           })()}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && (
-            <div className="relative" style={{ pointerEvents: (orchardOpen || orchardVisible || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (statsOpen || leaderboardOpen || shopOpen) ? 0.3 : undefined, transition: 'opacity 0.15s ease' }}>
+            <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0.3 : undefined, transition: 'opacity 0.15s ease' }}>
               <DocumentToolbar
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -3216,7 +3194,7 @@ export default function NoteApp() {
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
-                onOpenGrove={() => { closeAllPanels(); openOrchard() }}
+                onOpenGrove={() => { closeAllPanels(); setOrchardOpen(true) }}
                 onInsertImage={() => setShowImageModal(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
@@ -3707,135 +3685,71 @@ export default function NoteApp() {
 
         </div>
 
-        <div style={{
-          display: orchardVisible ? undefined : 'none',
-          position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50,
-          transform: orchardTransit === 'warp-in' ? 'translateX(0) skewX(0deg)' : orchardTransit === 'warp-out' || orchardTransit === 'idle' && !orchardOpen ? 'translateX(120%) skewX(-3deg)' : orchardTransit === 'close-out' ? 'translateX(120%) skewX(-3deg)' : 'translateX(0)',
-          opacity: orchardTransit === 'warp-in' || orchardTransit === 'close-in' ? 0 : orchardOpen ? 1 : 0,
-          transition: orchardTransit === 'idle' ? 'none' : 'transform 0.4s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.25s ease',
-          willChange: orchardTransit !== 'idle' ? 'transform, opacity' : undefined,
-        }}><OrchardView
-          isOpen={orchardVisible}
-          onClose={closeOrchard}
-          theme={theme}
-          accent={accent}
-          juice={juice}
-          gems={gems}
-          xp={juice}
-          grove={grove}
-          inventory={inventory}
-          setJuice={setJuice}
-          setGems={setGems}
-          setInventory={setInventory}
-          setGrove={setGrove}
-          notes={notes}
-          userId={user?.id}
-          activeTabId={activeTabId}
-          orchardTimeMode={orchardTimeMode || "theme"}
-        /></div>
+        {orchardOpen && <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
+            <OrchardView
+              isOpen={orchardOpen}
+              onClose={() => setOrchardOpen(false)}
+              theme={theme}
+              accent={accent}
+              juice={juice}
+              gems={gems}
+              xp={juice}
+              grove={grove}
+              inventory={inventory}
+              setJuice={setJuice}
+              setGems={setGems}
+              setInventory={setInventory}
+              setGrove={setGrove}
+              notes={notes}
+              userId={user?.id}
+              activeTabId={activeTabId}
+              orchardTimeMode={orchardTimeMode || "theme"}
+            />
+          </div>}
 
-        {orchardTransit !== 'idle' && (
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 60, pointerEvents: 'none', overflow: 'hidden',
-          }}>
-            <style>{`
-              @keyframes warp-streak {
-                0% { transform: translateX(120%); opacity: 0; }
-                15% { opacity: 1; }
-                85% { opacity: 1; }
-                100% { transform: translateX(-120%); opacity: 0; }
-              }
-              @keyframes warp-streak-rev {
-                0% { transform: translateX(-120%); opacity: 0; }
-                15% { opacity: 1; }
-                85% { opacity: 1; }
-                100% { transform: translateX(120%); opacity: 0; }
-              }
-              @keyframes warp-flash {
-                0% { opacity: 0; }
-                30% { opacity: 1; }
-                70% { opacity: 1; }
-                100% { opacity: 0; }
-              }
-            `}</style>
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: theme === "dark" ? 'rgba(9,9,11,0.4)' : 'rgba(255,252,248,0.5)',
-              animation: 'warp-flash 0.8s ease-out forwards',
-            }} />
-            {Array.from({ length: 18 }, (_, i) => {
-              const y = 5 + (i / 18) * 90
-              const h = 0.3 + Math.random() * 0.8
-              const delay = Math.random() * 0.15
-              const dur = 0.35 + Math.random() * 0.2
-              const isClosing = orchardTransit === 'close-out' || orchardTransit === 'close-in'
-              return <div key={i} style={{
-                position: 'absolute',
-                top: `${y}%`,
-                left: 0,
-                right: 0,
-                height: `${h}%`,
-                background: `linear-gradient(90deg, transparent, ${theme === "dark" ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.2)'} 20%, ${theme === "dark" ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.4)'} 50%, ${theme === "dark" ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.2)'} 80%, transparent)`,
-                animation: `${isClosing ? 'warp-streak-rev' : 'warp-streak'} ${dur}s cubic-bezier(0.2, 0, 0.3, 1) ${delay}s forwards`,
-                borderRadius: 2,
-              }} />
-            })}
-            {Array.from({ length: 8 }, (_, i) => {
-              const y = 10 + (i / 8) * 80
-              const delay = 0.05 + Math.random() * 0.1
-              const dur = 0.3 + Math.random() * 0.15
-              const isClosing = orchardTransit === 'close-out' || orchardTransit === 'close-in'
-              return <div key={`thick-${i}`} style={{
-                position: 'absolute',
-                top: `${y}%`,
-                left: 0,
-                right: 0,
-                height: '1.5%',
-                background: `linear-gradient(90deg, transparent, ${theme === "dark" ? 'rgba(100,180,100,0.12)' : 'rgba(80,140,60,0.1)'} 30%, ${theme === "dark" ? 'rgba(60,100,60,0.08)' : 'rgba(60,120,50,0.06)'} 70%, transparent)`,
-                animation: `${isClosing ? 'warp-streak-rev' : 'warp-streak'} ${dur}s cubic-bezier(0.2, 0, 0.3, 1) ${delay}s forwards`,
-                filter: 'blur(2px)',
-              }} />
-            })}
-          </div>
-        )}
+        {statsOpen && <Suspense fallback={null}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
+            isOpen={statsOpen}
+            onClose={() => setStatsOpen(false)}
+            theme={theme}
+            accent={accent}
+            xp={xp}
+            streak={streak}
+          /></div>
+        </Suspense>}
 
-        <div style={{ display: statsOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
-          isOpen={statsOpen}
-          onClose={() => setStatsOpen(false)}
-          theme={theme}
-          accent={accent}
-          xp={xp}
-          streak={streak}
-        /></div>
+        {leaderboardOpen && <Suspense fallback={null}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
+            isOpen={leaderboardOpen}
+            onClose={() => setLeaderboardOpen(false)}
+            theme={theme}
+            juice={juice}
+          /></div>
+        </Suspense>}
 
-        <div style={{ display: leaderboardOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
-          isOpen={leaderboardOpen}
-          onClose={() => setLeaderboardOpen(false)}
-          theme={theme}
-          juice={juice}
-        /></div>
-
-        <div style={{ display: shopOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
-          isOpen={shopOpen}
-          onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
-          theme={theme}
-          accent={accent}
-          gems={isAdmin ? 999999 : gems}
-          juice={isAdmin ? 999999 : juice}
-          inventory={inventory}
-          setGems={setGems}
-          setJuice={setJuice}
-          setInventory={setInventory}
-          setGrove={setGrove}
-          unlockedCosmetics={unlockedCosmetics}
-          setUnlockedCosmetics={setUnlockedCosmetics}
-          onUpdateConfig={updateSettings}
-          initialTab={shopInitialTab}
-          initialScrollTo={shopScrollTo}
-        /></div>
+        {shopOpen && <Suspense fallback={null}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
+            isOpen={shopOpen}
+            onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
+            theme={theme}
+            accent={accent}
+            gems={isAdmin ? 999999 : gems}
+            juice={isAdmin ? 999999 : juice}
+            inventory={inventory}
+            setGems={setGems}
+            setJuice={setJuice}
+            setInventory={setInventory}
+            setGrove={setGrove}
+            unlockedCosmetics={unlockedCosmetics}
+            setUnlockedCosmetics={setUnlockedCosmetics}
+            onUpdateConfig={updateSettings}
+            initialTab={shopInitialTab}
+            initialScrollTo={shopScrollTo}
+          /></div>
+        </Suspense>}
 
         {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-          <HangingOrange onClick={() => { if (orchardOpen || orchardVisible) { closeOrchard() } else { closeAllPanels(); openOrchard() } }} />
+          <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
         )}
 
         {slashMenu && (
@@ -4095,14 +4009,14 @@ export default function NoteApp() {
 
       </div>
 
-      {gemStoreOpen && <GemStoreModal
+      {gemStoreOpen && <Suspense fallback={null}><GemStoreModal
         isOpen={gemStoreOpen}
         onClose={() => setGemStoreOpen(false)}
         gems={gems}
-      />}
+      /></Suspense>}
 
 
-      <div style={{ display: focusOpen ? undefined : 'none' }}><FocusView
+      {focusOpen && <Suspense fallback={null}><FocusView
         isOpen={focusOpen}
         onClose={() => setFocusOpen(false)}
         theme={theme}
@@ -4111,7 +4025,7 @@ export default function NoteApp() {
         onUpdateConfig={updateSettings}
         onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
         openConfirm={openConfirm}
-      /></div>
+      /></Suspense>}
 
       <VitalitySystem
         theme={theme}

@@ -1,3 +1,6 @@
+## GLOBAL — READ FIRST
+- Few words only. No yapping. Ever.
+
 ## Response Style
 - One sentence responses max. Talk like caveman. Short. Blunt. No fluff.
 
