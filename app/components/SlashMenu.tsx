@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { format } from "date-fns"
-import katex from "katex"
+let _katex: typeof import("katex") | null = null
+const getKatex = async () => { if (!_katex) _katex = await import("katex"); return _katex.default }
 import { DatetimePicker } from "@/components/ui/datetime-picker"
 import { GlassFilter } from "@/components/ui/liquid-glass-button"
 import type { TextBox } from "@/app/types"
@@ -526,13 +527,13 @@ function EquationInput({ onInsert, onClose, accent }: { onInsert: (html: string)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   useEffect(() => { setTimeout(() => textareaRef.current?.focus(), 50) }, [])
 
-  const renderedLatex = useMemo(() => {
-    if (!latex.trim()) return ""
-    try {
-      return katex.renderToString(latex, { throwOnError: false, displayMode: true })
-    } catch {
-      return `<div style="color:#ef4444;font-size:12px;padding:8px;background:rgba(239,68,68,0.1);border-radius:4px;border:1px solid rgba(239,68,68,0.3)">Invalid LaTeX syntax</div>`
-    }
+  const [renderedLatex, setRenderedLatex] = useState("")
+  useEffect(() => {
+    if (!latex.trim()) { setRenderedLatex(""); return }
+    getKatex().then(k => {
+      try { setRenderedLatex(k.renderToString(latex, { throwOnError: false, displayMode: true })) }
+      catch { setRenderedLatex(`<div style="color:#ef4444;font-size:12px;padding:8px;background:rgba(239,68,68,0.1);border-radius:4px;border:1px solid rgba(239,68,68,0.3)">Invalid LaTeX syntax</div>`) }
+    })
   }, [latex])
 
   const handleInsert = () => {

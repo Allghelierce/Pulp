@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense } from "react"
+import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
 import { LazyMotion, domAnimation, m } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
@@ -21,23 +21,38 @@ import { ShelfView } from "@/app/components/ShelfView"
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 import { CoverModal } from "@/app/components/CoverModal"
 import { FlashcardView } from "@/app/components/FlashcardView"
-import { SlashMenu } from "@/app/components/SlashMenu"
+const _preloadSlashMenu = () => import("@/app/components/SlashMenu")
+const SlashMenu = lazy(() => _preloadSlashMenu().then(m => ({ default: m.SlashMenu })))
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 
-import { OrchardView } from "@/app/components/OrchardView"
-const BoutiqueView = lazy(() => import("@/app/components/BoutiqueView").then(m => ({ default: m.BoutiqueView })))
-const StatsView = lazy(() => import("@/app/components/StatsView").then(m => ({ default: m.StatsView })))
-const LeaderboardView = lazy(() => import("@/app/components/LeaderboardView").then(m => ({ default: m.LeaderboardView })))
-const FocusView = lazy(() => import("@/app/components/FocusView").then(m => ({ default: m.FocusView })))
-const SettingsView = lazy(() => import("@/app/components/settings/SettingsView").then(m => ({ default: m.SettingsView })))
-const GemStoreModal = lazy(() => import("@/app/components/GemStoreModal").then(m => ({ default: m.GemStoreModal })))
-const AiCommandBar = lazy(() => import("@/app/components/AiCommandBar").then(m => ({ default: m.AiCommandBar })))
-const NotebookChat = lazy(() => import("@/app/components/NotebookChat").then(m => ({ default: m.NotebookChat })))
-const VersionHistoryPanel = lazy(() => import("@/app/components/VersionHistoryPanel").then(m => ({ default: m.VersionHistoryPanel })))
-const GridView = lazy(() => import("@/app/components/GridView").then(m => ({ default: m.GridView })))
-const AiInlineMenu = lazy(() => import("@/app/components/AiInlineMenu").then(m => ({ default: m.AiInlineMenu })))
-const AiResultModal = lazy(() => import("@/app/components/AiResultModal").then(m => ({ default: m.AiResultModal })))
+const _preloadOrchard = () => import("@/app/components/OrchardView")
+const _preloadBoutique = () => import("@/app/components/BoutiqueView")
+const _preloadStats = () => import("@/app/components/StatsView")
+const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
+const _preloadFocus = () => import("@/app/components/FocusView")
+const _preloadSettings = () => import("@/app/components/settings/SettingsView")
+const _preloadGemStore = () => import("@/app/components/GemStoreModal")
+const _preloadAiCmd = () => import("@/app/components/AiCommandBar")
+const _preloadChat = () => import("@/app/components/NotebookChat")
+const _preloadVersionHistory = () => import("@/app/components/VersionHistoryPanel")
+const _preloadGrid = () => import("@/app/components/GridView")
+const _preloadAiInline = () => import("@/app/components/AiInlineMenu")
+const _preloadAiResult = () => import("@/app/components/AiResultModal")
+
+const OrchardView = lazy(() => _preloadOrchard().then(m => ({ default: m.OrchardView })))
+const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.BoutiqueView })))
+const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
+const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
+const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
+const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
+const GemStoreModal = lazy(() => _preloadGemStore().then(m => ({ default: m.GemStoreModal })))
+const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
+const NotebookChat = lazy(() => _preloadChat().then(m => ({ default: m.NotebookChat })))
+const VersionHistoryPanel = lazy(() => _preloadVersionHistory().then(m => ({ default: m.VersionHistoryPanel })))
+const GridView = lazy(() => _preloadGrid().then(m => ({ default: m.GridView })))
+const AiInlineMenu = lazy(() => _preloadAiInline().then(m => ({ default: m.AiInlineMenu })))
+const AiResultModal = lazy(() => _preloadAiResult().then(m => ({ default: m.AiResultModal })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
@@ -1084,6 +1099,15 @@ export default function NoteApp() {
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
+
+  useEffect(() => {
+    const id = requestIdleCallback(() => {
+      _preloadOrchard(); _preloadBoutique(); _preloadStats()
+      _preloadLeaderboard(); _preloadFocus(); _preloadSettings()
+      _preloadGemStore(); _preloadGrid(); _preloadSlashMenu()
+    }, { timeout: 3000 })
+    return () => cancelIdleCallback(id)
+  }, [])
 
   useEffect(() => {
     if (!orchardOpen) return
@@ -2882,7 +2906,7 @@ export default function NoteApp() {
     setShowSettings(false)
     setShopInitialTab('gems')
     setShopScrollTo(itemId)
-    closeAllPanels(); setShopOpen(true)
+    startTransition(() => { closeAllPanels(); setShopOpen(true) })
   }, [closeAllPanels])
   const handleSyncNow = useCallback(async () => {
     if (!user) return null
@@ -2995,7 +3019,7 @@ export default function NoteApp() {
               onSetRenamingFolder={setRenamingFolder}
               onSetDraggedNoteId={setDraggedNoteId}
               onDropNote={handleDropNote}
-              onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { closeAllPanels(); setShowSettings(true) } }}
+              onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
               onOpenTimer={() => setTimerOpen(t => !t)}
               timerOpen={timerOpen}
               onSetNoteParent={setNoteParent}
@@ -3009,11 +3033,11 @@ export default function NoteApp() {
                 setBookmarks(prev => prev.map(b => b.id === id ? { ...b, label: newName } : b))
               }}
               onUnlockDev={handleUnlockDev}
-              onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
+              onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
               onOpenGemStore={() => setGemStoreOpen(true)}
-              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { closeAllPanels(); setLeaderboardOpen(true) } }}
+              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
               onOpenFocus={() => setFocusOpen(true)}
-              onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { closeAllPanels(); setStatsOpen(true) } }}
+              onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
               juice={juice}
               gems={gems}
               xp={xp}
@@ -3192,9 +3216,9 @@ export default function NoteApp() {
                 sidebarOpen={sidebarWidth > 40}
                 onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
-                onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
+                onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
-                onOpenGrove={() => { closeAllPanels(); setOrchardOpen(true) }}
+                onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
                 onInsertImage={() => setShowImageModal(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
@@ -3685,7 +3709,7 @@ export default function NoteApp() {
 
         </div>
 
-        {orchardOpen && <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
+        {orchardOpen && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
@@ -3705,7 +3729,7 @@ export default function NoteApp() {
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
             />
-          </div>}
+          </div></Suspense>}
 
         {statsOpen && <Suspense fallback={null}>
           <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
@@ -3749,10 +3773,10 @@ export default function NoteApp() {
         </Suspense>}
 
         {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-          <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
+          <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
         )}
 
-        {slashMenu && (
+        {slashMenu && (<Suspense fallback={null}>
           <SlashMenu
             {...slashMenu}
             accent={accent}
@@ -3783,7 +3807,7 @@ export default function NoteApp() {
               }))
             }}
           />
-        )}
+        </Suspense>)}
 
         {showImageModal && (
           <ImageUploadModal

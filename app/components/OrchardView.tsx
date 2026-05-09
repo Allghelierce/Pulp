@@ -463,6 +463,17 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
 
 
+        {/* Distant cliff hills — behind mountains, angular and steep */}
+        <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#0a0c10' : '#8898a8'} opacity={isDark ? 0.5 : 0.25} />
+        {/* Cliff face shadows — steep left drops */}
+        <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
+        <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
+        <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
+        <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
+        <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
+        <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
+        <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
+
         {/* Mountain range — back layer (darker, depth) */}
         <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
         {/* Mountain range — main */}
@@ -581,6 +592,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
         {/* Background windmills — behind hills, mostly occluded */}
         {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.13 }, { x: 155, y: 20, s: 0.11 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
+
+        {/* Extra rolling hills — left side, between mountains and back hill */}
+        <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26 C42,30 50,32 58,30 C64,28 68,25 72,23 C78,22 85,24 90,28 C95,31 100,33 110,34 L210,36 L210,42 L-10,42 Z" fill={p.hillMidBot} />
+        <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.25" />
+        <path d="M58,30 C64,28 68,25 72,23 C78,22 85,24 90,28" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="0.2" />
 
         {/* Rolling hills — back hill broad dome on right, front hill steep hump on left */}
         {/* Back hill — broad dome peaking center-right */}
@@ -744,12 +760,12 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               fruits.push(`M${(fx + 0.05).toFixed(2)},${fy.toFixed(2)}a0.05,0.05 0 1 1 -0.10,0a0.05,0.05 0 1 1 0.10,0Z`)
             }
           })
-          return <g opacity="0.55">
+          return <g opacity="0.35">
             <path d={trunks.join('')} stroke={trunkC} strokeWidth="0.3" fill="none" strokeLinecap="round" />
             <path d={branches.join('')} stroke={trunkC} strokeWidth="0.2" fill="none" strokeLinecap="round" opacity="0.7" />
             <path d={canopies.join('')} fill={isDark ? '#1a3018' : '#3a6a30'} />
             <path d={canopyDark.join('')} stroke={isDark ? '#0e200c' : '#2a5020'} strokeWidth="0.2" fill="none" opacity="0.3" />
-            <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.6} />
+            <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.4} />
           </g>
         })()}
         {/* Back hill — lake on slope */}
@@ -835,9 +851,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
           }
           return <>
-            <path d={bushPaths.join('')} fill={isDark ? '#142810' : '#3a6a2e'} opacity={isDark ? 0.2 : 0.12} />
-            <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.4" />
-            <path d={bladesPaths.join('')} stroke={isDark ? '#1a3416' : '#3a6830'} strokeWidth="0.15" fill="none" opacity="0.3" />
+            <path d={bushPaths.join('')} fill={isDark ? '#142810' : '#3a6a2e'} opacity={isDark ? 0.08 : 0.05} />
+            <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity={isDark ? 0.15 : 0.1} />
+            <path d={bladesPaths.join('')} stroke={isDark ? '#1a3416' : '#3a6830'} strokeWidth="0.15" fill="none" opacity={isDark ? 0.12 : 0.08} />
           </>
         })()}
 
@@ -1475,6 +1491,44 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         {/* Main field */}
         <path d="M-5,38 Q20,39 50,38 Q80,37 100,38 Q130,39 160,38 Q185,39 205,38 L205,100 L-5,100 Z" fill="url(#field-g)" />
 
+        {/* Small wildflowers across main hill */}
+        {(() => {
+          const svgParts: string[] = []
+          const stems: string[] = []
+          const petalCols = isDark
+            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
+            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+          const centerCols = isDark
+            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
+            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+          for (let i = 0; i < 60; i++) {
+            const rng = seededRng(i * 67 + 1237)
+            const inField = rng() < 0.75
+            const fx = inField ? 12 + rng() * 76 : 2 + rng() * 196
+            const fy = inField ? 44 + rng() * 40 : 39 + rng() * 56
+            const tillX = fx / 2
+            if (tillX >= 14 && tillX <= 86 && fy >= 42 && fy <= 84) continue
+            const ci = Math.floor(rng() * petalCols.length)
+            const sh = 0.5 + rng() * 0.6
+            const tx = fx + (rng() * 0.08 - 0.04)
+            const ty = fy - sh
+            const pr = 0.25 + rng() * 0.15
+            const petals = 4 + Math.floor(rng() * 3)
+            stems.push(`M${fx.toFixed(1)},${fy.toFixed(1)}L${tx.toFixed(2)},${ty.toFixed(2)}`)
+            for (let p = 0; p < petals; p++) {
+              const ang = (p / petals) * Math.PI * 2 + rng() * 0.3
+              const px = tx + Math.cos(ang) * pr
+              const py = ty + Math.sin(ang) * pr * 0.7
+              svgParts.push(`<ellipse cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" rx="${(pr * 0.5).toFixed(2)}" ry="${(pr * 0.35).toFixed(2)}" fill="${petalCols[ci]}" transform="rotate(${(ang * 180 / Math.PI).toFixed(0)} ${px.toFixed(2)} ${py.toFixed(2)})" />`)
+            }
+            svgParts.push(`<circle cx="${tx.toFixed(2)}" cy="${ty.toFixed(2)}" r="${(pr * 0.25).toFixed(2)}" fill="${centerCols[ci]}" />`)
+          }
+          return <g opacity={isDark ? 0.5 : 0.4}>
+            <path d={stems.join('')} stroke={isDark ? '#2a4a1a' : '#6a9a50'} strokeWidth="0.1" fill="none" opacity={0.5} />
+            <g dangerouslySetInnerHTML={{ __html: svgParts.join('') }} />
+          </g>
+        })()}
+
         {/* Moonlight on main field */}
         {(() => {
           const isNight = timeState.hour >= 18 || timeState.hour < 6
@@ -1654,52 +1708,48 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Packed-earth patch under windmills */}
+        {/* Dirt ground and flowers around windmills */}
         {(() => {
+          const dirtBase = isDark ? '#2a2418' : '#8a7a5a'
+          const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const rng = seededRng(6677)
-          const areaPath = `M165,38 Q175,37.5 186,38 Q198,38.5 210,39 L210,56 Q200,56.5 186,56 Q175,55.5 165,55.5 Z`
-          const dirtC = isDark ? '#1e1a12' : '#8a7a5a'
-          const dirtD = isDark ? '#161208' : '#7a6a4a'
-          const pebbles: string[] = []
-          const cracks: string[] = []
-          const patches: string[] = []
-          for (let i = 0; i < 35; i++) {
-            const px = 166 + rng() * 42
-            const py = 38.5 + rng() * 16.5
-            const pr = 0.1 + rng() * 0.2
-            pebbles.push(`M${(px + pr).toFixed(2)},${py.toFixed(2)}a${pr.toFixed(2)},${(pr * 0.5).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.5).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
-          }
-          for (let i = 0; i < 12; i++) {
-            const cx = 168 + rng() * 38
-            const cy = 39 + rng() * 15
-            const len = 1 + rng() * 3
-            const ang = (rng() - 0.5) * 0.5
-            cracks.push(`M${cx.toFixed(1)},${cy.toFixed(1)}l${(Math.cos(ang) * len).toFixed(1)},${(Math.sin(ang) * len * 0.3).toFixed(1)}`)
-          }
-          for (let i = 0; i < 8; i++) {
-            const px = 167 + rng() * 40
-            const py = 39 + rng() * 15
-            const pw = 1.5 + rng() * 3
-            const ph = 0.4 + rng() * 0.8
-            patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${px.toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
-          }
-          const edgeGrass: string[] = []
-          const er2 = seededRng(3344)
-          for (let i = 0; i < 30; i++) {
-            const t = i / 30
-            const isTop = t < 0.5
-            const et = isTop ? t * 2 : (t - 0.5) * 2
-            const ex = 165 + et * 45
-            const ey = isTop ? 37.5 + Math.sin(et * Math.PI) * 0.8 : 56 - Math.sin(et * Math.PI) * 0.5
-            const h = 0.3 + er2() * 0.5
-            const sw = (er2() - 0.5) * 0.2
-            edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+          const petalCols = isDark
+            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
+            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+          const centerCols = isDark
+            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
+            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+          const flowerSvg: string[] = []
+          const flowerStems: string[] = []
+          const spots: [number, number][] = [
+            [168, 44], [171, 40], [175, 38], [180, 42], [183, 39],
+            [186, 44], [190, 40], [193, 38], [197, 41], [201, 43],
+            [174, 50], [180, 52], [186, 50], [192, 48], [198, 50],
+            [160, 50], [184, 46], [196, 45], [203, 40], [166, 42],
+          ]
+          for (let i = 0; i < spots.length; i++) {
+            const [bx, by] = spots[i]
+            const sr = seededRng(i * 43 + 8899)
+            const ci = Math.floor(sr() * petalCols.length)
+            const sz = 0.25 + sr() * 0.2
+            const sh = 0.5 + sr() * 0.5
+            const tx = bx + (sr() * 0.1 - 0.05)
+            const ty = by - sh
+            const petals = 4 + Math.floor(sr() * 3)
+            flowerStems.push(`M${bx.toFixed(1)},${by.toFixed(1)}L${tx.toFixed(2)},${ty.toFixed(2)}`)
+            for (let p = 0; p < petals; p++) {
+              const ang = (p / petals) * Math.PI * 2 + sr() * 0.3
+              const px = tx + Math.cos(ang) * sz
+              const py = ty + Math.sin(ang) * sz * 0.7
+              flowerSvg.push(`<ellipse cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" rx="${(sz * 0.5).toFixed(2)}" ry="${(sz * 0.35).toFixed(2)}" fill="${petalCols[ci]}" transform="rotate(${(ang * 180 / Math.PI).toFixed(0)} ${px.toFixed(2)} ${py.toFixed(2)})" />`)
+            }
+            flowerSvg.push(`<circle cx="${tx.toFixed(2)}" cy="${ty.toFixed(2)}" r="${(sz * 0.25).toFixed(2)}" fill="${centerCols[ci]}" />`)
           }
           return <g>
-            <path d={patches.join('')} fill={dirtD} opacity={isDark ? 0.04 : 0.02} />
-            <path d={pebbles.join('')} fill={isDark ? '#2a2620' : '#9a8a6a'} opacity={isDark ? 0.08 : 0.04} />
-            <path d={cracks.join('')} stroke={dirtD} strokeWidth="0.12" fill="none" opacity={isDark ? 0.04 : 0.02} />
-            <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.2 : 0.12} />
+            <g opacity={isDark ? 0.5 : 0.4}>
+              <path d={flowerStems.join('')} stroke={isDark ? '#2a4a1a' : '#6a9a50'} strokeWidth="0.1" fill="none" opacity={0.5} />
+              <g dangerouslySetInnerHTML={{ __html: flowerSvg.join('') }} />
+            </g>
           </g>
         })()}
 
@@ -1716,10 +1766,10 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const sapColor = isDark ? '#b06810' : '#d97706'
           const sapDark = isDark ? '#8a5008' : '#b56a04'
           const barrels = [
-            { cx: 172, bot: 56, rx: 1.3, h: 3.6, open: false },
-            { cx: 174.2, bot: 56.3, rx: 1.1, h: 3.2, open: true },
-            { cx: 188, bot: 53, rx: 1, h: 2.8, open: false },
-            { cx: 195, bot: 53.3, rx: 1.1, h: 3, open: true },
+            { cx: 172, bot: 58, rx: 1.3, h: 3.6, open: false },
+            { cx: 174.5, bot: 57.5, rx: 1.1, h: 3.2, open: true },
+            { cx: 188, bot: 55, rx: 1, h: 2.8, open: false },
+            { cx: 195, bot: 54, rx: 1.1, h: 3, open: true },
           ]
           return (
             <g>
@@ -1810,9 +1860,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Path between foreground windmills */}
-        <path d={`M178,${44 + 14 * 0.7} Q185,${44 + 15 * 0.7} 192,${42 + 14 * 0.55}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.8" opacity="0.25" strokeLinecap="round" />
-        <path d={`M192,${42 + 14 * 0.55} Q198,${42 + 10 * 0.55} 210,${40}`} fill="none" stroke={isDark ? '#2e2418' : '#7a6a4a'} strokeWidth="1.5" opacity="0.2" strokeLinecap="round" />
 
         {/* Dirt path */}
         <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
@@ -2558,10 +2605,10 @@ export const OrchardView = memo(function OrchardView({
                   <>
                     <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
                       {(() => {
-                        const pad = 5
-                        const yT = 48, yB = 94, steps = 24
-                        const getL = (y: number) => getTillX(0, Math.max(GRID_ROW_START, Math.min(GRID_ROW_END, y)))
-                        const getR = (y: number) => getTillX(GRID_COLS - 1, Math.max(GRID_ROW_START, Math.min(GRID_ROW_END, y)))
+                        const pad = 3
+                        const yT = 38, yB = 100, steps = 24
+                        const getL = (_y: number) => 0
+                        const getR = (_y: number) => 100
 
                         const rngE = seededRng(4477)
                         let pathD = ''
