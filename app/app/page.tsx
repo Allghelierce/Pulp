@@ -1085,6 +1085,16 @@ export default function NoteApp() {
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
+
+  useEffect(() => {
+    if (!orchardOpen) return
+    const vp = document.querySelector('meta[name="viewport"]')
+    if (vp) {
+      const orig = vp.getAttribute('content') || ''
+      vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1')
+      requestAnimationFrame(() => { vp.setAttribute('content', orig || 'width=device-width, initial-scale=1') })
+    }
+  }, [orchardOpen])
   const [gemStoreOpen, setGemStoreOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
@@ -3661,9 +3671,6 @@ export default function NoteApp() {
 
           </div>
 
-          {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
-          )}
         </div>
 
         <div style={{ display: orchardOpen ? undefined : 'none', position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}><OrchardView
@@ -3721,6 +3728,9 @@ export default function NoteApp() {
           initialScrollTo={shopScrollTo}
         /></div>
 
+        {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
+          <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
+        )}
 
         {slashMenu && (
           <SlashMenu

@@ -599,16 +599,91 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return <path d={dots.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.3" />
         })()}
 
-        {/* Winding paths on hills — behind everything */}
-        <path d="M-5,36 Q10,34 25,33 Q35,31 45,30 Q55,30 65,31 Q80,33 95,30 Q110,26 125,22 Q140,20 155,20 Q165,21 175,24 Q185,26 200,28" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.7" opacity={isDark ? 0.5 : 0.35} strokeLinecap="round" />
-        <path d="M-5,36.3 Q10,34.3 25,33.3 Q35,31.3 45,30.3 Q55,30.3 65,31.3 Q80,33.3 95,30.3 Q110,26.3 125,22.3 Q140,20.3 155,20.3 Q165,21.3 175,24.3 Q185,26.3 200,28.3" fill="none" stroke={isDark ? '#1e1a10' : '#7a6040'} strokeWidth="0.2" opacity={isDark ? 0.3 : 0.2} strokeLinecap="round" />
-        <path d="M65,31 Q70,33 75,35 Q80,36 90,37 Q100,37 115,38" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.5" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
-        <path d="M65,31.2 Q70,33.2 75,35.2 Q80,36.2 90,37.2 Q100,37.2 115,38.2" fill="none" stroke={isDark ? '#1e1a10' : '#7a6040'} strokeWidth="0.15" opacity={isDark ? 0.25 : 0.15} strokeLinecap="round" />
-        <path d="M45,30 Q48,30.5 52,31" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.35" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" />
-        {/* Path branch to House 1 door */}
-        <path d="M95,30 C94,29 92.5,28.8 91.1,28.1" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.45" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
-        {/* Path branch to House 2 door */}
-        <path d="M125,22 C127,22.5 129,23.5 131.2,24.4" fill="none" stroke={isDark ? '#2a2014' : '#8a7050'} strokeWidth="0.4" opacity={isDark ? 0.4 : 0.28} strokeLinecap="round" />
+        {/* Winding paths on hills — layered for terrain integration */}
+        {(() => {
+          const mainD = "M-5,35.5 Q10,33.5 25,31 Q35,29 45,28 Q55,27.5 65,27 Q80,25 95,23 Q110,21 125,20 Q140,19.5 155,19.5 Q165,20 175,22 Q185,24 200,27"
+          const branchD = "M65,31 Q70,33 75,35 Q80,36 90,37 Q100,37 115,38"
+          const spurD = "M45,30 Q48,30.5 52,31"
+          const house1D = "M95,30 C94,29 92.5,28.8 91.1,28.1"
+          const house2D = "M125,22 C127,22.5 129,23.5 131.2,24.4"
+          const dirtBase = isDark ? '#2a2014' : '#8a7050'
+          const dirtDark = isDark ? '#1a1408' : '#6a5030'
+          const dirtLight = isDark ? '#342a1a' : '#a08a60'
+          const edgeGrass = isDark ? '#1a2c14' : '#4a7a3a'
+          const rng = seededRng(5599)
+          const pebbles: string[] = []
+          const grassEdge: string[] = []
+          const ruts: string[] = []
+          const pts = [[-5,35.5],[10,33.5],[25,31],[35,29],[45,28],[55,27.5],[65,27],[80,25],[95,23],[110,21],[125,20],[140,19.5],[155,19.5],[165,20],[175,22],[185,24],[200,27]]
+          const wornPatches: string[] = []
+          for (let i = 0; i < 80; i++) {
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const ox = (rng() - 0.5) * 0.9
+            const oy = (rng() - 0.5) * 0.5
+            const pr = 0.03 + rng() * 0.06
+            pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
+          }
+          for (let i = 0; i < 50; i++) {
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const side = rng() > 0.5 ? 1 : -1
+            const gx = px + side * (0.35 + rng() * 0.4)
+            const gy = py + side * (0.08 + rng() * 0.2)
+            const gh = 0.2 + rng() * 0.4
+            const gsway = (rng() - 0.5) * 0.25
+            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
+            if (rng() > 0.5) {
+              grassEdge.push(`M${(gx + 0.1).toFixed(2)},${gy.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-gh * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-gh * 0.6).toFixed(2)}`)
+            }
+          }
+          for (let i = 0; i < 15; i++) {
+            const t = 0.05 + rng() * 0.9
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const dx = (pts[nxt][0] - pts[idx][0]) * 0.12
+            const dy = (pts[nxt][1] - pts[idx][1]) * 0.12
+            ruts.push(`M${(px - dx).toFixed(1)},${(py - dy + 0.1).toFixed(1)}L${(px + dx).toFixed(1)},${(py + dy + 0.1).toFixed(1)}`)
+          }
+          for (let i = 0; i < 12; i++) {
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const wr = 0.2 + rng() * 0.4
+            wornPatches.push(`M${(px - wr).toFixed(1)},${py.toFixed(1)}a${wr.toFixed(2)},${(wr * 0.35).toFixed(2)} 0 1 1 ${(wr * 2).toFixed(2)},0a${wr.toFixed(2)},${(wr * 0.35).toFixed(2)} 0 1 1 -${(wr * 2).toFixed(2)},0Z`)
+          }
+          return <g>
+            <path d={mainD} fill="none" stroke={dirtDark} strokeWidth="1.3" strokeLinecap="round" opacity={isDark ? 0.22 : 0.14} />
+            <path d={mainD} fill="none" stroke={dirtBase} strokeWidth="0.8" strokeLinecap="round" opacity={isDark ? 0.45 : 0.3} />
+            <path d={mainD} fill="none" stroke={dirtLight} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.15 : 0.1} />
+            <path d={mainD} fill="none" stroke={dirtDark} strokeWidth="0.15" strokeLinecap="round" opacity={isDark ? 0.12 : 0.06} strokeDasharray="0.4 1.2" />
+            <path d={wornPatches.join('')} fill={dirtLight} opacity={isDark ? 0.12 : 0.07} />
+            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.14" fill="none" opacity={isDark ? 0.28 : 0.16} strokeLinecap="round" />
+            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.35 : 0.2} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.16" fill="none" opacity={isDark ? 0.4 : 0.22} />
+            <path d={branchD} fill="none" stroke={dirtDark} strokeWidth="1.0" strokeLinecap="round" opacity={isDark ? 0.2 : 0.1} />
+            <path d={branchD} fill="none" stroke={dirtBase} strokeWidth="0.55" strokeLinecap="round" opacity={isDark ? 0.4 : 0.25} />
+            <path d={spurD} fill="none" stroke={dirtBase} strokeWidth="0.35" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" />
+            <path d={house1D} fill="none" stroke={dirtDark} strokeWidth="0.7" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
+            <path d={house1D} fill="none" stroke={dirtBase} strokeWidth="0.4" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
+            <path d={house2D} fill="none" stroke={dirtDark} strokeWidth="0.65" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
+            <path d={house2D} fill="none" stroke={dirtBase} strokeWidth="0.35" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
+          </g>
+        })()}
 
         {/* Back hill — tangerine trees along ridge */}
         {(() => {
@@ -654,21 +729,93 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.6} />
           </g>
         })()}
+        {/* Back hill — lake on slope */}
+        {(() => {
+          const lakeC = isDark ? '#0e1e2e' : '#5a8ab0'
+          const shoreC = isDark ? '#1a2a1a' : '#6a8a5a'
+          const sparkle = isDark ? 'rgba(120,180,255,0.12)' : 'rgba(255,255,255,0.25)'
+          const mudC = isDark ? '#1a1a10' : '#7a7050'
+          const rng = seededRng(8811)
+          const cx = 30, cy = 33
+          const shorePath = `M${cx - 10},${cy + 0.5} Q${cx - 8},${cy - 2.5} ${cx - 3},${cy - 2.8} Q${cx + 2},${cy - 3} ${cx + 6},${cy - 2} Q${cx + 9},${cy - 1} ${cx + 10},${cy + 0.8} Q${cx + 8},${cy + 2.5} ${cx + 4},${cy + 3} Q${cx - 1},${cy + 3.5} ${cx - 5},${cy + 2.8} Q${cx - 9},${cy + 2} ${cx - 10},${cy + 0.5}Z`
+          const waterPath = `M${cx - 8.5},${cy + 0.3} Q${cx - 7},${cy - 2} ${cx - 2.5},${cy - 2.3} Q${cx + 2},${cy - 2.5} ${cx + 5},${cy - 1.5} Q${cx + 7.5},${cy - 0.5} ${cx + 8.5},${cy + 0.6} Q${cx + 7},${cy + 2} ${cx + 3.5},${cy + 2.5} Q${cx - 1},${cy + 3} ${cx - 4.5},${cy + 2.3} Q${cx - 7.5},${cy + 1.5} ${cx - 8.5},${cy + 0.3}Z`
+          const deepPath = `M${cx - 5},${cy} Q${cx - 3},${cy - 1.2} ${cx},${cy - 1} Q${cx + 3},${cy - 0.8} ${cx + 5},${cy + 0.2} Q${cx + 3},${cy + 1.2} ${cx},${cy + 1.5} Q${cx - 3},${cy + 1.2} ${cx - 5},${cy}Z`
+          const reeds: string[] = []
+          for (let i = 0; i < 22; i++) {
+            const a = rng() * Math.PI * 2
+            const d = 8 + rng() * 3
+            const rx = cx + Math.cos(a) * d
+            const ry = cy + Math.sin(a) * d * 0.3
+            const h = 0.5 + rng() * 0.7
+            const sw = (rng() - 0.5) * 0.25
+            reeds.push(`M${rx.toFixed(1)},${ry.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+          }
+          const ripples: string[] = []
+          for (let i = 0; i < 8; i++) {
+            const rx = cx - 5 + rng() * 10
+            const ry = cy - 1.5 + rng() * 3
+            const w = 0.6 + rng() * 1.2
+            ripples.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${rx.toFixed(1)},${(ry - 0.12).toFixed(2)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}`)
+          }
+          const mudPts: string[] = []
+          for (let i = 0; i < 12; i++) {
+            const a = rng() * Math.PI * 2
+            const d = 9 + rng() * 2
+            const mx = cx + Math.cos(a) * d
+            const my = cy + Math.sin(a) * d * 0.3
+            const mr = 0.15 + rng() * 0.2
+            mudPts.push(`M${(mx + mr).toFixed(2)},${my.toFixed(2)}a${mr.toFixed(2)},${(mr * 0.6).toFixed(2)} 0 1 1 -${(mr * 2).toFixed(2)},0a${mr.toFixed(2)},${(mr * 0.6).toFixed(2)} 0 1 1 ${(mr * 2).toFixed(2)},0Z`)
+          }
+          return <g>
+            <path d={mudPts.join('')} fill={mudC} opacity={isDark ? 0.2 : 0.12} />
+            <path d={shorePath} fill={shoreC} opacity={isDark ? 0.35 : 0.25} />
+            <path d={waterPath} fill={lakeC} opacity={isDark ? 0.65 : 0.45} />
+            <path d={deepPath} fill={isDark ? '#0a1828' : '#4a7aa0'} opacity={isDark ? 0.4 : 0.25} />
+            <path d={ripples.join('')} stroke={sparkle} strokeWidth="0.12" fill="none" />
+            <path d={reeds.join('')} stroke={isDark ? '#1a3018' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.5" />
+          </g>
+        })()}
         {/* Back hill — grass tufts along contour */}
         {(() => {
           const tufts: string[] = []
-          for (let i = 0; i < 30; i++) {
+          const bushPaths: string[] = []
+          const bladesPaths: string[] = []
+          const getBackY = (x: number) => {
+            if (x < 70) return 36 - (x + 10) * 10 / 80
+            if (x < 140) return 26 - (x - 70) * 7 / 70
+            return 19 + (x - 140) * 10 / 70
+          }
+          for (let i = 0; i < 60; i++) {
             const rng = seededRng(i * 37 + 449)
             const x = -5 + rng() * 215
-            const baseY = (() => {
-              if (x < 70) return 36 - (x + 10) * 10 / 80
-              if (x < 140) return 26 - (x - 70) * 7 / 70
-              return 19 + (x - 140) * 10 / 70
-            })() + rng() * 4
-            const h = 0.25 + rng() * 0.4
+            const ridgeY = getBackY(x)
+            const baseY = ridgeY + 1 + rng() * 5
+            const h = 0.25 + rng() * 0.5
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.15).toFixed(2)},${(-h).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.08).toFixed(2)},${(-h * 0.9).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
           }
-          return <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.4" />
+          for (let i = 0; i < 35; i++) {
+            const rng = seededRng(i * 67 + 3311)
+            const x = 5 + rng() * 200
+            const ridgeY = getBackY(x)
+            const by = ridgeY + 2 + rng() * 4
+            const bw = 0.3 + rng() * 0.6
+            const bh = 0.15 + rng() * 0.3
+            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 40; i++) {
+            const rng = seededRng(i * 51 + 7723)
+            const x = 5 + rng() * 200
+            const ridgeY = getBackY(x)
+            const by = ridgeY + 1.5 + rng() * 5
+            const bh = 0.4 + rng() * 0.7
+            const curve = (rng() - 0.5) * 0.5
+            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+          }
+          return <>
+            <path d={bushPaths.join('')} fill={isDark ? '#142810' : '#3a6a2e'} opacity={isDark ? 0.2 : 0.12} />
+            <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.4" />
+            <path d={bladesPaths.join('')} stroke={isDark ? '#1a3416' : '#3a6830'} strokeWidth="0.15" fill="none" opacity="0.3" />
+          </>
         })()}
 
         {/* Distant orange grove — all orange trees on mid-hill contour */}
@@ -956,34 +1103,113 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.65} />
           </g>
         })()}
-        {/* Front hill — grass tufts */}
+        {/* Front hill — grass tufts and brush */}
         {(() => {
           const tufts: string[] = []
-          for (let i = 0; i < 25; i++) {
+          const bushPaths: string[] = []
+          const bladesPaths: string[] = []
+          const getFrontY = (x: number) => {
+            if (x < 35) return 34 - (x + 10) * 7 / 45
+            if (x < 75) return 27 + (x - 35) * 3 / 40
+            return 30 + (x - 75) * 8 / 65
+          }
+          for (let i = 0; i < 50; i++) {
             const rng = seededRng(i * 41 + 557)
             const x = -5 + rng() * 150
-            const baseY = (() => {
-              if (x < 35) return 34 - (x + 10) * 7 / 45
-              if (x < 75) return 27 + (x - 35) * 3 / 40
-              return 30 + (x - 75) * 8 / 65
-            })() + rng() * 3
+            const ridgeY = getFrontY(x)
+            const baseY = ridgeY + 1 + rng() * 4
             const h = 0.4 + rng() * 0.7
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
           }
-          return <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
+          for (let i = 0; i < 30; i++) {
+            const rng = seededRng(i * 73 + 4411)
+            const x = 0 + rng() * 140
+            const ridgeY = getFrontY(x)
+            const by = ridgeY + 2 + rng() * 4
+            const bw = 0.4 + rng() * 0.8
+            const bh = 0.2 + rng() * 0.4
+            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 35; i++) {
+            const rng = seededRng(i * 47 + 8833)
+            const x = 0 + rng() * 140
+            const ridgeY = getFrontY(x)
+            const by = ridgeY + 1.5 + rng() * 5
+            const bh = 0.5 + rng() * 0.9
+            const curve = (rng() - 0.5) * 0.6
+            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+          }
+          return <>
+            <path d={bushPaths.join('')} fill={isDark ? '#182c12' : '#3a6a2e'} opacity={isDark ? 0.2 : 0.12} />
+            <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
+            <path d={bladesPaths.join('')} stroke={isDark ? '#1e3818' : '#3e6e34'} strokeWidth="0.16" fill="none" opacity="0.3" />
+          </>
         })()}
 
         {/* Front hill — dirt paths */}
         {(() => {
-          const pathC = isDark ? '#2a2418' : '#8a7a5a'
-          const edgeC = isDark ? '#1e1a10' : '#6a5a3a'
-          return <g opacity={isDark ? 0.35 : 0.3}>
-            <path d="M 20,28 Q 25,29.5 32,30 Q 40,30.5 48,29.5 Q 55,28.5 60,30 Q 65,31.5 72,33" fill="none" stroke={pathC} strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M 20,28 Q 25,29.5 32,30 Q 40,30.5 48,29.5 Q 55,28.5 60,30 Q 65,31.5 72,33" fill="none" stroke={edgeC} strokeWidth="1.1" strokeLinecap="round" opacity="0.15" />
-            <path d="M 48,29.5 Q 52,31 54,33 Q 56,35 55,37" fill="none" stroke={pathC} strokeWidth="0.6" strokeLinecap="round" />
-            <path d="M 48,29.5 Q 52,31 54,33 Q 56,35 55,37" fill="none" stroke={edgeC} strokeWidth="0.9" strokeLinecap="round" opacity="0.12" />
-            <path d="M 32,30 Q 30,31.5 28,33.5 Q 27,35 28,37" fill="none" stroke={pathC} strokeWidth="0.5" strokeLinecap="round" />
-            <path d="M 32,30 Q 30,31.5 28,33.5 Q 27,35 28,37" fill="none" stroke={edgeC} strokeWidth="0.8" strokeLinecap="round" opacity="0.1" />
+          const mainPath = "M -5,35 C 5,33 12,30 22,28.5 C 30,27.5 38,27 45,27.5 C 55,28 62,29 72,31 C 82,33.5 90,36 100,37.5"
+          const branchPath = "M 45,27.5 C 48,29 50,31 50,34 C 50,36.5 48,38.5 47,40"
+          const branchPath2 = "M 72,31 C 75,33 76,35 75,38 C 74,39.5 73,40.5 72,41"
+          const dirtBase = isDark ? '#2a2418' : '#8a7a5a'
+          const dirtDark = isDark ? '#1a1408' : '#6a5030'
+          const dirtLight = isDark ? '#342a1a' : '#a08a60'
+          const edgeGrass = isDark ? '#1a2e14' : '#4a7a3a'
+          const rng = seededRng(7733)
+          const pebbles: string[] = []
+          const grassEdge: string[] = []
+          const ruts: string[] = []
+          const pts = [[-5,35],[5,33],[12,30],[22,28.5],[30,27.5],[38,27],[45,27.5],[55,28],[62,29],[72,31],[82,33.5],[90,36],[100,37.5]]
+          for (let i = 0; i < 35; i++) {
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const ox = (rng() - 0.5) * 1.0
+            const oy = (rng() - 0.5) * 0.5
+            const pr = 0.05 + rng() * 0.08
+            pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
+          }
+          for (let i = 0; i < 25; i++) {
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const side = rng() > 0.5 ? 1 : -1
+            const gx = px + side * (0.5 + rng() * 0.4)
+            const gy = py + side * (0.12 + rng() * 0.2)
+            const gh = 0.25 + rng() * 0.45
+            const gsway = (rng() - 0.5) * 0.25
+            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
+          }
+          for (let i = 0; i < 6; i++) {
+            const t = 0.1 + rng() * 0.8
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const dx = (pts[nxt][0] - pts[idx][0]) * 0.12
+            const dy = (pts[nxt][1] - pts[idx][1]) * 0.12
+            ruts.push(`M${(px - dx).toFixed(1)},${(py - dy + 0.12).toFixed(1)}L${(px + dx).toFixed(1)},${(py + dy + 0.12).toFixed(1)}`)
+          }
+          return <g>
+            <path d={mainPath} fill="none" stroke={dirtDark} strokeWidth="1.3" strokeLinecap="round" opacity={isDark ? 0.2 : 0.12} />
+            <path d={mainPath} fill="none" stroke={dirtBase} strokeWidth="0.8" strokeLinecap="round" opacity={isDark ? 0.4 : 0.28} />
+            <path d={mainPath} fill="none" stroke={dirtLight} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.12 : 0.08} />
+            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.14" fill="none" opacity={isDark ? 0.2 : 0.12} strokeLinecap="round" />
+            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.25 : 0.15} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.18" fill="none" opacity={isDark ? 0.3 : 0.18} />
+            <path d={branchPath} fill="none" stroke={dirtDark} strokeWidth="1.1" strokeLinecap="round" opacity={isDark ? 0.18 : 0.1} />
+            <path d={branchPath} fill="none" stroke={dirtBase} strokeWidth="0.6" strokeLinecap="round" opacity={isDark ? 0.35 : 0.25} />
+            <path d={branchPath} fill="none" stroke={dirtLight} strokeWidth="0.2" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
+            <path d={branchPath2} fill="none" stroke={dirtDark} strokeWidth="1.0" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
+            <path d={branchPath2} fill="none" stroke={dirtBase} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
+            <path d={branchPath2} fill="none" stroke={dirtLight} strokeWidth="0.18" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
           </g>
         })()}
 
@@ -1039,27 +1265,60 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
                   <stop offset="100%" stopColor="#c8b888" />
                 </radialGradient>
                 <mask id="moon-crescent-mask">
-                  <circle cx={mx} cy={my} r="2.5" fill="white" />
-                  <circle cx={mx + 0.7} cy={my - 0.4} r="2.3" fill="black" />
+                  <circle cx={mx} cy={my} r="1.8" fill="white" />
+                  <circle cx={mx + 0.5} cy={my - 0.3} r="1.65" fill="black" />
                 </mask>
               </defs>
-              <ellipse cx={mx} cy={my} rx="12" ry="7" fill="url(#moon-glow-bg)" />
-              <circle cx={mx} cy={my} r="2.5" fill="url(#moon-face-bg)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.7} cy={my - 0.2} r="0.18" fill="rgba(140,155,180,0.3)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.2} cy={my + 0.6} r="0.22" fill="rgba(130,145,170,0.25)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 1.1} cy={my + 0.15} r="0.1" fill="rgba(150,160,185,0.28)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.5} cy={my - 0.8} r="0.13" fill="rgba(135,150,175,0.2)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.9} cy={my - 0.55} r="0.07" fill="rgba(145,158,182,0.22)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.15} cy={my + 0.15} r="0.09" fill="rgba(138,152,178,0.18)" mask="url(#moon-crescent-mask)" />
-              <path d={`M${mx-0.3} ${my-2.4} Q${mx-1.2} ${my} ${mx-0.3} ${my+2.4}`} fill="none" stroke="rgba(220,230,250,0.12)" strokeWidth="0.3" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx} cy={my} rx="8" ry="5" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-face-bg)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.5} cy={my - 0.15} r="0.13" fill="rgba(140,155,180,0.3)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.15} cy={my + 0.45} r="0.16" fill="rgba(130,145,170,0.25)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.8} cy={my + 0.1} r="0.07" fill="rgba(150,160,185,0.28)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.35} cy={my - 0.6} r="0.09" fill="rgba(135,150,175,0.2)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.65} cy={my - 0.4} r="0.05" fill="rgba(145,158,182,0.22)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.1} cy={my + 0.1} r="0.06" fill="rgba(138,152,178,0.18)" mask="url(#moon-crescent-mask)" />
+              <path d={`M${mx-0.2} ${my-1.7} Q${mx-0.85} ${my} ${mx-0.2} ${my+1.7}`} fill="none" stroke="rgba(220,230,250,0.12)" strokeWidth="0.2" mask="url(#moon-crescent-mask)" />
               {/* Wispy clouds around moon */}
-              <ellipse cx={mx - 3.5} cy={my + 0.8} rx="3" ry="0.7" fill="rgba(180,195,220,0.08)" />
-              <ellipse cx={mx - 2} cy={my + 0.5} rx="2.2" ry="0.5" fill="rgba(170,185,210,0.1)" />
-              <ellipse cx={mx + 2.5} cy={my - 0.3} rx="2.8" ry="0.6" fill="rgba(175,190,215,0.07)" />
-              <ellipse cx={mx + 1.5} cy={my + 1.2} rx="3.5" ry="0.8" fill="rgba(165,180,205,0.09)" />
-              <ellipse cx={mx - 1} cy={my - 1.5} rx="2" ry="0.45" fill="rgba(180,192,218,0.06)" />
+              <ellipse cx={mx - 2.5} cy={my + 0.6} rx="2.2" ry="0.5" fill="rgba(180,195,220,0.08)" />
+              <ellipse cx={mx - 1.4} cy={my + 0.4} rx="1.6" ry="0.35" fill="rgba(170,185,210,0.1)" />
+              <ellipse cx={mx + 1.8} cy={my - 0.2} rx="2" ry="0.45" fill="rgba(175,190,215,0.07)" />
+              <ellipse cx={mx + 1.1} cy={my + 0.9} rx="2.5" ry="0.6" fill="rgba(165,180,205,0.09)" />
+              <ellipse cx={mx - 0.7} cy={my - 1.1} rx="1.5" ry="0.35" fill="rgba(180,192,218,0.06)" />
             </g>
           )
+        })()}
+
+        {/* Moonlight on hills */}
+        {(() => {
+          const isNight = timeState.hour >= 18 || timeState.hour < 6
+          if (!isNight) return null
+          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+          const moonT = Math.max(0, Math.min(1, nightHour / 12))
+          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
+          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
+          const glowId = 'moonlight-hill-glow'
+          return <g opacity={intensity} style={{ pointerEvents: 'none' }}>
+            <defs>
+              <radialGradient id={glowId} cx="50%" cy="0%" r="80%">
+                <stop offset="0%" stopColor="rgba(180,205,240,0.18)" />
+                <stop offset="35%" stopColor="rgba(160,190,230,0.1)" />
+                <stop offset="70%" stopColor="rgba(140,175,220,0.04)" />
+                <stop offset="100%" stopColor="rgba(120,160,210,0)" />
+              </radialGradient>
+              <clipPath id="moonlight-clip-back">
+                <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29 L210,42 L-10,42 Z" />
+              </clipPath>
+              <clipPath id="moonlight-clip-front">
+                <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,42 L-10,42 Z" />
+              </clipPath>
+            </defs>
+            <g clipPath="url(#moonlight-clip-back)">
+              <ellipse cx={mx} cy="20" rx="50" ry="22" fill={`url(#${glowId})`} />
+            </g>
+            <g clipPath="url(#moonlight-clip-front)">
+              <ellipse cx={mx} cy="24" rx="45" ry="20" fill={`url(#${glowId})`} />
+            </g>
+          </g>
         })()}
 
         {/* Tangerine grove on near hills — placed on near-hill contour */}
@@ -1198,23 +1457,51 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
 
-        {/* Grass tufts — baked */}
+        {/* Grass tufts and ground texture — baked */}
         {(() => {
-          const grassColor = isDark ? '#3a5a2e' : '#6a9a50'
+          const grassC = isDark ? '#3a5a2e' : '#6a9a50'
+          const grassL = isDark ? '#4a6a3a' : '#7aaa60'
+          const grassD = isDark ? '#2a4a20' : '#5a8a40'
+          const dirtC = isDark ? '#2a2418' : '#8a7a5a'
           const d1: string[] = []
           const d2: string[] = []
-          for (let i = 0; i < 50; i++) {
+          const d3: string[] = []
+          const patches: string[] = []
+          const dirtSpots: string[] = []
+          for (let i = 0; i < 120; i++) {
             const rng = seededRng(i * 53 + 101)
             const x = 6 + rng() * 188
             const y = 40 + rng() * 56
-            const h = 0.4 + rng() * 0.6
-            d1.push(`M${x.toFixed(1)},${y.toFixed(1)}L${(x-0.4).toFixed(1)},${(y-h).toFixed(1)}`)
-            d2.push(`M${x.toFixed(1)},${y.toFixed(1)}L${(x+0.3).toFixed(1)},${(y-h*0.8).toFixed(1)}`)
+            const h = 0.4 + rng() * 0.7
+            const sway = (rng() - 0.5) * 0.3
+            d1.push(`M${x.toFixed(1)},${y.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+            d2.push(`M${(x + 0.15).toFixed(2)},${y.toFixed(1)}q${((rng() - 0.5) * 0.25).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.12).toFixed(2)},${(-h * 0.8).toFixed(2)}`)
+            if (rng() > 0.5) {
+              d3.push(`M${(x - 0.1).toFixed(2)},${y.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-h * 0.6).toFixed(2)}`)
+            }
+          }
+          for (let i = 0; i < 25; i++) {
+            const rng = seededRng(i * 71 + 3311)
+            const px = 10 + rng() * 180
+            const py = 42 + rng() * 52
+            const pw = 1.5 + rng() * 3
+            const ph = 0.5 + rng() * 1.5
+            patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${(px - pw * 0.3).toFixed(1)},${(py - ph).toFixed(1)} ${px.toFixed(1)},${(py - ph * 0.8).toFixed(1)}Q${(px + pw * 0.4).toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 15; i++) {
+            const rng = seededRng(i * 93 + 5511)
+            const dx = 10 + rng() * 180
+            const dy = 42 + rng() * 52
+            const dr = 0.3 + rng() * 0.5
+            dirtSpots.push(`M${(dx + dr).toFixed(2)},${dy.toFixed(2)}a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 -${(dr * 2).toFixed(2)},0a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 ${(dr * 2).toFixed(2)},0Z`)
           }
           return (
-            <g opacity={isDark ? 0.15 : 0.1}>
-              <path d={d1.join('')} stroke={grassColor} strokeWidth="0.3" fill="none" />
-              <path d={d2.join('')} stroke={grassColor} strokeWidth="0.25" fill="none" />
+            <g>
+              <path d={patches.join('')} fill={grassD} opacity={isDark ? 0.08 : 0.05} />
+              <path d={dirtSpots.join('')} fill={dirtC} opacity={isDark ? 0.06 : 0.04} />
+              <path d={d1.join('')} stroke={grassC} strokeWidth="0.25" fill="none" opacity={isDark ? 0.18 : 0.12} />
+              <path d={d2.join('')} stroke={grassL} strokeWidth="0.2" fill="none" opacity={isDark ? 0.14 : 0.09} />
+              <path d={d3.join('')} stroke={grassD} strokeWidth="0.18" fill="none" opacity={isDark ? 0.12 : 0.07} />
             </g>
           )
         })()}
@@ -1320,6 +1607,28 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               <polygon points={`${lx + 0.6},${ly - 8.5} ${lx + 1.5},${ly - 9.2} ${lx + 2.4},${ly - 8.5}`} fill={iron} />
             </g>
           )
+        })()}
+
+        {/* Gravel patch around windmills */}
+        {(() => {
+          const gravelC = isDark ? '#1e1a14' : '#9a9080'
+          const gravelD = isDark ? '#14120e' : '#7a7060'
+          const rng = seededRng(6677)
+          const gravelPath = `M168,46 Q172,43.5 178,42 Q184,41 190,41.5 Q196,42 200,44 Q202,46 201,48 Q199,50 195,50.5 Q188,51 182,50.5 Q175,50 170,48 Q168,47.5 168,46Z`
+          const pebbles: string[] = []
+          for (let i = 0; i < 40; i++) {
+            const px = 170 + rng() * 28
+            const py = 42.5 + rng() * 7
+            const dx = px - 186, dy = (py - 46) * 2
+            if (dx * dx + dy * dy > 200) continue
+            const pr = 0.08 + rng() * 0.15
+            pebbles.push(`M${(px + pr).toFixed(2)},${py.toFixed(2)}a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
+          }
+          return <g>
+            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.2 : 0.12} />
+            <path d={gravelPath} fill="none" stroke={gravelD} strokeWidth="0.15" opacity={isDark ? 0.1 : 0.06} />
+            <path d={pebbles.join('')} fill={gravelD} opacity={isDark ? 0.3 : 0.18} />
+          </g>
         })()}
 
                 {/* Foreground windmills */}
@@ -2143,139 +2452,131 @@ export const OrchardView = memo(function OrchardView({
                 {(() => { return (
                   <>
                     <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
-                      <defs>
-                        <linearGradient id="gp-top" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
-                          <stop offset="40%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
-                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
-                        </linearGradient>
-                        <linearGradient id="gp-bot" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
-                          <stop offset="70%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
-                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
-                        </linearGradient>
-                        <linearGradient id="gp-left" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
-                          <stop offset="35%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
-                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
-                        </linearGradient>
-                        <linearGradient id="gp-right" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
-                          <stop offset="65%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
-                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
-                        </linearGradient>
-                        <radialGradient id="gp-warm" cx="40%" cy="42%" r="35%">
-                          <stop offset="0%" stopColor={isDark ? '#22301a' : '#3a5e30'} stopOpacity="0.35" />
-                          <stop offset="100%" stopColor={isDark ? '#22301a' : '#3a5e30'} stopOpacity="0" />
-                        </radialGradient>
-                        <radialGradient id="gp-cool" cx="60%" cy="68%" r="30%">
-                          <stop offset="0%" stopColor={isDark ? '#0e1a0a' : '#1e3a16'} stopOpacity="0.25" />
-                          <stop offset="100%" stopColor={isDark ? '#0e1a0a' : '#1e3a16'} stopOpacity="0" />
-                        </radialGradient>
-                        <filter id="gp-blur" x="-8%" y="-8%" width="116%" height="116%">
-                          <feGaussianBlur stdDeviation="1.8" />
-                        </filter>
-                        <filter id="gp-blur-sm" x="-5%" y="-5%" width="110%" height="110%">
-                          <feGaussianBlur stdDeviation="0.8" />
-                        </filter>
-                      </defs>
-                      <path d={`
-                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
-                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
-                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
-                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
-                        Q 65,95.5 50,95 Q 35,96 25,94
-                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
-                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
-                      `} fill="url(#gp-top)" filter="url(#gp-blur)" />
-                      <path d={`
-                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
-                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
-                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
-                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
-                        Q 65,95.5 50,95 Q 35,96 25,94
-                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
-                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
-                      `} fill="url(#gp-bot)" filter="url(#gp-blur)" />
-                      <path d={`
-                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
-                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
-                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
-                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
-                        Q 65,95.5 50,95 Q 35,96 25,94
-                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
-                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
-                      `} fill="url(#gp-left)" filter="url(#gp-blur)" />
-                      <path d={`
-                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
-                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
-                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
-                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
-                        Q 65,95.5 50,95 Q 35,96 25,94
-                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
-                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
-                      `} fill="url(#gp-right)" filter="url(#gp-blur)" />
-                      <rect x="16" y="44" width="68" height="48" rx="3" fill={isDark ? '#1c2a14' : '#2e4e24'} opacity={isDark ? 0.45 : 0.3} filter="url(#gp-blur)" />
-                      <rect x="20" y="48" width="60" height="40" rx="2" fill="url(#gp-warm)" filter="url(#gp-blur)" />
-                      <rect x="22" y="52" width="56" height="36" rx="2" fill="url(#gp-cool)" filter="url(#gp-blur)" />
                       {(() => {
+                        const pad = 5
+                        const yT = 48, yB = 94, steps = 24
+                        const getL = (y: number) => getTillX(0, Math.max(GRID_ROW_START, Math.min(GRID_ROW_END, y)))
+                        const getR = (y: number) => getTillX(GRID_COLS - 1, Math.max(GRID_ROW_START, Math.min(GRID_ROW_END, y)))
+
+                        const rngE = seededRng(4477)
+                        let pathD = ''
+                        const rightSeg: string[] = []
+                        for (let i = 0; i <= steps; i++) {
+                          const y = yT - pad + i * (yB - yT + pad * 2) / steps
+                          const lx = getL(y) - pad + (rngE() - 0.5) * 1.0
+                          const rx = getR(y) + pad + (rngE() - 0.5) * 1.0
+                          if (i === 0) pathD += `M${lx.toFixed(1)},${y.toFixed(1)}`
+                          else pathD += ` L${lx.toFixed(1)},${y.toFixed(1)}`
+                          rightSeg.push(`${rx.toFixed(1)},${y.toFixed(1)}`)
+                        }
+                        for (let i = rightSeg.length - 1; i >= 0; i--) pathD += ` L${rightSeg[i]}`
+                        pathD += 'Z'
+
                         const tufts: string[] = []
                         const blades: string[] = []
                         const clover: string[] = []
-                        const moss: string[] = []
-                        const L = 12, R = 88, T = 40, B = 96
-                        for (let i = 0; i < 180; i++) {
+                        const bushes: string[] = []
+                        for (let i = 0; i < 1500; i++) {
                           const rng = seededRng(i * 43 + 997)
-                          const tx = L + rng() * (R - L)
-                          const ty = T + rng() * (B - T)
-                          const edgeDist = Math.min(tx - L, R - tx, ty - T, B - ty)
-                          const fade = Math.min(1, edgeDist / 8)
+                          const ty = yT - pad + rng() * (yB - yT + pad * 2)
+                          const lE = getL(ty) - pad
+                          const rE = getR(ty) + pad
+                          const tx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(tx - lE, rE - tx, ty - (yT - pad), (yB + pad) - ty)
+                          const fade = Math.min(1, edgeDist / 5)
                           if (fade < 0.05) continue
                           const h = (0.4 + rng() * 0.8) * fade
-                          const sway = (rng() - 0.5) * 0.35
-                          tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.6).toFixed(2)} ${(sway * 0.4).toFixed(2)},${(-h).toFixed(2)}`)
-                          if (rng() > 0.3) {
-                            const s2 = (rng() - 0.5) * 0.5
-                            tufts.push(`M${(tx + 0.15).toFixed(2)},${ty.toFixed(1)}q${s2.toFixed(2)},${(-h * 0.4).toFixed(2)} ${(s2 * 0.6).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
-                          }
-                          if (rng() > 0.5) {
-                            const s3 = (rng() - 0.5) * 0.4
-                            tufts.push(`M${(tx - 0.12).toFixed(2)},${ty.toFixed(1)}q${s3.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(s3 * 0.5).toFixed(2)},${(-h * 0.6).toFixed(2)}`)
-                          }
+                          const sway = (rng() - 0.5) * 0.4
+                          tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+                          tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
+                          tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
                         }
-                        for (let i = 0; i < 100; i++) {
+                        for (let i = 0; i < 500; i++) {
                           const rng = seededRng(i * 59 + 1231)
-                          const bx = L + 2 + rng() * (R - L - 4)
-                          const by = T + 2 + rng() * (B - T - 4)
-                          const edgeDist = Math.min(bx - L, R - bx, by - T, B - by)
-                          const fade = Math.min(1, edgeDist / 6)
+                          const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
+                          const lE = getL(by) - pad + 1
+                          const rE = getR(by) + pad - 1
+                          const bx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+                          const fade = Math.min(1, edgeDist / 4)
                           if (fade < 0.08) continue
                           const bh = (0.5 + rng() * 1.0) * fade
                           const curve = (rng() - 0.5) * 0.7
-                          blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.25).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.8).toFixed(1)},${(by - bh * 0.65).toFixed(1)} ${(bx + curve * 0.6).toFixed(1)},${(by - bh).toFixed(1)}`)
+                          blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
                         }
-                        for (let i = 0; i < 30; i++) {
+                        for (let i = 0; i < 60; i++) {
                           const rng = seededRng(i * 37 + 2099)
-                          const cx = L + 4 + rng() * (R - L - 8)
-                          const cy = T + 4 + rng() * (B - T - 8)
+                          const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
+                          const lE = getL(cy) - pad + 3
+                          const rE = getR(cy) + pad - 3
+                          const cx = lE + rng() * (rE - lE)
                           const cs = 0.12 + rng() * 0.1
                           for (let l = 0; l < 3; l++) {
                             const la = (l / 3) * Math.PI * 2 + rng() * 0.4
-                            clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.4).toFixed(2)},${(cy + Math.sin(la) * cs * 1.4).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.8).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.8).toFixed(2)}`)
+                            clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
                           }
                         }
-                        for (let i = 0; i < 45; i++) {
-                          const rng = seededRng(i * 79 + 3301)
-                          const mx = L + 2 + rng() * (R - L - 4)
-                          const my = T + 2 + rng() * (B - T - 4)
-                          const ms = 0.2 + rng() * 0.4
-                          moss.push(`M${(mx - ms).toFixed(2)},${my.toFixed(2)}a${ms.toFixed(2)},${(ms * 0.4).toFixed(2)} 0 1 1 ${(ms * 2).toFixed(2)},0a${ms.toFixed(2)},${(ms * 0.4).toFixed(2)} 0 1 1 -${(ms * 2).toFixed(2)},0Z`)
+                        for (let i = 0; i < 100; i++) {
+                          const rng = seededRng(i * 83 + 6601)
+                          const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
+                          const lE = getL(by) - pad + 2
+                          const rE = getR(by) + pad - 2
+                          const bx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+                          const fade = Math.min(1, edgeDist / 5)
+                          if (fade < 0.1) continue
+                          const bw = (0.5 + rng() * 0.9) * fade
+                          const bh2 = (0.25 + rng() * 0.5) * fade
+                          bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
                         }
                         return <>
-                          <path d={moss.join('')} fill={isDark ? '#1a2c12' : '#2c4c22'} opacity={isDark ? 0.2 : 0.14} filter="url(#gp-blur-sm)" />
-                          <path d={tufts.join('')} stroke={isDark ? '#223a18' : '#2e5824'} strokeWidth="0.2" fill="none" opacity={isDark ? 0.45 : 0.3} />
-                          <path d={blades.join('')} stroke={isDark ? '#2a4420' : '#386830'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.35 : 0.22} />
-                          <path d={clover.join('')} stroke={isDark ? '#2e4824' : '#3a6a30'} strokeWidth="0.12" fill={isDark ? '#223818' : '#2e5a24'} opacity={isDark ? 0.25 : 0.18} />
+                          <defs>
+                            <filter id="grass-blend" x="-20%" y="-20%" width="140%" height="140%">
+                              <feGaussianBlur stdDeviation="2.5" />
+                            </filter>
+                          </defs>
+                          <path d={pathD} fill={isDark ? '#1e3414' : '#4a8a38'} opacity={isDark ? 0.1 : 0.06} filter="url(#grass-blend)" />
+                          <path d={bushes.join('')} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.15 : 0.1} />
+                          <path d={tufts.join('')} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.3 : 0.2} />
+                          <path d={blades.join('')} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.1" fill="none" opacity={isDark ? 0.25 : 0.16} />
+                          <path d={clover.join('')} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.08" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.18 : 0.12} />
+                        </>
+                      })()}
+                      {(() => {
+                        const waterC = isDark ? '#0e1e2e' : '#5a8ab0'
+                        const bankC = isDark ? '#1a2a1a' : '#5a7a4a'
+                        const sparkle = isDark ? 'rgba(120,180,255,0.1)' : 'rgba(255,255,255,0.2)'
+                        const rng = seededRng(9922)
+                        const ripples: string[] = []
+                        for (let i = 0; i < 10; i++) {
+                          const ry = 48 + rng() * 44
+                          const rx = 8 + rng() * 3 + Math.sin(ry * 0.15) * 2
+                          const w = 0.3 + rng() * 0.5
+                          ripples.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${rx.toFixed(1)},${(ry - 0.1).toFixed(2)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}`)
+                        }
+                        const reeds: string[] = []
+                        for (let i = 0; i < 14; i++) {
+                          const ry = 48 + rng() * 44
+                          const side = rng() > 0.5 ? 1.5 : -1.5
+                          const rx = 9 + Math.sin(ry * 0.15) * 2 + side
+                          const h = 0.4 + rng() * 0.6
+                          const sw = (rng() - 0.5) * 0.2
+                          reeds.push(`M${rx.toFixed(1)},${ry.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+                        }
+                        const stones: string[] = []
+                        for (let i = 0; i < 8; i++) {
+                          const ry = 50 + rng() * 38
+                          const rx = 8.5 + Math.sin(ry * 0.15) * 2 + (rng() - 0.5) * 2.5
+                          const sr = 0.15 + rng() * 0.2
+                          stones.push(`M${(rx + sr).toFixed(2)},${ry.toFixed(2)}a${sr.toFixed(2)},${(sr * 0.6).toFixed(2)} 0 1 1 -${(sr * 2).toFixed(2)},0a${sr.toFixed(2)},${(sr * 0.6).toFixed(2)} 0 1 1 ${(sr * 2).toFixed(2)},0Z`)
+                        }
+                        return <>
+                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={bankC} strokeWidth="3" strokeLinecap="round" opacity={isDark ? 0.2 : 0.12} />
+                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={waterC} strokeWidth="1.5" strokeLinecap="round" opacity={isDark ? 0.5 : 0.35} />
+                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={isDark ? '#142838' : '#6a9ac0'} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.3 : 0.2} />
+                          <path d={ripples.join('')} stroke={sparkle} strokeWidth="0.1" fill="none" />
+                          <path d={stones.join('')} fill={isDark ? '#1a1a1c' : '#8a8a80'} opacity={isDark ? 0.25 : 0.15} />
+                          <path d={reeds.join('')} stroke={isDark ? '#1a3018' : '#4a7a3a'} strokeWidth="0.15" fill="none" opacity="0.4" />
                         </>
                       })()}
                     </svg>
