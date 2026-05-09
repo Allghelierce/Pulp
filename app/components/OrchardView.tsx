@@ -46,8 +46,8 @@ const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
 const GRID_ROWS = 4
 const GRID_COL_START = 17
 const GRID_COL_END = 83
-const GRID_ROW_START = 50
-const GRID_ROW_END = 88
+const GRID_ROW_START = 47
+const GRID_ROW_END = 85
 const GRID_TILL_OFFSET = 2.5
 
 function gridSlotPos(slotIndex: number): { x: number; y: number; col: number; side: number; row: number } {
@@ -520,6 +520,31 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           </g>
         )}
 
+        {/* Moonlight on mountain faces */}
+        {(() => {
+          const isNight = timeState.hour >= 18 || timeState.hour < 6
+          if (!isNight) return null
+          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+          const moonT = Math.max(0, Math.min(1, nightHour / 12))
+          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
+          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
+          return <g opacity={intensity * 0.4} style={{ pointerEvents: 'none' }}>
+            <defs>
+              <radialGradient id="moonlight-mtn" cx="50%" cy="60%" r="60%">
+                <stop offset="0%" stopColor="rgba(180,200,235,0.2)" />
+                <stop offset="50%" stopColor="rgba(160,185,220,0.08)" />
+                <stop offset="100%" stopColor="rgba(140,170,210,0)" />
+              </radialGradient>
+              <clipPath id="moonlight-clip-mtn">
+                <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
+              </clipPath>
+            </defs>
+            <g clipPath="url(#moonlight-clip-mtn)">
+              <ellipse cx={mx} cy="18" rx="50" ry="20" fill="url(#moonlight-mtn)" />
+            </g>
+          </g>
+        })()}
+
         {/* Windmills — behind hills, on mountain slopes */}
         {(() => {
           const mills = [
@@ -667,21 +692,19 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             wornPatches.push(`M${(px - wr).toFixed(1)},${py.toFixed(1)}a${wr.toFixed(2)},${(wr * 0.35).toFixed(2)} 0 1 1 ${(wr * 2).toFixed(2)},0a${wr.toFixed(2)},${(wr * 0.35).toFixed(2)} 0 1 1 -${(wr * 2).toFixed(2)},0Z`)
           }
           return <g>
-            <path d={mainD} fill="none" stroke={dirtDark} strokeWidth="1.3" strokeLinecap="round" opacity={isDark ? 0.22 : 0.14} />
-            <path d={mainD} fill="none" stroke={dirtBase} strokeWidth="0.8" strokeLinecap="round" opacity={isDark ? 0.45 : 0.3} />
-            <path d={mainD} fill="none" stroke={dirtLight} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.15 : 0.1} />
-            <path d={mainD} fill="none" stroke={dirtDark} strokeWidth="0.15" strokeLinecap="round" opacity={isDark ? 0.12 : 0.06} strokeDasharray="0.4 1.2" />
-            <path d={wornPatches.join('')} fill={dirtLight} opacity={isDark ? 0.12 : 0.07} />
-            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.14" fill="none" opacity={isDark ? 0.28 : 0.16} strokeLinecap="round" />
-            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.35 : 0.2} />
-            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.16" fill="none" opacity={isDark ? 0.4 : 0.22} />
-            <path d={branchD} fill="none" stroke={dirtDark} strokeWidth="1.0" strokeLinecap="round" opacity={isDark ? 0.2 : 0.1} />
-            <path d={branchD} fill="none" stroke={dirtBase} strokeWidth="0.55" strokeLinecap="round" opacity={isDark ? 0.4 : 0.25} />
-            <path d={spurD} fill="none" stroke={dirtBase} strokeWidth="0.35" opacity={isDark ? 0.35 : 0.22} strokeLinecap="round" />
-            <path d={house1D} fill="none" stroke={dirtDark} strokeWidth="0.7" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
-            <path d={house1D} fill="none" stroke={dirtBase} strokeWidth="0.4" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
-            <path d={house2D} fill="none" stroke={dirtDark} strokeWidth="0.65" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
-            <path d={house2D} fill="none" stroke={dirtBase} strokeWidth="0.35" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
+            <path d={mainD} fill="none" stroke={dirtDark} strokeWidth="0.6" strokeLinecap="round" opacity={isDark ? 0.12 : 0.08} />
+            <path d={mainD} fill="none" stroke={dirtBase} strokeWidth="0.35" strokeLinecap="round" opacity={isDark ? 0.2 : 0.14} />
+            <path d={wornPatches.join('')} fill={dirtLight} opacity={isDark ? 0.06 : 0.04} />
+            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.12 : 0.08} strokeLinecap="round" />
+            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.15 : 0.1} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.18 : 0.1} />
+            <path d={branchD} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
+            <path d={branchD} fill="none" stroke={dirtBase} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
+            <path d={spurD} fill="none" stroke={dirtBase} strokeWidth="0.2" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" />
+            <path d={house1D} fill="none" stroke={dirtDark} strokeWidth="0.35" strokeLinecap="round" opacity={isDark ? 0.08 : 0.05} />
+            <path d={house1D} fill="none" stroke={dirtBase} strokeWidth="0.2" strokeLinecap="round" opacity={isDark ? 0.15 : 0.1} />
+            <path d={house2D} fill="none" stroke={dirtDark} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.08 : 0.05} />
+            <path d={house2D} fill="none" stroke={dirtBase} strokeWidth="0.18" strokeLinecap="round" opacity={isDark ? 0.15 : 0.1} />
           </g>
         })()}
 
@@ -1198,18 +1221,15 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             ruts.push(`M${(px - dx).toFixed(1)},${(py - dy + 0.12).toFixed(1)}L${(px + dx).toFixed(1)},${(py + dy + 0.12).toFixed(1)}`)
           }
           return <g>
-            <path d={mainPath} fill="none" stroke={dirtDark} strokeWidth="1.3" strokeLinecap="round" opacity={isDark ? 0.2 : 0.12} />
-            <path d={mainPath} fill="none" stroke={dirtBase} strokeWidth="0.8" strokeLinecap="round" opacity={isDark ? 0.4 : 0.28} />
-            <path d={mainPath} fill="none" stroke={dirtLight} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.12 : 0.08} />
-            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.14" fill="none" opacity={isDark ? 0.2 : 0.12} strokeLinecap="round" />
-            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.25 : 0.15} />
-            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.18" fill="none" opacity={isDark ? 0.3 : 0.18} />
-            <path d={branchPath} fill="none" stroke={dirtDark} strokeWidth="1.1" strokeLinecap="round" opacity={isDark ? 0.18 : 0.1} />
-            <path d={branchPath} fill="none" stroke={dirtBase} strokeWidth="0.6" strokeLinecap="round" opacity={isDark ? 0.35 : 0.25} />
-            <path d={branchPath} fill="none" stroke={dirtLight} strokeWidth="0.2" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
-            <path d={branchPath2} fill="none" stroke={dirtDark} strokeWidth="1.0" strokeLinecap="round" opacity={isDark ? 0.15 : 0.08} />
-            <path d={branchPath2} fill="none" stroke={dirtBase} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.35 : 0.22} />
-            <path d={branchPath2} fill="none" stroke={dirtLight} strokeWidth="0.18" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
+            <path d={mainPath} fill="none" stroke={dirtDark} strokeWidth="0.7" strokeLinecap="round" opacity={isDark ? 0.12 : 0.08} />
+            <path d={mainPath} fill="none" stroke={dirtBase} strokeWidth="0.4" strokeLinecap="round" opacity={isDark ? 0.22 : 0.15} />
+            <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} strokeLinecap="round" />
+            <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.12 : 0.08} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.15 : 0.1} />
+            <path d={branchPath} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
+            <path d={branchPath} fill="none" stroke={dirtBase} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
+            <path d={branchPath2} fill="none" stroke={dirtDark} strokeWidth="0.45" strokeLinecap="round" opacity={isDark ? 0.08 : 0.05} />
+            <path d={branchPath2} fill="none" stroke={dirtBase} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.18 : 0.1} />
           </g>
         })()}
 
@@ -1266,7 +1286,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
                 </radialGradient>
                 <mask id="moon-crescent-mask">
                   <circle cx={mx} cy={my} r="1.8" fill="white" />
-                  <circle cx={mx + 0.5} cy={my - 0.3} r="1.65" fill="black" />
+                  <circle cx={mx + 1.8} cy={my} r="1.8" fill="black" />
                 </mask>
               </defs>
               <ellipse cx={mx} cy={my} rx="8" ry="5" fill="url(#moon-glow-bg)" />
@@ -1299,10 +1319,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const glowId = 'moonlight-hill-glow'
           return <g opacity={intensity} style={{ pointerEvents: 'none' }}>
             <defs>
-              <radialGradient id={glowId} cx="50%" cy="0%" r="80%">
-                <stop offset="0%" stopColor="rgba(180,205,240,0.18)" />
-                <stop offset="35%" stopColor="rgba(160,190,230,0.1)" />
-                <stop offset="70%" stopColor="rgba(140,175,220,0.04)" />
+              <radialGradient id={glowId} cx="50%" cy="20%" r="70%">
+                <stop offset="0%" stopColor="rgba(200,220,255,0.35)" />
+                <stop offset="25%" stopColor="rgba(180,205,240,0.22)" />
+                <stop offset="55%" stopColor="rgba(160,190,230,0.1)" />
+                <stop offset="80%" stopColor="rgba(140,175,220,0.03)" />
                 <stop offset="100%" stopColor="rgba(120,160,210,0)" />
               </radialGradient>
               <clipPath id="moonlight-clip-back">
@@ -1311,12 +1332,15 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               <clipPath id="moonlight-clip-front">
                 <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,42 L-10,42 Z" />
               </clipPath>
+              <clipPath id="moonlight-clip-field">
+                <path d="M-5,38 Q20,39 50,38 Q80,37 100,38 Q130,39 160,38 Q185,39 205,38 L205,100 L-5,100 Z" />
+              </clipPath>
             </defs>
-            <g clipPath="url(#moonlight-clip-back)">
-              <ellipse cx={mx} cy="20" rx="50" ry="22" fill={`url(#${glowId})`} />
+            <g clipPath="url(#moonlight-clip-back)" opacity={0.12}>
+              <ellipse cx={mx} cy="26" rx="55" ry="20" fill={`url(#${glowId})`} />
             </g>
-            <g clipPath="url(#moonlight-clip-front)">
-              <ellipse cx={mx} cy="24" rx="45" ry="20" fill={`url(#${glowId})`} />
+            <g clipPath="url(#moonlight-clip-front)" opacity={0.25}>
+              <ellipse cx={mx} cy="30" rx="50" ry="18" fill={`url(#${glowId})`} />
             </g>
           </g>
         })()}
@@ -1450,6 +1474,27 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
         {/* Main field */}
         <path d="M-5,38 Q20,39 50,38 Q80,37 100,38 Q130,39 160,38 Q185,39 205,38 L205,100 L-5,100 Z" fill="url(#field-g)" />
+
+        {/* Moonlight on main field */}
+        {(() => {
+          const isNight = timeState.hour >= 18 || timeState.hour < 6
+          if (!isNight) return null
+          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+          const moonT = Math.max(0, Math.min(1, nightHour / 12))
+          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
+          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
+          return <g opacity={intensity} style={{ pointerEvents: 'none' }}>
+            <rect x="-5" y="38" width="210" height="62" fill="rgba(160,185,220,0.06)" />
+            <defs>
+              <radialGradient id="moonlight-field-spot" cx="50%" cy="0%" r="100%">
+                <stop offset="0%" stopColor="rgba(180,205,240,0.14)" />
+                <stop offset="40%" stopColor="rgba(170,195,230,0.07)" />
+                <stop offset="100%" stopColor="rgba(160,185,220,0)" />
+              </radialGradient>
+            </defs>
+            <ellipse cx={mx} cy="38" rx="120" ry="50" fill="url(#moonlight-field-spot)" />
+          </g>
+        })()}
 
         {/* Field texture */}
         <path d="M0,50 Q50,48 100,50 Q150,52 200,50" fill="none" stroke="rgba(40,60,30,0.15)" strokeWidth="0.4" />
@@ -1609,25 +1654,62 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Gravel patch around windmills */}
+        {/* Gravel patch around lamppost and windmills */}
         {(() => {
-          const gravelC = isDark ? '#1e1a14' : '#9a9080'
-          const gravelD = isDark ? '#14120e' : '#7a7060'
+          const gravelC = isDark ? '#2a2a2a' : '#b0b0a8'
+          const gravelD = isDark ? '#1a1a1a' : '#888880'
+          const gravelL = isDark ? '#353535' : '#c8c8c0'
           const rng = seededRng(6677)
-          const gravelPath = `M168,46 Q172,43.5 178,42 Q184,41 190,41.5 Q196,42 200,44 Q202,46 201,48 Q199,50 195,50.5 Q188,51 182,50.5 Q175,50 170,48 Q168,47.5 168,46Z`
+          const gravelPath = `M160,50 L165,46 L170,44.5 Q175,43.5 181,44 L188,43.5 L195,44.5 L201,46 L205,48 L210,51 L212,55 L211,59 Q209,63 205,65.5 L199,67 L192,67.5 Q186,68 180,66 L174,64 L169,61 Q165,58 163,55 L160,52 Z`
+          const edgeGrass: string[] = []
+          const er2 = seededRng(3344)
+          const edgePts = [
+            [160,50],[165,46],[170,44.5],[181,44],[188,43.5],[195,44.5],[201,46],[205,48],[210,51],[212,55],[211,59],[205,65.5],[199,67],[192,67.5],[180,66],[174,64],[169,61],[163,55],[160,52]
+          ]
+          for (let i = 0; i < edgePts.length; i++) {
+            const [ex0, ey0] = edgePts[i]
+            const [ex1, ey1] = edgePts[(i + 1) % edgePts.length]
+            for (let j = 0; j < 3; j++) {
+              const t2 = (j + 0.5) / 3
+              const ex = ex0 + (ex1 - ex0) * t2 + (er2() - 0.5) * 2
+              const ey = ey0 + (ey1 - ey0) * t2 + (er2() - 0.5) * 1.5
+            const h = 0.4 + er2() * 0.6
+            const sw = (er2() - 0.5) * 0.3
+            edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+            }
+          }
           const pebbles: string[] = []
-          for (let i = 0; i < 40; i++) {
-            const px = 170 + rng() * 28
-            const py = 42.5 + rng() * 7
-            const dx = px - 186, dy = (py - 46) * 2
-            if (dx * dx + dy * dy > 200) continue
-            const pr = 0.08 + rng() * 0.15
+          for (let i = 0; i < 140; i++) {
+            const px = 160 + rng() * 52
+            const py = 44 + rng() * 24
+            const cx = 186, cy = 56
+            const dx = (px - cx) / 27, dy = (py - cy) / 12
+            if (dx * dx + dy * dy > 1) continue
+            const pr = 0.1 + rng() * 0.25
             pebbles.push(`M${(px + pr).toFixed(2)},${py.toFixed(2)}a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
+          const cracks: string[] = []
+          for (let i = 0; i < 15; i++) {
+            const cx2 = 162 + rng() * 48
+            const cy2 = 45 + rng() * 22
+            const dx2 = (cx2 - 186) / 27, dy2 = (cy2 - 56) / 12
+            if (dx2 * dx2 + dy2 * dy2 > 0.85) continue
+            const len = 1.2 + rng() * 3
+            const ang = rng() * Math.PI
+            cracks.push(`M${cx2.toFixed(1)},${cy2.toFixed(1)}l${(Math.cos(ang) * len).toFixed(2)},${(Math.sin(ang) * len * 0.3).toFixed(2)}`)
+          }
           return <g>
-            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.2 : 0.12} />
-            <path d={gravelPath} fill="none" stroke={gravelD} strokeWidth="0.15" opacity={isDark ? 0.1 : 0.06} />
-            <path d={pebbles.join('')} fill={gravelD} opacity={isDark ? 0.3 : 0.18} />
+            <defs>
+              <filter id="gravel-blend" x="-15%" y="-15%" width="130%" height="130%">
+                <feGaussianBlur stdDeviation="0.8" />
+              </filter>
+            </defs>
+            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.35 : 0.25} filter="url(#gravel-blend)" />
+            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.2 : 0.15} />
+            <path d={gravelPath} fill="none" stroke={isDark ? '#3a3a38' : '#8a8a80'} strokeWidth="0.15" opacity={isDark ? 0.4 : 0.3} />
+            <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.25 : 0.15} />
+            <path d={pebbles.join('')} fill={gravelD} opacity={isDark ? 0.45 : 0.25} />
+            <path d={cracks.join('')} stroke={gravelD} strokeWidth="0.1" fill="none" opacity={isDark ? 0.15 : 0.08} />
           </g>
         })()}
 
@@ -2530,53 +2612,10 @@ export const OrchardView = memo(function OrchardView({
                           bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
                         }
                         return <>
-                          <defs>
-                            <filter id="grass-blend" x="-20%" y="-20%" width="140%" height="140%">
-                              <feGaussianBlur stdDeviation="2.5" />
-                            </filter>
-                          </defs>
-                          <path d={pathD} fill={isDark ? '#1e3414' : '#4a8a38'} opacity={isDark ? 0.1 : 0.06} filter="url(#grass-blend)" />
-                          <path d={bushes.join('')} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.15 : 0.1} />
-                          <path d={tufts.join('')} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.3 : 0.2} />
-                          <path d={blades.join('')} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.1" fill="none" opacity={isDark ? 0.25 : 0.16} />
-                          <path d={clover.join('')} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.08" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.18 : 0.12} />
-                        </>
-                      })()}
-                      {(() => {
-                        const waterC = isDark ? '#0e1e2e' : '#5a8ab0'
-                        const bankC = isDark ? '#1a2a1a' : '#5a7a4a'
-                        const sparkle = isDark ? 'rgba(120,180,255,0.1)' : 'rgba(255,255,255,0.2)'
-                        const rng = seededRng(9922)
-                        const ripples: string[] = []
-                        for (let i = 0; i < 10; i++) {
-                          const ry = 48 + rng() * 44
-                          const rx = 8 + rng() * 3 + Math.sin(ry * 0.15) * 2
-                          const w = 0.3 + rng() * 0.5
-                          ripples.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${rx.toFixed(1)},${(ry - 0.1).toFixed(2)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}`)
-                        }
-                        const reeds: string[] = []
-                        for (let i = 0; i < 14; i++) {
-                          const ry = 48 + rng() * 44
-                          const side = rng() > 0.5 ? 1.5 : -1.5
-                          const rx = 9 + Math.sin(ry * 0.15) * 2 + side
-                          const h = 0.4 + rng() * 0.6
-                          const sw = (rng() - 0.5) * 0.2
-                          reeds.push(`M${rx.toFixed(1)},${ry.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
-                        }
-                        const stones: string[] = []
-                        for (let i = 0; i < 8; i++) {
-                          const ry = 50 + rng() * 38
-                          const rx = 8.5 + Math.sin(ry * 0.15) * 2 + (rng() - 0.5) * 2.5
-                          const sr = 0.15 + rng() * 0.2
-                          stones.push(`M${(rx + sr).toFixed(2)},${ry.toFixed(2)}a${sr.toFixed(2)},${(sr * 0.6).toFixed(2)} 0 1 1 -${(sr * 2).toFixed(2)},0a${sr.toFixed(2)},${(sr * 0.6).toFixed(2)} 0 1 1 ${(sr * 2).toFixed(2)},0Z`)
-                        }
-                        return <>
-                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={bankC} strokeWidth="3" strokeLinecap="round" opacity={isDark ? 0.2 : 0.12} />
-                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={waterC} strokeWidth="1.5" strokeLinecap="round" opacity={isDark ? 0.5 : 0.35} />
-                          <path d="M10,46 Q8,52 9,58 Q11,64 8,70 Q7,76 9,82 Q10,88 8,94" fill="none" stroke={isDark ? '#142838' : '#6a9ac0'} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.3 : 0.2} />
-                          <path d={ripples.join('')} stroke={sparkle} strokeWidth="0.1" fill="none" />
-                          <path d={stones.join('')} fill={isDark ? '#1a1a1c' : '#8a8a80'} opacity={isDark ? 0.25 : 0.15} />
-                          <path d={reeds.join('')} stroke={isDark ? '#1a3018' : '#4a7a3a'} strokeWidth="0.15" fill="none" opacity="0.4" />
+                          <path d={bushes.join('')} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.06 : 0.035} />
+                          <path d={tufts.join('')} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.12 : 0.07} />
+                          <path d={blades.join('')} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} />
+                          <path d={clover.join('')} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.06" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.08 : 0.04} />
                         </>
                       })()}
                     </svg>
