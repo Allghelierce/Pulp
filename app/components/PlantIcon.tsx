@@ -81,8 +81,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 34 Q18 30 15 28" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
             <path d="M24 32 Q28 30 30 28" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M14 22 Q14 16 18 14 Q20 13 24 14 Q28 13 30 14 Q34 16 34 22 Q34 26 30 28 Q27 29 24 29 Q21 29 18 28 Q14 26 14 22 Z" fill={color} opacity="0.75" />
-            <ellipse cx="21" cy="19" rx="4" ry="3" fill={light} opacity="0.2" />
-            <ellipse cx="28" cy="24" rx="3" ry="2.5" fill={dark} opacity="0.12" />
+            <path d="M17 19 Q19 15 25 16 Q24 19 21 22 Q18 22 17 19 Z" fill={light} opacity="0.2" />
+            <path d="M25 24 Q27 21 31 21.5 Q31 24 28 26.5 Q25 26 25 24 Z" fill={dark} opacity="0.12" />
             <circle cx="18" cy="22" r="1" fill={light} opacity="0.15" />
             <circle cx="30" cy="18" r="0.8" fill={light} opacity="0.12" />
           </g>
@@ -94,12 +94,12 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M22.5 42 L25.5 41.8" stroke={dark} strokeWidth="0.5" opacity="0.25" />
             <path d="M22 36 Q16 32 14 30" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
             <path d="M26 36 Q30 34 32 32" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" />
-            <ellipse cx="24" cy="21" rx="12" ry="11" fill={color} />
-            <ellipse cx="24" cy="27" rx="10" ry="4" fill={dark} opacity="0.1" />
-            <ellipse cx="20" cy="17" rx="6" ry="5" fill={light} opacity="0.2" />
-            <ellipse cx="30" cy="24" rx="4" ry="3" fill={dark} opacity="0.12" />
-            <ellipse cx="16" cy="22" rx="3" ry="2.5" fill={color} opacity="0.3" />
-            <ellipse cx="28" cy="16" rx="3.5" ry="2.5" fill={color} opacity="0.25" />
+            <path d="M12 21 Q12 10 24 10 Q36 10 36 21 Q36 32 24 32 Q12 32 12 21 Z" fill={color} />
+            <path d="M14 27 Q18 31 24 31 Q30 31 34 27 Q32 29 24 29 Q16 29 14 27 Z" fill={dark} opacity="0.1" />
+            <path d="M14 17 Q16 12 26 12 Q25 17 20 22 Q15 21 14 17 Z" fill={light} opacity="0.2" />
+            <path d="M26 24 Q28 21 34 21.5 Q33 25 30 27 Q27 26 26 24 Z" fill={dark} opacity="0.12" />
+            <path d="M13 22 Q14 19 19 19.5 Q18 22 16 24.5 Q13 24 13 22 Z" fill={color} opacity="0.3" />
+            <path d="M24.5 16 Q26 13 31.5 13.5 Q31 16 28 18.5 Q25 18 24.5 16 Z" fill={color} opacity="0.25" />
             <circle cx="18" cy="18" r="1.5" fill={light} opacity="0.18" />
             <path d="M21 46 Q19 45 17 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.3" />
             <path d="M27 46 Q29 45 31 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
@@ -621,18 +621,18 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M22 28 Q20 24 18 22" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <path d="M7 22 C5 19 6 16 10 15 C14 14 17 17 16 21 C15 24 10 25 7 22Z" fill="#f9a8d4" />
             <path d="M9 18 C8 16 10 14.5 12 16 C14 17 13 20 10 20Z" fill="#ffc0d8" />
-            <ellipse cx="12" cy="22" rx="3" ry="2" fill="#ffe0ec" />
+            <path d="M9 22 Q10 20 12 19.5 Q15 20 15 22 Q14 24 12 24.5 Q10 24 9 22 Z" fill="#ffe0ec" />
             <path d="M10 19 L10.5 18 L11.5 18.5 L11 19.5 L10 19Z" fill="#ffc0d8" />
             <circle cx="10" cy="20" r="0.5" fill="#fbbf24" opacity="0.4" />
             <path d="M16 20 C14 17 15 14 19 14 C23 14 24 18 21 21 C18 23 15 22 16 20Z" fill="#ffc0d8" />
             <path d="M18 16 Q17 15 18.5 14.5 L19.5 15.5 Q19 17 18 16Z" fill="#ffe0ec" />
-            <ellipse cx="20" cy="19" rx="1.5" ry="2.5" fill="#e890b8" opacity="0.25" />
+            <path d="M18.5 19 Q19 16.5 20 16.5 Q21.5 17 21.5 19 Q21 21.5 20 21.5 Q18.5 21 18.5 19 Z" fill="#e890b8" opacity="0.7" />
             <circle cx="18" cy="19" r="0.5" fill="#fbbf24" opacity="0.35" />
             <path d="M29 22 C27 19 29 16 33 17 C36 18 37 21 34 23 C31 25 28 24 29 22Z" fill="#f9a8d4" />
             <path d="M32 19 L32.5 18 L33.5 18.5 L33 19.5 L32 19Z" fill="#ffe0ec" />
             <circle cx="32" cy="21" r="0.4" fill="#fbbf24" opacity="0.3" />
             <path d="M21 25 C19 22 21 20 24 20.5 C26 21 26 24 23 26Z" fill="#ffc0d8" />
-            <ellipse cx="28" cy="36" rx="0.9" ry="0.5" fill="#f9a8d4" transform="rotate(-25 28 36)" />
+            <path d="M27 36 Q27.5 35.2 28.5 35.5 Q29 36 28.5 36.8 Q28 37 27 36 Z" fill="#f9a8d4" opacity="0.7" />
           </g>
         )
         if (s === 2) return (
@@ -655,14 +655,14 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M23 28 Q26 24 30 22" stroke="#5c4a3a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <path d="M4 20 C2 17 3 13 7 12 C12 11 16 14 16 18 C16 22 12 24 8 23 C5 22 3 21 4 20Z" fill="#f9a8d4" />
             <path d="M6 16 C5 14 7 12 10 13 C12 14 12 17 9 18Z" fill="#ffc0d8" />
-            <ellipse cx="10" cy="20" rx="2.5" ry="1.5" fill="#e890b8" opacity="0.35" />
+            <path d="M7.5 20 Q8.5 18.5 10 18.5 Q12 18.5 12.5 20 Q12 21.5 10 21.5 Q8 21.5 7.5 20 Z" fill="#e890b8" opacity="0.7" />
             <path d="M11 14 C9 11 11 8 15 9 C19 10 20 14 17 16 C14 18 10 17 11 14Z" fill="#ffc0d8" />
             <path d="M14 11 Q13 10 14.5 9 L16 10.5 Q15 12 14 11Z" fill="#ffe0ec" />
-            <ellipse cx="17" cy="15" rx="1.5" ry="2.5" fill="#e890b8" opacity="0.25" />
+            <path d="M15.5 15 Q16 12.5 17 12.5 Q18.5 13 18.5 15 Q18 17.5 17 17.5 Q15.5 17 15.5 15 Z" fill="#e890b8" opacity="0.7" />
             <path d="M16 12 C14 9 17 7 20 9 C23 11 21 15 18 15Z" fill="#f9a8d4" />
             <path d="M20 19 C17 15 20 12 24 13 C28 14 28 19 24 21 C21 22 18 21 20 19Z" fill="#ffc0d8" />
             <path d="M23 15 L23.5 14 L24.5 14.5 L24 15.5 L23 15Z" fill="#ffe0ec" />
-            <ellipse cx="22" cy="18" rx="2" ry="1.2" fill="#e890b8" opacity="0.2" />
+            <path d="M20 18 Q21 16.8 22 16.8 Q23.5 17 24 18 Q23.5 19.2 22 19.2 Q20.5 19 20 18 Z" fill="#e890b8" opacity="0.7" />
             <path d="M28 20 C25 16 28 13 32 15 C35 17 34 21 30 22 C27 23 26 22 28 20Z" fill="#f9a8d4" />
             <path d="M31 17 C29 15 31 13 34 15 C36 17 33 20 31 17Z" fill="#ffe0ec" />
             <path d="M35 16 C33 12 37 9 41 11 C44 13 42 17 39 18 C36 19 34 18 35 16Z" fill="#ffc0d8" />
@@ -675,8 +675,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M30 6 C30.5 5.5 31 5.5 31 6 C31 6.5 30.5 7 30 6.5 Z" fill="#ffc0d8" opacity="0.35" style={{animation: `sakuraFall-${uid} 6.5s linear 1.2s infinite`, '--sf-x': '-5px'} as React.CSSProperties} />
             <path d="M8 10 Q8.5 9.5 9 10 L8.5 10.5 Z" fill="#ffe0ec" opacity="0.4" style={{animation: `sakuraFall-${uid} 4.5s linear 2.5s infinite`, '--sf-x': '3px'} as React.CSSProperties} />
             <path d="M40 10 C40.5 9.5 41 10 40.5 10.5 Z" fill="#f9a8d4" opacity="0.3" style={{animation: `sakuraFall-${uid} 7s linear 0.8s infinite`, '--sf-x': '-6px'} as React.CSSProperties} />
-            <ellipse cx="28" cy="34" rx="1" ry="0.6" fill="#f9a8d4" opacity="0.7" transform="rotate(-20 28 34)" />
-            <ellipse cx="16" cy="38" rx="0.8" ry="0.5" fill="#ffc0d8" opacity="0.6" transform="rotate(15 16 38)" />
+            <path d="M27 34 Q27.5 33.2 28.5 33.5 Q29.2 34 28.8 34.8 Q28 35 27 34 Z" fill="#f9a8d4" opacity="0.7" />
+            <path d="M15.2 38 Q15.5 37.3 16.5 37.5 Q17 38 16.5 38.8 Q16 39 15.2 38 Z" fill="#ffc0d8" opacity="0.7" />
           </g>
         )
         return (
@@ -1078,9 +1078,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M18 24 Q16 22 17 20 Q19 22 18 24 Z" fill="#3a6e28" opacity="0.5" />
             <path d="M30 14 Q31 12 30 10 Q29 12 30 14 Z" fill="#3a6e28" opacity="0.4" />
             {/* Glossy highlight */}
-            <ellipse cx="22" cy="16" rx="2" ry="4" fill="#4a8c3a" opacity="0.15" />
+            <path d="M20 16 Q21 12 22 12 Q23 12 24 16 Q23 20 22 20 Q21 20 20 16 Z" fill="#4a8c3a" opacity="0.15" />
             {/* One lemon */}
-            <ellipse cx="27" cy="20" rx="1.5" ry="2.2" fill={color} transform="rotate(-15 27 20)" />
+            <path d="M27 17.5 Q28.5 18 28.8 20 Q28.5 22 27 22.5 Q25.5 22 25.2 20 Q25.5 18 27 17.5 Z" fill={color} />
             <path d="M27.8 18.2 Q28 17.8 27.5 18" stroke="#c8a800" strokeWidth="0.3" fill="none" opacity="0.2" />
             <circle cx="26.3" cy="19" r="0.4" fill="white" opacity="0.2" />
           </g>
@@ -1098,13 +1098,13 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M16 26 Q14 24 15 22 Q17 24 16 26 Z" fill="#3a6e28" opacity="0.5" />
             <path d="M32 10 Q33 8 32 6 Q31 8 32 10 Z" fill="#3a6e28" opacity="0.4" />
             {/* Glossy highlight */}
-            <ellipse cx="21" cy="14" rx="2.5" ry="6" fill="#4a8c3a" opacity="0.12" />
+            <path d="M18.5 14 Q19.5 8 21 8 Q22.5 8 23.5 14 Q22.5 20 21 20 Q19.5 20 18.5 14 Z" fill="#4a8c3a" opacity="0.12" />
             {/* Lemons — oval with pointed tip */}
-            <ellipse cx="19" cy="22" rx="1.6" ry="2.5" fill={color} transform="rotate(-8 19 22)" />
+            <path d="M19 19.2 Q20.6 19.5 20.8 22 Q20.5 24.5 19 24.8 Q17.4 24.5 17.2 22 Q17.4 19.5 19 19.2 Z" fill={color} />
             <path d="M19 19.8 Q18.5 19 19.2 19.5" stroke={light} strokeWidth="0.3" fill="none" opacity="0.3" />
             <circle cx="18.2" cy="21" r="0.4" fill="white" opacity="0.18" />
             <path d="M19.5 24.2 Q19.8 24.8 19.2 24.5" fill="#c8a800" opacity="0.2" />
-            <ellipse cx="30" cy="16" rx="1.4" ry="2.2" fill={color} transform="rotate(10 30 16)" />
+            <path d="M30 13.5 Q31.4 14 31.6 16 Q31.4 18.2 30 18.5 Q28.6 18 28.4 16 Q28.6 14 30 13.5 Z" fill={color} />
             <circle cx="29.2" cy="15" r="0.35" fill="white" opacity="0.15" />
             <path d="M23 46 Q21 45 19 46" stroke={trunk} strokeWidth="0.7" fill="none" opacity="0.25" />
             <path d="M26 46 Q28 45 30 46" stroke={trunk} strokeWidth="0.6" fill="none" opacity="0.2" />
@@ -1533,7 +1533,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 46 Q28 42 34 39" stroke="#5a8c3f" strokeWidth="1.2" fill="none" strokeLinecap="round" />
             <path d="M24 46 Q24 40 24 36" stroke="#6ab04c" strokeWidth="1" fill="none" strokeLinecap="round" />
             {/* Small fruit bud */}
-            <ellipse cx="24" cy="34" rx="2.5" ry="3" fill="#d4a017" />
+            <path d="M21.5 34 Q22 31 24 31 Q26 31 26.5 34 Q26 37 24 37 Q22 37 21.5 34 Z" fill="#d4a017" />
             <path d="M22.5 33 L25.5 33 M22 34.5 L26 34.5" stroke="#a0780a" strokeWidth="0.3" fill="none" opacity="0.4" />
             {/* Tiny crown */}
             <path d="M24 31 L23 29 M24 31 L24 28.5 M24 31 L25 29" stroke="#5a8c3f" strokeWidth="0.6" fill="none" strokeLinecap="round" />
@@ -1556,8 +1556,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 46 Q22 42 16 37" stroke="#6ab04c" strokeWidth="1" fill="none" strokeLinecap="round" />
             <path d="M24 46 Q26 42 32 37" stroke="#6ab04c" strokeWidth="1" fill="none" strokeLinecap="round" />
             {/* Fruit body — sits on rosette */}
-            <ellipse cx="24" cy="38" rx="4.5" ry="5.5" fill={`url(#${uid}-pine)`} />
-            <ellipse cx="22.5" cy="35" rx="1.5" ry="2" fill="#e8c040" opacity="0.1" />
+            <path d="M19.5 38 Q20 32.5 24 32.5 Q28 32.5 28.5 38 Q28 43.5 24 43.5 Q20 43.5 19.5 38 Z" fill={`url(#${uid}-pine)`} />
+            <path d="M21 35 Q21.5 33 22.5 33 Q24 33 24 35 Q23.5 37 22.5 37 Q21.5 37 21 35 Z" fill="#e8c040" opacity="0.1" />
             {/* Diamond pattern */}
             <path d="M20.5 35 L27.5 35 M20 37 L28 37 M20 39 L28 39 M20.5 41 L27.5 41" stroke="#8a6510" strokeWidth="0.4" fill="none" opacity="0.45" />
             <path d="M22 33 L22 43 M24 32.5 L24 43.5 M26 33 L26 43" stroke="#8a6510" strokeWidth="0.4" fill="none" opacity="0.4" />
@@ -1670,10 +1670,10 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M28 32 Q26 30 27 29 Q29 30.5 31 29.5 Q29 31.5 28 32 Z" fill={color} opacity="0.45" />
             {/* Small fruits forming */}
             <path d="M20 28 L20 30" stroke="#5a8c3f" strokeWidth="0.4" strokeLinecap="round" />
-            <ellipse cx="20" cy="31.2" rx="1.2" ry="1.6" fill="#9b1b5e" />
-            <ellipse cx="19.6" cy="30.6" rx="0.3" ry="0.4" fill="#ff6b85" opacity="0.3" />
+            <path d="M18.8 31.2 Q19.2 29.6 20 29.6 Q20.8 29.6 21.2 31.2 Q20.8 32.8 20 32.8 Q19.2 32.8 18.8 31.2 Z" fill="#9b1b5e" />
+            <path d="M19.3 30.6 Q19.4 30.2 19.6 30.2 Q19.9 30.2 19.9 30.6 Q19.9 31 19.6 31 Q19.3 31 19.3 30.6 Z" fill="#ff6b85" opacity="0.7" />
             <path d="M33 26 L33 27.5" stroke="#5a8c3f" strokeWidth="0.35" strokeLinecap="round" />
-            <ellipse cx="33" cy="28.7" rx="1" ry="1.4" fill="#9b1b5e" opacity="0.8" />
+            <path d="M32 28.7 Q32.2 27.3 33 27.3 Q33.8 27.3 34 28.7 Q33.8 30.1 33 30.1 Q32.2 30.1 32 28.7 Z" fill="#9b1b5e" opacity="0.8" />
           </g>
         )
         return (
@@ -1948,11 +1948,11 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <ellipse cx={24} cy={44} rx={3} ry={1} fill="#3a2e1a" opacity={0.3}/>
             <line x1={24} y1={44} x2={24} y2={38} stroke={trunk} strokeWidth={1.8} strokeLinecap="round"/>
             <line x1={24} y1={40} x2={22} y2={37} stroke={trunk} strokeWidth={0.8} strokeLinecap="round"/>
-            <ellipse cx={24} cy={36} rx={4} ry={3.5} fill={color} opacity={0.85}/>
-            <ellipse cx={22.5} cy={35.5} rx={2.5} ry={2.2} fill={dark} opacity={0.5}/>
-            <ellipse cx={25} cy={37} rx={2} ry={1.8} fill={light} opacity={0.4}/>
+            <path d="M20 36 Q20 32.5 24 32.5 Q28 32.5 28 36 Q28 39.5 24 39.5 Q20 39.5 20 36 Z" fill={color} opacity={0.85}/>
+            <path d="M20 35.5 Q21 33.3 22.5 33.3 Q24 33.3 25 35.5 Q24 37.7 22.5 37.7 Q21 37.7 20 35.5 Z" fill={dark} opacity={0.5}/>
+            <path d="M23 37 Q23.5 35.2 25 35.2 Q26.5 35.2 27 37 Q26.5 38.8 25 38.8 Q23.5 38.8 23 37 Z" fill={light} opacity={0.7}/>
             <line x1={24} y1={34} x2={24} y2={32.5} stroke={dark} strokeWidth={0.6} strokeLinecap="round"/>
-            <ellipse cx={24} cy={32} rx={1.2} ry={0.8} fill="#2d5a1e" opacity={0.7}/>
+            <path d="M22.8 32 Q23.5 31.2 24 31.2 Q24.5 31.2 25.2 32 Q24.5 32.8 24 32.8 Q23.5 32.8 22.8 32 Z" fill="#2d5a1e" opacity={0.7}/>
             <circle cx={23} cy={36} r={0.4} fill="#fff" opacity={0.25}/>
           </g>
         )
@@ -1966,12 +1966,12 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <line x1={22.8} y1={36} x2={19} y2={32} stroke={trunk} strokeWidth={1.2} strokeLinecap="round"/>
             <line x1={25.2} y1={34} x2={29} y2={30} stroke={trunk} strokeWidth={1} strokeLinecap="round"/>
             <line x1={23} y1={32} x2={21} y2={28} stroke={trunk} strokeWidth={0.8} strokeLinecap="round"/>
-            <ellipse cx={24} cy={27} rx={6} ry={5} fill={dark} opacity={0.7}/>
-            <ellipse cx={21} cy={28} rx={4} ry={3.5} fill="#2d5a1e" opacity={0.8}/>
-            <ellipse cx={27} cy={28} rx={4} ry={3.5} fill="#3a7a2e" opacity={0.7}/>
-            <ellipse cx={19} cy={31} rx={3} ry={2.5} fill="#2d5a1e" opacity={0.65}/>
-            <ellipse cx={29} cy={30} rx={3} ry={2.5} fill={dark} opacity={0.6}/>
-            <ellipse cx={24} cy={25} rx={4} ry={3} fill="#3a7a2e" opacity={0.75}/>
+            <path d="M18 27 Q19 22 24 22 Q29 22 30 27 Q29 32 24 32 Q19 32 18 27 Z" fill={dark} opacity={0.7}/>
+            <path d="M17 28 Q18 24.5 21 24.5 Q24 24.5 25 28 Q24 31.5 21 31.5 Q18 31.5 17 28 Z" fill="#2d5a1e" opacity={0.8}/>
+            <path d="M23 28 Q24 24.5 27 24.5 Q30 24.5 31 28 Q30 31.5 27 31.5 Q24 31.5 23 28 Z" fill="#3a7a2e" opacity={0.7}/>
+            <path d="M16 31 Q17 28.5 19 28.5 Q21 28.5 22 31 Q21 33.5 19 33.5 Q17 33.5 16 31 Z" fill="#2d5a1e" opacity={0.7}/>
+            <path d="M26 30 Q27 27.5 29 27.5 Q31 27.5 32 30 Q31 32.5 29 32.5 Q27 32.5 26 30 Z" fill={dark} opacity={0.7}/>
+            <path d="M20 25 Q21 22 24 22 Q27 22 28 25 Q27 28 24 28 Q21 28 20 25 Z" fill="#3a7a2e" opacity={0.75}/>
             <circle cx={20} cy={30} r={2.2} fill={color} opacity={0.85}/>
             <circle cx={20} cy={30} r={1.8} fill={dark} opacity={0.3}/>
             <circle cx={20.5} cy={29.5} r={0.5} fill="#fff" opacity={0.2}/>
@@ -1993,15 +1993,15 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M23 30 Q20 26 18 23" stroke={trunk} strokeWidth={1.1} fill="none" strokeLinecap="round"/>
             <path d="M25 28 Q27 24 30 22" stroke={trunk} strokeWidth={1} fill="none" strokeLinecap="round"/>
             <path d="M23.5 26 Q22 23 20 20" stroke={trunk} strokeWidth={0.9} fill="none" strokeLinecap="round"/>
-            <ellipse cx={24} cy={21} rx={9} ry={7} fill={dark} opacity={0.6}/>
-            <ellipse cx={18} cy={24} rx={5} ry={4} fill="#2d5a1e" opacity={0.8}/>
-            <ellipse cx={30} cy={24} rx={5} ry={4} fill="#3a7a2e" opacity={0.75}/>
-            <ellipse cx={16} cy={27} rx={4} ry={3} fill="#2d5a1e" opacity={0.7}/>
-            <ellipse cx={32} cy={26} rx={4} ry={3} fill={dark} opacity={0.65}/>
-            <ellipse cx={24} cy={18} rx={6} ry={4.5} fill="#3a7a2e" opacity={0.8}/>
-            <ellipse cx={20} cy={20} rx={5} ry={3.5} fill="#2d5a1e" opacity={0.7}/>
-            <ellipse cx={28} cy={20} rx={5} ry={3.5} fill={dark} opacity={0.65}/>
-            <ellipse cx={24} cy={15} rx={4} ry={3} fill="#3a7a2e" opacity={0.6}/>
+            <path d="M15 21 Q16 14 24 14 Q32 14 33 21 Q32 28 24 28 Q16 28 15 21 Z" fill={dark} opacity={0.7}/>
+            <path d="M13 24 Q14 20 18 20 Q22 20 23 24 Q22 28 18 28 Q14 28 13 24 Z" fill="#2d5a1e" opacity={0.8}/>
+            <path d="M25 24 Q26 20 30 20 Q34 20 35 24 Q34 28 30 28 Q26 28 25 24 Z" fill="#3a7a2e" opacity={0.75}/>
+            <path d="M12 27 Q13 24 16 24 Q19 24 20 27 Q19 30 16 30 Q13 30 12 27 Z" fill="#2d5a1e" opacity={0.7}/>
+            <path d="M28 26 Q29 23 32 23 Q35 23 36 26 Q35 29 32 29 Q29 29 28 26 Z" fill={dark} opacity={0.7}/>
+            <path d="M18 18 Q19 13.5 24 13.5 Q29 13.5 30 18 Q29 22.5 24 22.5 Q19 22.5 18 18 Z" fill="#3a7a2e" opacity={0.8}/>
+            <path d="M15 20 Q16 16.5 20 16.5 Q24 16.5 25 20 Q24 23.5 20 23.5 Q16 23.5 15 20 Z" fill="#2d5a1e" opacity={0.7}/>
+            <path d="M23 20 Q24 16.5 28 16.5 Q32 16.5 33 20 Q32 23.5 28 23.5 Q24 23.5 23 20 Z" fill={dark} opacity={0.7}/>
+            <path d="M20 15 Q21 12 24 12 Q27 12 28 15 Q27 18 24 18 Q21 18 20 15 Z" fill="#3a7a2e" opacity={0.7}/>
             <circle cx={17} cy={25} r={2.8} fill={color} opacity={0.9}/>
             <circle cx={17} cy={25} r={2.3} fill={dark} opacity={0.25}/>
             <circle cx={17.5} cy={24.3} r={0.6} fill="#fff" opacity={0.2}/>
@@ -2086,8 +2086,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 36 Q21 32 19 30 Q18 29 20 28 Q22 29 24 33Z" fill="#2d5a1e" opacity={0.8}/>
             <path d="M24 36 Q27 32 29 30 Q30 29 28 28 Q26 29 24 33Z" fill="#1a4a14" opacity={0.7}/>
             <path d="M22 31 Q21 30 22 29" fill="#3a7a2e" opacity={0.3}/>
-            <ellipse cx={24} cy={34} rx={1.8} ry={2.2} fill={color}/>
-            <ellipse cx={24} cy={34} rx={1.2} ry={1.5} fill={dark} opacity={0.2}/>
+            <path d="M22.2 34 Q22.5 31.8 24 31.8 Q25.5 31.8 25.8 34 Q25.5 36.2 24 36.2 Q22.5 36.2 22.2 34 Z" fill={color}/>
+            <path d="M22.8 34 Q23 32.5 24 32.5 Q25 32.5 25.2 34 Q25 35.5 24 35.5 Q23 35.5 22.8 34 Z" fill={dark} opacity={0.2}/>
             <circle cx={23.3} cy={33.5} r={0.4} fill={light} opacity={0.3}/>
           </g>
         )
@@ -2104,9 +2104,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M32 26 Q29 23 28 21 Q27 19 29 18 Q31 19 32 22Z" fill="#1a4a14" opacity={0.65}/>
             <path d="M24 28 Q21 24 19 21 Q18 19 20 18 Q22 19 24 23Z" fill="#2d5a1e" opacity={0.7}/>
             <path d="M24 28 Q27 24 29 21 Q30 19 28 18 Q26 19 24 23Z" fill="#1a4a14" opacity={0.6}/>
-            <ellipse cx={17} cy={26} rx={2} ry={2.5} fill={color}/>
+            <path d="M15 26 Q15.5 23.5 17 23.5 Q18.5 23.5 19 26 Q18.5 28.5 17 28.5 Q15.5 28.5 15 26 Z" fill={color}/>
             <circle cx={16.3} cy={25.5} r={0.5} fill={light} opacity={0.25}/>
-            <ellipse cx={30} cy={24} rx={1.8} ry={2.2} fill={color} opacity={0.8}/>
+            <path d="M28.2 24 Q28.5 21.8 30 21.8 Q31.5 21.8 31.8 24 Q31.5 26.2 30 26.2 Q28.5 26.2 28.2 24 Z" fill={color} opacity={0.8}/>
             <circle cx={29.4} cy={23.5} r={0.4} fill={light} opacity={0.2}/>
           </g>
         )
@@ -2130,13 +2130,13 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M36 28 Q38 26 40 24 Q41 22 39 21 Q37 22 36 25Z" fill="#1a4a14" opacity={0.55}/>
             <path d="M14 16 Q12 14 11 12 Q10 10 12 9 Q14 10 15 13Z" fill="#2d5a1e" opacity={0.5}/>
             <path d="M34 16 Q36 14 37 12 Q38 10 36 9 Q34 10 33 13Z" fill="#1a4a14" opacity={0.45}/>
-            <ellipse cx={9} cy={26} rx={2.2} ry={2.8} fill={color}/>
-            <ellipse cx={9} cy={26} rx={1.3} ry={1.7} fill={dark} opacity={0.2}/>
+            <path d="M6.8 26 Q7.2 23.2 9 23.2 Q10.8 23.2 11.2 26 Q10.8 28.8 9 28.8 Q7.2 28.8 6.8 26 Z" fill={color}/>
+            <path d="M7.7 26 Q8 24.3 9 24.3 Q10 24.3 10.3 26 Q10 27.7 9 27.7 Q8 27.7 7.7 26 Z" fill={dark} opacity={0.2}/>
             <circle cx={8.3} cy={25.3} r={0.5} fill={light} opacity={0.25}/>
-            <ellipse cx={36} cy={24} rx={2} ry={2.5} fill={color} opacity={0.85}/>
+            <path d="M34 24 Q34.5 21.5 36 21.5 Q37.5 21.5 38 24 Q37.5 26.5 36 26.5 Q34.5 26.5 34 24 Z" fill={color} opacity={0.85}/>
             <circle cx={35.4} cy={23.5} r={0.45} fill={light} opacity={0.2}/>
-            <ellipse cx={22} cy={20} rx={1.8} ry={2.3} fill={color} opacity={0.8}/>
-            <ellipse cx={28} cy={18} rx={1.5} ry={2} fill={color} opacity={0.7}/>
+            <path d="M20.2 20 Q20.5 17.7 22 17.7 Q23.5 17.7 23.8 20 Q23.5 22.3 22 22.3 Q20.5 22.3 20.2 20 Z" fill={color} opacity={0.8}/>
+            <path d="M26.5 18 Q27 16 28 16 Q29 16 29.5 18 Q29 20 28 20 Q27 20 26.5 18 Z" fill={color} opacity={0.7}/>
           </g>
         )
         return (
@@ -2689,8 +2689,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
         if (s === 0) return (
           <g>
             <path d="M24 41 Q23 38 24 35" stroke={trunk} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <ellipse cx="23" cy="33.5" rx="3.5" ry="2.2" fill="#1b5e20" opacity="0.7" />
-            <ellipse cx="25.5" cy="33" rx="2.8" ry="1.8" fill="#2e7d32" opacity="0.55" />
+            <path d="M19.5 33.5 Q20.5 31.3 23 31.3 Q25.5 31.3 26.5 33.5 Q25.5 35.7 23 35.7 Q20.5 35.7 19.5 33.5 Z" fill="#1b5e20" opacity="0.7" />
+            <path d="M22.7 33 Q23.5 31.2 25.5 31.2 Q27.5 31.2 28.3 33 Q27.5 34.8 25.5 34.8 Q23.5 34.8 22.7 33 Z" fill="#2e7d32" opacity="0.7" />
             <rect x="18" y="42" width="12" height="4" rx="1" fill="#8d6048" />
             <rect x="17" y="41" width="14" height="2" rx="1" fill="#a07050" />
           </g>
@@ -2801,9 +2801,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <ellipse cx="23.5" cy="30" rx="0.8" ry="0.4" fill="#3a3a3a" opacity="0.35" />
             <ellipse cx="24.2" cy="26" rx="0.7" ry="0.35" fill="#3a3a3a" opacity="0.3" />
             {/* Canopy — shimmering ovals */}
-            <ellipse cx="24" cy="18" rx="8" ry="6" fill={color} opacity="0.6" />
-            <ellipse cx="20" cy="16" rx="3.5" ry="2.5" fill={light} opacity="0.3" />
-            <ellipse cx="28" cy="20" rx="3" ry="2" fill={dark} opacity="0.12" />
+            <path d="M16 18 Q17 12 24 12 Q31 12 32 18 Q31 24 24 24 Q17 24 16 18 Z" fill={color} opacity="0.7" />
+            <path d="M16.5 16 Q17.5 13.5 20 13.5 Q22.5 13.5 23.5 16 Q22.5 18.5 20 18.5 Q17.5 18.5 16.5 16 Z" fill={light} opacity="0.7" />
+            <path d="M25 20 Q26 18 28 18 Q30 18 31 20 Q30 22 28 22 Q26 22 25 20 Z" fill={dark} opacity="0.12" />
             {/* Shimmer */}
             <circle cx="18" cy="16" r="0.6" fill={light} opacity="0.4" />
             <circle cx="26" cy="14" r="0.5" fill={light} opacity="0.35" />
@@ -2823,10 +2823,10 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M23 20 Q18 16 14 14" stroke="#c8c4bc" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M24 16 Q28 12 32 10" stroke="#c8c4bc" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             {/* Canopy */}
-            <ellipse cx="24" cy="12" rx="11" ry="8" fill={color} opacity="0.55" />
-            <ellipse cx="16" cy="14" rx="5" ry="4" fill={color} opacity="0.4" />
-            <ellipse cx="32" cy="12" rx="4" ry="3.5" fill={color} opacity="0.35" />
-            <ellipse cx="20" cy="10" rx="4" ry="3" fill={light} opacity="0.3" />
+            <path d="M13 12 Q14 4 24 4 Q34 4 35 12 Q34 20 24 20 Q14 20 13 12 Z" fill={color} opacity="0.7" />
+            <path d="M11 14 Q12 10 16 10 Q20 10 21 14 Q20 18 16 18 Q12 18 11 14 Z" fill={color} opacity="0.7" />
+            <path d="M28 12 Q29 8.5 32 8.5 Q35 8.5 36 12 Q35 15.5 32 15.5 Q29 15.5 28 12 Z" fill={color} opacity="0.7" />
+            <path d="M16 10 Q17 7 20 7 Q23 7 24 10 Q23 13 20 13 Q17 13 16 10 Z" fill={light} opacity="0.7" />
             {/* Shimmer dots */}
             <circle cx="16" cy="12" r="0.7" fill={light} opacity="0.45" />
             <circle cx="22" cy="8" r="0.6" fill={light} opacity="0.4" />
@@ -2905,9 +2905,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M21 46 Q20.5 40 21 34 L27 34 Q27.5 40 27 46 Z" fill={trunk} />
             <path d="M22 38 L26 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
             <path d="M22 42 L26 41.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
-            <ellipse cx="24" cy="28" rx="7" ry="6" fill={color} opacity="0.7" />
-            <ellipse cx="22" cy="26" rx="3" ry="2.5" fill={light} opacity="0.15" />
-            <ellipse cx="27" cy="30" rx="2.5" ry="2" fill={dark} opacity="0.1" />
+            <path d="M17 28 Q17 22 24 22 Q31 22 31 28 Q31 34 24 34 Q17 34 17 28 Z" fill={color} opacity="0.7" />
+            <path d="M21 24 Q20 26 22 28 Q24 26 21 24 Z" fill={light} opacity="0.15" />
+            <path d="M26 28 Q25 30 27 32 Q29 30 26 28 Z" fill={dark} opacity="0.1" />
           </g>
         )
         if (s === 2) return (
@@ -2927,9 +2927,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M18.5 40 L29.5 39.8" stroke={dark} strokeWidth="0.4" opacity="0.2" />
             <path d="M19 44 L29 43.8" stroke={dark} strokeWidth="0.4" opacity="0.15" />
             {/* Small canopy on top */}
-            <ellipse cx="24" cy="22" rx="10" ry="7" fill={color} />
-            <ellipse cx="20" cy="20" rx="4" ry="3" fill={light} opacity="0.18" />
-            <ellipse cx="28" cy="24" rx="3" ry="2.5" fill={dark} opacity="0.1" />
+            <path d="M14 22 Q14 15 24 15 Q34 15 34 22 Q34 29 24 29 Q14 29 14 22 Z" fill={color} />
+            <path d="M18 18 Q17 20 20 22 Q22 20 18 18 Z" fill={light} opacity="0.18" />
+            <path d="M27 22 Q26 24 28 26 Q30 24 27 22 Z" fill={dark} opacity="0.1" />
             <circle cx="18" cy="18" r="0.6" fill={light} opacity="0.2" />
             <circle cx="30" cy="20" r="0.5" fill={light} opacity="0.15" />
             {/* Roots */}
@@ -3010,9 +3010,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             {/* Aerial roots starting */}
             <path d="M20 34 Q19 40 19 46" stroke={trunk} strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.4" />
             {/* Canopy */}
-            <ellipse cx="24" cy="24" rx="10" ry="7" fill={color} opacity="0.7" />
-            <ellipse cx="20" cy="22" rx="4" ry="3" fill={light} opacity="0.15" />
-            <ellipse cx="28" cy="26" rx="3" ry="2.5" fill={dark} opacity="0.1" />
+            <path d="M14 24 Q14 17 24 17 Q34 17 34 24 Q34 31 24 31 Q14 31 14 24 Z" fill={color} opacity="0.7" />
+            <path d="M18 20 Q17 22 20 24 Q22 22 18 20 Z" fill={light} opacity="0.15" />
+            <path d="M27 24 Q26 26 28 28 Q30 26 27 24 Z" fill={dark} opacity="0.1" />
             <circle cx="18" cy="22" r="0.5" fill={light} opacity="0.2" />
           </g>
         )
@@ -3032,9 +3032,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M32 26 Q33 36 33 46" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.5" />
             <path d="M18 28 Q17 38 17.5 46" stroke={trunk} strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.35" />
             {/* Wide canopy */}
-            <ellipse cx="24" cy="18" rx="14" ry="10" fill={`url(#${uid}-bcanopy)`} />
-            <ellipse cx="18" cy="14" rx="5" ry="4" fill={light} opacity="0.15" />
-            <ellipse cx="30" cy="22" rx="4" ry="3" fill={dark} opacity="0.1" />
+            <path d="M10 18 Q10 8 24 8 Q38 8 38 18 Q38 28 24 28 Q10 28 10 18 Z" fill={`url(#${uid}-bcanopy)`} />
+            <path d="M16 12 Q15 14 18 16 Q20 14 16 12 Z" fill={light} opacity="0.15" />
+            <path d="M29 20 Q28 22 30 24 Q32 22 29 20 Z" fill={dark} opacity="0.1" />
             <circle cx="14" cy="14" r="0.6" fill={light} opacity="0.2" />
             <circle cx="32" cy="14" r="0.5" fill={light} opacity="0.18" />
             <circle cx="24" cy="10" r="0.5" fill={light} opacity="0.22" />
@@ -3882,30 +3882,30 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
         if (s === 0) return (
           <g>
             <line x1="24" y1="46" x2="24" y2="41" stroke="#4caf50" strokeWidth="1.5" />
-            <ellipse cx="23" cy="40" rx="1.5" ry="2" fill="#66bb6a" />
-            <ellipse cx="25" cy="40.5" rx="1.5" ry="2" fill="#66bb6a" />
+            <path d="M24 42 Q22 40 20 41 Q22 38 24 40" fill="#66bb6a" opacity="0.8" />
+            <path d="M24 42 Q26 40 28 41 Q26 38 24 40" fill="#66bb6a" opacity="0.75" />
           </g>
         )
         if (s === 1) return (
           <g>
             <line x1="24" y1="46" x2="24" y2="35" stroke="#4caf50" strokeWidth="2" />
             {/* Leaves on stem */}
-            <ellipse cx="21" cy="41" rx="2.5" ry="1.2" fill="#43a047" transform="rotate(-20,21,41)" />
-            <ellipse cx="27" cy="38" rx="2.5" ry="1.2" fill="#43a047" transform="rotate(20,27,38)" />
+            <path d="M24 42 Q21 40 18 41 Q21 38 24 41" fill="#43a047" opacity="0.8" />
+            <path d="M24 39 Q27 37 30 38 Q27 35 24 38" fill="#43a047" opacity="0.75" />
             {/* Small flower head */}
             <circle cx="24" cy="33" r="2.5" fill="#795548" />
-            {[0,45,90,135,180,225,270,315].map((a,i)=><ellipse key={i} cx="24" cy="30.5" rx="1.2" ry="2.5" fill={color} transform={`rotate(${a},24,33)`} />)}
+            {[0,45,90,135,180,225,270,315].map((a,i)=><path key={i} d="M24 28 Q25 30 24 33 Q23 30 24 28Z" fill={color} transform={`rotate(${a},24,33)`} />)}
           </g>
         )
         if (s === 2) return (
           <g>
             <line x1="24" y1="46" x2="24" y2="28" stroke="#4caf50" strokeWidth="2.5" />
-            <ellipse cx="20" cy="40" rx="3" ry="1.5" fill="#43a047" transform="rotate(-25,20,40)" />
-            <ellipse cx="28" cy="36" rx="3" ry="1.5" fill="#43a047" transform="rotate(20,28,36)" />
-            <ellipse cx="21" cy="33" rx="2.5" ry="1.3" fill="#43a047" transform="rotate(-15,21,33)" />
+            <path d="M24 41 Q20 39 16 40 Q20 36 24 40" fill="#43a047" opacity="0.8" />
+            <path d="M24 37 Q28 35 32 36 Q28 33 24 36" fill="#43a047" opacity="0.75" />
+            <path d="M24 34 Q21 32 18 33 Q21 30 24 33" fill="#43a047" opacity="0.7" />
             {/* Medium flower */}
             <circle cx="24" cy="25" r="3.5" fill="#5d4037" />
-            {[0,30,60,90,120,150,180,210,240,270,300,330].map((a,i)=><ellipse key={i} cx="24" cy="21.5" rx="1.3" ry="3.5" fill={color} transform={`rotate(${a},24,25)`} />)}
+            {[0,30,60,90,120,150,180,210,240,270,300,330].map((a,i)=><path key={i} d="M24 18 Q25.3 21 24 25 Q22.7 21 24 18Z" fill={color} transform={`rotate(${a},24,25)`} />)}
             <circle cx="24" cy="25" r="2.5" fill="#795548" />
           </g>
         )
@@ -3917,13 +3917,13 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             {/* Thick stalk */}
             <line x1="24" y1="46" x2="24" y2="22" stroke="#4caf50" strokeWidth="3" />
             {/* Leaves */}
-            <ellipse cx="19" cy="41" rx="4" ry="1.8" fill="#43a047" transform="rotate(-30,19,41)" />
-            <ellipse cx="29" cy="37" rx="4" ry="1.8" fill="#43a047" transform="rotate(25,29,37)" />
-            <ellipse cx="20" cy="33" rx="3.5" ry="1.5" fill="#388e3c" transform="rotate(-20,20,33)" />
-            <ellipse cx="28" cy="29" rx="3" ry="1.3" fill="#388e3c" transform="rotate(15,28,29)" />
+            <path d="M24 42 Q19 39 15 41 Q19 37 24 41Z" fill="#43a047" />
+            <path d="M24 38 Q29 35 33 37 Q29 33 24 37Z" fill="#43a047" />
+            <path d="M24 34 Q20 31 16 33 Q20 29 24 33Z" fill="#388e3c" />
+            <path d="M24 30 Q28 27 31 29 Q28 25 24 29Z" fill="#388e3c" />
             {/* Huge flower head */}
             {[0,22.5,45,67.5,90,112.5,135,157.5,180,202.5,225,247.5,270,292.5,315,337.5].map((a,i)=>(
-              <ellipse key={i} cx="24" cy="15" rx="1.5" ry="4.5" fill={i%2===0?color:dark} transform={`rotate(${a},24,19)`} />
+              <path key={i} d="M24 11 Q25.5 15 24 19 Q22.5 15 24 11Z" fill={i%2===0?color:dark} transform={`rotate(${a},24,19)`} />
             ))}
             <circle cx="24" cy="19" r="4.5" fill={`url(#${uid}sd)`} />
             {/* Seed texture */}
@@ -4053,7 +4053,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <ellipse cx="24" cy="44" rx="2" ry="0.8" fill="#cfd8dc" opacity="0.3" />
             {/* Tiny bell bud */}
             <path d="M23 39 Q24 37 25 39" stroke={color} strokeWidth="0.8" fill="none" />
-            <ellipse cx="24" cy="39.5" rx="1.2" ry="0.8" fill={color} opacity="0.4" />
+            <path d="M24 39 Q25 39.5 24 40 Q23 39.5 24 39Z" fill={color} opacity="0.8" />
           </g>
         )
         if (s === 1) return (
@@ -4206,8 +4206,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           <g>
             <path d="M24 46 Q23.5 43 24 40" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M24 40 Q22 38 21 36" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M21 36 Q18 34 17 35 Q18 32 21 35" fill="#4caf50" opacity="0.6" />
-            <path d="M21 36 Q23 33 25 35 Q24 32 21 35" fill="#4caf50" opacity="0.5" />
+            <path d="M21 36 Q18 34 17 35 Q18 32 21 35" fill="#4caf50" opacity="0.7" />
+            <path d="M21 36 Q23 33 25 35 Q24 32 21 35" fill="#4caf50" opacity="0.7" />
           </g>
         )
         if (s === 1) return (
@@ -4216,7 +4216,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M23 36 Q20 32 18 30" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M23 34 Q26 30 29 28" stroke={trunk} strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M16 26 Q14 22 17 21 Q20 21 21 24 Q20 27 17 28 Q15 28 16 26 Z" fill="#4caf50" opacity="0.7" />
-            <path d="M28 24 Q27 21 29 20 Q32 20 33 23 Q32 26 29 26 Q27 26 28 24 Z" fill="#4caf50" opacity="0.6" />
+            <path d="M28 24 Q27 21 29 20 Q32 20 33 23 Q32 26 29 26 Q27 26 28 24 Z" fill="#4caf50" opacity="0.7" />
             <path d="M17 22 L18.5 25.5" stroke="#388e3c" strokeWidth="0.3" fill="none" opacity="0.3" />
             <path d="M30 21 L30.5 24" stroke="#388e3c" strokeWidth="0.3" fill="none" opacity="0.25" />
             <path d="M19 30 Q17 29 16 30 Q15.5 31 16.5 31.5" stroke={trunk} strokeWidth="0.5" fill="none" opacity="0.4" />
@@ -4230,8 +4230,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 32 Q28 28 32 26" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M23 38 Q20 36 18 34" stroke={trunk} strokeWidth="0.8" strokeLinecap="round" fill="none" opacity="0.5" />
             <path d="M13 20 Q11 16 14 15 Q17 15 18 18 Q17 21 14 22 Q12 22 13 20 Z" fill="#4caf50" opacity="0.7" />
-            <path d="M30 22 Q29 18 31 17 Q34 17 35 20 Q34 23 31 24 Q29 24 30 22 Z" fill="#4caf50" opacity="0.65" />
-            <path d="M20 26 Q18 24 20 22 Q22 23 21 26 Z" fill="#4caf50" opacity="0.5" />
+            <path d="M30 22 Q29 18 31 17 Q34 17 35 20 Q34 23 31 24 Q29 24 30 22 Z" fill="#4caf50" opacity="0.7" />
+            <path d="M20 26 Q18 24 20 22 Q22 23 21 26 Z" fill="#4caf50" opacity="0.7" />
             {/* Cluster 1 — stem connects branch to grapes */}
             <path d="M16 25 L16 26" stroke="#5a4a32" strokeWidth="0.6" strokeLinecap="round" fill="none" />
             <circle cx="16" cy="26.5" r="1.4" fill={color} />
@@ -4315,7 +4315,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <ellipse cx="24" cy="40" rx="3" ry="2" fill="#8B7355" opacity="0.4" />
             <path d="M24 38 Q23 36 24 33" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             <path d="M24 33 Q20 30 18 32 Q20 28 24 32" fill="#4caf50" opacity="0.7" />
-            <path d="M24 33 Q28 30 30 32 Q28 28 24 32" fill="#4caf50" opacity="0.6" />
+            <path d="M24 33 Q28 30 30 32 Q28 28 24 32" fill="#4caf50" opacity="0.7" />
             <circle cx="22" cy="30" r="0.4" fill="#81c784" opacity="0.25" />
           </g>
         )
@@ -4329,8 +4329,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             {/* Upright pyramidal canopy */}
             <path d="M24 12 Q16 16 14 22 Q12 26 14 28 Q18 30 24 30 Q30 30 34 28 Q36 26 34 22 Q32 16 24 12 Z" fill="#4caf50" opacity="0.7" />
             <path d="M24 14 Q20 17 18 22" stroke="#388e3c" strokeWidth="0.3" fill="none" opacity="0.15" />
-            <ellipse cx="20" cy="18" rx="4" ry="3" fill="#66bb6a" opacity="0.2" />
-            <ellipse cx="28" cy="24" rx="3.5" ry="2.5" fill="#388e3c" opacity="0.12" />
+            <path d="M18 16 Q17 18 20 20 Q22 18 18 16 Z" fill="#66bb6a" opacity="0.2" />
+            <path d="M27 22 Q26 24 28 26 Q30 24 27 22 Z" fill="#388e3c" opacity="0.12" />
           </g>
         )
         if (s === 2) return (
@@ -4342,9 +4342,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M26 36 Q32 32 36 30" stroke={trunk} strokeWidth="1.2" strokeLinecap="round" fill="none" />
             {/* Upright pyramidal canopy */}
             <path d="M24 8 Q14 14 11 22 Q10 26 12 28 Q16 32 24 32 Q32 32 36 28 Q38 26 37 22 Q34 14 24 8 Z" fill="#4caf50" opacity="0.75" />
-            <ellipse cx="19" cy="16" rx="5" ry="4" fill="#66bb6a" opacity="0.2" />
-            <ellipse cx="30" cy="24" rx="4" ry="3" fill="#388e3c" opacity="0.12" />
-            <ellipse cx="24" cy="28" rx="8" ry="2.5" fill="#388e3c" opacity="0.1" />
+            <path d="M17 14 Q16 16 19 18 Q21 16 17 14 Z" fill="#66bb6a" opacity="0.2" />
+            <path d="M29 22 Q28 24 30 26 Q32 24 29 22 Z" fill="#388e3c" opacity="0.12" />
+            <path d="M16 28 Q20 26 24 28 Q28 26 32 28" fill="#388e3c" opacity="0.1" />
             {/* Pear fruits — teardrop shapes */}
             <path d="M16 26 Q15 24 16 22.5 Q17 24 16 26 Z" fill={color} />
             <ellipse cx="16" cy="25" rx="1.5" ry="2" fill={color} />
@@ -4410,8 +4410,8 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           <g>
             <ellipse cx="24" cy="44" rx="3" ry="1.5" fill="#8B7355" opacity="0.3" />
             <path d="M24 46 Q24 44 24 42" stroke="#5d8a3c" strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            <path d="M24 42 Q22 40 20 40.5 Q21 38 24 41" fill="#4caf50" opacity="0.6" />
-            <path d="M24 42 Q26 40 28 40.5 Q27 38 24 41" fill="#4caf50" opacity="0.5" />
+            <path d="M24 42 Q22 40 20 40.5 Q21 38 24 41" fill="#4caf50" opacity="0.7" />
+            <path d="M24 42 Q26 40 28 40.5 Q27 38 24 41" fill="#4caf50" opacity="0.7" />
           </g>
         )
         if (s === 1) return (
@@ -4606,14 +4606,14 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M23.2 38 L24.8 37.8" stroke={dark} strokeWidth="0.5" opacity="0.3" />
             <path d="M23 34 L25 33.8" stroke={dark} strokeWidth="0.4" opacity="0.25" />
             {/* Feathery canopy */}
-            <ellipse cx="24" cy="20" rx="10" ry="7" fill="#4a7a38" opacity="0.6" />
+            <path d="M14 20 Q14 13 24 13 Q34 13 34 20 Q34 27 24 27 Q14 27 14 20 Z" fill="#4a7a38" opacity="0.7" />
             {/* Feathery leaf fronds */}
             <path d="M16 18 L14 17 L16 16 L14 15 L16 14" stroke="#4a7a38" strokeWidth="0.5" fill="none" opacity="0.5" />
             <path d="M32 18 L34 17 L32 16 L34 15 L32 14" stroke="#3a6a28" strokeWidth="0.5" fill="none" opacity="0.4" />
             <path d="M20 14 L18 13 L20 12 L18 11 L20 10" stroke="#4a7a38" strokeWidth="0.4" fill="none" opacity="0.4" />
             <path d="M28 14 L30 13 L28 12 L30 11 L28 10" stroke="#3a6a28" strokeWidth="0.4" fill="none" opacity="0.35" />
-            <ellipse cx="20" cy="18" rx="5" ry="3.5" fill="#4a7a38" opacity="0.4" />
-            <ellipse cx="28" cy="20" rx="4" ry="3" fill="#3a6a28" opacity="0.35" />
+            <path d="M17 16 Q16 18 20 20 Q22 18 17 16 Z" fill="#4a7a38" opacity="0.7" />
+            <path d="M26 18 Q25 20 28 22 Q30 20 26 18 Z" fill="#3a6a28" opacity="0.7" />
             {/* One pod */}
             <path d="M26 24 Q28 23 30 24 Q28 25 26 24" fill={color} />
             <path d="M27 24 L29 24" stroke={dark} strokeWidth="0.3" opacity="0.2" />
@@ -4632,9 +4632,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M22 28 Q16 24 10 22" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.85" />
             <path d="M26 28 Q32 24 38 22" stroke={color} strokeWidth="1.3" strokeLinecap="round" fill="none" opacity="0.8" />
             {/* Feathery canopy */}
-            <ellipse cx="24" cy="14" rx="14" ry="9" fill="#4a7a38" opacity="0.5" />
-            <ellipse cx="17" cy="12" rx="6" ry="4" fill="#4a7a38" opacity="0.4" />
-            <ellipse cx="31" cy="16" rx="5" ry="3.5" fill="#3a6a28" opacity="0.35" />
+            <path d="M10 14 Q10 5 24 5 Q38 5 38 14 Q38 23 24 23 Q10 23 10 14 Z" fill="#4a7a38" opacity="0.7" />
+            <path d="M13 10 Q12 12 17 14 Q20 12 13 10 Z" fill="#4a7a38" opacity="0.7" />
+            <path d="M28 14 Q27 16 31 18 Q34 16 28 14 Z" fill="#3a6a28" opacity="0.7" />
             {/* Feathery fronds */}
             <path d="M10 14 L8 13 L10 12 L8 11 L10 10" stroke="#4a7a38" strokeWidth="0.5" fill="none" opacity="0.5" />
             <path d="M38 14 L40 13 L38 12 L40 11 L38 10" stroke="#3a6a28" strokeWidth="0.5" fill="none" opacity="0.4" />
