@@ -24,7 +24,7 @@ interface DocumentToolbarProps {
   setSketchMode: (v: boolean) => void
   setSketchPrompt: (v: string) => void
   setDrawLineMode: (v: boolean) => void
-  insertTable: (rows: number, cols: number) => void
+  insertTable: () => void
   insertColumns: (num: number) => void
   openAlert: (title: string, message?: string) => void
   clearPage: () => void
@@ -195,8 +195,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const [alignOpen, setAlignOpen] = useState(false)
   const [drawOpen, setDrawOpen] = useState(false)
   const [insertOpen, setInsertOpen] = useState(false)
-  const [tablePickerOpen, setTablePickerOpen] = useState(false)
-  const [tableHover, setTableHover] = useState<[number, number]>([0, 0])
 
   useEffect(() => {
     if (!alignOpen) return
@@ -238,10 +236,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       ref={toolbarRef}
       id="document-toolbar"
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-3 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
-      style={{ transform: "translateZ(0)" }}
+      style={{ transform: "translateZ(0)", minWidth: 'max-content' }}
     >
 
-      <div className="flex items-center gap-3 relative z-10 min-w-0 overflow-visible" ref={leftToolsRef}>
+      <div className="flex items-center gap-3 relative z-10 overflow-visible shrink-0" ref={leftToolsRef}>
         {/* Simple Sidebar Toggle Arrow */}
         <button
           onClick={onSidebarToggle}
@@ -309,58 +307,22 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 Vertical Line
               </button>
               <button
-                onMouseDown={e => { e.preventDefault(); onInsertImage?.(); setInsertOpen(false) }}
+                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'image' ? 'select' : 'image'); setInsertOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                 Image
               </button>
+              <div className={`h-px mx-1.5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
               <button
-                onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'textbox' ? 'select' : 'textbox'); setInsertOpen(false) }}
+                onMouseDown={e => { e.preventDefault(); insertTable(); setInsertOpen(false) }}
                 className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="7" y1="8" x2="17" y2="8" /><line x1="7" y1="12" x2="14" y2="12" /></svg>
-                Text Box
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
+                Table
               </button>
-              <div className={`h-px mx-1.5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
-              <div className="relative">
-                <button
-                  onMouseDown={e => { e.preventDefault(); setTablePickerOpen(p => !p) }}
-                  className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                  style={btnFont}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
-                  Table
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="ml-auto shrink-0" style={{ transform: tablePickerOpen ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                {tablePickerOpen && (
-                  <div className="mt-1 px-2 pb-2" onMouseDown={e => e.preventDefault()} onMouseLeave={() => setTableHover([0, 0])}>
-                    <div className={`text-[10px] text-center mb-1.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>
-                      {tableHover[0] > 0 ? `${tableHover[0]} × ${tableHover[1]}` : "Select size"}
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 18px)", gap: 2, justifyContent: "center" }}>
-                      {Array.from({ length: 25 }, (_, i) => {
-                        const r = Math.floor(i / 5) + 1, c = (i % 5) + 1
-                        const active = r <= tableHover[0] && c <= tableHover[1]
-                        return (
-                          <div key={i}
-                            onMouseEnter={() => setTableHover([r, c])}
-                            onMouseDown={e => { e.preventDefault(); insertTable(r, c); setTablePickerOpen(false); setInsertOpen(false) }}
-                            style={{
-                              width: 18, height: 18, borderRadius: 2, cursor: "pointer",
-                              background: active ? `${accent}80` : (theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"),
-                              border: active ? `1.5px solid ${accent}` : `1px solid ${theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"}`,
-                              transition: "all 0.05s",
-                            }}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>

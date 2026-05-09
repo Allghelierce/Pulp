@@ -780,7 +780,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 25% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 50% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
 
               {lostJuice > 0 && !running && !done && (

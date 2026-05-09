@@ -79,6 +79,57 @@
 - Multiplier applies to all sap earned from focus timer
 - Encourages leaderboard competition
 
+## Sap Sinks
+
+### Seasonal Skins
+- Rotate quarterly: spring blossoms, summer glow, autumn leaves, winter frost
+- Pay sap to unlock per-tree or bulk unlock for whole orchard
+- Season pass option: one large sap payment unlocks all skins for the quarter
+
+### Gambling System
+- **Mystery seeds**: 3 tiers (small/medium/large sap cost), weighted rarity odds
+- **Tree grafting**: merge two trees, RNG outcome — hybrid (new visual), rarity bump, or failure (lose one). Higher rarity inputs = better odds
+- **Daily spin**: sap entry fee, wheel with seeds/gems/cosmetics/nothing
+
+### Tree Insurance
+- Pay per-tree or blanket coverage for one session
+- Per-tree: ~10% of seed cost in sap
+- Blanket: expensive flat rate, covers all trees
+- Single-use — expires after one session
+
+### Timer Failure Penalty
+- Giving up or failing a session costs 50% of sap (implemented)
+- Makes insurance valuable
+- Recoverable with gems
+
+### Other Sap Sinks
+- **Fertilizer** — boost tree growth stage progress
+- **Watering can upgrade** — extend 8-min water deadline
+- **Focus potions** — 2x XP for next session
+- **Seed rerolls** — reroll boutique daily stock
+- **Terrain cosmetics** — pond, paths, stone wall, lanterns, benches, flower beds
+- **Weather effects** — rain, snow, autumn leaves overlays
+- **Bucket upgrades** — bigger buckets = higher sap cap per tree
+- **Notebook themes** — custom orchard biomes per notebook (desert, snow, tropical)
+- **Auto-collect** — pay sap for automatic collection for X hours
+- **Session multiplier** — pay before session, tree grows 2x faster
+- **Seed crafting** — combine 3 common seeds + sap for uncommon seed
+- **Tree relocation** — move trees between notebooks for a fee
+- **Prestige reset** — reset orchard for permanent +% sap rate, huge cost
+- **Tree auras** — glowing rings, sparkles, fireflies around specific trees
+- **Golden bucket** — shimmering bucket skin
+- **Fairy lights** — string lights between trees
+- **Custom fences** — wooden, stone, hedgerow, iron
+- **Tree diary** — unlock lore/flavor text per species
+- **Undo chop** — recover chopped tree within 24h
+- **Offline drip** — lump sum enables offline sap generation for 24h
+
+## Sap Economy Balancing
+- Use juiceYield from constants as per-tick production rate
+- Diminishing returns: after 5th tree of same type, each additional produces 20% less (floor 40%)
+- Tick interval: 60s, cap at 10 ticks (~10 min to fill)
+- Paper/gem trees produce 0 sap — keeps fruit trees valuable
+
 ## Open Questions
 
 - Exact tree species list and rarity assignments?

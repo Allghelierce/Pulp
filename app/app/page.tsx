@@ -17,10 +17,10 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
-import { ShelfView } from "@/app/components/ShelfView"
-import { ImageUploadModal } from "@/app/components/ImageUploadModal"
-import { CoverModal } from "@/app/components/CoverModal"
-import { FlashcardView } from "@/app/components/FlashcardView"
+const _preloadShelf = () => import("@/app/components/ShelfView")
+const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
+const _preloadCover = () => import("@/app/components/CoverModal")
+const _preloadFlashcard = () => import("@/app/components/FlashcardView")
 const _preloadSlashMenu = () => import("@/app/components/SlashMenu")
 const SlashMenu = lazy(() => _preloadSlashMenu().then(m => ({ default: m.SlashMenu })))
 import { VitalitySystem } from "@/app/components/VitalitySystem"
@@ -53,8 +53,11 @@ const VersionHistoryPanel = lazy(() => _preloadVersionHistory().then(m => ({ def
 const GridView = lazy(() => _preloadGrid().then(m => ({ default: m.GridView })))
 const AiInlineMenu = lazy(() => _preloadAiInline().then(m => ({ default: m.AiInlineMenu })))
 const AiResultModal = lazy(() => _preloadAiResult().then(m => ({ default: m.AiResultModal })))
+const ShelfView = lazy(() => _preloadShelf().then(m => ({ default: m.ShelfView })))
+const ImageUploadModal = lazy(() => _preloadImageUpload().then(m => ({ default: m.ImageUploadModal })))
+const CoverModal = lazy(() => _preloadCover().then(m => ({ default: m.CoverModal })))
+const FlashcardView = lazy(() => _preloadFlashcard().then(m => ({ default: m.FlashcardView })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
-import { FloatingToolbar } from "@/app/components/FloatingToolbar"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
 
 function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
@@ -305,7 +308,8 @@ const BoxItem = memo(function BoxItem({
   }, [isDark])
   const isImage = box.content.includes("http") || box.content.startsWith("data:image")
   const isSticky = !!box.boxHighlightColor
-  const isEmpty = !isSticky && !isImage && box.content.trim() === ''
+  const isTitle = !!box.isTitle
+  const isEmpty = !isSticky && !isImage && !isTitle && box.content.trim() === ''
   return (
     <div
       id={`box-${box.id}`}
@@ -1113,6 +1117,7 @@ export default function NoteApp() {
       _preloadOrchard(); _preloadBoutique(); _preloadStats()
       _preloadLeaderboard(); _preloadFocus(); _preloadSettings()
       _preloadGemStore(); _preloadGrid(); _preloadSlashMenu()
+      _preloadShelf(); _preloadFlashcard(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
     return () => cancelIdleCallback(id)
   }, [])
@@ -1343,15 +1348,19 @@ export default function NoteApp() {
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
 
+  const pendingImageBoxId = useRef<string | null>(null)
+  const pendingTableBoxId = useRef<string | null>(null)
+
   const placeHorizontalLine = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current || !activeTabId) return
     e.preventDefault()
     const r = paperRef.current.getBoundingClientRect()
     const scale = Number(zoom) || 1
     const y = (e.clientY - r.top) / scale
-    const hline = { id: uid(), x: 64, y, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
+    const id = uid()
+    const hrBox: TextBoxType = { id, x: 40, y, w: paperRef.current.clientWidth / scale - 80, h: 8, content: '<hr style="border:none;border-top:2px solid rgba(0,0,0,0.15);margin:0">' }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
+      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), hrBox] }
     }))
     setActiveTool('select')
   }, [activeTabId, currentPageIdx, setNotes, zoom])
@@ -1363,11 +1372,45 @@ export default function NoteApp() {
     const scale = Number(zoom) || 1
     const x = (e.clientX - r.left) / scale
     const y = (e.clientY - r.top) / scale
-    const vline = { id: uid(), x, y, width: 300, direction: "vertical" as const }
+    const id = uid()
+    const vrBox: TextBoxType = { id, x, y, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
+      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
     }))
     setActiveTool('select')
+  }, [activeTabId, currentPageIdx, setNotes, zoom])
+
+  const placeImageBox = useCallback((e: React.MouseEvent) => {
+    if (!paperRef.current || !activeTabId) return
+    e.preventDefault()
+    const r = paperRef.current.getBoundingClientRect()
+    const scale = Number(zoom) || 1
+    const x = (e.clientX - r.left) / scale
+    const y = (e.clientY - r.top) / scale
+    const id = uid()
+    const imgBox: TextBoxType = { id, x: x - 150, y, w: 300, h: 200, content: '' }
+    pendingImageBoxId.current = id
+    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), imgBox] }
+    }))
+    setActiveTool('select')
+    setShowImageModal(true)
+  }, [activeTabId, currentPageIdx, setNotes, zoom])
+
+  const insertTableBox = useCallback(() => {
+    if (!paperRef.current || !activeTabId) return
+    const scale = Number(zoom) || 1
+    const paperW = paperRef.current.clientWidth / scale
+    const scrollTop = paperRef.current.closest('.overflow-y-scroll')?.scrollTop ?? 0
+    const x = (paperW - 400) / 2
+    const y = scrollTop / scale + 100
+    const id = uid()
+    const mkRow = (cells: number, tag: string) => `<tr>${Array.from({ length: cells }, () => `<${tag} style="border:1.5px solid rgba(0,0,0,0.25);padding:6px 10px;font-size:13px;min-width:80px;outline:none;${tag === 'th' ? 'font-weight:600;' : ''}"><br></${tag}>`).join('')}</tr>`
+    const tableHtml = `<table style="border-collapse:collapse;width:100%">${mkRow(3, 'th')}${mkRow(3, 'td')}${mkRow(3, 'td')}</table>`
+    const tableBox: TextBoxType = { id, x, y, w: 400, h: 160, content: tableHtml }
+    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), tableBox] }
+    }))
   }, [activeTabId, currentPageIdx, setNotes, zoom])
 
   // ─── Sticky note placement — handled directly in page to avoid stale hook state ─
@@ -2951,7 +2994,7 @@ export default function NoteApp() {
     <LazyMotion features={domAnimation}>
       <>
 
-        <div className="flex h-screen overflow-hidden font-sans relative select-none" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
+        <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
           {showSettings && <Suspense fallback={null}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
@@ -3080,7 +3123,7 @@ export default function NoteApp() {
 
           {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
 
-          {currentView === "shelf" && (
+          {currentView === "shelf" && (<Suspense fallback={null}>
             <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
               <ShelfView
                 notes={notes}
@@ -3089,7 +3132,7 @@ export default function NoteApp() {
                 theme={theme}
               />
             </div>
-          )}
+          </Suspense>)}
 
           <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
@@ -3103,7 +3146,11 @@ export default function NoteApp() {
                   onClick={() => {
                     const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
                     if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
-                    else setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, icon: activeNote.icon }])
+                    else {
+                      const titleBox = (activeNote.boxes[currentPageIdx] || []).find(b => b.isTitle)
+                      const titleText = titleBox?.content?.replace(/<[^>]*>/g, '').trim()
+                      setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, label: titleText || undefined, icon: activeNote.icon }])
+                    }
                   }}
                   animate={{ scaleY: isBookmarked ? 1 : 0.6, opacity: isBookmarked ? 1 : 0.45 }}
                   whileHover={{ scaleY: 1, opacity: 1 }}
@@ -3159,7 +3206,7 @@ export default function NoteApp() {
 
                   currentPageIdx={currentPageIdx}
                   saveSelection={editor.saveSelection}
-                  insertTable={editor.insertTable}
+                  insertTable={insertTableBox}
                   insertColumns={editor.insertColumns}
                   openAlert={openAlert}
                   clearPage={clearPage}
@@ -3326,7 +3373,7 @@ export default function NoteApp() {
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
               ) : activeNote?.noteType === "flashcard" ? (
-                <main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
+                <Suspense fallback={null}><main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
                   <FlashcardView
                     cards={activeNote.flashcards || []}
                     onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? { ...n, flashcards: cards } : n))}
@@ -3334,7 +3381,7 @@ export default function NoteApp() {
                     theme={theme}
                     accent={accent}
                   />
-                </main>
+                </main></Suspense>
               ) : (
                 <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden" }}>
                   <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto", paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
@@ -3347,10 +3394,9 @@ export default function NoteApp() {
                         <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                           onMouseDown={e => {
-                            if (activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr') {
-                              // Handled by onClick below to ensure clean single-click placement
+                            if (activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'image') {
                               return
                             }
                             if (activeTool !== 'select' && activeTool !== 'text' && activeTool !== 'textbox') return
@@ -3373,6 +3419,8 @@ export default function NoteApp() {
                               placeHorizontalLine(e)
                             } else if (activeTool === 'vr') {
                               placeVerticalLine(e)
+                            } else if (activeTool === 'image') {
+                              placeImageBox(e)
                             }
                           }}
                         >
@@ -3761,7 +3809,6 @@ export default function NoteApp() {
               isOpen={statsOpen}
               onClose={() => setStatsOpen(false)}
               theme={theme}
-              accent={accent}
               xp={xp}
               streak={streak}
             /></div>
@@ -3818,42 +3865,68 @@ export default function NoteApp() {
               onInsertHLine={() => {
                 if (!activeTabId || !paperRef.current) return
                 const cursorY = slashMenu ? slashMenu.y : 200
-                const hline = { id: uid(), x: 64, y: cursorY, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
+                const hrBox: TextBoxType = { id: uid(), x: 40, y: cursorY, w: paperRef.current.clientWidth - 80, h: 8, content: '<hr style="border:none;border-top:2px solid rgba(0,0,0,0.15);margin:0">' }
                 setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                  ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
+                  ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), hrBox] }
                 }))
               }}
               onInsertVLine={() => {
                 if (!activeTabId || !paperRef.current) return
                 const cursorY = slashMenu ? slashMenu.y : 200
-                const vline = { id: uid(), x: slashMenu ? slashMenu.x : paperRef.current.clientWidth / 2, y: cursorY, width: 300, direction: "vertical" as const }
+                const cursorX = slashMenu ? slashMenu.x : paperRef.current.clientWidth / 2
+                const vrBox: TextBoxType = { id: uid(), x: cursorX, y: cursorY, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
                 setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                  ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
+                  ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
                 }))
+              }}
+              onInsertTitle={() => {
+                if (!activeTabId) return
+                const titleBox: TextBoxType = { id: uid(), x: 40, y: 24, w: 600, h: 50, content: '', boxHeadingStyle: 'h1', boxFontSize: 28, isTitle: true }
+                setNotes(prev => prev.map(n => {
+                  if (n.id !== activeTabId) return n
+                  const pageBoxes = n.boxes[currentPageIdx] || []
+                  const existing = pageBoxes.find(b => b.isTitle)
+                  if (existing) return n
+                  return { ...n, boxes: { ...n.boxes, [currentPageIdx]: [titleBox, ...pageBoxes] } }
+                }))
+                setTimeout(() => {
+                  const el = document.getElementById(`box-${titleBox.id}`)
+                  if (el) {
+                    const editable = el.querySelector('[contenteditable]') as HTMLElement
+                    if (editable) { editable.focus() }
+                  }
+                }, 50)
               }}
             />
           </Suspense>)}
 
-          {showImageModal && (
+          {showImageModal && (<Suspense fallback={null}>
             <ImageUploadModal
               onConfirm={(htmlOrUrl, isHtml) => {
-                if (isHtml) {
+                const boxId = pendingImageBoxId.current
+                if (boxId) {
+                  const imgHtml = isHtml ? htmlOrUrl : `<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block" alt="Media" />`
+                  setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                    ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).map(b => b.id === boxId ? { ...b, content: imgHtml } : b) }
+                  }))
+                  pendingImageBoxId.current = null
+                } else if (isHtml) {
                   editor.insertHTML(htmlOrUrl)
                 } else {
                   editor.insertHTML(`<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`)
                 }
               }}
-              onClose={() => setShowImageModal(false)}
+              onClose={() => { setShowImageModal(false); pendingImageBoxId.current = null }}
             />
-          )}
+          </Suspense>)}
 
-          {showCoverModal && (
+          {showCoverModal && (<Suspense fallback={null}>
             <CoverModal
               existingCover={activeNote?.cover}
               onConfirm={setCover}
               onClose={() => setShowCoverModal(false)}
             />
-          )}
+          </Suspense>)}
 
           {aiMenu && (
             <AiInlineMenu
@@ -3935,16 +4008,14 @@ export default function NoteApp() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-semibold text-gray-900">Quiz</span>
-                        <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                          {quizState.current + 1} / {quizState.questions.length}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
                       <button onClick={() => setQuizState(null)} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       </button>
+                      <span className="text-lg font-semibold text-gray-900">Quiz</span>
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {quizState.current + 1} / {quizState.questions.length}
+                      </span>
                     </div>
 
                     <div className="rounded-xl bg-gray-50 border border-gray-200 p-5">

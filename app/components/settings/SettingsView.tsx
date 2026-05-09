@@ -991,7 +991,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
-                        { name: "Grove & Achievements", description: "Plant trees, earn juice, unlock rewards", included: true },
+                        { name: "Grove & Achievements", description: "Plant trees, earn sap, unlock rewards", included: true },
                         { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
                         { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
                       ],

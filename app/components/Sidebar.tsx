@@ -556,7 +556,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
+      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)' }} />
@@ -762,7 +762,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mt-1.5 mx-[-8px] border-b border-white/5" />
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-visible px-0 py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-visible px-0 py-3 space-y-0.5 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }} onDragOver={e => e.preventDefault()} onDrop={handleRootDrop}>
           {/* Binder Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
@@ -954,7 +954,7 @@ export const Sidebar = memo(function Sidebar({
         )}
 
         {/* Socials */}
-        <div className="shrink-0 border-t border-white/5 flex items-center justify-center gap-3 pb-3 pt-3" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
+        <div className="shrink-0 border-t border-white/5 flex items-center justify-center gap-3 pb-3 pt-3 z-10 relative" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
           <a href="#" title="Instagram" className="text-zinc-600 hover:text-zinc-400 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
           </a>

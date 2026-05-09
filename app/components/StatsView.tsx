@@ -8,7 +8,6 @@ interface StatsViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  accent: string
   xp: number
   streak?: number
 }
@@ -111,7 +110,7 @@ function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
 }
 
 export const StatsView = memo(function StatsView({
-  isOpen, onClose, theme, accent, xp, streak = 0,
+  isOpen, onClose, theme, xp, streak = 0,
 }: StatsViewProps) {
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week")
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
@@ -124,7 +123,7 @@ export const StatsView = memo(function StatsView({
   const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
   const focusColor = '#d97706'
-  const writingColor = accent
+  const writingColor = '#ea580c'
   const levelColor = '#d97706'
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
@@ -286,19 +285,16 @@ export const StatsView = memo(function StatsView({
             </div>
 
             {/* Month labels */}
-            <div style={{ display: "flex", marginLeft: 30, marginBottom: 4, gap: 2 }}>
+            <div style={{ position: "relative", marginLeft: 30, marginBottom: 4, height: 12 }}>
               {(() => {
                 const totalCols = Math.ceil(heatmapGrid.length / 7)
-                const elements: React.ReactNode[] = []
-                for (let c = 0; c < totalCols; c++) {
-                  const month = heatmapMonths.find(m => m.col === c)
-                  elements.push(
-                    <div key={c} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                      {month && <span style={{ fontSize: 8, color: textMuted, whiteSpace: "nowrap" }}>{month.label}</span>}
-                    </div>
-                  )
-                }
-                return elements
+                return heatmapMonths.map((m, i) => (
+                  <span key={i} style={{
+                    position: "absolute",
+                    left: `${(m.col / totalCols) * 100}%`,
+                    fontSize: 8, color: textMuted, whiteSpace: "nowrap",
+                  }}>{m.label}</span>
+                ))
               })()}
             </div>
 
@@ -397,26 +393,32 @@ export const StatsView = memo(function StatsView({
                   return (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0, height: "100%" }}>
                       <div style={{ display: "flex", gap: 2, alignItems: "flex-end", flex: 1, width: "100%", minHeight: 0 }}>
-                        <div
-                          title={`${d.focusMinutes} min focus`}
-                          style={{
-                            flex: 1, borderRadius: "3px 3px 0 0",
-                            minHeight: d.focusMinutes > 0 ? 4 : 0,
-                            height: focusH,
-                            backgroundColor: focusColor,
-                            transition: "height 0.3s ease",
-                          }}
-                        />
-                        <div
-                          title={`${d.charsWritten} chars`}
-                          style={{
-                            flex: 1, borderRadius: "3px 3px 0 0",
-                            minHeight: d.charsWritten > 0 ? 4 : 0,
-                            height: charsH,
-                            backgroundColor: writingColor,
-                            transition: "height 0.3s ease",
-                          }}
-                        />
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          {d.focusMinutes > 0 && <span style={{ fontSize: 7, color: focusColor, marginBottom: 2 }}>{d.focusMinutes}</span>}
+                          <div
+                            title={`${d.focusMinutes} min focus`}
+                            style={{
+                              width: "100%", borderRadius: "3px 3px 0 0",
+                              minHeight: d.focusMinutes > 0 ? 4 : 0,
+                              height: focusH,
+                              backgroundColor: focusColor,
+                              transition: "height 0.3s ease",
+                            }}
+                          />
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          {d.charsWritten > 0 && <span style={{ fontSize: 7, color: writingColor, marginBottom: 2 }}>{d.charsWritten}</span>}
+                          <div
+                            title={`${d.charsWritten} chars`}
+                            style={{
+                              width: "100%", borderRadius: "3px 3px 0 0",
+                              minHeight: d.charsWritten > 0 ? 4 : 0,
+                              height: charsH,
+                              backgroundColor: writingColor,
+                              transition: "height 0.3s ease",
+                            }}
+                          />
+                        </div>
                       </div>
                       {showLabel && (
                         <span style={{ fontSize: 8, color: textMuted, marginTop: 4, whiteSpace: "nowrap" }}>{d.label}</span>

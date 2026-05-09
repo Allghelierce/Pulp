@@ -116,7 +116,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div className="flex items-center gap-3">
             <button
-              onClick={onClose}
+              onClick={() => { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() }}
               className="p-1.5 rounded-lg transition-colors"
               style={{ color: textMuted }}
               onMouseEnter={e => e.currentTarget.style.color = textPrimary}
@@ -194,12 +194,15 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] font-semibold truncate max-w-full" style={{ color: textPrimary, fontFamily: font }}>{p.name}</p>
+                  <div className="flex items-center gap-1.5 max-w-full">
+                    <span className="font-bold tabular-nums shrink-0" style={{ color: podiumMedals[i], fontSize: isFirst ? 16 : 14, fontFamily: font }}>{['#2','#1','#3'][i]}</span>
+                    <p className="font-bold truncate" style={{ color: textPrimary, fontFamily: font, fontSize: isFirst ? 14 : 12 }}>{p.name}</p>
+                  </div>
                   <p className="text-[10px] font-bold tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>{formatVal(p)}</p>
 
                   {/* Podium block */}
                   <div
-                    className="w-full mt-2 rounded-t-lg flex items-start justify-center pt-2"
+                    className="w-full mt-2 rounded-t-lg flex items-start justify-center pt-2 gap-1.5"
                     style={{
                       height,
                       background: isDark
@@ -209,6 +212,12 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                       borderBottom: 'none',
                     }}
                   >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill={podiumMedals[i]} stroke="none" style={{ marginTop: 1 }}>
+                      {i === 1
+                        ? <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        : <circle cx="12" cy="12" r="10"/>
+                      }
+                    </svg>
                     <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: podiumMedals[i], fontFamily: font }}>{podiumLabels[i]}</span>
                   </div>
                 </div>

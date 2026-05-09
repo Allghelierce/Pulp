@@ -288,7 +288,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
   const dismissDeadTree = useCallback(() => {
-    const lost = Math.ceil(juice * 0.25)
+    const lost = Math.ceil(juice * 0.5)
     setLostJuice(lost)
     setJuice(j => j - lost)
     setTimerElapsed(0)

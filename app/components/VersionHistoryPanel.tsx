@@ -101,6 +101,12 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
         {/* Header */}
         <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
           <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={onClose}
+              className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-zinc-100 text-zinc-400"}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-zinc-400" : "text-zinc-500"}>
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
             </svg>
@@ -108,21 +114,13 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
               Version History
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => { const updated = onSaveSnapshot(); setLocalVersions(updated) }}
-              title="Save snapshot now"
-              className={`text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
-            >
-              Save now
-            </button>
           <button
-            onClick={onClose}
-            className={`p-1 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-zinc-100 text-zinc-400"}`}
+            onClick={() => { const updated = onSaveSnapshot(); setLocalVersions(updated) }}
+            title="Save snapshot now"
+            className={`text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            Save now
           </button>
-          </div>
         </div>
 
         {/* Note title */}

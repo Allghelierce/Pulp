@@ -43,6 +43,7 @@ interface SlashMenuProps {
   onInsertImage?: () => void
   onInsertHLine?: () => void
   onInsertVLine?: () => void
+  onInsertTitle?: () => void
   mode: "@" | "/"
   theme?: "light" | "dark"
   box?: TextBox
@@ -643,7 +644,7 @@ function CustomMenuFlyoutPortal({ parentEl, ...props }: Omit<React.ComponentProp
 
 export const SlashMenu = memo(function SlashMenu({
   x, y, filter, accent, isSelectionMode, onSelect, onClose, execCmd, insertHTML,
-  toggleScript: _toggleScript, insertBacklink, onInsertImage, onInsertHLine, onInsertVLine, mode, theme, box, onUpdateBox
+  toggleScript: _toggleScript, insertBacklink, onInsertImage, onInsertHLine, onInsertVLine, onInsertTitle, mode, theme, box, onUpdateBox
 }: SlashMenuProps) {
   const [activeIdx, setActiveIdx] = useState<number | null>(0)
   const [prevFilter, setPrevFilter] = useState(filter)
@@ -662,6 +663,11 @@ export const SlashMenu = memo(function SlashMenu({
 
   // ── @ menu items ──────────────────────────────────────────────────────────
   const allItems: SlashItem[] = useMemo(() => [
+    {
+      id: "title", label: "Page Title", group: "Structure",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M4 6h16M4 12h10"/><path d="M4 18h6"/></svg>,
+      action: () => { onInsertTitle?.(); onClose() }
+    },
     {
       id: "bold", label: "Bold", shortcut: "⌘B", group: "Typography",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" /></svg>,
@@ -833,7 +839,7 @@ export const SlashMenu = memo(function SlashMenu({
       action: () => { },
       customContent: <BookmarkInput onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} mode={mode} accent={accent} />
     },
-  ], [execCmd, insertHTML, accent, insertBacklink, onInsertImage, onSelect, onClose, mode, box, onUpdateBox])
+  ], [execCmd, insertHTML, accent, insertBacklink, onInsertImage, onInsertTitle, onSelect, onClose, mode, box, onUpdateBox])
 
   // ── / menu items ──────────────────────────────────────────────────────────
   const settingsItems: SlashItem[] = useMemo(() => box ? [
