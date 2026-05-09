@@ -486,7 +486,24 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
         <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
         <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        {/* (snow removed) */}
+        {/* Snow cap on highest peak — slopes: (42,18)→(50,8)→(58,16) */}
+        <path d="M45.2,14.2 L50,8 L54.8,13.2 Q53,12.5 51.5,13 Q50,12 48.5,13 Q47,12.5 45.2,14.2 Z" fill={isDark ? '#d0d4da' : '#f0f2f5'} />
+        <path d="M46.5,13 L50,8 L53.5,12 Q52,11.8 50.5,12.2 Q49,11.5 47.5,12.5 Z" fill={isDark ? '#e0e4ea' : '#fafbfc'} opacity="0.85" />
+        <path d="M48,11 L50,8 L52,10.5" fill="none" stroke={isDark ? '#eee' : '#fff'} strokeWidth="0.3" opacity="0.4" />
+        {/* Tiny cabin on right slope below peak */}
+        <g transform="translate(52.8,11.5) scale(0.55)">
+          <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
+          <path d="M-1.6,0.2 Q0,0.35 1.6,0.2" fill="none" stroke={isDark ? '#d0d4da' : '#f0f2f5'} strokeWidth="0.2" opacity="0.5" />
+          <rect x={-0.8} y={-0.95} width="1.6" height="1.1" fill={isDark ? '#3a3530' : '#7a6a58'} />
+          <rect x={-0.8} y={-0.95} width="1.6" height="0.12" fill={isDark ? '#44403a' : '#8a7a65'} opacity="0.4" />
+          <polygon points="-1,-0.95 0,-1.75 1,-0.95" fill={isDark ? '#4a3028' : '#8a5040'} />
+          <polygon points="-1,-0.95 0,-1.75 0,-0.95" fill={isDark ? '#3a2820' : '#7a4438'} />
+          <path d="M-1.05,-0.95 L0,-1.8 L1.05,-0.95 Q0.7,-1.08 0.3,-1 Q0,-1.1 -0.3,-1 Q-0.7,-1.08 -1.05,-0.95 Z" fill={isDark ? '#c8ccd2' : '#eef0f4'} opacity="0.6" />
+          <rect x={0.4} y={-1.55} width="0.25" height="0.65" fill={isDark ? '#3a3530' : '#6a5a48'} />
+          <path d="M0.52,-1.55 Q0.58,-1.85 0.48,-2.1 Q0.56,-2.3 0.5,-2.55" stroke={isDark ? 'rgba(180,180,190,0.3)' : 'rgba(100,100,110,0.15)'} strokeWidth="0.1" fill="none" strokeLinecap="round" />
+          <rect x={-0.35} y={-0.6} width="0.28" height="0.25" rx="0.02" fill={isDark ? '#fbbf24' : '#c8b888'} opacity={isDark ? 0.6 : 0.3} />
+          <ellipse cx={0} cy={0.2} rx="1.1" ry="0.15" fill="rgba(0,0,0,0.12)" />
+        </g>
         {/* Base shadow — atmospheric haze at mountain feet */}
         <path d="M-10,30 L210,30 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
         {/* Sunlit faces — soft warm wash across upper mountain faces */}
@@ -600,7 +617,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const canopies: string[] = []
           const canopyDark: string[] = []
           const fruits: string[] = []
-          const bushSeeds = [5,12,20,28,36,45,52,62,70,78,86,95,102,108,115,122,130,138,145,152,160,168,176,185,195]
+          const bushSeeds = [2,5,9,12,16,20,24,28,32,36,40,45,49,52,56,60,62,66,70,74,78,82,86,90,95,99,102,106,108,112,115,119,122,126,130,134,138,142,145,149,152,156,160,164,168,172,176,180,185,190,195,200]
           const trunkC = isDark ? '#2a1a0e' : '#5a3a1a'
           bushSeeds.forEach((bx, i) => {
             const rng = seededRng(i * 53 + 191)
@@ -621,12 +638,12 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             const wobble = rng() * 0.15
             canopies.push(`M${(tx - r1).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)}Q${(tx - r1 * 0.6).toFixed(1)},${(cy - r2 - wobble).toFixed(1)} ${tx.toFixed(1)},${(cy - r2).toFixed(1)}Q${(tx + r1 * 0.7).toFixed(1)},${(cy - r2 + wobble).toFixed(1)} ${(tx + r1).toFixed(1)},${(cy + r2 * 0.15).toFixed(1)}Q${(tx + r1 * 0.5).toFixed(1)},${(cy + r2 * 0.6).toFixed(1)} ${tx.toFixed(1)},${(cy + r2 * 0.4).toFixed(1)}Q${(tx - r1 * 0.4).toFixed(1)},${(cy + r2 * 0.5).toFixed(1)} ${(tx - r1).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)}Z`)
             canopyDark.push(`M${(tx + r1 * 0.2).toFixed(1)},${(cy + r2 * 0.3).toFixed(1)}Q${(tx + r1 * 0.6).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)} ${(tx + r1 * 0.8).toFixed(1)},${(cy + r2 * 0.15).toFixed(1)}`)
-            const fruitCount = 1 + Math.floor(rng() * 2)
+            const fruitCount = 4 + Math.floor(rng() * 5)
             for (let f = 0; f < fruitCount; f++) {
               const a = rng() * Math.PI * 2
-              const d = r1 * (0.2 + rng() * 0.4)
+              const d = r1 * (0.15 + rng() * 0.5)
               const fx = tx + Math.cos(a) * d, fy = cy + Math.sin(a) * d * (r2 / r1)
-              fruits.push(`M${(fx + 0.12).toFixed(2)},${fy.toFixed(2)}a0.12,0.12 0 1 1 -0.24,0a0.12,0.12 0 1 1 0.24,0Z`)
+              fruits.push(`M${(fx + 0.05).toFixed(2)},${fy.toFixed(2)}a0.05,0.05 0 1 1 -0.10,0a0.05,0.05 0 1 1 0.10,0Z`)
             }
           })
           return <g opacity="0.55">
@@ -712,13 +729,13 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             canopyDark.push(`M${(tx + r1 * 0.15).toFixed(1)},${(cy + r2 * 0.25).toFixed(1)}Q${(tx + r1 * 0.5).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)} ${(tx + r1 * 0.7).toFixed(1)},${(cy + r2 * 0.15).toFixed(1)}`)
             const hx = tx - r1 * 0.3, hy = cy - r2 * 0.6
             highlights.push(`M${hx.toFixed(1)},${hy.toFixed(1)}a${(r1 * 0.3).toFixed(1)},${(r2 * 0.25).toFixed(1)} 0 1 1 ${(r1 * 0.5).toFixed(1)},${(r2 * 0.1).toFixed(1)}`)
-            const fruitCount = 1 + Math.floor(rng() * 4)
+            const fruitCount = 5 + Math.floor(rng() * 6)
             for (let f = 0; f < fruitCount; f++) {
               const a = rng() * Math.PI * 2
-              const dist = (0.3 + rng() * 0.5) * r1
+              const dist = (0.15 + rng() * 0.55) * r1
               const fx = tx + Math.cos(a) * dist
               const fy = cy + Math.sin(a) * dist * (r2 / r1) * 0.8
-              const fr = 0.12 + rng() * 0.08
+              const fr = 0.05 + rng() * 0.04
               fruits.push(`M${(fx + fr).toFixed(2)},${fy.toFixed(2)}a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 -${(fr * 2).toFixed(2)},0a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 ${(fr * 2).toFixed(2)},0Z`)
             }
           }
@@ -897,7 +914,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const canopies: string[] = []
           const canopyDark: string[] = []
           const fruits: string[] = []
-          const seeds = [3,10,18,25,30,36,42,48,55,62,68,75,82,90,96]
+          const seeds = [1,5,10,14,18,22,25,28,30,33,36,39,42,45,48,52,55,58,62,65,68,72,75,78,82,86,90,93,96,100]
           const trunkC = isDark ? '#2a1a0e' : '#5a3a1a'
           seeds.forEach((bx, i) => {
             const rng = seededRng(i * 67 + 331)
@@ -923,12 +940,12 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             const w2 = (rng() - 0.5) * r2 * 0.35
             canopies.push(`M${(tx - r1).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)}Q${(tx - r1 * 0.5).toFixed(1)},${(cy - r2 + w1).toFixed(1)} ${tx.toFixed(1)},${(cy - r2).toFixed(1)}Q${(tx + r1 * 0.6).toFixed(1)},${(cy - r2 + w2).toFixed(1)} ${(tx + r1).toFixed(1)},${(cy + r2 * 0.15).toFixed(1)}Q${(tx + r1 * 0.4).toFixed(1)},${(cy + r2 * 0.55).toFixed(1)} ${tx.toFixed(1)},${(cy + r2 * 0.4).toFixed(1)}Q${(tx - r1 * 0.35).toFixed(1)},${(cy + r2 * 0.5).toFixed(1)} ${(tx - r1).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)}Z`)
             canopyDark.push(`M${(tx + r1 * 0.1).toFixed(1)},${(cy + r2 * 0.2).toFixed(1)}Q${(tx + r1 * 0.5).toFixed(1)},${cy.toFixed(1)} ${(tx + r1 * 0.8).toFixed(1)},${(cy + r2 * 0.1).toFixed(1)}`)
-            const fruitCount = 2 + Math.floor(rng() * 4)
+            const fruitCount = 5 + Math.floor(rng() * 6)
             for (let f = 0; f < fruitCount; f++) {
               const a = rng() * Math.PI * 2
-              const d = r1 * (0.2 + rng() * 0.55)
+              const d = r1 * (0.15 + rng() * 0.55)
               const fx = tx + Math.cos(a) * d, fy = cy + Math.sin(a) * d * (r2 / r1)
-              fruits.push(`M${(fx + 0.18).toFixed(2)},${fy.toFixed(2)}a0.18,0.18 0 1 1 -0.36,0a0.18,0.18 0 1 1 0.36,0Z`)
+              fruits.push(`M${(fx + 0.12).toFixed(2)},${fy.toFixed(2)}a0.12,0.12 0 1 1 -0.24,0a0.12,0.12 0 1 1 0.24,0Z`)
             }
           })
           return <g opacity="0.5">
@@ -954,6 +971,20 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
           }
           return <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
+        })()}
+
+        {/* Front hill — dirt paths */}
+        {(() => {
+          const pathC = isDark ? '#2a2418' : '#8a7a5a'
+          const edgeC = isDark ? '#1e1a10' : '#6a5a3a'
+          return <g opacity={isDark ? 0.35 : 0.3}>
+            <path d="M 20,28 Q 25,29.5 32,30 Q 40,30.5 48,29.5 Q 55,28.5 60,30 Q 65,31.5 72,33" fill="none" stroke={pathC} strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M 20,28 Q 25,29.5 32,30 Q 40,30.5 48,29.5 Q 55,28.5 60,30 Q 65,31.5 72,33" fill="none" stroke={edgeC} strokeWidth="1.1" strokeLinecap="round" opacity="0.15" />
+            <path d="M 48,29.5 Q 52,31 54,33 Q 56,35 55,37" fill="none" stroke={pathC} strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M 48,29.5 Q 52,31 54,33 Q 56,35 55,37" fill="none" stroke={edgeC} strokeWidth="0.9" strokeLinecap="round" opacity="0.12" />
+            <path d="M 32,30 Q 30,31.5 28,33.5 Q 27,35 28,37" fill="none" stroke={pathC} strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M 32,30 Q 30,31.5 28,33.5 Q 27,35 28,37" fill="none" stroke={edgeC} strokeWidth="0.8" strokeLinecap="round" opacity="0.1" />
+          </g>
         })()}
 
         {/* Sun on arc */}
@@ -1057,54 +1088,103 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             return 32
           }
           const trunks: string[] = []
-          const canopyPaths: string[] = []
+          const trunkBark: string[] = []
+          const knots: string[] = []
+          const branchesL: string[] = []
+          const branchesR: string[] = []
+          const subBranches: string[] = []
+          const canopies: string[] = []
+          const canopyShade: string[] = []
+          const canopyHighlight: string[] = []
+          const leafTexture: string[] = []
+          const fruitStems: string[] = []
           const fruits: string[] = []
-          const nearFills = isDark
+          const fruitShine: string[] = []
+          const shadows: string[] = []
+          const trunkC = isDark ? '#2a1a0e' : '#5a3a1a'
+          const trunkD = isDark ? '#1a0e06' : '#3a2210'
+          const canopyFills = isDark
             ? ['#1a3420', '#1c3622', '#16301c', '#203a26', '#142c18', '#1e3824']
             : ['#2e5a2a', '#326030', '#2a5424', '#386834', '#264e20', '#3c6c38']
-          for (let i = 0; i < 85; i++) {
+          const canopyFillIdx: number[] = []
+          for (let i = 0; i < 140; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
             const baseY = getNearY(x) + rng() * 2.5 + 0.8
             const sz = 0.8 + rng() * 1.6
-            const cx = x
-            const shape = rng()
-            const fill = nearFills[Math.floor(rng() * nearFills.length)]
-            let canopy: string
-            if (shape < 0.25) {
-              const cy = baseY - sz * 1.8
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${cx.toFixed(1)},${(cy - sz * 1.2).toFixed(1)}L${(cx - sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}L${(cx + sz * 0.55).toFixed(1)},${(cy + sz * 0.3).toFixed(1)}Z`
-            } else if (shape < 0.45) {
-              const cy = baseY - sz * 1.1
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx - sz * 1.15).toFixed(1)},${cy.toFixed(1)}A${(sz * 1.15).toFixed(1)},${(sz * 0.6).toFixed(1)} 0 1 1 ${(cx + sz * 1.15).toFixed(1)},${cy.toFixed(1)}Z`
-            } else if (shape < 0.6) {
-              const cy = baseY - sz * 0.6
-              canopy = `M${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx - sz * 0.8).toFixed(1)},${cy.toFixed(1)}A${(sz * 0.8).toFixed(1)},${(sz * 0.55).toFixed(1)} 0 1 1 ${(cx + sz * 0.8).toFixed(1)},${cy.toFixed(1)}Z`
-            } else {
-              const cy = baseY - sz * 1.3 - sz * 0.5
-              trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${cx.toFixed(1)},${cy.toFixed(1)}`)
-              canopy = `M${(cx + sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx - sz).toFixed(1)},${cy.toFixed(1)}A${sz.toFixed(1)},${(sz * 0.85).toFixed(1)} 0 1 1 ${(cx + sz).toFixed(1)},${cy.toFixed(1)}Z`
+            const th = sz * (1.2 + rng() * 0.5)
+            const lean = (rng() - 0.5) * 0.25
+            const tx = x + lean
+            const cy = baseY - th
+            const fillI = Math.floor(rng() * canopyFills.length)
+            canopyFillIdx.push(fillI)
+            const tw = sz * 0.1
+            trunks.push(`M${(x - tw).toFixed(2)},${baseY.toFixed(1)}C${(x - tw * 0.7).toFixed(2)},${(baseY - th * 0.4).toFixed(1)} ${(tx - tw * 0.4).toFixed(2)},${(baseY - th * 0.7).toFixed(1)} ${tx.toFixed(1)},${(cy + sz * 0.2).toFixed(1)}L${(tx + tw * 0.8).toFixed(2)},${(cy + sz * 0.2).toFixed(1)}C${(tx + tw * 0.6).toFixed(2)},${(baseY - th * 0.6).toFixed(1)} ${(x + tw * 1.1).toFixed(2)},${(baseY - th * 0.3).toFixed(1)} ${(x + tw).toFixed(2)},${baseY.toFixed(1)}Z`)
+            const barkY1 = baseY - th * (0.25 + rng() * 0.15)
+            const barkY2 = baseY - th * (0.45 + rng() * 0.15)
+            trunkBark.push(`M${(x - tw * 0.3).toFixed(2)},${barkY1.toFixed(1)}L${(x + tw * 0.5).toFixed(2)},${(barkY1 - sz * 0.05).toFixed(2)}`)
+            trunkBark.push(`M${(x - tw * 0.2).toFixed(2)},${barkY2.toFixed(1)}L${(x + tw * 0.4).toFixed(2)},${(barkY2 + sz * 0.03).toFixed(2)}`)
+            if (rng() > 0.5) {
+              const knotY = baseY - th * (0.3 + rng() * 0.2)
+              knots.push(`M${(x + tw * 0.3).toFixed(2)},${(knotY - sz * 0.04).toFixed(2)}a${(sz * 0.05).toFixed(2)},${(sz * 0.07).toFixed(2)} 0 1 1 -${(sz * 0.01).toFixed(3)},0Z`)
             }
-            canopyPaths.push(canopy)
-            if (shape > 0.5) {
-              for (let f = 0; f < 4; f++) {
-                const a = rng() * Math.PI * 0.8 + Math.PI * 0.1
-                const cy = baseY - sz * 1.3 - sz * 0.5
-                const rDist = sz * (0.25 + rng() * 0.35)
-                const fx = cx + Math.cos(a) * rDist * (rng() > 0.5 ? 1 : -1)
-                const fy = cy + Math.abs(Math.sin(a)) * rDist * 0.8
-                if (rng() > 0.6) continue
-                fruits.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.22,0.22 0 1 1 0.01,0Z`)
-              }
+            shadows.push(`M${(x - sz * 0.7).toFixed(1)},${baseY.toFixed(1)}a${(sz * 0.7).toFixed(1)},${(sz * 0.15).toFixed(1)} 0 1 0 ${(sz * 1.4).toFixed(1)},0a${(sz * 0.7).toFixed(1)},${(sz * 0.15).toFixed(1)} 0 1 0 -${(sz * 1.4).toFixed(1)},0Z`)
+            const branchY = cy + sz * 0.3
+            branchesL.push(`M${tx.toFixed(1)},${branchY.toFixed(1)}C${(tx - sz * 0.25).toFixed(1)},${(branchY - sz * 0.12).toFixed(1)} ${(tx - sz * 0.5).toFixed(1)},${(branchY - sz * 0.08).toFixed(1)} ${(tx - sz * 0.8).toFixed(1)},${(branchY + sz * 0.04).toFixed(1)}`)
+            branchesR.push(`M${tx.toFixed(1)},${branchY.toFixed(1)}C${(tx + sz * 0.25).toFixed(1)},${(branchY - sz * 0.12).toFixed(1)} ${(tx + sz * 0.5).toFixed(1)},${(branchY - sz * 0.08).toFixed(1)} ${(tx + sz * 0.8).toFixed(1)},${(branchY + sz * 0.04).toFixed(1)}`)
+            if (rng() > 0.35) {
+              const sbDir = rng() > 0.5 ? 1 : -1
+              const sbY = cy + sz * (0.05 + rng() * 0.25)
+              subBranches.push(`M${(tx + sbDir * sz * 0.35).toFixed(1)},${(branchY - sz * 0.03).toFixed(1)}C${(tx + sbDir * sz * 0.5).toFixed(1)},${(sbY + sz * 0.08).toFixed(1)} ${(tx + sbDir * sz * 0.7).toFixed(1)},${sbY.toFixed(1)} ${(tx + sbDir * sz * 1.0).toFixed(1)},${(sbY - sz * 0.06).toFixed(1)}`)
+            }
+            const r1 = sz * (0.8 + rng() * 0.4)
+            const r2 = sz * (0.6 + rng() * 0.3)
+            const w1 = (rng() - 0.5) * r2 * 0.5
+            const w2 = (rng() - 0.5) * r2 * 0.45
+            const w3 = (rng() - 0.5) * r2 * 0.3
+            const w4 = (rng() - 0.5) * r2 * 0.35
+            const w5 = (rng() - 0.5) * r2 * 0.25
+            const w6 = (rng() - 0.5) * r2 * 0.3
+            canopies.push(`M${(tx - r1).toFixed(1)},${(cy + r2 * 0.15 + w3).toFixed(1)}Q${(tx - r1 * 0.7).toFixed(1)},${(cy - r2 * 0.4 + w5).toFixed(1)} ${(tx - r1 * 0.35).toFixed(1)},${(cy - r2 + w1).toFixed(1)}Q${(tx - r1 * 0.1).toFixed(1)},${(cy - r2 * 1.1).toFixed(1)} ${tx.toFixed(1)},${(cy - r2).toFixed(1)}Q${(tx + r1 * 0.15).toFixed(1)},${(cy - r2 * 1.05).toFixed(1)} ${(tx + r1 * 0.4).toFixed(1)},${(cy - r2 + w2).toFixed(1)}Q${(tx + r1 * 0.75).toFixed(1)},${(cy - r2 * 0.35 + w6).toFixed(1)} ${(tx + r1).toFixed(1)},${(cy + r2 * 0.1 + w4).toFixed(1)}Q${(tx + r1 * 0.5).toFixed(1)},${(cy + r2 * 0.55).toFixed(1)} ${(tx + r1 * 0.15).toFixed(1)},${(cy + r2 * 0.5).toFixed(1)}Q${tx.toFixed(1)},${(cy + r2 * 0.48).toFixed(1)} ${(tx - r1 * 0.15).toFixed(1)},${(cy + r2 * 0.5).toFixed(1)}Q${(tx - r1 * 0.45).toFixed(1)},${(cy + r2 * 0.55).toFixed(1)} ${(tx - r1).toFixed(1)},${(cy + r2 * 0.15 + w3).toFixed(1)}Z`)
+            canopyShade.push(`M${(tx - r1 * 0.1).toFixed(1)},${(cy + r2 * 0.3).toFixed(1)}C${(tx + r1 * 0.2).toFixed(1)},${(cy + r2 * 0.5).toFixed(1)} ${(tx + r1 * 0.6).toFixed(1)},${(cy + r2 * 0.4).toFixed(1)} ${(tx + r1 * 0.8).toFixed(1)},${(cy + r2 * 0.15).toFixed(1)}`)
+            canopyHighlight.push(`M${(tx - r1 * 0.5).toFixed(1)},${(cy - r2 * 0.5).toFixed(1)}C${(tx - r1 * 0.2).toFixed(1)},${(cy - r2 * 0.8).toFixed(1)} ${(tx + r1 * 0.1).toFixed(1)},${(cy - r2 * 0.7).toFixed(1)} ${(tx + r1 * 0.3).toFixed(1)},${(cy - r2 * 0.4).toFixed(1)}`)
+            for (let lt = 0; lt < 3; lt++) {
+              const la = rng() * Math.PI * 2
+              const ld = r1 * (0.3 + rng() * 0.35)
+              const lx = tx + Math.cos(la) * ld
+              const ly = cy + Math.sin(la) * ld * (r2 / r1) * 0.8
+              const lsz = sz * (0.15 + rng() * 0.15)
+              leafTexture.push(`M${lx.toFixed(2)},${ly.toFixed(2)}Q${(lx + lsz * 0.5).toFixed(2)},${(ly - lsz * 0.3).toFixed(2)} ${(lx + lsz).toFixed(2)},${ly.toFixed(2)}`)
+            }
+            const fruitCount = 5 + Math.floor(rng() * 7)
+            for (let f = 0; f < fruitCount; f++) {
+              const fa = rng() * Math.PI * 2
+              const fd = r1 * (0.1 + rng() * 0.6)
+              const fx = tx + Math.cos(fa) * fd
+              const fy = cy + Math.sin(fa) * fd * (r2 / r1)
+              const fr = sz * 0.04 + rng() * sz * 0.035
+              fruitStems.push(`M${fx.toFixed(2)},${(fy - fr).toFixed(2)}L${fx.toFixed(2)},${(fy - fr - sz * 0.08).toFixed(2)}`)
+              fruits.push(`M${(fx + fr).toFixed(2)},${fy.toFixed(2)}a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 -${(fr * 2).toFixed(2)},0a${fr.toFixed(2)},${fr.toFixed(2)} 0 1 1 ${(fr * 2).toFixed(2)},0Z`)
+              fruitShine.push(`M${(fx - fr * 0.3).toFixed(2)},${(fy - fr * 0.3).toFixed(2)}a${(fr * 0.25).toFixed(2)},${(fr * 0.25).toFixed(2)} 0 1 1 ${(fr * 0.01).toFixed(3)},0Z`)
             }
           }
           return (
             <g opacity={p.groveOpacity}>
-              <path d={trunks.join('')} stroke={isDark ? '#2a1a0e' : '#5a3a1a'} strokeWidth="0.5" fill="none" />
-              {canopyPaths.map((c, i) => <path key={i} d={c} fill={nearFills[i % nearFills.length]} />)}
-              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.5} />
+              <path d={shadows.join('')} fill="rgba(0,0,0,0.06)" />
+              <path d={trunks.join('')} fill={trunkC} />
+              <path d={trunks.join('')} fill={trunkD} opacity="0.12" />
+              <path d={trunkBark.join('')} stroke={trunkD} strokeWidth="0.15" fill="none" opacity="0.3" />
+              <path d={knots.join('')} fill="#0a0604" opacity="0.45" />
+              <path d={branchesL.join('')} stroke={trunkC} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+              <path d={branchesR.join('')} stroke={trunkC} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+              <path d={subBranches.join('')} stroke={trunkC} strokeWidth="0.18" fill="none" strokeLinecap="round" opacity="0.6" />
+              {canopies.map((c, i) => <path key={i} d={c} fill={canopyFills[canopyFillIdx[i]]} />)}
+              <path d={canopyShade.join('')} fill={isDark ? '#0e200c' : '#1e4a1c'} opacity="0.18" />
+              <path d={canopyHighlight.join('')} fill={isDark ? '#2a4a22' : '#4a8a42'} opacity="0.12" />
+              <path d={leafTexture.join('')} stroke={isDark ? '#142c10' : '#225018'} strokeWidth="0.15" fill="none" opacity="0.2" />
+              <path d={fruitStems.join('')} stroke={isDark ? '#3a7a2a' : '#3a7a2a'} strokeWidth="0.1" fill="none" strokeLinecap="round" />
+              <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} />
+              <path d={fruitShine.join('')} fill="rgba(255,255,255,0.25)" />
             </g>
           )
         })()}
@@ -1184,8 +1264,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const lx = 170, ly = 46
           const iron = isDark ? '#3a3a3a' : '#4a4a4a'
           const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
-          const glass = isDark ? '#fbbf24' : '#f59e0b'
-          const glassL = isDark ? '#fcd34d' : '#fbbf24'
+          const isNight = isDark
+          const glass = isNight ? '#fbbf24' : '#8a8a82'
+          const glassL = isNight ? '#fcd34d' : '#9a9a92'
           return (
             <g>
               <defs>
@@ -1215,20 +1296,16 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
                   <stop offset="100%" stopColor={glass} stopOpacity="0" />
                 </linearGradient>
               </defs>
-              {/* Wide ambient wash across windmill area */}
+              {isNight && <>
               <ellipse cx={lx + 15} cy={ly - 2} rx="35" ry="18" fill="url(#lamp-ambient)" />
-              {/* Secondary softer fill for far windmill */}
               <ellipse cx={lx + 22} cy={ly} rx="28" ry="14" fill="url(#lamp-ambient)" opacity="0.6" />
-              {/* Ground warm reflection */}
               <ellipse cx={lx + 10} cy={ly + 8} rx="30" ry="8" fill="url(#lamp-ground)" />
-              {/* Volumetric light cone beneath lantern */}
               <path d={`M${lx + 0.5},${ly - 7} L${lx - 4},${ly + 4} L${lx + 6},${ly + 4} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              {/* Warm rim on nearby surfaces — subtle highlights on ground */}
               <ellipse cx={lx + 2} cy={ly + 1} rx="6" ry="1.5" fill={glass} opacity="0.03" />
               <ellipse cx={lx + 8} cy={ly + 2} rx="8" ry="1.8" fill={glass} opacity="0.02" />
-              {/* Tight lantern glow */}
               <circle cx={lx + 1.5} cy={ly - 7.5} r="4" fill="url(#lamp-glow)" />
               <circle cx={lx + 1.5} cy={ly - 7.5} r="2" fill={glassL} opacity="0.06" />
+              </>}
               {/* Pole */}
               <rect x={lx - 0.3} y={ly - 8} width="0.6" height="9" rx="0.15" fill={iron} />
               {/* Base */}
@@ -2065,6 +2142,143 @@ export const OrchardView = memo(function OrchardView({
               >
                 {(() => { return (
                   <>
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
+                      <defs>
+                        <linearGradient id="gp-top" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
+                          <stop offset="40%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
+                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
+                        </linearGradient>
+                        <linearGradient id="gp-bot" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
+                          <stop offset="70%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.7 : 0.5} />
+                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
+                        </linearGradient>
+                        <linearGradient id="gp-left" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
+                          <stop offset="35%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
+                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
+                        </linearGradient>
+                        <linearGradient id="gp-right" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
+                          <stop offset="65%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity={isDark ? 0.6 : 0.45} />
+                          <stop offset="100%" stopColor={isDark ? '#1a2812' : '#2e4e24'} stopOpacity="0" />
+                        </linearGradient>
+                        <radialGradient id="gp-warm" cx="40%" cy="42%" r="35%">
+                          <stop offset="0%" stopColor={isDark ? '#22301a' : '#3a5e30'} stopOpacity="0.35" />
+                          <stop offset="100%" stopColor={isDark ? '#22301a' : '#3a5e30'} stopOpacity="0" />
+                        </radialGradient>
+                        <radialGradient id="gp-cool" cx="60%" cy="68%" r="30%">
+                          <stop offset="0%" stopColor={isDark ? '#0e1a0a' : '#1e3a16'} stopOpacity="0.25" />
+                          <stop offset="100%" stopColor={isDark ? '#0e1a0a' : '#1e3a16'} stopOpacity="0" />
+                        </radialGradient>
+                        <filter id="gp-blur" x="-8%" y="-8%" width="116%" height="116%">
+                          <feGaussianBlur stdDeviation="1.8" />
+                        </filter>
+                        <filter id="gp-blur-sm" x="-5%" y="-5%" width="110%" height="110%">
+                          <feGaussianBlur stdDeviation="0.8" />
+                        </filter>
+                      </defs>
+                      <path d={`
+                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
+                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
+                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
+                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
+                        Q 65,95.5 50,95 Q 35,96 25,94
+                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
+                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
+                      `} fill="url(#gp-top)" filter="url(#gp-blur)" />
+                      <path d={`
+                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
+                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
+                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
+                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
+                        Q 65,95.5 50,95 Q 35,96 25,94
+                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
+                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
+                      `} fill="url(#gp-bot)" filter="url(#gp-blur)" />
+                      <path d={`
+                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
+                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
+                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
+                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
+                        Q 65,95.5 50,95 Q 35,96 25,94
+                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
+                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
+                      `} fill="url(#gp-left)" filter="url(#gp-blur)" />
+                      <path d={`
+                        M 13,42 Q 15,40.5 20,41.5 L 30,41 Q 40,39.5 50,40.5
+                        Q 60,39 70,41 L 80,40.5 Q 85,41 87,42
+                        L 89,44 Q 90,46 89,50 L 90,60 Q 89,70 90,78
+                        Q 89,86 88,90 L 86,93 Q 82,95 75,94
+                        Q 65,95.5 50,95 Q 35,96 25,94
+                        Q 18,95 14,93 L 12,90 Q 10,86 11,78
+                        L 10,68 Q 11,56 10,48 Q 11,44 13,42 Z
+                      `} fill="url(#gp-right)" filter="url(#gp-blur)" />
+                      <rect x="16" y="44" width="68" height="48" rx="3" fill={isDark ? '#1c2a14' : '#2e4e24'} opacity={isDark ? 0.45 : 0.3} filter="url(#gp-blur)" />
+                      <rect x="20" y="48" width="60" height="40" rx="2" fill="url(#gp-warm)" filter="url(#gp-blur)" />
+                      <rect x="22" y="52" width="56" height="36" rx="2" fill="url(#gp-cool)" filter="url(#gp-blur)" />
+                      {(() => {
+                        const tufts: string[] = []
+                        const blades: string[] = []
+                        const clover: string[] = []
+                        const moss: string[] = []
+                        const L = 12, R = 88, T = 40, B = 96
+                        for (let i = 0; i < 180; i++) {
+                          const rng = seededRng(i * 43 + 997)
+                          const tx = L + rng() * (R - L)
+                          const ty = T + rng() * (B - T)
+                          const edgeDist = Math.min(tx - L, R - tx, ty - T, B - ty)
+                          const fade = Math.min(1, edgeDist / 8)
+                          if (fade < 0.05) continue
+                          const h = (0.4 + rng() * 0.8) * fade
+                          const sway = (rng() - 0.5) * 0.35
+                          tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.6).toFixed(2)} ${(sway * 0.4).toFixed(2)},${(-h).toFixed(2)}`)
+                          if (rng() > 0.3) {
+                            const s2 = (rng() - 0.5) * 0.5
+                            tufts.push(`M${(tx + 0.15).toFixed(2)},${ty.toFixed(1)}q${s2.toFixed(2)},${(-h * 0.4).toFixed(2)} ${(s2 * 0.6).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
+                          }
+                          if (rng() > 0.5) {
+                            const s3 = (rng() - 0.5) * 0.4
+                            tufts.push(`M${(tx - 0.12).toFixed(2)},${ty.toFixed(1)}q${s3.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(s3 * 0.5).toFixed(2)},${(-h * 0.6).toFixed(2)}`)
+                          }
+                        }
+                        for (let i = 0; i < 100; i++) {
+                          const rng = seededRng(i * 59 + 1231)
+                          const bx = L + 2 + rng() * (R - L - 4)
+                          const by = T + 2 + rng() * (B - T - 4)
+                          const edgeDist = Math.min(bx - L, R - bx, by - T, B - by)
+                          const fade = Math.min(1, edgeDist / 6)
+                          if (fade < 0.08) continue
+                          const bh = (0.5 + rng() * 1.0) * fade
+                          const curve = (rng() - 0.5) * 0.7
+                          blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.25).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.8).toFixed(1)},${(by - bh * 0.65).toFixed(1)} ${(bx + curve * 0.6).toFixed(1)},${(by - bh).toFixed(1)}`)
+                        }
+                        for (let i = 0; i < 30; i++) {
+                          const rng = seededRng(i * 37 + 2099)
+                          const cx = L + 4 + rng() * (R - L - 8)
+                          const cy = T + 4 + rng() * (B - T - 8)
+                          const cs = 0.12 + rng() * 0.1
+                          for (let l = 0; l < 3; l++) {
+                            const la = (l / 3) * Math.PI * 2 + rng() * 0.4
+                            clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.4).toFixed(2)},${(cy + Math.sin(la) * cs * 1.4).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.8).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.8).toFixed(2)}`)
+                          }
+                        }
+                        for (let i = 0; i < 45; i++) {
+                          const rng = seededRng(i * 79 + 3301)
+                          const mx = L + 2 + rng() * (R - L - 4)
+                          const my = T + 2 + rng() * (B - T - 4)
+                          const ms = 0.2 + rng() * 0.4
+                          moss.push(`M${(mx - ms).toFixed(2)},${my.toFixed(2)}a${ms.toFixed(2)},${(ms * 0.4).toFixed(2)} 0 1 1 ${(ms * 2).toFixed(2)},0a${ms.toFixed(2)},${(ms * 0.4).toFixed(2)} 0 1 1 -${(ms * 2).toFixed(2)},0Z`)
+                        }
+                        return <>
+                          <path d={moss.join('')} fill={isDark ? '#1a2c12' : '#2c4c22'} opacity={isDark ? 0.2 : 0.14} filter="url(#gp-blur-sm)" />
+                          <path d={tufts.join('')} stroke={isDark ? '#223a18' : '#2e5824'} strokeWidth="0.2" fill="none" opacity={isDark ? 0.45 : 0.3} />
+                          <path d={blades.join('')} stroke={isDark ? '#2a4420' : '#386830'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.35 : 0.22} />
+                          <path d={clover.join('')} stroke={isDark ? '#2e4824' : '#3a6a30'} strokeWidth="0.12" fill={isDark ? '#223818' : '#2e5a24'} opacity={isDark ? 0.25 : 0.18} />
+                        </>
+                      })()}
+                    </svg>
                     {tillSvg}
                     {filteredTrees.length === 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
