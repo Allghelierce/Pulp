@@ -1654,69 +1654,52 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Brick paving around lamppost and windmills */}
+        {/* Packed-earth patch under windmills */}
         {(() => {
           const rng = seededRng(6677)
-          const areaPath = `M160,50 L165,46 L170,44.5 Q175,43.5 181,44 L188,43.5 L195,44.5 L201,46 L205,48 L210,51 L212,55 L211,59 Q209,63 205,65.5 L199,67 L192,67.5 Q186,68 180,66 L174,64 L169,61 Q165,58 163,55 L160,52 Z`
-          const cx0 = 186, cy0 = 55
-          const bw = 2.2, bh = 1.0
-          const bricks: string[] = []
-          const brickFills: { d: string; shade: number; depthT: number }[] = []
-          for (let row = 0; row < 28; row++) {
-            const by = 42 + row * bh
-            if (by > 70) break
-            const depthT = Math.max(0, Math.min(1, (by - 42) / 28))
-            const scaleX = 1 + depthT * 0.15
-            const ySkew = depthT * 0.12
-            const offset = (row % 2) * (bw * 0.5)
-            for (let col = 0; col < 30; col++) {
-              const bx = 155 + offset + col * bw * scaleX
-              if (bx > 215) break
-              const dx = (bx + bw * scaleX * 0.5 - cx0) / 28
-              const dy = (by + bh * 0.5 - cy0) / 14
-              if (dx * dx + dy * dy > 1) continue
-              const x0 = bx
-              const x1 = bx + bw * scaleX
-              const y0 = by + (bx - 155) * ySkew * 0.01
-              const y1 = y0 + bh
-              const shade = rng()
-              brickFills.push({
-                d: `M${x0.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y1.toFixed(2)} L${x0.toFixed(2)},${y1.toFixed(2)} Z`,
-                shade, depthT
-              })
-              bricks.push(`M${x0.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y1.toFixed(2)} L${x0.toFixed(2)},${y1.toFixed(2)} Z`)
-            }
+          const areaPath = `M165,38 Q175,37.5 186,38 Q198,38.5 210,39 L210,56 Q200,56.5 186,56 Q175,55.5 165,55.5 Z`
+          const dirtC = isDark ? '#1e1a12' : '#8a7a5a'
+          const dirtD = isDark ? '#161208' : '#7a6a4a'
+          const pebbles: string[] = []
+          const cracks: string[] = []
+          const patches: string[] = []
+          for (let i = 0; i < 35; i++) {
+            const px = 166 + rng() * 42
+            const py = 38.5 + rng() * 16.5
+            const pr = 0.1 + rng() * 0.2
+            pebbles.push(`M${(px + pr).toFixed(2)},${py.toFixed(2)}a${pr.toFixed(2)},${(pr * 0.5).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.5).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
+          }
+          for (let i = 0; i < 12; i++) {
+            const cx = 168 + rng() * 38
+            const cy = 39 + rng() * 15
+            const len = 1 + rng() * 3
+            const ang = (rng() - 0.5) * 0.5
+            cracks.push(`M${cx.toFixed(1)},${cy.toFixed(1)}l${(Math.cos(ang) * len).toFixed(1)},${(Math.sin(ang) * len * 0.3).toFixed(1)}`)
+          }
+          for (let i = 0; i < 8; i++) {
+            const px = 167 + rng() * 40
+            const py = 39 + rng() * 15
+            const pw = 1.5 + rng() * 3
+            const ph = 0.4 + rng() * 0.8
+            patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${px.toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
           }
           const edgeGrass: string[] = []
           const er2 = seededRng(3344)
-          for (let i = 0; i < 50; i++) {
-            const ang = (i / 50) * Math.PI * 2
-            const rx = 28 + (er2() - 0.5) * 4
-            const ry = 14 + (er2() - 0.5) * 2
-            const ex = cx0 + Math.cos(ang) * rx
-            const ey = cy0 + Math.sin(ang) * ry
+          for (let i = 0; i < 30; i++) {
+            const t = i / 30
+            const isTop = t < 0.5
+            const et = isTop ? t * 2 : (t - 0.5) * 2
+            const ex = 165 + et * 45
+            const ey = isTop ? 37.5 + Math.sin(et * Math.PI) * 0.8 : 56 - Math.sin(et * Math.PI) * 0.5
             const h = 0.3 + er2() * 0.5
             const sw = (er2() - 0.5) * 0.2
             edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
           }
           return <g>
-            <defs>
-              <clipPath id="brick-area-clip">
-                <path d={areaPath} />
-              </clipPath>
-              <linearGradient id="brick-base" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={p.fieldTop} />
-                <stop offset="100%" stopColor={p.fieldBot} />
-              </linearGradient>
-            </defs>
-            <g clipPath="url(#brick-area-clip)">
-              <path d={areaPath} fill="url(#brick-base)" />
-              {brickFills.map((b, i) => (
-                <path key={i} d={b.d} fill={b.shade > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'} />
-              ))}
-              <path d={bricks.join('')} fill="none" stroke={p.fieldBot} strokeWidth="0.18" opacity={0.5} />
-              <path d={areaPath} fill="rgba(0,0,0,0.08)" />
-            </g>
+            <path d={areaPath} fill={dirtC} opacity={isDark ? 0.12 : 0.08} />
+            <path d={patches.join('')} fill={dirtD} opacity={isDark ? 0.08 : 0.05} />
+            <path d={pebbles.join('')} fill={isDark ? '#2a2620' : '#9a8a6a'} opacity={isDark ? 0.15 : 0.1} />
+            <path d={cracks.join('')} stroke={dirtD} strokeWidth="0.12" fill="none" opacity={isDark ? 0.08 : 0.05} />
             <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.2 : 0.12} />
           </g>
         })()}

@@ -44,6 +44,13 @@ export const TREE_TYPES: Record<string, any> = {
   // LEGENDARY — 100 juice each
   abyss:         { name: 'Abyss Maw',     color: '#000000', bg: 'rgba(0,0,0,0.2)',       cost: 100, currency: 'juice', rarity: 'legendary', weight: 0.1,  shape: 'void',         category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 1, sceneBg: 'linear-gradient(180deg, #05050f 0%, #0a0a1a 50%, #0f0f25 100%)' },
 
+  // ═══ MORE TREES ═══
+  persimmon:     { name: 'Persimmon',      color: '#e2711d', bg: 'rgba(226,113,29,0.1)',  cost: 5,   currency: 'juice', rarity: 'common',    weight: 0.5,  shape: 'apple',        category: 'fruit', juiceYield: 3,  paperYield: 1, sceneBg: 'linear-gradient(180deg, #1c1208 0%, #241c0e 50%, #2e2614 100%)' },
+  juniper:       { name: 'Juniper',        color: '#2d6a4f', bg: 'rgba(45,106,79,0.1)',   cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'conifer',      category: 'paper', juiceYield: 0,  paperYield: 8,  sceneBg: 'linear-gradient(180deg, #0c1a14 0%, #102418 50%, #142e1c 100%)' },
+  clementine:    { name: 'Clementine',     color: '#f97316', bg: 'rgba(249,115,22,0.1)',  cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'citrus',       category: 'fruit', juiceYield: 5,  paperYield: 2, sceneBg: 'linear-gradient(180deg, #1c1408 0%, #241e0e 50%, #2e2814 100%)' },
+  mulberry:      { name: 'Mulberry',       color: '#7e22ce', bg: 'rgba(126,34,206,0.1)',  cost: 40,  currency: 'juice', rarity: 'rare',      weight: 0.2,  shape: 'blackberry',   category: 'fruit', juiceYield: 7,  paperYield: 4, sceneBg: 'linear-gradient(180deg, #160e24 0%, #1e1430 50%, #261a3c 100%)' },
+  elderwood:     { name: 'Elderwood',      color: '#4a3728', bg: 'rgba(74,55,40,0.1)',    cost: 65,  currency: 'juice', rarity: 'epic',      weight: 0.15, shape: 'oak',          category: 'paper', juiceYield: 0,  paperYield: 22, sceneBg: 'linear-gradient(180deg, #141008 0%, #1a160e 50%, #201c14 100%)' },
+
   // ═══ SPECIAL ═══
   spoiled:       { name: 'Spoiled',        color: '#71717a', bg: 'rgba(113,113,122,0.1)', cost: 0,   currency: 'juice', rarity: 'common',    weight: 0,    shape: 'dead',         category: 'none',  juiceYield: 0,  paperYield: 0, sceneBg: 'linear-gradient(180deg, #141414 0%, #1a1a1a 50%, #202020 100%)' }
 }

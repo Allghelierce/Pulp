@@ -1078,13 +1078,16 @@ export default function NoteApp() {
   const [streak, setStreak] = useState(0)
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
+  const [orchardVisible, setOrchardVisible] = useState(false)
+  const [orchardTransit, setOrchardTransit] = useState<'idle' | 'warp-out' | 'warp-in' | 'close-out' | 'close-in'>('idle')
+
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'gems' | 'bag' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setOrchardVisible(false); setOrchardTransit('idle'); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
 
   useEffect(() => {
     if (!orchardOpen) return
@@ -1287,6 +1290,21 @@ export default function NoteApp() {
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
     shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
   } = settings
+
+  const openOrchard = useCallback(() => {
+    if (reduceMotion) { setOrchardOpen(true); setOrchardVisible(true); return }
+    setOrchardTransit('warp-out')
+    setTimeout(() => { setOrchardOpen(true); setOrchardVisible(true); setOrchardTransit('warp-in') }, 400)
+    setTimeout(() => setOrchardTransit('idle'), 850)
+  }, [reduceMotion])
+
+  const closeOrchard = useCallback(() => {
+    if (reduceMotion) { setOrchardOpen(false); setOrchardVisible(false); return }
+    setOrchardTransit('close-out')
+    setTimeout(() => { setOrchardOpen(false); setOrchardTransit('close-in') }, 400)
+    setTimeout(() => { setOrchardVisible(false); setOrchardTransit('idle') }, 850)
+  }, [reduceMotion])
+
   const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
   const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettingsRef.current?.trashNotes) ? _savedSettingsRef.current.trashNotes : [])
@@ -3056,7 +3074,13 @@ export default function NoteApp() {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
+        <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{
+          display: currentView === "shelf" ? "none" : undefined,
+          transform: orchardTransit === 'warp-out' ? 'translateX(-120%) skewX(3deg)' : orchardTransit === 'close-in' ? 'translateX(0)' : orchardTransit === 'close-out' || orchardTransit === 'warp-in' ? 'translateX(-120%)' : 'translateX(0)',
+          opacity: orchardTransit === 'warp-out' || orchardTransit === 'close-out' ? 0 : 1,
+          transition: orchardTransit === 'idle' ? 'none' : 'transform 0.4s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.25s ease',
+          willChange: orchardTransit !== 'idle' ? 'transform, opacity' : undefined,
+        }}>
 
 
           {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
@@ -3103,7 +3127,7 @@ export default function NoteApp() {
           })()}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && (
-            <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0.3 : undefined, transition: 'opacity 0.15s ease' }}>
+            <div className="relative" style={{ pointerEvents: (orchardOpen || orchardVisible || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (statsOpen || leaderboardOpen || shopOpen) ? 0.3 : undefined, transition: 'opacity 0.15s ease' }}>
               <DocumentToolbar
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -3192,7 +3216,7 @@ export default function NoteApp() {
                 onTimerOpen={() => setTimerOpen(!timerOpen)}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { closeAllPanels(); setShopOpen(true) } }}
                 onOpenGemStore={() => setGemStoreOpen(true)}
-                onOpenGrove={() => { closeAllPanels(); setOrchardOpen(true) }}
+                onOpenGrove={() => { closeAllPanels(); openOrchard() }}
                 onInsertImage={() => setShowImageModal(true)}
                 onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                 onQuickPrompt={handleQuickPrompt}
@@ -3683,9 +3707,16 @@ export default function NoteApp() {
 
         </div>
 
-        <div style={{ display: orchardOpen ? undefined : 'none', position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}><OrchardView
-          isOpen={orchardOpen}
-          onClose={() => setOrchardOpen(false)}
+        <div style={{
+          display: orchardVisible ? undefined : 'none',
+          position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50,
+          transform: orchardTransit === 'warp-in' ? 'translateX(0) skewX(0deg)' : orchardTransit === 'warp-out' || orchardTransit === 'idle' && !orchardOpen ? 'translateX(120%) skewX(-3deg)' : orchardTransit === 'close-out' ? 'translateX(120%) skewX(-3deg)' : 'translateX(0)',
+          opacity: orchardTransit === 'warp-in' || orchardTransit === 'close-in' ? 0 : orchardOpen ? 1 : 0,
+          transition: orchardTransit === 'idle' ? 'none' : 'transform 0.4s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.25s ease',
+          willChange: orchardTransit !== 'idle' ? 'transform, opacity' : undefined,
+        }}><OrchardView
+          isOpen={orchardVisible}
+          onClose={closeOrchard}
           theme={theme}
           accent={accent}
           juice={juice}
@@ -3702,6 +3733,71 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           orchardTimeMode={orchardTimeMode || "theme"}
         /></div>
+
+        {orchardTransit !== 'idle' && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 60, pointerEvents: 'none', overflow: 'hidden',
+          }}>
+            <style>{`
+              @keyframes warp-streak {
+                0% { transform: translateX(120%); opacity: 0; }
+                15% { opacity: 1; }
+                85% { opacity: 1; }
+                100% { transform: translateX(-120%); opacity: 0; }
+              }
+              @keyframes warp-streak-rev {
+                0% { transform: translateX(-120%); opacity: 0; }
+                15% { opacity: 1; }
+                85% { opacity: 1; }
+                100% { transform: translateX(120%); opacity: 0; }
+              }
+              @keyframes warp-flash {
+                0% { opacity: 0; }
+                30% { opacity: 1; }
+                70% { opacity: 1; }
+                100% { opacity: 0; }
+              }
+            `}</style>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: theme === "dark" ? 'rgba(9,9,11,0.4)' : 'rgba(255,252,248,0.5)',
+              animation: 'warp-flash 0.8s ease-out forwards',
+            }} />
+            {Array.from({ length: 18 }, (_, i) => {
+              const y = 5 + (i / 18) * 90
+              const h = 0.3 + Math.random() * 0.8
+              const delay = Math.random() * 0.15
+              const dur = 0.35 + Math.random() * 0.2
+              const isClosing = orchardTransit === 'close-out' || orchardTransit === 'close-in'
+              return <div key={i} style={{
+                position: 'absolute',
+                top: `${y}%`,
+                left: 0,
+                right: 0,
+                height: `${h}%`,
+                background: `linear-gradient(90deg, transparent, ${theme === "dark" ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.2)'} 20%, ${theme === "dark" ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.4)'} 50%, ${theme === "dark" ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.2)'} 80%, transparent)`,
+                animation: `${isClosing ? 'warp-streak-rev' : 'warp-streak'} ${dur}s cubic-bezier(0.2, 0, 0.3, 1) ${delay}s forwards`,
+                borderRadius: 2,
+              }} />
+            })}
+            {Array.from({ length: 8 }, (_, i) => {
+              const y = 10 + (i / 8) * 80
+              const delay = 0.05 + Math.random() * 0.1
+              const dur = 0.3 + Math.random() * 0.15
+              const isClosing = orchardTransit === 'close-out' || orchardTransit === 'close-in'
+              return <div key={`thick-${i}`} style={{
+                position: 'absolute',
+                top: `${y}%`,
+                left: 0,
+                right: 0,
+                height: '1.5%',
+                background: `linear-gradient(90deg, transparent, ${theme === "dark" ? 'rgba(100,180,100,0.12)' : 'rgba(80,140,60,0.1)'} 30%, ${theme === "dark" ? 'rgba(60,100,60,0.08)' : 'rgba(60,120,50,0.06)'} 70%, transparent)`,
+                animation: `${isClosing ? 'warp-streak-rev' : 'warp-streak'} ${dur}s cubic-bezier(0.2, 0, 0.3, 1) ${delay}s forwards`,
+                filter: 'blur(2px)',
+              }} />
+            })}
+          </div>
+        )}
 
         <div style={{ display: statsOpen ? undefined : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
           isOpen={statsOpen}
@@ -3739,7 +3835,7 @@ export default function NoteApp() {
         /></div>
 
         {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-          <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { closeAllPanels(); setOrchardOpen(true) } }} />
+          <HangingOrange onClick={() => { if (orchardOpen || orchardVisible) { closeOrchard() } else { closeAllPanels(); openOrchard() } }} />
         )}
 
         {slashMenu && (
