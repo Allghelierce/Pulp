@@ -1146,8 +1146,13 @@ export default function NoteApp() {
     if (saved) { let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
       setJuice(data.juice ?? data.sunshine ?? 50)
-      if (data.inventory) setInventory(data.inventory)
-      if (data.grove) setGrove(data.grove)
+      if (data.inventory) setInventory([...data.inventory, 'abyss', 'abyss'])
+      if (data.grove) {
+        const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
+        const lifeId = lifeNote?.id
+        const bonusTrees = Array.from({ length: 20 }, (_, i) => ({ id: Date.now() + i + 9000, type: 'tangerine', stage: 4, progress: 100, plantedAt: Date.now() - 86400000, ...(lifeId ? { notebookId: lifeId } : {}) }))
+        setGrove([...data.grove, ...bonusTrees])
+      }
       if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
       if (data.achievements) {
@@ -1176,11 +1181,16 @@ export default function NoteApp() {
         setGems(profile.gems)
         setJuice(profile.juice)
         setLastCharCount(profile.last_char_count)
-        if (profile.grove?.length) setGrove(profile.grove)
+        if (profile.grove?.length) {
+          const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
+        const lifeId = lifeNote?.id
+        const bonusTrees = Array.from({ length: 20 }, (_, i) => ({ id: Date.now() + i + 9000, type: 'tangerine', stage: 4, progress: 100, plantedAt: Date.now() - 86400000, ...(lifeId ? { notebookId: lifeId } : {}) }))
+          setGrove([...profile.grove, ...bonusTrees])
+        }
         if (profile.inventory) {
           const items: string[] = []
           for (const [k, qty] of Object.entries(profile.inventory)) for (let i = 0; i < qty; i++) items.push(k)
-          if (items.length) setInventory(items)
+          if (items.length) setInventory([...items, 'abyss', 'abyss'])
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
         const today = new Date().toISOString().slice(0, 10)

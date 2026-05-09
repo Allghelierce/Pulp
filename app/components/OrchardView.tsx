@@ -1654,62 +1654,70 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })()}
 
-        {/* Gravel patch around lamppost and windmills */}
+        {/* Brick paving around lamppost and windmills */}
         {(() => {
-          const gravelC = isDark ? '#2a2a2a' : '#b0b0a8'
-          const gravelD = isDark ? '#1a1a1a' : '#888880'
-          const gravelL = isDark ? '#353535' : '#c8c8c0'
           const rng = seededRng(6677)
-          const gravelPath = `M160,50 L165,46 L170,44.5 Q175,43.5 181,44 L188,43.5 L195,44.5 L201,46 L205,48 L210,51 L212,55 L211,59 Q209,63 205,65.5 L199,67 L192,67.5 Q186,68 180,66 L174,64 L169,61 Q165,58 163,55 L160,52 Z`
-          const edgeGrass: string[] = []
-          const er2 = seededRng(3344)
-          const edgePts = [
-            [160,50],[165,46],[170,44.5],[181,44],[188,43.5],[195,44.5],[201,46],[205,48],[210,51],[212,55],[211,59],[205,65.5],[199,67],[192,67.5],[180,66],[174,64],[169,61],[163,55],[160,52]
-          ]
-          for (let i = 0; i < edgePts.length; i++) {
-            const [ex0, ey0] = edgePts[i]
-            const [ex1, ey1] = edgePts[(i + 1) % edgePts.length]
-            for (let j = 0; j < 3; j++) {
-              const t2 = (j + 0.5) / 3
-              const ex = ex0 + (ex1 - ex0) * t2 + (er2() - 0.5) * 2
-              const ey = ey0 + (ey1 - ey0) * t2 + (er2() - 0.5) * 1.5
-            const h = 0.4 + er2() * 0.6
-            const sw = (er2() - 0.5) * 0.3
-            edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+          const areaPath = `M160,50 L165,46 L170,44.5 Q175,43.5 181,44 L188,43.5 L195,44.5 L201,46 L205,48 L210,51 L212,55 L211,59 Q209,63 205,65.5 L199,67 L192,67.5 Q186,68 180,66 L174,64 L169,61 Q165,58 163,55 L160,52 Z`
+          const cx0 = 186, cy0 = 55
+          const bw = 2.2, bh = 1.0
+          const bricks: string[] = []
+          const brickFills: { d: string; shade: number; depthT: number }[] = []
+          for (let row = 0; row < 28; row++) {
+            const by = 42 + row * bh
+            if (by > 70) break
+            const depthT = Math.max(0, Math.min(1, (by - 42) / 28))
+            const scaleX = 1 + depthT * 0.15
+            const ySkew = depthT * 0.12
+            const offset = (row % 2) * (bw * 0.5)
+            for (let col = 0; col < 30; col++) {
+              const bx = 155 + offset + col * bw * scaleX
+              if (bx > 215) break
+              const dx = (bx + bw * scaleX * 0.5 - cx0) / 28
+              const dy = (by + bh * 0.5 - cy0) / 14
+              if (dx * dx + dy * dy > 1) continue
+              const x0 = bx
+              const x1 = bx + bw * scaleX
+              const y0 = by + (bx - 155) * ySkew * 0.01
+              const y1 = y0 + bh
+              const shade = rng()
+              brickFills.push({
+                d: `M${x0.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y1.toFixed(2)} L${x0.toFixed(2)},${y1.toFixed(2)} Z`,
+                shade, depthT
+              })
+              bricks.push(`M${x0.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y0.toFixed(2)} L${x1.toFixed(2)},${y1.toFixed(2)} L${x0.toFixed(2)},${y1.toFixed(2)} Z`)
             }
           }
-          const pebbles: string[] = []
-          for (let i = 0; i < 140; i++) {
-            const px = 160 + rng() * 52
-            const py = 44 + rng() * 24
-            const cx = 186, cy = 56
-            const dx = (px - cx) / 27, dy = (py - cy) / 12
-            if (dx * dx + dy * dy > 1) continue
-            const pr = 0.1 + rng() * 0.25
-            pebbles.push(`M${(px + pr).toFixed(2)},${py.toFixed(2)}a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.6).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
-          }
-          const cracks: string[] = []
-          for (let i = 0; i < 15; i++) {
-            const cx2 = 162 + rng() * 48
-            const cy2 = 45 + rng() * 22
-            const dx2 = (cx2 - 186) / 27, dy2 = (cy2 - 56) / 12
-            if (dx2 * dx2 + dy2 * dy2 > 0.85) continue
-            const len = 1.2 + rng() * 3
-            const ang = rng() * Math.PI
-            cracks.push(`M${cx2.toFixed(1)},${cy2.toFixed(1)}l${(Math.cos(ang) * len).toFixed(2)},${(Math.sin(ang) * len * 0.3).toFixed(2)}`)
+          const edgeGrass: string[] = []
+          const er2 = seededRng(3344)
+          for (let i = 0; i < 50; i++) {
+            const ang = (i / 50) * Math.PI * 2
+            const rx = 28 + (er2() - 0.5) * 4
+            const ry = 14 + (er2() - 0.5) * 2
+            const ex = cx0 + Math.cos(ang) * rx
+            const ey = cy0 + Math.sin(ang) * ry
+            const h = 0.3 + er2() * 0.5
+            const sw = (er2() - 0.5) * 0.2
+            edgeGrass.push(`M${ex.toFixed(1)},${ey.toFixed(1)}q${sw.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sw * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
           }
           return <g>
             <defs>
-              <filter id="gravel-blend" x="-15%" y="-15%" width="130%" height="130%">
-                <feGaussianBlur stdDeviation="0.8" />
-              </filter>
+              <clipPath id="brick-area-clip">
+                <path d={areaPath} />
+              </clipPath>
+              <linearGradient id="brick-base" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={p.fieldTop} />
+                <stop offset="100%" stopColor={p.fieldBot} />
+              </linearGradient>
             </defs>
-            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.35 : 0.25} filter="url(#gravel-blend)" />
-            <path d={gravelPath} fill={gravelC} opacity={isDark ? 0.2 : 0.15} />
-            <path d={gravelPath} fill="none" stroke={isDark ? '#3a3a38' : '#8a8a80'} strokeWidth="0.15" opacity={isDark ? 0.4 : 0.3} />
-            <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.14" fill="none" opacity={isDark ? 0.25 : 0.15} />
-            <path d={pebbles.join('')} fill={gravelD} opacity={isDark ? 0.45 : 0.25} />
-            <path d={cracks.join('')} stroke={gravelD} strokeWidth="0.1" fill="none" opacity={isDark ? 0.15 : 0.08} />
+            <g clipPath="url(#brick-area-clip)">
+              <path d={areaPath} fill="url(#brick-base)" />
+              {brickFills.map((b, i) => (
+                <path key={i} d={b.d} fill={b.shade > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'} />
+              ))}
+              <path d={bricks.join('')} fill="none" stroke={p.fieldBot} strokeWidth="0.18" opacity={0.5} />
+              <path d={areaPath} fill="rgba(0,0,0,0.08)" />
+            </g>
+            <path d={edgeGrass.join('')} stroke={isDark ? '#2a4a1e' : '#5a8a42'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.2 : 0.12} />
           </g>
         })()}
 
@@ -1784,7 +1792,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
                       </>
                     )}
                     {/* Ground shadow */}
-                    <ellipse cx={b.cx} cy={b.bot + 0.2} rx={b.rx + 0.3} ry={0.25} fill="rgba(0,0,0,0.1)" />
+                    <ellipse cx={b.cx} cy={b.bot + 0.2} rx={b.rx + 0.3} ry={0.25} fill="rgba(0,0,0,0.1)" opacity={(timeState.hour >= 18 || timeState.hour < 6) ? 0.4 : 1} />
                   </g>
                 )
               })}
@@ -2042,9 +2050,13 @@ export const OrchardView = memo(function OrchardView({
     return !localStorage.getItem('pulp-chop-hint-dismissed')
   })
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
+  const [editMode, setEditMode] = useState(false)
   const [sapReadyMap, setSapReadyMap] = useState<Record<string, number>>({})
   const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
+  const [sapFlyAnim, setSapFlyAnim] = useState<{ amount: number; phase: 'pop' | 'fly' | 'none' }>({ amount: 0, phase: 'none' })
+  const collectBtnRef = useRef<HTMLButtonElement>(null)
+  const sapCounterRef = useRef<HTMLDivElement>(null)
 
   const [slotOrder, setSlotOrder] = useState<Record<string, string[]>>(() => {
     try { return JSON.parse(localStorage.getItem('pulp-slot-order') || '{}') } catch { return {} }
@@ -2152,6 +2164,9 @@ export const OrchardView = memo(function OrchardView({
     for (const tree of treesWithSap) bucketState[tree.id] = 'bucket'
     setTapAnim(prev => ({ ...prev, ...bucketState }))
     setCollectAllAnim({ total, current: 0, active: true })
+    setSapFlyAnim({ amount: total, phase: 'pop' })
+    setTimeout(() => setSapFlyAnim(prev => ({ ...prev, phase: 'fly' })), 600)
+    setTimeout(() => setSapFlyAnim({ amount: 0, phase: 'none' }), 1400)
     const steps = 15
     const stepTime = 600 / steps
     for (let i = 1; i <= steps; i++) {
@@ -2453,6 +2468,7 @@ export const OrchardView = memo(function OrchardView({
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
         @keyframes sap-bounce { 0% { transform: scale(1) } 20% { transform: scale(0.92) translateY(2px) } 50% { transform: scale(1.06) translateY(-3px) } 100% { transform: scale(1) } }
+        @keyframes sap-pop { 0% { transform: translate(-50%, 10px) scale(0.3); opacity: 0 } 40% { transform: translate(-50%, -5px) scale(2); opacity: 1 } 100% { transform: translate(-50%, 0) scale(1.8); opacity: 1 } }
         @keyframes sap-ramp { 0% { opacity:0; transform: translateY(4px) } 15% { opacity:1; transform: translateY(0) } 85% { opacity:1; transform: translateY(0) } 100% { opacity:0; transform: translateY(-4px) } }
         @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
       `}</style>
@@ -2464,10 +2480,15 @@ export const OrchardView = memo(function OrchardView({
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}, inset 0 0 15px 4px ${isDark ? 'rgba(9,9,11,0.2)' : 'rgba(240,236,234,0.2)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
-          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
+          <div style={{
+            filter: (activeTool !== 'none' || editMode) ? 'blur(2px) brightness(0.7)' : 'none',
+            transition: 'filter 0.3s ease',
+          }}>
+            <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') } }} />
+          </div>
 
           {/* Sap count */}
-          <div className="absolute top-3 left-3 z-50 flex items-center gap-1.5 rounded-md px-2 py-1" style={{
+          <div ref={sapCounterRef} className="absolute top-3 left-3 z-50 flex items-center gap-1.5 rounded-md px-2 py-1" style={{
             background: isDark ? 'rgba(24,24,27,0.8)' : 'rgba(255,255,255,0.85)',
             border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
             fontFamily: '"EB Garamond", serif',
@@ -2684,6 +2705,11 @@ export const OrchardView = memo(function OrchardView({
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           className="absolute flex flex-col items-center group"
                           onPointerDown={(e) => {
+                            if (editMode) {
+                              e.preventDefault()
+                              handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+                              return
+                            }
                             if (activeTool === 'axe') {
                               setChopTarget({ tree, sap: getSapYield(tree) })
                               return
@@ -2705,7 +2731,7 @@ export const OrchardView = memo(function OrchardView({
                             transformOrigin: 'center bottom',
                             zIndex: isDragging ? 999 : Math.round(y),
                             willChange: isDragging ? 'transform' : undefined,
-                            cursor: activeTool === 'axe' ? 'crosshair' : sapReady > 0 ? 'pointer' : isDragging ? 'grabbing' : undefined,
+                            cursor: editMode ? (isDragging ? 'grabbing' : 'grab') : activeTool === 'axe' ? 'crosshair' : sapReady > 0 ? 'pointer' : isDragging ? 'grabbing' : undefined,
                             opacity: isDragging ? 0.85 : 1,
                           }}
                         >
@@ -2723,8 +2749,8 @@ export const OrchardView = memo(function OrchardView({
                             </div>
                             {/* Dirt mound */}
                             <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
-                              <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={0.35 + depthT * 0.15} />
-                              <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={0.25 + depthT * 0.1} />
+                              <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
+                              <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
                             </svg>
                             {/* Ground shadow */}
                             <div style={{
@@ -2737,7 +2763,7 @@ export const OrchardView = memo(function OrchardView({
                               borderRadius: '50%',
                               zIndex: -1,
                               background: isDark
-                                ? 'rgba(0,0,0,0.35)'
+                                ? 'rgba(0,0,0,0.12)'
                                 : 'rgba(30,25,15,0.18)',
                               filter: 'blur(3px)',
                               pointerEvents: 'none',
@@ -2827,41 +2853,89 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
 
-          {/* Tool tray */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-0.5 rounded-lg px-1 py-1" style={{
-            background: isDark ? 'rgba(24,24,27,0.85)' : 'rgba(255,255,255,0.9)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-            fontFamily: '"EB Garamond", serif',
-          }}>
+          {/* Tool buttons */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
             <button
-              onClick={collectAllSap}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors"
+              onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
+              className="flex items-center justify-center gap-1.5 rounded-[6px] transition-all text-[11px] font-semibold"
               style={{
-                background: 'transparent',
+                padding: '6px 14px',
+                letterSpacing: '0.01em',
+                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : '#f4f4f5'),
+                color: activeTool === 'axe' ? '#ef4444' : (isDark ? '#a1a1aa' : '#71717a'),
+                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.25)' : (isDark ? 'rgba(255,255,255,0.06)' : '#d4d4d8')}`,
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#a1a1aa' : '#71717a'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 6l4-4 4 4"/><path d="M5 2v14a2 2 0 002 2h10a2 2 0 002-2V6"/><path d="M1 6h18"/></svg>
-              <span className="text-[11px]" style={{ color: isDark ? '#a1a1aa' : '#71717a' }}>Collect all</span>
-              {(() => {
-                const totalReady = filteredTrees.reduce((s, t) => s + (sapReadyMap[t.id] || 0), 0)
-                return totalReady > 0 ? (
-                  <span className="text-[10px] tabular-nums" style={{ color: '#d97706' }}>{totalReady}</span>
-                ) : null
-              })()}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 12l-8.5 8.5a2.12 2.12 0 01-3-3L11 9"/><path d="M15 13L9 7l4-4 6 6h3a8 8 0 01-7 4z"/></svg>
+              Chop
             </button>
-            <div style={{ width: 1, height: 14, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', margin: '0 2px' }} />
+
+            <div style={{ position: 'relative' }}>
+              <button
+                ref={collectBtnRef}
+                onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
+                className="flex flex-col items-center justify-center rounded-[8px] transition-all font-semibold"
+                style={{
+                  padding: '8px 24px 7px',
+                  letterSpacing: '0.01em',
+                  backgroundColor: isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)',
+                  color: '#d97706',
+                  border: '1px solid rgba(217,119,6,0.25)',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 2 }}><path d="M12 2v6l3-3"/><path d="M12 8l-3-3"/><path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
+                <span className="text-[12px] flex items-center gap-1">
+                  Collect All
+                  {(() => {
+                    const totalReady = filteredTrees.reduce((s, t) => s + (sapReadyMap[t.id] || 0), 0)
+                    return totalReady > 0 ? <span className="text-[10px] tabular-nums font-bold">{totalReady}</span> : null
+                  })()}
+                </span>
+              </button>
+              {sapFlyAnim.phase !== 'none' && (() => {
+                const btnRect = collectBtnRef.current?.getBoundingClientRect()
+                const counterRect = sapCounterRef.current?.getBoundingClientRect()
+                if (!btnRect || !counterRect) return null
+                const dx = counterRect.left + counterRect.width / 2 - (btnRect.left + btnRect.width / 2)
+                const dy = counterRect.top + counterRect.height / 2 - (btnRect.top - 20)
+                return (
+                  <div style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: -20,
+                    transform: sapFlyAnim.phase === 'pop'
+                      ? 'translate(-50%, 0) scale(1.8)'
+                      : `translate(calc(-50% + ${dx}px), ${dy}px) scale(0.6)`,
+                    opacity: sapFlyAnim.phase === 'pop' ? 1 : 0.4,
+                    transition: sapFlyAnim.phase === 'fly' ? 'all 0.7s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none',
+                    pointerEvents: 'none',
+                    zIndex: 999,
+                    fontFamily: '"EB Garamond", serif',
+                    fontWeight: 800,
+                    fontSize: 18,
+                    color: '#d97706',
+                    textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    animation: sapFlyAnim.phase === 'pop' ? 'sap-pop 0.5s ease-out forwards' : undefined,
+                  }}>
+                    +{sapFlyAnim.amount}
+                  </div>
+                )
+              })()}
+            </div>
+
             <button
-              onClick={() => {
-                setActiveTool(t => t === 'axe' ? 'none' : 'axe')
-                setChopTarget(null)
-              }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors"
+              onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
+              className="flex items-center justify-center gap-1.5 rounded-[6px] transition-all text-[11px] font-semibold"
               style={{
-                background: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)') : 'transparent',
+                padding: '6px 14px',
+                letterSpacing: '0.01em',
+                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)') : (isDark ? 'rgba(255,255,255,0.04)' : '#f4f4f5'),
+                color: editMode ? '#d97706' : (isDark ? '#a1a1aa' : '#71717a'),
+                border: `1px solid ${editMode ? 'rgba(217,119,6,0.25)' : (isDark ? 'rgba(255,255,255,0.06)' : '#d4d4d8')}`,
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={activeTool === 'axe' ? '#ef4444' : isDark ? '#a1a1aa' : '#71717a'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 12l-8.5 8.5a2.12 2.12 0 01-3-3L11 9"/><path d="M15 13L9 7l4-4 6 6h3a8 8 0 01-7 4z"/></svg>
-              <span className="text-[11px]" style={{ color: activeTool === 'axe' ? '#ef4444' : isDark ? '#a1a1aa' : '#71717a' }}>Chop</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
             </button>
           </div>
 
