@@ -508,6 +508,28 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
 
       {/* Input */}
       <div style={{ padding: "10px 16px 14px", borderTop: `1px solid ${borderColor}`, display: "flex", gap: 8, alignItems: "flex-end" }}>
+        {messages.filter(m => m.role === "assistant").length > 0 && (
+          <button
+            onClick={() => {
+              const aiMsgs = messages.filter(m => m.role === "assistant").slice(-3).map(m => m.content).join("\n")
+              const desc = aiMsgs.length > 200 ? aiMsgs.slice(0, 200) : aiMsgs
+              setEditingPersonality({ id: "", name: "", systemPrompt: "" })
+              setEditName("")
+              setEditPrompt(`Write in this style: ${desc}`)
+              setShowPersonalityPanel(true)
+            }}
+            title="Save current AI style as personality"
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: `1px solid ${borderColor}`, flexShrink: 0,
+              background: "transparent", color: mutedText, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </button>
+        )}
         <textarea
           ref={inputRef}
           value={input}

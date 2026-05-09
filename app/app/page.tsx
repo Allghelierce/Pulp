@@ -3340,9 +3340,9 @@ export default function NoteApp() {
                   <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto", paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
                     <div style={{ position: "relative", overflow: "visible" }}>
                       <div style={{ position: "relative", overflow: "visible" }}>
-                        <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: theme === "dark" ? "#1f1f23" : "#FCFBF9", borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)" }} />
-                        <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: theme === "dark" ? "#1a1a1e" : "#FAFAFA", borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)" }} />
-                        <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: theme === "dark" ? "#151518" : "#F8F8F8", borderRadius: 2, zIndex: -1 }} />
+                        <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: paperBg, borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)", filter: "brightness(0.97)" }} />
+                        <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: paperBg, borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)", filter: "brightness(0.94)" }} />
+                        <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: paperBg, borderRadius: 2, zIndex: -1, filter: "brightness(0.91)" }} />
 
                         <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 

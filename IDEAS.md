@@ -50,6 +50,7 @@
 - Only show orchards that have trees
 - "Harvest all" button: collect juice across all orchards at once
 - Per-notebook identity — each garden has its own character
+- Rivers and maybe a lake for visual variety
 
 ## Tree System
 
