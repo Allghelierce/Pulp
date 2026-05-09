@@ -526,6 +526,10 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M45.2,14.2 L50,8 L54.8,13.2 Q53,12.5 51.5,13 Q50,12 48.5,13 Q47,12.5 45.2,14.2 Z" fill={isDark ? '#d0d4da' : '#f0f2f5'} />
         <path d="M46.5,13 L50,8 L53.5,12 Q52,11.8 50.5,12.2 Q49,11.5 47.5,12.5 Z" fill={isDark ? '#e0e4ea' : '#fafbfc'} opacity="0.85" />
         <path d="M48,11 L50,8 L52,10.5" fill="none" stroke={isDark ? '#eee' : '#fff'} strokeWidth="0.3" opacity="0.4" />
+        {/* Snow cap on second peak — slopes: (95,22)→(105,9)→(115,18) */}
+        <path d="M100.2,14.5 L105,9 L109.8,13.8 Q108,13 106.5,13.5 Q105,12.5 103.5,13.5 Q102,13 100.2,14.5 Z" fill={isDark ? '#c8ccd2' : '#eaecf0'} />
+        <path d="M101.5,13.5 L105,9 L108.5,12.8 Q107,12.3 105.5,12.8 Q104,12 102.5,13 Z" fill={isDark ? '#d8dce2' : '#f4f5f8'} opacity="0.8" />
+        <path d="M103,11.5 L105,9 L107,11" fill="none" stroke={isDark ? '#eee' : '#fff'} strokeWidth="0.3" opacity="0.35" />
         {/* Tiny cabin on right slope below peak */}
         <g transform="translate(52.8,11.5) scale(0.55)">
           <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
@@ -2245,7 +2249,7 @@ export const OrchardView = memo(function OrchardView({
   const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
   const [sapFlyAnim, setSapFlyAnim] = useState<{ amount: number; phase: 'pop' | 'fly' | 'none' }>({ amount: 0, phase: 'none' })
-  const [sapParticles, setSapParticles] = useState<{ id: number; startX: number; startY: number; phase: 'fly' | 'done' }[]>([])
+  const [sapParticles, setSapParticles] = useState<{ id: number; startX: number; startY: number; phase: 'wait' | 'fly' | 'done' }[]>([])
   const [btnFillLevel, setBtnFillLevel] = useState(0)
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
@@ -2353,49 +2357,63 @@ export const OrchardView = memo(function OrchardView({
     }
     if (total <= 0) return
 
-    const bucketState: Record<string, 'bucket' | 'fill' | 'done'> = {}
-    for (const tree of treesWithSap) bucketState[tree.id] = 'bucket'
-    setTapAnim(prev => ({ ...prev, ...bucketState }))
+    const fillState: Record<string, 'bucket' | 'fill' | 'done'> = {}
+    for (const tree of treesWithSap) fillState[tree.id] = 'fill'
+    setTapAnim(prev => ({ ...prev, ...fillState }))
 
     const orchardEl = orchardRef.current
     const btnEl = collectBtnRef.current
     if (orchardEl && btnEl) {
       const oRect = orchardEl.getBoundingClientRect()
-      const particles: { id: number; startX: number; startY: number; phase: 'fly' | 'done' }[] = []
+      const particles: { id: number; startX: number; startY: number; phase: 'wait' | 'fly' | 'done' }[] = []
       const placedTrees = (placedRef.current ?? []).filter((p: any) => treesWithSap.some((t: any) => t.id === p.tree.id))
       placedTrees.forEach((p, i) => {
         const sx = oRect.left + (p.x / 100) * oRect.width
         const sy = oRect.top + (p.y / 100) * oRect.height
-        particles.push({ id: Date.now() + i, startX: sx, startY: sy, phase: 'fly' })
+        particles.push({ id: Date.now() + i, startX: sx, startY: sy, phase: 'wait' })
       })
       setSapParticles(particles)
-      requestAnimationFrame(() => setSapParticles(prev => prev.map(p => ({ ...p, phase: 'fly' }))))
+      placedTrees.forEach((_, i) => {
+        setTimeout(() => {
+          setSapParticles(prev => prev.map((p, j) => j === i ? { ...p, phase: 'fly' } : p))
+        }, 50 + i * 80)
+      })
     }
 
     setBtnFillLevel(0)
-    setTimeout(() => setBtnFillLevel(0.3), 300)
-    setTimeout(() => setBtnFillLevel(0.6), 500)
-    setTimeout(() => setBtnFillLevel(1), 700)
+    setTimeout(() => setBtnFillLevel(0.15), 1000)
+    setTimeout(() => setBtnFillLevel(0.4), 1400)
+    setTimeout(() => setBtnFillLevel(0.7), 1800)
+    setTimeout(() => setBtnFillLevel(1), 2200)
 
     setCollectAllAnim({ total, current: 0, active: true })
-    const steps = 20
-    const stepTime = 800 / steps
-    for (let i = 1; i <= steps; i++) {
+
+    setTimeout(() => {
+      const drainState: Record<string, 'bucket' | 'fill' | 'done'> = {}
+      for (const tree of treesWithSap) drainState[tree.id] = 'bucket'
+      setTapAnim(prev => ({ ...prev, ...drainState }))
+    }, 800)
+
+    setTimeout(() => setSapParticles([]), 2400)
+
+    const rampStart = 1200
+    const rampDuration = 1600
+    const rampSteps = 40
+    const rampStepTime = rampDuration / rampSteps
+    let added = 0
+    for (let i = 1; i <= rampSteps; i++) {
       setTimeout(() => {
-        setCollectAllAnim(prev => ({ ...prev, current: Math.round(total * (i / steps)) }))
-      }, 400 + i * stepTime)
+        const target = Math.round(total * (i / rampSteps))
+        const delta = target - added
+        if (delta > 0) {
+          added = target
+          setJuice((j: number) => j + delta)
+          setCollectAllAnim(prev => ({ ...prev, current: target }))
+        }
+      }, rampStart + i * rampStepTime)
     }
 
     setTimeout(() => {
-      const fillState: Record<string, 'bucket' | 'fill' | 'done'> = {}
-      for (const tree of treesWithSap) fillState[tree.id] = 'fill'
-      setTapAnim(prev => ({ ...prev, ...fillState }))
-    }, 200)
-
-    setTimeout(() => setSapParticles([]), 1000)
-
-    setTimeout(() => {
-      setJuice((j: number) => j + total)
       setSapReadyMap(prev => {
         const next = { ...prev }
         for (const tree of filteredTrees) next[tree.id] = 0
@@ -2412,8 +2430,8 @@ export const OrchardView = memo(function OrchardView({
           return n
         })
         setCollectAllAnim({ total: 0, current: 0, active: false })
-      }, 400)
-    }, 1200)
+      }, 600)
+    }, rampStart + rampDuration + 200)
   }, [filteredTrees, sapReadyMap, setJuice])
 
   const TREES_PER_PLOT = 40
@@ -2721,14 +2739,14 @@ export const OrchardView = memo(function OrchardView({
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
           }}>
             <div className="grid items-center w-full h-full" style={{ fontFamily: '"EB Garamond", serif', gridTemplateColumns: '1fr auto 1fr' }}>
-              <div className="flex items-center gap-2 justify-end pr-3">
+              <div className="flex flex-col items-end justify-center pr-3">
                 <div ref={sapCounterRef} className="flex items-center gap-2">
                   <PulpIcon size={18} />
                   <span className="text-[16px] font-semibold tabular-nums" style={{ color: isDark ? '#d4d0c8' : '#3a3630' }}>{juice}</span>
-                  {collectAllAnim.active && (
-                    <span className="text-[14px] font-bold tabular-nums" style={{ color: '#d97706', animation: 'sap-ramp 0.8s ease-out forwards' }}>+{collectAllAnim.current}</span>
-                  )}
                 </div>
+                {collectAllAnim.active && (
+                  <span className="text-[11px] font-bold tabular-nums" style={{ color: '#d97706', opacity: 0.85 }}>+{collectAllAnim.current}</span>
+                )}
               </div>
               <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
               <div className="flex items-center pl-3">
@@ -2739,16 +2757,29 @@ export const OrchardView = memo(function OrchardView({
                   className="relative flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold overflow-hidden"
                   style={{
                     padding: '4px 10px',
-                    backgroundColor: isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)',
-                    color: '#d97706',
-                    border: '1px solid rgba(217,119,6,0.3)',
+                    backgroundColor: (() => {
+                      const has = filteredTrees.some(t => (sapReadyMap[t.id] || 0) > 0)
+                      if (btnFillLevel > 0) return isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.15)'
+                      return has
+                        ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)')
+                        : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')
+                    })(),
+                    color: (() => {
+                      const has = filteredTrees.some(t => (sapReadyMap[t.id] || 0) > 0)
+                      return has || btnFillLevel > 0 ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)')
+                    })(),
+                    border: (() => {
+                      const has = filteredTrees.some(t => (sapReadyMap[t.id] || 0) > 0)
+                      return has || btnFillLevel > 0 ? '1px solid rgba(217,119,6,0.3)' : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
+                    })(),
+                    cursor: filteredTrees.some(t => (sapReadyMap[t.id] || 0) > 0) ? 'pointer' : 'default',
                   }}
                 >
                   {btnFillLevel > 0 && (
                     <div className="absolute inset-0 pointer-events-none" style={{
                       background: `linear-gradient(to top, rgba(217,119,6,${isDark ? 0.4 : 0.3}) 0%, rgba(217,119,6,${isDark ? 0.15 : 0.1}) 60%, transparent 100%)`,
                       transform: `translateY(${(1 - btnFillLevel) * 100}%)`,
-                      transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)',
                       borderRadius: 'inherit',
                     }} />
                   )}
@@ -2792,29 +2823,29 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
           {/* Flying sap particles */}
-          {sapParticles.map((p, i) => {
+          {sapParticles.map((p) => {
             const btnRect = collectBtnRef.current?.getBoundingClientRect()
             if (!btnRect) return null
             const targetX = btnRect.left + btnRect.width / 2
             const targetY = btnRect.top + btnRect.height / 2
+            const atTarget = p.phase === 'fly'
+            const waiting = p.phase === 'wait'
             return (
               <div key={p.id} className="fixed pointer-events-none z-[9999]" style={{
-                left: 0, top: 0,
-                width: 8, height: 8,
+                left: p.startX - 5,
+                top: p.startY - 5,
+                width: 10, height: 10,
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, #d97706 40%, rgba(217,119,6,0) 100%)',
-                boxShadow: '0 0 6px 2px rgba(217,119,6,0.4)',
-                transform: `translate(${targetX - 4}px, ${targetY - 4}px) scale(0.2)`,
-                opacity: 0,
-                animation: `sap-p-${p.id} ${0.6 + i * 0.03}s cubic-bezier(0.3, 0.8, 0.3, 1) ${i * 0.05}s forwards`,
+                background: 'radial-gradient(circle, #d97706 30%, rgba(217,119,6,0.6) 70%, transparent 100%)',
+                boxShadow: '0 0 8px 3px rgba(217,119,6,0.35)',
+                transform: atTarget
+                  ? `translate(${targetX - p.startX}px, ${targetY - p.startY}px) scale(0.3)`
+                  : 'translate(0, 0) scale(1)',
+                opacity: waiting ? 0.9 : atTarget ? 0 : 0,
+                transition: atTarget
+                  ? `transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 1.1s cubic-bezier(0.4, 0, 1, 1) 0.3s`
+                  : 'none',
               }}>
-                <style>{`
-                  @keyframes sap-p-${p.id} {
-                    0% { transform: translate(${p.startX - 4}px, ${p.startY - 4}px) scale(1); opacity: 1; }
-                    70% { opacity: 0.8; }
-                    100% { transform: translate(${targetX - 4}px, ${targetY - 4}px) scale(0.2); opacity: 0; }
-                  }
-                `}</style>
               </div>
             )
           })}
