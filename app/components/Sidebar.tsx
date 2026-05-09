@@ -953,7 +953,7 @@ export const Sidebar = memo(function Sidebar({
                 border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
               }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60 group-hover:text-amber-500/80"}`}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60 group-hover:text-amber-500/80"}`}>
                 <ellipse cx="12" cy="21" rx="7" ry="1.5" fill="currentColor" opacity="0.25" />
                 <path d="M12 20 C12 16 11.5 14 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <path d="M12 14 C9 12 7 10.5 7 8.5 C7 8.5 9.5 9 12 12" fill="currentColor" opacity="0.7" />
@@ -964,7 +964,7 @@ export const Sidebar = memo(function Sidebar({
                 <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
                 <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
               </svg>
-              <span className={`text-[11px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
+              <span className={`text-[13px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
             </button>
           </div>
         )}

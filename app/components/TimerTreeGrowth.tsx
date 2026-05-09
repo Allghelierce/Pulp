@@ -139,13 +139,28 @@ export function TimerTreeGrowth({ elapsed, total, running, theme, accent }: Time
 
   return (
     <div className="relative flex flex-col items-center gap-4">
-      <canvas
-        ref={canvasRef}
-        width={280}
-        height={280}
-        className="w-72 h-72 rounded-lg"
-        style={{ opacity: 0.95 }}
-      />
+      <div
+        className="rounded-xl p-3"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%)',
+          backdropFilter: 'blur(24px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+          border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.5)',
+          boxShadow: isDark
+            ? 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.3)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 32px rgba(0,0,0,0.08)',
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          width={280}
+          height={280}
+          className="w-72 h-72 rounded-lg"
+          style={{ opacity: 0.95 }}
+        />
+      </div>
       <div className="text-sm opacity-60" style={{ fontFamily: '"EB Garamond", serif' }}>
         Growth: {Math.round(progress * 100)}%
       </div>

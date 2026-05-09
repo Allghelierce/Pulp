@@ -28,11 +28,12 @@ interface OrchardViewProps {
 }
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
-const RARITY_META: Record<string, { label: string; color: string }> = {
-  common: { label: 'Common', color: '#8a8a8f' },
-  uncommon: { label: 'Uncommon', color: '#6b9a6b' },
-  rare: { label: 'Rare', color: '#6888a8' },
-  legendary: { label: 'Legendary', color: '#b89860' },
+const RARITY_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  common: { label: 'Common', color: '#8a8a8f', bg: 'rgba(138,138,143,0.08)', border: 'rgba(138,138,143,0.2)' },
+  uncommon: { label: 'Uncommon', color: '#6b9a6b', bg: 'rgba(107,154,107,0.1)', border: 'rgba(107,154,107,0.25)' },
+  rare: { label: 'Rare', color: '#6888a8', bg: 'rgba(104,136,168,0.12)', border: 'rgba(104,136,168,0.3)' },
+  epic: { label: 'Epic', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)' },
+  legendary: { label: 'Legendary', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
 }
 
 function seededRng(seed: number) {
@@ -2839,8 +2840,8 @@ export const OrchardView = memo(function OrchardView({
                               const fillH = phase === 'fill' ? bh * 0.7 : phase === 'done' ? bh * 0.8 : 0
                               return (
                                 <div style={{
-                                  position: 'absolute', left: '50%', bottom: 0,
-                                  transform: `translate(-50%, ${bh - 2}px)`,
+                                  position: 'absolute', left: '60%', bottom: 0,
+                                  transform: `translate(0%, ${bh + 2}px)`,
                                   pointerEvents: 'none', zIndex: 10,
                                   opacity: phase === 'done' ? 0 : 1,
                                   transition: 'opacity 0.3s',
@@ -2859,30 +2860,58 @@ export const OrchardView = memo(function OrchardView({
                             })()}
                           </div>
 
-                          <div className="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ zIndex: 300, position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 2 }}>
-                            <div className="px-2.5 py-1.5 rounded-lg" style={{
-                              backgroundColor: isDark ? 'rgba(0,0,0,0.92)' : 'rgba(255,255,255,0.96)',
-                              border: `1px solid ${cardBorder}`,
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          {(() => {
+                            const popLeft = x > 50
+                            const planted = tree.plantedAt ? new Date(tree.plantedAt) : null
+                            const plantedStr = planted ? planted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null
+                            const ageMs = planted ? Date.now() - planted.getTime() : 0
+                            const ageDays = Math.floor(ageMs / 86400000)
+                            const ageHrs = Math.floor(ageMs / 3600000)
+                            const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
+                            return (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+                              zIndex: 300, position: 'absolute',
+                              bottom: '105%',
+                              ...(popLeft
+                                ? { right: 0 }
+                                : { left: 0 }),
                             }}>
-                              <span className="text-[9px] font-bold uppercase tracking-wider whitespace-nowrap block" style={{ color: textPrimary }}>
-                                {typeInfo?.name || tree.type}
-                              </span>
-                              <span className="text-[8px] font-semibold uppercase tracking-widest whitespace-nowrap block mt-0.5" style={{ color: meta.color }}>
-                                {meta.label}
-                              </span>
-                              {sapReady > 0 && (
-                                <span className="text-[8px] font-bold block mt-0.5" style={{ color: '#d97706' }}>
-                                  🍯 {sapReady} sap ready
-                                </span>
-                              )}
-                              {tree.stage < 4 && (
-                                <div className="w-full h-[2px] rounded-full mt-1 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
-                                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: '#8ba870' }} />
+                              <div className="px-3 py-2 rounded-lg" style={{
+                                backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
+                                border: `1.5px solid ${meta.border}`,
+                                boxShadow: `0 4px 16px rgba(0,0,0,0.2), inset 0 0 0 0.5px ${meta.border}`,
+                                minWidth: 110,
+                              }}>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
+                                  <span className="text-[10px] font-bold tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
+                                    {typeInfo?.name || tree.type}
+                                  </span>
                                 </div>
-                              )}
+                                {plantedStr && (
+                                  <div className="mt-1.5 flex flex-col gap-0.5">
+                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}>
+                                      Planted {plantedStr}
+                                    </span>
+                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textMuted }}>
+                                      {ageStr}
+                                    </span>
+                                  </div>
+                                )}
+                                {sapReady > 0 && (
+                                  <span className="text-[8px] font-bold block mt-1" style={{ color: '#d97706' }}>
+                                    {sapReady} sap ready
+                                  </span>
+                                )}
+                                {tree.stage < 4 && (
+                                  <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+                                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                            )
+                          })()}
                         </div>
                       )
                     })}

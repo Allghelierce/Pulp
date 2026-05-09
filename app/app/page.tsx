@@ -1098,6 +1098,23 @@ export default function NoteApp() {
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+
+  // Deferred rendering states
+  const [hasOpenedSettings, setHasOpenedSettings] = useState(false)
+  const [hasOpenedOrchard, setHasOpenedOrchard] = useState(false)
+  const [hasOpenedLeaderboard, setHasOpenedLeaderboard] = useState(false)
+  const [hasOpenedShop, setHasOpenedShop] = useState(false)
+  const [hasOpenedFocus, setHasOpenedFocus] = useState(false)
+  const [hasOpenedStats, setHasOpenedStats] = useState(false)
+  const [hasOpenedGemStore, setHasOpenedGemStore] = useState(false)
+
+  useEffect(() => { if (showSettings) setHasOpenedSettings(true) }, [showSettings])
+  useEffect(() => { if (orchardOpen) setHasOpenedOrchard(true) }, [orchardOpen])
+  useEffect(() => { if (leaderboardOpen) setHasOpenedLeaderboard(true) }, [leaderboardOpen])
+  useEffect(() => { if (shopOpen) setHasOpenedShop(true) }, [shopOpen])
+  useEffect(() => { if (focusOpen) setHasOpenedFocus(true) }, [focusOpen])
+  useEffect(() => { if (statsOpen) setHasOpenedStats(true) }, [statsOpen])
+  
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
 
   useEffect(() => {
@@ -1119,6 +1136,7 @@ export default function NoteApp() {
     }
   }, [orchardOpen])
   const [gemStoreOpen, setGemStoreOpen] = useState(false)
+  useEffect(() => { if (gemStoreOpen) setHasOpenedGemStore(true) }, [gemStoreOpen])
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
     { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
@@ -2944,8 +2962,8 @@ export default function NoteApp() {
 
       <div className="flex h-screen overflow-hidden font-sans relative select-none" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
         {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-        {showSettings && <Suspense fallback={null}>
-          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
+        {hasOpenedSettings && <Suspense fallback={null}>
+          <div style={{ display: showSettings ? 'block' : 'none', position: 'absolute', inset: 0, zIndex: 50 }}>
             <SettingsView
               user={user}
               onClose={handleCloseSettings}
@@ -2997,7 +3015,7 @@ export default function NoteApp() {
                 if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
                   openPrompt("Enter Password", "Vault Locked", "Password...", "Unlock", pwd => {
                     if (pwd === (n.password || "")) {
-                      unlockedVaults.current.add(id)
+                      unlockedVaults.current.add(n.id)
                       editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
                     } else {
                       openAlert("Access Denied", "Incorrect password.")
@@ -3709,9 +3727,10 @@ export default function NoteApp() {
 
         </div>
 
-        {orchardOpen && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
+        {hasOpenedOrchard && <Suspense fallback={null}>
+          <div style={{ display: orchardOpen ? 'block' : 'none', position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
             <OrchardView
-              isOpen={orchardOpen}
+              isOpen={true}
               onClose={() => setOrchardOpen(false)}
               theme={theme}
               accent={accent}
@@ -3729,11 +3748,12 @@ export default function NoteApp() {
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
             />
-          </div></Suspense>}
+          </div>
+        </Suspense>}
 
-        {statsOpen && <Suspense fallback={null}>
-          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
-            isOpen={statsOpen}
+        {hasOpenedStats && <Suspense fallback={null}>
+          <div style={{ display: statsOpen ? 'block' : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
+            isOpen={true}
             onClose={() => setStatsOpen(false)}
             theme={theme}
             accent={accent}
@@ -3742,18 +3762,18 @@ export default function NoteApp() {
           /></div>
         </Suspense>}
 
-        {leaderboardOpen && <Suspense fallback={null}>
-          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
-            isOpen={leaderboardOpen}
+        {hasOpenedLeaderboard && <Suspense fallback={null}>
+          <div style={{ display: leaderboardOpen ? 'block' : 'none', position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
+            isOpen={true}
             onClose={() => setLeaderboardOpen(false)}
             theme={theme}
             juice={juice}
           /></div>
         </Suspense>}
 
-        {shopOpen && <Suspense fallback={null}>
-          <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
-            isOpen={shopOpen}
+        {hasOpenedShop && <Suspense fallback={null}>
+          <div style={{ display: shopOpen ? 'block' : 'none', position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
+            isOpen={true}
             onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
             theme={theme}
             accent={accent}
@@ -3768,7 +3788,7 @@ export default function NoteApp() {
             setUnlockedCosmetics={setUnlockedCosmetics}
             onUpdateConfig={updateSettings}
             initialTab={shopInitialTab}
-            initialScrollTo={shopScrollTo}
+            scrollToItem={shopScrollTo}
           /></div>
         </Suspense>}
 
@@ -4033,23 +4053,31 @@ export default function NoteApp() {
 
       </div>
 
-      {gemStoreOpen && <Suspense fallback={null}><GemStoreModal
-        isOpen={gemStoreOpen}
-        onClose={() => setGemStoreOpen(false)}
-        gems={gems}
-      /></Suspense>}
+      {hasOpenedGemStore && <Suspense fallback={null}>
+        <div style={{ display: gemStoreOpen ? 'block' : 'none' }}>
+          <GemStoreModal
+            isOpen={true}
+            onClose={() => setGemStoreOpen(false)}
+            gems={gems}
+          />
+        </div>
+      </Suspense>}
 
 
-      {focusOpen && <Suspense fallback={null}><FocusView
-        isOpen={focusOpen}
-        onClose={() => setFocusOpen(false)}
-        theme={theme}
-        blockedSites={blockedSites}
-        gems={gems}
-        onUpdateConfig={updateSettings}
-        onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
-        openConfirm={openConfirm}
-      /></Suspense>}
+      {hasOpenedFocus && <Suspense fallback={null}>
+        <div style={{ display: focusOpen ? 'block' : 'none' }}>
+          <FocusView
+            isOpen={true}
+            onClose={() => setFocusOpen(false)}
+            theme={theme}
+            blockedSites={blockedSites}
+            gems={gems}
+            onUpdateConfig={updateSettings}
+            onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
+            openConfirm={openConfirm}
+          />
+        </div>
+      </Suspense>}
 
       <VitalitySystem
         theme={theme}
