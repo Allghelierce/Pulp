@@ -357,7 +357,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30">
+    <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30" onMouseDown={onClose}>
       <div
         onMouseDown={e => e.stopPropagation()}
         className={`relative w-full max-w-[1100px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
@@ -469,7 +469,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* 4 Seed Cards */}
               <div style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Seeds</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.02em' }}>Seeds</span>
                   <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
@@ -481,7 +481,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {shopItems.length > 0 && (
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Items</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.02em' }}>Items</span>
                     <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>

@@ -221,7 +221,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
               <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-3 mt-3 border-t border-zinc-800" : "pt-3 mt-3 border-t border-zinc-300/40") : "mb-1"}>
-                <p className={`text-[9.5px] font-bold uppercase tracking-[0.12em] px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
+                <p className={`text-[9.5px] font-bold tracking-wide px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
                 {group.tabs.map(tab => {
                   const isPremium = tab.id === "subscription"
                   const isActive = activeTab === tab.id
@@ -910,7 +910,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                )}
 
                <div className="mb-7">
-                <p className={`text-[10px] font-semibold uppercase tracking-[0.12em] mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
+                <p className={`text-[10px] font-semibold tracking-wide mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
                   Danger Zone
                 </p>
                 <div className={`rounded-xl border overflow-hidden divide-y ${
@@ -1551,7 +1551,7 @@ function BlockList({ placeholder, items, onChange, isDark, description }: {
           />
           <button 
             onClick={add}
-            className={`px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-widest ${
+            className={`px-4 py-2 rounded-xl text-[11px] font-bold tracking-wide ${
                isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 shadow-sm"
             }`}
           >

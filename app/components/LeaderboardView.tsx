@@ -98,6 +98,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   return (
     <div
       className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30"
+      onMouseDown={onClose}
     >
       <div
         onMouseDown={e => e.stopPropagation()}

@@ -41,7 +41,7 @@ function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
           <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
         </svg>
-        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Archive</span>
+        <span className="text-[10px] font-bold text-zinc-400 tracking-wide leading-none">Archive</span>
         <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({archivedNotes.length})</span>
       </div>
       {/* Scrollable list */}
@@ -761,7 +761,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
+                <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
                 {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
@@ -821,7 +821,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Bookmarks</p>
+              <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Bookmarks</p>
             </div>
             {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
@@ -891,7 +891,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Backlinks Section */}
           <div className="mb-6 pt-4">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Backlinks</p>
+              <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Backlinks</p>
             </div>
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (

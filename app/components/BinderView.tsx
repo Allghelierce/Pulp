@@ -50,34 +50,34 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ y: -5, scale: 1.02 }}
       transition={{ type: "spring", damping: 15, stiffness: 200 }}
-      className={`group relative rounded-lg p-5 flex flex-col items-center justify-between overflow-hidden shadow-2xl transition-all duration-500 ${styleClass}`}
+      className={`group relative rounded-lg p-3 flex flex-col items-center justify-between overflow-hidden shadow-2xl transition-all duration-500 ${styleClass}`}
     >
       {/* Decorative Corner Accents */}
-      <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-black/5 rounded-tl-2xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-black/5 rounded-br-2xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-black/5 rounded-tl-xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-black/5 rounded-br-xl pointer-events-none" />
 
       {/* Rarity Tag */}
-      <div className="absolute top-4 left-4 flex flex-col">
+      <div className="absolute top-2 left-2 flex flex-col">
         <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">{typeInfo.rarity}</span>
         {typeInfo.rarity === 'sacred' && (
           <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-1 w-full pt-4">
+      <div className="flex-1 flex flex-col items-center justify-center gap-0.5 w-full pt-2">
         <div className="plant-icon-wrapper relative">
-          <PlantIcon type={card.type} size={110} stage={card.stage} />
+          <PlantIcon type={card.type} size={70} stage={card.stage} />
           {/* Subtle Glow beneath icon */}
           <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-50 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         </div>
         <div className="text-center z-10 transition-transform group-hover:scale-105 duration-500">
-          <h4 className="font-black text-base uppercase tracking-tight leading-none mb-1">{typeInfo.name}</h4>
+          <h4 className="font-black text-xs uppercase tracking-tight leading-none mb-0.5">{typeInfo.name}</h4>
           <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest italic">Estate Collection</p>
         </div>
       </div>
 
       {/* Progress & Actions */}
-      <div className="w-full mt-4 space-y-3 z-10">
+      <div className="w-full mt-2 space-y-1.5 z-10">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
             <span>Growth Progress</span>
@@ -95,7 +95,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
         
         <div className="flex gap-2">
           <button 
-            className="flex-1 py-2 rounded-lg bg-black/5 hover:bg-black/10 text-[9px] font-black uppercase tracking-[0.15em] transition-all opacity-40 hover:opacity-100 hover:scale-95"
+            className="flex-1 py-1.5 rounded-md bg-black/5 hover:bg-black/10 text-[8px] font-black uppercase tracking-[0.15em] transition-all opacity-40 hover:opacity-100 hover:scale-95"
             onClick={(e) => { e.stopPropagation(); alert("Trading system coming soon!"); }}
           >
             Initiate Trade
@@ -132,7 +132,7 @@ export const BinderView = memo(function BinderView({
 }: BinderViewProps) {
 
   const [page, setPage] = useState(0)
-  const cardsPerPage = 4
+  const cardsPerPage = 8
   const totalPages = Math.max(1, Math.ceil(grove.length / cardsPerPage))
   const [plantingPlot, setPlantingPlot] = useState<number | null>(null)
 
@@ -266,8 +266,8 @@ export const BinderView = memo(function BinderView({
           {/* Book Content */}
           <div className={`flex-1 flex overflow-hidden ${theme === 'dark' ? 'binder-inner-dark' : 'binder-inner'}`}>
              {/* Left Page */}
-             <div className="flex-1 p-14 flex flex-col relative">
-                <div className="flex items-center justify-between mb-8">
+             <div className="flex-1 p-10 flex flex-col relative">
+                <div className="flex items-center justify-between mb-6">
                    <div className="flex flex-col">
                       <h2 className="text-3xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">PULP ESTATE</h2>
                       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mt-2">Folio Archetype v2.4</span>
@@ -275,8 +275,8 @@ export const BinderView = memo(function BinderView({
                    <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 1}</div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-8 flex-1">
-                   {[...Array(2)].map((_, i) => {
+                <div className="grid grid-cols-4 gap-4 flex-1">
+                   {[...Array(4)].map((_, i) => {
                       const globalIdx = page * cardsPerPage + i
                       const card = grove[globalIdx]
                       return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} />
@@ -285,8 +285,8 @@ export const BinderView = memo(function BinderView({
              </div>
 
              {/* Right Page */}
-             <div className="flex-1 p-14 flex flex-col relative border-l border-black/5">
-                <div className="flex items-center justify-between mb-8">
+             <div className="flex-1 p-10 flex flex-col relative border-l border-black/5">
+                <div className="flex items-center justify-between mb-6">
                    <div className="flex items-center gap-6">
                       <div className="flex flex-col">
                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Yield Balance</span>
@@ -299,9 +299,9 @@ export const BinderView = memo(function BinderView({
                    <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 2}</div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 flex-1">
-                   {[...Array(2)].map((_, i) => {
-                      const globalIdx = page * cardsPerPage + 2 + i
+                <div className="grid grid-cols-4 gap-4 flex-1">
+                   {[...Array(4)].map((_, i) => {
+                      const globalIdx = page * cardsPerPage + 4 + i
                       const card = grove[globalIdx]
                       return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} />
                    })}

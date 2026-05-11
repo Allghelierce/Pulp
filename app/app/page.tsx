@@ -3799,8 +3799,8 @@ export default function NoteApp() {
               userId={user?.id}
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
-              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true); setLeaderboardOpen(true) }) } }}
-              onOpenShop={() => { startTransition(() => { closeAllPanels(); setShopOpen(true) }) }}
+              onOpenLeaderboard={() => { setLeaderboardOpen(v => !v) }}
+              onOpenShop={() => { setShopOpen(v => !v) }}
             />
           </div></Suspense>}
 

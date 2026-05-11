@@ -571,15 +571,22 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
 
         {/* Distant cliff hills — behind mountains, angular and steep */}
+        <defs>
+          <clipPath id="cliff-clip">
+            <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" />
+          </clipPath>
+        </defs>
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
-        {/* Cliff face shadows — steep left drops */}
-        <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
-        <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
-        <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
-        <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
-        <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
-        <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
-        <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
+        {/* Cliff face shadows — clipped to cliff shape */}
+        <g clipPath="url(#cliff-clip)">
+          <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
+          <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
+          <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
+          <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
+          <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
+          <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
+          <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
+        </g>
 
         {/* Sun — between distant cliffs and mountains */}
         {(() => {
@@ -613,19 +620,25 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
         {/* Mountain range — main */}
         <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
-        {/* Left-facing slopes — shadow for depth */}
-        <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
-        <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
-        <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
-        <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
-        <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
-        {/* Right-facing slopes — lighter for 3D relief */}
-        <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
-        <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
-        <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
-        <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
-        <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
-        <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
+        {/* Slope shadows & highlights — clipped to mountain shape */}
+        <defs>
+          <clipPath id="mtn-clip">
+            <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#mtn-clip)">
+          <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
+          <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
+          <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
+          <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
+          <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
+          <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
+          <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
+          <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
+          <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
+          <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
+          <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
+        </g>
         {/* Ridge highlights — thin bright edge along peaks */}
         <path d="M15,12 L25,22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
         <path d="M35,10 L42,18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
@@ -2859,13 +2872,13 @@ export const OrchardView = memo(function OrchardView({
         <div className="flex-1 flex flex-col relative overflow-hidden">
           {/* Topbar with sap count */}
           <div className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
-            backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.08)',
-            backdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(28px) saturate(2) brightness(1.05)',
-            WebkitBackdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(28px) saturate(2) brightness(1.05)',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.25)'}`,
+            backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.01)',
+            backdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
+            WebkitBackdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'}`,
             boxShadow: isDark
               ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
-              : 'inset 0 0.5px 0 rgba(255,255,255,0.4), 0 2px 12px rgba(0,0,0,0.05)',
+              : 'none',
           }}>
             <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
               {onOpenLeaderboard && (
