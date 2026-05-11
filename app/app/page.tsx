@@ -2269,10 +2269,6 @@ export default function NoteApp() {
       }
 
       if (keyStr === shortcuts.aiCommand) {
-        const active = document.activeElement as HTMLElement | null
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
-          return
-        }
         e.preventDefault()
         setShowAiCommandBar(true)
       }
@@ -3803,6 +3799,8 @@ export default function NoteApp() {
               userId={user?.id}
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
+              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true); setLeaderboardOpen(true) }) } }}
+              onOpenShop={() => { startTransition(() => { closeAllPanels(); setShopOpen(true) }) }}
             />
           </div></Suspense>}
 

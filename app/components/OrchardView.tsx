@@ -25,6 +25,8 @@ interface OrchardViewProps {
   userId?: string
   activeTabId?: string | null
   orchardTimeMode?: "theme" | "realtime"
+  onOpenLeaderboard?: () => void
+  onOpenShop?: () => void
 }
 
 type RGB = [number, number, number]
@@ -344,12 +346,12 @@ function interpolatePalette(phase: string, t: number): SkyPalette {
   return result as SkyPalette
 }
 
-const STAR_POSITIONS = Array.from({ length: 160 }, (_, i) => {
+const STAR_POSITIONS = Array.from({ length: 50 }, (_, i) => {
   const rng = seededRng(i * 47 + 199)
   const brightness = rng()
   return { x: rng() * 200, y: rng() * 28, r: 0.12 + rng() * 0.28, twinkle: rng(), brightness, warm: rng() > 0.7 }
 })
-const SPECK_STARS = Array.from({ length: 200 }, (_, i) => {
+const SPECK_STARS = Array.from({ length: 70 }, (_, i) => {
   const rng = seededRng(i * 31 + 503)
   return { x: rng() * 200, y: rng() * 28, r: 0.04 + rng() * 0.08, op: 0.15 + rng() * 0.35 }
 })
@@ -368,7 +370,7 @@ const CONSTELLATION_LINES: [number, number][] = [
   [1, 6],
 ]
 
-const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
+const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
   const [realtimeState, setRealtimeState] = useState(getTimePhase)
   useEffect(() => {
     if (orchardTimeMode !== 'realtime') return
@@ -379,9 +381,28 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
   const timeState = orchardTimeMode === 'realtime'
     ? realtimeState
-    : isDark ? { phase: 'night', t: 0, hour: 0 } : { phase: 'day', t: 0.5, hour: 13 }
+    : isDarkProp ? { phase: 'night', t: 0, hour: 0 } : { phase: 'day', t: 0.5, hour: 13 }
+
+  const isDark = orchardTimeMode === 'realtime'
+    ? (timeState.phase === 'night' || timeState.phase === 'dusk' || (timeState.phase === 'dawn' && timeState.t < 0.3))
+    : isDarkProp
 
   const p = useMemo(() => interpolatePalette(timeState.phase, timeState.t), [timeState.phase, timeState.t])
+
+  const terrainSvgRef = useRef<SVGSVGElement>(null)
+  const [svgAspect, setSvgAspect] = useState(2)
+  useEffect(() => {
+    const el = terrainSvgRef.current
+    if (!el) return
+    const measure = () => {
+      const r = el.getBoundingClientRect()
+      if (r.width > 0 && r.height > 0) setSvgAspect(r.width / r.height)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
   const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
@@ -445,7 +466,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
   return (
     <>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
+      <svg ref={terrainSvgRef} className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
         <defs>
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.skyTop} />
@@ -521,9 +542,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               const sz = bright ? s.r * 2.5 : s.r * 1.5
               const op = Math.min(1, (bright ? 0.75 : 0.5) + mb * 0.4)
               return (
-                <circle key={i} cx={s.x} cy={s.y} r={sz} fill={`url(#sg${i})`} opacity={op}>
-                  <animate attributeName="opacity" values={`${op};${op * (bright ? 0.3 : 0.4)};${op}`} dur={`${2.5 + s.twinkle * 3.5}s`} begin={`${s.twinkle * 2}s`} repeatCount="indefinite" />
-                </circle>
+                <circle key={i} cx={s.x} cy={s.y} r={sz} fill={`url(#sg${i})`} opacity={op} />
               )
             })}
             {SPECK_STARS.map((s, i) => (
@@ -534,17 +553,13 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
               {CONSTELLATION_LINES.map(([a, b], i) => {
                 const lo = 0.1 + moonBoost * 0.2
                 return (
-                <line key={`cl${i}`} x1={CONSTELLATION_STARS[a].x} y1={CONSTELLATION_STARS[a].y} x2={CONSTELLATION_STARS[b].x} y2={CONSTELLATION_STARS[b].y} stroke="#e8f0ff" strokeWidth="0.08" opacity={lo}>
-                  <animate attributeName="opacity" values={`${lo};${lo * 0.35};${lo}`} dur="7s" begin={`${i * 0.8}s`} repeatCount="indefinite" />
-                </line>
+                <line key={`cl${i}`} x1={CONSTELLATION_STARS[a].x} y1={CONSTELLATION_STARS[a].y} x2={CONSTELLATION_STARS[b].x} y2={CONSTELLATION_STARS[b].y} stroke="#e8f0ff" strokeWidth="0.08" opacity={lo} />
                 )
               })}
               {CONSTELLATION_STARS.map((s, i) => {
                 const co = Math.min(1, 0.8 + moonBoost * 0.3)
                 return (
-                <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#csg)" opacity={co}>
-                  <animate attributeName="opacity" values={`${co};${co * 0.3};${co}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
-                </circle>
+                <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#csg)" opacity={co} />
                 )
               })}
             </g>
@@ -554,29 +569,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
 
 
-        {/* Shooting stars — night only */}
-        {p.starOpacity > 0.3 && (() => {
-          return [0,1,2].map(i => {
-            const r = seededRng(i * 131 + 7919)
-            const x1 = 10 + r() * 150
-            const y1 = 1 + r() * 8
-            const angle = 0.3 + r() * 0.4
-            const len = 12 + r() * 18
-            const x2 = x1 + Math.cos(angle) * len
-            const y2 = y1 + Math.sin(angle) * len
-            const dur = 0.6 + r() * 0.4
-            const pause = 20 + r() * 40
-            return (
-              <line key={`shoot-${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke="url(#csg)" strokeWidth="0.3" strokeLinecap="round"
-                opacity="0">
-                <animate attributeName="opacity" values="0;0;0.9;0" keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.3) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
-                <animate attributeName="x2" values={`${x1};${x1};${x2};${x2}`} keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.2) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
-                <animate attributeName="y2" values={`${y1};${y1};${y2};${y2}`} keyTimes={`0;${1 - dur / pause};${1 - (dur * 0.2) / pause};1`} dur={`${pause}s`} begin={`${r() * pause}s`} repeatCount="indefinite" />
-              </line>
-            )
-          })
-        })()}
 
         {/* Distant cliff hills — behind mountains, angular and steep */}
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
@@ -598,7 +590,8 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const visible = timeState.hour >= 6 && timeState.hour < 18
           if (!visible) return null
           const horizonFade = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
-          const aspect = 200 / 100
+          const vbAspect = 200 / 104
+          const squeeze = svgAspect / vbAspect
           return (
             <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
               <defs>
@@ -609,9 +602,9 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
                   <stop offset="100%" stopColor={p.sunColor} stopOpacity="0" />
                 </radialGradient>
               </defs>
-              <ellipse cx={sx} cy={sy} rx={8 / aspect} ry={8} fill="url(#sun-glow-bg)" />
-              <ellipse cx={sx} cy={sy} rx={3 / aspect} ry={3} fill={p.sunColor} />
-              <ellipse cx={sx} cy={sy} rx={1.8 / aspect} ry={1.8} fill="#fff4d0" />
+              <ellipse cx={sx} cy={sy} rx={8 / squeeze} ry={8} fill="url(#sun-glow-bg)" />
+              <ellipse cx={sx} cy={sy} rx={3 / squeeze} ry={3} fill={p.sunColor} />
+              <ellipse cx={sx} cy={sy} rx={1.8 / squeeze} ry={1.8} fill="#fff4d0" />
             </g>
           )
         })()}
@@ -1129,23 +1122,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           {/* Roof — covers front and side walls */}
           <polygon points="87.3,26.4 93.2,26.4 89.8,24.2" fill={isDark ? '#2a2018' : '#7a5838'} />
           <polygon points="89.8,24.2 93.2,26.4 89.8,26.4" fill={isDark ? '#221a14' : '#6a4a30'} />
-          {/* Smoke */}
-          <g opacity="0.35">
-            <ellipse cx="88.6" cy="23.6" rx="0.35" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="23.6;22.8;22" dur="4s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.35;0.55;0.7" dur="4s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.35;0.18;0" dur="4s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="88.8" cy="22.2" rx="0.3" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="22.2;21.2;20.2" dur="5.5s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.3;0.6;0.9" dur="5.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.25;0.1;0" dur="5.5s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="88.4" cy="20.6" rx="0.25" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="20.6;19.4;18.4" dur="7s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.25;0.7;1.2" dur="7s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.15;0.05;0" dur="7s" repeatCount="indefinite" />
-            </ellipse>
+          {/* Smoke — static wisps */}
+          <g opacity="0.25">
+            <ellipse cx="88.6" cy="23" rx="0.45" ry="0.25" fill={isDark ? '#4a4a55' : '#b5b5b8'} />
+            <ellipse cx="88.5" cy="21.5" rx="0.6" ry="0.2" fill={isDark ? '#4a4a55' : '#b5b5b8'} opacity="0.15" />
+            <ellipse cx="88.4" cy="20" rx="0.8" ry="0.18" fill={isDark ? '#4a4a55' : '#b5b5b8'} opacity="0.07" />
           </g>
         </g>
 
@@ -1185,28 +1166,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           {/* Roof */}
           <polygon points="170,25.3 175.8,25.3 172.9,23.8" fill={isDark ? '#2a1e12' : '#6a4a2e'} />
           <polygon points="172.9,23.8 175.8,25.3 172.9,25.3" fill={isDark ? '#241a10' : '#5e4226'} />
-          {/* Smoke — obvious, trailing up */}
-          <g opacity="0.5">
-            <ellipse cx="174.5" cy="22" rx="0.4" ry="0.3" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="22;21;20" dur="3.5s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.4;0.7;1" dur="3.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.5;0.25;0" dur="3.5s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="174.7" cy="20.5" rx="0.5" ry="0.35" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="20.5;19;17.5" dur="4.5s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.5;0.9;1.4" dur="4.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.4;0.2;0" dur="4.5s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="174.3" cy="18.5" rx="0.6" ry="0.4" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="18.5;16.5;14.5" dur="6s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.6;1.2;1.8" dur="6s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.3;0.1;0" dur="6s" repeatCount="indefinite" />
-            </ellipse>
-            <ellipse cx="174.6" cy="15.5" rx="0.7" ry="0.45" fill={isDark ? '#4a4a55' : '#b5b5b8'}>
-              <animate attributeName="cy" values="15.5;13;10.5" dur="7.5s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0.7;1.5;2.2" dur="7.5s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.2;0.07;0" dur="7.5s" repeatCount="indefinite" />
-            </ellipse>
+          {/* Smoke — static wisps */}
+          <g opacity="0.35">
+            <ellipse cx="174.5" cy="21.5" rx="0.5" ry="0.3" fill={isDark ? '#4a4a55' : '#b5b5b8'} />
+            <ellipse cx="174.4" cy="19.5" rx="0.8" ry="0.3" fill={isDark ? '#4a4a55' : '#b5b5b8'} opacity="0.2" />
+            <ellipse cx="174.5" cy="17" rx="1.2" ry="0.3" fill={isDark ? '#4a4a55' : '#b5b5b8'} opacity="0.08" />
           </g>
         </g>
 
@@ -2012,7 +1976,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       {/* ── Ambient animations ── */}
       {/* Clouds — high distant layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.35 : 0.45 }}>
-        {[0,1,2,3,4,5,6,7,8,9].map(i => {
+        {[0,1,2,3,4].map(i => {
           const r = seededRng(i * 41 + 77)
           const y = 1 + r() * 14
           const w = 50 + r() * 70
@@ -2022,7 +1986,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return (
             <svg key={`cloud-hi-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
               opacity: 0.25 + r() * 0.25,
             }} viewBox="0 0 100 30" preserveAspectRatio="none">
               <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#3a4458' : '#b8b4aa'} />
@@ -2034,7 +1998,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       </div>
       {/* Clouds — mid layer around sun/moon level */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.4 : 0.55 }}>
-        {[0,1,2,3,4,5,6,7].map(i => {
+        {[0,1,2,3].map(i => {
           const r = seededRng(i * 53 + 149)
           const y = 4 + r() * 18
           const w = 80 + r() * 120
@@ -2044,7 +2008,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return (
             <svg key={`cloud-mid-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
               opacity: 0.3 + r() * 0.25,
             }} viewBox="0 0 120 35" preserveAspectRatio="none">
               <ellipse cx="60" cy="20" rx="55" ry="12" fill={isDark ? '#323e54' : '#c0bcb2'} />
@@ -2056,7 +2020,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       </div>
       {/* Clouds — low close layer, bigger, faster, overlaps hills */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.6 : 0.85 }}>
-        {[0,1,2,3,4,5,6,7,8].map(i => {
+        {[0,1,2,3,4].map(i => {
           const r = seededRng(i * 67 + 233)
           const y = 12 + r() * 18
           const w = 120 + r() * 180
@@ -2066,7 +2030,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           return (
             <svg key={`cloud-lo-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
               opacity: 0.4 + r() * 0.3,
             }} viewBox="0 0 140 40" preserveAspectRatio="none">
               <ellipse cx="70" cy="24" rx="65" ry="14" fill={isDark ? '#2a3448' : '#b4b0a6'} />
@@ -2082,7 +2046,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       {/* Fireflies — night only */}
       {(timeState.phase === 'night' || (timeState.phase === 'dusk' && timeState.t > 0.5)) && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 18 }, (_, i) => {
+          {Array.from({ length: 10 }, (_, i) => {
             const r = seededRng(i * 59 + 131)
             const x = 5 + r() * 90
             const y = 30 + r() * 55
@@ -2362,6 +2326,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   juice, gems, xp, grove, notes, setGems, setJuice, setGrove, userId, activeTabId, orchardTimeMode,
+  onOpenLeaderboard, onOpenShop,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -2895,15 +2860,20 @@ export const OrchardView = memo(function OrchardView({
           {/* Topbar with sap count */}
           <div className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
             backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.08)',
-            backdropFilter: 'blur(40px) saturate(1.8) brightness(1.1)',
-            WebkitBackdropFilter: 'blur(40px) saturate(1.8) brightness(1.1)',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.4)'}`,
+            backdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(28px) saturate(2) brightness(1.05)',
+            WebkitBackdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(28px) saturate(2) brightness(1.05)',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.25)'}`,
             boxShadow: isDark
               ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
-              : 'inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 16px rgba(0,0,0,0.04)',
+              : 'inset 0 0.5px 0 rgba(255,255,255,0.4), 0 2px 12px rgba(0,0,0,0.05)',
           }}>
-            <div className="grid items-center w-full h-full" style={{ fontFamily: '"EB Garamond", serif', gridTemplateColumns: '1fr auto 1fr' }}>
-              <div className="flex flex-col items-end justify-center pr-3">
+            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
+              {onOpenLeaderboard && (
+                <button onClick={onOpenLeaderboard} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
+                </button>
+              )}
+              <div className="flex flex-col items-center justify-center">
                 <div ref={sapCounterRef} className="flex items-center gap-2">
                   <PulpIcon size={18} />
                   <span className="text-[15px] font-semibold tabular-nums" style={{
@@ -2927,7 +2897,19 @@ export const OrchardView = memo(function OrchardView({
                 )}
               </div>
               <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
-              <div className="flex items-center pl-3">
+              <div className="flex items-center gap-2">
+                <GemIcon size={16} />
+                <span className="text-[15px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
+              </div>
+              {onOpenShop && (
+                <button onClick={onOpenShop} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Collect all sap button — below topbar */}
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
               <div style={{ position: 'relative' }}>
                 <button
                   ref={collectBtnRef}
@@ -3001,8 +2983,6 @@ export const OrchardView = memo(function OrchardView({
                   )
                 })()}
               </div>
-              </div>
-            </div>
           </div>
           <canvas id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
