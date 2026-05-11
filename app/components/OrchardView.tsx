@@ -2086,7 +2086,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             const r = seededRng(i * 59 + 131)
             const x = 5 + r() * 90
             const y = 30 + r() * 55
-            const dur = 6 + r() * 8
+            const dur = 12 + r() * 14
             const delay = r() * 10
             const driftX = -8 + r() * 16
             const driftY = -6 + r() * 12
@@ -2326,7 +2326,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
       <style>{`
         @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
-        @keyframes firefly-glow { 0%, 100% { opacity: 0; } 15%, 25% { opacity: 0.4; } 40%, 60% { opacity: 0.9; } 75%, 85% { opacity: 0.4; } }
+        @keyframes firefly-glow { 0% { opacity: 0.05; } 20% { opacity: 0.15; } 40% { opacity: 0.7; } 50% { opacity: 0.85; } 60% { opacity: 0.7; } 80% { opacity: 0.15; } 100% { opacity: 0.05; } }
         @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
 @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
         @keyframes butterfly-path { 0% { transform: translate(0, 0); } 20% { transform: translate(20px, -12px); } 40% { transform: translate(-10px, -20px); } 60% { transform: translate(15px, 8px); } 80% { transform: translate(-15px, -5px); } 100% { transform: translate(0, 0); } }
@@ -2380,7 +2380,8 @@ export const OrchardView = memo(function OrchardView({
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
-  const [hoveredTreeId, setHoveredTreeId] = useState<string | null>(null)
+  const hoveredElRef = useRef<HTMLElement | null>(null)
+  const hoveredZRef = useRef<string>('')
   const [sapReadyMap, setSapReadyMap] = useState<Record<string, number>>({})
   const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
@@ -2392,7 +2393,6 @@ export const OrchardView = memo(function OrchardView({
   const [slotOrder, setSlotOrder] = useState<Record<string, string[]>>(() => {
     try { return JSON.parse(localStorage.getItem('pulp-slot-order') || '{}') } catch { return {} }
   })
-  const [dragState, setDragState] = useState<{ treeId: string; startX: number; startY: number; currentX: number; currentY: number; slotIdx: number; active: boolean } | null>(null)
   const orchardRef = useRef<HTMLDivElement>(null)
 
   const getSapInterval = (stage: number) => {
@@ -2448,25 +2448,31 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
+  const filteredTreesRef = useRef(filteredTrees)
+  filteredTreesRef.current = filteredTrees
+
   useEffect(() => {
     if (!isOpen) return
     const tick = () => {
       setSapReadyMap(prev => {
+        const trees = filteredTreesRef.current
+        let changed = false
         const next = { ...prev }
-        for (const tree of filteredTrees) {
+        for (const tree of trees) {
           const current = next[tree.id] || 0
           const max = getSapPerTick(tree) * 8
           if (current < max) {
             next[tree.id] = current + getSapPerTick(tree)
+            changed = true
           }
         }
-        return next
+        return changed ? next : prev
       })
     }
     tick()
     const interval = setInterval(tick, 15000)
     return () => clearInterval(interval)
-  }, [isOpen, filteredTrees])
+  }, [isOpen])
 
   const [tapAnim, setTapAnim] = useState<Record<string, 'bucket' | 'fill' | 'done'>>({})
   const collectSap = useCallback((tree: any, x: number, y: number) => {
@@ -2651,37 +2657,38 @@ export const OrchardView = memo(function OrchardView({
 
   const emptySlots = useMemo(() => ALL_SLOTS.filter(s => !occupiedSlots.has(s.slotIndex)), [occupiedSlots])
 
-  const dragRef = useRef(dragState)
-  dragRef.current = dragState
+  const dragRef = useRef<{ treeId: string; startX: number; startY: number; currentX: number; currentY: number; slotIdx: number; active: boolean } | null>(null)
   const dragElRef = useRef<HTMLElement | null>(null)
   const placedRef = useRef(placed)
   placedRef.current = placed
   const slotOrderRef = useRef(slotOrder)
   slotOrderRef.current = slotOrder
+  const currentPlotTreesRef = useRef(currentPlotTrees)
+  currentPlotTreesRef.current = currentPlotTrees
+  const selectedNotebookRef = useRef(selectedNotebook)
+  selectedNotebookRef.current = selectedNotebook
 
   const handleDragStart = useCallback((treeId: string, slotIdx: number, clientX: number, clientY: number) => {
     if (activeTool !== 'none') return
-    setDragState({ treeId, startX: clientX, startY: clientY, currentX: clientX, currentY: clientY, slotIdx, active: false })
-  }, [activeTool])
-
-  useEffect(() => {
-    if (!dragState) return
+    dragRef.current = { treeId, startX: clientX, startY: clientY, currentX: clientX, currentY: clientY, slotIdx, active: false }
     const onMove = (e: PointerEvent) => {
       const ds = dragRef.current
       if (!ds) return
       const dx = e.clientX - ds.startX
       const dy = e.clientY - ds.startY
-      const active = ds.active || (dx * dx + dy * dy > 64)
-      dragRef.current = { ...ds, currentX: e.clientX, currentY: e.clientY, active }
+      ds.active = ds.active || (dx * dx + dy * dy > 64)
+      ds.currentX = e.clientX
+      ds.currentY = e.clientY
       if (dragElRef.current) {
         dragElRef.current.style.transform = `translate(calc(-50% + ${dx}px), calc(-85% + ${dy}px)) scale(1.08)`
         dragElRef.current.style.zIndex = '999'
         dragElRef.current.style.opacity = '0.85'
         dragElRef.current.style.cursor = 'grabbing'
       }
-      if (active && !ds.active) setDragState(dragRef.current)
     }
     const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
       const ds = dragRef.current
       if (dragElRef.current) {
         dragElRef.current.style.transform = ''
@@ -2690,7 +2697,8 @@ export const OrchardView = memo(function OrchardView({
         dragElRef.current.style.cursor = ''
         dragElRef.current = null
       }
-      if (!ds || !ds.active || !orchardRef.current) { setDragState(null); return }
+      dragRef.current = null
+      if (!ds || !ds.active || !orchardRef.current) return
       const rect = orchardRef.current.getBoundingClientRect()
       const dropX = ((ds.currentX - rect.left) / rect.width) * 100
       const dropY = ((ds.currentY - rect.top) / rect.height) * 100
@@ -2703,8 +2711,8 @@ export const OrchardView = memo(function OrchardView({
         if (dist < closestDist) { closestDist = dist; closest = slot.slotIndex }
       }
       if (closest >= 0 && closestDist < 200) {
-        const key = selectedNotebook ?? '_all'
-        const currentOrder = slotOrderRef.current[key] || currentPlotTrees.map((t: any) => t.id)
+        const key = selectedNotebookRef.current ?? '_all'
+        const currentOrder = slotOrderRef.current[key] || currentPlotTreesRef.current.map((t: any) => t.id)
         const dragIdx = currentOrder.indexOf(ds.treeId)
         if (dragIdx >= 0) {
           const targetTreeId = placedRef.current.find(p => p.slotIndex === closest)?.tree?.id
@@ -2723,12 +2731,10 @@ export const OrchardView = memo(function OrchardView({
           localStorage.setItem('pulp-slot-order', JSON.stringify(updated))
         }
       }
-      setDragState(null)
     }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
-    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
-  }, [!!dragState, selectedNotebook, currentPlotTrees])
+  }, [activeTool])
 
   const tillSvg = useMemo(() => {
     const dk = isDark
@@ -2888,17 +2894,20 @@ export const OrchardView = memo(function OrchardView({
         <div className="flex-1 flex flex-col relative overflow-hidden">
           {/* Topbar with sap count */}
           <div className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
-            backgroundColor: isDark ? 'rgba(18,18,20,0.5)' : 'rgba(180,175,165,0.35)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+            backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(40px) saturate(1.8) brightness(1.1)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.8) brightness(1.1)',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.4)'}`,
+            boxShadow: isDark
+              ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
+              : 'inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 16px rgba(0,0,0,0.04)',
           }}>
             <div className="grid items-center w-full h-full" style={{ fontFamily: '"EB Garamond", serif', gridTemplateColumns: '1fr auto 1fr' }}>
               <div className="flex flex-col items-end justify-center pr-3">
                 <div ref={sapCounterRef} className="flex items-center gap-2">
                   <PulpIcon size={18} />
-                  <span className="text-[16px] font-semibold tabular-nums" style={{
-                    color: isDark ? '#d4d0c8' : '#3a3630',
+                  <span className="text-[15px] font-semibold tabular-nums" style={{
+                    color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)',
                     transition: 'transform 0.3s ease, color 0.3s ease',
                     transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
                   }}>{juice}</span>
@@ -2917,30 +2926,31 @@ export const OrchardView = memo(function OrchardView({
                   }}>+{collectAllAnim.total}</span>
                 )}
               </div>
-              <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.25)' }} />
+              <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
               <div className="flex items-center pl-3">
               <div style={{ position: 'relative' }}>
                 <button
                   ref={collectBtnRef}
                   onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                  className="relative flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold overflow-hidden"
+                  className="relative flex items-center justify-center rounded-md transition-all text-[11px] font-semibold overflow-hidden"
                   style={{
-                    padding: '4px 10px',
+                    padding: '5px 12px',
                     backgroundColor: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
                       return has
-                        ? (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)')
-                        : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')
+                        ? (isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.06)')
+                        : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')
                     })(),
                     color: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)')
+                      return has ? '#d97706' : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)')
                     })(),
                     border: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has ? '1px solid rgba(217,119,6,0.3)' : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
+                      return has ? '1px solid rgba(217,119,6,0.2)' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
                     })(),
                     cursor: (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0) ? 'pointer' : 'default',
+                    letterSpacing: '0.02em',
                   }}
                 >
                   {(() => {
@@ -3008,7 +3018,7 @@ export const OrchardView = memo(function OrchardView({
             {/* Plot switcher overlay */}
             <div className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
               {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
-                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.25)' }}>
+                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
@@ -3195,17 +3205,24 @@ export const OrchardView = memo(function OrchardView({
                       const sapReady = sapReadyMap[tree.id] || 0
                       const sapMax = getSapPerTick(tree) * 8
                       const sapFill = Math.min(1, sapReady / sapMax)
-                      const isDragging = dragState?.treeId === tree.id && dragState?.active
-                      const dragOffsetX = isDragging ? dragState!.currentX - dragState!.startX : 0
-                      const dragOffsetY = isDragging ? dragState!.currentY - dragState!.startY : 0
                       const glowColor = meta.color
 
                       return (
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           className="absolute flex flex-col items-center group"
-                          onMouseEnter={() => setHoveredTreeId(tree.id)}
-                          onMouseLeave={() => setHoveredTreeId(prev => prev === tree.id ? null : prev)}
+                          onMouseEnter={(e) => {
+                            if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
+                            hoveredElRef.current = e.currentTarget
+                            hoveredZRef.current = e.currentTarget.style.zIndex
+                            e.currentTarget.style.zIndex = '998'
+                          }}
+                          onMouseLeave={(e) => {
+                            if (hoveredElRef.current === e.currentTarget) {
+                              e.currentTarget.style.zIndex = hoveredZRef.current
+                              hoveredElRef.current = null
+                            }
+                          }}
                           onPointerDown={(e) => {
                             if (editMode) {
                               e.preventDefault()
@@ -3222,14 +3239,11 @@ export const OrchardView = memo(function OrchardView({
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
-                            transform: isDragging
-                              ? `translate(calc(-50% + ${dragOffsetX}px), calc(-85% + ${dragOffsetY}px)) scale(1.08)`
-                              : `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
+                            transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
-                            zIndex: isDragging ? 999 : hoveredTreeId === tree.id ? 998 : Math.round(y),
-                            willChange: isDragging ? 'transform' : undefined,
-                            cursor: editMode ? (isDragging ? 'grabbing' : 'grab') : activeTool === 'axe' ? 'crosshair' : sapReady > 0 ? 'pointer' : isDragging ? 'grabbing' : undefined,
-                            opacity: isDragging ? 0.85 : 1,
+                            zIndex: Math.round(y),
+                            cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : sapReady > 0 ? 'pointer' : undefined,
+                            opacity: 1,
                           }}
                         >
                           <div style={{
@@ -3402,13 +3416,14 @@ export const OrchardView = memo(function OrchardView({
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center rounded-[4px] text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
               style={{
                 width: 36, height: 36,
-                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.15)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                color: activeTool === 'axe' ? '#ef4444' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
-                boxShadow: activeTool === 'axe' ? '0 0 8px rgba(239,68,68,0.4)' : 'none',
+                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                color: activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
+                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.4)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')}`,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
               }}
               title="Chop"
             >
@@ -3422,13 +3437,14 @@ export const OrchardView = memo(function OrchardView({
 
             <button
               onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center rounded-[4px] text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
               style={{
                 width: 36, height: 36,
-                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.15)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                color: editMode ? '#d97706' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${editMode ? '#d97706' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
-                boxShadow: editMode ? '0 0 8px rgba(217,119,6,0.4)' : 'none',
+                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                color: editMode ? '#d97706' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
+                border: `1px solid ${editMode ? 'rgba(217,119,6,0.3)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')}`,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
               }}
               title="Edit layout"
             >

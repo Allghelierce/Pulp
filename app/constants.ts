@@ -58,7 +58,7 @@ export const TREE_TYPES: Record<string, any> = {
 
   // ═══ NEW SACRED — 100 juice each ═══
   starweaver:    { name: 'Starweaver',     color: '#1a237e', bg: 'rgba(26,35,126,0.1)',   cost: 100, currency: 'juice', rarity: 'sacred', weight: 0.1,  shape: 'starweaver',   category: 'gem',   juiceYield: 0,  paperYield: 8,  gemYield: 2, sceneBg: 'linear-gradient(180deg, #04040e 0%, #08081a 50%, #0c0c26 100%)' },
-  leviathan:     { name: 'Leviathan',      color: '#006064', bg: 'rgba(0,96,100,0.1)',    cost: 100, currency: 'juice', rarity: 'sacred', weight: 0.1,  shape: 'leviathan',    category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 2, sceneBg: 'linear-gradient(180deg, #04101a 0%, #081a28 50%, #0c2436 100%)' },
+  leviathan:     { name: 'Leviathan',      color: '#006064', bg: 'rgba(0,96,100,0.1)',    cost: 100, currency: 'juice', rarity: 'true rare', weight: 0.1,  shape: 'leviathan',    category: 'gem',   juiceYield: 0,  paperYield: 5,  gemYield: 2, sceneBg: 'linear-gradient(180deg, #04101a 0%, #081a28 50%, #0c2436 100%)' },
   prismatic:     { name: 'Prismatic',      color: '#ffffff', bg: 'rgba(255,255,255,0.08)',cost: 100, currency: 'juice', rarity: 'sacred', weight: 0.1,  shape: 'prismatic',    category: 'gem',   juiceYield: 0,  paperYield: 4,  gemYield: 3, sceneBg: 'linear-gradient(180deg, #0e0e14 0%, #14141e 50%, #1a1a28 100%)' },
 
 
@@ -99,7 +99,7 @@ export const TREE_TYPES: Record<string, any> = {
   bloom:         { name: 'Everbloom',      color: '#c43a62', bg: 'rgba(196,58,98,0.1)',   cost: 65,  currency: 'juice', rarity: 'true rare',      weight: 0.15, shape: 'bloom',        category: 'fruit', juiceYield: 13, paperYield: 4,  sceneBg: 'linear-gradient(180deg, #1c0810 0%, #241018 50%, #2e1820 100%)' },
 
   // ═══ WAVE 4 — COMMON ═══
-  willow:        { name: 'Willow',         color: '#66bb6a', bg: 'rgba(102,187,106,0.1)', cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'willow',       category: 'paper', juiceYield: 0,  paperYield: 10, sceneBg: 'linear-gradient(180deg, #0e1c12 0%, #142818 50%, #1a341e 100%)' },
+
   cattail:       { name: 'Cattail',        color: '#6d4c41', bg: 'rgba(109,76,65,0.1)',   cost: 15,  currency: 'juice', rarity: 'uncommon',  weight: 0.3,  shape: 'cattail',      category: 'paper', juiceYield: 0,  paperYield: 10, sceneBg: 'linear-gradient(180deg, #141210 0%, #1c1a16 50%, #24221c 100%)' },
 
   // ═══ WAVE 4 — UNCOMMON ═══

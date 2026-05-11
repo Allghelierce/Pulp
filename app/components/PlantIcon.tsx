@@ -2574,26 +2574,17 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
       case 'coral':
         if (s === 0) return (
           <g>
-            <path d="M24 46 L24 41" stroke={color} strokeWidth="2" strokeLinecap="round" />
-            <ellipse cx="24" cy="43" rx="2.5" ry="1" fill="#8B7355" opacity="0.3" />
-            {/* Tiny coral branch */}
-            <path d="M24 41 Q22 39 21 37" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M24 41 Q26 39 27 38" stroke={color} strokeWidth="1" strokeLinecap="round" fill="none" />
+            <ellipse cx="24" cy="46" rx="3" ry="1" fill={dark} opacity="0.25" />
+            <path d="M24 47 L24 41 Q22 39 21 37 M24 41 Q26 39 27 38" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             <circle cx="21" cy="37" r="0.5" fill={light} opacity="0.3" />
           </g>
         )
         if (s === 1) return (
           <g>
-            {/* Coral branching structure */}
-            <path d="M24 46 L24 34" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M24 38 Q20 34 18 30" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <path d="M24 36 Q28 32 30 28" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <path d="M18 30 Q16 28 14 26" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M30 28 Q32 26 34 24" stroke={color} strokeWidth="1" strokeLinecap="round" fill="none" />
-            {/* Coral tips */}
+            <ellipse cx="24" cy="46" rx="4" ry="1.2" fill={dark} opacity="0.25" />
+            <path d="M24 47 L24 34 M24 38 Q20 34 18 30 Q16 28 14 26 M24 36 Q28 32 30 28 Q32 26 34 24" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             <circle cx="14" cy="26" r="1" fill={light} opacity="0.4" />
             <circle cx="34" cy="24" r="0.8" fill={light} opacity="0.35" />
-            <circle cx="18" cy="30" r="0.6" fill={light} opacity="0.3" />
           </g>
         )
         if (s === 2) return (
@@ -2604,19 +2595,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
                 <stop offset="100%" stopColor={color} stopOpacity="0.1" />
               </radialGradient>
             </defs>
-            {/* Main coral trunk */}
-            <path d="M24 46 L24 30" stroke={color} strokeWidth="3" strokeLinecap="round" />
-            {/* Branching coral */}
-            <path d="M24 36 Q18 32 14 28" stroke={color} strokeWidth="2.2" strokeLinecap="round" fill="none" />
-            <path d="M24 34 Q30 30 34 26" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
-            <path d="M14 28 Q12 26 10 22" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <path d="M14 28 Q16 24 18 20" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M34 26 Q36 24 38 20" stroke={color} strokeWidth="1.3" strokeLinecap="round" fill="none" />
-            <path d="M34 26 Q32 22 30 18" stroke={color} strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M24 32 Q24 26 24 20" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <path d="M24 24 Q22 20 20 16" stroke={color} strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <path d="M24 24 Q26 20 28 16" stroke={color} strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            {/* Coral tips */}
+            <ellipse cx="24" cy="46" rx="5" ry="1.5" fill={dark} opacity="0.25" />
+            <path d="M24 47 L24 30" stroke={color} strokeWidth="3" strokeLinecap="round" />
+            <path d="M24 36 Q18 32 14 28 Q12 26 10 22 M14 28 Q16 24 18 20 M24 34 Q30 30 34 26 Q36 24 38 20 M34 26 Q32 22 30 18 M24 32 Q24 26 24 20 M24 24 Q22 20 20 16 M24 24 Q26 20 28 16" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             <circle cx="10" cy="22" r="1.2" fill={light} opacity="0.4" />
             <circle cx="38" cy="20" r="1" fill={light} opacity="0.35" />
             <circle cx="18" cy="20" r="0.8" fill={light} opacity="0.3" />
@@ -2624,7 +2605,6 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <circle cx="24" cy="20" r="0.7" fill={light} opacity="0.25" />
             <circle cx="20" cy="16" r="0.6" fill={light} opacity="0.25" />
             <circle cx="28" cy="16" r="0.6" fill={light} opacity="0.22" />
-            {/* Bubbles */}
             <circle cx="16" cy="14" r="0.5" fill="#fff" opacity="0.3">
               <animate attributeName="cy" values="14;10;14" dur="4s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.3;0.1;0.3" dur="4s" repeatCount="indefinite" />
@@ -2652,28 +2632,18 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             </defs>
             {/* Underwater ambient glow */}
             <ellipse cx="24" cy="26" rx="18" ry="14" fill={`url(#${uid}-crglow)`} filter={`url(#${uid}-crblur)`} opacity="0.4" />
-            {/* Main coral trunk */}
-            <path d="M24 46 L24 28" stroke={`url(#${uid}-crbranch)`} strokeWidth="3.5" strokeLinecap="round" />
-            {/* Primary branching */}
-            <path d="M24 36 Q16 30 10 24" stroke={color} strokeWidth="2.5" strokeLinecap="round" fill="none" />
-            <path d="M24 34 Q32 28 38 22" stroke={color} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+            {/* Base anchor */}
+            <ellipse cx="24" cy="46" rx="5" ry="1.5" fill={dark} opacity="0.3" />
+            {/* Main coral — connected paths */}
+            <path d="M24 47 L24 28 M24 36 Q16 30 10 24 Q8 20 6 16 Q4 14 4 10 M10 24 Q12 20 14 16 Q12 14 12 12 M24 34 Q32 28 38 22 Q40 18 42 14 Q44 12 44 10 M38 22 Q36 18 34 14 Q36 12 36 10 M24 32 Q24 26 24 18 M24 24 Q20 18 16 12 Q14 10 14 8 M24 24 Q28 18 32 12 Q34 10 34 8" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Thinner overlay for tapering */}
+            <path d="M10 24 Q8 20 6 16 Q4 14 4 10 M10 24 Q12 20 14 16 Q12 14 12 12 M38 22 Q40 18 42 14 Q44 12 44 10 M38 22 Q36 18 34 14 Q36 12 36 10 M24 24 Q20 18 16 12 Q14 10 14 8 M24 24 Q28 18 32 12 Q34 10 34 8" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Trunk thickness */}
+            <path d="M24 47 L24 28" stroke={`url(#${uid}-crbranch)`} strokeWidth="3.5" strokeLinecap="round" />
+            {/* Primary branches over trunk */}
+            <path d="M24 36 Q16 30 10 24" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M24 34 Q32 28 38 22" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             <path d="M24 32 Q24 26 24 18" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
-            {/* Secondary branching */}
-            <path d="M10 24 Q8 20 6 16" stroke={color} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <path d="M10 24 Q12 20 14 16" stroke={color} strokeWidth="1.3" strokeLinecap="round" fill="none" />
-            <path d="M38 22 Q40 18 42 14" stroke={color} strokeWidth="1.3" strokeLinecap="round" fill="none" />
-            <path d="M38 22 Q36 18 34 14" stroke={color} strokeWidth="1" strokeLinecap="round" fill="none" />
-            <path d="M24 24 Q20 18 16 12" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            <path d="M24 24 Q28 18 32 12" stroke={color} strokeWidth="1" strokeLinecap="round" fill="none" />
-            {/* Tertiary twigs */}
-            <path d="M6 16 Q4 14 4 10" stroke={color} strokeWidth="0.8" strokeLinecap="round" fill="none" />
-            <path d="M6 16 Q8 14 10 12" stroke={color} strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M14 16 Q12 14 12 12" stroke={color} strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M42 14 Q44 12 44 10" stroke={color} strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M42 14 Q40 12 38 10" stroke={color} strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            <path d="M34 14 Q36 12 36 10" stroke={color} strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            <path d="M16 12 Q14 10 14 8" stroke={color} strokeWidth="0.6" strokeLinecap="round" fill="none" />
-            <path d="M32 12 Q34 10 34 8" stroke={color} strokeWidth="0.5" strokeLinecap="round" fill="none" />
             {/* Coral polyp tips */}
             <circle cx="4" cy="10" r="1" fill={light} opacity="0.45" />
             <circle cx="10" cy="12" r="0.8" fill={light} opacity="0.4" />
