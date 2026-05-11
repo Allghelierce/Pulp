@@ -1008,7 +1008,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       features: [
                         { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
                         { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
-                        { name: "Rare Seed Drops", description: "Bonus rare & legendary seeds every month", included: true },
+                        { name: "Rare Seed Drops", description: "Bonus rare & sacred seeds every month", included: true },
                         { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                       ],
                     },
@@ -1063,7 +1063,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 <div className="px-5 py-4 space-y-4">
                   {[
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, title: "Growing Plants", desc: "Every completed focus session grows a plant. The plant type depends on the seed you select before starting. Plants are automatically assigned to whichever notebook you had open." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, and legendary. Fruit trees produce sap, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, true rare, and sacred. Fruit trees produce sap, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all sap earned that session." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">

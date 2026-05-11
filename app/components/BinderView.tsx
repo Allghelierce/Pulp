@@ -24,7 +24,7 @@ const RARITY_CARD_STYLES: Record<string, string> = {
   common: "card-common",
   uncommon: "card-uncommon",
   rare: "card-rare",
-  legendary: "card-premium",
+  sacred: "card-premium",
 }
 
 const Card = ({ card, idx, sellCard, theme }: any) => {
@@ -59,8 +59,8 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       {/* Rarity Tag */}
       <div className="absolute top-4 left-4 flex flex-col">
         <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">{typeInfo.rarity}</span>
-        {typeInfo.rarity === 'legendary' && (
-          <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Legendary</span>
+        {typeInfo.rarity === 'sacred' && (
+          <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
         )}
       </div>
 

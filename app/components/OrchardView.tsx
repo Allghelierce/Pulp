@@ -117,13 +117,13 @@ function flyParticle(x1:number, y1:number, toEl:HTMLElement|null, colors:Particl
   if (!_rafId) _rafId = requestAnimationFrame(_loop)
 }
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'legendary']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'sacred']
 const RARITY_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
   common: { label: 'Common', color: '#8a8a8f', bg: 'rgba(138,138,143,0.08)', border: 'rgba(138,138,143,0.2)' },
   uncommon: { label: 'Uncommon', color: '#6b9a6b', bg: 'rgba(107,154,107,0.1)', border: 'rgba(107,154,107,0.25)' },
   rare: { label: 'Rare', color: '#6888a8', bg: 'rgba(104,136,168,0.12)', border: 'rgba(104,136,168,0.3)' },
-  epic: { label: 'Epic', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)' },
-  legendary: { label: 'Legendary', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
+  'true rare': { label: 'True Rare', color: '#4d8cff', bg: 'rgba(77,140,255,0.12)', border: 'rgba(77,140,255,0.3)' },
+  sacred: { label: 'Sacred', color: '#c4a6ff', bg: 'rgba(196,166,255,0.12)', border: 'rgba(196,166,255,0.3)' },
 }
 
 function seededRng(seed: number) {
@@ -182,7 +182,7 @@ function getRarityPlantClass(type: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
     case 'rare': return 'rarity-rare'
-    case 'legendary': return 'rarity-premium'
+    case 'sacred': return 'rarity-premium'
     default: return ''
   }
 }
@@ -589,6 +589,33 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
         <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
 
+        {/* Sun — between distant cliffs and mountains */}
+        {(() => {
+          const sunT = Math.max(0, Math.min(1, (timeState.hour - 6) / 12))
+          const t = sunT
+          const sx = (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
+          const sy = (1-t)*(1-t)*10 + 2*(1-t)*t*(-8) + t*t*14
+          const visible = timeState.hour >= 6 && timeState.hour < 18
+          if (!visible) return null
+          const horizonFade = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
+          const aspect = 200 / 100
+          return (
+            <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
+              <defs>
+                <radialGradient id="sun-glow-bg" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={p.sunColor} stopOpacity="1" />
+                  <stop offset="20%" stopColor={p.sunColor} stopOpacity="0.5" />
+                  <stop offset="50%" stopColor={p.sunColor} stopOpacity="0.1" />
+                  <stop offset="100%" stopColor={p.sunColor} stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <ellipse cx={sx} cy={sy} rx={8 / aspect} ry={8} fill="url(#sun-glow-bg)" />
+              <ellipse cx={sx} cy={sy} rx={3 / aspect} ry={3} fill={p.sunColor} />
+              <ellipse cx={sx} cy={sy} rx={1.8 / aspect} ry={1.8} fill="#fff4d0" />
+            </g>
+          )
+        })()}
+
         {/* Mountain range — back layer (darker, depth) */}
         <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
         {/* Mountain range — main */}
@@ -612,16 +639,35 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
         <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
         <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
         <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        {/* Snow cap on highest peak — slopes: (42,18)→(50,8)→(58,16) */}
-        <path d="M45.2,14.2 L50,8 L54.8,13.2 Q53,12.5 51.5,13 Q50,12 48.5,13 Q47,12.5 45.2,14.2 Z" fill={isDark ? '#d0d4da' : '#f0f2f5'} />
-        <path d="M46.5,13 L50,8 L53.5,12 Q52,11.8 50.5,12.2 Q49,11.5 47.5,12.5 Z" fill={isDark ? '#e0e4ea' : '#fafbfc'} opacity="0.85" />
-        <path d="M48,11 L50,8 L52,10.5" fill="none" stroke={isDark ? '#eee' : '#fff'} strokeWidth="0.3" opacity="0.4" />
-        {/* Snow cap on left neighbor peak — slopes: (25,22)→(35,10)→(42,18) */}
-        <path d="M31.5,14 Q33,12.8 35,10 Q37.5,13 39,14.5 C38,13.8 36.8,14.2 35.5,13.6 C34.2,14 33,13.5 31.5,14 Z" fill={isDark ? '#bfc4ca' : '#e4e7ec'} />
-        <path d="M33,12.8 L35,10 L37.2,13 C36.2,12.4 34.5,12.2 33,12.8 Z" fill={isDark ? '#d4d8de' : '#f2f3f6'} opacity="0.75" />
-        {/* Snow cap on right peak — slopes: (95,22)→(105,9)→(115,18) */}
-        <path d="M101,14.8 C102.5,13 103.8,11 105,9 C106.5,11.5 108,13.5 109.5,15 C108.2,14 106.8,14.6 105.2,13.8 C103.8,14.5 102.2,14 101,14.8 Z" fill={isDark ? '#c0c6cc' : '#e6e9ee'} />
-        <path d="M102.8,13 C103.6,11.5 104.4,10 105,9 L107.5,12.5 C106.5,12 104,11.8 102.8,13 Z" fill={isDark ? '#d0d6dc' : '#eff0f4'} opacity="0.7" />
+        {/* Snow caps */}
+        <defs>
+          <linearGradient id="snow-blend-c" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#e8ecf0' : '#fafbfd'} />
+            <stop offset="55%" stopColor={isDark ? '#c8cdd4' : '#e8eaee'} />
+            <stop offset="100%" stopColor={isDark ? '#8a94a0' : '#b8bcc4'} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="snow-blend-l" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#d8dce2' : '#f0f2f5'} />
+            <stop offset="60%" stopColor={isDark ? '#b0b8c2' : '#dcdee4'} />
+            <stop offset="100%" stopColor={isDark ? '#7a8490' : '#a8aeb8'} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="snow-blend-r" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#dce0e6' : '#f2f4f7'} />
+            <stop offset="55%" stopColor={isDark ? '#b8c0ca' : '#e0e2e8'} />
+            <stop offset="100%" stopColor={isDark ? '#808a96' : '#aab0ba'} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Center peak snow — slopes follow (42,18)→(50,8)→(58,16) exactly */}
+        <path d="M46,13 L48,10.5 L50,8 L52.5,10.5 L55,13 C54,13.5 53.2,12.7 52,13.3 C51,12.5 50.3,13.4 49.5,12.8 C48.5,13.5 47.4,12.7 46,13 Z" fill="url(#snow-blend-c)" />
+        <path d="M47.6,11.5 L50,8 L52.1,11 C51.4,11.5 50.7,10.8 50,11.2 C49.3,10.7 48.4,11.3 47.6,11.5 Z" fill={isDark ? '#e8ecf2' : '#fcfcfd'} opacity="0.85" />
+        <path d="M46,13 L50,8 L50,12.5 C49.2,12.8 48,13.2 46.8,12.8 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Left peak snow — exact slopes (25,22)→(35,10)→(42,18) */}
+        <path d="M32.3,13 L33.7,11.5 L35,10 L36.2,11.5 L37.6,13 C37,13.4 36.4,12.8 35.8,13.2 C35.2,12.6 34.5,13.3 33.8,12.8 C33.2,13.3 32.7,13 32.3,13 Z" fill="url(#snow-blend-l)" />
+        <path d="M33.5,11.5 L35,10 L36.2,11.2 C35.7,11.6 35.3,11 35,11.4 C34.6,11 34,11.5 33.5,11.5 Z" fill={isDark ? '#dce0e6' : '#f8f9fb'} opacity="0.75" />
+        {/* Right peak snow — exact slopes (95,22)→(105,9)→(115,18) */}
+        <path d="M102.7,12.5 L103.8,10.7 L105,9 L107,10.8 L108.9,12.5 C108.1,13 107.2,12.3 106.4,12.8 C105.7,12.2 105.1,12.9 104.4,12.4 C103.6,12.9 103.1,12.5 102.7,12.5 Z" fill="url(#snow-blend-r)" />
+        <path d="M103.8,10.8 L105,9 L106.6,10.8 C106,11.2 105.5,10.5 105,10.9 C104.5,10.5 104.2,11.1 103.8,10.8 Z" fill={isDark ? '#e2e6ec' : '#fafbfc'} opacity="0.8" />
+        <path d="M102.7,12.5 L105,9 L105,12 C104.3,12.4 103.5,12.6 102.7,12.5 Z" fill="rgba(0,0,0,0.05)" />
         {/* Tiny cabin on right slope below peak */}
         <g transform="translate(52.8,11.5) scale(0.55)">
           <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
@@ -651,6 +697,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
             <path d="M-10,8 L210,8 L210,34 L-10,34 Z" fill="url(#mtn-light-wash)" opacity={p.mtnLightOpacity * 0.6} />
           </g>
         )}
+
 
         {/* Moonlight on mountain faces */}
         {(() => {
@@ -763,11 +810,11 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
 
         {/* Winding paths on hills — layered for terrain integration */}
         {(() => {
-          const mainD = "M-5,35.5 Q10,33.5 25,31 Q35,29 45,28 Q55,27.5 65,27 Q80,25 95,23 Q110,21 125,20 Q140,19.5 155,19.5 Q165,20 175,22 Q185,24 200,27"
-          const branchD = "M65,31 Q70,33 75,35 Q80,36 90,37 Q100,37 115,38"
-          const spurD = "M45,30 Q48,30.5 52,31"
-          const house1D = "M95,30 C94,29 92.5,28.8 91.1,28.1"
-          const house2D = "M125,22 C127,22.5 129,23.5 131.2,24.4"
+          const mainD = "M-5,36.5 Q10,34.5 25,32 Q35,30 45,29 Q55,28 65,27.5 Q80,25.5 95,23.5 Q110,21.5 125,20.5 Q140,20 155,20 Q165,20.5 175,22.5 Q185,24.5 200,27.5"
+          const branchD = "M65,32 Q70,34 75,36 Q80,37 90,38 Q100,38.5 115,39"
+          const spurD = "M45,31 Q48,31.5 52,32"
+          const house1D = "M95,30.5 C94,29.5 92.5,29.3 91.1,28.6"
+          const house2D = "M125,22.5 C127,23 129,24 131.2,24.9"
           const dirtBase = isDark ? '#2a2014' : '#8a7050'
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const dirtLight = isDark ? '#342a1a' : '#a08a60'
@@ -776,7 +823,7 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           const pebbles: string[] = []
           const grassEdge: string[] = []
           const ruts: string[] = []
-          const pts = [[-5,35.5],[10,33.5],[25,31],[35,29],[45,28],[55,27.5],[65,27],[80,25],[95,23],[110,21],[125,20],[140,19.5],[155,19.5],[165,20],[175,22],[185,24],[200,27]]
+          const pts = [[-5,36.5],[10,34.5],[25,32],[35,30],[45,29],[55,28],[65,27.5],[80,25.5],[95,23.5],[110,21.5],[125,20.5],[140,20],[155,20],[165,20.5],[175,22.5],[185,24.5],[200,27.5]]
           const wornPatches: string[] = []
           for (let i = 0; i < 80; i++) {
             const t = rng()
@@ -1370,32 +1417,6 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           </g>
         })()}
 
-        {/* Sun on arc */}
-        {(() => {
-          const sunT = Math.max(0, Math.min(1, (timeState.hour - 6) / 12))
-          const t = sunT
-          const sx = (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
-          const sy = (1-t)*(1-t)*16 + 2*(1-t)*t*0 + t*t*20
-          const visible = timeState.hour >= 6 && timeState.hour < 18
-          if (!visible) return null
-          const horizonFade = t < 0.08 ? t / 0.08 : t > 0.92 ? (1 - t) / 0.08 : 1
-          const reflOpacity = horizonFade * (1 - p.sunGlow * 0.3)
-          return (
-            <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
-              <defs>
-                <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor={p.sunColor} stopOpacity="0.9" />
-                  <stop offset="20%" stopColor={p.sunColor} stopOpacity="0.4" />
-                  <stop offset="50%" stopColor={p.sunColor} stopOpacity="0.1" />
-                  <stop offset="100%" stopColor={p.sunColor} stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              <ellipse cx={sx} cy={sy} rx="18" ry="8" fill="url(#sun-glow)" />
-              <circle cx="0" cy="0" r="1.2" fill={p.sunColor} opacity="0.7" transform={`translate(${sx},${sy}) scale(2.5,2)`} />
-              <circle cx="0" cy="0" r="0.8" fill="#fff4d0" opacity="0.9" transform={`translate(${sx},${sy}) scale(2.5,2)`} />
-            </g>
-          )
-        })()}
         {/* Moon on arc */}
         {(() => {
           const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
@@ -1991,18 +2012,18 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
       {/* ── Ambient animations ── */}
       {/* Clouds — high distant layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.35 : 0.45 }}>
-        {[0,1,2,3,4,5].map(i => {
+        {[0,1,2,3,4,5,6,7,8,9].map(i => {
           const r = seededRng(i * 41 + 77)
-          const y = 1 + r() * 10
-          const w = 50 + r() * 60
+          const y = 1 + r() * 14
+          const w = 50 + r() * 70
           const h = 12 + r() * 10
-          const dur = 220 + r() * 140
+          const dur = 200 + r() * 160
           const delay = -(r() * dur)
           return (
             <svg key={`cloud-hi-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
               animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
-              opacity: 0.3 + r() * 0.2,
+              opacity: 0.25 + r() * 0.25,
             }} viewBox="0 0 100 30" preserveAspectRatio="none">
               <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#3a4458' : '#b8b4aa'} />
               <ellipse cx="35" cy="14" rx="28" ry="12" fill={isDark ? '#404c60' : '#c4c0b6'} />
@@ -2011,9 +2032,31 @@ const Terrain = memo(function Terrain({ isDark, treeCount, treeBases, chopMode, 
           )
         })}
       </div>
+      {/* Clouds — mid layer around sun/moon level */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.4 : 0.55 }}>
+        {[0,1,2,3,4,5,6,7].map(i => {
+          const r = seededRng(i * 53 + 149)
+          const y = 4 + r() * 18
+          const w = 80 + r() * 120
+          const h = 16 + r() * 14
+          const dur = 160 + r() * 120
+          const delay = -(r() * dur)
+          return (
+            <svg key={`cloud-mid-${i}`} className="absolute" style={{
+              top: `${y}%`, width: `${w}px`, height: `${h}px`,
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
+              opacity: 0.3 + r() * 0.25,
+            }} viewBox="0 0 120 35" preserveAspectRatio="none">
+              <ellipse cx="60" cy="20" rx="55" ry="12" fill={isDark ? '#323e54' : '#c0bcb2'} />
+              <ellipse cx="40" cy="16" rx="32" ry="13" fill={isDark ? '#3a4660' : '#c8c4ba'} />
+              <ellipse cx="80" cy="17" rx="28" ry="11" fill={isDark ? '#354050' : '#bcb8ae'} />
+            </svg>
+          )
+        })}
+      </div>
       {/* Clouds — low close layer, bigger, faster, overlaps hills */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.6 : 0.85 }}>
-        {[0,1,2,3,4,5,6].map(i => {
+        {[0,1,2,3,4,5,6,7,8].map(i => {
           const r = seededRng(i * 67 + 233)
           const y = 12 + r() * 18
           const w = 120 + r() * 180
@@ -2407,7 +2450,7 @@ export const OrchardView = memo(function OrchardView({
 
   useEffect(() => {
     if (!isOpen) return
-    const interval = setInterval(() => {
+    const tick = () => {
       setSapReadyMap(prev => {
         const next = { ...prev }
         for (const tree of filteredTrees) {
@@ -2419,7 +2462,9 @@ export const OrchardView = memo(function OrchardView({
         }
         return next
       })
-    }, 45000)
+    }
+    tick()
+    const interval = setInterval(tick, 15000)
     return () => clearInterval(interval)
   }, [isOpen, filteredTrees])
 
@@ -2457,13 +2502,13 @@ export const OrchardView = memo(function OrchardView({
     const btnEl = collectBtnRef.current
     if (btnEl) {
       let arrived = 0
-      const bucketEls = Array.from(document.querySelectorAll<HTMLElement>('[data-sap-bucket]'))
-        .filter(el => treesWithSap.some((t: any) => t.id === el.dataset.sapBucket))
-      const total_buckets = bucketEls.length || 1
-      bucketEls.forEach((el, i) => {
+      const total_buckets = treesWithSap.length
+      treesWithSap.forEach((tree: any, i: number) => {
         setTimeout(() => {
+          const el = document.querySelector<HTMLElement>(`[data-sap-bucket="${tree.id}"]`)
+          if (!el) { arrived++; setBtnFillLevel(arrived / total_buckets); return }
           const r = el.getBoundingClientRect()
-          if (r.width === 0 && r.height === 0) return
+          if (r.width === 0 && r.height === 0) { arrived++; setBtnFillLevel(arrived / total_buckets); return }
           flyParticle(r.left + r.width / 2, r.top + r.height * 0.3, btnEl, SAP_COLOR, () => {
             arrived++
             setBtnFillLevel(arrived / total_buckets)
@@ -2608,6 +2653,7 @@ export const OrchardView = memo(function OrchardView({
 
   const dragRef = useRef(dragState)
   dragRef.current = dragState
+  const dragElRef = useRef<HTMLElement | null>(null)
   const placedRef = useRef(placed)
   placedRef.current = placed
   const slotOrderRef = useRef(slotOrder)
@@ -2626,10 +2672,24 @@ export const OrchardView = memo(function OrchardView({
       const dx = e.clientX - ds.startX
       const dy = e.clientY - ds.startY
       const active = ds.active || (dx * dx + dy * dy > 64)
-      setDragState({ ...ds, currentX: e.clientX, currentY: e.clientY, active })
+      dragRef.current = { ...ds, currentX: e.clientX, currentY: e.clientY, active }
+      if (dragElRef.current) {
+        dragElRef.current.style.transform = `translate(calc(-50% + ${dx}px), calc(-85% + ${dy}px)) scale(1.08)`
+        dragElRef.current.style.zIndex = '999'
+        dragElRef.current.style.opacity = '0.85'
+        dragElRef.current.style.cursor = 'grabbing'
+      }
+      if (active && !ds.active) setDragState(dragRef.current)
     }
     const onUp = () => {
       const ds = dragRef.current
+      if (dragElRef.current) {
+        dragElRef.current.style.transform = ''
+        dragElRef.current.style.zIndex = ''
+        dragElRef.current.style.opacity = ''
+        dragElRef.current.style.cursor = ''
+        dragElRef.current = null
+      }
       if (!ds || !ds.active || !orchardRef.current) { setDragState(null); return }
       const rect = orchardRef.current.getBoundingClientRect()
       const dropX = ((ds.currentX - rect.left) / rect.width) * 100
@@ -2868,35 +2928,37 @@ export const OrchardView = memo(function OrchardView({
                     padding: '4px 10px',
                     backgroundColor: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      if (btnFillLevel > 0) return isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.15)'
                       return has
-                        ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)')
+                        ? (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.08)')
                         : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')
                     })(),
                     color: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has || btnFillLevel > 0 ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)')
+                      return has ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)')
                     })(),
                     border: (() => {
                       const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has || btnFillLevel > 0 ? '1px solid rgba(217,119,6,0.3)' : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
+                      return has ? '1px solid rgba(217,119,6,0.3)' : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
                     })(),
                     cursor: (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0) ? 'pointer' : 'default',
                   }}
                 >
-                  {btnFillLevel > 0 && (
-                    <div className="absolute inset-0 pointer-events-none" style={{
-                      background: `linear-gradient(to top, rgba(217,119,6,${isDark ? 0.4 : 0.3}) 0%, rgba(217,119,6,${isDark ? 0.15 : 0.1}) 60%, transparent 100%)`,
-                      transform: `translateY(${(1 - btnFillLevel) * 100}%)`,
-                      transition: 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)',
-                      borderRadius: 'inherit',
-                    }} />
-                  )}
                   {(() => {
                     const visibleTrees = (placedRef.current ?? []).map((p: any) => p.tree)
                     const totalReady = visibleTrees.reduce((s: number, t: any) => s + (sapReadyMap[t.id] || 0), 0)
                     const sapMax = visibleTrees.reduce((s: number, t: any) => s + getSapPerTick(t) * 8, 0)
-                    return <span className="relative z-10">Collect All Sap <em className="text-[10px] tabular-nums not-italic font-bold" style={{ fontStyle: 'italic' }}>{totalReady}/{sapMax}</em></span>
+                    const fill = btnFillLevel > 0 ? btnFillLevel : (sapMax > 0 ? totalReady / sapMax : 0)
+                    return <>
+                      {fill > 0 && (
+                        <div className="absolute inset-0 pointer-events-none" style={{
+                          background: `linear-gradient(to top, rgba(217,119,6,${isDark ? 0.4 : 0.3}) 0%, rgba(217,119,6,${isDark ? 0.15 : 0.1}) 60%, transparent 100%)`,
+                          transform: `translateY(${(1 - fill) * 100}%)`,
+                          transition: 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)',
+                          borderRadius: 'inherit',
+                        }} />
+                      )}
+                      <span className="relative z-10">Collect All Sap</span>
+                    </>
                   })()}
                 </button>
                 {sapFlyAnim.phase !== 'none' && (() => {
@@ -2935,12 +2997,7 @@ export const OrchardView = memo(function OrchardView({
           <canvas id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
           <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
-          <div style={{
-            opacity: (activeTool !== 'none' || editMode) ? 0.4 : 1,
-            transition: 'opacity 0.3s ease',
-          }}>
-            <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
-          </div>
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
 
 
           {/* Orchard scene */}
@@ -3152,6 +3209,7 @@ export const OrchardView = memo(function OrchardView({
                           onPointerDown={(e) => {
                             if (editMode) {
                               e.preventDefault()
+                              dragElRef.current = e.currentTarget as HTMLElement
                               handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
                               return
                             }
@@ -3344,31 +3402,43 @@ export const OrchardView = memo(function OrchardView({
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-[4px] text-[11px] font-semibold"
               style={{
                 width: 36, height: 36,
-                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.15)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
                 color: activeTool === 'axe' ? '#ef4444' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.3)' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
+                border: `1px solid ${activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
+                boxShadow: activeTool === 'axe' ? '0 0 8px rgba(239,68,68,0.4)' : 'none',
               }}
               title="Chop"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
             </button>
+            {activeTool === 'axe' && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
+                Tap tree
+              </span>
+            )}
 
             <button
               onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center rounded-[4px] transition-all text-[11px] font-semibold"
+              className="flex items-center justify-center rounded-[4px] text-[11px] font-semibold"
               style={{
                 width: 36, height: 36,
-                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.15)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
                 color: editMode ? '#d97706' : (isDark ? '#a1a1aa' : '#71717a'),
-                border: `1px solid ${editMode ? 'rgba(217,119,6,0.3)' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
+                border: `1px solid ${editMode ? '#d97706' : (isDark ? 'rgba(255,255,255,0.08)' : '#d4d4d8')}`,
+                boxShadow: editMode ? '0 0 8px rgba(217,119,6,0.4)' : 'none',
               }}
               title="Edit layout"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
+            {editMode && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
+                Drag to move
+              </span>
+            )}
           </div>
 
           {/* Chop confirmation popup */}

@@ -12,8 +12,8 @@ const SHOWCASE_TREES = [
   { type: 'pineapple', name: 'pineapple', rarity: 'rare' },
   { type: 'passionfruit', name: 'passionfruit', rarity: 'rare' },
 
-  { type: 'sakura', name: 'sakura', rarity: 'legendary' },
-  { type: 'abyss', name: 'abyss maw', rarity: 'legendary' },
+  { type: 'sakura', name: 'sakura', rarity: 'sacred' },
+  { type: 'abyss', name: 'abyss maw', rarity: 'sacred' },
 ]
 
 const FEATURES = [
@@ -30,7 +30,7 @@ const RARITY_COLOR: Record<string, string> = {
   common: '#a1a1aa',
   uncommon: '#34d399',
   rare: '#60a5fa',
-  legendary: '#f59e0b',
+  sacred: '#c4a6ff',
 }
 
 function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?: () => void }) {

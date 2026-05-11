@@ -40,22 +40,22 @@ const GEM_COSMETICS = [
   { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 4 },
 ]
 
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary']
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'sacred']
 
 const RARITY_LABEL: Record<string, string> = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary',
+  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', 'true rare': 'True Rare', sacred: 'Sacred',
 }
 
 const RARITY_COLOR: Record<string, string> = {
-  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', epic: '#c084fc', legendary: '#f59e0b',
+  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', 'true rare': '#4d8cff', sacred: '#c4a6ff',
 }
 
 const RARITY_BG: Record<string, string> = {
   common: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #22301a 100%)',
   uncommon: 'linear-gradient(180deg, #0e1a16 0%, #122820 50%, #163228 100%)',
   rare: 'linear-gradient(180deg, #0e1420 0%, #121e30 50%, #162840 100%)',
-  epic: 'linear-gradient(180deg, #14102a 0%, #1a1636 50%, #201c42 100%)',
-  legendary: 'linear-gradient(180deg, #1a1610 0%, #28201a 50%, #362a20 100%)',
+  'true rare': 'linear-gradient(180deg, #14102a 0%, #1a1636 50%, #201c42 100%)',
+  sacred: 'linear-gradient(180deg, #0c0a14 0%, #141020 50%, #1c162c 100%)',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -81,8 +81,8 @@ function rarityPlantClass(rarity: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
     case 'rare': return 'rarity-rare'
-    case 'epic': return 'rarity-rare'
-    case 'legendary': return 'rarity-premium'
+    case 'true rare': return 'rarity-true-rare'
+    case 'sacred': return 'rarity-premium'
     default: return ''
   }
 }
@@ -90,14 +90,14 @@ function rarityPlantClass(rarity: string): string {
 function rarityCardClass(rarity: string): string {
   switch (rarity) {
     case 'rare': return 'rarity-card-rare'
-    case 'epic': return 'rarity-card-rare'
-    case 'legendary': return 'rarity-card-premium'
+    case 'true rare': return 'rarity-card-true-rare'
+    case 'sacred': return 'rarity-card-premium'
     default: return ''
   }
 }
 
 function Sparkles({ rarity, count }: { rarity: string; count: number }) {
-  if (rarity !== 'legendary' && rarity !== 'epic') return null
+  if (rarity !== 'sacred' && rarity !== 'true rare') return null
   const cls = 'sparkle-premium'
   return (
     <div className="sparkle-container">
@@ -119,49 +119,55 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
 }
 
 function RarityScene({ rarity }: { rarity: string }) {
-  if (rarity === 'epic') {
+  if (rarity === 'true rare') {
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
-            <radialGradient id="epic-glow" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="rgba(192,132,252,0.1)">
-                <animate attributeName="stopColor" values="rgba(192,132,252,0.06);rgba(192,132,252,0.14);rgba(192,132,252,0.06)" dur="6s" repeatCount="indefinite" />
+            <radialGradient id="trurerare-glow" cx="50%" cy="75%">
+              <stop offset="0%" stopColor="rgba(77,140,255,0.1)">
+                <animate attributeName="stopColor" values="rgba(77,140,255,0.06);rgba(77,140,255,0.14);rgba(77,140,255,0.06)" dur="6s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#epic-glow)" />
+          <rect width="100%" height="100%" fill="url(#trurerare-glow)" />
         </svg>
       </div>
     )
   }
-  if (rarity === 'legendary') {
+  if (rarity === 'sacred') {
     return (
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
-            <radialGradient id="prm-core" cx="50%" cy="65%">
-              <stop offset="0%" stopColor="#1c1608" />
-              <stop offset="100%" stopColor="#0a0804" />
+            <radialGradient id="sac-core" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#1a1030" />
+              <stop offset="100%" stopColor="#08060e" />
             </radialGradient>
-            <radialGradient id="prm-glow" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="rgba(234,88,12,0.08)">
-                <animate attributeName="stopColor" values="rgba(234,88,12,0.05);rgba(234,88,12,0.12);rgba(234,88,12,0.05)" dur="5s" repeatCount="indefinite" />
+            <radialGradient id="sac-glow" cx="50%" cy="60%">
+              <stop offset="0%" stopColor="rgba(196,166,255,0.06)">
+                <animate attributeName="stopColor" values="rgba(196,166,255,0.04);rgba(230,210,255,0.08);rgba(196,166,255,0.04)" dur="8s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
+            <radialGradient id="sac-halo" cx="50%" cy="30%">
+              <stop offset="0%" stopColor="rgba(230,210,255,0.06)" />
+              <stop offset="60%" stopColor="rgba(160,130,220,0.03)" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#prm-core)" />
-          <rect width="100%" height="100%" fill="url(#prm-glow)" />
-          {Array.from({ length: 6 }).map((_, i) => (
+          <rect width="100%" height="100%" fill="url(#sac-core)" />
+          <rect width="100%" height="100%" fill="url(#sac-glow)" />
+          <rect width="100%" height="100%" fill="url(#sac-halo)" />
+          {Array.from({ length: 8 }).map((_, i) => (
             <circle key={i}
-              cx={`${(i * 33 + 15) % 85}%`}
-              r={0.6 + (i % 2) * 0.3}
-              fill={i % 2 === 0 ? '#d97706' : '#92400e'}
+              cx={`${12 + (i * 23) % 76}%`}
+              cy={`${20 + (i * 17) % 60}%`}
+              r={0.4 + (i % 3) * 0.2}
+              fill={i % 3 === 0 ? '#d4b8ff' : i % 3 === 1 ? '#a78bfa' : '#e8deff'}
             >
-              <animate attributeName="opacity" values="0;0.4;0" dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
-              <animate attributeName="cy" values={`${80 + (i * 7) % 15}%;${60 + (i * 5) % 15}%`} dur={`${5 + (i % 3) * 2}s`} begin={`${i * 1.5}s`} repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0;0.5;0" dur={`${6 + (i % 4) * 2}s`} begin={`${i * 1.2}s`} repeatCount="indefinite" />
             </circle>
           ))}
         </svg>
@@ -354,8 +360,8 @@ export const BoutiqueView = memo(function BoutiqueView({
     <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30">
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
-        style={{ backgroundColor: bg, height: 660 }}
+        className={`relative w-full max-w-[1100px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
+        style={{ backgroundColor: bg, height: 780 }}
       >
         {/* ── Header ── */}
         <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
@@ -820,7 +826,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                       <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                       {plants.map(type => {
                         const t = TREE_TYPES[type]
                         const owned = inventory.includes(type)
@@ -830,24 +836,24 @@ export const BoutiqueView = memo(function BoutiqueView({
                             className={rarityCardClass(t.rarity)}
                             onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') }}
                             style={{
-                              borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
+                              borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden',
                               backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
                               transition: 'all 0.15s', position: 'relative', fontFamily: font,
                             }}
                           >
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                              height: 180, position: 'relative',
+                              height: 130, position: 'relative', aspectRatio: '1',
                               background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
                             }}>
                               <RarityScene rarity={t.rarity} />
-                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 16, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
-                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
-                              <Sparkles rarity={t.rarity} count={4} />
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 12, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
+                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+                              <Sparkles rarity={t.rarity} count={3} />
                               <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
-                                <PlantIcon type={type} size={120} stage={3} />
+                                <PlantIcon type={type} size={85} stage={3} />
                               </div>
-                              <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
+                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
                               {type === 'tangerine' ? (
@@ -860,10 +866,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 </div>
                               )}
                             </div>
-                            <div style={{ padding: '10px 14px', borderTop: `1px solid ${dividerColor}` }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                              <div style={{ marginTop: 4 }}>
-                                <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
+                            <div style={{ padding: '6px 8px', borderTop: `1px solid ${dividerColor}` }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                              <div style={{ marginTop: 2 }}>
+                                <span style={{ fontSize: 8, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
                             </div>
                           </button>

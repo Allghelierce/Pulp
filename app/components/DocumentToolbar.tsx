@@ -68,6 +68,7 @@ interface DocumentToolbarProps {
   onOpenGrove?: () => void
   userAvatarUrl?: string | null
   userEmail?: string | null
+  onOpenLeaderboard?: () => void
   onInsertImage?: () => void
   strokeColor: string
   onStrokeColorChange: (c: string) => void
@@ -130,7 +131,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   juice, gems, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
+  userAvatarUrl, userEmail, onOpenLeaderboard, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -705,6 +706,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               {userEmail[0]}
             </div>
           ) : null}
+          {onOpenLeaderboard && (
+            <button onClick={onOpenLeaderboard} title="Leaderboard" className={`p-1 rounded-md transition-colors ml-1 ${theme === "dark" ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"}`}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>
+            </button>
+          )}
         </div>
 
         {currencyTooltip && (

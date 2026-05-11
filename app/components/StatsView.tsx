@@ -180,9 +180,9 @@ export const StatsView = memo(function StatsView({
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className="relative w-full max-w-[900px] rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-[1100px] rounded-2xl overflow-hidden flex flex-col"
         style={{
-          backgroundColor: bg, height: 660,
+          backgroundColor: bg, height: 780,
           boxShadow: isDark ? '0 25px 80px -15px rgba(0,0,0,0.7)' : '0 25px 80px -15px rgba(0,0,0,0.15)',
           border: `1px solid ${cardBorder}`,
         }}

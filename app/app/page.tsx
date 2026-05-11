@@ -3273,6 +3273,7 @@ export default function NoteApp() {
                   gems={isAdmin ? 999999 : gems}
                   userAvatarUrl={user?.user_metadata?.avatar_url}
                   userEmail={user?.email}
+                  onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
                   onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
                   onTimerOpen={() => setTimerOpen(!timerOpen)}

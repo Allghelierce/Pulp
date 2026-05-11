@@ -468,7 +468,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         if (!info) return null
                         const isSelected = selectedSeed === type
                         const count = counts.get(type) || 1
-                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'epic' ? '#c084fc' : info.rarity === 'legendary' ? '#f59e0b' : '#a1a1aa'
+                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#4d8cff' : info.rarity === 'sacred' ? '#c4a6ff' : '#a1a1aa'
                         return (
                           <motion.button
                             key={type}
