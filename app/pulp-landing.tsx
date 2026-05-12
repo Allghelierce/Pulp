@@ -20,7 +20,7 @@ const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.' },
   { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.' },
   { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.' },
-  { label: 'notebooks', desc: 'multiple types — standard, single page, flashcards, cornell, and encrypted vaults.' },
+  { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.' },
   { label: 'achievements', desc: 'unlock milestones as you write. earn sap, gems, and xp to level up.' },
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.' },
 ]
@@ -644,9 +644,18 @@ export default function PulpLanding() {
                     }}>
                       start writing — free
                     </a>
-                    <span style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', letterSpacing: '0.06em', textTransform: 'lowercase' }}>
-                      no credit card
-                    </span>
+                    <a href="/app" style={{
+                      fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
+                      padding: '9px 22px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
+                      background: 'transparent', color: '#6b6864',
+                      border: '1px solid rgba(15,15,16,0.12)',
+                      transition: 'border-color 0.2s, color 0.2s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(15,15,16,0.3)'; e.currentTarget.style.color = '#0f0f10' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(15,15,16,0.12)'; e.currentTarget.style.color = '#6b6864' }}
+                    >
+                      try without account
+                    </a>
                   </div>
                 </div>
               </motion.div>

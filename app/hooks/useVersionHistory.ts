@@ -16,7 +16,7 @@ function extractVersion(note: NoteData): NoteVersion {
     lines: note.lines,
     hlines: note.hlines,
     drawings: note.drawings,
-    flashcards: note.flashcards,
+
   }
 }
 
@@ -27,7 +27,7 @@ function contentHash(note: NoteData): string {
     lines: note.lines,
     hlines: note.hlines,
     drawings: note.drawings,
-    flashcards: note.flashcards,
+
   })
 }
 
@@ -125,7 +125,6 @@ export function useVersionHistory(
         lines: version.lines,
         hlines: version.hlines,
         drawings: version.drawings,
-        flashcards: version.flashcards,
       }
     }))
     hashMapRef.current.set(noteId, JSON.stringify({
@@ -134,7 +133,6 @@ export function useVersionHistory(
       lines: version.lines,
       hlines: version.hlines,
       drawings: version.drawings,
-      flashcards: version.flashcards,
     }))
   }, [])
 

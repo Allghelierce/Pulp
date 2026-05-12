@@ -68,7 +68,7 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 
 ## State persistence
 
-- `localStorage`: `pulp-grove` (juice, gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics)
+- `localStorage`: `pulp-grove` (sap [stored as `juice` key], gems, grove, inventory, achievements, lastCharCount, unlockedCosmetics)
 - `sessionStorage`: `pulp-timer` (elapsed, total, running, done, preset, waterDeadline, selectedSeed)
 - Notes are stored separately in localStorage
 
@@ -77,5 +77,8 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 - Trees get tagged with `notebookId` on timer completion via `activeTabId`
 - Timer sessions always produce a tree — tangerine if no seed selected
 - Water mechanic: sessions >= 10min require watering every 8min or tree dies
-- Giving up a session costs all juice; recoverable with gems
+- Giving up a session costs 15% sap; recoverable with 15 gems
+- Sap is earned by collecting from grove trees (sapYield), not from focus sessions directly
+- Gem trees (abyss, starweaver, leviathan, prismatic) yield gems when grove sap is collected
+- Tree categories: fruit, flora, gem, none
 - Achievement progress is checked via `checkAchievementRef` callback pattern

@@ -5,7 +5,7 @@ const ebGaramond = EB_Garamond({ subsets: ["latin"], display: "swap", variable: 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={ebGaramond.variable}>
+    <html lang="en" className={ebGaramond.variable} suppressHydrationWarning>
       <head>
         {process.env.NEXT_PUBLIC_SUPABASE_URL && <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />

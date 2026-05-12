@@ -35,7 +35,7 @@ const faces = [
   { eyes: "heart", eyeSize: 2, mouth: "curve-up", label: "love" },
 ]
 
-export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: { onClick: () => void; onHover?: () => void }) {
+export const HangingOrange = memo(function HangingOrange({ onClick, onHover, retracted }: { onClick: () => void; onHover?: () => void; retracted?: boolean }) {
   const angle = useMotionValue(0)
   const [faceIndex, setFaceIndex] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
@@ -110,9 +110,9 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover }: {
         rotate: springAngle,
       }}
       initial={{ y: -180, opacity: 0 }}
-      animate={timerRunning ? { y: -180, opacity: 0 } : { y: 0, opacity: 1 }}
+      animate={timerRunning || retracted ? { y: -180, opacity: 0 } : { y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 50, damping: 14, mass: 1 }}
-      whileHover={timerRunning ? {} : { y: 4 }}
+      whileHover={timerRunning || retracted ? {} : { y: 4 }}
       drag="y"
       dragConstraints={{ top: 0, bottom: 45 }}
       dragElastic={0.05}

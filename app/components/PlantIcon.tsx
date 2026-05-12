@@ -16,7 +16,12 @@ function lighten(hex: string, amount: number) {
   return `rgb(${r},${g},${b})`
 }
 
-export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number }) {
+export const ANIMATED_SHAPES = new Set([
+  'sakura', 'mangrove', 'winterveil', 'starweaver', 'leviathan',
+  'prismatic', 'whirlpool', 'bloom', 'coral', 'void', 'snowbell', 'wisteria',
+])
+
+export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt, disableSway = false }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number, disableSway?: boolean }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
@@ -5047,7 +5052,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
               <path d="M33 34 Q32 32 33 31.5 Q34 32 33 34Z" fill={color} />
               <path d="M31 33 Q30 31 31 30.5 Q32 31 31 33Z" fill={dark} />
             </g>
-            {/* Juice drip particles */}
+            {/* Sap drip particles */}
             <circle cx="12" cy="21" r="0.3" fill={light} style={{animation: `drip-${uid} 5s ease-in 0s infinite`}} />
             <circle cx="36" cy="21" r="0.3" fill={light} style={{animation: `drip-${uid} 6s ease-in 2s infinite`}} />
             <circle cx="14" cy="29" r="0.3" fill={light} style={{animation: `drip-${uid} 4.5s ease-in 1s infinite`}} />
@@ -5160,7 +5165,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <ellipse cx={24} cy={46} rx={rx} ry={ry} fill="#000" opacity={dirtDark ? 0.22 : 0.14} />
           )
         })()}
-        <g style={{
+        <g style={disableSway ? {
+          transformOrigin: '24px 46px',
+        } : {
           transformOrigin: '24px 46px',
           '--sway-deg': `${swayDeg}deg`,
           animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,

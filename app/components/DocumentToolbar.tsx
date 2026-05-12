@@ -50,10 +50,11 @@ interface DocumentToolbarProps {
   onStartSidebarDrag: (x: number) => void
   sidebarWidth: number
   isSidebarDragging: boolean
-  juice: number
+  sap: number
   gems: number
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
   onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
+  onAiAction?: (action: string) => void
   isTextActive: boolean
   onOpenChat: () => void
   chatOpen: boolean
@@ -64,11 +65,11 @@ interface DocumentToolbarProps {
   onSidebarToggle?: () => void
   onTimerOpen?: () => void
   onOpenShop: () => void
-  onOpenGemStore?: () => void
   onOpenGrove?: () => void
   userAvatarUrl?: string | null
   userEmail?: string | null
   onOpenLeaderboard?: () => void
+  onOpenSettings?: () => void
   onInsertImage?: () => void
   strokeColor: string
   onStrokeColorChange: (c: string) => void
@@ -128,38 +129,38 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  juice, gems, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGemStore, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, isTextActive, onOpenChat, chatOpen,
+  sap, gems, isVault, isUnlocked, onLock,
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, onAiAction, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenLeaderboard, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
+  userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [toolbarWidth, setToolbarWidth] = useState(9999)
-  const [displayJuice, setDisplayJuice] = useState(juice)
-  const prevJuiceRef = useRef(juice)
+  const [displaySap, setDisplaySap] = useState(sap)
+  const prevSapRef = useRef(sap)
   const animFrameRef = useRef<number>(undefined)
 
   useEffect(() => {
-    const prev = prevJuiceRef.current
-    prevJuiceRef.current = juice
-    if (juice >= prev || prev - juice < 2) {
-      setDisplayJuice(juice)
+    const prev = prevSapRef.current
+    prevSapRef.current = sap
+    if (sap >= prev || prev - sap < 2) {
+      setDisplaySap(sap)
       return
     }
-    const diff = prev - juice
+    const diff = prev - sap
     const steps = Math.min(diff, 30)
     const stepDuration = Math.min(60, 1200 / steps)
     let step = 0
     const tick = () => {
       step++
       const t = step / steps
-      setDisplayJuice(Math.round(prev - diff * t))
+      setDisplaySap(Math.round(prev - diff * t))
       if (step < steps) animFrameRef.current = window.setTimeout(tick, stepDuration) as unknown as number
     }
     tick()
     return () => { if (animFrameRef.current) clearTimeout(animFrameRef.current) }
-  }, [juice])
+  }, [sap])
   const compact = toolbarWidth < 820
   const hideShare = toolbarWidth < 760
   const hideCurrencies = toolbarWidth < 680
@@ -625,6 +626,28 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   {item.label}
                 </button>
               ))}
+              {onAiAction && (
+                <>
+                  <div className="h-px bg-zinc-200/50 my-1 mx-1" />
+                  <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Study Tools</div>
+                  {[
+                    { label: "Quiz me", action: "quiz" },
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      onMouseDown={e => {
+                        e.preventDefault()
+                        onAiAction(item.action)
+                        setAiOpen(false)
+                      }}
+                      className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                      style={btnFont}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </>
+              )}
               <div className="h-px bg-zinc-200/50 my-1 mx-1" />
               <button
                 onMouseDown={e => {
@@ -681,7 +704,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'sap' ? null : 'sap') }}
           >
             <PulpIcon size={15} />
-            <span style={{ color: displayJuice !== juice ? '#ef4444' : undefined, transition: 'color 0.15s' }}>{displayJuice >= 999999 ? "∞" : displayJuice}</span>
+            <span style={{ color: displaySap !== sap ? '#ef4444' : undefined, transition: 'color 0.15s' }}>{displaySap >= 999999 ? "∞" : displaySap}</span>
           </div>
           <div className="w-px h-4 bg-zinc-400/30" />
           <div
@@ -692,17 +715,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             <GemIcon size={15} />
             <span>{gems >= 999999 ? "∞" : gems}</span>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpenGemStore?.() }}
-            className="flex items-center gap-1 ml-1 pl-1.5 border-l border-zinc-400/20 hover:text-orange-600 transition-colors group cursor-pointer"
-            title="Get Gems"
-          >
-            <ShoppingBag size={11} strokeWidth={2.8} className="group-hover:scale-110 mb-0.5" />
-          </button>
           {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5" referrerPolicy="no-referrer" />
+            <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
           ) : userEmail ? (
-            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-bold text-zinc-600 uppercase ml-1.5">
+            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-bold text-zinc-600 uppercase ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }}>
               {userEmail[0]}
             </div>
           ) : null}
@@ -744,9 +760,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   { icon: '🛒', text: 'Spend sap to buy seeds in the shop.' },
                   { icon: '⚠️', text: 'Lose 25% if your plant dies.' },
                 ] : [
-                  { icon: '💎', text: 'Premium currency for recovery and cosmetics.' },
+                  { icon: '💎', text: 'Earned from achievements and gem trees.' },
                   { icon: '🔄', text: 'Recover lost sap after a failed session.' },
-                  { icon: '🛍️', text: 'Purchase from the gem store.' },
+                  { icon: '🔓', text: 'Unlock orchard plots and unblock sites.' },
                 ]).map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
@@ -762,7 +778,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                     e.stopPropagation()
                     setCurrencyTooltip(null)
                     if (currencyTooltip === 'sap') onOpenGrove?.()
-                    else onOpenGemStore?.()
                   }}
                   style={{
                     width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 600,
@@ -771,7 +786,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                   onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
                 >
-                  {currencyTooltip === 'sap' ? 'Open Grove' : 'Get Gems'}
+                  {currencyTooltip === 'sap' ? 'Open Grove' : 'Got it'}
                 </button>
               </div>
             </div>

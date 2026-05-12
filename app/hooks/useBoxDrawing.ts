@@ -518,30 +518,27 @@ export function useBoxDrawing({
           const y = (sy - r.top) / scale
           const id = uid()
           const paperW = paperRef.current?.clientWidth || 800
-          const bw = Math.min(300, paperW - x - 8)
+          const bw = paperW - x - 40
           const newBox: TextBox = { id, x, y: y - 8, w: Math.max(bw, 120), h: 32, content: '' }
           const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
           const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
-          setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
-          }))
-          setSelectedBoxIds(new Set([id]))
-          if (activeTool === 'textbox') setActiveTool('select')
-          const focusNewBox = () => {
-            const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
-            if (targetNode) {
-              targetNode.focus()
-              const range = document.createRange()
-              range.selectNodeContents(targetNode)
-              range.collapse(false)
-              const sel = window.getSelection()
-              sel?.removeAllRanges()
-              sel?.addRange(range)
-            } else {
-              requestAnimationFrame(focusNewBox)
-            }
+          flushSync(() => {
+            setNotes(prev => prev.map(n => n.id !== tid ? n : {
+              ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
+            }))
+            setSelectedBoxIds(new Set([id]))
+            if (activeTool === 'textbox') setActiveTool('select')
+          })
+          const targetNode = document.getElementById(`box-${id}`)?.querySelector<HTMLElement>('[contenteditable]')
+          if (targetNode) {
+            targetNode.focus()
+            const range = document.createRange()
+            range.selectNodeContents(targetNode)
+            range.collapse(false)
+            const sel = window.getSelection()
+            sel?.removeAllRanges()
+            sel?.addRange(range)
           }
-          requestAnimationFrame(focusNewBox)
           if (sketchMode) {
             requestAnimationFrame(() => generateSketch(sketchPrompt, id))
             setSketchMode(false); setSketchPrompt('')
@@ -590,7 +587,7 @@ export function useBoxDrawing({
     document.addEventListener('mouseup', handleUp.current)
   }, [])
 
-  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '' || !!b.boxHighlightColor)), [updateBoxes])
+  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '' || !!b.boxHighlightColor || selectedBoxIdsRef.current.has(b.id))), [updateBoxes])
 
   const startDrag = useCallback((e: React.MouseEvent, box: TextBox) => {
     const target = e.target as HTMLElement

@@ -6,7 +6,7 @@ export interface DailyEntry {
   charsWritten: number
   focusMinutes: number
   sessionsCompleted: number
-  juiceEarned: number
+  sapEarned: number
 }
 
 const STORAGE_KEY = "pulp-daily-stats"
@@ -29,7 +29,7 @@ function getOrCreateToday(entries: DailyEntry[]): [DailyEntry[], DailyEntry] {
   const d = today()
   const existing = entries.find(e => e.date === d)
   if (existing) return [entries, existing]
-  const entry: DailyEntry = { date: d, charsWritten: 0, focusMinutes: 0, sessionsCompleted: 0, juiceEarned: 0 }
+  const entry: DailyEntry = { date: d, charsWritten: 0, focusMinutes: 0, sessionsCompleted: 0, sapEarned: 0 }
   const updated = [...entries, entry]
   return [updated, entry]
 }
@@ -47,12 +47,12 @@ export function logCharsWritten(count: number) {
   getUserId().then(uid => { if (uid) db.incrementDailyStat(uid, 'words_written', count) })
 }
 
-export function logFocusSession(minutes: number, juice: number) {
+export function logFocusSession(minutes: number, sap: number) {
   const entries = loadDailyStats()
   const [list, entry] = getOrCreateToday(entries)
   entry.focusMinutes += minutes
   entry.sessionsCompleted += 1
-  entry.juiceEarned += juice
+  entry.sapEarned += sap
   saveDailyStats(list.map(e => e.date === entry.date ? entry : e))
   getUserId().then(uid => {
     if (!uid) return
@@ -62,9 +62,9 @@ export function logFocusSession(minutes: number, juice: number) {
   })
 }
 
-export function logJuice(amount: number) {
+export function logSap(amount: number) {
   const entries = loadDailyStats()
   const [list, entry] = getOrCreateToday(entries)
-  entry.juiceEarned += amount
+  entry.sapEarned += amount
   saveDailyStats(list.map(e => e.date === entry.date ? entry : e))
 }

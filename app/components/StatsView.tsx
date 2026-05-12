@@ -176,16 +176,12 @@ export const StatsView = memo(function StatsView({
 
   return (
     <div
-      className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30"
+      className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4"
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className="relative w-full max-w-[1100px] rounded-2xl overflow-hidden flex flex-col"
-        style={{
-          backgroundColor: bg, height: 780,
-          boxShadow: isDark ? '0 25px 80px -15px rgba(0,0,0,0.7)' : '0 25px 80px -15px rgba(0,0,0,0.15)',
-          border: `1px solid ${cardBorder}`,
-        }}
+        className={`relative w-full max-w-[900px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
+        style={{ backgroundColor: bg, height: 660 }}
       >
         {/* Header with stats */}
         <div className="px-6 pt-4 pb-3 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -193,10 +189,7 @@ export const StatsView = memo(function StatsView({
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-full transition-colors"
-                style={{ color: textMuted }}
-                onMouseEnter={e => e.currentTarget.style.color = textPrimary}
-                onMouseLeave={e => e.currentTarget.style.color = textMuted}
+                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>

@@ -29,6 +29,7 @@
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.38.0",
+    "html-to-image": "^1.11.13",
     "iconsax-react": "^0.0.8",
     "katex": "^0.16.41",
     "lottie-react": "^2.4.1",

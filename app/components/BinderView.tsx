@@ -1,7 +1,7 @@
 "use client"
 import { memo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES } from "@/app/constants"
+import { TREE_TYPES, ASCENSION_TIERS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
@@ -10,11 +10,11 @@ interface BinderViewProps {
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  juice: number
+  sap: number
   gems: number
   grove: any[]
   inventory: string[]
-  setJuice: (v: number | ((p: number) => number)) => void
+  setSap: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
@@ -63,6 +63,22 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
           <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
         )}
       </div>
+
+      {/* Ascension Badge */}
+      {(card.ascension || 0) > 0 && (() => {
+        const tierColors = ['#a8d8a8', '#6eb8e0', '#e8c44a']
+        const tier = card.ascension - 1
+        return (
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{
+            backgroundColor: `${tierColors[tier]}20`,
+            border: `1px solid ${tierColors[tier]}40`,
+          }}>
+            <span style={{ fontSize: 7, fontWeight: 800, color: tierColors[tier], letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              {ASCENSION_TIERS[tier]?.name}
+            </span>
+          </div>
+        )
+      })()}
 
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 w-full pt-2">
         <div className="plant-icon-wrapper relative">
@@ -116,7 +132,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
               <span className="text-4xl">💰</span>
               <span className="font-black text-xs tracking-widest uppercase">Redeem Estate</span>
               <div className="px-4 py-1 rounded-full bg-white/20 text-[10px] font-bold">
-                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'juice' ? <PulpIcon size={12} /> : <GemIcon size={12} />}
+                +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'sap' ? <PulpIcon size={12} /> : <GemIcon size={12} />}
               </div>
             </div>
           </motion.button>
@@ -128,7 +144,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
 
 export const BinderView = memo(function BinderView({
   isOpen, onClose, theme, accent,
-  juice, gems, grove, inventory, setJuice, setGems, setInventory, setGrove
+  sap, gems, grove, inventory, setSap, setGems, setInventory, setGrove
 }: BinderViewProps) {
 
   const [page, setPage] = useState(0)
@@ -141,7 +157,7 @@ export const BinderView = memo(function BinderView({
     if (!tree || tree.stage < 4) return
     const typeInfo = TREE_TYPES[tree.type]
     const goldBack = Math.floor(typeInfo.cost * 1.5)
-    if (typeInfo.currency === 'juice') setJuice(s => s + goldBack)
+    if (typeInfo.currency === 'sap') setSap(s => s + goldBack)
     else setGems(g => g + goldBack)
     setGrove(g => g.filter((_, i) => i !== idx))
   }
@@ -291,7 +307,7 @@ export const BinderView = memo(function BinderView({
                       <div className="flex flex-col">
                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Yield Balance</span>
                          <div className="flex items-center gap-4 mt-1 font-black text-sm">
-                            <span className="flex items-center gap-1.5"><PulpIcon size={18} /> {juice}</span>
+                            <span className="flex items-center gap-1.5"><PulpIcon size={18} /> {sap}</span>
                             <span className="flex items-center gap-1.5"><GemIcon size={18} /> {gems}</span>
                          </div>
                       </div>

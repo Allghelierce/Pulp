@@ -191,6 +191,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
 
       const notebookContent = notebookTextRef.current || gatherNotebookText(note)
       const history = [...messages, userMsg].slice(-10).map(m => `${m.role}: ${m.content}`).join("\n")
+
       const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}${ragContext}\n\n[CONVERSATION HISTORY]:\n${history}`
 
       const response = await apiFetch("/api/chat", {

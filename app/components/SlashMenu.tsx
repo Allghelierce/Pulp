@@ -199,6 +199,7 @@ function Submenu({
   return createPortal(
     <div
       ref={ref}
+      className="slash-menu-flyout"
       style={{
         position: "fixed",
         left: coords?.left ?? -9999,
@@ -297,6 +298,7 @@ function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { child
   return createPortal(
     <div
       ref={ref}
+      className="slash-menu-flyout"
       style={{
         position: "fixed",
         left: coords?.left ?? -9999,
@@ -419,7 +421,7 @@ function TableGridPicker({ onInsert, onClose, accent }: { onInsert: (html: strin
             <div
               key={i}
               onMouseEnter={() => setHover([r, c])}
-              onClick={() => { onInsert(makeTable(r, c), c); onClose() }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onInsert(makeTable(r, c), c); onClose() }}
               style={{
                 width: 20, height: 20, borderRadius: 2, cursor: "pointer",
                 background: active ? `rgba(${rgb},0.5)` : `rgba(${rgb},0.15)`,
@@ -827,6 +829,12 @@ export const SlashMenu = memo(function SlashMenu({
       action: () => onSelect(() => insertHTML(CODE_BLOCK_HTML))
     },
     {
+      id: "table", label: "Table", group: "Blocks",
+      icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" /><line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" /></svg>,
+      action: () => { },
+      customContent: <TableGridPicker onInsert={(html) => { onSelect(() => insertHTML(html)) }} onClose={onClose} accent={accent} />
+    },
+    {
       id: "bookmark", label: "Web Bookmark", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>,
       action: () => { },
@@ -973,7 +981,12 @@ export const SlashMenu = memo(function SlashMenu({
 
   const interactingRef = useRef(false)
   useEffect(() => {
-    const handler = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) onClose() }
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (ref.current?.contains(t)) return
+      if ((t as HTMLElement).closest?.('.slash-menu-root, .slash-menu-flyout')) return
+      onClose()
+    }
     const resizer = () => onClose()
     const focusHandler = (e: FocusEvent) => {
       if (interactingRef.current) return

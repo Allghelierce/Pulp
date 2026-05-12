@@ -168,6 +168,15 @@ const SignIn1: React.FC<SignInProps> = ({
               {isSignUp ? "Sign in" : "Sign up free"}
             </button>
           </p>
+
+          {/* Skip — try without account */}
+          <a
+            href="/app"
+            className="text-center text-xs text-zinc-600 hover:text-zinc-400 transition-colors mt-3 block"
+            style={{ textDecoration: 'none' }}
+          >
+            or just try it — no account needed →
+          </a>
         </div>
       </form>
 

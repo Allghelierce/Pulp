@@ -4,17 +4,17 @@ How to add new tree species to the Pulp app. Written from experience across 90+ 
 
 ## Files to modify
 
-1. **`app/constants.ts`** — `TREE_TYPES` object. One line per tree with: name, color, bg, cost, currency, rarity, weight, shape, category, juiceYield, paperYield, gemYield?, sceneBg.
+1. **`app/constants.ts`** — `TREE_TYPES` object. One line per tree with: name, color, bg, cost, currency, rarity, weight, shape, category, sapYield, gemYield?, sceneBg.
 2. **`app/components/PlantIcon.tsx`** — `renderShape()` switch. One case block per shape with 4 stages (s=0 sprout, s=1 young, s=2 adolescent, s=3 mature).
 
 ## Constants entry template
 
 ```ts
-treename: { name: 'Display Name', color: '#hex', bg: 'rgba(r,g,b,0.1)', cost: 5, currency: 'juice', rarity: 'common', weight: 0.5, shape: 'treename', category: 'fruit', juiceYield: 2, paperYield: 1, sceneBg: 'linear-gradient(180deg, #dark 0%, #mid 50%, #light 100%)' },
+treename: { name: 'Display Name', color: '#hex', bg: 'rgba(r,g,b,0.1)', cost: 5, currency: 'sap', rarity: 'common', weight: 0.5, shape: 'treename', category: 'fruit', sapYield: 2, sceneBg: 'linear-gradient(180deg, #dark 0%, #mid 50%, #light 100%)' },
 ```
 
 - **rarity**: common (cost 5, weight 0.5), uncommon (15, 0.3), rare (40, 0.2), epic (65, 0.15), legendary (100, 0.1)
-- **category**: fruit (produces juice), paper (yields paper when cut), gem (produces gems), none (spoiled)
+- **category**: fruit (produces sap), flora (foliage trees), gem (produces gems), none (spoiled)
 - **sceneBg**: dark gradient matching the tree's color palette — used as orchard background
 
 ## PlantIcon rendering system

@@ -2,43 +2,25 @@
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
-import { PulpIcon, GemIcon, PaperIcon } from '@/app/components/CurrencyIcons'
+import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
-import { ACCENT_COLORS, FONT_OPTIONS, HEADING_FONT_OPTIONS, PAGE_STYLE_OPTIONS } from "./settings/SettingsView"
 
-export type TabId = 'shop' | 'gems' | 'bag' | 'catalog'
+export type TabId = 'shop' | 'bag' | 'catalog'
 
 interface BoutiqueViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  gems: number
-  juice: number
+  sap: number
   inventory: string[]
-  setGems: (v: number | ((p: number) => number)) => void
-  setJuice: (v: number | ((p: number) => number)) => void
+  setSap: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
-  unlockedCosmetics: string[]
-  setUnlockedCosmetics: (v: string[] | ((p: string[]) => string[])) => void
   onUpdateConfig: (updates: Record<string, any>) => void
   initialTab?: TabId
   initialScrollTo?: string
 }
-
-const GEM_COSMETICS = [
-  { id: 'color_gold', name: 'Liquid Gold', type: 'accent', value: '#b8860b', cost: 2 },
-  { id: 'color_midnight', name: 'Midnight Ink', type: 'accent', value: '#191970', cost: 2 },
-  { id: 'color_ember', name: 'Ember', type: 'accent', value: '#cc5500', cost: 2 },
-  { id: 'color_seafoam', name: 'Seafoam', type: 'accent', value: '#2e8b57', cost: 2 },
-  { id: 'color_plum', name: 'Dark Plum', type: 'accent', value: '#3c1361', cost: 2 },
-  { id: 'ink_vintage', name: 'Vintage Sepia', type: 'ink', value: 'vintage', cost: 3 },
-  { id: 'ink_blueprint', name: 'Blueprint Blue', type: 'ink', value: 'blueprint', cost: 3 },
-  { id: 'ink_emerald', name: 'Emerald Script', type: 'ink', value: 'emerald', cost: 3 },
-  { id: 'paper_parchment', name: 'Aged Parchment', type: 'paper', value: 'parchment', cost: 4 },
-  { id: 'paper_midnight', name: 'Midnight Paper', type: 'paper', value: 'midnight', cost: 4 },
-]
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'true rare', 'sacred']
 
@@ -59,11 +41,11 @@ const RARITY_BG: Record<string, string> = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  fruit: '🍊 Fruit', paper: 'Paper', gem: 'Gem', none: '',
+  fruit: '🍊 Fruit', flora: '🌿 Flora', gem: '💎 Gem', none: '',
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
-  fruit: '#fb923c', paper: '#a3e635', gem: '#a78bfa', none: '#71717a',
+  fruit: '#fb923c', flora: '#a3e635', gem: '#a78bfa', none: '#71717a',
 }
 
 const TOTAL_WEIGHT = Object.keys(TREE_TYPES).filter(t => t !== 'spoiled' && t !== 'tangerine').reduce((sum, t) => sum + TREE_TYPES[t].weight, 0)
@@ -180,21 +162,18 @@ function RarityScene({ rarity }: { rarity: string }) {
 
 export const BoutiqueView = memo(function BoutiqueView({
   isOpen, onClose, theme, accent,
-  gems, juice, inventory, setGems, setJuice, setInventory, setGrove,
-  unlockedCosmetics, setUnlockedCosmetics, onUpdateConfig,
+  sap, inventory, setSap, setInventory, setGrove,
+  onUpdateConfig,
   initialTab, initialScrollTo
 }: BoutiqueViewProps) {
 
   const [activeTab, setActiveTab] = useState<TabId>('shop')
   const [isRenderingCatalog, setIsRenderingCatalog] = useState(false)
   const [dailySeeds, setDailySeeds] = useState<string[]>([])
-  const [shopItems, setShopItems] = useState<string[]>([])
   const [shopStock, setShopStock] = useState<Record<string, number>>({})
   const [selectedPlant, setSelectedPlant] = useState<string | null>(null)
   const [previewStage, setPreviewStage] = useState(3)
-  const [highlightItem, setHighlightItem] = useState<string | null>(null)
   const [countdown, setCountdown] = useState('')
-  const scrollRef = useRef<HTMLDivElement>(null)
   const prevTabRef = useRef<TabId>('shop')
   const isDark = theme === 'dark'
 
@@ -205,24 +184,16 @@ export const BoutiqueView = memo(function BoutiqueView({
         setIsRenderingCatalog(true)
         setTimeout(() => setIsRenderingCatalog(false), 20)
       }
-      if (initialScrollTo) {
-        setHighlightItem(initialScrollTo)
-        setTimeout(() => {
-          const el = document.getElementById(`gem-item-${initialScrollTo}`)
-          el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          setTimeout(() => setHighlightItem(null), 2000)
-        }, 100)
-      }
     }
   }, [isOpen, initialTab, initialScrollTo])
 
-  const bg = isDark ? '#09090b' : '#f5f3f1'
+  const bg = isDark ? '#09090b' : '#f5f3ef'
   const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
-  const cardBorder = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
-  const textPrimary = isDark ? '#e4e4e7' : '#18181b'
-  const textSecondary = isDark ? '#a1a1aa' : '#000000'
-  const textMuted = isDark ? '#52525b' : '#000000'
-  const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
+  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
+  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
+  const textSecondary = isDark ? '#8a8680' : '#7a7670'
+  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
+  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
   useEffect(() => {
     if (!isOpen) return
@@ -284,31 +255,24 @@ export const BoutiqueView = memo(function BoutiqueView({
         selected.push(picked)
         newStock[picked] = getStockValue()
       }
-      const available = GEM_COSMETICS.filter(c => !unlockedCosmetics.includes(c.id))
-      const shuffled = [...available].sort(() => Math.random() - 0.5)
-      const items = shuffled.slice(0, 2).map(c => c.id)
       setDailySeeds(selected)
-      setShopItems(items)
       setShopStock(newStock)
       localStorage.setItem('pulp_last_shop_reset', epoch)
       localStorage.setItem('pulp_daily_seeds', JSON.stringify(selected))
-      localStorage.setItem('pulp_shop_items', JSON.stringify(items))
       localStorage.setItem('pulp_shop_stock', JSON.stringify(newStock))
     } else {
       const savedSeeds = localStorage.getItem('pulp_daily_seeds')
       const savedStock = localStorage.getItem('pulp_shop_stock')
-      const savedItems = localStorage.getItem('pulp_shop_items')
       if (savedSeeds) setDailySeeds(JSON.parse(savedSeeds))
       if (savedStock) setShopStock(JSON.parse(savedStock))
-      if (savedItems) setShopItems(JSON.parse(savedItems))
     }
-  }, [isOpen, getShopEpoch, unlockedCosmetics])
+  }, [isOpen, getShopEpoch])
 
   const buySeed = (type: string) => {
     if ((shopStock[type] || 0) <= 0 || inventory.length >= 60) return
     const t = TREE_TYPES[type]
-    if (juice < t.cost) return
-    setJuice((j: number) => j - t.cost)
+    if (sap < t.cost) return
+    setSap((j: number) => j - t.cost)
     const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
     setShopStock(nextStock)
     localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
@@ -317,51 +281,36 @@ export const BoutiqueView = memo(function BoutiqueView({
 
   const discardSeed = (index: number) => setInventory(inv => inv.filter((_, i) => i !== index))
 
-  const buyCosmetic = (c: typeof GEM_COSMETICS[number]) => {
-    if (gems < c.cost || unlockedCosmetics.includes(c.id)) return
-    setGems((g: number) => g - c.cost)
-    setUnlockedCosmetics(prev => [...prev, c.id])
-  }
-
-  const applyCosmetic = (c: typeof GEM_COSMETICS[number]) => {
-    if (c.type === 'accent') onUpdateConfig({ accentColor: c.value })
-  }
-
   if (!isOpen) return null
 
   const STAGE_NAMES = ['Seed', 'Seedling', 'Sprout', 'Young', 'Mature']
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
-  const CurrencyPill = ({ type, amount }: { type: 'juice' | 'gems'; amount: number }) => (
+  const CurrencyPill = ({ amount }: { amount: number }) => (
     <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
-      {type === 'gems'
-        ? <GemIcon size={11} />
-        : <PulpIcon size={11} />
-      }
+      <PulpIcon size={11} />
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
   )
 
   const tabIcons: Record<TabId, React.ReactNode> = {
     shop: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>,
-    gems: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>,
     bag: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>,
     catalog: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>,
   }
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'shop', label: 'Shop' },
-    { id: 'gems', label: 'Gems' },
     { id: 'bag', label: 'My Seeds' },
     { id: 'catalog', label: 'Catalog' },
   ]
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose}>
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1100px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
-        style={{ backgroundColor: bg, height: 780 }}
+        className={`relative w-full max-w-[900px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
+        style={{ backgroundColor: bg, height: 660 }}
       >
         {/* ── Header ── */}
         <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
@@ -416,8 +365,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <CurrencyPill type="juice" amount={juice} />
-            <CurrencyPill type="gems" amount={gems} />
+            <CurrencyPill amount={sap} />
           </div>
         </div>
 
@@ -477,60 +425,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </div>
               </div>
 
-              {/* 2 Item Cards */}
-              {shopItems.length > 0 && (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.02em' }}>Items</span>
-                    <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                    {shopItems.map(id => {
-                      const cosmetic = GEM_COSMETICS.find(c => c.id === id)
-                      if (!cosmetic) return null
-                      const owned = unlockedCosmetics.includes(cosmetic.id)
-                      const cantAfford = gems < cosmetic.cost
-                      return (
-                        <div
-                          key={id}
-                          style={{
-                            borderRadius: 14, border: `1px solid ${cardBorder}`, overflow: 'hidden',
-                            backgroundColor: cardBg, fontFamily: font,
-                          }}
-                        >
-                          <div style={{
-                            height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #18181c 100%)' : 'linear-gradient(180deg, #f2f0ed 0%, #eae8e4 100%)',
-                          }}>
-                            {cosmetic.type === 'accent' && <div style={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: cosmetic.value, boxShadow: `0 0 16px ${cosmetic.value}40` }} />}
-                            {cosmetic.type === 'ink' && <span style={{ fontSize: 22, color: isDark ? '#a1a1aa' : '#71717a' }}>✎</span>}
-                            {cosmetic.type === 'paper' && <span style={{ fontSize: 22, color: isDark ? '#a1a1aa' : '#71717a' }}>▤</span>}
-                          </div>
-                          <div style={{ padding: '6px 10px', borderTop: `1px solid ${dividerColor}` }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cosmetic.name}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 3 }}>
-                              <span style={{ fontSize: 10, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{cosmetic.type}</span>
-                              {owned
-                                ? <button onClick={() => applyCosmetic(cosmetic)} style={{ fontSize: 11, fontWeight: 600, color: '#34d399', background: 'none', border: 'none', cursor: 'pointer' }}>Apply</button>
-                                : <button
-                                    onClick={() => buyCosmetic(cosmetic)}
-                                    disabled={cantAfford}
-                                    style={{
-                                      fontSize: 11, fontWeight: 700, color: textSecondary, background: 'none', border: 'none',
-                                      cursor: cantAfford ? 'not-allowed' : 'pointer', opacity: cantAfford ? 0.35 : 1,
-                                    }}
-                                  >
-                                    <GemIcon size={11} /> {cosmetic.cost}
-                                  </button>
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -560,7 +454,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary, fontFamily: font }}>
                   {STAGE_NAMES[previewStage]}
                 </span>
-                <span style={{ fontSize: 11, color: isDark ? textMuted : "#000000", fontFamily: font, marginLeft: 8 }}>
+                <span style={{ fontSize: 11, color: textMuted, fontFamily: font, marginLeft: 8 }}>
                   Stage {previewStage + 1} of {STAGE_NAMES.length}
                 </span>
               </div>
@@ -601,7 +495,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {/* Buy button + stock indicator */}
               {(() => {
                 const stock = shopStock[selectedPlant!] || 0
-                const cantAfford = juice < previewInfo.cost
+                const cantAfford = sap < previewInfo.cost
                 if (stock <= 0) return (
                   <div className="mt-5 px-6 py-2.5 rounded-lg text-[13px] font-bold" style={{
                     fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -638,121 +532,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                   </div>
                 )
               })()}
-            </div>
-          )}
-
-          {/* ── GEMS ── */}
-          {activeTab === 'gems' && (
-            <div ref={scrollRef} className="px-6 py-4">
-
-              <GemSection title="Accent Colors" isDark={isDark}>
-                {[
-                  ...ACCENT_COLORS.filter(c => c.cost || c.pro).map(({ hex, name, cost, pro }) => ({ id: `accent_${hex}`, name, cost, pro, value: hex })),
-                  ...GEM_COSMETICS.filter(c => c.type === 'accent').map(c => ({ id: c.id, name: c.name, cost: c.cost, value: c.value })),
-                ].map((item) => {
-                  const owned = unlockedCosmetics.includes(item.id)
-                  const cantAfford = !item.cost || gems < item.cost
-                  return (
-                    <GemRow key={item.id} id={`gem-item-${item.id}`} isDark={isDark} highlight={highlightItem === item.id}
-                      icon={<div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: item.value }} />}
-                      label={item.name}
-                      action={(item as any).pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
-                        : owned
-                        ? <button onClick={() => onUpdateConfig({ accentColor: item.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (item.cost && gems >= item.cost) { setGems(g => g - item.cost!); setUnlockedCosmetics(prev => [...prev, item.id]); onUpdateConfig({ accentColor: item.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {item.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
-              <GemSection title="Heading Fonts" isDark={isDark}>
-                {HEADING_FONT_OPTIONS.filter(f => f.cost || f.pro).map((f) => {
-                  const id = `hfont_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
-                  return (
-                    <GemRow key={id} id={`gem-item-${id}`} isDark={isDark} highlight={highlightItem === id}
-                      icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
-                      label={f.label} labelFont={`"${f.value}", serif`}
-                      action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
-                        : owned
-                        ? <button onClick={() => onUpdateConfig({ headingFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ headingFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
-              <GemSection title="Body Fonts" isDark={isDark}>
-                {FONT_OPTIONS.filter(f => f.cost || f.pro).map((f) => {
-                  const id = `bfont_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
-                  return (
-                    <GemRow key={id} id={`gem-item-${id}`} isDark={isDark} highlight={highlightItem === id}
-                      icon={<span className={`text-[13px] font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={{ fontFamily: `"${f.value}", serif` }}>Aa</span>}
-                      label={f.label} labelFont={`"${f.value}", serif`}
-                      action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
-                        : owned
-                        ? <button onClick={() => onUpdateConfig({ editorFont: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ editorFont: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
-              <GemSection title="Page Styles" isDark={isDark}>
-                {PAGE_STYLE_OPTIONS.filter(f => f.cost || f.pro).map((f) => {
-                  const id = `paper_${f.value}`, owned = unlockedCosmetics.includes(id), cantAfford = !f.cost || gems < f.cost
-                  return (
-                    <GemRow key={id} id={`gem-item-${id}`} isDark={isDark} highlight={highlightItem === id}
-                      icon={<span className="text-[12px]">▤</span>}
-                      label={f.label}
-                      action={f.pro
-                        ? <span className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#d97706' }}>PRO</span>
-                        : owned
-                        ? <button onClick={() => onUpdateConfig({ paperStyle: f.value })} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => { if (f.cost && gems >= f.cost) { setGems(g => g - f.cost!); setUnlockedCosmetics(prev => [...prev, id]); onUpdateConfig({ paperStyle: f.value }) } }} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {f.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
-              <GemSection title="Ink Styles" isDark={isDark}>
-                {GEM_COSMETICS.filter(c => c.type === 'ink').map((cosmetic) => {
-                  const owned = unlockedCosmetics.includes(cosmetic.id), cantAfford = gems < cosmetic.cost
-                  return (
-                    <GemRow key={cosmetic.id} id={`gem-item-${cosmetic.id}`} isDark={isDark} highlight={highlightItem === cosmetic.id}
-                      icon={<span className="text-[12px]">✎</span>}
-                      label={cosmetic.name}
-                      action={owned
-                        ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {cosmetic.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
-              <GemSection title="Paper Textures" isDark={isDark}>
-                {GEM_COSMETICS.filter(c => c.type === 'paper').map((cosmetic) => {
-                  const owned = unlockedCosmetics.includes(cosmetic.id), cantAfford = gems < cosmetic.cost
-                  return (
-                    <GemRow key={cosmetic.id} id={`gem-item-${cosmetic.id}`} isDark={isDark} highlight={highlightItem === cosmetic.id}
-                      icon={<span className="text-[12px]">▤</span>}
-                      label={cosmetic.name}
-                      action={owned
-                        ? <button onClick={() => applyCosmetic(cosmetic)} className="text-[11px] font-semibold text-emerald-400 bg-transparent border-none cursor-pointer">Apply</button>
-                        : <button onClick={() => buyCosmetic(cosmetic)} disabled={cantAfford} className={`text-[11px] font-bold text-zinc-400 bg-transparent border-none ${cantAfford ? 'cursor-not-allowed opacity-35' : 'cursor-pointer'}`}><GemIcon size={11} /> {cosmetic.cost}</button>
-                      }
-                    />
-                  )
-                })}
-              </GemSection>
-
             </div>
           )}
 
@@ -826,7 +605,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                       <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 10px' }}>
                       {plants.map(type => {
                         const t = TREE_TYPES[type]
                         const owned = inventory.includes(type)
@@ -920,7 +699,7 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   const t = TREE_TYPES[type]
   if (!t) return null
   const soldOut = (shopStock[type] || 0) <= 0
-  const dividerColor = isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'
+  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
 
   return (
     <button
@@ -935,17 +714,31 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
     >
       <div style={{
         display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        height: featured ? 100 : 95,
+        width: '100%', position: 'relative', aspectRatio: '1',
         background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
-        position: 'relative',
       }}>
         <RarityScene rarity={t.rarity} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 12, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.3) 100%)', zIndex: 1 }} />
-        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 15px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 1 }} />
+        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 4 }} />
         <Sparkles rarity={t.rarity} count={featured ? 6 : 4} />
-        <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', marginBottom: -2, zIndex: 2 }}>
-          <PlantIcon type={type} size={featured ? 68 : 64} stage={3} />
+        <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', zIndex: 2, bottom: '7%' }}>
+          <PlantIcon type={type} size={featured ? 90 : 80} stage={3} hideGround />
         </div>
+        <svg viewBox="0 0 100 18" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '12%', zIndex: 3 }}>
+          <defs>
+            <linearGradient id={`soil-shop-${type}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={isDark ? '#2e2414' : '#6e5c3a'} />
+              <stop offset="100%" stopColor={isDark ? '#1a1408' : '#4e3e22'} />
+            </linearGradient>
+          </defs>
+          <rect y="3" width="100" height="15" fill={`url(#soil-shop-${type})`} />
+          <path d="M-1 4 Q4 2.5 10 3.5 Q16 1.5 24 3 Q30 1 38 2.8 Q44 1 52 3 Q58 0.5 66 2.5 Q72 1 80 2.8 Q86 0.5 94 2.5 Q98 1.5 101 3 L101 6.5 Q94 5 86 5.8 Q78 4.5 70 5.5 Q62 4 54 5.5 Q46 4 38 5.5 Q30 4 22 5.5 Q14 4 6 5.5 L-1 6Z" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
+          <path d="M-1 3 Q5 1 12 2.5 Q18 0 26 2 Q32 0 40 1.8 Q46 0 54 2 Q60 0 68 1.8 Q74 0 82 2 Q88 0 96 2 Q100 1 101 2 L101 5 Q94 3.5 86 4.5 Q78 3 70 4 Q62 3 54 4 Q46 3 38 4 Q30 3 22 4 Q14 3 6 4 L-1 4.5Z" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
+          <path d="M-1 2.5 Q6 1 14 2 Q20 0 28 1.5 Q34 0 42 1.5 Q48 0 56 1.5 Q62 0 70 1.5 Q76 0 84 1.5 Q90 0 98 1.5 L101 2 L101 4 Q92 3 84 3.5 Q76 2.5 68 3.2 Q60 2.5 52 3.2 Q44 2.5 36 3.2 Q28 2.5 20 3.2 Q12 2.5 4 3.2 L-1 3.5Z" fill={isDark ? '#345828' : '#6a9a4a'} />
+          <path d="M4 2 Q3 -0.5 2 -2 M5 2.2 Q5.5 0 6.5 -1" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+          <path d="M30 1.5 Q28.5 -0.5 27.5 -2 M31 1.8 Q31.5 0 32 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+          <path d="M57 1.5 Q55.5 -0.5 54 -2 M58 1.5 Q58.5 0 59 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+          <path d="M84 1.5 Q82.5 -0.5 81 -2 M85 1.5 Q85.5 0 86 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+        </svg>
         <div style={{ position: 'absolute', top: 8, left: 8, fontSize: 8, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2 }}>
           {getDropChance(t.weight)}
         </div>
@@ -975,43 +768,3 @@ function PlantCard({ type, isDark, cardBg, cardBorder, textPrimary, textMuted, s
   )
 }
 
-function GemSection({ title, isDark, children }: {
-  title: string; isDark: boolean; textSecondary?: string; dividerColor?: string; children: React.ReactNode
-}) {
-  return (
-    <div className="mb-4">
-      <p className={`text-[9px] font-semibold uppercase tracking-[0.12em] mb-1.5 px-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-        {title}
-      </p>
-      <div className={`rounded-lg border overflow-hidden divide-y ${
-        isDark
-          ? "bg-zinc-900/50 border-zinc-800 divide-zinc-800/60"
-          : "bg-white border-zinc-200/80 divide-zinc-100"
-      }`}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function GemRow({ id, isDark, highlight, icon, label, labelFont, action }: {
-  id: string; isDark: boolean; highlight: boolean
-  icon: React.ReactNode; label: string; labelFont?: string; action: React.ReactNode
-}) {
-  return (
-    <div
-      id={id}
-      className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${highlight ? (isDark ? 'bg-zinc-700/20' : 'bg-zinc-200/40') : ''}`}
-    >
-      <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={`text-[12px] font-medium leading-snug ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`} style={labelFont ? { fontFamily: labelFont } : undefined}>
-          {label}
-        </p>
-      </div>
-      <div className="shrink-0">{action}</div>
-    </div>
-  )
-}

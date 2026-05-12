@@ -11,12 +11,12 @@ interface VitalitySystemProps {
   sidebarWidth: number
   timerOpen: boolean
   onSetTimerOpen: (open: boolean) => void
-  juice: number
+  sap: number
   gems: number
   xp: number
   grove: Tree[]
   achievements: Achievement[]
-  setJuice: React.Dispatch<React.SetStateAction<number>>
+  setSap: React.Dispatch<React.SetStateAction<number>>
   setGems: React.Dispatch<React.SetStateAction<number>>
   setXp: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
@@ -32,7 +32,7 @@ interface VitalitySystemProps {
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  juice, gems, xp, grove, achievements, setJuice, setGems, setXp, setGrove, setAchievements,
+  sap, gems, xp, grove, achievements, setSap, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
   inventory, activeTabId, initialNotes,
@@ -111,7 +111,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   useEffect(() => {
     if (_isBackup && _backupExpired) {
       if (!_wasInCancelWindow) {
-        setJuice(j => Math.floor(j * 0.75))
+        setSap(j => Math.floor(j * 0.85))
         setDeathReason("You were away too long")
       }
       localStorage.removeItem('pulp-timer-backup')
@@ -126,8 +126,8 @@ export const VitalitySystem = memo(function VitalitySystem({
     })
   }, [setGrove])
 
-  const WATER_INTERVAL_MS = 8 * 60 * 1000 // 8 minutes (so 10-min sessions need watering at 8 min)
-  const WATER_REQUIRED_THRESHOLD = 10 * 60 // sessions ≥ 10 minutes need watering
+  const WATER_REQUIRED_THRESHOLD = 10 * 60
+  const WATER_GRACE_SEC = 90
 
   // Timer state is now initialized from sessionStorage in useState initializers above
 
@@ -148,6 +148,39 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed])
 
   useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
+
+  // Request notification permission when a session starts
+  useEffect(() => {
+    if (timerRunning && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [timerRunning])
+
+  // Send water reminder notification when tab is hidden
+  const waterNotiSentRef = useRef(false)
+  useEffect(() => {
+    if (!timerRunning || !waterDeadline) { waterNotiSentRef.current = false; return }
+    const check = () => {
+      if (!document.hidden) { waterNotiSentRef.current = false; return }
+      const wd = waterDeadlineRef.current
+      if (!wd || waterNotiSentRef.current) return
+      const msLeft = wd - Date.now()
+      if (msLeft > 0 && msLeft < 90_000) {
+        waterNotiSentRef.current = true
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          const n = new Notification('Your tree needs water!', {
+            body: `${Math.ceil(msLeft / 1000)}s left — come back before it wilts.`,
+            icon: '/pulp_logo.svg',
+            tag: 'pulp-water',
+          })
+          n.onclick = () => { window.focus(); n.close() }
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', check)
+    const interval = setInterval(check, 10_000)
+    return () => { document.removeEventListener('visibilitychange', check); clearInterval(interval) }
+  }, [timerRunning, waterDeadline])
 
   // Timer tick
   useEffect(() => {
@@ -173,7 +206,7 @@ export const VitalitySystem = memo(function VitalitySystem({
             checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
           }
           if (next > 0 && next % 600 === 0 && Math.random() < 0.125) {
-            setGems(g => g + 1)
+            setXp(x => x + 5)
           }
           return next
         })
@@ -188,15 +221,19 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setDeathReason(null)
+    setLostSap(0)
     setTimerRunning(true)
+    setWaterCount(0)
     if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
-      setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
+      const thirdSec = Math.floor(timerTotal / 3)
+      setWaterDeadline(Date.now() + (thirdSec + WATER_GRACE_SEC) * 1000)
     } else {
       setWaterDeadline(null)
     }
   }, [timerTotal, activeTabId])
 
-  const [lostJuice, setLostJuice] = useState(0)
+  const [waterCount, setWaterCount] = useState(0)
+  const [lostSap, setLostSap] = useState(0)
 
   const giveUp = useCallback(() => {
     setTimerRunning(false)
@@ -213,18 +250,28 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [])
 
-  const recoverJuice = useCallback(() => {
-    const cost = Math.max(1, Math.ceil(lostJuice * 0.02))
-    if (gems < cost || lostJuice <= 0) return
+  const recoverSap = useCallback(() => {
+    const cost = 15
+    if (gems < cost || lostSap <= 0) return
     setGems(g => g - cost)
-    setJuice(s => s + lostJuice)
-    setLostJuice(0)
-  }, [lostJuice, gems, setGems, setJuice])
+    setSap(s => s + lostSap)
+    setLostSap(0)
+  }, [lostSap, gems, setGems, setSap])
 
   const waterTree = useCallback(() => {
     if (!timerRunning || treeDead) return
-    setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
-  }, [timerRunning, treeDead])
+    const nextCount = waterCount + 1
+    setWaterCount(nextCount)
+    if (nextCount >= 2) {
+      setWaterDeadline(null)
+    } else {
+      const thirdSec = Math.floor(timerTotal / 3)
+      const nextThirdEnd = (nextCount + 1) * thirdSec
+      const nowElapsed = timerElapsed
+      const remaining = Math.max(10, nextThirdEnd - nowElapsed + WATER_GRACE_SEC)
+      setWaterDeadline(Date.now() + remaining * 1000)
+    }
+  }, [timerRunning, treeDead, waterCount, timerTotal, timerElapsed])
 
   // Achievement Methods — defined before claimReward which depends on them
   const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
@@ -249,6 +296,8 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
+    const xpReward = Math.max(10, Math.round(minutes * 3 + Math.pow(minutes / 10, 1.5)))
+
     try {
       const res = await apiFetch('/api/grove', {
         method: 'POST',
@@ -256,7 +305,6 @@ export const VitalitySystem = memo(function VitalitySystem({
       })
       if (res.ok) {
         const data = await res.json()
-        setJuice(data.juice)
         setXp(x => x + data.xpReward)
         if (data.tree) {
           setGrove(g => {
@@ -267,15 +315,11 @@ export const VitalitySystem = memo(function VitalitySystem({
           })
         }
       } else {
-        const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
-        setJuice(s => s + reward)
-        setXp(x => x + Math.max(5, Math.round(minutes * 2)))
+        setXp(x => x + xpReward)
         setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
       }
     } catch {
-      const reward = Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
-      setJuice(s => s + reward)
-      setXp(x => x + Math.max(5, Math.round(minutes * 2)))
+      setXp(x => x + xpReward)
       setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
     }
 
@@ -283,31 +327,31 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setJuice, setXp, setGrove, checkAchievement, activeTabId])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setXp, setGrove, checkAchievement, activeTabId])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
   const dismissDeadTree = useCallback(() => {
-    const lost = Math.ceil(juice * 0.5)
-    setLostJuice(lost)
-    setJuice(j => j - lost)
+    const lost = Math.ceil(sap * 0.15)
+    setLostSap(lost)
+    setSap(j => j - lost)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setDeathReason(null)
     setWaterDeadline(null)
-  }, [juice, setJuice])
+  }, [sap, setSap])
 
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
       if (!target || !target.completed || target.claimed) return prev
       if (target.rewardType === 'gems') setGems(g => g + target.reward)
-      else setJuice(s => s + target.reward)
+      else setSap(s => s + target.reward)
       setXp(x => x + target.reward * 5)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setJuice, setXp, setAchievements])
+  }, [setGems, setSap, setXp, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
@@ -358,11 +402,10 @@ export const VitalitySystem = memo(function VitalitySystem({
         checkAchievement('wordsmith', a => ({ progress: Math.min(200000, (a.progress || 0) + typedDiff) }))
         const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))
         setXp(x => x + xpFromWriting)
-        setJuice(s => s + Math.max(1, Math.floor(typedDiff / 15)))
       }
 
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setJuice, setLastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setSap, setLastCharCount])
 
   return (
     <TimerSidebarPanel
@@ -386,9 +429,8 @@ export const VitalitySystem = memo(function VitalitySystem({
       onWater={waterTree}
       onClaim={claimReward}
       onDismissDead={dismissDeadTree}
-      lostJuice={lostJuice}
-      gems={gems}
-      onRecoverJuice={recoverJuice}
+      lostSap={lostSap}
+      onRecoverSap={recoverSap}
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}

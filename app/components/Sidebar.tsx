@@ -76,7 +76,7 @@ interface SidebarProps {
   isDragging?: boolean
   unlockedIds: Set<string>
   onAddNote: (folderId?: number | null) => void
-  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "flashcard" | "vault" | "cornell") => void
+  onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "vault" | "cornell") => void
   onAddFolder: () => void
   onSelectNote: (id: string) => void
   onRenameNote: (id: string, newName: string) => void
@@ -95,11 +95,10 @@ interface SidebarProps {
   onUnlockDev: () => void
   onGoToShelf: () => void
   onOpenShop?: () => void
-  onOpenGemStore?: () => void
   onOpenLeaderboard?: () => void
   onOpenFocus?: () => void
   onOpenStats?: () => void
-  juice?: number
+  sap?: number
   gems?: number
   xp?: number
   totalNotes?: number
@@ -122,8 +121,8 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
-  onOpenShop, onOpenGemStore, onOpenLeaderboard, onOpenFocus, onOpenStats,
-  juice = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
+  onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
+  sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
 }: SidebarProps) {
@@ -414,12 +413,6 @@ export const Sidebar = memo(function Sidebar({
           <div className="w-px h-3 bg-zinc-500/30 dark:bg-zinc-700/50 shrink-0 mx-0.5" />
 
           {/* Note type indicator */}
-          {n.noteType === "flashcard" && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Flashcard">
-              <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" style={{ strokeDasharray: "2,2" }} />
-              <line x1="6" y1="12" x2="18" y2="12" style={{ strokeDasharray: "2,2" }} />
-            </svg>
-          )}
           {n.noteType === "singlepage" && (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" className="shrink-0" aria-label="Single Page">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" style={{ strokeDasharray: "2,2" }} />
@@ -660,7 +653,7 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-lg border border-white/10 bg-[#09090b] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }} onMouseDown={e => e.stopPropagation()}>
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-lg border border-white/10 shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))', background: '#09090b', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate' }} onMouseDown={e => e.stopPropagation()}>
                 {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>

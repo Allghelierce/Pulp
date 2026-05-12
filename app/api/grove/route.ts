@@ -2,16 +2,11 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
+import { TREE_TYPES } from "@/app/constants"
 
-const VALID_TREE_TYPES = new Set([
-  'tangerine', 'lemon', 'apple', 'plum', 'blackberry', 'peach',
-  'pineapple', 'passionfruit', 'birch', 'bamboo', 'pine', 'oak',
-  'cypress', 'sakura', 'abyss', 'spoiled',
-  'pomegranate', 'fig',
-])
+const VALID_TREE_TYPES = new Set(Object.keys(TREE_TYPES).filter(k => k !== 'spoiled'))
 
-const JUICE_FORMULA = (minutes: number) => Math.max(1, Math.round(minutes * 0.4 + Math.pow(minutes / 10, 1.5)))
-const XP_FORMULA = (minutes: number) => Math.max(5, Math.round(minutes * 2))
+const XP_FORMULA = (minutes: number) => Math.max(10, Math.round(minutes * 3 + Math.pow(minutes / 10, 1.5)))
 
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
@@ -29,7 +24,7 @@ export async function POST(req: Request) {
 
   const { treeType, notebookId, timerDuration } = body
 
-  if (!treeType || !VALID_TREE_TYPES.has(treeType) || treeType === 'spoiled') {
+  if (!treeType || !VALID_TREE_TYPES.has(treeType)) {
     return NextResponse.json({ error: "Invalid tree type" }, { status: 400 })
   }
 
@@ -61,15 +56,12 @@ export async function POST(req: Request) {
   }
 
   const minutes = duration / 60
-  const juiceReward = JUICE_FORMULA(minutes)
   const xpReward = XP_FORMULA(minutes)
 
   const nbId = notebookId || '_unassigned'
   let plotsFull = false
   const treesInNb = grove.filter((t: any) => (t.notebookId || '_unassigned') === nbId).length
   if (treesInNb >= 90) plotsFull = true
-
-  const newJuice = (profile.juice || 0) + juiceReward + (plotsFull ? juiceReward : 0)
 
   let newTree = null
   if (!plotsFull) {
@@ -86,7 +78,7 @@ export async function POST(req: Request) {
 
   const { error: updateErr } = await supabaseAdmin
     .from('player_profiles')
-    .update({ grove, juice: newJuice, inventory })
+    .update({ grove, juice: profile.juice, inventory })
     .eq('user_id', user.id)
 
   if (updateErr) {
@@ -95,8 +87,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     tree: newTree,
-    juice: newJuice,
-    juiceReward: plotsFull ? juiceReward * 2 : juiceReward,
+    sap: profile.juice,
     xpReward,
     plotsFull,
   })

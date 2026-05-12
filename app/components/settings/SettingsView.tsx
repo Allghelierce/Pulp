@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, memo } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
@@ -134,8 +134,8 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, onSpendGems, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote }: {
-  user: { id: string; email?: string } | null
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp }: {
+  user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
   onUpdateConfig: (updates: Partial<PulpConfig>) => void
@@ -149,9 +149,9 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   setGems: React.Dispatch<React.SetStateAction<number>>
   setUnlockedCosmetics: React.Dispatch<React.SetStateAction<string[]>>
   onOpenShopItem?: (itemId: string) => void
-  onSpendGems?: (amount: number) => void
   openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
   onSyncNow?: () => Promise<{ pushed: number; pulled: number } | null>
+  xp?: number
   archivedNotes?: NoteData[]
   onUnarchiveNote?: (id: string) => void
 }) {
@@ -183,6 +183,35 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   const [pwConfirm, setPwConfirm] = useState("")
   const [pwLoading, setPwLoading] = useState(false)
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url ?? null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (!file.type.startsWith("image/")) return
+    if (file.size > 2 * 1024 * 1024) return
+
+    setAvatarUploading(true)
+    const ext = file.name.split(".").pop() || "png"
+    const path = `${user.id}/avatar.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true })
+
+    if (uploadError) { setAvatarUploading(false); return }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(path)
+
+    const timestamped = `${publicUrl}?t=${Date.now()}`
+    await supabase.auth.updateUser({ data: { avatar_url: timestamped } })
+    setAvatarUrl(timestamped)
+    setAvatarUploading(false)
+  }, [user])
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -269,9 +298,29 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             {activeTab === "general" && (<>
               <SettingSection title="Account" isDark={isDark}>
                 <div className="flex items-center gap-4 px-5 py-4">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-bold text-white shrink-0 shadow-md" style={{ background: 'linear-gradient(135deg, #d9770699, #d97706)' }}>
-                    {user?.email?.[0]?.toUpperCase() ?? "?"}
-                  </div>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  <button
+                    onClick={() => user && avatarInputRef.current?.click()}
+                    disabled={avatarUploading || !user}
+                    className="relative w-11 h-11 rounded-full shrink-0 shadow-md group overflow-hidden"
+                    style={{ background: avatarUrl ? undefined : 'linear-gradient(135deg, #d9770699, #d97706)' }}
+                    title="Change profile picture"
+                  >
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <span className="flex items-center justify-center w-full h-full text-[15px] font-bold text-white">
+                        {user?.email?.[0]?.toUpperCase() ?? "?"}
+                      </span>
+                    )}
+                    <div className={`absolute inset-0 rounded-full flex items-center justify-center transition-opacity ${avatarUploading ? "opacity-100" : "opacity-0 group-hover:opacity-100"} ${isDark ? "bg-black/50" : "bg-black/40"}`}>
+                      {avatarUploading ? (
+                        <svg className="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      )}
+                    </div>
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className={`text-[13px] font-semibold truncate ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{user?.email ?? "Not signed in"}</p>
                     <span className={`inline-flex items-center gap-1 mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
@@ -467,9 +516,9 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ accentColor: hex }); return }
                             if (pro) return
-                            goToShop(id)
+                            undefined
                           }}
-                          title={unlocked ? name : pro ? `${name} — Pro only` : `${name} — Unlock in Shop`}
+                          title={unlocked ? name : pro ? `${name} — Pro only` : `${name} — Reach ${cost} XP to unlock`}
                           className="group flex flex-col items-center gap-1.5 relative"
                         >
                           <div
@@ -527,7 +576,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ headingFont: value }); return }
                             if (pro) return
-                            goToShop(id)
+                            undefined
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
@@ -537,7 +586,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                 : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
                           style={{ fontFamily: `"${value}", serif` }}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Reach ${cost} XP to unlock`}
                         >
                           {label}
                           {!unlocked && (
@@ -566,7 +615,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ editorFont: value }); return }
                             if (pro) return
-                            goToShop(id)
+                            undefined
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
@@ -576,7 +625,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                 : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
                           style={{ fontFamily: `"${value}", serif` }}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Reach ${cost} XP to unlock`}
                         >
                           {label}
                           {!unlocked && (
@@ -622,7 +671,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           onClick={() => {
                             if (unlocked) { onUpdateConfig({ paperStyle: value as any }); return }
                             if (pro) return
-                            goToShop(id)
+                            undefined
                           }}
                           className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
                             selected
@@ -631,7 +680,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                 ? isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                                 : isDark ? "bg-zinc-900/50 border-zinc-800/50 text-zinc-600 cursor-pointer" : "bg-zinc-50 border-zinc-200/50 text-zinc-400 cursor-pointer"
                           }`}
-                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Unlock in Shop`}
+                          title={unlocked ? label : pro ? `${label} — Pro only` : `${label} — Reach ${cost} XP to unlock`}
                         >
                           {label}
                           {!unlocked && (
@@ -758,7 +807,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         </div>
                         <div className="flex flex-col items-end shrink-0">
                           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
-                            {a.rewardType === 'gems' ? <GemIcon size={10} /> : <PulpIcon size={10} />} {a.reward}
+                            <PulpIcon size={10} /> {a.reward}
                           </div>
                         </div>
                       </div>
@@ -806,9 +855,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
               <FocusBlockerSection
                 isDark={isDark}
                 blockedSites={blockedSites}
-                gems={gems}
                 onUpdateConfig={onUpdateConfig}
-                onSpendGems={onSpendGems}
                 openConfirm={openConfirm}
               />
             </>)}
@@ -944,37 +991,56 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
             {/* ── Subscription ── */}
             {activeTab === "subscription" && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
-                {/* Fun doodles */}
-                <svg className="absolute -top-2 -right-4 pointer-events-none" width="80" height="80" viewBox="0 0 80 80" fill="none" style={{ opacity: isDark ? 0.12 : 0.1 }}>
-                  <path d="M20 60 Q25 20 40 15 Q55 10 60 40 Q65 55 50 65 Q35 72 20 60Z" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                  <path d="M35 35 L38 28 M42 33 L44 26" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1" strokeLinecap="round" />
-                  <circle cx="37" cy="42" r="1.5" fill={isDark ? '#d97706' : '#d97706'} />
-                  <circle cx="45" cy="40" r="1.5" fill={isDark ? '#d97706' : '#d97706'} />
-                  <path d="M38 48 Q41 51 44 48" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1" fill="none" strokeLinecap="round" />
-                </svg>
-                <svg className="absolute top-16 -left-6 pointer-events-none" width="70" height="70" viewBox="0 0 70 70" fill="none" style={{ opacity: isDark ? 0.1 : 0.08 }}>
-                  <path d="M35 8 L38 22 L52 18 L42 28 L55 35 L42 38 L48 52 L35 42 L22 52 L28 38 L15 35 L28 28 L18 18 L32 22Z" stroke={isDark ? '#facc15' : '#eab308'} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <svg className="absolute bottom-24 -right-2 pointer-events-none" width="60" height="60" viewBox="0 0 60 60" fill="none" style={{ opacity: isDark ? 0.1 : 0.08 }}>
-                  <path d="M30 10 Q35 25 45 30 Q35 35 30 50 Q25 35 15 30 Q25 25 30 10Z" stroke={isDark ? '#22c55e' : '#16a34a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                  <path d="M30 20 L30 40 M22 30 L38 30" stroke={isDark ? '#22c55e' : '#16a34a'} strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
-                </svg>
-                <svg className="absolute bottom-8 left-4 pointer-events-none" width="90" height="40" viewBox="0 0 90 40" fill="none" style={{ opacity: isDark ? 0.08 : 0.06 }}>
-                  <path d="M5 30 Q15 8 30 20 Q45 32 55 12 Q65 0 85 18" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                  <circle cx="15" cy="16" r="2" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
-                  <circle cx="55" cy="10" r="1.5" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
-                  <circle cx="78" cy="20" r="2.5" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="1" fill="none" />
-                </svg>
-                <svg className="absolute top-40 right-8 pointer-events-none" width="50" height="50" viewBox="0 0 50 50" fill="none" style={{ opacity: isDark ? 0.09 : 0.07 }}>
-                  <path d="M10 25 Q15 10 25 8 Q35 6 40 20" stroke={isDark ? '#d97706' : '#d97706'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                  <path d="M25 8 L25 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="1" strokeLinecap="round" />
-                  <path d="M25 42 Q22 44 18 42 M25 42 Q28 44 32 42" stroke={isDark ? '#8b6914' : '#78590f'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                </svg>
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
+                {/* Hero banner */}
+                <div className="relative rounded-xl overflow-hidden" style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, #1c1108 0%, #291a06 40%, #1a1206 100%)'
+                    : 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 40%, #fde68a 100%)',
+                }}>
+                  <div className="pointer-events-none absolute inset-0" style={{
+                    background: 'radial-gradient(ellipse at 80% 20%, rgba(217,119,6,0.2) 0%, transparent 60%)',
+                  }} />
+                  <svg className="pointer-events-none absolute -right-4 -top-4" width="120" height="120" viewBox="0 0 120 120" fill="none" style={{ opacity: isDark ? 0.08 : 0.12 }}>
+                    <path d="M60 10 Q70 35 90 45 Q70 55 60 90 Q50 55 30 45 Q50 35 60 10Z" stroke="#d97706" strokeWidth="1.5" fill="none" />
+                    <path d="M60 25 Q66 42 78 48 Q66 54 60 75 Q54 54 42 48 Q54 42 60 25Z" stroke="#d97706" strokeWidth="1" fill="none" opacity="0.5" />
+                  </svg>
+                  <svg className="pointer-events-none absolute left-6 bottom-2" width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ opacity: isDark ? 0.1 : 0.15 }}>
+                    <path d="M20 5 L22 15 L32 12 L25 20 L35 25 L25 27 L28 37 L20 30 L12 37 L15 27 L5 25 L15 20 L8 12 L18 15Z" stroke="#d97706" strokeWidth="1" fill="none" />
+                  </svg>
+                  <div className="relative z-10 px-6 py-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(217,119,6,0.15)' }}>
+                        <Sparkles className="w-4.5 h-4.5" style={{ color: '#d97706' }} />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: '#d97706' }}>
+                        Upgrade
+                      </span>
+                    </div>
+                    <h3 className={`text-[18px] font-extrabold tracking-tight ${isDark ? "text-zinc-50" : "text-zinc-900"}`}>
+                      Grow your world
+                    </h3>
+                    <p className={`text-[12px] mt-1 max-w-[320px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                      Unlock AI writing, rare seeds, seasonal drops, and cloud sync — everything you need to make writing feel rewarding.
+                    </p>
+                  </div>
+                </div>
 
-                <div className="relative z-10">
-                  <h3 className={`text-[14px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>Upgrade to Pro</h3>
-                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Unlimited AI, more storage, and priority support</p>
+                {/* Perks row */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, label: "Rare Seeds", sub: "Monthly drops" },
+                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>, label: "Unlimited AI", sub: "Write & rewrite" },
+                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>, label: "Cloud Sync", sub: "All devices" },
+                  ].map((perk, i) => (
+                    <div key={i} className={`flex flex-col items-center text-center gap-1.5 px-3 py-3 rounded-xl border ${isDark ? "bg-zinc-900/60 border-zinc-800/60" : "bg-white/80 border-zinc-200/60"}`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-zinc-800 text-amber-500" : "bg-amber-50 text-amber-600"}`}>
+                        {perk.icon}
+                      </div>
+                      <span className={`text-[11px] font-bold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{perk.label}</span>
+                      <span className={`text-[9.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{perk.sub}</span>
+                    </div>
+                  ))}
                 </div>
 
                 <PricingSection
@@ -987,7 +1053,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       price: { monthly: 4, yearly: 36 },
                       description: "Write smarter with AI",
                       buttonLabel: "Upgrade to Creator",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
+                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
                       ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
                       features: [
                         { name: "Cloud Sync", description: "Access notes from any device", included: true },
@@ -1015,14 +1081,27 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   ]}
                 />
 
-                <div className={`relative z-10 px-4 py-3 rounded-lg border flex items-center gap-3 ${isDark ? "bg-zinc-900/40 border-zinc-800/80" : "bg-zinc-50 border-zinc-200/70"}`}>
-                  <div className="flex-1 min-w-0">
-                    <span className={`text-[11.5px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
-                    <span className={`text-[11px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Custom volume licensing</span>
+                {/* Guarantee + Enterprise */}
+                <div className="space-y-2">
+                  <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-green-50/50 border-green-200/40"}`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isDark ? "bg-green-500/10" : "bg-green-500/10"}`}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </div>
+                    <div>
+                      <span className={`text-[11px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>7-day free trial</span>
+                      <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>· Cancel anytime, no questions asked</span>
+                    </div>
                   </div>
-                  <button onClick={() => window.open("mailto:pulpsupport@gmail.com?subject=Pulp Enterprise %26 Education Inquiry", "_blank")} className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-semibold transition-all shrink-0`}>
-                    Contact Sales
-                  </button>
+
+                  <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-zinc-50 border-zinc-200/60"}`}>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-[11px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
+                      <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Volume licensing</span>
+                    </div>
+                    <button onClick={() => window.open("mailto:pulpsupport@gmail.com?subject=Pulp Enterprise %26 Education Inquiry", "_blank")} className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-semibold transition-all shrink-0`}>
+                      Contact Sales
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1043,8 +1122,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, title: "Notebooks & Pages", desc: "Create notebooks from the sidebar. Each notebook holds multiple pages you can flip through. Click anywhere on a page to create a text box and start writing." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Sap & Gems", desc: "Sap is earned by writing and completing focus sessions — use it to buy seeds in the shop. Gems are a premium currency for cosmetics, orchard expansion, and accent colors." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. Removing a site costs 50 gems to discourage impulsive unblocking. Install the Chrome extension for enforcement." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Sap & XP", desc: "Sap is earned by writing and completing focus sessions — use it to buy seeds in the shop. XP unlocks cosmetics, accent colors, and other customizations as you level up." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. You can remove sites anytime. Install the Chrome extension for enforcement." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
@@ -1063,7 +1142,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 <div className="px-5 py-4 space-y-4">
                   {[
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, title: "Growing Plants", desc: "Every completed focus session grows a plant. The plant type depends on the seed you select before starting. Plants are automatically assigned to whichever notebook you had open." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, true rare, and sacred. Fruit trees produce sap, paper trees yield lumber, and gem trees produce gems. Find seeds in the boutique." },
+                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M2 9h20"/></svg>, title: "Seeds & Rarity", desc: "Seeds come in different rarities — common, uncommon, rare, true rare, and sacred. Fruit trees produce sap, paper trees yield lumber, and gem trees produce XP. Find seeds in the boutique." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>, title: "Watering", desc: "Sessions 10 minutes or longer require watering. A watering can appears in the timer — click it before the deadline or your plant dies and you lose all sap earned that session." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
@@ -1417,10 +1496,9 @@ function cleanDomain(input: string): string {
   return input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").replace(/:.*$/, "")
 }
 
-function FocusBlockerSection({ isDark, blockedSites, gems, onUpdateConfig, onSpendGems, openConfirm }: {
-  isDark: boolean; blockedSites: string[]; gems: number
+function FocusBlockerSection({ isDark, blockedSites, onUpdateConfig, openConfirm }: {
+  isDark: boolean; blockedSites: string[]
   onUpdateConfig: (updates: Record<string, any>) => void
-  onSpendGems?: (amount: number) => void
   openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
 }) {
   const [input, setInput] = useState("")
@@ -1434,15 +1512,13 @@ function FocusBlockerSection({ isDark, blockedSites, gems, onUpdateConfig, onSpe
   }
 
   const removeSite = (domain: string) => {
-    if (!onSpendGems || gems < 50) return
     const doRemove = () => {
-      onSpendGems(50)
       onUpdateConfig({ blockedSites: blockedSites.filter(s => s !== domain) })
     }
     if (openConfirm) {
-      openConfirm("Remove Blocked Site", `Unblocking ${domain} costs 50 gems.`, doRemove, "Pay 50 gems & Remove", true)
+      openConfirm("Remove Blocked Site", `Are you sure you want to unblock ${domain}?`, doRemove, "Unblock", true)
     } else {
-      if (confirm(`Unblocking ${domain} costs 50 gems. Continue?`)) doRemove()
+      if (confirm(`Unblock ${domain}?`)) doRemove()
     }
   }
 
@@ -1450,15 +1526,6 @@ function FocusBlockerSection({ isDark, blockedSites, gems, onUpdateConfig, onSpe
     <>
       <SettingSection title="Blocked Sites" isDark={isDark}>
         <div className="p-5 flex flex-col gap-4">
-          <div className={`rounded-xl px-4 py-3 flex items-start gap-3 ${isDark ? "bg-amber-500/5 border-amber-500/10" : "bg-amber-50 border-amber-200/50"} border`}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 text-amber-500/70">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <p className={`text-[11px] leading-relaxed m-0 ${isDark ? "text-amber-500/60" : "text-amber-700/70"}`}>
-              Once added, removing a site costs <strong><GemIcon size={11} /> 50 gems</strong>.
-            </p>
-          </div>
-
           <div className="flex gap-2">
             <input
               value={input}
@@ -1480,29 +1547,20 @@ function FocusBlockerSection({ isDark, blockedSites, gems, onUpdateConfig, onSpe
                   <span className={`flex-1 text-[12px] min-w-0 truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{site}</span>
                   <button
                     onClick={() => removeSite(site)}
-                    disabled={gems < 50}
-                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
                     style={{
-                      background: gems >= 50 ? "rgba(168,85,247,0.1)" : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),
-                      border: `1px solid ${gems >= 50 ? "rgba(168,85,247,0.2)" : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)")}`,
-                      color: gems >= 50 ? "#c084fc" : (isDark ? "#3f3f46" : "#a1a1aa"),
-                      cursor: gems >= 50 ? "pointer" : "not-allowed",
-                      opacity: gems >= 50 ? 1 : 0.5,
+                      background: "rgba(239,68,68,0.1)",
+                      border: "1px solid rgba(239,68,68,0.2)",
+                      color: "#f87171",
                     }}
                   >
-                    <GemIcon size={10} /> 50
+                    Remove
                   </button>
                 </div>
               ))}
             </div>
           ) : (
             <p className={`text-[11px] text-center py-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>No blocked sites yet.</p>
-          )}
-
-          {blockedSites.length > 0 && (
-            <p className={`text-[10px] text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
-              Removing costs <GemIcon size={10} /> 50 · You have <GemIcon size={10} /> {gems}
-            </p>
           )}
         </div>
       </SettingSection>

@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
 import { LazyMotion, domAnimation, m } from "framer-motion"
+import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
 import { sanitizeHTML } from "@/lib/sanitize"
@@ -20,7 +21,6 @@ import { HangingOrange } from "@/app/components/HangingOrange"
 const _preloadShelf = () => import("@/app/components/ShelfView")
 const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
-const _preloadFlashcard = () => import("@/app/components/FlashcardView")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
@@ -31,7 +31,6 @@ const _preloadStats = () => import("@/app/components/StatsView")
 const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 const _preloadFocus = () => import("@/app/components/FocusView")
 const _preloadSettings = () => import("@/app/components/settings/SettingsView")
-const _preloadGemStore = () => import("@/app/components/GemStoreModal")
 const _preloadAiCmd = () => import("@/app/components/AiCommandBar")
 const _preloadChat = () => import("@/app/components/NotebookChat")
 const _preloadVersionHistory = () => import("@/app/components/VersionHistoryPanel")
@@ -45,7 +44,6 @@ const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView }
 const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
 const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
-const GemStoreModal = lazy(() => _preloadGemStore().then(m => ({ default: m.GemStoreModal })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
 const NotebookChat = lazy(() => _preloadChat().then(m => ({ default: m.NotebookChat })))
 const VersionHistoryPanel = lazy(() => _preloadVersionHistory().then(m => ({ default: m.VersionHistoryPanel })))
@@ -55,7 +53,6 @@ const AiResultModal = lazy(() => _preloadAiResult().then(m => ({ default: m.AiRe
 const ShelfView = lazy(() => _preloadShelf().then(m => ({ default: m.ShelfView })))
 const ImageUploadModal = lazy(() => _preloadImageUpload().then(m => ({ default: m.ImageUploadModal })))
 const CoverModal = lazy(() => _preloadCover().then(m => ({ default: m.CoverModal })))
-const FlashcardView = lazy(() => _preloadFlashcard().then(m => ({ default: m.FlashcardView })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
 
@@ -174,6 +171,58 @@ function htmlToPlain(html: string): string {
   return html.replace(/<br\s*\/?>\n/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
 }
 
+const MarginEngravings = memo(function MarginEngravings({ theme }: { theme: "light" | "dark" }) {
+  const dk = theme === "dark"
+  const color = dk ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.055)"
+  const style: React.CSSProperties = { position: "sticky", top: 120, pointerEvents: "none", flexShrink: 0, width: 0, overflow: "visible", zIndex: 0 }
+  return (<>
+    {/* Left gutter */}
+    <div style={{ ...style, order: -1 }}>
+      <svg width="120" height="280" viewBox="0 0 120 280" fill="none" style={{ position: "absolute", right: 20, top: 0 }}>
+        {/* Fern frond */}
+        <path d="M60 280 C60 280 60 20 60 10" stroke={color} strokeWidth="1.2" />
+        <path d="M60 240 C40 230 25 215 20 195" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 240 C80 230 95 215 100 195" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 200 C38 188 22 170 18 148" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 200 C82 188 98 170 102 148" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 160 C42 150 30 135 28 118" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 160 C78 150 90 135 92 118" stroke={color} strokeWidth="0.8" fill="none" />
+        <path d="M60 125 C46 116 38 104 36 90" stroke={color} strokeWidth="0.7" fill="none" />
+        <path d="M60 125 C74 116 82 104 84 90" stroke={color} strokeWidth="0.7" fill="none" />
+        <path d="M60 95 C50 88 44 78 43 66" stroke={color} strokeWidth="0.6" fill="none" />
+        <path d="M60 95 C70 88 76 78 77 66" stroke={color} strokeWidth="0.6" fill="none" />
+        <path d="M60 68 C54 62 50 54 50 44" stroke={color} strokeWidth="0.5" fill="none" />
+        <path d="M60 68 C66 62 70 54 70 44" stroke={color} strokeWidth="0.5" fill="none" />
+        {/* Small leaf veins */}
+        <path d="M38 218 C32 210 28 202 25 195" stroke={color} strokeWidth="0.4" fill="none" />
+        <path d="M82 218 C88 210 92 202 95 195" stroke={color} strokeWidth="0.4" fill="none" />
+        <path d="M40 175 C34 166 30 157 27 148" stroke={color} strokeWidth="0.4" fill="none" />
+        <path d="M80 175 C86 166 90 157 93 148" stroke={color} strokeWidth="0.4" fill="none" />
+      </svg>
+    </div>
+    {/* Right gutter */}
+    <div style={style}>
+      <svg width="100" height="200" viewBox="0 0 100 200" fill="none" style={{ position: "absolute", left: 20, top: 60 }}>
+        {/* Wildflower stem cluster */}
+        <path d="M50 200 C48 160 44 120 42 80 C40 50 46 30 50 10" stroke={color} strokeWidth="1" />
+        <path d="M50 200 C54 165 60 130 65 100 C70 75 68 45 62 20" stroke={color} strokeWidth="0.8" />
+        <path d="M50 200 C44 170 36 140 30 110 C25 85 30 55 38 25" stroke={color} strokeWidth="0.8" />
+        {/* Flower heads */}
+        <circle cx="50" cy="10" r="5" stroke={color} strokeWidth="0.7" fill="none" />
+        <circle cx="50" cy="10" r="2" stroke={color} strokeWidth="0.5" fill="none" />
+        <circle cx="62" cy="20" r="4" stroke={color} strokeWidth="0.7" fill="none" />
+        <circle cx="62" cy="20" r="1.5" stroke={color} strokeWidth="0.5" fill="none" />
+        <circle cx="38" cy="25" r="4.5" stroke={color} strokeWidth="0.7" fill="none" />
+        <circle cx="38" cy="25" r="1.8" stroke={color} strokeWidth="0.5" fill="none" />
+        {/* Leaves on stems */}
+        <path d="M44 100 C36 95 30 100 34 108" stroke={color} strokeWidth="0.6" fill="none" />
+        <path d="M56 130 C64 126 68 132 62 138" stroke={color} strokeWidth="0.6" fill="none" />
+        <path d="M46 150 C38 146 34 152 40 158" stroke={color} strokeWidth="0.6" fill="none" />
+      </svg>
+    </div>
+  </>)
+})
+
 // ─── Memoized spiral binding — NEVER re-renders during box operations ──────────
 const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingCompact, paperBg }: {
   theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean; paperBg: string
@@ -291,9 +340,10 @@ const BoxItem = memo(function BoxItem({
   onDragStart: () => void; onDragEnd: () => void; handwrittenEffect: boolean
 }) {
   const [localDragging, setLocalDragging] = useState(false)
+  const [pristine, setPristine] = useState(box.content.trim() === '')
   const isDark = isDarkPaper(paperStyle)
   const resizeHandles = useMemo<[string, React.CSSProperties][]>(() => {
-    const dot = { width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.6)", border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}` }
+    const dot = { width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)", border: `1px solid ${isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }
     return [
       ["nw", { top: -4, left: -4, ...dot, cursor: "nw-resize" }],
       ["ne", { top: -4, right: -4, ...dot, cursor: "ne-resize" }],
@@ -305,17 +355,48 @@ const BoxItem = memo(function BoxItem({
       ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
     ]
   }, [isDark])
+  useEffect(() => {
+    if (pristine && !isSelected) setPristine(false)
+  }, [isSelected, pristine])
   const isImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
   const isSticky = !!box.boxHighlightColor
   const isTitle = !!box.isTitle
   const isEmpty = !isSticky && !isImage && !isTitle && box.content.trim() === ''
+  const hideChrome = pristine && !isEmpty
   return (
     <div
       id={`box-${box.id}`}
       onMouseDown={e => {
         const target = e.target as HTMLElement
         const isEditing = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-        if (isEditing && isSelected) return
+        if (isEditing && isSelected) {
+          const sx = e.clientX, sy = e.clientY
+          const el = e.currentTarget as HTMLElement
+          let didDrag = false
+          const onMove = (me: MouseEvent) => {
+            if (didDrag) return
+            if (Math.abs(me.clientX - sx) + Math.abs(me.clientY - sy) > 4) {
+              didDrag = true
+              if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+              window.getSelection()?.removeAllRanges()
+              el.style.transition = 'none'
+              el.style.willChange = 'left, top'
+              setLocalDragging(true); onDragStart(); startDrag(e, box)
+            }
+          }
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove)
+            window.removeEventListener('mouseup', onUp)
+            if (didDrag) {
+              el.style.transition = ''
+              el.style.willChange = ''
+              setLocalDragging(false); onDragEnd()
+            }
+          }
+          window.addEventListener('mousemove', onMove)
+          window.addEventListener('mouseup', onUp)
+          return
+        }
         e.preventDefault()
         const el = e.currentTarget as HTMLElement
         el.style.transition = 'none'
@@ -336,28 +417,27 @@ const BoxItem = memo(function BoxItem({
       }}
       style={{
         position: "absolute", left: box.x, top: box.y, width: box.w,
-        height: isSticky ? box.h : "auto", minHeight: isSticky ? undefined : 32,
+        height: isSticky || box.sizeLocked ? box.h : "auto", minHeight: isSticky || box.sizeLocked ? undefined : 32,
         transform: `rotate(${box.boxRotation || 0}deg)`,
-        border: isEmpty ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.15)"}`) : "1px solid transparent",
+        border: isEmpty || hideChrome ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.10)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
-        borderRadius: 3, backgroundColor: isEmpty ? "transparent" : isSelected ? (box.boxHighlightColor || (isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)")) : (box.boxHighlightColor || "transparent"),
-        zIndex: isSelected ? 100 : 50, overflow: isSticky ? "hidden" : "visible", cursor: "grab",
+        borderRadius: 4, backgroundColor: isSticky ? (box.boxHighlightColor || "transparent") : "transparent",
+        zIndex: isSelected ? 100 : 50, overflow: isSticky || box.sizeLocked ? "hidden" : "visible", cursor: "grab",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
           : "none",
-        transition: localDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: localDragging ? "none" : "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)",
         willChange: localDragging ? "left, top" : "auto",
       }}
     >
-      {isSelected && !isEmpty && (<>
-        <div style={{ position: "absolute", inset: 0, border: `1.5px solid ${isDark ? "#71717a" : "rgba(0,0,0,0.25)"}`, borderRadius: 2, animation: "box-ripple 0.45s ease-out forwards", pointerEvents: "none", zIndex: 55 }} />
-        <div style={{ position: "absolute", inset: 0, border: `1px solid ${isDark ? "#52525b" : "rgba(0,0,0,0.15)"}`, borderRadius: 2, animation: "box-ripple-2 0.7s 0.05s ease-out forwards", pointerEvents: "none", zIndex: 54 }} />
-      </>)}
-      {isSelected && !isSticky && !isEmpty && resizeHandles.map(([h, pos]) => (
+      {isSelected && !isEmpty && !hideChrome && (
+        <div style={{ position: "absolute", inset: -1, border: `1.5px solid ${isDark ? "rgba(113,113,122,0.5)" : "rgba(0,0,0,0.18)"}`, borderRadius: 5, pointerEvents: "none", zIndex: 55 }} />
+      )}
+      {isSelected && !isSticky && !isEmpty && !hideChrome && resizeHandles.map(([h, pos]) => (
         <div key={h} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onDragStart(); startResize(e, box, h) }}
           style={{ position: "absolute", zIndex: 20, ...pos }} />
       ))}
-      {isSelected && !isSticky && !isEmpty && (
+      {isSelected && !isSticky && !isEmpty && !hideChrome && (
         <div style={{ position: "absolute", top: 0, right: -34, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, zIndex: 120 }}>
           {/* Rotate button */}
           <div
@@ -405,6 +485,27 @@ const BoxItem = memo(function BoxItem({
               fontFamily: 'cursive', fontWeight: 600,
               filter: "url(#handwritten-jitter-subtle)"
             }}>×</button>
+          <button
+            title={box.sizeLocked ? "Unlock size" : "Lock size"}
+            onMouseDown={e => { e.stopPropagation(); updateBox(box.id, { sizeLocked: !box.sizeLocked }) }}
+            className="hover:scale-110 active:scale-95 transition-transform"
+            style={{
+              width: 17, height: 17, borderRadius: "50%",
+              background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", border: "none",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: box.sizeLocked ? "#d97706" : (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)"), flexShrink: 0,
+              filter: "url(#handwritten-jitter-subtle)"
+            }}
+          >
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {box.sizeLocked ? (
+                <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>
+              ) : (
+                <><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" /></>
+              )}
+            </svg>
+          </button>
         </div>
       )}
       {isSelected && isSticky && (
@@ -421,12 +522,12 @@ const BoxItem = memo(function BoxItem({
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
       )}
-      {isSelected && selectedCount === 1 && !isImage && !isSticky && !isEmpty && (
+      {isSelected && selectedCount === 1 && !isImage && !isSticky && !isEmpty && !hideChrome && (
         <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} paperStyle={paperStyle} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
 
-      {isSelected && !isSticky && !isEmpty && (
+      {isSelected && !isSticky && !isEmpty && !hideChrome && (
         <div
           onMouseDown={e => {
             const ce = (e.currentTarget.parentElement as HTMLElement)?.querySelector<HTMLElement>('[contenteditable]')
@@ -435,9 +536,9 @@ const BoxItem = memo(function BoxItem({
             setSelectedBoxIds(new Set([box.id]))
             startDrag(e, box)
           }}
-          style={{ position: "absolute", bottom: -12, left: "50%", transform: "translateX(-50%)", width: "70%", maxWidth: 200, height: 12, background: accentSolid, opacity: 0.15, borderRadius: "0 0 6px 6px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)", width: "50%", maxWidth: 140, height: 8, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", borderRadius: "0 0 4px 4px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
-          <div style={{ width: 32, height: 2, background: "rgba(0,0,0,0.5)", borderRadius: 1 }} />
+          <div style={{ width: 24, height: 1.5, background: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)", borderRadius: 1 }} />
         </div>
       )}
 
@@ -451,7 +552,7 @@ const BoxItem = memo(function BoxItem({
         }} />
       )}
 
-      <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
+      <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage ? (
@@ -467,6 +568,7 @@ const BoxItem = memo(function BoxItem({
             boxHighlightColor={box.boxHighlightColor}
             boxTextColor={box.boxTextColor}
             isSticky={isSticky}
+            sizeLocked={box.sizeLocked}
             onUpdate={(id, updates) => updateBox(id, updates)}
             onFocus={() => setSelectedBoxIds(new Set([box.id]))}
             onKeyDown={onKeyDown}
@@ -764,7 +866,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
 interface BoxTextareaProps {
   id: string; content: string; textAlign?: "left" | "center" | "right" | "justify"
   boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: string; boxHighlightColor?: string; boxTextColor?: string
-  isSticky?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
+  isSticky?: boolean; sizeLocked?: boolean; theme: "light" | "dark"; paperStyle: PaperStyle; handwrittenEffect: boolean
   onUpdate: (id: string, updates: Partial<TextBoxType>) => void
   onFocus: () => void
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
@@ -773,7 +875,7 @@ interface BoxTextareaProps {
 }
 
 const BoxTextarea = memo(function BoxTextarea({
-  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp
+  id, content, textAlign, boxFontFamily, boxFontSize, boxHeadingStyle, boxTextColor, isSticky, sizeLocked, theme, paperStyle, handwrittenEffect, onUpdate, onFocus, onKeyDown, onInput, spellCheck: spellCheckProp
 }: BoxTextareaProps) {
   const ref = useRef<HTMLDivElement>(null)
   const timerRef = useRef<any>(null)
@@ -790,13 +892,13 @@ const BoxTextarea = memo(function BoxTextarea({
   const syncState = useCallback(() => {
     if (!ref.current) return
     const v = ref.current.innerHTML
-    if (isSticky) {
+    if (isSticky || sizeLocked) {
       onUpdate(id, { content: v })
     } else {
       const h = Math.max(ref.current.scrollHeight, 32)
       onUpdate(id, { content: v, h })
     }
-  }, [id, isSticky, onUpdate])
+  }, [id, isSticky, sizeLocked, onUpdate])
 
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
@@ -829,9 +931,7 @@ const BoxTextarea = memo(function BoxTextarea({
             let didDelete = false
 
             if (!range.collapsed) {
-              ghostRect = range.getBoundingClientRect()
-              ghostText = range.toString()
-              if (ghostRect.width > 0 && ghostText) {
+              if (range.toString().length > 0) {
                 e.preventDefault()
                 range.deleteContents()
                 sel.collapseToStart()
@@ -1043,7 +1143,6 @@ export default function NoteApp() {
 
   // UI state
   const [zoom, setZoom] = useState("0.85")
-  const [windowScale, setWindowScale] = useState(1)
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window === "undefined") return 0
     const saved = localStorage.getItem("pulp-sidebar-width")
@@ -1092,14 +1191,14 @@ export default function NoteApp() {
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [gems, setGems] = useState(3)
-  const [juice, setJuice] = useState(50)
+  const [sap, setSap] = useState(50)
   const [xp, setXp] = useState(0)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
-  const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean } | null>(null)
+  const [aiResult, setAiResult] = useState<{ title: string; result: string; loading: boolean; prompt?: string } | null>(null)
   const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const unlockedVaults = useRef<Set<string>>(new Set())
@@ -1109,7 +1208,7 @@ export default function NoteApp() {
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
-  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'gems' | 'bag' | 'catalog'>('shop')
+  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'bag' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
@@ -1119,8 +1218,8 @@ export default function NoteApp() {
     const id = requestIdleCallback(() => {
       _preloadOrchard(); _preloadBoutique(); _preloadStats()
       _preloadLeaderboard(); _preloadFocus(); _preloadSettings()
-      _preloadGemStore(); _preloadGrid()
-      _preloadShelf(); _preloadFlashcard(); _preloadImageUpload(); _preloadCover()
+      _preloadGrid()
+      _preloadShelf(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
     return () => cancelIdleCallback(id)
   }, [])
@@ -1134,7 +1233,6 @@ export default function NoteApp() {
       requestAnimationFrame(() => { vp.setAttribute('content', orig || 'width=device-width, initial-scale=1') })
     }
   }, [orchardOpen])
-  const [gemStoreOpen, setGemStoreOpen] = useState(false)
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
     { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
@@ -1185,7 +1283,7 @@ export default function NoteApp() {
     if (saved) {
       let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
-      setJuice(data.juice ?? data.sunshine ?? 50)
+      setSap(data.juice ?? data.sunshine ?? 50)
       if (data.inventory) setInventory([...data.inventory, 'abyss', 'abyss'])
       if (data.grove) {
         const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
@@ -1219,7 +1317,7 @@ export default function NoteApp() {
 
       if (profile) {
         setGems(profile.gems)
-        setJuice(profile.juice)
+        setSap(profile.juice)
         setLastCharCount(profile.last_char_count)
         if (profile.grove?.length) {
           const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
@@ -1894,16 +1992,16 @@ export default function NoteApp() {
           const actualH = el ? el.getBoundingClientRect().height / (Number(zoom) || 1) : currentBox.h
           const newId = uid()
           const newBox = { id: newId, x: currentBox.x, y: currentBox.y + actualH + 8, w: currentBox.w, h: 32, content: '' }
-          setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-            ...n,
-            boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
-          }))
-          boxes.setSelectedBoxIds(new Set([newId]))
-          setTimeout(() => {
-            const newEl = document.getElementById(`box-${newId}`)
-            const editable = newEl?.querySelector('[contenteditable]') as HTMLElement | null
-            if (editable) editable.focus()
-          }, 30)
+          flushSync(() => {
+            setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+              ...n,
+              boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
+            }))
+            boxes.setSelectedBoxIds(new Set([newId]))
+          })
+          const newEl = document.getElementById(`box-${newId}`)
+          const editable = newEl?.querySelector('[contenteditable]') as HTMLElement | null
+          if (editable) editable.focus()
           return
         }
       }
@@ -2221,8 +2319,6 @@ export default function NoteApp() {
       const w = window.innerWidth
       const isNarrow = w < 1000
       updateSettings({ wordCountVisible: !isNarrow })
-      const scale = w < 800 ? Math.max(0.75, w / 1000) : 1
-      setWindowScale(scale)
     }
     checkViewport()
     window.addEventListener('resize', checkViewport)
@@ -2304,7 +2400,7 @@ export default function NoteApp() {
               if (p >= note.pages.length - 1) {
                 const np = [...note.pages, ""]
                 const pageIdx = note.pages.length
-                setNotes((prev: any[]) => prev.map(n => n.id !== note.id ? n : { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] } }))
+                setNotes((prev: any[]) => prev.map(n => n.id !== note.id ? n : { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: '' }] } }))
                 return pageIdx
               }
               return p + 1
@@ -2466,17 +2562,17 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const groveData = { gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
+      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
         for (const item of inventory) invMap[item] = (invMap[item] || 0) + 1
-        db.upsertPlayerProfile(user.id, { gems, juice, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
+        db.upsertPlayerProfile(user.id, { gems, juice: sap, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
         db.upsertAchievements(user.id, achievements)
       }
     }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [gems, juice, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
+  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -2486,7 +2582,7 @@ export default function NoteApp() {
     cloudSaveTimer.current = setTimeout(async () => {
       const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
       if (!note) return
-      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
       else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }) }).catch(() => { })
     }, 2000)
@@ -2579,7 +2675,7 @@ export default function NoteApp() {
         setUser(u)
         const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
         if (!error && data?.length) {
-          const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+          const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
           setNotes(prev => {
             const localIds = new Set(prev.map(n => n.id))
             const missing = cloudNotes.filter(n => !localIds.has(n.id))
@@ -2598,7 +2694,7 @@ export default function NoteApp() {
   }, [])
 
 
-  const defaultBoxes = () => ({ 0: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] })
+  const defaultBoxes = () => ({ 0: [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: '' }] })
 
   // Note/folder actions
   const addNote = (folderId: number | null = null) =>
@@ -2633,8 +2729,6 @@ export default function NoteApp() {
 
     if (noteType === "singlepage") {
       title = "New Page"; placeholder = "Page name…"; promptTitle = "Name your page"; icon = "📄"
-    } else if (noteType === "flashcard") {
-      title = "New Deck"; placeholder = "Deck name…"; promptTitle = "Name your deck"; icon = "🃏"
     } else if (noteType === "vault") {
       title = "New Vault"; placeholder = "Vault name…"; promptTitle = "Name your vault"; icon = "🔐"
     }
@@ -2642,19 +2736,17 @@ export default function NoteApp() {
     const finishCreate = (name: string, pwd?: string) => {
       const id = uid()
       const baseNote = { id, subject: name.trim(), folderId, boxes: defaultBoxes(), noteType, password: pwd }
-      const newNote: NoteData = noteType === "flashcard"
-        ? { ...baseNote, pages: [""], flashcards: [{ id: uid(), front: "", back: "", interval: 1, easeFactor: 2.5, repetitions: 0, nextReviewDate: Date.now() }] }
-        : noteType === "singlepage"
-          ? { ...baseNote, pages: [""], icon: "📄" }
-          : noteType === "vault"
-            ? { ...baseNote, pages: [""], icon: "🔐" }
-            : { ...baseNote, pages: [""] }
+      const newNote: NoteData = noteType === "singlepage"
+        ? { ...baseNote, pages: [""], icon: "📄" }
+        : noteType === "vault"
+          ? { ...baseNote, pages: [""], icon: "🔐" }
+          : { ...baseNote, pages: [""] }
 
       if (noteType === "vault") unlockedVaults.current.add(id)
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
-      if (user) supabase.from("notes").insert({ id, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: folderId, note_type: noteType ?? null, flashcards: newNote.flashcards ?? null, user_id: user.id })
+      if (user) supabase.from("notes").insert({ id, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: folderId, note_type: noteType ?? null, user_id: user.id })
     }
 
     openPrompt(title, "", promptTitle, "Create", name => {
@@ -2715,7 +2807,7 @@ export default function NoteApp() {
       return
     }
 
-    setAiResult({ title: actionLabel, result: "", loading: true })
+    setAiResult({ title: actionLabel, result: "", loading: true, prompt })
     try {
       const res = await apiFetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt, text: pageText }) })
       if (!res.ok) throw new Error("API error")
@@ -2724,7 +2816,7 @@ export default function NoteApp() {
     } catch {
       setAiResult(null); openAlert("AI Error", "Could not process your request.")
     }
-  }, [AI_ACTIONS])
+  }, [AI_ACTIONS, notes, activeTabId, setNotes])
 
   const insertBacklink = useCallback(() => {
     editor.saveSelection()
@@ -2806,7 +2898,7 @@ export default function NoteApp() {
     setNotes(ns => ns.some(n => n.id === id) ? ns : [...ns, { ...note, deletedAt: undefined }])
     if (user) {
       db.removeFromTrash(user.id, id)
-      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
     }
     const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
     localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
@@ -2956,7 +3048,7 @@ export default function NoteApp() {
   const handleCloseSettings = useCallback(() => setShowSettings(false), [])
   const handleOpenShopItem = useCallback((itemId: string) => {
     setShowSettings(false)
-    setShopInitialTab('gems')
+    setShopInitialTab('shop')
     setShopScrollTo(itemId)
     startTransition(() => { closeAllPanels(); setShopOpen(true) })
   }, [closeAllPanels])
@@ -2965,14 +3057,14 @@ export default function NoteApp() {
     try {
       const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id)
       if (error || !data) return null
-      const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, flashcards: n.flashcards ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+      const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
       const localNotes = notesRef.current
       const cloudIds = new Set(cloudNotes.map(n => n.id))
       const localIds = new Set(localNotes.map(n => n.id))
       const pulled = cloudNotes.filter(n => !localIds.has(n.id))
       const toPush = localNotes.filter(n => !cloudIds.has(n.id))
       if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
-      if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, flashcards: note.flashcards ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
+      if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
       return { pushed: toPush.length, pulled: pulled.length }
     } catch { return null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2982,10 +3074,6 @@ export default function NoteApp() {
 
   const handleUnlockDev = () => {
     if (isAdmin) updateSettings({ isDevUnlocked: true })
-  }
-
-  const handleOpenShop = () => {
-    setGemStoreOpen(true)
   }
 
   const { backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark")
@@ -3009,13 +3097,14 @@ export default function NoteApp() {
                 onRestoreNote={restoreNote}
                 onPermanentlyDeleteNote={permanentlyDeleteNote}
                 unlockedCosmetics={unlockedCosmetics}
-                gems={gems}
-                setGems={setGems}
                 setUnlockedCosmetics={setUnlockedCosmetics}
                 onOpenShopItem={handleOpenShopItem}
                 archivedNotes={archivedNotes}
                 onUnarchiveNote={unarchiveNote}
                 onSyncNow={handleSyncNow}
+                gems={gems}
+                setGems={setGems}
+                xp={xp}
               />
             </div>
           </Suspense>}
@@ -3086,11 +3175,10 @@ export default function NoteApp() {
                 }}
                 onUnlockDev={handleUnlockDev}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
-                onOpenGemStore={() => setGemStoreOpen(true)}
                 onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                 onOpenFocus={() => setFocusOpen(true)}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
-                juice={juice}
+                sap={sap}
                 gems={gems}
                 xp={xp}
                 totalNotes={notes.filter(n => !n.archived).length}
@@ -3134,7 +3222,7 @@ export default function NoteApp() {
             </div>
           </Suspense>)}
 
-          <div className="flex-1 flex flex-col overflow-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
+          <div className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
 
             {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
@@ -3265,20 +3353,21 @@ export default function NoteApp() {
                   onStartSidebarDrag={startSidebarDrag}
                   sidebarWidth={sidebarWidth}
                   isSidebarDragging={isSidebarDragging}
-                  juice={isAdmin ? 999999 : juice}
+                  sap={isAdmin ? 999999 : sap}
                   gems={isAdmin ? 999999 : gems}
                   userAvatarUrl={user?.user_metadata?.avatar_url}
                   userEmail={user?.email}
                   onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
+                  onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
                   onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
                   onTimerOpen={() => setTimerOpen(!timerOpen)}
                   onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
-                  onOpenGemStore={() => setGemStoreOpen(true)}
                   onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
                   onInsertImage={() => setShowImageModal(true)}
                   onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                   onQuickPrompt={handleQuickPrompt}
+                  onAiAction={handleAiAction}
                   isTextActive={isTextActive}
                   onOpenChat={() => setShowNotebookChat(v => !v)}
                   chatOpen={showNotebookChat}
@@ -3299,7 +3388,7 @@ export default function NoteApp() {
               </div>
             )}
 
-            <div className="flex-1 flex overflow-hidden relative">
+            <div className="flex-1 flex overflow-x-auto overflow-y-hidden relative">
               {notes.filter(n => !n.archived).length === 0 ? (
                 <main className="flex-1 flex items-center justify-center px-4 overflow-hidden">
                   <div className="text-center max-w-md overflow-hidden">
@@ -3373,19 +3462,9 @@ export default function NoteApp() {
                 </main>
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
-              ) : activeNote?.noteType === "flashcard" ? (
-                <Suspense fallback={null}><main className="flex-1 overflow-y-scroll flex justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#EDE8E6", scrollbarGutter: "stable" }}>
-                  <FlashcardView
-                    cards={activeNote.flashcards || []}
-                    onChange={cards => setNotes(ns => ns.map(n => n.id === activeTabId ? { ...n, flashcards: cards } : n))}
-                    noteTitle={activeNote.subject}
-                    theme={theme}
-                    accent={accent}
-                  />
-                </main></Suspense>
               ) : (
-                <main className="flex-1 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden" }}>
-                  <div style={{ zoom: parseFloat(zoom) * windowScale, transformOrigin: "top center", margin: "0 auto", paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
+                <main className="flex-1 shrink-0 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
+                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 680, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
                     <div style={{ position: "relative", overflow: "visible" }}>
                       <div style={{ position: "relative", overflow: "visible" }}>
                         <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: paperBg, borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)", filter: "brightness(0.97)" }} />
@@ -3407,7 +3486,15 @@ export default function NoteApp() {
                               const boxId = boxEl.id.replace('box-', '')
                               const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
                               if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
-                              // Empty box — treat click as paper click so it gets replaced
+                            }
+                            // Remove empty non-sticky, non-title boxes before creating new ones
+                            const emptyIds = (activeNote.boxes[currentPageIdx] || [])
+                              .filter(b => b.content.trim() === '' && !b.boxHighlightColor && !b.isTitle)
+                              .map(b => b.id)
+                            if (emptyIds.length > 0) {
+                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                                ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).filter(b => !emptyIds.includes(b.id)) }
+                              }))
                             }
                             boxes.onPaperMouseDown(e)
                           }}
@@ -3744,7 +3831,7 @@ export default function NoteApp() {
                                   else {
                                     const np = [...activeNote.pages, ""];
                                     const pageIdx = activeNote.pages.length
-                                    setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 600, h: 32, content: '' }] } } : n));
+                                    setNotes(prev => prev.map(n => n.id === activeTabId ? { ...n, pages: np, boxes: { ...n.boxes, [pageIdx]: [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: '' }] } } : n));
                                     setCurrentPageIdx(pageIdx)
                                   }
                                 }}
@@ -3773,6 +3860,8 @@ export default function NoteApp() {
                       <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
                     </div>
                   </div>
+                  {/* Botanical margin engravings */}
+                  <MarginEngravings theme={theme} />
                 </main>
               )}
 
@@ -3786,12 +3875,12 @@ export default function NoteApp() {
               onClose={() => setOrchardOpen(false)}
               theme={theme}
               accent={accent}
-              juice={juice}
+              sap={sap}
               gems={gems}
-              xp={juice}
+              xp={xp}
               grove={grove}
               inventory={inventory}
-              setJuice={setJuice}
+              setSap={setSap}
               setGems={setGems}
               setInventory={setInventory}
               setGrove={setGrove}
@@ -3819,7 +3908,7 @@ export default function NoteApp() {
               isOpen={leaderboardOpen}
               onClose={() => setLeaderboardOpen(false)}
               theme={theme}
-              juice={juice}
+              sap={sap}
             /></div>
           </Suspense>}
 
@@ -3829,15 +3918,11 @@ export default function NoteApp() {
               onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
               theme={theme}
               accent={accent}
-              gems={isAdmin ? 999999 : gems}
-              juice={isAdmin ? 999999 : juice}
+              sap={isAdmin ? 999999 : sap}
               inventory={inventory}
-              setGems={setGems}
-              setJuice={setJuice}
+              setSap={setSap}
               setInventory={setInventory}
               setGrove={setGrove}
-              unlockedCosmetics={unlockedCosmetics}
-              setUnlockedCosmetics={setUnlockedCosmetics}
               onUpdateConfig={updateSettings}
               initialTab={shopInitialTab}
               initialScrollTo={shopScrollTo}
@@ -3845,7 +3930,7 @@ export default function NoteApp() {
           </Suspense>}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
           {slashMenu && (
@@ -3872,16 +3957,18 @@ export default function NoteApp() {
               }}
               onInsertVLine={() => {
                 if (!activeTabId || !paperRef.current) return
-                const cursorY = slashMenu ? slashMenu.y : 200
-                const cursorX = slashMenu ? slashMenu.x : paperRef.current.clientWidth / 2
-                const vrBox: TextBoxType = { id: uid(), x: cursorX, y: cursorY, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
+                const r = paperRef.current.getBoundingClientRect()
+                const scale = Number(zoom) || 1
+                const x = slashMenu ? (slashMenu.x - r.left) / scale : paperRef.current.clientWidth / (2 * scale)
+                const y = slashMenu ? (slashMenu.y - r.top) / scale : 200
+                const vrBox: TextBoxType = { id: uid(), x, y, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
                 setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
                   ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
                 }))
               }}
               onInsertTitle={() => {
                 if (!activeTabId) return
-                const titleBox: TextBoxType = { id: uid(), x: 40, y: 24, w: 600, h: 50, content: '', boxHeadingStyle: 'h1', boxFontSize: 28, isTitle: true }
+                const titleBox: TextBoxType = { id: uid(), x: 40, y: 24, w: 900, h: 50, content: '', boxHeadingStyle: 'h1', boxFontSize: 28, isTitle: true }
                 setNotes(prev => prev.map(n => {
                   if (n.id !== activeTabId) return n
                   const pageBoxes = n.boxes[currentPageIdx] || []
@@ -3979,6 +4066,8 @@ export default function NoteApp() {
               title={aiResult.title}
               result={aiResult.result}
               loading={aiResult.loading}
+              prompt={aiResult.prompt}
+              theme={theme}
               onClose={() => setAiResult(null)}
               onInsert={text => { editor.insertHTML(`<p>${text}</p>`); setAiResult(null) }}
             />
@@ -4080,7 +4169,7 @@ export default function NoteApp() {
               onClose={() => setShowAiCommandBar(false)}
               onSubmit={async (prompt) => {
                 setShowAiCommandBar(false)
-                setAiResult({ title: "AI Generation", result: "", loading: true })
+                setAiResult({ title: "AI Generation", result: "", loading: true, prompt })
                 try {
                   const res = await apiFetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) })
                   if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Request failed") }
@@ -4129,13 +4218,6 @@ export default function NoteApp() {
 
         </div>
 
-        {gemStoreOpen && <Suspense fallback={null}><GemStoreModal
-          isOpen={gemStoreOpen}
-          onClose={() => setGemStoreOpen(false)}
-          gems={gems}
-        /></Suspense>}
-
-
         {focusOpen && <Suspense fallback={null}><FocusView
           isOpen={focusOpen}
           onClose={() => setFocusOpen(false)}
@@ -4153,13 +4235,13 @@ export default function NoteApp() {
           sidebarWidth={sidebarWidth}
           timerOpen={timerOpen}
           onSetTimerOpen={setTimerOpen}
-          juice={juice}
+          sap={sap}
           gems={gems}
           xp={xp}
           setXp={setXp}
           grove={grove}
           achievements={achievements}
-          setJuice={setJuice}
+          setSap={setSap}
           setGems={setGems}
           setGrove={setGrove}
           setAchievements={setAchievements}

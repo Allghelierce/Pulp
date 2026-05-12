@@ -3,7 +3,7 @@ import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
-import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
+import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 
 const QUOTES = [
   "Every moment is a fresh beginning.",
@@ -39,9 +39,8 @@ interface TimerSidebarPanelProps {
   onWater: () => void
   onClaim: () => void
   onDismissDead: () => void
-  lostJuice: number
-  gems: number
-  onRecoverJuice: () => void
+  lostSap: number
+  onRecoverSap: () => void
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
@@ -158,7 +157,7 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
-  lostJuice, gems, onRecoverJuice,
+  lostSap, onRecoverSap,
   inventory, selectedSeed, onSelectSeed,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
@@ -367,7 +366,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         strokeWidth="3" strokeLinecap="round"
                         pathLength="1"
                         strokeDasharray="1"
-                        strokeDashoffset={1 - Math.min(1, waterMsLeft / (8 * 60 * 1000))}
+                        strokeDashoffset={1 - Math.min(1, waterMsLeft / (Math.floor(total / 3) * 1000 + 90_000))}
                       />
                     </svg>
                   </div>
@@ -533,12 +532,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     fontSize: 44,
                     lineHeight: 1,
                     ...(running && !done ? {
-                      backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 38%, #fbbf24 50%, #d97706 62%, #d97706 100%)',
-                      backgroundSize: '300% 100%',
+                      backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 30%, #e8a33a 45%, #f0c060 50%, #e8a33a 55%, #d97706 70%, #d97706 100%)',
+                      backgroundSize: '400% 100%',
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
-                      animation: 'pulp-timer-shimmer 6s ease-in-out infinite',
+                      animation: 'pulp-timer-shimmer 16s cubic-bezier(0.4, 0, 0.2, 1) infinite',
                     } : {
                       color: done ? mainColor : textColor,
                     }),
@@ -548,59 +547,15 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5" style={{ color: mainColor }}>+{Math.max(1, Math.round(total / 300))} <PulpIcon size={11} /></span>}
+                  {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.max(10, Math.round(Math.floor(total / 60) * 3 + Math.pow(Math.floor(total / 60) / 10, 1.5)))} XP</span>}
                 </p>
-                {treeDead && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-1.5 flex justify-center"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <line x1="6" y1="7" x2="10" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="10" y1="7" x2="6" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="14" y1="7" x2="18" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="18" y1="7" x2="14" y2="11" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M7 19 Q12 14 17 19" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </motion.div>
-                )}
               </div>
 
               {/* Tree view */}
-              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 84 }}>
+              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 32 }}>
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
                     </div>
-                    {/* Juice depletion animation on death */}
-                    <AnimatePresence>
-                      {treeDead && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.3, y: 10 }}
-                          animate={{ opacity: [0, 1, 1, 1, 0], scale: [0.3, 1.15, 1, 1, 0.9], y: [10, -5, -10, -25, -50] }}
-                          transition={{ duration: 3, times: [0, 0.12, 0.2, 0.7, 1], ease: "easeOut" }}
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                        >
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span style={{
-                              fontSize: 22, fontWeight: 800, color: '#ef4444', fontFamily: '"EB Garamond", serif',
-                              textShadow: '0 0 12px rgba(239,68,68,0.5), 0 2px 8px rgba(0,0,0,0.4)',
-                              letterSpacing: '-0.02em',
-                            }}>
-                              −25% <PulpIcon size={18} />
-                            </span>
-                            <span style={{
-                              fontSize: 9, fontWeight: 600, color: '#fca5a5', fontFamily: 'Inter, system-ui, sans-serif',
-                              textTransform: 'uppercase', letterSpacing: '0.12em',
-                              textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-                            }}>
-                              Sap Lost
-                            </span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
 
               {/* Growth timeline */}
@@ -641,6 +596,48 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </div>
               )}
 
+              {/* Sap recovery */}
+              {lostSap > 0 && !running && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full mt-5 relative overflow-hidden rounded-xl"
+                  style={{
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(127,29,29,0.15) 0%, rgba(239,68,68,0.06) 100%)'
+                      : 'linear-gradient(135deg, rgba(254,226,226,0.6) 0%, rgba(254,242,242,0.4) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.18)'}`,
+                  }}
+                >
+                  <div className="px-4 py-3.5 flex flex-col items-center gap-2.5">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[13px] font-bold inline-flex items-center gap-1" style={{ color: isDark ? '#fca5a5' : '#dc2626', fontFamily: serifFont }}>
+                        −{lostSap} <PulpIcon size={13} />
+                      </span>
+                      <span className="text-[9px] uppercase tracking-[0.12em] font-semibold" style={{ color: isDark ? 'rgba(252,165,165,0.5)' : 'rgba(220,38,38,0.4)', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                        sap lost (15%)
+                      </span>
+                    </div>
+                    <button
+                      onClick={onRecoverSap}
+                      className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                      style={{
+                        background: isDark
+                          ? 'linear-gradient(135deg, rgba(217,119,6,0.25) 0%, rgba(217,119,6,0.15) 100%)'
+                          : 'linear-gradient(135deg, rgba(217,119,6,0.18) 0%, rgba(217,119,6,0.10) 100%)',
+                        border: `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)'}`,
+                        color: isDark ? '#fbbf24' : '#92400e',
+                        fontFamily: 'Inter, system-ui, sans-serif',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Recover Sap
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
             </motion.div>
             )}
             </AnimatePresence>
@@ -671,7 +668,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </button>
               )}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-@keyframes pulp-timer-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+@keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
               {/* Quote when running */}
               {running && (
@@ -693,12 +690,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
-                  <div className="flex items-center justify-center gap-2 mb-3">
+                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
+                  <div className="flex items-center justify-center gap-2 mb-2">
                     {[15, 45, 90].map(m => (
                       <button
                         key={m}
                         onClick={() => onSetTotal(m * 60)}
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
+                        className="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold transition-all"
                         style={{
                           fontFamily: 'Inter, system-ui, sans-serif',
                           color: Math.floor(total / 60) === m ? textColor : subtleColor,
@@ -711,7 +709,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     ))}
                   </div>
                   <div
-                    className="relative h-1 rounded-full cursor-grab active:cursor-grabbing mb-1.5"
+                    className="relative h-1 rounded-full cursor-grab active:cursor-grabbing mb-1"
                     style={{ backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
                     onMouseDown={sliderMouseDown}
                   >
@@ -741,13 +739,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                     <span>180m</span>
                   </div>
-
+                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
                 </div>
               )}
             </div>
 
             {/* Main button */}
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {
@@ -780,34 +778,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 50% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 15% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
 
-              {lostJuice > 0 && !running && !done && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="w-full rounded-[8px] px-3 py-3 mt-2 flex flex-col items-center gap-2"
-                  style={{
-                    backgroundColor: isDark ? "rgba(239,68,68,0.06)" : "rgba(239,68,68,0.05)",
-                    border: `1px solid ${isDark ? "rgba(239,68,68,0.2)" : "rgba(239,68,68,0.2)"}`,
-                    fontFamily: serifFont,
-                  }}
-                >
-                  <span className="text-[11px] font-bold tracking-[0.02em]" style={{ color: isDark ? "#fca5a5" : "#dc2626" }}>
-                    −{lostJuice} <PulpIcon size={11} /> lost
-                  </span>
-                  <button
-                    onClick={onRecoverJuice}
-                    disabled={gems < Math.max(5, Math.ceil(lostJuice * 0.5))}
-                    className="text-[11px] font-black uppercase tracking-[0.08em] rounded-lg px-4 py-1.5 disabled:opacity-30 transition-colors"
-                    style={{ backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", color: isDark ? "#fafafa" : "#18181b" }}
-                  >
-                    Recover for {Math.max(5, Math.ceil(lostJuice * 0.5))} <GemIcon size={10} />
-                  </button>
-                </motion.div>
-              )}
             </div>
           </div>
         </motion.div>
@@ -855,11 +828,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             <div className="px-5 py-4 space-y-3">
               {[
-                { icon: <PulpIcon size={14} />, text: 'Complete a session to earn sap and XP.' },
+                { icon: '✨', text: 'Complete a session to earn XP and grow your tree.' },
                 { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
                 { icon: '💀', text: 'Leaving, giving up, or missing water kills your plant.' },
                 { icon: '⚠️', text: 'A dead plant costs you 25% of your sap.' },
-                { icon: <GemIcon size={14} />, text: 'Spend gems to recover lost sap.' },
+                { icon: <PulpIcon size={14} />, text: 'Recover lost sap after giving up.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>

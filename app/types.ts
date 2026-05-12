@@ -1,18 +1,5 @@
-export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3"; boxHighlightColor?: string; boxOutlineWidth?: number; boxRotation?: number; boxTextColor?: string; isTitle?: boolean }
+export interface TextBox { id: string; x: number; y: number; w: number; h: number; content: string; textAlign?: "left" | "center" | "right" | "justify"; boxFontFamily?: string; boxFontSize?: number; boxHeadingStyle?: "default" | "h1" | "h2" | "h3"; boxHighlightColor?: string; boxOutlineWidth?: number; boxRotation?: number; boxTextColor?: string; isTitle?: boolean; sizeLocked?: boolean }
 export type BoxesMap = { [pageIdx: number]: TextBox[] }
-export interface FlashcardItem {
-  id: string;
-  front: string;
-  back: string;
-  // Spaced Repetition System (SM-2 Algorithm)
-  interval: number; // days until next review
-  easeFactor: number; // difficulty multiplier (1.3 - 2.5)
-  repetitions: number; // times successfully reviewed
-  nextReviewDate: number; // timestamp for next review
-  lastReviewDate?: number; // timestamp of last review
-}
-
-
 export interface NoteData {
   id: string;
   subject: string;
@@ -21,9 +8,8 @@ export interface NoteData {
   parentId?: string;
   icon?: string;
   cover?: string;
-  noteType?: "notebook" | "singlepage" | "flashcard" | "vault" | "cornell";
+  noteType?: "notebook" | "singlepage" | "vault" | "cornell";
   password?: string;
-  flashcards?: FlashcardItem[];
   boxes: BoxesMap;
   lines?: { [pageIdx: number]: number[] };
   hlines?: { [pageIdx: number]: HLine[] };
@@ -50,7 +36,7 @@ export interface Achievement {
   icon: React.ReactNode
   description: string
   reward: number
-  rewardType: 'gems' | 'juice'
+  rewardType: 'sap' | 'gems'
   completed: boolean
   claimed: boolean
   progress?: number
@@ -71,6 +57,7 @@ export interface Tree {
   plantedAt: number
   notebookId?: string
   lastHarvest?: number
+  ascension?: number
 }
 
 export interface SlashMenuState {
@@ -97,5 +84,4 @@ export interface NoteVersion {
   lines?: { [pageIdx: number]: number[] }
   hlines?: { [pageIdx: number]: HLine[] }
   drawings?: { [pageIdx: number]: DrawingPath[] }
-  flashcards?: FlashcardItem[]
 }

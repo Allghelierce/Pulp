@@ -6,10 +6,10 @@ interface LeaderboardViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  juice: number
+  sap: number
 }
 
-type Tab = 'juice' | 'time'
+type Tab = 'sap' | 'time'
 
 function seededRng(seed: number) {
   let s = Math.abs(seed) || 1
@@ -22,7 +22,7 @@ function generatePlayers(count: number) {
   const nouns = ['quill','moth','ink','fox','owl','cedar','fern','ash','drift','plume','prose','wolf','crow','reed','thorn','spark','rune','veil','tide','stone']
   const avatarColors = ['#d97706','#8b7aaa','#c06878','#5a9a6a','#5a88b0','#b07850','#6a8a5a','#9a6a8a','#5a7aaa','#aa7a5a','#7a9a7a','#8a6aaa','#aa8a5a','#6a7a9a','#9a8a6a']
 
-  const players: { name: string; level: number; juice: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
+  const players: { name: string; level: number; sap: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
   const usedNames = new Set<string>()
 
   for (let i = 0; i < count; i++) {
@@ -34,14 +34,14 @@ function generatePlayers(count: number) {
 
     const rank = i + 1
     const base = Math.pow(0.92, rank)
-    const juice = Math.round((90000 + rng() * 30000) * base)
+    const sap = Math.round((90000 + rng() * 30000) * base)
     const focusHours = Math.round((420 + rng() * 180) * base)
     const level = Math.max(1, Math.round(10 + (50 - rank) * 0.85 + rng() * 5))
     const streak = Math.max(1, Math.round((90 - rank * 1.2) + rng() * 15))
     const trees = Math.max(3, Math.round((60 - rank * 0.8) + rng() * 10))
     const avatar = avatarColors[Math.floor(rng() * avatarColors.length)]
 
-    players.push({ name, level, juice, focusHours, streak, trees, avatar })
+    players.push({ name, level, sap, focusHours, streak, trees, avatar })
   }
   return players
 }
@@ -50,9 +50,9 @@ const ALL_PLAYERS = generatePlayers(50)
 
 const font = '"EB Garamond", serif'
 
-export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, juice }: LeaderboardViewProps) {
+export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sap }: LeaderboardViewProps) {
   const isDark = theme === "dark"
-  const [tab, setTab] = useState<Tab>('juice')
+  const [tab, setTab] = useState<Tab>('sap')
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null)
 
   useEffect(() => {
@@ -79,8 +79,8 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const MEDAL_COLORS = ['#d97706', '#9a9590', '#a07050']
 
   const formatVal = (p: typeof ALL_PLAYERS[0]) => {
-    if (tab === 'juice') {
-      const v = p.juice
+    if (tab === 'sap') {
+      const v = p.sap
       return v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v)
     }
     return `${p.focusHours}h`
@@ -97,31 +97,21 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
   return (
     <div
-      className="absolute inset-0 z-40 flex items-center justify-center backdrop-blur-md bg-black/30"
+      className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4"
       onMouseDown={onClose}
     >
       <div
         onMouseDown={e => e.stopPropagation()}
         onClick={e => e.stopPropagation()}
-        className="relative w-full overflow-hidden flex flex-col"
-        style={{
-          maxWidth: 520,
-          maxHeight: 720,
-          borderRadius: 16,
-          background: bgColor,
-          boxShadow: isDark ? "0 25px 80px -15px rgba(0,0,0,0.7)" : "0 25px 80px -15px rgba(0,0,0,0.15)",
-          border: `1px solid ${cardBorder}`,
-        }}
+        className={`relative w-full max-w-[520px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
+        style={{ background: bgColor, height: 660 }}
       >
         {/* Header */}
         <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() }}
-              className="p-1.5 rounded-lg transition-colors"
-              style={{ color: textMuted }}
-              onMouseEnter={e => e.currentTarget.style.color = textPrimary}
-              onMouseLeave={e => e.currentTarget.style.color = textMuted}
+              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
@@ -131,12 +121,12 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[10px] font-semibold`}>
-              {([['juice', 'Sap'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
+            <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
+              {([['sap', 'Sap'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
                 <button
                   key={id}
                   onClick={() => setTab(id)}
-                  className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 ${
                     tab === id
                       ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
                       : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
@@ -144,7 +134,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   style={{ fontFamily: font }}
                 >
                   <span className="opacity-80">
-                    {id === 'juice'
+                    {id === 'sap'
                       ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     }
@@ -261,7 +251,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
                 <div className="flex items-center gap-1.5">
                   <span className="opacity-70">
-                    {tab === 'juice'
+                    {tab === 'sap'
                       ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                       : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     }
@@ -294,13 +284,13 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             </div>
             <div className="flex items-center gap-1.5">
               <span className="opacity-70">
-                {tab === 'juice'
+                {tab === 'sap'
                   ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
                   : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 }
               </span>
               <span className="text-[12px] font-bold tabular-nums" style={{ color: accent, fontFamily: font }}>
-                {juice >= 1000 ? `${(juice / 1000).toFixed(1)}k` : juice}
+                {sap >= 1000 ? `${(sap / 1000).toFixed(1)}k` : sap}
               </span>
             </div>
           </div>
@@ -314,7 +304,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           const rank = selectedPlayer + 1
           const medalColor = rank <= 3 ? MEDAL_COLORS[rank - 1] : accent
           const statItems = [
-            { label: 'Sap', value: p.juice.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
+            { label: 'Sap', value: p.sap.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
             { label: 'Focus Time', value: `${p.focusHours}h`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
             { label: 'Streak', value: `${p.streak}d`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 .67 2.5 1.73 4.2 3 5.5 2 2.08 2.5 4.5 1 7.5-1 2-3 3.5-5.5 3.5s-4-1-5-3.5c-.56-1.41-.56-3.18 0-4.5"/></svg> },
             { label: 'Trees', value: String(p.trees), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },

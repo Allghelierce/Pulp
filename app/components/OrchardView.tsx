@@ -1,23 +1,25 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES, getLevel } from "@/app/constants"
+import { TREE_TYPES, getLevel, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 import * as db from "@/lib/db"
+import { toPng } from "html-to-image"
 
 interface OrchardViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
   accent: string
-  juice: number
+  sap: number
   gems: number
   xp: number
   grove: any[]
   inventory: string[]
-  setJuice: (v: number | ((p: number) => number)) => void
+  setSap: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
@@ -194,9 +196,10 @@ const PLOT_COST = [0, 5, 12]
 function getSapYield(tree: any): number {
   const info = TREE_TYPES[tree.type]
   if (!info) return 1
-  const base = info.juiceYield || Math.max(1, Math.floor(info.cost * 0.3))
+  const base = info.sapYield || Math.max(1, Math.floor(info.cost * 0.3))
   const stageBonus = tree.stage >= 4 ? 1.5 : tree.stage >= 3 ? 1.2 : tree.stage >= 2 ? 1 : 0.5
-  return Math.max(1, Math.round(base * stageBonus))
+  const ascensionMultiplier = tree.ascension ? ASCENSION_TIERS[tree.ascension - 1]?.sapMultiplier || 1 : 1
+  return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
 }
 
 // Time-of-day phases: night(0-5), dawn(5-7), morning(7-10), day(10-16), dusk(16-19), night(19-24)
@@ -2331,14 +2334,13 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 const NOTE_TYPE_ICONS: Record<string, string> = {
   notebook: '📓',
   singlepage: '📄',
-  flashcard: '🃏',
   vault: '🔒',
   cornell: '📋',
 }
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  juice, gems, xp, grove, notes, setGems, setJuice, setGrove, userId, activeTabId, orchardTimeMode,
+  sap, gems, xp, grove, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
   onOpenLeaderboard, onOpenShop,
 }: OrchardViewProps) {
 
@@ -2358,13 +2360,11 @@ export const OrchardView = memo(function OrchardView({
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
+  const [ascensionMode, setAscensionMode] = useState(false)
+  const [selectedSacrifices, setSelectedSacrifices] = useState<number[]>([])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
-  const [sapReadyMap, setSapReadyMap] = useState<Record<string, number>>({})
-  const [collectAnimations, setCollectAnimations] = useState<{ id: string; x: number; y: number; amount: number }[]>([])
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
-  const [sapFlyAnim, setSapFlyAnim] = useState<{ amount: number; phase: 'pop' | 'fly' | 'none' }>({ amount: 0, phase: 'none' })
-  const [btnFillLevel, setBtnFillLevel] = useState(0)
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
 
@@ -2372,18 +2372,56 @@ export const OrchardView = memo(function OrchardView({
     try { return JSON.parse(localStorage.getItem('pulp-slot-order') || '{}') } catch { return {} }
   })
   const orchardRef = useRef<HTMLDivElement>(null)
+  const captureRef = useRef<HTMLDivElement>(null)
+  const [screenshotData, setScreenshotData] = useState<string | null>(null)
+  const [screenshotBusy, setScreenshotBusy] = useState(false)
 
-  const getSapInterval = (stage: number) => {
-    if (stage >= 4) return 3 * 60 * 1000
-    if (stage >= 3) return 5 * 60 * 1000
-    if (stage >= 2) return 8 * 60 * 1000
-    return 15 * 60 * 1000
-  }
+  const captureOrchard = useCallback(async () => {
+    const el = captureRef.current
+    if (!el || screenshotBusy) return
+    setScreenshotBusy(true)
+    const overlays = el.querySelectorAll<HTMLElement>('[data-orchard-ui]')
+    overlays.forEach(o => o.style.visibility = 'hidden')
+    try {
+      const url = await toPng(el, {
+        pixelRatio: 2,
+        cacheBust: true,
+        skipFonts: true,
+        filter: (node: any) => {
+          if (node.tagName === 'LINK' && node.rel === 'stylesheet') return false
+          return true
+        },
+      })
+      setScreenshotData(url)
+    } catch { /* ignore */ }
+    overlays.forEach(o => o.style.visibility = '')
+    setScreenshotBusy(false)
+  }, [screenshotBusy])
 
-  const getSapPerTick = (tree: any) => {
+  const shareScreenshot = useCallback(async () => {
+    if (!screenshotData) return
+    const blob = await (await fetch(screenshotData)).blob()
+    const file = new File([blob], 'my-orchard.png', { type: 'image/png' })
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'My Pulp Orchard', text: 'Check out my orchard on Pulp!' }).catch(() => {})
+    } else {
+      const a = document.createElement('a')
+      a.href = screenshotData
+      a.download = 'my-orchard.png'
+      a.click()
+    }
+  }, [screenshotData])
+
+  const SAP_FILL_DURATION = 30 * 60 * 1000
+  const SAP_TICK_INTERVAL = 10 * 1000
+
+  const getTreeSapMax = (tree: any) => {
     const info = TREE_TYPES[tree.type]
     if (!info) return 1
-    return tree.stage >= 4 ? 2 : 1
+    const base = info.sapYield || Math.max(1, Math.floor((info.cost || 5) * 0.3))
+    const stageBonus = tree.stage >= 4 ? 1.5 : tree.stage >= 3 ? 1.2 : tree.stage >= 2 ? 1.0 : 0.5
+    const ascensionMultiplier = tree.ascension ? ASCENSION_TIERS[tree.ascension - 1]?.sapMultiplier || 1 : 1
+    return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
   }
 
   const lvl = getLevel(xp)
@@ -2429,124 +2467,99 @@ export const OrchardView = memo(function OrchardView({
   const filteredTreesRef = useRef(filteredTrees)
   filteredTreesRef.current = filteredTrees
 
+  const sapStartTimeRef = useRef<number>(Date.now())
+  const [sapFillProgress, setSapFillProgress] = useState(0)
+
   useEffect(() => {
     if (!isOpen) return
+    sapStartTimeRef.current = Date.now()
+    setSapFillProgress(0)
     const tick = () => {
-      setSapReadyMap(prev => {
-        const trees = filteredTreesRef.current
-        let changed = false
-        const next = { ...prev }
-        for (const tree of trees) {
-          const current = next[tree.id] || 0
-          const max = getSapPerTick(tree) * 8
-          if (current < max) {
-            next[tree.id] = current + getSapPerTick(tree)
-            changed = true
-          }
-        }
-        return changed ? next : prev
-      })
+      const elapsed = Date.now() - sapStartTimeRef.current
+      setSapFillProgress(Math.min(1, elapsed / SAP_FILL_DURATION))
     }
-    tick()
-    const interval = setInterval(tick, 15000)
+    const interval = setInterval(tick, SAP_TICK_INTERVAL)
     return () => clearInterval(interval)
   }, [isOpen])
 
-  const [tapAnim, setTapAnim] = useState<Record<string, 'bucket' | 'fill' | 'done'>>({})
-  const collectSap = useCallback((tree: any, x: number, y: number) => {
-    const amount = sapReadyMap[tree.id] || 0
-    if (amount <= 0 || tapAnim[tree.id]) return
-    setTapAnim(prev => ({ ...prev, [tree.id]: 'bucket' }))
-    setTimeout(() => setTapAnim(prev => ({ ...prev, [tree.id]: 'fill' })), 200)
-    setTimeout(() => {
-      setJuice((j: number) => j + amount)
-      setSapReadyMap(prev => ({ ...prev, [tree.id]: 0 }))
-      const animId = `${tree.id}-${Date.now()}`
-      setCollectAnimations(prev => [...prev, { id: animId, x, y, amount }])
-      setTimeout(() => setCollectAnimations(prev => prev.filter(a => a.id !== animId)), 1200)
-      setTapAnim(prev => ({ ...prev, [tree.id]: 'done' }))
-      setTimeout(() => setTapAnim(prev => { const n = { ...prev }; delete n[tree.id]; return n }), 400)
-    }, 800)
-  }, [sapReadyMap, setJuice, tapAnim])
+  const [sapDrops, setSapDrops] = useState<{ id: string; x: number; y: number; delay: number }[]>([])
+  const [sapFunnelTarget, setSapFunnelTarget] = useState<{ x: number; y: number } | null>(null)
+
+  const getAvailableSap = useCallback(() => {
+    const allTrees = grove.filter(t => t && t.type !== 'spoiled')
+    const maxSap = allTrees.reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
+    return Math.floor(maxSap * sapFillProgress)
+  }, [sapFillProgress, grove])
+
+  const getGlobalMaxSap = useCallback(() => {
+    return grove.filter(t => t && t.type !== 'spoiled').reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
+  }, [grove])
+
+  const getAvailableGems = useCallback(() => {
+    const gemTrees = grove.filter(t => t && TREE_TYPES[t.type]?.gemYield)
+    return gemTrees.reduce((sum: number, t: any) => {
+      const info = TREE_TYPES[t.type]
+      const stageBonus = t.stage >= 4 ? 1 : t.stage >= 3 ? 0.5 : 0
+      return sum + Math.floor((info.gemYield || 0) * stageBonus * sapFillProgress)
+    }, 0)
+  }, [sapFillProgress, grove])
 
   const collectAllSap = useCallback(() => {
-    const visibleTrees = (placedRef.current ?? []).map((p: any) => p.tree)
-    let total = 0
-    const treesWithSap: any[] = []
-    for (const tree of visibleTrees) {
-      const amt = sapReadyMap[tree.id] || 0
-      if (amt > 0) { total += amt; treesWithSap.push(tree) }
-    }
-    if (total <= 0) return
+    const amount = getAvailableSap()
+    if (amount <= 0) return
 
-    const fillState: Record<string, 'bucket' | 'fill' | 'done'> = {}
-    for (const tree of treesWithSap) fillState[tree.id] = 'fill'
-    setTapAnim(prev => ({ ...prev, ...fillState }))
+    const gemAmount = getAvailableGems()
+    if (gemAmount > 0) setGems((g: number) => g + gemAmount)
 
+    const counterEl = sapCounterRef.current
     const btnEl = collectBtnRef.current
-    if (btnEl) {
-      let arrived = 0
-      const total_buckets = treesWithSap.length
-      treesWithSap.forEach((tree: any, i: number) => {
-        setTimeout(() => {
-          const el = document.querySelector<HTMLElement>(`[data-sap-bucket="${tree.id}"]`)
-          if (!el) { arrived++; setBtnFillLevel(arrived / total_buckets); return }
-          const r = el.getBoundingClientRect()
-          if (r.width === 0 && r.height === 0) { arrived++; setBtnFillLevel(arrived / total_buckets); return }
-          flyParticle(r.left + r.width / 2, r.top + r.height * 0.3, btnEl, SAP_COLOR, () => {
-            arrived++
-            setBtnFillLevel(arrived / total_buckets)
-          })
-        }, i * 80)
-      })
+    if (counterEl && btnEl) {
+      const counterRect = counterEl.getBoundingClientRect()
+      const tx = counterRect.left + counterRect.width / 2
+      const ty = counterRect.top + counterRect.height / 2
+      const btnRect = btnEl.getBoundingClientRect()
+      const sx = btnRect.left + btnRect.width / 2
+      const sy = btnRect.top + btnRect.height / 2
+      const dropCount = Math.min(40, Math.max(8, Math.round(amount * 0.8)))
+      const drops: { id: string; x: number; y: number; delay: number }[] = []
+      for (let i = 0; i < dropCount; i++) {
+        const spread = 80 + Math.random() * 120
+        const angle = Math.random() * Math.PI * 2
+        drops.push({
+          id: `${Date.now()}-${i}`,
+          x: sx + Math.cos(angle) * spread,
+          y: sy + Math.sin(angle) * spread,
+          delay: Math.random() * 400,
+        })
+      }
+      setSapDrops(drops)
+      setSapFunnelTarget({ x: tx, y: ty })
+      setTimeout(() => { setSapDrops([]); setSapFunnelTarget(null) }, 1800)
     }
 
-    setBtnFillLevel(0)
-    setCollectAllAnim({ total, current: 0, active: true })
-
-    setTimeout(() => {
-      const drainState: Record<string, 'bucket' | 'fill' | 'done'> = {}
-      for (const tree of treesWithSap) drainState[tree.id] = 'bucket'
-      setTapAnim(prev => ({ ...prev, ...drainState }))
-    }, 400)
-
-    const rampStart = 600
-    const rampDuration = 1200
-    const rampSteps = 30
-    const rampStepTime = rampDuration / rampSteps
+    setCollectAllAnim({ total: amount, current: 0, active: true })
+    const rampSteps = 20
+    const rampDuration = 800
     let added = 0
     for (let i = 1; i <= rampSteps; i++) {
       setTimeout(() => {
-        const target = Math.round(total * (i / rampSteps))
+        const target = Math.round(amount * (i / rampSteps))
         const delta = target - added
         if (delta > 0) {
           added = target
-          setJuice((j: number) => j + delta)
+          setSap((j: number) => j + delta)
           setCollectAllAnim(prev => ({ ...prev, current: target }))
         }
-      }, rampStart + i * rampStepTime)
+      }, 200 + i * (rampDuration / rampSteps))
     }
 
+    sapStartTimeRef.current = Date.now()
+    setSapFillProgress(0)
+
     setTimeout(() => {
-      setSapReadyMap(prev => {
-        const next = { ...prev }
-        for (const tree of treesWithSap) next[tree.id] = 0
-        return next
-      })
-      const doneState: Record<string, 'bucket' | 'fill' | 'done'> = {}
-      for (const tree of treesWithSap) doneState[tree.id] = 'done'
-      setTapAnim(prev => ({ ...prev, ...doneState }))
-      setBtnFillLevel(0)
-      setTimeout(() => {
-        setTapAnim(prev => {
-          const n = { ...prev }
-          for (const tree of treesWithSap) delete n[tree.id]
-          return n
-        })
-        setCollectAllAnim({ total: 0, current: 0, active: false })
-      }, 600)
-    }, rampStart + rampDuration + 400)
-  }, [sapReadyMap, setJuice])
+      setCollectAllAnim({ total: 0, current: 0, active: false })
+    }, 200 + rampDuration + 600)
+  }, [getAvailableSap, getAvailableGems, setSap, setGems])
 
   const TREES_PER_PLOT = 40
   const MAX_PLOTS = 3
@@ -2584,11 +2597,11 @@ export const OrchardView = memo(function OrchardView({
   const confirmChop = useCallback(() => {
     if (!chopTarget) return
     const { tree, sap } = chopTarget
-    setJuice((j: number) => j + sap)
+    setSap((j: number) => j + sap)
     setGrove((g: any[]) => g.filter(t => t.id !== tree.id))
     if (userId) db.deleteTree(userId, tree.id).catch(() => {})
     setChopTarget(null)
-  }, [chopTarget, setJuice, setGrove, userId])
+  }, [chopTarget, setSap, setGrove, userId])
 
   // Auto-convert overflow trees to sap
   useEffect(() => {
@@ -2598,7 +2611,7 @@ export const OrchardView = memo(function OrchardView({
     let totalSap = 0
     const overflowIds = new Set(overflow.map((t: any) => { totalSap += getSapYield(t); return t.id }))
     if (overflowIds.size === 0) return
-    setJuice((j: number) => j + totalSap)
+    setSap((j: number) => j + totalSap)
     setGrove((g: any[]) => g.filter(t => !overflowIds.has(t.id)))
     if (userId) overflow.forEach((t: any) => db.deleteTree(userId, t.id).catch(() => {}))
   }, [filteredTrees.length, nbUnlocked, selectedNotebook])
@@ -2835,10 +2848,11 @@ export const OrchardView = memo(function OrchardView({
   const textSecondary = isDark ? '#6b6860' : '#9a9590'
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
-  const baseSize = filteredTrees.length <= 6 ? 130 :
-    filteredTrees.length <= 15 ? 115 :
-    filteredTrees.length <= 24 ? 105 :
-    filteredTrees.length <= 36 ? 95 : 85
+  const plotCount = currentPlotTrees.length
+  const baseSize = plotCount <= 6 ? 130 :
+    plotCount <= 15 ? 115 :
+    plotCount <= 24 ? 105 :
+    plotCount <= 36 ? 95 : 85
 
   return (
     <div
@@ -2849,6 +2863,8 @@ export const OrchardView = memo(function OrchardView({
       <style>{`
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
+        @keyframes sap-drop-burst { 0% { opacity:0; transform: scale(0) translateY(0) } 15% { opacity:1; transform: scale(1.3) translateY(-5px) } 40% { opacity:0.9; transform: scale(1) translateY(-15px) } 100% { opacity:0; transform: scale(0.5) translateY(-40px) } }
+        @keyframes sap-funnel { 0% { opacity:0; transform: scale(0.3) translate(0,0) } 20% { opacity:1; transform: scale(1.2) translate(0,0) } 100% { opacity:0; transform: scale(0.4) translate(var(--funnel-tx), var(--funnel-ty)) } }
         @keyframes sap-bounce { 0% { transform: scale(1) } 20% { transform: scale(0.92) translateY(2px) } 50% { transform: scale(1.06) translateY(-3px) } 100% { transform: scale(1) } }
         @keyframes sap-pop { 0% { transform: translate(-50%, 10px) scale(0.3); opacity: 0 } 40% { transform: translate(-50%, -5px) scale(2); opacity: 1 } 100% { transform: translate(-50%, 0) scale(1.8); opacity: 1 } }
         @keyframes sap-ramp { 0% { opacity:0; transform: translateY(4px) } 15% { opacity:1; transform: translateY(0) } 85% { opacity:1; transform: translateY(0) } 100% { opacity:0; transform: translateY(-4px) } }
@@ -2863,15 +2879,20 @@ export const OrchardView = memo(function OrchardView({
           100% { transform: translateY(var(--drip-dist)) scale(0); opacity: 0; }
         }
         @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
+        @keyframes ascension-pulse { 0%,100% { opacity: 0.4; transform: scale(1) } 50% { opacity: 0.7; transform: scale(1.08) } }
+        .ascension-aura { animation: ascension-pulse 3s ease-in-out infinite; }
+        .ascension-tier-1 { background: radial-gradient(circle, rgba(168,216,168,0.25) 0%, transparent 70%); }
+        .ascension-tier-2 { background: radial-gradient(circle, rgba(110,184,224,0.3) 0%, transparent 70%); }
+        .ascension-tier-3 { background: radial-gradient(circle, rgba(232,196,74,0.4) 0%, rgba(232,196,74,0.1) 40%, transparent 70%); box-shadow: 0 0 12px rgba(232,196,74,0.15); }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
         className="relative flex overflow-hidden w-full h-full"
       >
         {/* Main orchard area */}
-        <div className="flex-1 flex flex-col relative overflow-hidden">
+        <div ref={captureRef} className="flex-1 flex flex-col relative overflow-hidden">
           {/* Topbar with sap count */}
-          <div className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
+          <div data-orchard-ui className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
             backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.01)',
             backdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
             WebkitBackdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
@@ -2893,7 +2914,7 @@ export const OrchardView = memo(function OrchardView({
                     color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)',
                     transition: 'transform 0.3s ease, color 0.3s ease',
                     transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
-                  }}>{juice}</span>
+                  }}>{sap}</span>
                 </div>
                 {collectAllAnim.active && collectAllAnim.current < collectAllAnim.total && (
                   <span className="text-[11px] font-bold tabular-nums" style={{
@@ -2921,85 +2942,68 @@ export const OrchardView = memo(function OrchardView({
               )}
             </div>
           </div>
-          {/* Collect all sap button — below topbar */}
-          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
+          {/* Collect sap meter button — below topbar */}
+          <div data-orchard-ui className="absolute top-14 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
               <div style={{ position: 'relative' }}>
-                <button
-                  ref={collectBtnRef}
-                  onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                  className="relative flex items-center justify-center rounded-md transition-all text-[11px] font-semibold overflow-hidden"
-                  style={{
-                    padding: '5px 12px',
-                    backgroundColor: (() => {
-                      const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has
-                        ? (isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.06)')
-                        : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)')
-                    })(),
-                    color: (() => {
-                      const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has ? '#d97706' : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)')
-                    })(),
-                    border: (() => {
-                      const has = (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0)
-                      return has ? '1px solid rgba(217,119,6,0.2)' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
-                    })(),
-                    cursor: (placedRef.current ?? []).some((p: any) => (sapReadyMap[p.tree.id] || 0) > 0) ? 'pointer' : 'default',
-                    letterSpacing: '0.02em',
-                  }}
-                >
-                  {(() => {
-                    const visibleTrees = (placedRef.current ?? []).map((p: any) => p.tree)
-                    const totalReady = visibleTrees.reduce((s: number, t: any) => s + (sapReadyMap[t.id] || 0), 0)
-                    const sapMax = visibleTrees.reduce((s: number, t: any) => s + getSapPerTick(t) * 8, 0)
-                    const fill = btnFillLevel > 0 ? btnFillLevel : (sapMax > 0 ? totalReady / sapMax : 0)
-                    return <>
-                      {fill > 0 && (
-                        <div className="absolute inset-0 pointer-events-none" style={{
-                          background: `linear-gradient(to top, rgba(217,119,6,${isDark ? 0.4 : 0.3}) 0%, rgba(217,119,6,${isDark ? 0.15 : 0.1}) 60%, transparent 100%)`,
-                          transform: `translateY(${(1 - fill) * 100}%)`,
-                          transition: 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)',
-                          borderRadius: 'inherit',
-                        }} />
-                      )}
-                      <span className="relative z-10">Collect All Sap</span>
-                    </>
-                  })()}
-                </button>
-                {sapFlyAnim.phase !== 'none' && (() => {
-                  const btnRect = collectBtnRef.current?.getBoundingClientRect()
-                  const counterRect = sapCounterRef.current?.getBoundingClientRect()
-                  if (!btnRect || !counterRect) return null
-                  const dx = counterRect.left + counterRect.width / 2 - (btnRect.left + btnRect.width / 2)
-                  const dy = counterRect.top + counterRect.height / 2 - (btnRect.top - 20)
+                {(() => {
+                  const available = getAvailableSap()
+                  const maxSap = getGlobalMaxSap()
+                  const hasSap = available > 0
                   return (
-                    <div style={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: -20,
-                      transform: sapFlyAnim.phase === 'pop'
-                        ? 'translate(-50%, 0) scale(1.8)'
-                        : `translate(calc(-50% + ${dx}px), ${dy}px) scale(0.6)`,
-                      opacity: sapFlyAnim.phase === 'pop' ? 1 : 0.4,
-                      transition: sapFlyAnim.phase === 'fly' ? 'all 0.7s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none',
-                      pointerEvents: 'none',
-                      zIndex: 999,
-                      fontFamily: '"EB Garamond", serif',
-                      fontWeight: 800,
-                      fontSize: 18,
-                      color: '#d97706',
-                      textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                      animation: sapFlyAnim.phase === 'pop' ? 'sap-pop 0.5s ease-out forwards' : undefined,
-                    }}>
-                      +{sapFlyAnim.amount}
-                    </div>
+                    <button
+                      ref={collectBtnRef}
+                      onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
+                      className="relative flex items-center gap-2 rounded-full transition-all text-[11px] font-semibold overflow-hidden"
+                      style={{
+                        padding: '6px 16px',
+                        minWidth: 120,
+                        backgroundColor: isDark ? 'rgba(20,18,16,0.7)' : 'rgba(255,255,255,0.6)',
+                        color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'),
+                        border: hasSap ? '1px solid rgba(217,119,6,0.25)' : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                        cursor: hasSap ? 'pointer' : 'default',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{
+                        width: `${sapFillProgress * 100}%`,
+                        background: `linear-gradient(90deg, rgba(217,119,6,${isDark ? 0.25 : 0.18}) 0%, rgba(245,158,11,${isDark ? 0.35 : 0.25}) 100%)`,
+                        transition: 'width 1s linear',
+                        borderRadius: 'inherit',
+                      }} />
+                      <PulpIcon size={13} />
+                      <span className="relative z-10 tabular-nums">{hasSap ? `+${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
+                    </button>
                   )
                 })()}
+                {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
+                  <div style={{
+                    position: 'absolute', left: '50%', top: -24,
+                    transform: 'translateX(-50%)',
+                    pointerEvents: 'none', zIndex: 999,
+                    fontFamily: '"EB Garamond", serif', fontWeight: 800, fontSize: 18,
+                    color: '#d97706', textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    animation: 'sap-collect 1.2s ease-out forwards',
+                  }}>
+                    +{collectAllAnim.total}
+                  </div>
+                )}
               </div>
+              {sapDrops.map(drop => (
+                <div key={drop.id} className="fixed pointer-events-none" style={{
+                  left: drop.x, top: drop.y, zIndex: 9998,
+                  opacity: 0,
+                  '--funnel-tx': sapFunnelTarget ? `${sapFunnelTarget.x - drop.x}px` : '0px',
+                  '--funnel-ty': sapFunnelTarget ? `${sapFunnelTarget.y - drop.y}px` : '-40px',
+                  animation: `sap-funnel 0.9s cubic-bezier(0.4, 0, 0.2, 1) ${drop.delay}ms forwards`,
+                } as React.CSSProperties}>
+                  <PulpIcon size={10} />
+                </div>
+              ))}
           </div>
-          <canvas id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
+          <canvas data-orchard-ui id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
-          <div className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
+          <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
 
 
@@ -3009,7 +3013,7 @@ export const OrchardView = memo(function OrchardView({
           }}>
 
             {/* Plot switcher overlay */}
-            <div className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
+            <div data-orchard-ui className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
               {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
                 <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
@@ -3188,16 +3192,13 @@ export const OrchardView = memo(function OrchardView({
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
                       const shape = typeInfo?.shape || 'oak'
-                      const shapeScale = ({ oak: 1.25, conifer: 1.3, birch: 1.2, cypress: 1.3, sakura: 1.25, bamboo: 1.15, void: 1.1 } as Record<string, number>)[shape] || 0.95
+                      const shapeScale = ({ oak: 1.0, conifer: 1.05, birch: 0.95, cypress: 1.05, sakura: 1.0, bamboo: 0.9, void: 0.85 } as Record<string, number>)[shape] || 0.85
                       const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
                       const depthScale = 0.55 + depthT * 0.55
                       const treeSize = Math.round(baseSize * depthScale * shapeScale)
                       const scaleY = 0.75 + depthT * 0.25
                       const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
-                      const sapReady = sapReadyMap[tree.id] || 0
-                      const sapMax = getSapPerTick(tree) * 8
-                      const sapFill = Math.min(1, sapReady / sapMax)
                       const glowColor = meta.color
 
                       return (
@@ -3235,7 +3236,7 @@ export const OrchardView = memo(function OrchardView({
                             transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
-                            cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : sapReady > 0 ? 'pointer' : undefined,
+                            cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
                             opacity: 1,
                           }}
                         >
@@ -3248,8 +3249,14 @@ export const OrchardView = memo(function OrchardView({
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
                               filter: `brightness(${100 - dimAmount}%)`,
                               transition: 'filter 0.3s',
+                              position: 'relative',
                             }}>
-                              <PlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+                              {(tree.ascension || 0) > 0 && (
+                                <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
+                                  position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
+                                }} />
+                              )}
+                              <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
                             </div>
                             {/* Dirt mound */}
                             <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
@@ -3287,53 +3294,6 @@ export const OrchardView = memo(function OrchardView({
                               pointerEvents: 'none',
                               borderRadius: '50%',
                             }} />
-                            {(() => {
-                              const sapMax = getSapPerTick(tree) * 8
-                              const sapFrac = sapMax > 0 ? Math.min(1, sapReady / sapMax) : 0
-                              const draining = tapAnim[tree.id] === 'bucket' || tapAnim[tree.id] === 'done'
-                              const fill = draining ? 0 : sapFrac
-                              const bw = Math.round(treeSize * 0.18)
-                              const bh = Math.round(bw * 0.8)
-                              const dripDist = Math.round(treeSize * 0.25)
-                              const dripSpeed = tree.stage >= 4 ? 4 : tree.stage >= 3 ? 6 : 8
-                              const fillH = Math.round(fill * (bh - 2))
-                              return (
-                                <div data-sap-bucket={tree.id} style={{
-                                  position: 'absolute', left: '62%', bottom: 0,
-                                  transform: `translate(0%, ${bh + 1}px)`,
-                                  pointerEvents: 'none', zIndex: 10,
-                                  opacity: tapAnim[tree.id] === 'done' ? 0.3 : 1,
-                                  transition: 'opacity 0.4s',
-                                }}>
-                                  {sapFrac < 1 && !draining && (
-                                    <div style={{
-                                      position: 'absolute',
-                                      left: bw / 2 - 1.5,
-                                      top: -dripDist,
-                                      width: 3, height: 4,
-                                      borderRadius: '50% 50% 50% 50% / 30% 30% 70% 70%',
-                                      backgroundColor: '#b45309',
-                                      // @ts-ignore
-                                      '--drip-dist': `${dripDist}px`,
-                                      animation: `sap-drip ${dripSpeed}s ease-in infinite`,
-                                    }} />
-                                  )}
-                                  <svg width={bw} height={bh} viewBox="0 0 16 13" overflow="visible">
-                                    <path d="M2 2 L1.5 11 Q1.5 12.5 3.5 12.5 L12.5 12.5 Q14.5 12.5 14.5 11 L14 2 Z" fill={isDark ? '#3a2c1a' : '#6a5535'} stroke={isDark ? '#2a1c10' : '#5a4525'} strokeWidth="0.5" />
-                                    <rect x="2" y="5.5" width="12" height="0.6" rx="0.2" fill={isDark ? '#4a4440' : '#8a8478'} opacity="0.5" />
-                                    <ellipse cx="8" cy="2" rx="6" ry="1.5" fill={isDark ? '#4a3a22' : '#7a6545'} />
-                                    <ellipse cx="8" cy="2" rx="4.8" ry="1" fill={isDark ? '#1a1408' : '#3a3020'} opacity="0.4" />
-                                    <clipPath id={`bkt-${tree.id}`}>
-                                      <path d="M2 2 L1.5 11 Q1.5 12.5 3.5 12.5 L12.5 12.5 Q14.5 12.5 14.5 11 L14 2 Z" />
-                                    </clipPath>
-                                    <rect x="1" y={12.5 - fillH} width="14" height={fillH} fill="#b45309" opacity={0.75} clipPath={`url(#bkt-${tree.id})`} style={{ transition: 'height 2s ease, y 2s ease' }} />
-                                    {fillH > 1 && (
-                                      <ellipse cx="8" cy={12.5 - fillH + 0.3} rx="5.5" ry="0.8" fill="#d97706" opacity="0.2" clipPath={`url(#bkt-${tree.id})`} style={{ transition: 'cy 2s ease' }} />
-                                    )}
-                                  </svg>
-                                </div>
-                              )
-                            })()}
                           </div>
 
                           {(() => {
@@ -3372,11 +3332,6 @@ export const OrchardView = memo(function OrchardView({
                                     </span>
                                   </div>
                                 )}
-                                {sapReady > 0 && (
-                                  <span className="text-[8px] font-bold block mt-1" style={{ color: '#d97706' }}>
-                                    {sapReady} sap ready
-                                  </span>
-                                )}
                                 {tree.stage < 4 && (
                                   <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
                                     <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
@@ -3389,15 +3344,6 @@ export const OrchardView = memo(function OrchardView({
                         </div>
                       )
                     })}
-                    {/* Sap collection floating numbers */}
-                    {collectAnimations.map(anim => (
-                      <div key={anim.id} className="fixed pointer-events-none" style={{
-                        left: anim.x, top: anim.y, zIndex: 9999,
-                        animation: 'sap-collect 1.2s ease-out forwards',
-                      }}>
-                        <span className="text-sm font-bold" style={{ color: '#d97706', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>+{anim.amount}</span>
-                      </div>
-                    ))}
                   </>
                 ); })()}
               </motion.div>
@@ -3406,7 +3352,7 @@ export const OrchardView = memo(function OrchardView({
           </div>
 
           {/* Tool buttons — left center */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
+          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
               className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
@@ -3448,6 +3394,23 @@ export const OrchardView = memo(function OrchardView({
                 Drag to move
               </span>
             )}
+
+            <button
+              onClick={captureOrchard}
+              className="flex items-center justify-center rounded-md transition-all"
+              style={{
+                width: 36, height: 36,
+                backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                color: screenshotBusy ? '#d97706' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                opacity: screenshotBusy ? 0.5 : 1,
+              }}
+              title="Screenshot"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
           </div>
 
           {/* Chop confirmation popup */}
@@ -3526,8 +3489,40 @@ export const OrchardView = memo(function OrchardView({
               const ageMins = Math.floor(ageMs / 60000)
               const ageStr = ageDays > 0 ? `${ageDays} day${ageDays > 1 ? 's' : ''} old` : ageHrs > 0 ? `${ageHrs} hour${ageHrs > 1 ? 's' : ''} old` : `${ageMins} min old`
               const stageNames = ['Seed', 'Sprout', 'Sapling', 'Young', 'Mature']
-              const sapPerTick = getSapPerTick(ft)
+              const sapPerTick = getTreeSapMax(ft)
               const notebook = ft.notebookId ? notes.find(n => n.id === ft.notebookId) : null
+              const currentAscension = ft.ascension || 0
+              const canAscend = ft.stage === 4 && currentAscension < 3 && ft.type !== 'spoiled'
+              const nextTier = currentAscension < 3 ? ASCENSION_TIERS[currentAscension] : null
+              const costs = ASCENSION_COSTS[rarity] || ASCENSION_COSTS.common
+              const sapCost = canAscend ? costs.sap[currentAscension] : 0
+              const sacrificeCount = canAscend ? costs.sacrifices[currentAscension] : 0
+              const RARITY_RANK: Record<string, number> = { common: 0, uncommon: 1, rare: 2, 'true rare': 3, sacred: 4 }
+              const targetRarityRank = RARITY_RANK[rarity] ?? 0
+              const eligibleSacrifices = grove.filter(t =>
+                t.id !== ft.id &&
+                t.stage === 4 &&
+                t.type !== 'spoiled' &&
+                (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank &&
+                !selectedSacrifices.includes(t.id)
+              )
+              const canAfford = sap >= sapCost && (selectedSacrifices.length >= sacrificeCount)
+
+              const doAscend = () => {
+                if (!canAfford || !canAscend) return
+                setSap((s: number) => s - sapCost)
+                const sacrificeIds = new Set(selectedSacrifices.slice(0, sacrificeCount))
+                setGrove((g: any[]) => g.filter(t => !sacrificeIds.has(t.id)).map(t =>
+                  t.id === ft.id ? { ...t, ascension: currentAscension + 1 } : t
+                ))
+                setFocusedTree(prev => prev ? { ...prev, tree: { ...prev.tree, ascension: currentAscension + 1 } } : null)
+                setAscensionMode(false)
+                setSelectedSacrifices([])
+              }
+
+              const tierColors = ['#a8d8a8', '#6eb8e0', '#e8c44a']
+              const tierGlow = currentAscension > 0 ? tierColors[currentAscension - 1] : undefined
+
               return (
                 <motion.div
                   key="tree-focus"
@@ -3537,7 +3532,7 @@ export const OrchardView = memo(function OrchardView({
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 z-50 flex items-center justify-center"
                   style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-                  onClick={() => setFocusedTree(null)}
+                  onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
                 >
                   <motion.div
                     initial={{ scale: 0.85, opacity: 0, y: 20 }}
@@ -3548,65 +3543,283 @@ export const OrchardView = memo(function OrchardView({
                     style={{
                       padding: '28px 32px 24px',
                       backgroundColor: isDark ? '#141316' : '#fdfcfa',
-                      border: `1.5px solid ${meta.border}`,
-                      boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
-                      minWidth: 240, maxWidth: 300,
+                      border: `1.5px solid ${tierGlow || meta.border}`,
+                      boxShadow: tierGlow
+                        ? `0 20px 60px rgba(0,0,0,0.4), 0 0 ${currentAscension * 12}px ${tierGlow}40, 0 0 0 1px ${tierGlow}60`
+                        : `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
+                      minWidth: ascensionMode ? 360 : 240, maxWidth: ascensionMode ? 400 : 300,
                       fontFamily: '"EB Garamond", serif',
+                      transition: 'min-width 0.2s, max-width 0.2s',
                     }}
                     onClick={e => e.stopPropagation()}
                   >
-                    <PlantIcon type={ft.type} size={100} stage={ft.stage} hideGround />
+                    <div style={{ position: 'relative' }}>
+                      {currentAscension > 0 && (
+                        <div style={{
+                          position: 'absolute', inset: -12, borderRadius: '50%',
+                          background: `radial-gradient(circle, ${tierGlow}20 0%, transparent 70%)`,
+                          animation: 'ascension-pulse 2s ease-in-out infinite',
+                          pointerEvents: 'none',
+                        }} />
+                      )}
+                      <PlantIcon type={ft.type} size={100} stage={ft.stage} hideGround />
+                    </div>
                     <div className="flex items-center gap-2">
-                      <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: meta.color }} />
+                      <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: tierGlow || meta.color }} />
                       <span className="text-[16px] font-bold tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
                         {typeInfo?.name || ft.type}
                       </span>
-                    </div>
-                    <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
-                      <div className="flex justify-between">
-                        <span>Stage</span>
-                        <span style={{ color: meta.color, fontWeight: 600 }}>{stageNames[ft.stage] || 'Unknown'}</span>
-                      </div>
-                      {ft.stage < 4 && (
-                        <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(100, ft.progress)}%`, background: meta.color }} />
-                        </div>
-                      )}
-                      {plantedStr && (
-                        <div className="flex justify-between">
-                          <span>Planted</span>
-                          <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{plantedStr}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span>Age</span>
-                        <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{ageStr}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Sap rate</span>
-                        <span style={{ color: '#d97706', fontWeight: 600 }}>{sapPerTick}/tick</span>
-                      </div>
-                      {notebook && (
-                        <div className="flex justify-between">
-                          <span>Notebook</span>
-                          <span className="truncate max-w-[120px]" style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{notebook.subject || 'Untitled'}</span>
-                        </div>
+                      {currentAscension > 0 && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                          padding: '1px 6px', borderRadius: 4,
+                          backgroundColor: `${tierGlow}20`, color: tierGlow,
+                          textTransform: 'uppercase',
+                        }}>
+                          {ASCENSION_TIERS[currentAscension - 1].name}
+                        </span>
                       )}
                     </div>
-                    <button
-                      onClick={() => setFocusedTree(null)}
-                      className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
-                      style={{
-                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                        color: isDark ? '#6a6860' : '#9a9690',
-                      }}
-                    >
-                      Close
-                    </button>
+
+                    {!ascensionMode ? (
+                      <>
+                        <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
+                          <div className="flex justify-between">
+                            <span>Stage</span>
+                            <span style={{ color: meta.color, fontWeight: 600 }}>{stageNames[ft.stage] || 'Unknown'}</span>
+                          </div>
+                          {ft.stage < 4 && (
+                            <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+                              <div className="h-full rounded-full" style={{ width: `${Math.min(100, ft.progress)}%`, background: meta.color }} />
+                            </div>
+                          )}
+                          {plantedStr && (
+                            <div className="flex justify-between">
+                              <span>Planted</span>
+                              <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{plantedStr}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span>Age</span>
+                            <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{ageStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Sap rate</span>
+                            <span style={{ color: '#d97706', fontWeight: 600 }}>{sapPerTick}/cycle</span>
+                          </div>
+                          {currentAscension > 0 && (
+                            <div className="flex justify-between">
+                              <span>Ascension</span>
+                              <span style={{ color: tierGlow, fontWeight: 600 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
+                            </div>
+                          )}
+                          {notebook && (
+                            <div className="flex justify-between">
+                              <span>Notebook</span>
+                              <span className="truncate max-w-[120px]" style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{notebook.subject || 'Untitled'}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="w-full flex flex-col gap-2 mt-1">
+                          {canAscend && (
+                            <button
+                              onClick={() => { setAscensionMode(true); setSelectedSacrifices([]) }}
+                              className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                              style={{
+                                background: `linear-gradient(135deg, ${tierColors[currentAscension]}30, ${tierColors[currentAscension]}15)`,
+                                border: `1px solid ${tierColors[currentAscension]}40`,
+                                color: tierColors[currentAscension],
+                              }}
+                            >
+                              Ascend to {nextTier?.name}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
+                            className="w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            style={{
+                              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                              color: isDark ? '#6a6860' : '#9a9690',
+                            }}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-full" style={{ fontSize: 11, color: isDark ? '#8a8680' : '#7a7670' }}>
+                          <div style={{
+                            padding: '8px 10px', borderRadius: 8, marginBottom: 8,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                          }}>
+                            <div className="flex justify-between mb-1">
+                              <span>Sap cost</span>
+                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 600 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Sacrifices needed</span>
+                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 600 }}>
+                                {selectedSacrifices.length}/{sacrificeCount} <span style={{ opacity: 0.5 }}>({rarity}+ mature)</span>
+                              </span>
+                            </div>
+                            {nextTier && (
+                              <div className="flex justify-between mt-1" style={{ opacity: 0.6 }}>
+                                <span>Sap rate after</span>
+                                <span style={{ color: '#d97706' }}>{Math.round(sapPerTick * nextTier.sapMultiplier / (currentAscension > 0 ? ASCENSION_TIERS[currentAscension - 1].sapMultiplier : 1))}/cycle</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {grove.filter(t =>
+                              t.id !== ft.id &&
+                              t.stage === 4 &&
+                              t.type !== 'spoiled' &&
+                              (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank
+                            ).length === 0 ? (
+                              <div style={{ textAlign: 'center', padding: '16px 0', opacity: 0.4, fontStyle: 'italic' }}>
+                                No eligible mature trees to sacrifice
+                              </div>
+                            ) : (
+                              grove.filter(t =>
+                                t.id !== ft.id &&
+                                t.stage === 4 &&
+                                t.type !== 'spoiled' &&
+                                (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank
+                              ).map(t => {
+                                const ti = TREE_TYPES[t.type]
+                                const selected = selectedSacrifices.includes(t.id)
+                                return (
+                                  <button
+                                    key={t.id}
+                                    onClick={() => {
+                                      if (selected) setSelectedSacrifices(s => s.filter(id => id !== t.id))
+                                      else if (selectedSacrifices.length < sacrificeCount) setSelectedSacrifices(s => [...s, t.id])
+                                    }}
+                                    className="flex items-center gap-3 w-full rounded-lg transition-all"
+                                    style={{
+                                      padding: '6px 8px',
+                                      backgroundColor: selected
+                                        ? (isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)')
+                                        : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                                      border: `1px solid ${selected ? 'rgba(239,68,68,0.3)' : 'transparent'}`,
+                                      opacity: !selected && selectedSacrifices.length >= sacrificeCount ? 0.3 : 1,
+                                    }}
+                                  >
+                                    <PlantIcon type={t.type} size={28} stage={4} hideGround />
+                                    <div className="flex-1 text-left">
+                                      <div style={{ fontWeight: 600, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
+                                      <div style={{ fontSize: 9, opacity: 0.5 }}>{ti?.rarity}{t.ascension ? ` · ${ASCENSION_TIERS[t.ascension - 1]?.name}` : ''}</div>
+                                    </div>
+                                    <div style={{
+                                      width: 16, height: 16, borderRadius: 4,
+                                      border: `1.5px solid ${selected ? '#ef4444' : isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
+                                      backgroundColor: selected ? '#ef4444' : 'transparent',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                      {selected && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                                    </div>
+                                  </button>
+                                )
+                              })
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="w-full flex gap-2 mt-1">
+                          <button
+                            onClick={() => { setAscensionMode(false); setSelectedSacrifices([]) }}
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            style={{
+                              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                              color: isDark ? '#6a6860' : '#9a9690',
+                            }}
+                          >
+                            Back
+                          </button>
+                          <button
+                            onClick={doAscend}
+                            disabled={!canAfford}
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                            style={{
+                              background: canAfford
+                                ? `linear-gradient(135deg, ${tierColors[currentAscension]}, ${tierColors[currentAscension]}cc)`
+                                : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+                              color: canAfford ? '#000' : (isDark ? '#4a4840' : '#b0aca4'),
+                              cursor: canAfford ? 'pointer' : 'not-allowed',
+                            }}
+                          >
+                            Ascend
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </motion.div>
                 </motion.div>
               )
             })()}
+          </AnimatePresence>
+
+          {/* Screenshot preview modal */}
+          <AnimatePresence>
+            {screenshotData && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 z-[70] flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+                onClick={() => setScreenshotData(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="rounded-xl flex flex-col items-center gap-3 p-4"
+                  style={{
+                    backgroundColor: isDark ? '#1a1816' : '#faf8f5',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+                    maxWidth: '85vw', maxHeight: '80vh',
+                    fontFamily: '"EB Garamond", serif',
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <img
+                    src={screenshotData}
+                    alt="Orchard screenshot"
+                    className="rounded-lg"
+                    style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }}
+                  />
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={() => setScreenshotData(null)}
+                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                        color: isDark ? '#8a8780' : '#7a7670',
+                      }}
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={shareScreenshot}
+                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                      style={{
+                        backgroundColor: 'rgba(217,119,6,0.15)',
+                        color: '#d97706',
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      Share
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
