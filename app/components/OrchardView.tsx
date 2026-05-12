@@ -251,7 +251,7 @@ interface SkyPalette {
 
 const PALETTES: Record<string, SkyPalette> = {
   night: {
-    skyTop: '#10081a', skyMid: '#0e0a16', skyLow: '#0e0c10', skyHorizon: '#12100c', skyField: '#0e0c08', skyBottom: '#0a0a08',
+    skyTop: '#09090b', skyMid: '#09090b', skyLow: '#09090b', skyHorizon: '#09090b', skyField: '#09090b', skyBottom: '#09090b',
     oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
     mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
     snowTop: '#2a2820', snowFade: '#10100c',
@@ -259,7 +259,7 @@ const PALETTES: Record<string, SkyPalette> = {
     hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
     fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
-    moonGlow: 0.7, moonY: 4,
+    moonGlow: 0.25, moonY: 4,
     starOpacity: 1,
     mtnLightOpacity: 0, mtnLightColor: 'rgba(0,0,0,0)',
     groveOpacity: 0.8,
@@ -352,11 +352,11 @@ function interpolatePalette(phase: string, t: number): SkyPalette {
 const STAR_POSITIONS = Array.from({ length: 50 }, (_, i) => {
   const rng = seededRng(i * 47 + 199)
   const brightness = rng()
-  return { x: rng() * 200, y: rng() * 28, r: 0.12 + rng() * 0.28, twinkle: rng(), brightness, warm: rng() > 0.7 }
+  return { x: rng() * 200, y: rng() * 6, r: 0.12 + rng() * 0.28, twinkle: rng(), brightness, warm: rng() > 0.7 }
 })
 const SPECK_STARS = Array.from({ length: 70 }, (_, i) => {
   const rng = seededRng(i * 31 + 503)
-  return { x: rng() * 200, y: rng() * 28, r: 0.04 + rng() * 0.08, op: 0.15 + rng() * 0.35 }
+  return { x: rng() * 200, y: rng() * 6, r: 0.04 + rng() * 0.08, op: 0.15 + rng() * 0.35 }
 })
 
 const CONSTELLATION_STARS = [
@@ -539,7 +539,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 <stop offset="25%" stopColor="#e8f0ff" stopOpacity="0.6" />
                 <stop offset="100%" stopColor="#e8f0ff" stopOpacity="0" />
               </radialGradient>
+              <clipPath id="sky-clip">
+                <path d="M-10,-5 L210,-5 L210,28 L195,18 L185,22 L175,15 L165,20 L155,10 L145,16 L135,22 L125,13 L115,18 L105,9 L95,22 L85,14 L78,20 L68,11 L58,16 L50,8 L42,18 L35,10 L25,22 L15,12 L5,24 L-10,28 Z" />
+              </clipPath>
             </defs>
+            <g clipPath="url(#sky-clip)">
             {STAR_POSITIONS.map((s, i) => {
               const bright = s.brightness > 0.6
               const sz = bright ? s.r * 2.5 : s.r * 1.5
@@ -565,6 +569,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#csg)" opacity={co} />
                 )
               })}
+            </g>
             </g>
           </g>
           )
@@ -768,7 +773,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         })()}
 
         {/* Background windmills — behind hills, mostly occluded */}
-        {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.13 }, { x: 155, y: 20, s: 0.11 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
+        {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
 
         {/* Extra rolling hills — left side, between mountains and back hill */}
         <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26 C42,30 50,32 58,30 C64,28 68,25 72,23 C78,22 85,24 90,28 C95,31 100,33 110,34 L210,36 L210,42 L-10,42 Z" fill={p.hillMidBot} />
@@ -1411,10 +1416,10 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <g opacity={horizonFade} style={{ pointerEvents: 'none' }}>
               <defs>
                 <radialGradient id="moon-glow-bg" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#d0dff0" stopOpacity="0.45" />
-                  <stop offset="30%" stopColor="#b8cce8" stopOpacity="0.18" />
-                  <stop offset="70%" stopColor="#96aed0" stopOpacity="0.06" />
-                  <stop offset="100%" stopColor="#90a8d0" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#c0cee0" stopOpacity="0.15" />
+                  <stop offset="30%" stopColor="#a0b0c8" stopOpacity="0.06" />
+                  <stop offset="70%" stopColor="#8090b0" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="#8090b0" stopOpacity="0" />
                 </radialGradient>
                 <radialGradient id="moon-face-bg" cx="35%" cy="30%" r="65%">
                   <stop offset="0%" stopColor="#eef0f5" />
@@ -1424,18 +1429,26 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 </radialGradient>
                 <mask id="moon-crescent-mask">
                   <circle cx={mx} cy={my} r="1.8" fill="white" />
-                  <circle cx={mx + 2.8} cy={my - 0.3} r="1.8" fill="black" />
+                  <circle cx={mx + 1.4} cy={my - 0.15} r="1.7" fill="black" />
                 </mask>
+                <radialGradient id="moon-edge-glow" cx="20%" cy="45%" r="80%">
+                  <stop offset="0%" stopColor="#f0f4ff" />
+                  <stop offset="40%" stopColor="#dde4f0" />
+                  <stop offset="100%" stopColor="#b8c4d8" />
+                </radialGradient>
               </defs>
-              <ellipse cx={mx} cy={my} rx="8" ry="5" fill="url(#moon-glow-bg)" />
-              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-face-bg)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.5} cy={my - 0.15} r="0.13" fill="rgba(140,155,180,0.3)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.15} cy={my + 0.45} r="0.16" fill="rgba(130,145,170,0.25)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.8} cy={my + 0.1} r="0.07" fill="rgba(150,160,185,0.28)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.35} cy={my - 0.6} r="0.09" fill="rgba(135,150,175,0.2)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.65} cy={my - 0.4} r="0.05" fill="rgba(145,158,182,0.22)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.1} cy={my + 0.1} r="0.06" fill="rgba(138,152,178,0.18)" mask="url(#moon-crescent-mask)" />
-              <path d={`M${mx-0.2} ${my-1.7} Q${mx-0.85} ${my} ${mx-0.2} ${my+1.7}`} fill="none" stroke="rgba(220,230,250,0.12)" strokeWidth="0.2" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx} cy={my} rx="6" ry="4" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
+              {/* Craters — subtle darkening baked into the surface */}
+              <circle cx={mx - 0.6} cy={my - 0.3} r="0.22" fill="rgba(160,170,190,0.35)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.62} cy={my - 0.32} r="0.18" fill="rgba(180,188,205,0.25)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.3} cy={my + 0.5} r="0.15" fill="rgba(155,165,185,0.3)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.28} cy={my + 0.48} r="0.11" fill="rgba(175,183,200,0.2)" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx - 0.85} cy={my + 0.05} rx="0.1" ry="0.08" fill="rgba(150,162,182,0.28)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.45} cy={my - 0.75} r="0.09" fill="rgba(158,168,188,0.25)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.7} cy={my + 0.4} r="0.07" fill="rgba(162,172,190,0.22)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.15} cy={my - 0.1} r="0.12" fill="rgba(165,174,192,0.18)" mask="url(#moon-crescent-mask)" />
+              <path d={`M${mx-0.55} ${my-1.65} Q${mx-1.1} ${my} ${mx-0.55} ${my+1.65}`} fill="none" stroke="rgba(240,245,255,0.06)" strokeWidth="0.12" mask="url(#moon-crescent-mask)" />
               {/* Wispy clouds around moon */}
               <ellipse cx={mx - 2.5} cy={my + 0.6} rx="2.2" ry="0.5" fill="rgba(180,195,220,0.08)" />
               <ellipse cx={mx - 1.4} cy={my + 0.4} rx="1.6" ry="0.35" fill="rgba(170,185,210,0.1)" />
@@ -2066,19 +2079,35 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const r = seededRng(i * 59 + 131)
             const x = 5 + r() * 90
             const y = 30 + r() * 55
-            const dur = 12 + r() * 14
+            const glowDur = 6 + r() * 8
+            const driftDur = 25 + r() * 20
             const delay = r() * 10
-            const driftX = -8 + r() * 16
-            const driftY = -6 + r() * 12
+            const dx1 = -40 + r() * 80
+            const dy1 = -30 + r() * 60
+            const dx2 = -40 + r() * 80
+            const dy2 = -30 + r() * 60
+            const dx3 = -40 + r() * 80
+            const dy3 = -30 + r() * 60
+            const name = `firefly-drift-${i}`
             return (
-              <div key={`fly-${i}`} className="absolute rounded-full" style={{
-                left: `${x}%`, top: `${y}%`,
-                width: 3, height: 3,
-                background: 'radial-gradient(circle, rgba(57,255,20,0.95) 0%, rgba(57,255,20,0) 70%)',
-                boxShadow: '0 0 6px 2px rgba(57,255,20,0.5)',
-                animation: `firefly-glow ${dur}s ease-in-out ${delay}s infinite, firefly-drift ${dur * 1.5}s ease-in-out ${delay}s infinite`,
-                '--drift-x': `${driftX}px`, '--drift-y': `${driftY}px`,
-              } as React.CSSProperties} />
+              <div key={`fly-${i}`}>
+                <style>{`
+                  @keyframes ${name} {
+                    0% { transform: translate(0, 0); }
+                    25% { transform: translate(${dx1}px, ${dy1}px); }
+                    50% { transform: translate(${dx2}px, ${dy2}px); }
+                    75% { transform: translate(${dx3}px, ${dy3}px); }
+                    100% { transform: translate(0, 0); }
+                  }
+                `}</style>
+                <div className="absolute rounded-full" style={{
+                  left: `${x}%`, top: `${y}%`,
+                  width: 3, height: 3,
+                  background: 'radial-gradient(circle, rgba(57,255,20,0.95) 0%, rgba(57,255,20,0) 70%)',
+                  boxShadow: '0 0 6px 2px rgba(57,255,20,0.5)',
+                  animation: `firefly-glow ${glowDur}s ease-in-out ${delay}s infinite both, ${name} ${driftDur}s ease-in-out ${delay}s infinite both`,
+                }} />
+              </div>
             )
           })}
         </div>
@@ -2306,7 +2335,17 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
       <style>{`
         @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
-        @keyframes firefly-glow { 0% { opacity: 0.05; } 20% { opacity: 0.15; } 40% { opacity: 0.7; } 50% { opacity: 0.85; } 60% { opacity: 0.7; } 80% { opacity: 0.15; } 100% { opacity: 0.05; } }
+        @keyframes firefly-glow {
+          0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+          15% { opacity: 0.06; }
+          30% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
+          45% { opacity: 0.6; }
+          50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(57,255,20,0.5); }
+          55% { opacity: 0.6; }
+          70% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
+          85% { opacity: 0.06; }
+          100% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+        }
         @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
 @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
         @keyframes butterfly-path { 0% { transform: translate(0, 0); } 20% { transform: translate(20px, -12px); } 40% { transform: translate(-10px, -20px); } 60% { transform: translate(15px, 8px); } 80% { transform: translate(-15px, -5px); } 100% { transform: translate(0, 0); } }
@@ -2893,9 +2932,9 @@ export const OrchardView = memo(function OrchardView({
         <div ref={captureRef} className="flex-1 flex flex-col relative overflow-hidden">
           {/* Topbar with sap count */}
           <div data-orchard-ui className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
-            backgroundColor: isDark ? 'rgba(30,30,35,0.12)' : 'rgba(255,255,255,0.01)',
-            backdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
-            WebkitBackdropFilter: isDark ? 'blur(20px) saturate(1.6) brightness(1.1)' : 'blur(16px) saturate(1.3)',
+            backgroundColor: isDark ? 'rgba(20,20,22,0.55)' : 'rgba(0,0,0,0.25)',
+            backdropFilter: 'blur(20px) saturate(1.2)',
+            WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'}`,
             boxShadow: isDark
               ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
@@ -2942,8 +2981,8 @@ export const OrchardView = memo(function OrchardView({
               )}
             </div>
           </div>
-          {/* Collect sap meter button — below topbar */}
-          <div data-orchard-ui className="absolute top-14 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
+          {/* Collect sap meter button — bottom center */}
+          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
               <div style={{ position: 'relative' }}>
                 {(() => {
                   const available = getAvailableSap()
@@ -2953,16 +2992,24 @@ export const OrchardView = memo(function OrchardView({
                     <button
                       ref={collectBtnRef}
                       onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                      className="relative flex items-center gap-2 rounded-full transition-all text-[11px] font-semibold overflow-hidden"
+                      className="relative flex items-center justify-center gap-2.5 rounded-full transition-all overflow-hidden"
                       style={{
-                        padding: '6px 16px',
-                        minWidth: 120,
-                        backgroundColor: isDark ? 'rgba(20,18,16,0.7)' : 'rgba(255,255,255,0.6)',
+                        padding: '10px 28px',
+                        minWidth: 160,
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: '0.03em',
+                        backgroundColor: hasSap
+                          ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)')
+                          : (isDark ? 'rgba(20,18,16,0.7)' : 'rgba(255,255,255,0.6)'),
                         color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'),
-                        border: hasSap ? '1px solid rgba(217,119,6,0.25)' : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                        border: hasSap ? '1.5px solid rgba(217,119,6,0.4)' : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                         cursor: hasSap ? 'pointer' : 'default',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        boxShadow: hasSap
+                          ? '0 4px 24px rgba(217,119,6,0.2), 0 0 0 1px rgba(217,119,6,0.1)'
+                          : 'none',
                       }}
                     >
                       <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{
@@ -2971,18 +3018,18 @@ export const OrchardView = memo(function OrchardView({
                         transition: 'width 1s linear',
                         borderRadius: 'inherit',
                       }} />
-                      <PulpIcon size={13} />
-                      <span className="relative z-10 tabular-nums">{hasSap ? `+${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
+                      <PulpIcon size={15} />
+                      <span className="relative z-10 tabular-nums">{hasSap ? `Collect +${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
                     </button>
                   )
                 })()}
                 {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
                   <div style={{
-                    position: 'absolute', left: '50%', top: -24,
+                    position: 'absolute', left: '50%', top: -28,
                     transform: 'translateX(-50%)',
                     pointerEvents: 'none', zIndex: 999,
-                    fontFamily: '"EB Garamond", serif', fontWeight: 800, fontSize: 18,
-                    color: '#d97706', textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    fontFamily: '"EB Garamond", serif', fontWeight: 800, fontSize: 20,
+                    color: '#d97706', textShadow: '0 1px 6px rgba(0,0,0,0.4)',
                     animation: 'sap-collect 1.2s ease-out forwards',
                   }}>
                     +{collectAllAnim.total}
@@ -3192,7 +3239,7 @@ export const OrchardView = memo(function OrchardView({
                       const rarity = typeInfo?.rarity || 'common'
                       const meta = RARITY_META[rarity] || RARITY_META.common
                       const shape = typeInfo?.shape || 'oak'
-                      const shapeScale = ({ oak: 1.0, conifer: 1.05, birch: 0.95, cypress: 1.05, sakura: 1.0, bamboo: 0.9, void: 0.85 } as Record<string, number>)[shape] || 0.85
+                      const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
                       const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
                       const depthScale = 0.55 + depthT * 0.55
                       const treeSize = Math.round(baseSize * depthScale * shapeScale)
@@ -3233,7 +3280,7 @@ export const OrchardView = memo(function OrchardView({
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
-                            transform: `translate(-50%, -85%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
+                            transform: `translate(-50%, -${(75 + depthT * 10).toFixed(0)}%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
                             zIndex: Math.round(y),
                             cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
