@@ -732,7 +732,7 @@ export const Sidebar = memo(function Sidebar({
           {onOpenShop && (
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
-              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Shop</span>
+              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Market</span>
               <ShopCountdown />
             </button>
           )}

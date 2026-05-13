@@ -1234,7 +1234,7 @@ export default function NoteApp() {
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
-  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'bag' | 'catalog'>('shop')
+  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
@@ -3964,6 +3964,7 @@ export default function NoteApp() {
               onUpdateConfig={updateSettings}
               initialTab={shopInitialTab}
               initialScrollTo={shopScrollTo}
+              isAdmin={isAdmin}
             /></div>
           </Suspense>}
 
