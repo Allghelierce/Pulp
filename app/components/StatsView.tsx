@@ -180,12 +180,12 @@ export const StatsView = memo(function StatsView({
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[900px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
-        style={{ backgroundColor: bg, height: 660 }}
+        className={`relative w-full max-w-[1060px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
+        style={{ backgroundColor: bg, maxHeight: '85vh' }}
       >
         {/* Header with stats */}
-        <div className="px-6 pt-4 pb-3 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <div className="flex items-center justify-between mb-3">
+        <div className="px-8 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
@@ -210,7 +210,7 @@ export const StatsView = memo(function StatsView({
           </div>
 
           {/* Summary stats */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg flex-1" style={{
               background: isDark ? 'rgba(251,146,60,0.06)' : 'rgba(251,146,60,0.08)',
               border: `1px solid ${isDark ? 'rgba(251,146,60,0.12)' : 'rgba(251,146,60,0.15)'}`,
@@ -267,12 +267,12 @@ export const StatsView = memo(function StatsView({
           </div>
         </div>
 
-        {/* Content — no scroll, both graphs visible */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "16px 24px", overflow: "hidden" }}>
+        {/* Content */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "24px 32px", overflowY: "auto", minHeight: 0 }}>
 
           {/* Consistency Heatmap */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
               <span style={{ fontSize: 9, color: textMuted }}>Past year</span>
             </div>
@@ -328,8 +328,8 @@ export const StatsView = memo(function StatsView({
           </div>
 
           {/* Activity Chart */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 260 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Activity</span>
               <div style={{ display: "flex", gap: 1 }}>
                 {(["day", "week", "month"] as const).map(r => (
@@ -351,7 +351,7 @@ export const StatsView = memo(function StatsView({
             </div>
 
             {/* Summary */}
-            <div style={{ display: "flex", gap: 0, marginBottom: 12 }}>
+            <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
               {[
                 { label: "Focus", value: totalFocusThisRange, unit: "min", color: focusColor },
                 { label: "Sessions", value: totalSessionsThisRange, unit: "", color: textPrimary },
@@ -464,7 +464,7 @@ export const StatsView = memo(function StatsView({
             )}
 
             {timeRange !== "day" && (
-              <div style={{ display: "flex", gap: 14, marginTop: 8, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 14, marginTop: 12, justifyContent: "flex-end" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: focusColor }} />
                   <span style={{ fontSize: 8, color: textMuted }}>Focus (min)</span>
@@ -476,6 +476,8 @@ export const StatsView = memo(function StatsView({
               </div>
             )}
           </div>
+
+          <div style={{ height: 16, flexShrink: 0 }} />
         </div>
       </div>
     </div>

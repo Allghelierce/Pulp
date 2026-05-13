@@ -329,7 +329,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <div className={`h-px mx-1.5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
               <div ref={tablePickerRef} className="relative">
                 <button
-                  onMouseDown={e => { e.preventDefault(); setTablePickerOpen(!tablePickerOpen); setInsertOpen(false) }}
+                  onMouseDown={e => { e.preventDefault(); setTablePickerOpen(!tablePickerOpen) }}
                   className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                   style={btnFont}
                 >
@@ -360,7 +360,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                           <div
                             key={i}
                             onMouseEnter={() => setTableHover([r, c])}
-                            onClick={() => { insertTable(r, c); setTablePickerOpen(false); setTableHover([0, 0]) }}
+                            onClick={() => { insertTable(r, c); setTablePickerOpen(false); setTableHover([0, 0]); setInsertOpen(false) }}
                             style={{
                               width: 20, height: 20, borderRadius: 3, cursor: "pointer",
                               background: active ? "rgba(217,119,6,0.5)" : "rgba(217,119,6,0.12)",
@@ -695,22 +695,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         </select>
       </div>
 
-      {/* Currencies Display - Centered */}
+      {/* Currency Display - Centered */}
       {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            title="What is Sap?"
-            onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'sap' ? null : 'sap') }}
-          >
-            <PulpIcon size={15} />
-            <span style={{ color: displaySap !== sap ? '#ef4444' : undefined, transition: 'color 0.15s' }}>{displaySap >= 999999 ? "∞" : displaySap}</span>
-          </div>
-          <div className="w-px h-4 bg-zinc-400/30" />
-          <div
-            className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
             onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'gem' ? null : 'gem') }}
-            title="What are Gems?"
+            title="Time earned"
           >
             <GemIcon size={15} />
             <span>{gems >= 999999 ? "∞" : gems}</span>
@@ -748,22 +739,18 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             >
               <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-2">
-                  {currencyTooltip === 'sap' ? <PulpIcon size={14} /> : <GemIcon size={14} />}
+                  <GemIcon size={14} />
                   <span style={{ fontSize: 14, fontWeight: 600, color: '#e4e0d8', fontFamily: '"EB Garamond", serif' }}>
-                    {currencyTooltip === 'sap' ? 'Sap' : 'Gems'}
+                    Time
                   </span>
                 </div>
               </div>
               <div className="px-4 py-3 space-y-2">
-                {(currencyTooltip === 'sap' ? [
-                  { icon: '🌳', text: 'Earned by completing focus sessions.' },
-                  { icon: '🛒', text: 'Spend sap to buy seeds in the shop.' },
-                  { icon: '⚠️', text: 'Lose 25% if your plant dies.' },
-                ] : [
-                  { icon: '💎', text: 'Earned from achievements and gem trees.' },
-                  { icon: '🔄', text: 'Recover lost sap after a failed session.' },
-                  { icon: '🔓', text: 'Unlock orchard plots and unblock sites.' },
-                ]).map((item, i) => (
+                {[
+                  { icon: '⏳', text: 'Earned 1:1 from focus sessions. 1 minute = 1 time.' },
+                  { icon: '🌱', text: 'Spend time to buy seeds.' },
+                  { icon: '🏆', text: 'Lifetime time earned is your leaderboard score.' },
+                ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
                     <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: '"EB Garamond", serif', lineHeight: 1.4, margin: 0 }}>
@@ -786,7 +773,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                   onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
                 >
-                  {currencyTooltip === 'sap' ? 'Open Grove' : 'Got it'}
+                  Got it
                 </button>
               </div>
             </div>

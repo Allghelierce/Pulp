@@ -990,7 +990,9 @@ export const SlashMenu = memo(function SlashMenu({
     const resizer = () => onClose()
     const focusHandler = (e: FocusEvent) => {
       if (interactingRef.current) return
-      if (!ref.current?.contains(e.target as Node)) onClose()
+      if (ref.current?.contains(e.target as Node)) return
+      if ((e.target as HTMLElement)?.closest?.('.slash-menu-flyout')) return
+      onClose()
     }
     const wheelHandler = (e: WheelEvent) => {
       if (ref.current?.contains(e.target as Node)) {

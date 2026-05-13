@@ -24,7 +24,6 @@ export const RightSidebar = memo(function RightSidebar({
   isOpen, onClose, theme, accent,
   sap, gems, xp, grove, userName, setSap, setGems, setGrove
 }: RightSidebarProps) {
-  const [sapTooltip, setSapTooltip] = useState(false)
   const [gemsTooltip, setGemsTooltip] = useState(false)
   const [tab, setTab] = useState<"grove" | "leaderboard">("grove")
 
@@ -121,42 +120,23 @@ export const RightSidebar = memo(function RightSidebar({
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {tab === "grove" ? (
             <>
-              {/* Wallet / Currencies */}
-              <div className="grid grid-cols-2 gap-3">
-                <div
-                  className={`p-4 rounded-lg border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-orange-50/30 border-orange-100/50 hover:bg-orange-50/50'}`}
-                  onMouseEnter={() => setSapTooltip(true)}
-                  onMouseLeave={() => setSapTooltip(false)}
-                >
-                  <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center mb-2">
-                    <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"/></svg>
-                  </div>
-                  <span className="text-[18px] font-bold font-serif">{sap}</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Sap</span>
-                  {sapTooltip && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none bg-zinc-800 text-white">
-                      Earned by writing &amp; focus sessions.
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-800" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
-                    </div>
-                  )}
+              {/* Time Currency */}
+              <div
+                className={`p-4 rounded-lg border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-zinc-50/50 border-zinc-200/50 hover:bg-zinc-100/50'}`}
+                onMouseEnter={() => setGemsTooltip(true)}
+                onMouseLeave={() => setGemsTooltip(false)}
+              >
+                <div className="w-8 h-8 rounded-full bg-zinc-400/15 flex items-center justify-center mb-2">
+                  <GemIcon size={14} />
                 </div>
-                <div
-                  className={`p-4 rounded-lg border flex flex-col items-center text-center relative cursor-help transition-all ${isDark ? 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-900/80' : 'bg-purple-50/30 border-purple-100/50 hover:bg-purple-50/50'}`}
-                  onMouseEnter={() => setGemsTooltip(true)}
-                  onMouseLeave={() => setGemsTooltip(false)}
-                >
-                  <div className="w-8 h-8 rounded-full bg-purple-400/20 flex items-center justify-center mb-2">
-                    <GemIcon size={14} />
+                <span className="text-[18px] font-bold font-serif">{gems}</span>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Time</span>
+                {gemsTooltip && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none bg-zinc-800 text-white">
+                    1 minute focused = 1 time earned.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-800" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
                   </div>
-                  <span className="text-[18px] font-bold font-serif">{gems}</span>
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Gems</span>
-                  {gemsTooltip && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg text-[10px] whitespace-nowrap font-medium pointer-events-none bg-zinc-800 text-white">
-                      Rare rewards from achievements.
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-800" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}} />
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Nursery */}

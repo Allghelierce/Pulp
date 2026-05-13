@@ -36,7 +36,7 @@ export interface Achievement {
   icon: React.ReactNode
   description: string
   reward: number
-  rewardType: 'sap' | 'gems'
+  rewardType: 'sap' | 'time'
   completed: boolean
   claimed: boolean
   progress?: number

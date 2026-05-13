@@ -341,6 +341,7 @@ const BoxItem = memo(function BoxItem({
 }) {
   const [localDragging, setLocalDragging] = useState(false)
   const [pristine, setPristine] = useState(box.content.trim() === '')
+  const [mediaEditing, setMediaEditing] = useState(false)
   const isDark = isDarkPaper(paperStyle)
   const resizeHandles = useMemo<[string, React.CSSProperties][]>(() => {
     const dot = { width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)", border: `1px solid ${isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }
@@ -357,8 +358,12 @@ const BoxItem = memo(function BoxItem({
   }, [isDark])
   useEffect(() => {
     if (pristine && !isSelected) setPristine(false)
-  }, [isSelected, pristine])
-  const isImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
+    if (!isSelected && mediaEditing) setMediaEditing(false)
+  }, [isSelected, pristine, mediaEditing])
+  const rawImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
+  const htmlImgMatch = !rawImage && /^<img\s[^>]*src="([^"]+)"/.exec(box.content.trim())
+  const isImage = rawImage || !!htmlImgMatch
+  const imageSrc = rawImage ? box.content : htmlImgMatch?.[1] || ''
   const isSticky = !!box.boxHighlightColor
   const isTitle = !!box.isTitle
   const isEmpty = !isSticky && !isImage && !isTitle && box.content.trim() === ''
@@ -367,6 +372,20 @@ const BoxItem = memo(function BoxItem({
     <div
       id={`box-${box.id}`}
       onMouseDown={e => {
+        if (isImage && !mediaEditing) {
+          e.preventDefault()
+          const el = e.currentTarget as HTMLElement
+          el.style.transition = 'none'
+          el.style.willChange = 'left, top'
+          setLocalDragging(true); onDragStart(); startDrag(e, box)
+          const up = () => {
+            el.style.transition = ''
+            el.style.willChange = ''
+            setLocalDragging(false); onDragEnd(); window.removeEventListener('mouseup', up)
+          }
+          window.addEventListener('mouseup', up)
+          return
+        }
         const target = e.target as HTMLElement
         const isEditing = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
         if (isEditing && isSelected) {
@@ -413,6 +432,13 @@ const BoxItem = memo(function BoxItem({
         if (isSticky) {
           const ta = (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[contenteditable]')
           ta?.focus()
+        }
+      }}
+      onDoubleClick={e => {
+        if (isImage && !mediaEditing) {
+          e.preventDefault()
+          e.stopPropagation()
+          setMediaEditing(true)
         }
       }}
       style={{
@@ -555,8 +581,8 @@ const BoxItem = memo(function BoxItem({
       <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
-        ) : isImage ? (
-          <img src={box.content} style={{ width: "100%", height: "100%", objectFit: "contain", filter: "grayscale(1)", mixBlendMode: "multiply", opacity: 0.9 }} alt="sketch" />
+        ) : isImage && !mediaEditing ? (
+          <img src={imageSrc} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} alt="media" draggable={false} />
         ) : (
           <BoxTextarea
             id={box.id}
@@ -1227,24 +1253,23 @@ export default function NoteApp() {
   useEffect(() => {
     if (!orchardOpen) return
     const vp = document.querySelector('meta[name="viewport"]')
-    if (vp) {
-      const orig = vp.getAttribute('content') || ''
-      vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1')
-      requestAnimationFrame(() => { vp.setAttribute('content', orig || 'width=device-width, initial-scale=1') })
-    }
+    if (!vp) return
+    const orig = vp.getAttribute('content') || 'width=device-width, initial-scale=1'
+    vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+    return () => { vp.setAttribute('content', orig) }
   }, [orchardOpen])
   const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 50000 },
-    { id: 'wordsmith', title: 'Wordsmith', icon: '✒️', description: 'Type 200,000 characters by hand — a small novel.', reward: 6, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 200000 },
-    { id: 'full_grove', title: 'Groundskeeper', icon: '🌳', description: 'Grow 25 trees in your orchard.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 25 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between 3 and 4 AM.', reward: 1, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 2, rewardType: 'gems', completed: false, claimed: false },
-    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
-    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 30 days in a row — no breaks.', reward: 12, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 30 },
-    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 3, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 36000 },
-    { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 2, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 7200 },
-    { id: 'tangerine_grove', title: 'Pulp Fiction', icon: '🍊', description: 'Grow 100 tangerine trees — the signature fruit of Pulp.', reward: 10, rewardType: 'gems', completed: false, claimed: false, progress: 0, goal: 100 },
+    { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'time', completed: false, claimed: false },
+    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 50000 },
+    { id: 'wordsmith', title: 'Wordsmith', icon: '✒️', description: 'Type 200,000 characters by hand — a small novel.', reward: 6, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 200000 },
+    { id: 'full_grove', title: 'Groundskeeper', icon: '🌳', description: 'Grow 25 trees in your orchard.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 25 },
+    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between 3 and 4 AM.', reward: 1, rewardType: 'time', completed: false, claimed: false },
+    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 2, rewardType: 'time', completed: false, claimed: false },
+    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 30 },
+    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 30 days in a row — no breaks.', reward: 12, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 30 },
+    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 36000 },
+    { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 2, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 7200 },
+    { id: 'tangerine_grove', title: 'Pulp Fiction', icon: '🍊', description: 'Grow 100 tangerine trees — the signature fruit of Pulp.', reward: 10, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 100 },
   ])
   const [lastCharCount, setLastCharCount] = useState(0)
 
@@ -1474,7 +1499,7 @@ export default function NoteApp() {
     const x = (e.clientX - r.left) / scale
     const y = (e.clientY - r.top) / scale
     const id = uid()
-    const vrBox: TextBoxType = { id, x, y, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
+    const vrBox: TextBoxType = { id, x, y, w: 8, h: 300, sizeLocked: true, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
       ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
     }))
@@ -3364,7 +3389,20 @@ export default function NoteApp() {
                   onTimerOpen={() => setTimerOpen(!timerOpen)}
                   onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                   onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
-                  onInsertImage={() => setShowImageModal(true)}
+                  onInsertImage={() => {
+                    if (paperRef.current && activeTabId) {
+                      const scale = Number(zoom) || 1
+                      const paperW = paperRef.current.clientWidth / scale
+                      const scrollTop = paperRef.current.closest('.overflow-y-scroll')?.scrollTop ?? 0
+                      const id = uid()
+                      const imgBox: TextBoxType = { id, x: (paperW - 300) / 2, y: scrollTop / scale + 100, w: 300, h: 200, content: '' }
+                      pendingImageBoxId.current = id
+                      setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                        ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), imgBox] }
+                      }))
+                    }
+                    setShowImageModal(true)
+                  }}
                   onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
                   onQuickPrompt={handleQuickPrompt}
                   onAiAction={handleAiAction}
@@ -3994,7 +4032,7 @@ export default function NoteApp() {
                 if (boxId) {
                   const imgHtml = isHtml ? htmlOrUrl : `<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block" alt="Media" />`
                   setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                    ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).map(b => b.id === boxId ? { ...b, content: imgHtml } : b) }
+                    ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).map(b => b.id === boxId ? { ...b, content: imgHtml, sizeLocked: true } : b) }
                   }))
                   pendingImageBoxId.current = null
                 } else if (isHtml) {

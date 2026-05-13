@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
+import { SummerTerrain } from "./SummerTerrain"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 import * as db from "@/lib/db"
@@ -514,6 +515,27 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
         {/* Sky */}
         <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
+
+        {/* Atmospheric haze layers */}
+        <defs>
+          <radialGradient id="sky-haze-1" cx="25%" cy="35%" r="50%" fx="25%" fy="35%">
+            <stop offset="0%" stopColor={isDark ? '#1a1040' : '#b8c8e8'} stopOpacity={isDark ? 0.12 : 0.08} />
+            <stop offset="100%" stopColor={isDark ? '#1a1040' : '#b8c8e8'} stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="sky-haze-2" cx="72%" cy="28%" r="40%" fx="72%" fy="28%">
+            <stop offset="0%" stopColor={isDark ? '#201830' : '#c8b8d8'} stopOpacity={isDark ? 0.1 : 0.06} />
+            <stop offset="100%" stopColor={isDark ? '#201830' : '#c8b8d8'} stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="horizon-wash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={p.skyHorizon} stopOpacity="0" />
+            <stop offset="60%" stopColor={p.skyHorizon} stopOpacity="0" />
+            <stop offset="85%" stopColor={p.skyHorizon} stopOpacity={isDark ? '0.15' : '0.1'} />
+            <stop offset="100%" stopColor={p.skyHorizon} stopOpacity={isDark ? '0.25' : '0.15'} />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="200" height="40" fill="url(#sky-haze-1)" />
+        <rect x="0" y="0" width="200" height="40" fill="url(#sky-haze-2)" />
+        <rect x="0" y="0" width="200" height="40" fill="url(#horizon-wash)" />
 
         {/* Stars — soft radial dots, brightest when moon is highest */}
         {p.starOpacity > 0.01 && (() => {
@@ -2398,6 +2420,7 @@ export const OrchardView = memo(function OrchardView({
   })
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
+  const [orchardMode, setOrchardMode] = useState<'xp' | 'seasonal'>('xp')
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
   const [ascensionMode, setAscensionMode] = useState(false)
   const [selectedSacrifices, setSelectedSacrifices] = useState<number[]>([])
@@ -2989,38 +3012,39 @@ export const OrchardView = memo(function OrchardView({
                   const maxSap = getGlobalMaxSap()
                   const hasSap = available > 0
                   return (
-                    <button
-                      ref={collectBtnRef}
-                      onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                      className="relative flex items-center justify-center gap-2.5 rounded-full transition-all overflow-hidden"
-                      style={{
-                        padding: '10px 28px',
-                        minWidth: 160,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        letterSpacing: '0.03em',
-                        backgroundColor: hasSap
-                          ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.12)')
-                          : (isDark ? 'rgba(20,18,16,0.7)' : 'rgba(255,255,255,0.6)'),
-                        color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'),
-                        border: hasSap ? '1.5px solid rgba(217,119,6,0.4)' : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                        cursor: hasSap ? 'pointer' : 'default',
-                        backdropFilter: 'blur(16px)',
-                        WebkitBackdropFilter: 'blur(16px)',
-                        boxShadow: hasSap
-                          ? '0 4px 24px rgba(217,119,6,0.2), 0 0 0 1px rgba(217,119,6,0.1)'
-                          : 'none',
-                      }}
-                    >
-                      <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{
-                        width: `${sapFillProgress * 100}%`,
-                        background: `linear-gradient(90deg, rgba(217,119,6,${isDark ? 0.25 : 0.18}) 0%, rgba(245,158,11,${isDark ? 0.35 : 0.25}) 100%)`,
-                        transition: 'width 1s linear',
-                        borderRadius: 'inherit',
-                      }} />
-                      <PulpIcon size={15} />
-                      <span className="relative z-10 tabular-nums">{hasSap ? `Collect +${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
-                    </button>
+                    <div className="glass-button-wrap rounded-full">
+                      <button
+                        ref={collectBtnRef}
+                        onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
+                        className="glass-button relative flex items-center justify-center gap-2.5 rounded-full overflow-hidden"
+                        style={{
+                          padding: '8px 22px',
+                          minWidth: 145,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          letterSpacing: '0.03em',
+                          color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'),
+                          cursor: hasSap ? 'pointer' : 'default',
+                          borderColor: hasSap ? 'rgba(217,119,6,0.3)' : undefined,
+                          boxShadow: hasSap
+                            ? `inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.06), 0 4px 20px rgba(217,119,6,0.18), 0 0 1px rgba(217,119,6,0.3)`
+                            : undefined,
+                        }}
+                      >
+                        {/* Sap fill progress */}
+                        <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{
+                          width: `${sapFillProgress * 100}%`,
+                          background: hasSap
+                            ? `linear-gradient(90deg, rgba(217,119,6,${isDark ? 0.18 : 0.12}) 0%, rgba(245,158,11,${isDark ? 0.28 : 0.2}) 100%)`
+                            : `linear-gradient(90deg, rgba(${isDark ? '255,255,255' : '0,0,0'},${isDark ? 0.04 : 0.03}) 0%, rgba(${isDark ? '255,255,255' : '0,0,0'},${isDark ? 0.07 : 0.05}) 100%)`,
+                          transition: 'width 1s linear',
+                          borderRadius: 'inherit',
+                        }} />
+                        <PulpIcon size={15} />
+                        <span className="relative z-10 tabular-nums">{hasSap ? `Collect +${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
+                      </button>
+                      <div className="glass-button-shadow rounded-full" />
+                    </div>
                   )
                 })()}
                 {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
@@ -3289,8 +3313,11 @@ export const OrchardView = memo(function OrchardView({
                         >
                           <div style={{
                             position: 'relative',
-                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms both`,
                             transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
+                            transformOrigin: 'center bottom',
+                          }}>
+                          <div style={{
+                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
                             transformOrigin: 'center bottom',
                           }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
@@ -3341,6 +3368,7 @@ export const OrchardView = memo(function OrchardView({
                               pointerEvents: 'none',
                               borderRadius: '50%',
                             }} />
+                          </div>
                           </div>
 
                           {(() => {

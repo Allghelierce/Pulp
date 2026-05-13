@@ -346,7 +346,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
       if (!target || !target.completed || target.claimed) return prev
-      if (target.rewardType === 'gems') setGems(g => g + target.reward)
+      if (target.rewardType === 'time') setGems(g => g + target.reward)
       else setSap(s => s + target.reward)
       setXp(x => x + target.reward * 5)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
