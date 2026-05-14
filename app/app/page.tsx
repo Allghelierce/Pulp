@@ -30,6 +30,7 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
+const _preloadDashboard = () => import("@/app/components/DashboardView")
 const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
 const _preloadFocus = () => import("@/app/components/FocusView")
@@ -44,6 +45,7 @@ const _preloadAiResult = () => import("@/app/components/AiResultModal")
 const OrchardView = lazy(() => _preloadOrchard().then(m => ({ default: m.OrchardView })))
 const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.BoutiqueView })))
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
+const DashboardView = lazy(() => _preloadDashboard().then(m => ({ default: m.DashboardView })))
 const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
 
 const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
@@ -3132,7 +3134,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
-                mini={orchardOpen}
+                mini={orchardOpen || statsOpen}
                 user={user}
                 sidebarWidth={sidebarWidth}
                 isDragging={isSidebarDragging}
@@ -3974,15 +3976,20 @@ export default function NoteApp() {
           </div></Suspense>}
 
           {statsOpen && <Suspense fallback={null}>
-            <motion.div key="stats-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
-              isOpen={statsOpen}
-              onClose={() => setStatsOpen(false)}
-              theme={theme}
-              xp={xp}
-              grove={grove}
-              activeNotebookId={activeTabId ?? undefined}
-              activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
-            /></motion.div>
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+              <DashboardView
+                isOpen={statsOpen}
+                onClose={() => setStatsOpen(false)}
+                theme={theme}
+                xp={xp}
+                grove={grove}
+                inventory={inventory}
+                activeNotebookId={activeTabId ?? undefined}
+                activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
+                achievements={achievements}
+                notes={notes}
+              />
+            </div>
           </Suspense>}
 
           {leaderboardOpen && <Suspense fallback={null}>
