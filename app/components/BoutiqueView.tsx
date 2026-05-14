@@ -551,6 +551,251 @@ export const BoutiqueView = memo(function BoutiqueView({
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
             <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+              {/* Hanging vines + bottom oranges */}
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+                <svg viewBox="0 0 1060 700" style={{ width: '100%', height: '100%' }} fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  {(() => { const g = isDark ? '#5a9a3a' : '#3a7a1e'; const gl = isDark ? '#7aba5a' : '#5a9a3a'; return (<>
+                    {/* Vine A — far left, long, detailed */}
+                    <g opacity={isDark ? 0.18 : 0.14}>
+                      <path d="M45 0 Q38 50 48 100 Q56 145 44 190 Q36 230 42 270 Q50 300 44 330" stroke={g} strokeWidth="1.5" />
+                      <path d="M45 0 Q40 50 50 100 Q58 145 46 190" stroke={gl} strokeWidth="0.4" opacity="0.3" />
+                      <path d="M48 35 Q35 28 30 38 Q38 41 48 35" fill={g} />
+                      <path d="M36 33 Q34 36 38 38" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M44 95 Q54 86 60 96 Q52 99 44 95" fill={gl} />
+                      <path d="M50 91 Q54 93 52 96" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M48 150 Q36 142 32 152 Q40 155 48 150" fill={g} />
+                      <path d="M42 210 Q52 202 58 212 Q50 215 42 210" fill={gl} />
+                      <path d="M44 275 Q32 268 28 278 Q36 280 44 275" fill={g} />
+                      {/* Tendrils */}
+                      <path d="M46 65 Q40 58 36 62 Q34 66 38 68" stroke={g} strokeWidth="0.5" fill="none" />
+                      <path d="M42 190 Q36 183 32 188 Q30 192 34 194" stroke={gl} strokeWidth="0.4" fill="none" />
+                      <path d="M44 310 Q38 304 34 308 Q33 312 36 314" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine B — left, textured */}
+                    <g opacity={isDark ? 0.15 : 0.11}>
+                      <path d="M150 0 Q145 40 155 75 Q162 105 152 140 Q146 168 150 195" stroke={g} strokeWidth="1.3" />
+                      <path d="M150 0 Q147 40 157 75 Q164 105 154 140" stroke={gl} strokeWidth="0.3" opacity="0.3" />
+                      <path d="M155 28 Q145 20 140 30 Q147 33 155 28" fill={g} />
+                      <path d="M146 25 Q144 28 148 30" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M152 80 Q162 72 167 82 Q160 85 152 80" fill={gl} />
+                      <path d="M150 135 Q140 128 136 138 Q143 140 150 135" fill={g} />
+                      <path d="M152 170 Q162 164 166 174 Q159 176 152 170" fill={gl} />
+                      <path d="M154 55 Q148 48 144 52 Q143 56 146 57" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine C — left-center, wispy with curls */}
+                    <g opacity={isDark ? 0.11 : 0.08}>
+                      <path d="M310 0 Q305 30 312 58 Q318 80 310 105 Q304 125 308 145" stroke={g} strokeWidth="1" />
+                      <path d="M312 35 Q302 28 298 38 Q305 40 312 35" fill={g} />
+                      <path d="M310 70 Q320 63 324 73 Q317 75 310 70" fill={gl} />
+                      <path d="M308 110 Q298 104 294 114 Q301 116 308 110" fill={g} />
+                      <path d="M312 48 Q316 42 314 38 Q312 36 310 40" stroke={gl} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine D — center-left, thick */}
+                    <g opacity={isDark ? 0.13 : 0.1}>
+                      <path d="M440 0 Q448 35 438 70 Q430 100 440 130 Q448 155 442 180" stroke={g} strokeWidth="1.2" />
+                      <path d="M440 0 Q450 35 440 70" stroke={gl} strokeWidth="0.3" opacity="0.3" />
+                      <path d="M438 40 Q450 32 454 42 Q447 45 438 40" fill={gl} />
+                      <path d="M448 37 Q452 39 450 42" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M440 90 Q428 83 424 93 Q432 95 440 90" fill={g} />
+                      <path d="M442 145 Q452 138 456 148 Q449 150 442 145" fill={gl} />
+                      <path d="M439 60 Q444 53 442 48 Q439 46 438 50" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine E — center, tiny */}
+                    <g opacity={isDark ? 0.09 : 0.065}>
+                      <path d="M560 0 Q555 20 560 42 Q565 58 558 72" stroke={g} strokeWidth="0.8" />
+                      <path d="M560 25 Q550 20 548 28 Q553 30 560 25" fill={g} />
+                      <path d="M558 50 Q566 44 570 52 Q564 54 558 50" fill={gl} />
+                    </g>
+
+                    {/* Vine F — center-right, long curvy */}
+                    <g opacity={isDark ? 0.16 : 0.12}>
+                      <path d="M650 0 Q658 45 648 95 Q640 135 652 180 Q660 215 650 250 Q644 275 648 300" stroke={g} strokeWidth="1.4" />
+                      <path d="M650 0 Q660 45 650 95 Q642 135 654 180" stroke={gl} strokeWidth="0.4" opacity="0.25" />
+                      <path d="M648 50 Q638 42 634 52 Q641 55 648 50" fill={g} />
+                      <path d="M640 47 Q637 50 641 52" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M652 100 Q662 92 668 102 Q660 105 652 100" fill={gl} />
+                      <path d="M648 155 Q636 148 632 158 Q640 160 648 155" fill={g} />
+                      <path d="M650 215 Q660 208 664 218 Q657 220 650 215" fill={gl} />
+                      <path d="M648 265 Q638 258 634 268 Q641 270 648 265" fill={g} />
+                      <path d="M651 75 Q646 68 642 72 Q640 76 644 78" stroke={g} strokeWidth="0.5" fill="none" />
+                      <path d="M649 240 Q654 233 652 228 Q649 226 648 230" stroke={gl} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine G — right, medium */}
+                    <g opacity={isDark ? 0.12 : 0.09}>
+                      <path d="M780 0 Q785 30 778 65 Q772 90 780 115 Q786 135 782 155" stroke={g} strokeWidth="1.1" />
+                      <path d="M778 32 Q788 25 792 35 Q785 37 778 32" fill={gl} />
+                      <path d="M780 75 Q770 68 766 78 Q773 80 780 75" fill={g} />
+                      <path d="M782 120 Q792 114 796 124 Q789 126 782 120" fill={gl} />
+                      <path d="M779 52 Q784 45 782 40 Q779 38 778 42" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine H — right, long thick */}
+                    <g opacity={isDark ? 0.17 : 0.13}>
+                      <path d="M920 0 Q928 55 918 110 Q910 155 922 200 Q930 240 920 280" stroke={g} strokeWidth="1.5" />
+                      <path d="M920 0 Q930 55 920 110 Q912 155 924 200" stroke={gl} strokeWidth="0.4" opacity="0.25" />
+                      <path d="M918 45 Q930 38 934 48 Q927 50 918 45" fill={gl} />
+                      <path d="M928 42 Q932 44 930 48" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
+                      <path d="M922 100 Q910 93 906 103 Q914 105 922 100" fill={g} />
+                      <path d="M918 160 Q928 153 932 163 Q925 165 918 160" fill={gl} />
+                      <path d="M920 220 Q908 214 904 224 Q912 226 920 220" fill={g} />
+                      <path d="M919 75 Q924 68 922 62 Q919 60 918 64" stroke={gl} strokeWidth="0.5" fill="none" />
+                      <path d="M921 250 Q914 244 910 248 Q909 252 912 254" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine I — far right */}
+                    <g opacity={isDark ? 0.14 : 0.1}>
+                      <path d="M1020 0 Q1015 35 1022 70 Q1028 95 1018 125 Q1012 148 1016 170" stroke={g} strokeWidth="1.2" />
+                      <path d="M1022 30 Q1032 24 1036 34 Q1029 36 1022 30" fill={gl} />
+                      <path d="M1018 80 Q1008 73 1004 83 Q1011 85 1018 80" fill={g} />
+                      <path d="M1016 130 Q1026 123 1030 133 Q1023 135 1016 130" fill={gl} />
+                      <path d="M1020 52 Q1025 46 1023 40 Q1020 38 1019 42" stroke={g} strokeWidth="0.4" fill="none" />
+                    </g>
+
+                    {/* Vine J — tiny between B and C */}
+                    <g opacity={isDark ? 0.08 : 0.06}>
+                      <path d="M240 0 Q235 22 240 48 Q245 65 238 82" stroke={g} strokeWidth="0.8" />
+                      <path d="M240 30 Q232 24 228 32 Q234 34 240 30" fill={g} />
+                      <path d="M238 60 Q246 55 250 62 Q244 64 238 60" fill={gl} />
+                    </g>
+
+                    {/* Bottom crates with oranges */}
+                    {(() => { const wb = isDark ? '#3a2e20' : '#8a7050'; const wl = isDark ? '#4a3e30' : '#a08a68'; const wd = isDark ? '#2a2018' : '#6a5840'; const o1 = '#d97706'; const o2 = '#c87a08'; const o3 = '#e09010'; return (<>
+                      {/* Crate 1 — left, tall */}
+                      <g opacity={isDark ? 0.14 : 0.11}>
+                        <rect x="20" y="630" width="80" height="60" rx="2" fill={wb} />
+                        <rect x="20" y="630" width="80" height="60" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
+                        <line x1="20" y1="645" x2="100" y2="645" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="20" y1="660" x2="100" y2="660" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="20" y1="675" x2="100" y2="675" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="40" y1="630" x2="40" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="80" y1="630" x2="80" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        {/* Oranges in crate */}
+                        <circle cx="38" cy="625" r="8" fill={o1} /><circle cx="38" cy="625" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="60" cy="622" r="9" fill={o2} /><circle cx="60" cy="622" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="82" cy="624" r="7.5" fill={o3} /><circle cx="82" cy="624" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="50" cy="616" r="7" fill={o1} /><circle cx="50" cy="616" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="72" cy="617" r="6.5" fill={o2} /><circle cx="72" cy="617" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        {/* Highlights */}
+                        <ellipse cx="36" cy="622" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
+                        <ellipse cx="58" cy="619" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
+                        <ellipse cx="80" cy="621" rx="2.8" ry="1.4" fill="#f0b030" opacity="0.3" />
+                        {/* Leaves */}
+                        <path d="M60 614 Q65 608 68 612" fill={g} opacity="0.5" />
+                        <path d="M38 618 Q33 612 30 616" fill={g} opacity="0.4" />
+                      </g>
+
+                      {/* Crate 2 — center-left, short */}
+                      <g opacity={isDark ? 0.12 : 0.09}>
+                        <rect x="130" y="655" width="70" height="45" rx="2" fill={wb} />
+                        <rect x="130" y="655" width="70" height="45" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
+                        <line x1="130" y1="668" x2="200" y2="668" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="130" y1="681" x2="200" y2="681" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="155" y1="655" x2="155" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="180" y1="655" x2="180" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="148" cy="650" r="7" fill={o3} /><circle cx="148" cy="650" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="168" cy="648" r="8" fill={o1} /><circle cx="168" cy="648" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="188" cy="650" r="6.5" fill={o2} /><circle cx="188" cy="650" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <ellipse cx="166" cy="645" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
+                        <path d="M168 641 Q173 636 176 640" fill={g} opacity="0.4" />
+                      </g>
+
+                      {/* Crate 3 — center, stacked (bottom) */}
+                      <g opacity={isDark ? 0.14 : 0.11}>
+                        <rect x="380" y="650" width="90" height="50" rx="2" fill={wb} />
+                        <rect x="380" y="650" width="90" height="50" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
+                        <line x1="380" y1="665" x2="470" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="380" y1="680" x2="470" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="410" y1="650" x2="410" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="440" y1="650" x2="440" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        {/* Stacked crate on top */}
+                        <rect x="392" y="618" width="76" height="35" rx="2" fill={wl} />
+                        <rect x="392" y="618" width="76" height="35" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
+                        <line x1="392" y1="630" x2="468" y2="630" stroke={wd} strokeWidth="0.4" opacity="0.5" />
+                        <line x1="392" y1="642" x2="468" y2="642" stroke={wd} strokeWidth="0.4" opacity="0.5" />
+                        <line x1="415" y1="618" x2="415" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="445" y1="618" x2="445" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        {/* Oranges spilling from top crate */}
+                        <circle cx="408" cy="612" r="8" fill={o1} /><circle cx="408" cy="612" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="430" cy="610" r="9" fill={o3} /><circle cx="430" cy="610" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="454" cy="613" r="7.5" fill={o2} /><circle cx="454" cy="613" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="420" cy="604" r="7" fill={o1} /><circle cx="420" cy="604" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="442" cy="605" r="6.5" fill={o3} /><circle cx="442" cy="605" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <ellipse cx="428" cy="607" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
+                        <ellipse cx="406" cy="609" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
+                        <path d="M430 602 Q435 596 438 600" fill={g} opacity="0.5" />
+                        <path d="M408 605 Q403 599 400 603" fill={g} opacity="0.4" />
+                      </g>
+
+                      {/* Crate 4 — right of center */}
+                      <g opacity={isDark ? 0.11 : 0.085}>
+                        <rect x="540" y="660" width="75" height="40" rx="2" fill={wb} />
+                        <rect x="540" y="660" width="75" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
+                        <line x1="540" y1="672" x2="615" y2="672" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="540" y1="684" x2="615" y2="684" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="565" y1="660" x2="565" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="590" y1="660" x2="590" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="555" cy="655" r="7.5" fill={o2} /><circle cx="555" cy="655" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="577" cy="653" r="8.5" fill={o1} /><circle cx="577" cy="653" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="600" cy="655" r="7" fill={o3} /><circle cx="600" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <ellipse cx="575" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
+                      </g>
+
+                      {/* Crate 5 — right, tall */}
+                      <g opacity={isDark ? 0.13 : 0.1}>
+                        <rect x="750" y="635" width="85" height="65" rx="2" fill={wb} />
+                        <rect x="750" y="635" width="85" height="65" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
+                        <line x1="750" y1="650" x2="835" y2="650" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="750" y1="665" x2="835" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="750" y1="680" x2="835" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
+                        <line x1="775" y1="635" x2="775" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="810" y1="635" x2="810" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="768" cy="629" r="8.5" fill={o1} /><circle cx="768" cy="629" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="792" cy="627" r="9" fill={o3} /><circle cx="792" cy="627" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="818" cy="630" r="7.5" fill={o2} /><circle cx="818" cy="630" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="780" cy="621" r="7" fill={o2} /><circle cx="780" cy="621" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="805" cy="620" r="6.5" fill={o1} /><circle cx="805" cy="620" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <ellipse cx="790" cy="624" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
+                        <path d="M792 618 Q797 612 800 616" fill={g} opacity="0.5" />
+                        <path d="M768 622 Q763 616 760 620" fill={g} opacity="0.4" />
+                      </g>
+
+                      {/* Crate 6 — far right, small */}
+                      <g opacity={isDark ? 0.12 : 0.09}>
+                        <rect x="900" y="660" width="70" height="40" rx="2" fill={wl} />
+                        <rect x="900" y="660" width="70" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
+                        <line x1="900" y1="673" x2="970" y2="673" stroke={wd} strokeWidth="0.4" opacity="0.5" />
+                        <line x1="900" y1="686" x2="970" y2="686" stroke={wd} strokeWidth="0.4" opacity="0.5" />
+                        <line x1="925" y1="660" x2="925" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <line x1="950" y1="660" x2="950" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="918" cy="655" r="7" fill={o3} /><circle cx="918" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="938" cy="653" r="8" fill={o1} /><circle cx="938" cy="653" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <circle cx="958" cy="656" r="6.5" fill={o2} /><circle cx="958" cy="656" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
+                        <ellipse cx="936" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
+                      </g>
+
+                      {/* Loose oranges on ground between crates */}
+                      <g opacity={isDark ? 0.1 : 0.08}>
+                        <circle cx="115" cy="692" r="6" fill={o2} />
+                        <circle cx="250" cy="688" r="7" fill={o1} />
+                        <circle cx="330" cy="694" r="5.5" fill={o3} />
+                        <circle cx="505" cy="690" r="6.5" fill={o1} />
+                        <circle cx="680" cy="692" r="5.5" fill={o2} />
+                        <circle cx="860" cy="688" r="6" fill={o3} />
+                        <circle cx="1000" cy="694" r="5" fill={o1} />
+                        {/* Scattered leaves */}
+                        <path d="M270 686 Q276 680 282 684 Q276 688 270 686" fill={g} opacity="0.6" />
+                        <path d="M490 694 Q496 688 502 692 Q496 696 490 694" fill={gl} opacity="0.5" />
+                        <path d="M720 690 Q726 684 732 688 Q726 692 720 690" fill={g} opacity="0.5" />
+                      </g>
+                    </>)})()}
+                  </>)})()}
+                </svg>
+              </div>
               {/* Toggle + Timer */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative', zIndex: 1 }}>
                 {/* Current / Seasonal toggle */}
@@ -642,7 +887,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -10 }}>
+              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -70 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -695,8 +940,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
-                  const cardW = 175
-                  const cardH = 290
+                  const cardW = 155
+                  const cardH = 260
 
                   return (
                     <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -957,27 +1202,58 @@ export const BoutiqueView = memo(function BoutiqueView({
                           </>
                         )}
                       </div>
-                      {/* Name + price tag below oval */}
-                      <div style={{ textAlign: 'center', marginTop: 6, visibility: isRevealed ? 'visible' : 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
-                          {t.name || ' '}
-                        </div>
-                        <div style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(250,245,235,0.9)',
-                          border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(180,160,130,0.3)'}`,
-                          padding: '2px 8px', borderRadius: 4,
-                          boxShadow: isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
-                        }}>
-                          <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#a09080' : '#8a7a60'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                          {discount > 0 ? (<>
-                            <span style={{ fontSize: 9, fontWeight: 600, color: textMuted, textDecoration: 'line-through', opacity: 0.5, fontFamily: font }}>{t.cost}</span>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', fontFamily: font }}>{price}</span>
-                          </>) : (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#c0b8a8' : '#6a5a40', fontFamily: font }}>{price}</span>
-                          )}
-                        </div>
+                      {/* Name below oval */}
+                      <div style={{ textAlign: 'center', marginTop: 4, visibility: isRevealed ? 'visible' : 'hidden', fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                        {t.name || ' '}
                       </div>
+                      {/* Hanging price tag from oval bottom */}
+                      {isRevealed && (
+                        <div style={{
+                          position: 'absolute', top: cardH - 8, left: '50%', transform: 'translateX(-50%)',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 16,
+                        }}>
+                          {/* Twine string */}
+                          <svg width="4" height="22" viewBox="0 0 4 22">
+                            <path d="M2 0 Q3 5 1.5 10 Q0.5 15 2 22" stroke={isDark ? '#8a7a60' : '#6a5a40'} strokeWidth="1" fill="none" opacity={isDark ? 0.4 : 0.45} />
+                          </svg>
+                          {/* Parchment tag */}
+                          <div style={{
+                            position: 'relative',
+                            background: isDark
+                              ? 'linear-gradient(135deg, #2e2820 0%, #342e24 50%, #2a2418 100%)'
+                              : 'linear-gradient(135deg, #f5ead4 0%, #efe0c8 50%, #e8d8bc 100%)',
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(140,120,80,0.3)'}`,
+                            padding: '4px 10px 5px', borderRadius: 3,
+                            boxShadow: isDark ? '0 2px 5px rgba(0,0,0,0.4)' : '0 2px 5px rgba(0,0,0,0.08)',
+                            transform: `rotate(${i % 2 === 0 ? -2 : 2.5}deg)`,
+                            overflow: 'hidden',
+                          }}>
+                            {/* Parchment texture */}
+                            <svg width="100%" height="100%" viewBox="0 0 60 20" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.06 : 0.08 }}>
+                              <path d="M5 5 Q15 3 30 5 Q45 7 55 4" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.3" fill="none" />
+                              <path d="M3 10 Q18 8 35 10 Q50 12 58 9" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.2" fill="none" />
+                              <path d="M8 15 Q22 13 38 15 Q48 17 55 14" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.2" fill="none" />
+                            </svg>
+                            {/* Hole punch */}
+                            <div style={{
+                              position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+                              width: 5, height: 5, borderRadius: '50%',
+                              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
+                              background: isDark ? '#1a1816' : '#e8d8bc',
+                            }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 3, position: 'relative' }}>
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#a09080' : '#8a7a60'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                              {discount > 0 ? (<>
+                                <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textDecoration: 'line-through', opacity: 0.5, fontFamily: font }}>{t.cost}</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', fontFamily: font }}>{price}</span>
+                              </>) : (
+                                <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#c0b8a8' : '#6a5a40', fontFamily: font }}>{price}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Leaf scatter effect on reveal (rare+) */}
                       {revealEffect?.index === i && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>

@@ -1310,12 +1310,9 @@ export default function NoteApp() {
       let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
       setSap(data.juice ?? data.sunshine ?? 50)
-      if (data.inventory) setInventory([...data.inventory, 'abyss', 'abyss'])
+      if (data.inventory) setInventory([...data.inventory])
       if (data.grove) {
-        const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
-        const lifeId = lifeNote?.id
-        const bonusTrees = Array.from({ length: 20 }, (_, i) => ({ id: Date.now() + i + 9000, type: 'tangerine', stage: 4, progress: 100, plantedAt: Date.now() - 86400000, ...(lifeId ? { notebookId: lifeId } : {}) }))
-        setGrove([...data.grove, ...bonusTrees])
+        setGrove([...data.grove])
       }
       if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
@@ -1346,15 +1343,12 @@ export default function NoteApp() {
         setSap(profile.juice)
         setLastCharCount(profile.last_char_count)
         if (profile.grove?.length) {
-          const lifeNote = useNotesStore.getState().notes.find(n => n.subject.toUpperCase() === 'LIFE')
-          const lifeId = lifeNote?.id
-          const bonusTrees = Array.from({ length: 20 }, (_, i) => ({ id: Date.now() + i + 9000, type: 'tangerine', stage: 4, progress: 100, plantedAt: Date.now() - 86400000, ...(lifeId ? { notebookId: lifeId } : {}) }))
-          setGrove([...profile.grove, ...bonusTrees])
+          setGrove([...profile.grove])
         }
         if (profile.inventory) {
           const items: string[] = []
           for (const [k, qty] of Object.entries(profile.inventory)) for (let i = 0; i < qty; i++) items.push(k)
-          if (items.length) setInventory([...items, 'abyss', 'abyss'])
+          if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
         const today = new Date().toISOString().slice(0, 10)
@@ -3424,7 +3418,7 @@ export default function NoteApp() {
                   selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
                   unlockedCosmetics={unlockedCosmetics}
                 />
-                <div style={{ position: 'absolute', top: 44, left: 12, zIndex: 80 }}>
+                <div style={{ position: 'absolute', top: 57, left: 12, zIndex: 80 }}>
                   <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} />
                 </div>
               </div>
