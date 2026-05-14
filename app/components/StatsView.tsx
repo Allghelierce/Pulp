@@ -19,21 +19,21 @@ function loadGoals(): typeof DEFAULT_GOALS {
 
 const RING_GOALS = loadGoals()
 
-export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () => void }) {
-  const [today, setToday] = useState<DailyEntry | null>(null)
+function getTodayEntry(): DailyEntry | null {
+  if (typeof window === 'undefined') return null
+  const key = new Date().toISOString().split("T")[0]
+  return loadDailyStats().find(e => e.date === key) ?? null
+}
 
-  const refresh = useCallback(() => {
-    const key = new Date().toISOString().split("T")[0]
-    const entry = loadDailyStats().find(e => e.date === key)
-    setToday(entry ?? null)
-  }, [])
+export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () => void }) {
+  const [today, setToday] = useState<DailyEntry | null>(getTodayEntry)
 
   useEffect(() => {
-    refresh()
+    const refresh = () => setToday(getTodayEntry())
     const id = setInterval(refresh, 30000)
     window.addEventListener("storage", refresh)
     return () => { clearInterval(id); window.removeEventListener("storage", refresh) }
-  }, [refresh])
+  }, [])
 
   const size = 56
   const cx = size / 2, cy = size / 2
@@ -423,8 +423,8 @@ export const StatsView = memo(function StatsView({
     >
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1060px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
-        style={{ backgroundColor: bg, maxHeight: '85vh' }}
+        className={`relative w-full max-w-[1050px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
+        style={{ backgroundColor: bg, maxHeight: '72vh' }}
       >
         {/* Header with stats */}
         <div className="px-8 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -447,7 +447,10 @@ export const StatsView = memo(function StatsView({
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap' }}>{lvl.name}</h2>
+                  <div>
+                    <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap', lineHeight: 1 }}>{lvl.name}</h2>
+                    <span style={{ fontSize: 8, color: textMuted, fontWeight: 500 }}>{lvl.currentXp} / {lvl.nextXp} XP</span>
+                  </div>
                   <div style={{ flex: 1, minWidth: 60, padding: '4px 0', cursor: 'default' }} title={`${lvl.currentXp} / ${lvl.nextXp} XP`}>
                     <div style={{
                       height: 5, borderRadius: 3,
@@ -560,7 +563,7 @@ export const StatsView = memo(function StatsView({
               const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
               return (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: isDark ? '#111110' : '#edeae4', borderRadius: 10, padding: '12px 14px', margin: '-12px -14px' }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
@@ -765,12 +768,19 @@ export const StatsView = memo(function StatsView({
               </div>
         </div>
 
+        <div style={{
+          height: 3, flexShrink: 0,
+          background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+        }} />
+
         {grove.length > 0 && (() => {
           const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 10)
+          const itemW = 80
           const styled = recent.map((tree, i) => {
             const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
             return { tree, yOff: Math.round(seed * 8 - 2), tilt: ((seed * 6) - 3) * 0.7, size: 38 + Math.round(seed * 6) }
           })
+          const halfW = styled.length * itemW
           const doubled = [...styled, ...styled]
           return (
             <div style={{
@@ -795,14 +805,15 @@ export const StatsView = memo(function StatsView({
                 WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
               }}>
                 <div style={{
-                  display: 'flex', alignItems: 'flex-end', width: 'max-content',
+                  display: 'flex', alignItems: 'flex-end', width: halfW * 2,
                   animation: 'conveyorScroll 40s linear infinite',
                   willChange: 'transform',
                 }}>
                   {doubled.map(({ tree, yOff, tilt, size }, i) => (
-                    <div key={`${tree.id ?? tree.type}-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0,
-                      marginBottom: yOff, paddingLeft: 20, paddingRight: 20,
+                    <div key={`t-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      width: itemW, flexShrink: 0,
+                      marginBottom: yOff,
                       transform: `rotate(${tilt}deg)`,
                     }}>
                       <PlantIcon type={tree.type} size={size} stage={tree.stage} hideGround disableSway />
