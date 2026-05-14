@@ -4020,7 +4020,7 @@ export default function NoteApp() {
           </Suspense>}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
           {slashMenu && (

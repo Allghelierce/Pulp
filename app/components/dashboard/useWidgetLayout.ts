@@ -1,7 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react"
 import { DEFAULT_LAYOUT, genInstanceId, GRID_COLS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
+import { supabase } from "@/lib/supabase"
+import * as db from "@/lib/db"
 
 const STORAGE_KEY = "pulp-dashboard-layout"
+const SUPABASE_DEBOUNCE = 2000
 
 function loadLayout(): DashboardLayout {
   if (typeof window === "undefined") return DEFAULT_LAYOUT
@@ -15,7 +18,7 @@ function loadLayout(): DashboardLayout {
   return DEFAULT_LAYOUT
 }
 
-function saveLayout(layout: DashboardLayout) {
+function saveLocal(layout: DashboardLayout) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
 }
 
@@ -39,16 +42,53 @@ function resolveCollisions(widgets: WidgetInstance[]): WidgetInstance[] {
   return sorted
 }
 
+async function getUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id || null
+}
+
+async function saveToSupabase(layout: DashboardLayout) {
+  const uid = await getUserId()
+  if (!uid) return
+  db.upsertSettings(uid, { dashboard_layout: layout as unknown as Record<string, unknown> })
+}
+
+async function loadFromSupabase(): Promise<DashboardLayout | null> {
+  const uid = await getUserId()
+  if (!uid) return null
+  const settings = await db.getSettings(uid)
+  if (!settings?.dashboard_layout) return null
+  const remote = settings.dashboard_layout as unknown as DashboardLayout
+  if (remote.version === 1 && remote.widgets?.length) return remote
+  return null
+}
+
 export function useWidgetLayout() {
   const [layout, setLayout] = useState<DashboardLayout>(loadLayout)
   const [editMode, setEditMode] = useState(false)
   const [dragging, setDragging] = useState<{ instanceId: string; ghostPos: [number, number]; snapPos: [number, number] } | null>(null)
-  const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const supabaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mounted = useRef(false)
 
-  const persist = useCallback((next: DashboardLayout) => {
+  useEffect(() => {
+    if (mounted.current) return
+    mounted.current = true
+    loadFromSupabase().then(remote => {
+      if (!remote) return
+      const local = loadLayout()
+      if (remote.lastModified > local.lastModified) {
+        setLayout(remote)
+        saveLocal(remote)
+      }
+    })
+  }, [])
+
+  const commitLayout = useCallback((next: DashboardLayout) => {
     const updated = { ...next, lastModified: Date.now() }
     setLayout(updated)
-    saveLayout(updated)
+    saveLocal(updated)
+    if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+    supabaseTimer.current = setTimeout(() => saveToSupabase(updated), SUPABASE_DEBOUNCE)
   }, [])
 
   const moveWidget = useCallback((instanceId: string, newPos: [number, number]) => {
@@ -58,7 +98,9 @@ export function useWidgetLayout() {
       )
       const resolved = resolveCollisions(widgets)
       const next = { ...prev, widgets: resolved, lastModified: Date.now() }
-      saveLayout(next)
+      saveLocal(next)
+      if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+      supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
       return next
     })
   }, [])
@@ -70,7 +112,9 @@ export function useWidgetLayout() {
       )
       const resolved = resolveCollisions(widgets)
       const next = { ...prev, widgets: resolved, lastModified: Date.now() }
-      saveLayout(next)
+      saveLocal(next)
+      if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+      supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
       return next
     })
   }, [])
@@ -81,7 +125,9 @@ export function useWidgetLayout() {
         w.instanceId === instanceId ? { ...w, pinned: !w.pinned } : w
       )
       const next = { ...prev, widgets, lastModified: Date.now() }
-      saveLayout(next)
+      saveLocal(next)
+      if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+      supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
       return next
     })
   }, [])
@@ -98,7 +144,9 @@ export function useWidgetLayout() {
       }
       const widgets = resolveCollisions([...prev.widgets, inst])
       const next = { ...prev, widgets, lastModified: Date.now() }
-      saveLayout(next)
+      saveLocal(next)
+      if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+      supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
       return next
     })
   }, [])
@@ -107,7 +155,9 @@ export function useWidgetLayout() {
     setLayout(prev => {
       const widgets = prev.widgets.filter(w => w.instanceId !== instanceId)
       const next = { ...prev, widgets, lastModified: Date.now() }
-      saveLayout(next)
+      saveLocal(next)
+      if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+      supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
       return next
     })
   }, [])
@@ -123,6 +173,6 @@ export function useWidgetLayout() {
     pinWidget,
     addWidget,
     removeWidget,
-    persist,
+    commitLayout,
   }
 }

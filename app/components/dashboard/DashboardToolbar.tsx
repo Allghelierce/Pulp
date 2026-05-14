@@ -42,7 +42,7 @@ export const DashboardToolbar = memo(function DashboardToolbar({
           </svg>
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: textPrimary, fontFamily: font, letterSpacing: '0.02em' }}>
-          Dashboard
+          Stats
         </span>
       </div>
 

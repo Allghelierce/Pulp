@@ -209,6 +209,7 @@ export interface SettingsRow {
   sidebar_width: number
   skip_delete_confirmation: boolean
   dev_mode: boolean
+  dashboard_layout: Record<string, unknown> | null
 }
 
 export async function getSettings(userId: string): Promise<SettingsRow | null> {

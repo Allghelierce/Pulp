@@ -42,11 +42,11 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '4px 2px', borderRadius: 8,
-                opacity: has ? 1 : 0.25,
-                filter: has ? 'none' : 'grayscale(1)',
+                opacity: has ? 1 : 0.4,
+                filter: has ? 'none' : 'grayscale(1) brightness(0.6)',
               }}
             >
-              <PlantIcon type={key} size={28} stage={has ? 4 : 0} hideGround disableSway />
+              <PlantIcon type={key} size={28} stage={4} hideGround disableSway />
               <span style={{
                 fontSize: 6, fontWeight: 600, marginTop: 2,
                 color: has ? textSecondary : textMuted,
