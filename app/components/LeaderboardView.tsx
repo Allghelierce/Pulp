@@ -7,6 +7,7 @@ interface LeaderboardViewProps {
   onClose: () => void
   theme: "light" | "dark"
   sap: number
+  embedded?: boolean
 }
 
 type Tab = 'sap' | 'time'
@@ -50,7 +51,7 @@ const ALL_PLAYERS = generatePlayers(50)
 
 const font = '"EB Garamond", serif'
 
-export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sap }: LeaderboardViewProps) {
+export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, theme, sap, embedded }: LeaderboardViewProps) {
   const isDark = theme === "dark"
   const [tab, setTab] = useState<Tab>('sap')
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null)
@@ -95,19 +96,16 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
   const podiumLabels = ['2nd', '1st', '3rd']
   const podiumMedals = [MEDAL_COLORS[1], MEDAL_COLORS[0], MEDAL_COLORS[2]]
 
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4"
-      onMouseDown={onClose}
-    >
+  const innerContent = (
+    <>
       <div
         onMouseDown={e => e.stopPropagation()}
         onClick={e => e.stopPropagation()}
-        className={`relative w-full max-w-[520px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
-        style={{ background: bgColor, height: 660 }}
+        className={`relative w-full ${embedded ? '' : 'max-w-[520px]'} rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} ${embedded ? '' : 'border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]'}`}
+        style={{ background: embedded ? 'transparent' : bgColor, height: embedded ? '100%' : 660 }}
       >
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+        {!embedded && <div className="px-6 pt-5 pb-3 shrink-0 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() }}
@@ -144,7 +142,29 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
               ))}
             </div>
           </div>
-        </div>
+        </div>}
+
+        {/* Sap/Time toggle when embedded */}
+        {embedded && (
+          <div className="px-6 pt-3 pb-2 shrink-0 flex justify-end">
+            <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
+              {([['sap', 'Sap'], ['time', 'Focus Time']] as [Tab, string][]).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+                    tab === id
+                      ? (isDark ? "bg-zinc-700 text-zinc-100 shadow-sm" : "bg-white text-zinc-900 shadow-sm")
+                      : (isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-400 hover:text-zinc-700")
+                  }`}
+                  style={{ fontFamily: font }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Podium */}
         <div className="px-6 pt-5 pb-2 shrink-0">
@@ -461,6 +481,17 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           )
         })()}
       </AnimatePresence>
+    </>
+  )
+
+  if (embedded) return innerContent
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4"
+      onMouseDown={onClose}
+    >
+      {innerContent}
     </div>
   )
 })

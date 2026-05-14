@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
-import { LazyMotion, domAnimation, m } from "framer-motion"
+import { LazyMotion, domAnimation, m, motion } from "framer-motion"
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
@@ -30,7 +30,7 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
-const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
+
 const _preloadFocus = () => import("@/app/components/FocusView")
 const _preloadSettings = () => import("@/app/components/settings/SettingsView")
 const _preloadAiCmd = () => import("@/app/components/AiCommandBar")
@@ -43,7 +43,7 @@ const _preloadAiResult = () => import("@/app/components/AiResultModal")
 const OrchardView = lazy(() => _preloadOrchard().then(m => ({ default: m.OrchardView })))
 const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.BoutiqueView })))
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
-const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
+
 const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
@@ -1244,7 +1244,7 @@ export default function NoteApp() {
   useEffect(() => {
     const id = requestIdleCallback(() => {
       _preloadOrchard(); _preloadBoutique(); _preloadStats()
-      _preloadLeaderboard(); _preloadFocus(); _preloadSettings()
+      _preloadFocus(); _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
@@ -3147,7 +3147,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
-                mini={orchardOpen || statsOpen || shopOpen}
+                mini={orchardOpen}
                 user={user}
                 sidebarWidth={sidebarWidth}
                 isDragging={isSidebarDragging}
@@ -3196,7 +3196,7 @@ export default function NoteApp() {
                 }}
                 onUnlockDev={handleUnlockDev}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
-                onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
+                onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
                 onOpenFocus={() => setFocusOpen(true)}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
                 sap={sap}
@@ -3378,7 +3378,7 @@ export default function NoteApp() {
                   gems={isAdmin ? 999999 : gems}
                   userAvatarUrl={user?.user_metadata?.avatar_url}
                   userEmail={user?.email}
-                  onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
+                  onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
                   onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
                   onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
@@ -3964,32 +3964,24 @@ export default function NoteApp() {
               userId={user?.id}
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
-              onOpenLeaderboard={() => { setLeaderboardOpen(v => !v) }}
+              onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
               onOpenShop={() => { setShopOpen(v => !v) }}
             />
           </div></Suspense>}
 
           {statsOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><StatsView
+            <motion.div key="stats-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
               isOpen={statsOpen}
               onClose={() => setStatsOpen(false)}
               theme={theme}
               xp={xp}
               streak={streak}
-            /></div>
-          </Suspense>}
-
-          {leaderboardOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
-              isOpen={leaderboardOpen}
-              onClose={() => setLeaderboardOpen(false)}
-              theme={theme}
               sap={sap}
-            /></div>
+            /></motion.div>
           </Suspense>}
 
           {shopOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><BoutiqueView
+            <motion.div key="shop-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
               isOpen={shopOpen}
               onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
               theme={theme}
@@ -4003,7 +3995,7 @@ export default function NoteApp() {
               initialTab={shopInitialTab}
               initialScrollTo={shopScrollTo}
               isAdmin={isAdmin}
-            /></div>
+            /></motion.div>
           </Suspense>}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
