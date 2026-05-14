@@ -35,10 +35,10 @@ export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () =
     return () => { clearInterval(id); window.removeEventListener("storage", refresh) }
   }, [refresh])
 
-  const size = 44
+  const size = 56
   const cx = size / 2, cy = size / 2
   const strokeW = 2.5
-  const gap = 1.5
+  const gap = 2
 
   const rings = [
     { value: today?.focusMinutes ?? 0, goal: RING_GOALS.focus, color: '#ea580c', radius: (size - strokeW) / 2 },
@@ -59,17 +59,23 @@ export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () =
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
+          const gapLen = circ * 0.04
+          const trackLen = circ - gapLen
           const pct = Math.min(ring.value / ring.goal, 1)
-          const track = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+          const fillLen = trackLen * pct
+          const track = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'
           return (
             <g key={i}>
-              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round" />
+              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round"
+                strokeDasharray={`${trackLen} ${gapLen}`}
+                strokeDashoffset={-gapLen / 2}
+                transform={`rotate(-90 ${cx} ${cy})`}
+              />
               <circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
                 stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
-                strokeDasharray={circ}
-                strokeDashoffset={circ * (1 - pct)}
-                transform={`rotate(-90 ${cx} ${cy})`}
+                strokeDasharray={`${fillLen} ${circ - fillLen}`}
+                transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
               />
             </g>
           )
@@ -97,7 +103,7 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 8, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Goal</span>
+        <span style={{ fontSize: 8, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
         <button
           onClick={onEditGoals}
           title="Edit goals"
@@ -111,36 +117,70 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
+          const gapLen = circ * 0.04
+          const trackLen = circ - gapLen
           const pct = Math.min(ring.value / ring.goal, 1)
+          const fillLen = trackLen * pct
           const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+          const complete = pct >= 1
+          const checkR = ring.radius
+          const checkX = cx + Math.cos(-Math.PI / 2) * checkR
+          const checkY = cy + Math.sin(-Math.PI / 2) * checkR
           return (
             <g key={i}>
-              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round" />
+              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round"
+                strokeDasharray={`${trackLen} ${gapLen}`}
+                strokeDashoffset={-gapLen / 2}
+                transform={`rotate(-90 ${cx} ${cy})`}
+              />
               <motion.circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
                 stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
-                strokeDasharray={circ}
-                initial={{ strokeDashoffset: circ }}
-                animate={{ strokeDashoffset: circ * (1 - pct) }}
+                strokeDasharray={`${fillLen} ${circ - fillLen}`}
+                initial={{ strokeDashoffset: 0, opacity: 0 }}
+                animate={{ strokeDashoffset: 0, opacity: 1 }}
                 transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
-                transform={`rotate(-90 ${cx} ${cy})`}
+                transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
                 style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
               />
+              {complete && (
+                <motion.g
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 1.2 + i * 0.1 }}
+                  style={{ transformOrigin: `${checkX}px ${checkY}px` }}
+                >
+                  <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" stroke={ring.color} strokeWidth={0.5} opacity={0.35} />
+                  <circle cx={checkX} cy={checkY} r={strokeW + 1} fill={ring.color} />
+                  <path
+                    d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`}
+                    fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                  />
+                </motion.g>
+              )}
+            </g>
+          )
+        })}
+        {rings.map((ring, i) => {
+          const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
+          const abbr = ['mins', 'char', 'sesh'][i]
+          const y = cy - 12 + i * 16
+          return (
+            <g key={`label-${i}`}>
+              <text x={cx} y={y} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 9, fontWeight: 600, fill: ring.color }}
+              >
+                {pct}%
+              </text>
+              <text x={cx} y={y + 8} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 5.5, fontWeight: 500, fill: ring.color, opacity: 0.5 }}
+              >
+                {abbr}
+              </text>
             </g>
           )
         })}
       </svg>
-      <div style={{ display: 'flex', gap: 10 }}>
-        {rings.map((ring, i) => {
-          const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
-          return (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ring.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 8, fontWeight: 600, color: ring.color }}>{pct}%</span>
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -417,7 +457,7 @@ export const StatsView = memo(function StatsView({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap' }}>{lvl.name}</h2>
-                  <div style={{ flex: 1, minWidth: 60 }}>
+                  <div style={{ flex: 1, minWidth: 60, padding: '4px 0', cursor: 'default' }} title={`${lvl.currentXp} / ${lvl.nextXp} XP`}>
                     <div style={{
                       height: 5, borderRadius: 3,
                       backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
@@ -442,6 +482,11 @@ export const StatsView = memo(function StatsView({
             <div style={{ flex: '0 0 280px', display: 'flex', justifyContent: 'center' }}>
               <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
             </div>
+
+            <svg width="24" height="14" viewBox="0 0 24 14" style={{ flexShrink: 0, opacity: 0.08, marginLeft: -28, marginRight: -12 }}>
+              <path d="M0 7 L18 7" stroke={isDark ? '#fff' : '#000'} strokeWidth="1" strokeLinecap="round" />
+              <path d="M15 3 L21 7 L15 11" fill="none" stroke={isDark ? '#fff' : '#000'} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
 
             {(() => {
               let currentStreak = 0
@@ -685,23 +730,6 @@ export const StatsView = memo(function StatsView({
                   </div>
                 </div>
 
-                {grove.length > 0 && (
-                  <div>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif', marginBottom: 8, display: 'block' }}>Recent</span>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {[...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 8).map((tree, i) => (
-                        <div key={tree.id ?? i} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
-                          width: 36, height: 36, borderRadius: 8,
-                          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                          border: `1px solid ${cardBorder}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <PlantIcon type={tree.type} size={24} stage={tree.stage} hideGround disableSway />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Activity Line Graph */}
@@ -745,6 +773,61 @@ export const StatsView = memo(function StatsView({
                 </div>
               </div>
         </div>
+
+        {grove.length > 0 && (() => {
+          const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 10)
+          const styled = recent.map((tree, i) => {
+            const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
+            return { tree, yOff: Math.round(seed * 8 - 2), tilt: ((seed * 6) - 3) * 0.7, size: 38 + Math.round(seed * 6) }
+          })
+          const doubled = [...styled, ...styled]
+          return (
+            <div style={{
+              position: 'relative', height: 90, shrink: 0, overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: isDark
+                  ? 'linear-gradient(180deg, #09090b 0%, #110f0a 30%, #1a1610 55%, #2a2418 80%, #1e1a12 100%)'
+                  : 'linear-gradient(180deg, #f5f3ef 0%, #ebe5d8 30%, #ddd5c4 55%, #c8b890 80%, #b0a078 100%)',
+              }} />
+              <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30 }} preserveAspectRatio="none" viewBox="0 0 100 10">
+                <ellipse cx="15" cy="6" rx="18" ry="5" fill={isDark ? '#2e2818' : '#c0a878'} />
+                <ellipse cx="50" cy="7" rx="30" ry="4.5" fill={isDark ? '#2a2414' : '#baa470'} />
+                <ellipse cx="85" cy="5.5" rx="20" ry="5.5" fill={isDark ? '#2c2616' : '#c4ac7c'} />
+                <rect y="8" width="100" height="3" fill={isDark ? '#1a1610' : '#b09a68'} />
+              </svg>
+              <div style={{
+                position: 'absolute', bottom: 12, left: 0, right: 0, height: 60,
+                overflow: 'hidden',
+                maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'flex-end', gap: 40, width: 'max-content',
+                  animation: 'conveyorScroll 40s linear infinite',
+                  willChange: 'transform',
+                }}>
+                  {doubled.map(({ tree, yOff, tilt, size }, i) => (
+                    <div key={`${tree.id ?? tree.type}-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0,
+                      marginBottom: yOff,
+                      transform: `rotate(${tilt}deg)`,
+                    }}>
+                      <PlantIcon type={tree.type} size={size} stage={tree.stage} hideGround disableSway />
+                      <div style={{
+                        width: size * 0.6, height: 4, borderRadius: '50%', marginTop: -2,
+                        background: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',
+                        filter: 'blur(1.5px)',
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
