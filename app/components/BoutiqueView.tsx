@@ -985,13 +985,17 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 }} />
                               </div>
                             </div>
-                            {/* Grassy ground */}
-                            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '26%', zIndex: 3 }}>
-                              <ellipse cx="50" cy="26" rx="54" ry="16" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
-                              <ellipse cx="50" cy="23" rx="50" ry="12" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
-                              <ellipse cx="50" cy="20" rx="46" ry="8" fill={isDark ? '#345828' : '#6a9a4a'} />
-                              <path d="M20 18 Q19 14 18 11 M23 17 Q23 13 24 10 M38 16 Q37 12 36 9 M50 15 Q49 11 48 8 M62 16 Q61 12 60 9 M77 18 Q76 14 75 11"
-                                stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+                            {/* Ground */}
+                            <svg viewBox="0 0 180 60" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
+                              <defs>
+                                <linearGradient id={`ground-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={isDark ? '#3a5a2a' : '#6a9a4a'} />
+                                  <stop offset="40%" stopColor={isDark ? '#2a4a1e' : '#5a8a3a'} />
+                                  <stop offset="100%" stopColor={isDark ? '#1a3412' : '#3a6a22'} />
+                                </linearGradient>
+                              </defs>
+                              <path d="M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14 L180 60 L0 60 Z" fill={`url(#ground-${i})`} />
+                              <path d="M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14" fill="none" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.6" opacity="0.3" />
                             </svg>
                           </div>
                         )}
