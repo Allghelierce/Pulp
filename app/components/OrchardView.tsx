@@ -2718,6 +2718,8 @@ export const OrchardView = memo(function OrchardView({
   slotOrderRef.current = slotOrder
   const currentPlotTreesRef = useRef(currentPlotTrees)
   currentPlotTreesRef.current = currentPlotTrees
+  const baseSizeRef = useRef(0)
+  const prevPlotPageRef = useRef(-1)
   const selectedNotebookRef = useRef(selectedNotebook)
   selectedNotebookRef.current = selectedNotebook
 
@@ -2903,7 +2905,11 @@ export const OrchardView = memo(function OrchardView({
     if (showChopHint) { setShowChopHint(false); localStorage.setItem('pulp-chop-hint-dismissed', '1') }
   }, [showChopHint])
 
-  if (!isOpen) return null
+  if (!isOpen) {
+    baseSizeRef.current = 0
+    prevPlotPageRef.current = -1
+    return null
+  }
 
   const cardBorder = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'
   const textPrimary = isDark ? '#d4d0c8' : '#3a3630'
@@ -2911,10 +2917,15 @@ export const OrchardView = memo(function OrchardView({
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
   const plotCount = currentPlotTrees.length
-  const baseSize = plotCount <= 6 ? 130 :
+  const computedSize = plotCount <= 6 ? 130 :
     plotCount <= 15 ? 115 :
     plotCount <= 24 ? 105 :
     plotCount <= 36 ? 95 : 85
+  if (computedSize <= baseSizeRef.current || baseSizeRef.current === 0 || plotPage !== prevPlotPageRef.current) {
+    baseSizeRef.current = computedSize
+  }
+  prevPlotPageRef.current = plotPage
+  const baseSize = baseSizeRef.current
 
   return (
     <div

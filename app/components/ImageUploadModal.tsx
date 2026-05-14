@@ -73,19 +73,21 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.1 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/75 backdrop-blur-md"
+        className="absolute inset-0 bg-black/75"
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_32px_128px_rgba(0,0,0,0.8)] w-full max-w-sm overflow-hidden"
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.97 }}
+        transition={{ duration: 0.1 }}
+        className="relative bg-zinc-800 border border-zinc-700/50 rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.6)] w-full max-w-sm overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-right from-transparent via-orange-500/20 to-transparent" />
 

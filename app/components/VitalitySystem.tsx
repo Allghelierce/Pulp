@@ -28,6 +28,7 @@ interface VitalitySystemProps {
   inventory: string[]
   activeTabId: string | null
   initialNotes: any[]
+  onOpenSatchel?: () => void
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -35,7 +36,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sap, gems, xp, grove, achievements, setSap, setGems, setXp, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory, activeTabId, initialNotes,
+  inventory, activeTabId, initialNotes, onOpenSatchel,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -434,6 +435,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
+      onOpenSatchel={onOpenSatchel}
     />
   )
 })

@@ -19,10 +19,12 @@ import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
 const _preloadShelf = () => import("@/app/components/ShelfView")
+import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
+import { MiniRings } from "@/app/components/StatsView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 
 const _preloadOrchard = () => import("@/app/components/OrchardView")
@@ -51,7 +53,6 @@ const GridView = lazy(() => _preloadGrid().then(m => ({ default: m.GridView })))
 const AiInlineMenu = lazy(() => _preloadAiInline().then(m => ({ default: m.AiInlineMenu })))
 const AiResultModal = lazy(() => _preloadAiResult().then(m => ({ default: m.AiResultModal })))
 const ShelfView = lazy(() => _preloadShelf().then(m => ({ default: m.ShelfView })))
-const ImageUploadModal = lazy(() => _preloadImageUpload().then(m => ({ default: m.ImageUploadModal })))
 const CoverModal = lazy(() => _preloadCover().then(m => ({ default: m.CoverModal })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
@@ -3423,6 +3424,48 @@ export default function NoteApp() {
                   selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
                   unlockedCosmetics={unlockedCosmetics}
                 />
+                <div style={{ position: 'absolute', top: 44, left: 12, zIndex: 80 }}>
+                  <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} />
+                </div>
+              </div>
+            )}
+
+
+            {/* Floating zoom + undo/redo bar — bottom right */}
+            {notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
+              <div
+                className="fixed z-[80] flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg"
+                style={{
+                  bottom: 16, right: 16,
+                  background: theme === 'dark' ? 'rgba(24,24,27,0.9)' : 'rgba(255,255,255,0.92)',
+                  border: theme === 'dark' ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+              >
+                <button
+                  onMouseDown={e => { e.preventDefault(); drawing.undo() }}
+                  className={`h-6 w-6 flex items-center justify-center rounded transition-colors ${theme === 'dark' ? 'text-zinc-400 hover:bg-zinc-700' : 'text-zinc-500 hover:bg-zinc-100'}`}
+                  style={{ opacity: drawing.canUndo ? 1 : 0.25, cursor: drawing.canUndo ? 'pointer' : 'default' }}
+                  title="Undo"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+                </button>
+                <button
+                  onMouseDown={e => { e.preventDefault(); drawing.redo() }}
+                  className={`h-6 w-6 flex items-center justify-center rounded transition-colors ${theme === 'dark' ? 'text-zinc-400 hover:bg-zinc-700' : 'text-zinc-500 hover:bg-zinc-100'}`}
+                  style={{ opacity: drawing.canRedo ? 1 : 0.25, cursor: drawing.canRedo ? 'pointer' : 'default' }}
+                  title="Redo"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+                </button>
+                <div style={{ width: 1, height: 16, background: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 2px' }} />
+                <select
+                  value={zoom}
+                  onChange={e => setZoom(e.target.value)}
+                  className={`text-[11px] font-medium rounded px-1.5 py-0.5 outline-none cursor-pointer border-none ${theme === 'dark' ? 'bg-transparent text-zinc-400' : 'bg-transparent text-zinc-500'}`}
+                >
+                  {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
               </div>
             )}
 
@@ -4026,7 +4069,7 @@ export default function NoteApp() {
             />
           )}
 
-          {showImageModal && (<Suspense fallback={null}>
+          {showImageModal && (
             <ImageUploadModal
               onConfirm={(htmlOrUrl, isHtml) => {
                 const boxId = pendingImageBoxId.current
@@ -4044,7 +4087,7 @@ export default function NoteApp() {
               }}
               onClose={() => { setShowImageModal(false); pendingImageBoxId.current = null }}
             />
-          </Suspense>)}
+          )}
 
           {showCoverModal && (<Suspense fallback={null}>
             <CoverModal
@@ -4291,6 +4334,7 @@ export default function NoteApp() {
           inventory={inventory}
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
+          onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

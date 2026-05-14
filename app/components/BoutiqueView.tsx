@@ -392,7 +392,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
   const CurrencyPill = ({ amount }: { amount: number }) => (
     <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
-      <PulpIcon size={11} />
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
   )
@@ -410,7 +410,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose} onWheel={e => e.stopPropagation()} onTouchMove={e => e.preventDefault()} style={{ overscrollBehavior: 'contain' }}>
       <style>{`
         @keyframes seed-wobble {
           0%, 100% { transform: scale(1) rotate(0deg); }
@@ -435,11 +435,12 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 66% 100%, 64% 50%); opacity: 0; }
         }
         @keyframes sprout-emerge {
-          0% { transform: scale(0) translateY(10px); opacity: 0; }
-          50% { transform: scale(0.3) translateY(5px); opacity: 0; }
-          70% { transform: scale(0.8) translateY(2px); opacity: 1; }
-          85% { transform: scale(1.05) translateY(-2px); opacity: 1; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
+          0% { transform: scaleY(0) translateY(20px); transform-origin: center bottom; opacity: 0; }
+          40% { transform: scaleY(0.1) translateY(15px); transform-origin: center bottom; opacity: 0; }
+          60% { transform: scaleY(0.6) scaleX(0.8) translateY(5px); transform-origin: center bottom; opacity: 1; }
+          80% { transform: scaleY(1.08) scaleX(1.02) translateY(-3px); transform-origin: center bottom; opacity: 1; }
+          90% { transform: scaleY(0.97) scaleX(1) translateY(1px); transform-origin: center bottom; opacity: 1; }
+          100% { transform: scaleY(1) scaleX(1) translateY(0); transform-origin: center bottom; opacity: 1; }
         }
         @keyframes leaf-scatter {
           0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 0; }
@@ -461,13 +462,37 @@ export const BoutiqueView = memo(function BoutiqueView({
           30% { transform: scale(1.2); opacity: 0.15; }
           100% { transform: scale(3); opacity: 0; }
         }
-        @keyframes seed-packet-hover {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
+        @keyframes seed-spin-reveal {
+          0% { transform: rotateY(0) scale(1); }
+          30% { transform: rotateY(180deg) scale(0.9); }
+          60% { transform: rotateY(360deg) scale(1.05); }
+          100% { transform: rotateY(360deg) scale(1); }
+        }
+        @keyframes rarity-pulse {
+          0%, 100% { box-shadow: 0 0 8px var(--pulse-col), 0 4px 20px var(--pulse-col20); }
+          50% { box-shadow: 0 0 18px var(--pulse-col), 0 4px 30px var(--pulse-col40); }
+        }
+        @keyframes shop-pollen {
+          0% { transform: translate(0, 0) scale(0); opacity: 0; }
+          10% { opacity: 0.4; transform: translate(var(--sp-x1), var(--sp-y1)) scale(1); }
+          90% { opacity: 0.15; }
+          100% { opacity: 0; transform: translate(var(--sp-x2), var(--sp-y2)) scale(0.3); }
+        }
+        @keyframes shop-leaf-float {
+          0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 0; }
+          10% { opacity: 0.3; transform: translate(var(--sl-x1), var(--sl-y1)) rotate(45deg) scale(1); }
+          90% { opacity: 0.1; }
+          100% { opacity: 0; transform: translate(var(--sl-x2), var(--sl-y2)) rotate(var(--sl-r)) scale(0.2); }
+        }
+        @keyframes daily-deal-glow {
+          0%, 100% { box-shadow: 0 0 12px #d9770630, 0 0 24px #d9770610; }
+          50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
         .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .seed-packet:hover { transform: translateY(-4px); }
-        .seed-cracking { animation: seed-wobble 0.6s ease-in-out; }
+        .seed-cracking { animation: seed-spin-reveal 0.6s ease-in-out, seed-wobble 0.6s ease-in-out !important; }
+        .seed-revealed { animation: rarity-pulse 3s ease-in-out infinite; }
+        .daily-deal { animation: daily-deal-glow 2.5s ease-in-out infinite !important; }
       `}</style>
       <div
         onMouseDown={e => e.stopPropagation()}
@@ -525,53 +550,9 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
-            <div style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-              {/* Botanical background */}
-              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }} preserveAspectRatio="none">
-                <defs>
-                  <radialGradient id="mkt-glow-center" cx="50%" cy="45%">
-                    <stop offset="0%" stopColor={isDark ? 'rgba(217,119,6,0.03)' : 'rgba(217,119,6,0.04)'} />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                  <radialGradient id="mkt-glow-bl" cx="10%" cy="90%">
-                    <stop offset="0%" stopColor={isDark ? 'rgba(100,140,80,0.04)' : 'rgba(100,140,80,0.03)'} />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                  <radialGradient id="mkt-glow-tr" cx="90%" cy="10%">
-                    <stop offset="0%" stopColor={isDark ? 'rgba(160,120,60,0.03)' : 'rgba(160,120,60,0.025)'} />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#mkt-glow-center)" />
-                <rect width="100%" height="100%" fill="url(#mkt-glow-bl)" />
-                <rect width="100%" height="100%" fill="url(#mkt-glow-tr)" />
-                {/* Scattered leaf shapes */}
-                <g opacity={isDark ? 0.04 : 0.035} fill={isDark ? '#8a9a6a' : '#6a8a4a'}>
-                  <path d="M80 580 Q90 560 110 555 Q95 570 100 590 Q85 580 80 580Z" />
-                  <path d="M920 520 Q935 505 950 510 Q940 520 945 535 Q930 525 920 520Z" />
-                  <path d="M60 120 Q75 105 90 108 Q82 118 85 132 Q68 124 60 120Z" />
-                  <path d="M960 140 Q970 125 985 128 Q978 138 980 150 Q965 142 960 140Z" />
-                  <path d="M150 480 Q160 465 175 468 Q168 478 170 490 Q155 482 150 480Z" />
-                  <path d="M850 460 Q862 448 875 452 Q868 460 870 472 Q856 464 850 460Z" />
-                </g>
-                {/* Vine tendrils */}
-                <g stroke={isDark ? 'rgba(120,150,90,0.04)' : 'rgba(90,120,60,0.03)'} fill="none" strokeWidth="1" strokeLinecap="round">
-                  <path d="M0 200 Q30 180 50 200 Q70 220 60 250" />
-                  <path d="M1060 350 Q1030 330 1010 350 Q990 370 1000 400" />
-                  <path d="M0 450 Q25 440 40 455 Q55 470 45 490" />
-                  <path d="M1060 150 Q1035 140 1020 155 Q1005 170 1015 190" />
-                </g>
-                {/* Small scattered dots like seeds/pollen */}
-                <g fill={isDark ? 'rgba(217,119,6,0.06)' : 'rgba(217,119,6,0.05)'}>
-                  {[[120, 100], [200, 520], [340, 80], [500, 560], [680, 90], [780, 530], [900, 100], [950, 480], [60, 350], [1000, 300]].map(([cx, cy], di) => (
-                    <circle key={di} cx={cx} cy={cy} r={1 + (di % 3) * 0.5} />
-                  ))}
-                </g>
-                {/* Faint horizontal botanical divider lines */}
-                <line x1="5%" y1="98%" x2="95%" y2="98%" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.5" />
-              </svg>
+            <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {/* Toggle + Timer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative', zIndex: 1 }}>
                 {/* Current / Seasonal toggle */}
                 <div className={`flex rounded-lg overflow-hidden p-0.5 text-[10px] font-semibold`} style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                   {(['current', 'seasonal'] as const).map(mode => (
@@ -604,12 +585,108 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <span style={{ fontSize: 13, fontWeight: 600, color: textMuted, fontFamily: font }}>Seasonal shop coming soon</span>
                 </div>
               ) : (<>
-              <div style={{ textAlign: 'center', marginBottom: 12, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 22, fontWeight: 600, fontFamily: font, color: isDark ? '#f0ece4' : '#fff', letterSpacing: '-0.02em' }}>Fresh Seeds</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 2, position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</span>
+                <svg width="180" height="20" viewBox="0 0 180 20" style={{ marginTop: 3, opacity: isDark ? 0.3 : 0.25 }}>
+                  {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>
+                    <polygon points="5,10 10,6.5 15,10 10,13.5" fill={c} />
+                    <line x1="15" y1="10" x2="60" y2="10" stroke={c} strokeWidth="0.7" />
+                    <path d="M60 10 Q65 10 68 6.5 Q71 3 74 5.5 Q77 8 74 10 Q71 12 68 10" fill="none" stroke={c} strokeWidth="0.8" strokeLinecap="round" />
+                    <path d="M74 10 Q77 7.5 80 5 Q83 2.5 86 6 Q87.5 8.5 86 10" fill="none" stroke={c} strokeWidth="0.7" strokeLinecap="round" />
+                    <polygon points="90,5 93,10 90,15 87,10" fill="#d97706" />
+                    <path d="M94 10 Q92.5 8.5 94 6 Q97 2.5 100 5 Q103 7.5 106 10" fill="none" stroke={c} strokeWidth="0.7" strokeLinecap="round" />
+                    <path d="M106 10 Q109 12 112 10 Q115 8 112 5.5 Q109 3 112 6.5 Q115 10 120 10" fill="none" stroke={c} strokeWidth="0.8" strokeLinecap="round" />
+                    <line x1="120" y1="10" x2="165" y2="10" stroke={c} strokeWidth="0.7" />
+                    <polygon points="165,10 170,6.5 175,10 170,13.5" fill={c} />
+                  </>)})()}
+                </svg>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                  <button
+                    onClick={() => setActiveTab('satchel')}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      padding: '5px 10px', borderRadius: 6,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      fontSize: 10, fontWeight: 600, fontFamily: font,
+                    }}
+                    title={`Satchel (${inventory.length} seeds)`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
+                    {inventory.length}
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      padding: '5px 10px', borderRadius: 6,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      fontSize: 10, fontWeight: 600, fontFamily: font,
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  </button>
+                </div>
               </div>
               {/* 5 Oval Seed Packets */}
-              <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flex: 1, alignItems: 'center', maxHeight: 460, position: 'relative', zIndex: 1 }}>
+              {(() => {
+                const dealIdx = dailySeeds.reduce((best, type, i) => {
+                  const d = shopDiscounts[type] || 0
+                  const bd = shopDiscounts[dailySeeds[best]] || 0
+                  return d > bd ? i : best
+                }, 0)
+                const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
+                return (
+              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -10 }}>
+                {/* Ambient particles */}
+                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+                  {Array.from({ length: 8 }).map((_, pi) => {
+                    const x1 = -20 + Math.sin(pi * 1.3) * 30
+                    const y1 = -10 + Math.cos(pi * 0.9) * 20
+                    const x2 = 40 + Math.sin(pi * 2.1) * 60
+                    const y2 = -80 - Math.random() * 60
+                    return (
+                      <div key={`p-${pi}`} style={{
+                        position: 'absolute',
+                        left: `${10 + (pi * 11) % 80}%`,
+                        top: `${30 + (pi * 17) % 50}%`,
+                        width: 3, height: 3, borderRadius: '50%',
+                        backgroundColor: isDark ? '#d9770640' : '#d9770630',
+                        ['--sp-x1' as string]: `${x1}px`, ['--sp-y1' as string]: `${y1}px`,
+                        ['--sp-x2' as string]: `${x2}px`, ['--sp-y2' as string]: `${y2}px`,
+                        animation: `shop-pollen ${8 + pi * 1.5}s ease-in-out ${pi * 1.2}s infinite`,
+                      }} />
+                    )
+                  })}
+                  {Array.from({ length: 5 }).map((_, li) => {
+                    const x1 = 15 + Math.sin(li * 2) * 20
+                    const y1 = -10 + Math.cos(li) * 15
+                    const x2 = 30 + Math.sin(li * 3) * 50
+                    const y2 = -60 - Math.random() * 40
+                    const rot = 120 + li * 60
+                    return (
+                      <div key={`l-${li}`} style={{
+                        position: 'absolute',
+                        left: `${5 + (li * 19) % 85}%`,
+                        top: `${50 + (li * 13) % 40}%`,
+                        width: 8, height: 5,
+                        backgroundColor: isDark ? '#6a8a4a20' : '#5a7a3a18',
+                        borderRadius: '50% 50% 50% 0',
+                        ['--sl-x1' as string]: `${x1}px`, ['--sl-y1' as string]: `${y1}px`,
+                        ['--sl-x2' as string]: `${x2}px`, ['--sl-y2' as string]: `${y2}px`,
+                        ['--sl-r' as string]: `${rot}deg`,
+                        animation: `shop-leaf-float ${12 + li * 2}s ease-in-out ${li * 2.5}s infinite`,
+                      }} />
+                    )
+                  })}
+                </div>
                 {dailySeeds.map((type, i) => {
+                  const isDailyDeal = hasDeal && i === dealIdx
                   const t = TREE_TYPES[type]
                   if (!t) return null
                   const isRevealed = revealedCards.has(i)
@@ -618,27 +695,79 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
-                  const ovalW = 170
-                  const ovalH = 220
+                  const cardW = 175
+                  const cardH = 290
 
                   return (
-                    <div key={`${type}-${i}`} style={{ position: 'relative', width: ovalW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      {/* The oval seed packet */}
+                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {/* Daily deal label */}
+                      {isDailyDeal && (
+                        <div style={{
+                          position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+                          fontSize: 7, fontWeight: 800, color: '#d97706', letterSpacing: '0.1em',
+                          textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
+                          background: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)',
+                          padding: '2px 8px', borderRadius: 4,
+                          border: `1px solid ${isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.15)'}`,
+                        }}>Daily Deal</div>
+                      )}
+                      {/* Seed card */}
                       <div
-                        className={`seed-packet ${isCracking ? 'seed-cracking' : ''}`}
+                        className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
                         onClick={() => !isRevealed && revealCard(i)}
                         style={{
-                          width: ovalW, height: ovalH, borderRadius: '50%',
+                          width: cardW, height: cardH, borderRadius: '50%',
                           position: 'relative', overflow: 'hidden',
-                          cursor: isRevealed ? 'pointer' : 'pointer',
+                          cursor: 'pointer',
+                          ['--pulse-col' as string]: `${rarityCol}30`,
+                          ['--pulse-col20' as string]: `${rarityCol}15`,
+                          ['--pulse-col40' as string]: `${rarityCol}30`,
                           boxShadow: isRevealed
                             ? `0 4px 20px ${rarityCol}20, 0 2px 8px rgba(0,0,0,0.15)`
-                            : isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)',
-                          border: isRevealed
-                            ? `2px solid ${rarityCol}40`
-                            : `2px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                            : isDailyDeal
+                              ? undefined
+                              : isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)',
+                          border: 'none',
                         }}
                       >
+                        {/* Decorative border */}
+                        <svg viewBox={`0 0 ${cardW} ${cardH}`} style={{ position: 'absolute', inset: -1, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)', zIndex: 15, pointerEvents: 'none' }}>
+                          <defs>
+                            <clipPath id={`oval-clip-${i}`}><ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-1} ry={cardH/2-1} /></clipPath>
+                          </defs>
+                          {isRevealed ? (
+                            <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-2} ry={cardH/2-2} fill="none"
+                              stroke={rarityCol} strokeWidth="1" opacity="0.35"
+                              strokeDasharray="6 3 2 3" />
+                          ) : (
+                            <>
+                              <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-1.5} ry={cardH/2-1.5} fill="none"
+                                stroke={isDark ? '#a09080' : '#8a7a6a'} strokeWidth="1.2" opacity={isDark ? 0.2 : 0.25}
+                                strokeDasharray="4 6 2 6" />
+                              <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-4} ry={cardH/2-4} fill="none"
+                                stroke={isDark ? '#a09080' : '#8a7a6a'} strokeWidth="0.5" opacity={isDark ? 0.1 : 0.12}
+                                strokeDasharray="1 8" />
+                              {/* Vine accents */}
+                              <g opacity={isDark ? 0.15 : 0.18} stroke={isDark ? '#8a9a6a' : '#6a8a4a'} fill="none" strokeWidth="0.8" strokeLinecap="round" clipPath={`url(#oval-clip-${i})`}>
+                                <path d="M20 35 Q30 28 35 40 Q38 48 32 55" />
+                                <path d="M30 32 Q33 27 36 32" />
+                                <path d="M36 46 Q40 42 42 47" />
+                                <path d={`M${cardW-20} 35 Q${cardW-30} 28 ${cardW-35} 40 Q${cardW-38} 48 ${cardW-32} 55`} />
+                                <path d={`M${cardW-30} 32 Q${cardW-33} 27 ${cardW-36} 32`} />
+                                <path d={`M${cardW-36} 46 Q${cardW-40} 42 ${cardW-42} 47`} />
+                                <path d={`M15 ${cardH-50} Q25 ${cardH-45} 28 ${cardH-35} Q30 ${cardH-28} 24 ${cardH-24}`} />
+                                <path d={`M22 ${cardH-42} Q26 ${cardH-45} 28 ${cardH-41}`} />
+                                <path d={`M${cardW-15} ${cardH-50} Q${cardW-25} ${cardH-45} ${cardW-28} ${cardH-35} Q${cardW-30} ${cardH-28} ${cardW-24} ${cardH-24}`} />
+                                <path d={`M${cardW-22} ${cardH-42} Q${cardW-26} ${cardH-45} ${cardW-28} ${cardH-41}`} />
+                              </g>
+                              {discount > 0 && (
+                                <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-3} ry={cardH/2-3} fill="none"
+                                  stroke="#d97706" strokeWidth="1" opacity={isDark ? 0.15 : 0.12}
+                                  strokeDasharray="3 4 1 4" />
+                              )}
+                            </>
+                          )}
+                        </svg>
                         {!isRevealed ? (
                           /* Unrevealed — kraft paper seed packet */
                           <div
@@ -652,30 +781,61 @@ export const BoutiqueView = memo(function BoutiqueView({
                               position: 'relative',
                             }}
                           >
-                            {/* Paper texture lines */}
-                            <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.06 : 0.08 }}>
-                              {Array.from({ length: 8 }).map((_, li) => (
-                                <line key={li} x1="15%" y1={`${20 + li * 8}%`} x2="85%" y2={`${20 + li * 8}%`}
-                                  stroke={isDark ? '#fff' : '#000'} strokeWidth="0.5" />
-                              ))}
+                            {/* Organic paper texture */}
+                            <svg width="100%" height="100%" viewBox="0 0 170 230" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.05 : 0.06 }}>
+                              <defs>
+                                <radialGradient id={`paper-fade-${i}`} cx="50%" cy="50%" r="45%">
+                                  <stop offset="0%" stopOpacity="1" stopColor={isDark ? '#fff' : '#000'} />
+                                  <stop offset="100%" stopOpacity="0" stopColor={isDark ? '#fff' : '#000'} />
+                                </radialGradient>
+                              </defs>
+                              <g stroke={isDark ? '#fff' : '#000'} fill="none" strokeLinecap="round" mask={`url(#paper-fade-${i})`}>
+                                {/* Wood grain curves */}
+                                <path d="M30 55 Q55 50 85 53 Q120 57 145 52" strokeWidth="0.6" opacity="0.5" />
+                                <path d="M25 80 Q50 76 85 79 Q115 83 150 78" strokeWidth="0.4" opacity="0.35" />
+                                <path d="M35 105 Q60 100 90 103 Q125 107 140 102" strokeWidth="0.5" opacity="0.4" />
+                                <path d="M28 130 Q58 126 85 129 Q110 133 148 127" strokeWidth="0.4" opacity="0.3" />
+                                <path d="M32 155 Q62 150 88 153 Q118 157 142 151" strokeWidth="0.5" opacity="0.35" />
+                                <path d="M38 178 Q65 174 90 177 Q112 180 138 175" strokeWidth="0.3" opacity="0.25" />
+                                {/* Fiber wisps */}
+                                <path d="M45 68 Q52 65 60 67" strokeWidth="0.3" opacity="0.2" />
+                                <path d="M100 92 Q108 89 118 91" strokeWidth="0.3" opacity="0.2" />
+                                <path d="M55 140 Q63 137 72 139" strokeWidth="0.3" opacity="0.15" />
+                                <path d="M90 165 Q100 162 112 164" strokeWidth="0.3" opacity="0.2" />
+                              </g>
                             </svg>
-                            {/* Rarity ring hint */}
-                            <div style={{
-                              position: 'absolute', inset: 4, borderRadius: '50%',
-                              border: `1.5px solid ${rarityCol}`,
-                              opacity: isDark ? 0.15 : 0.12,
-                            }} />
-                            {/* Seed icon */}
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ opacity: isDark ? 0.25 : 0.3 }}>
-                              <path d="M12 22c4-4 8-8 8-13a8 8 0 0 0-16 0c0 5 4 9 8 13z" fill={rarityCol} opacity="0.4" />
-                              <path d="M12 22c4-4 8-8 8-13a8 8 0 0 0-16 0c0 5 4 9 8 13z" stroke={rarityCol} strokeWidth="1.5" fill="none" />
-                            </svg>
-                            {/* Small rarity dot */}
-                            <div style={{
-                              width: 5, height: 5, borderRadius: '50%', marginTop: 6,
-                              backgroundColor: rarityCol, opacity: isDark ? 0.25 : 0.2,
-                            }} />
-                            {/* Discount hint */}
+                            {/* Discount ring hint */}
+                            {discount > 0 && (
+                              <div style={{
+                                position: 'absolute', inset: 4, borderRadius: '50%',
+                                border: `1.5px solid ${isDark ? '#d97706' : '#d97706'}`,
+                                opacity: isDark ? 0.2 : 0.15,
+                              }} />
+                            )}
+                            {/* Sprouting seed */}
+                            {(() => {
+                              const isRareUp = t.rarity === 'rare' || t.rarity === 'true rare' || t.rarity === 'sacred'
+                              const seedCol = isRareUp ? '#d97706' : (isDark ? '#8a7a6a' : '#6a5a4a')
+                              const sproutCol = isRareUp ? '#e8a020' : (isDark ? '#6a8a4a' : '#5a7a3a')
+                              return (
+                                <svg width="40" height="52" viewBox="0 0 40 52" style={{ opacity: isDark ? 0.35 : 0.4 }}>
+                                  {/* Seed body */}
+                                  <ellipse cx="20" cy="38" rx="8" ry="10" fill={seedCol} opacity="0.6" />
+                                  <ellipse cx="20" cy="38" rx="8" ry="10" stroke={seedCol} strokeWidth="1" fill="none" opacity="0.8" />
+                                  {/* Crack line */}
+                                  <path d="M20 30 Q18 34 20 38 Q22 34 20 30" stroke={seedCol} strokeWidth="0.8" fill="none" opacity="0.5" />
+                                  {/* Sprout stem */}
+                                  <path d="M20 30 Q19 24 20 16" stroke={sproutCol} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                                  {/* Left leaf */}
+                                  <path d="M20 22 Q14 18 12 14 Q16 16 20 20" fill={sproutCol} opacity="0.7" />
+                                  {/* Right leaf */}
+                                  <path d="M20 18 Q26 14 28 10 Q24 13 20 16" fill={sproutCol} opacity="0.7" />
+                                  {/* Tiny unfurling leaf at top */}
+                                  <path d="M20 16 Q18 12 16 10 Q18 11 20 14" fill={sproutCol} opacity="0.5" />
+                                </svg>
+                              )
+                            })()}
+                            {/* Discount badge */}
                             {discount > 0 && (
                               <div style={{
                                 position: 'absolute', top: 14, right: 18,
@@ -747,28 +907,33 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 zIndex: 5,
                               }}>-{discount}%</div>
                             )}
-                            {/* Plant */}
-                            <div className={rarityPlantClass(t.rarity)} style={{
-                              position: 'relative', zIndex: 4, marginBottom: '18%',
-                              animation: isRevealed && revealEffect?.index === i ? 'sprout-emerge 0.5s ease-out backwards 0.1s' : undefined,
+                            {/* Plant — centered, base overlaps into grass */}
+                            <div style={{
+                              position: 'absolute', bottom: '15%', left: 0, right: 0,
+                              display: 'flex', justifyContent: 'center',
+                              zIndex: 2,
                             }}>
-                              <PlantIcon type={type} size={70} stage={3} hideGround />
+                              <div className={rarityPlantClass(t.rarity)} style={{
+                                animation: isRevealed && revealEffect?.index === i ? 'sprout-emerge 0.3s ease-out' : undefined,
+                                position: 'relative',
+                              }}>
+                                <PlantIcon type={type} size={100} stage={3} hideGround />
+                                {/* Ground blend */}
+                                <div style={{
+                                  position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
+                                  width: '60%', height: 10, zIndex: 5,
+                                  background: `linear-gradient(to top, ${isDark ? '#2a4a1e' : '#5a8a3a'} 0%, transparent 100%)`,
+                                  borderRadius: '50%',
+                                }} />
+                              </div>
                             </div>
-                            {/* Grassy ground arc */}
-                            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
-                              <defs>
-                                <linearGradient id={`mkt-soil-c-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={isDark ? '#2e2414' : '#6e5c3a'} />
-                                  <stop offset="100%" stopColor={isDark ? '#1a1408' : '#4e3e22'} />
-                                </linearGradient>
-                              </defs>
-                              <ellipse cx="50" cy="28" rx="52" ry="18" fill={`url(#mkt-soil-c-${i})`} />
-                              <ellipse cx="50" cy="24" rx="48" ry="12" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
-                              <ellipse cx="50" cy="22" rx="44" ry="9" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
-                              <ellipse cx="50" cy="21" rx="40" ry="7" fill={isDark ? '#345828' : '#6a9a4a'} />
-                              {/* Grass blades */}
-                              <path d="M25 18 Q24 14 22 12 M27 17 Q27 13 28 11 M42 16 Q40 12 39 10 M44 16 Q44 12 45 10 M58 16 Q56 12 55 10 M60 16 Q60 12 61 10 M75 18 Q74 14 72 12 M77 17 Q77 13 78 11"
-                                stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.5" fill="none" opacity="0.5" strokeLinecap="round" />
+                            {/* Grassy ground */}
+                            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '26%', zIndex: 3 }}>
+                              <ellipse cx="50" cy="26" rx="54" ry="16" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
+                              <ellipse cx="50" cy="23" rx="50" ry="12" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
+                              <ellipse cx="50" cy="20" rx="46" ry="8" fill={isDark ? '#345828' : '#6a9a4a'} />
+                              <path d="M20 18 Q19 14 18 11 M23 17 Q23 13 24 10 M38 16 Q37 12 36 9 M50 15 Q49 11 48 8 M62 16 Q61 12 60 9 M77 18 Q76 14 75 11"
+                                stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
                             </svg>
                           </div>
                         )}
@@ -792,47 +957,27 @@ export const BoutiqueView = memo(function BoutiqueView({
                           </>
                         )}
                       </div>
-                      {/* Info below circle */}
-                      {isRevealed && (
-                        <div style={{ textAlign: 'center', marginTop: 8, width: '100%' }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {t.name}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 2 }}>
-                            <span style={{ fontSize: 8, fontWeight: 600, color: rarityCol, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                              {getDropChance(t.weight)}
-                            </span>
-                            <span style={{ fontSize: 2, color: textMuted }}>·</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706', display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <PulpIcon size={10} />
-                              {discount > 0 ? (
-                                <>
-                                  <span style={{ textDecoration: 'line-through', opacity: 0.4, fontSize: 9 }}>{t.cost}</span>
-                                  <span>{price.toLocaleString()}</span>
-                                </>
-                              ) : (
-                                t.cost.toLocaleString()
-                              )}
-                            </span>
-                          </div>
-                          {/* Buy button */}
-                          {!soldOut && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); buySeed(type) }}
-                              disabled={sap < price}
-                              className="transition-all hover:brightness-110"
-                              style={{
-                                marginTop: 6, fontSize: 10, fontWeight: 600, fontFamily: font,
-                                background: '#d97706', color: '#fff', border: 'none',
-                                padding: '3px 12px', borderRadius: 99, cursor: sap < price ? 'default' : 'pointer',
-                                opacity: sap < price ? 0.35 : 1,
-                              }}
-                            >
-                              Buy
-                            </button>
+                      {/* Name + price tag below oval */}
+                      <div style={{ textAlign: 'center', marginTop: 6, visibility: isRevealed ? 'visible' : 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                          {t.name || ' '}
+                        </div>
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(250,245,235,0.9)',
+                          border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(180,160,130,0.3)'}`,
+                          padding: '2px 8px', borderRadius: 4,
+                          boxShadow: isDark ? 'none' : '0 1px 2px rgba(0,0,0,0.04)',
+                        }}>
+                          <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#a09080' : '#8a7a60'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          {discount > 0 ? (<>
+                            <span style={{ fontSize: 9, fontWeight: 600, color: textMuted, textDecoration: 'line-through', opacity: 0.5, fontFamily: font }}>{t.cost}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', fontFamily: font }}>{price}</span>
+                          </>) : (
+                            <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#c0b8a8' : '#6a5a40', fontFamily: font }}>{price}</span>
                           )}
                         </div>
-                      )}
+                      </div>
                       {/* Leaf scatter effect on reveal (rare+) */}
                       {revealEffect?.index === i && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>
@@ -882,8 +1027,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 18 }}>
                           {[0, 0.1, 0.2].map((delay, ri) => (
                             <div key={ri} style={{
-                              position: 'absolute', width: ovalW * 0.6, height: ovalH * 0.6,
-                              borderRadius: '50%', left: -(ovalW * 0.3), top: -(ovalH * 0.3),
+                              position: 'absolute', width: cardW * 0.6, height: cardH * 0.6,
+                              borderRadius: '50%', left: -(cardW * 0.3), top: -(cardH * 0.3),
                               background: `radial-gradient(circle, ${rarityCol}30 0%, transparent 70%)`,
                               animation: `golden-bloom 2s ease-out ${delay}s forwards`,
                             }} />
@@ -894,129 +1039,157 @@ export const BoutiqueView = memo(function BoutiqueView({
                   )
                 })}
               </div>
+                )
+              })()}
 
-              {/* Nav buttons below cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 18, position: 'relative', zIndex: 1 }}>
-                <button
-                  onClick={() => setActiveTab('satchel')}
-                  className={`px-5 py-2 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-2 w-48 justify-center ${isDark ? 'bg-zinc-800/60 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
-                  style={{ border: `1px solid ${cardBorder}`, fontFamily: font }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  Satchel
-                  <span style={{ fontSize: 9, opacity: 0.5 }}>{inventory.length}/{MAX_SEEDS}</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
-                  className={`px-5 py-2 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-2 w-48 justify-center ${isDark ? 'bg-zinc-800/60 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
-                  style={{ border: `1px solid ${cardBorder}`, fontFamily: font }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                  Catalog
-                </button>
-              </div>
+
               </>
               )}
             </div>
           )}
 
-          {activeTab === 'shop' && selectedPlant && previewInfo && (
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0 }}>
-              {/* Large plant preview */}
-              <div style={{
-                width: '100%', maxWidth: 520, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                borderRadius: 16, overflow: 'hidden', position: 'relative',
-                height: 320,
-                background: isDark
-                  ? (SHOP_BG_DARK[previewInfo.rarity] || SHOP_BG_DARK.common)
-                  : (SHOP_BG[previewInfo.rarity] || SHOP_BG.common),
-              }}>
-                <RarityScene rarity={previewInfo.rarity} isDark={isDark} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: `linear-gradient(180deg, transparent 0%, ${isDark ? 'rgba(20,16,10,0.35)' : 'rgba(40,32,20,0.15)'} 100%)`, zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 40px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`, borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
-                <Sparkles rarity={previewInfo.rarity} count={10} />
-                <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 12, zIndex: 2 }}>
-                  {previewStage === 0
-                    ? <PlantIcon type={selectedPlant!} size={180} isSeed />
-                    : <PlantIcon type={selectedPlant!} size={180} stage={previewStage - 1} />
-                  }
+          {activeTab === 'shop' && selectedPlant && previewInfo && (() => {
+            const stock = shopStock[selectedPlant!] || 0
+            const discPrice = getPrice(selectedPlant!)
+            const cantAfford = sap < discPrice
+            const disc = shopDiscounts[selectedPlant!] || 0
+            const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
+            const cat = previewInfo.category || 'none'
+            const desc = cat === 'fruit'
+              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} fruit tree that produces ${previewInfo.sapYield || 2} sap when harvested.`
+              : cat === 'flora'
+              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} ornamental plant. Yields ${previewInfo.sapYield || 2} sap at maturity.`
+              : cat === 'gem'
+              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} crystalline tree that yields gems when sap is collected.`
+              : `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
+
+            return (
+            <div style={{ padding: '32px 40px', flex: 1, display: 'flex', alignItems: 'center', gap: 40, minHeight: 0 }}>
+              {/* Left — plant preview */}
+              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 220, height: 260, borderRadius: 16, overflow: 'hidden', position: 'relative',
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                  background: isDark
+                    ? (SHOP_BG_DARK[previewInfo.rarity] || SHOP_BG_DARK.common)
+                    : (SHOP_BG[previewInfo.rarity] || SHOP_BG.common),
+                }}>
+                  <RarityScene rarity={previewInfo.rarity} isDark={isDark} />
+                  <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 30px ${isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
+                  <Sparkles rarity={previewInfo.rarity} count={6} />
+                  <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 16, zIndex: 2 }}>
+                    {previewStage === 0
+                      ? <PlantIcon type={selectedPlant!} size={130} isSeed />
+                      : <PlantIcon type={selectedPlant!} size={130} stage={previewStage - 1} />
+                    }
+                  </div>
+                </div>
+                {/* Stage slider */}
+                <div style={{ width: 220 }}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={STAGE_NAMES.length - 1}
+                    value={previewStage}
+                    onChange={e => setPreviewStage(Number(e.target.value))}
+                    className="boutique-slider"
+                    style={{
+                      width: '100%', height: 3, appearance: 'none', WebkitAppearance: 'none',
+                      background: `linear-gradient(90deg, ${isDark ? '#52525b' : '#a1a1aa'} 0%, ${isDark ? '#52525b' : '#a1a1aa'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} 100%)`,
+                      borderRadius: 4, outline: 'none', cursor: 'pointer',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                    {STAGE_NAMES.map((name, si) => (
+                      <button
+                        key={si}
+                        onClick={() => setPreviewStage(si)}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                          fontSize: 8, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
+                          color: previewStage === si ? textPrimary : textMuted,
+                          fontFamily: font, transition: 'color 0.15s',
+                        }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Stage label */}
-              <div style={{ marginTop: 10, textAlign: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary, fontFamily: font }}>
-                  {STAGE_NAMES[previewStage]}
+              {/* Right — info + buy */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+                {/* Rarity badge */}
+                <span style={{
+                  fontSize: 9, fontWeight: 700, color: rarityCol, letterSpacing: '0.08em',
+                  textTransform: 'uppercase', fontFamily: font, marginBottom: 6,
+                }}>
+                  {RARITY_LABEL[previewInfo.rarity]}
                 </span>
-                <span style={{ fontSize: 11, color: textMuted, fontFamily: font, marginLeft: 8 }}>
-                  Stage {previewStage + 1} of {STAGE_NAMES.length}
-                </span>
-              </div>
 
-              {/* Slider */}
-              <div style={{ width: '100%', maxWidth: 520, marginTop: 16, padding: '0 4px' }}>
-                <input
-                  type="range"
-                  min={0}
-                  max={STAGE_NAMES.length - 1}
-                  value={previewStage}
-                  onChange={e => setPreviewStage(Number(e.target.value))}
-                  className="boutique-slider"
-                  style={{
-                    width: '100%', height: 4, appearance: 'none', WebkitAppearance: 'none',
-                    background: `linear-gradient(90deg, ${isDark ? '#52525b' : '#a1a1aa'} 0%, ${isDark ? '#52525b' : '#a1a1aa'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} 100%)`,
-                    borderRadius: 4, outline: 'none', cursor: 'pointer',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, padding: '0 2px' }}>
-                  {STAGE_NAMES.map((name, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPreviewStage(i)}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
-                        fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
-                        color: previewStage === i ? textPrimary : textMuted,
-                        fontFamily: font, transition: 'color 0.15s',
-                      }}
-                    >
-                      {name}
-                    </button>
-                  ))}
+                {/* Name */}
+                <div style={{ fontSize: 24, fontWeight: 600, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
+                  {previewInfo.name}
                 </div>
-              </div>
 
-              {/* Buy button + stock indicator */}
-              {(() => {
-                const stock = shopStock[selectedPlant!] || 0
-                const discPrice = getPrice(selectedPlant!)
-                const cantAfford = sap < discPrice
-                const disc = shopDiscounts[selectedPlant!] || 0
-                if (stock <= 0) return (
-                  <div className="mt-5 px-6 py-2.5 rounded-lg text-[13px] font-bold" style={{
-                    fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 6,
-                    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                {/* Category */}
+                {cat !== 'none' && (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
+                    {CATEGORY_LABEL[cat]}
+                  </span>
+                )}
+
+                {/* Description */}
+                <p style={{ fontSize: 13, color: textSecondary, fontFamily: font, lineHeight: 1.6, marginBottom: 20, maxWidth: 360 }}>
+                  {desc}
+                </p>
+
+                {/* Stats row */}
+                <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <PulpIcon size={12} />
+                      {previewInfo.sapYield || 2}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
+                  </div>
+                </div>
+
+                {/* Price + Buy */}
+                {stock <= 0 ? (
+                  <div style={{
+                    fontSize: 13, fontWeight: 700, fontFamily: font,
                     color: isDark ? '#71717a' : '#a1a1aa',
+                    padding: '10px 0',
                   }}>
                     Sold Out
                   </div>
-                )
-                return (
-                  <div className="mt-5 flex items-center gap-3">
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button
                       onClick={() => buySeed(selectedPlant!)}
                       disabled={cantAfford}
-                      className="px-6 py-2.5 rounded-lg text-[13px] font-bold transition-all hover:brightness-110"
+                      className="transition-all hover:brightness-110"
                       style={{
                         fontFamily: font, cursor: cantAfford ? 'default' : 'pointer', border: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         background: '#d97706', color: '#fff',
                         opacity: cantAfford ? 0.35 : 1,
+                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                       }}
                     >
                       Buy Seed
-                      <span style={{ opacity: 0.6, marginLeft: 2 }}>·</span>
-                      <PulpIcon size={10} />
+                      <span style={{ opacity: 0.5 }}>·</span>
+                      <PulpIcon size={11} />
                       {disc > 0 ? (
                         <>
                           <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: 11 }}>{previewInfo.cost}</span>
@@ -1024,17 +1197,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         </>
                       ) : previewInfo.cost.toLocaleString()}
                     </button>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, fontFamily: font,
-                      color: isDark ? '#71717a' : '#a1a1aa',
-                    }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: textMuted, fontFamily: font }}>
                       ×{stock} left
                     </span>
                   </div>
-                )
-              })()}
+                )}
+              </div>
             </div>
-          )}
+          )})()}
 
           {/* SATCHEL */}
           {activeTab === 'satchel' && (
@@ -1057,10 +1227,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div className="text-[12px] mt-1 opacity-70">Buy seeds from the market to grow your orchard.</div>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-3">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {inventory.map((type, idx) => {
                     const t = TREE_TYPES[type]
                     if (!t) return null
+                    const rc = RARITY_COLOR[t.rarity]
                     return (
                       <div
                         key={`${type}-${idx}`}
@@ -1068,23 +1239,37 @@ export const BoutiqueView = memo(function BoutiqueView({
                       >
                         <button
                           onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(0); setActiveTab('shop') }}
-                          title={t.name}
-                          className={`w-14 h-14 rounded-full flex items-center justify-center cursor-pointer transition-all border ${
-                            isDark
-                              ? 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-800/80'
-                              : 'bg-white border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
-                          }`}
-                          style={{ boxShadow: `0 0 0 2px ${RARITY_COLOR[t.rarity]}20` }}
+                          style={{
+                            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                            transition: 'all 0.15s', fontFamily: font, textAlign: 'left',
+                            boxShadow: `inset 0 0 0 1px ${rc}10`,
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = `${rc}40` }}
+                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }}
                         >
-                          <PlantIcon type={type} size={32} isSeed />
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: `${rc}15`,
+                          }}>
+                            <PlantIcon type={type} size={22} isSeed />
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                            <div style={{ fontSize: 8, fontWeight: 700, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
+                          </div>
                         </button>
                         <button
-                          onClick={() => discardSeed(idx)}
-                          className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border-none cursor-pointer ${
+                          onClick={(e) => { e.stopPropagation(); discardSeed(idx) }}
+                          className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border-none cursor-pointer ${
                             isDark ? 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
                           }`}
+                          style={{ zIndex: 2 }}
                         >
-                          <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                         </button>
                       </div>
                     )
@@ -1116,12 +1301,28 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const plants = Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === rarity && t !== 'spoiled')
                   if (plants.length === 0) return null
                   return (
-                  <div key={rarity} style={{ marginBottom: 28 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: RARITY_COLOR[rarity] }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
-                      <div style={{ flex: 1, height: 1, backgroundColor: dividerColor }} />
+                  <div key={rarity} style={{ marginBottom: 44 }}>
+                    {(() => {
+                      const owned = plants.filter(t => inventory.includes(t)).length
+                      const total = plants.length
+                      const pct = Math.round((owned / total) * 100)
+                      const rc = RARITY_COLOR[rarity]
+                      const complete = owned === total
+                      return (
+                    <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 10, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${complete ? `${rc}30` : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: rc, boxShadow: complete ? `0 0 8px ${rc}60` : 'none' }} />
+                          <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
+                      </div>
+                      <div style={{ height: 6, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: complete ? rc : `linear-gradient(90deg, ${rc}90, ${rc}50)`, borderRadius: 3, transition: 'width 0.4s ease', boxShadow: pct > 0 ? `0 0 8px ${rc}30` : 'none' }} />
+                      </div>
                     </div>
+                      )
+                    })()}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 10px' }}>
                       {plants.map(type => {
                         const t = TREE_TYPES[type]

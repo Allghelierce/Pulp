@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react"
+import { useState, useEffect, useLayoutEffect, useRef, memo, useMemo, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { format } from "date-fns"
 let _katex: typeof import("katex") | null = null
@@ -131,7 +131,7 @@ function Submenu({
     return () => { mountedRef.current = false }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const parentEl = parentRef.current
     const submenuEl = ref.current
     if (!parentEl || !submenuEl || !parentEl.isConnected) return
@@ -207,16 +207,13 @@ function Submenu({
         visibility: coords ? "visible" : "hidden",
         zIndex: 10000,
         minWidth: 180,
-        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(20px) saturate(120%)",
-        WebkitBackdropFilter: "blur(20px) saturate(120%)",
+        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(20,20,22,0.97)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
         boxShadow: isLight
-          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
-          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
+          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02)"
+          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
         padding: "6px 0",
-        animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
@@ -270,9 +267,21 @@ function Submenu({
 
 function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { children: React.ReactNode, parentRef: React.RefObject<HTMLDivElement | null>, mode: "@" | "/", theme?: "light" | "dark", onClose?: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null)
+  const isLight = theme ? theme === "light" : mode === "/"
 
-  useEffect(() => {
+  const initCoords = useMemo(() => {
+    const parent = parentRef.current
+    if (!parent) return { top: -9999, left: -9999 }
+    const pr = parent.getBoundingClientRect()
+    let l = pr.right + 8
+    if (l + 300 > window.innerWidth - 8) l = pr.left - 300 - 8
+    if (l < 8) l = 8
+    return { top: pr.top, left: l }
+  }, [parentRef])
+
+  const [coords, setCoords] = useState(initCoords)
+
+  useLayoutEffect(() => {
     if (parentRef.current && ref.current) {
       const pr = parentRef.current.getBoundingClientRect()
       const rh = ref.current.getBoundingClientRect()
@@ -283,15 +292,16 @@ function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { child
       if (l < 8) l = 8
       setCoords({ top: t, left: l })
     }
+  }, [parentRef, children])
+
+  useEffect(() => {
     if (!onClose) return
     const handleMouseDown = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node) && !parentRef.current?.contains(e.target as Node)) onClose()
     }
     document.addEventListener("mousedown", handleMouseDown)
     return () => document.removeEventListener("mousedown", handleMouseDown)
-  }, [parentRef, children, onClose])
-
-  const isLight = theme ? theme === "light" : mode === "/"
+  }, [onClose, parentRef])
 
   if (typeof document === "undefined") return null
 
@@ -301,19 +311,15 @@ function CustomMenuFlyout({ children, parentRef, mode, onClose, theme }: { child
       className="slash-menu-flyout"
       style={{
         position: "fixed",
-        left: coords?.left ?? -9999,
-        top: coords?.top ?? -9999,
-        visibility: coords ? "visible" : "hidden",
+        left: coords.left,
+        top: coords.top,
         zIndex: 10000,
-        background: isLight ? "rgba(255,255,255,0.85)" : "rgba(20,20,22,0.82)",
-        backdropFilter: "blur(20px) saturate(120%)",
-        WebkitBackdropFilter: "blur(20px) saturate(120%)",
+        background: isLight ? "rgba(255,255,255,0.97)" : "rgba(20,20,22,0.97)",
         border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
         borderRadius: 14,
         boxShadow: isLight
-          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02), inset 0 0 0 1px rgba(255,255,255,0.5)"
-          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.05)",
-        animation: "slash-pop 0.2s cubic-bezier(0.16,1,0.3,1)",
+          ? "0 12px 40px -10px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.02)"
+          : "0 24px 80px -15px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
         fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
         overflow: "hidden",
       }}
@@ -1161,6 +1167,10 @@ export const SlashMenu = memo(function SlashMenu({
                         if (!hasSubmenu) {
                           e.stopPropagation()
                           onSelect(item.action)
+                        } else {
+                          e.stopPropagation()
+                          if (submenuDelayRef.current) { clearTimeout(submenuDelayRef.current); submenuDelayRef.current = null }
+                          setOpenSubmenuId(item.id)
                         }
                       }}
                       style={{

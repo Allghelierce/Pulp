@@ -44,6 +44,7 @@ interface TimerSidebarPanelProps {
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
+  onOpenSatchel?: () => void
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -158,7 +159,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   lostSap, onRecoverSap,
-  inventory, selectedSeed, onSelectSeed,
+  inventory, selectedSeed, onSelectSeed, onOpenSatchel,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -569,6 +570,21 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </div>
               )}
 
+              {/* Satchel (change plant) */}
+              {!running && !done && !treeDead && inventory.length > 0 && (
+                <div className="flex justify-center mt-3 relative z-20">
+                  <button
+                    onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
+                    className="transition-all hover:opacity-90 active:scale-95"
+                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: '"EB Garamond", serif', fontSize: 12, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}
+                    title={`Satchel (${inventory.length} seeds)`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
+                    Change Plant
+                  </button>
+                </div>
+              )}
+
               {/* Death reason */}
               {treeDead && deathReason && (
                 <motion.p
@@ -581,20 +597,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </motion.p>
               )}
 
-              {/* Change Plant and Notebook Selector */}
-              {!running && !done && !treeDead && (
-                <div className="flex flex-col items-center gap-3 mt-3 relative z-20">
-                  {inventory.length > 0 && (
-                    <button
-                      onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
-                      className="text-[10px] font-semibold uppercase tracking-[0.1em] transition-all underline decoration-current/40 hover:decoration-current"
-                      style={{ color: mainColor, fontFamily: 'Inter, system-ui, sans-serif' }}
-                    >
-                      Change Plant
-                    </button>
-                  )}
-                </div>
-              )}
 
               {/* Sap recovery */}
               {lostSap > 0 && !running && (
@@ -780,7 +782,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               >
                 {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 15% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
-
             </div>
           </div>
         </motion.div>
