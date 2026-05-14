@@ -410,7 +410,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose} onWheel={e => e.stopPropagation()} onTouchMove={e => e.preventDefault()} style={{ overscrollBehavior: 'contain' }}>
+    <div className={`absolute inset-0 z-40 flex flex-col ${isDark ? "bg-[#09090b] text-zinc-100" : "bg-[#f5f3f1] text-zinc-900"}`}>
       <style>{`
         @keyframes seed-wobble {
           0%, 100% { transform: scale(1) rotate(0deg); }
@@ -494,11 +494,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         .seed-revealed { animation: rarity-pulse 3s ease-in-out infinite; }
         .daily-deal { animation: daily-deal-glow 2.5s ease-in-out infinite !important; }
       `}</style>
-      <div
-        onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1060px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
-        style={{ backgroundColor: bg, height: 720 }}
-      >
+      <div className="relative flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
           <div className="flex items-center gap-3">
@@ -551,7 +547,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
             <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-              {/* Hanging vines + bottom oranges */}
+              {/* Hanging vines */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
                 <svg viewBox="0 0 1060 700" style={{ width: '100%', height: '100%' }} fill="none" strokeLinecap="round" strokeLinejoin="round">
                   {(() => { const g = isDark ? '#5a9a3a' : '#3a7a1e'; const gl = isDark ? '#7aba5a' : '#5a9a3a'; return (<>
@@ -662,140 +658,113 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <path d="M240 30 Q232 24 228 32 Q234 34 240 30" fill={g} />
                       <path d="M238 60 Q246 55 250 62 Q244 64 238 60" fill={gl} />
                     </g>
-
-                    {/* Bottom crates with oranges */}
-                    {(() => { const wb = isDark ? '#3a2e20' : '#8a7050'; const wl = isDark ? '#4a3e30' : '#a08a68'; const wd = isDark ? '#2a2018' : '#6a5840'; const o1 = '#d97706'; const o2 = '#c87a08'; const o3 = '#e09010'; return (<>
-                      {/* Crate 1 — left, tall */}
-                      <g opacity={isDark ? 0.14 : 0.11}>
-                        <rect x="20" y="630" width="80" height="60" rx="2" fill={wb} />
-                        <rect x="20" y="630" width="80" height="60" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="20" y1="645" x2="100" y2="645" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="20" y1="660" x2="100" y2="660" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="20" y1="675" x2="100" y2="675" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="40" y1="630" x2="40" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="80" y1="630" x2="80" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Oranges in crate */}
-                        <circle cx="38" cy="625" r="8" fill={o1} /><circle cx="38" cy="625" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="60" cy="622" r="9" fill={o2} /><circle cx="60" cy="622" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="82" cy="624" r="7.5" fill={o3} /><circle cx="82" cy="624" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="50" cy="616" r="7" fill={o1} /><circle cx="50" cy="616" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="72" cy="617" r="6.5" fill={o2} /><circle cx="72" cy="617" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        {/* Highlights */}
-                        <ellipse cx="36" cy="622" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="58" cy="619" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="80" cy="621" rx="2.8" ry="1.4" fill="#f0b030" opacity="0.3" />
-                        {/* Leaves */}
-                        <path d="M60 614 Q65 608 68 612" fill={g} opacity="0.5" />
-                        <path d="M38 618 Q33 612 30 616" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 2 — center-left, short */}
-                      <g opacity={isDark ? 0.12 : 0.09}>
-                        <rect x="130" y="655" width="70" height="45" rx="2" fill={wb} />
-                        <rect x="130" y="655" width="70" height="45" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="130" y1="668" x2="200" y2="668" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="130" y1="681" x2="200" y2="681" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="155" y1="655" x2="155" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="180" y1="655" x2="180" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="148" cy="650" r="7" fill={o3} /><circle cx="148" cy="650" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="168" cy="648" r="8" fill={o1} /><circle cx="168" cy="648" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="188" cy="650" r="6.5" fill={o2} /><circle cx="188" cy="650" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="166" cy="645" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <path d="M168 641 Q173 636 176 640" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 3 — center, stacked (bottom) */}
-                      <g opacity={isDark ? 0.14 : 0.11}>
-                        <rect x="380" y="650" width="90" height="50" rx="2" fill={wb} />
-                        <rect x="380" y="650" width="90" height="50" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="380" y1="665" x2="470" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="380" y1="680" x2="470" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="410" y1="650" x2="410" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="440" y1="650" x2="440" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Stacked crate on top */}
-                        <rect x="392" y="618" width="76" height="35" rx="2" fill={wl} />
-                        <rect x="392" y="618" width="76" height="35" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
-                        <line x1="392" y1="630" x2="468" y2="630" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="392" y1="642" x2="468" y2="642" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="415" y1="618" x2="415" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="445" y1="618" x2="445" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Oranges spilling from top crate */}
-                        <circle cx="408" cy="612" r="8" fill={o1} /><circle cx="408" cy="612" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="430" cy="610" r="9" fill={o3} /><circle cx="430" cy="610" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="454" cy="613" r="7.5" fill={o2} /><circle cx="454" cy="613" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="420" cy="604" r="7" fill={o1} /><circle cx="420" cy="604" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="442" cy="605" r="6.5" fill={o3} /><circle cx="442" cy="605" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="428" cy="607" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="406" cy="609" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <path d="M430 602 Q435 596 438 600" fill={g} opacity="0.5" />
-                        <path d="M408 605 Q403 599 400 603" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 4 — right of center */}
-                      <g opacity={isDark ? 0.11 : 0.085}>
-                        <rect x="540" y="660" width="75" height="40" rx="2" fill={wb} />
-                        <rect x="540" y="660" width="75" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="540" y1="672" x2="615" y2="672" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="540" y1="684" x2="615" y2="684" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="565" y1="660" x2="565" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="590" y1="660" x2="590" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="555" cy="655" r="7.5" fill={o2} /><circle cx="555" cy="655" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="577" cy="653" r="8.5" fill={o1} /><circle cx="577" cy="653" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="600" cy="655" r="7" fill={o3} /><circle cx="600" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="575" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                      </g>
-
-                      {/* Crate 5 — right, tall */}
-                      <g opacity={isDark ? 0.13 : 0.1}>
-                        <rect x="750" y="635" width="85" height="65" rx="2" fill={wb} />
-                        <rect x="750" y="635" width="85" height="65" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="750" y1="650" x2="835" y2="650" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="750" y1="665" x2="835" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="750" y1="680" x2="835" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="775" y1="635" x2="775" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="810" y1="635" x2="810" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="768" cy="629" r="8.5" fill={o1} /><circle cx="768" cy="629" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="792" cy="627" r="9" fill={o3} /><circle cx="792" cy="627" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="818" cy="630" r="7.5" fill={o2} /><circle cx="818" cy="630" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="780" cy="621" r="7" fill={o2} /><circle cx="780" cy="621" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="805" cy="620" r="6.5" fill={o1} /><circle cx="805" cy="620" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="790" cy="624" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <path d="M792 618 Q797 612 800 616" fill={g} opacity="0.5" />
-                        <path d="M768 622 Q763 616 760 620" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 6 — far right, small */}
-                      <g opacity={isDark ? 0.12 : 0.09}>
-                        <rect x="900" y="660" width="70" height="40" rx="2" fill={wl} />
-                        <rect x="900" y="660" width="70" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
-                        <line x1="900" y1="673" x2="970" y2="673" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="900" y1="686" x2="970" y2="686" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="925" y1="660" x2="925" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="950" y1="660" x2="950" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="918" cy="655" r="7" fill={o3} /><circle cx="918" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="938" cy="653" r="8" fill={o1} /><circle cx="938" cy="653" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="958" cy="656" r="6.5" fill={o2} /><circle cx="958" cy="656" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="936" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                      </g>
-
-                      {/* Loose oranges on ground between crates */}
-                      <g opacity={isDark ? 0.1 : 0.08}>
-                        <circle cx="115" cy="692" r="6" fill={o2} />
-                        <circle cx="250" cy="688" r="7" fill={o1} />
-                        <circle cx="330" cy="694" r="5.5" fill={o3} />
-                        <circle cx="505" cy="690" r="6.5" fill={o1} />
-                        <circle cx="680" cy="692" r="5.5" fill={o2} />
-                        <circle cx="860" cy="688" r="6" fill={o3} />
-                        <circle cx="1000" cy="694" r="5" fill={o1} />
-                        {/* Scattered leaves */}
-                        <path d="M270 686 Q276 680 282 684 Q276 688 270 686" fill={g} opacity="0.6" />
-                        <path d="M490 694 Q496 688 502 692 Q496 696 490 694" fill={gl} opacity="0.5" />
-                        <path d="M720 690 Q726 684 732 688 Q726 692 720 690" fill={g} opacity="0.5" />
-                      </g>
-                    </>)})()}
                   </>)})()}
                 </svg>
               </div>
+              {/* ── String lights across the top ── */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60, pointerEvents: 'none', zIndex: 0 }}>
+                <svg viewBox="0 0 1060 60" style={{ width: '100%', height: '100%' }} fill="none" preserveAspectRatio="none">
+                  {/* Wire */}
+                  <path d="M0 18 Q80 28 160 20 Q240 12 320 22 Q400 30 480 18 Q560 8 640 20 Q720 30 800 16 Q880 6 960 22 Q1020 30 1060 20" stroke={isDark ? '#5a5040' : '#8a7a60'} strokeWidth="0.8" opacity={isDark ? 0.25 : 0.2} />
+                  {/* Lanterns */}
+                  {[80, 200, 340, 480, 620, 760, 900, 1010].map((lx, li) => {
+                    const ly = 16 + Math.sin(li * 1.1) * 6
+                    const glow = isDark ? 0.12 + (li % 3) * 0.04 : 0.08 + (li % 3) * 0.03
+                    return (
+                      <g key={li}>
+                        <line x1={lx} y1={ly} x2={lx} y2={ly + 10} stroke={isDark ? '#5a5040' : '#8a7a60'} strokeWidth="0.6" opacity={isDark ? 0.3 : 0.25} />
+                        <ellipse cx={lx} cy={ly + 16} rx={4} ry={5} fill="#d97706" opacity={glow} />
+                        <ellipse cx={lx} cy={ly + 16} rx={12} ry={10} fill="#d97706" opacity={glow * 0.4} />
+                        <ellipse cx={lx} cy={ly + 14} rx={2.5} ry={3} fill={isDark ? '#fbbf24' : '#f59e0b'} opacity={glow * 1.5} />
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+
+              {/* ── Scattered seeds & petals ── */}
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                {[
+                  { x: '8%', y: '72%', r: 15, s: 4 },
+                  { x: '22%', y: '85%', r: -25, s: 3 },
+                  { x: '38%', y: '78%', r: 40, s: 5 },
+                  { x: '55%', y: '88%', r: -10, s: 3 },
+                  { x: '68%', y: '75%', r: 55, s: 4 },
+                  { x: '82%', y: '82%', r: -35, s: 3 },
+                  { x: '92%', y: '76%', r: 20, s: 4 },
+                  { x: '15%', y: '90%', r: 60, s: 3 },
+                  { x: '45%', y: '92%', r: -50, s: 2 },
+                  { x: '75%', y: '90%', r: 30, s: 3 },
+                ].map((seed, si) => (
+                  <div key={si} style={{
+                    position: 'absolute', left: seed.x, top: seed.y,
+                    width: seed.s, height: seed.s * 1.4, borderRadius: '50%',
+                    backgroundColor: si % 3 === 0 ? '#d97706' : si % 3 === 1 ? '#92400e' : '#8a7a60',
+                    opacity: isDark ? 0.12 : 0.1,
+                    transform: `rotate(${seed.r}deg)`,
+                  }} />
+                ))}
+                {[
+                  { x: '12%', y: '80%', r: -20, c: '#ea580c' },
+                  { x: '30%', y: '88%', r: 45, c: '#d97706' },
+                  { x: '60%', y: '82%', r: -40, c: '#f59e0b' },
+                  { x: '85%', y: '86%', r: 30, c: '#ea580c' },
+                  { x: '48%', y: '76%', r: -15, c: '#d97706' },
+                ].map((petal, pi) => (
+                  <div key={`p-${pi}`} style={{
+                    position: 'absolute', left: petal.x, top: petal.y,
+                    width: 6, height: 4,
+                    backgroundColor: petal.c,
+                    borderRadius: '50% 50% 50% 0',
+                    opacity: isDark ? 0.08 : 0.06,
+                    transform: `rotate(${petal.r}deg)`,
+                  }} />
+                ))}
+              </div>
+
+              {/* ── Wooden shelf / nursery counter ── */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 55, pointerEvents: 'none', zIndex: 0 }}>
+                <svg viewBox="0 0 1060 55" style={{ width: '100%', height: '100%' }} preserveAspectRatio="none">
+                  {/* Plank surface */}
+                  <rect x="0" y="8" width="1060" height="14" fill={isDark ? '#2a2218' : '#c4a87a'} opacity={isDark ? 0.35 : 0.2} rx="1" />
+                  {/* Plank edge highlight */}
+                  <rect x="0" y="8" width="1060" height="1.5" fill={isDark ? '#3a3020' : '#d4b88a'} opacity={isDark ? 0.2 : 0.15} rx="0.5" />
+                  {/* Wood grain */}
+                  <path d="M0 13 Q200 11 400 14 Q600 16 800 12 Q900 11 1060 13" stroke={isDark ? '#1a1610' : '#b09868'} strokeWidth="0.5" fill="none" opacity={isDark ? 0.15 : 0.12} />
+                  <path d="M0 17 Q150 19 350 16 Q550 14 750 18 Q950 20 1060 17" stroke={isDark ? '#1a1610' : '#b09868'} strokeWidth="0.4" fill="none" opacity={isDark ? 0.1 : 0.08} />
+                  {/* Plank shadow */}
+                  <rect x="0" y="22" width="1060" height="33" fill={isDark ? '#0a0908' : '#a08a60'} opacity={isDark ? 0.15 : 0.06} />
+                  {/* Support brackets */}
+                  {[120, 530, 940].map((bx) => (
+                    <g key={bx} opacity={isDark ? 0.2 : 0.12}>
+                      <path d={`M${bx} 22 L${bx} 48 L${bx + 18} 22`} stroke={isDark ? '#3a3020' : '#8a7a5a'} strokeWidth="1.5" fill="none" />
+                      <path d={`M${bx + 3} 22 L${bx + 3} 42 L${bx + 15} 22`} stroke={isDark ? '#3a3020' : '#8a7a5a'} strokeWidth="0.5" fill="none" opacity="0.5" />
+                    </g>
+                  ))}
+                  {/* Potted display plants */}
+                  {[60, 250, 450, 680, 850, 1000].map((px, pi) => {
+                    const potH = 7 + (pi % 3)
+                    const potW = 8 + (pi % 2) * 2
+                    const stemH = 8 + (pi % 4) * 3
+                    const leafCol = isDark ? '#4a6a38' : '#6a9a4a'
+                    const potCol = isDark ? '#5a4030' : '#b07850'
+                    return (
+                      <g key={pi} opacity={isDark ? 0.3 : 0.22}>
+                        {/* Pot */}
+                        <path d={`M${px - potW/2} ${8 - potH} L${px - potW/2 - 1} 8 L${px + potW/2 + 1} 8 L${px + potW/2} ${8 - potH}`} fill={potCol} />
+                        <rect x={px - potW/2 - 1.5} y={8 - potH - 1.5} width={potW + 3} height={2} rx="0.5" fill={potCol} opacity="0.8" />
+                        {/* Stem */}
+                        <line x1={px} y1={8 - potH} x2={px + (pi % 2 === 0 ? 1 : -1)} y2={8 - potH - stemH} stroke={leafCol} strokeWidth="0.8" />
+                        {/* Leaves */}
+                        <ellipse cx={px - 3} cy={8 - potH - stemH + 2} rx="3" ry="1.5" fill={leafCol} transform={`rotate(-30 ${px - 3} ${8 - potH - stemH + 2})`} />
+                        <ellipse cx={px + 3} cy={8 - potH - stemH + 4} rx="2.5" ry="1.2" fill={leafCol} transform={`rotate(25 ${px + 3} ${8 - potH - stemH + 4})`} />
+                        {pi % 2 === 0 && <ellipse cx={px - 1} cy={8 - potH - stemH - 1} rx="2" ry="1" fill={leafCol} transform={`rotate(-15 ${px - 1} ${8 - potH - stemH - 1})`} />}
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+
               {/* Toggle + Timer */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative', zIndex: 1 }}>
                 {/* Current / Seasonal toggle */}
@@ -887,7 +856,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -70 }}>
+              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -30 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {

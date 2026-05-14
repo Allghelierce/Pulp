@@ -114,6 +114,7 @@ interface SidebarProps {
   onUnarchiveNote?: (id: string) => void
   onSearchNavigate?: (noteId: string, pageIdx: number) => void
   onSetCover?: (noteId: string) => void
+  mini?: boolean
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -124,7 +125,7 @@ export const Sidebar = memo(function Sidebar({
   onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0, streak = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
-  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover,
+  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
@@ -549,7 +550,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
+      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: mini ? 72 : sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 160ms cubic-bezier(0.25, 1, 0.5, 1)", willChange: "width", boxShadow: "4px 0 16px rgba(0,0,0,0.25), 1px 0 4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03)" }}>
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.4), inset 0 0 40px rgba(255,255,255,0.01)' }} />
@@ -602,6 +603,27 @@ export const Sidebar = memo(function Sidebar({
           <path d="M130,55 Q120,35 115,24" stroke="rgba(110,130,70,0.025)" strokeWidth="0.6" fill="none" strokeLinecap="round" />
         </svg>
         <GlassFilter />
+
+        {mini ? (
+          <div className="relative flex flex-col items-center h-full z-10 pt-5 pb-4">
+            <span className="mb-6 shrink-0" style={{ fontFamily: '"EB Garamond", serif', fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
+            <div className="flex flex-col items-center gap-1.5 px-2 w-full">
+              {onOpenShop && (
+                <button onClick={onOpenShop} title="Market" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
+                </button>
+              )}
+              {onOpenStats && (
+                <button onClick={onOpenStats} title="Stats" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                </button>
+              )}
+              <button onClick={onOpenSettings} title="Settings" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+            </div>
+          </div>
+        ) : (<>
 
         <div className="relative px-3.5 py-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 220 }}>
           <div
@@ -742,10 +764,6 @@ export const Sidebar = memo(function Sidebar({
               <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
-          <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] group w-full text-left focus:outline-none">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Settings</span>
-          </button>
           <div className="mt-1.5 mx-[-8px] border-b border-white/5" />
         </div>
 
@@ -940,21 +958,13 @@ export const Sidebar = memo(function Sidebar({
           </div>
         )}
 
-        {/* Socials */}
-        <div className="shrink-0 flex items-center justify-start gap-3 pb-3 pt-1.5 px-3.5 z-10 relative" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
-          <a href="#" title="Instagram" className="text-zinc-600 hover:text-zinc-400 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-          </a>
-          <a href="#" title="Discord" className="text-zinc-600 hover:text-zinc-400 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></svg>
-          </a>
-          <a href="#" title="YouTube" className="text-zinc-600 hover:text-zinc-400 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          </a>
-          <a href="#" title="Twitter" className="text-zinc-600 hover:text-zinc-400 transition-colors">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </a>
+        <div className="shrink-0 z-10 flex justify-center pb-3 pt-1" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease" }}>
+          <button onClick={onOpenSettings} title="Settings" className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06] text-zinc-600 hover:text-zinc-400">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
         </div>
+
+        </>)}
 
       </div>
     </>

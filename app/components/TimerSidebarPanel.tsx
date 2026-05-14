@@ -576,7 +576,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <button
                     onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
                     className="transition-all hover:opacity-90 active:scale-95"
-                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: '"EB Garamond", serif', fontSize: 12, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: '"EB Garamond", serif', fontSize: 12, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                     title={`Satchel (${inventory.length} seeds)`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>

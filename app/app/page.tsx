@@ -3147,6 +3147,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
+                mini={orchardOpen || statsOpen || shopOpen}
                 user={user}
                 sidebarWidth={sidebarWidth}
                 isDragging={isSidebarDragging}
@@ -3944,7 +3945,7 @@ export default function NoteApp() {
 
           </div>
 
-          {orchardOpen && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth, zIndex: 50 }}>
+          {orchardOpen && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
@@ -3969,7 +3970,7 @@ export default function NoteApp() {
           </div></Suspense>}
 
           {statsOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><StatsView
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><StatsView
               isOpen={statsOpen}
               onClose={() => setStatsOpen(false)}
               theme={theme}
@@ -3979,7 +3980,7 @@ export default function NoteApp() {
           </Suspense>}
 
           {leaderboardOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', inset: 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }} onClick={() => setLeaderboardOpen(false)}><LeaderboardView
               isOpen={leaderboardOpen}
               onClose={() => setLeaderboardOpen(false)}
               theme={theme}
@@ -3988,7 +3989,7 @@ export default function NoteApp() {
           </Suspense>}
 
           {shopOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><BoutiqueView
               isOpen={shopOpen}
               onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
               theme={theme}
