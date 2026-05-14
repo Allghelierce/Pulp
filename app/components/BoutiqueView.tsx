@@ -410,7 +410,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose} onWheel={e => e.stopPropagation()} onTouchMove={e => e.preventDefault()} style={{ overscrollBehavior: 'contain' }}>
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style>{`
         @keyframes seed-wobble {
           0%, 100% { transform: scale(1) rotate(0deg); }
@@ -491,27 +491,22 @@ export const BoutiqueView = memo(function BoutiqueView({
         .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .seed-packet:hover { transform: translateY(-4px); }
         .seed-cracking { animation: seed-spin-reveal 0.6s ease-in-out, seed-wobble 0.6s ease-in-out !important; }
-        .seed-revealed { animation: rarity-pulse 3s ease-in-out infinite; }
-        .daily-deal { animation: daily-deal-glow 2.5s ease-in-out infinite !important; }
+        .seed-revealed { }
+        .daily-deal { }
       `}</style>
       <div
-        onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1060px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
-        style={{ backgroundColor: bg, height: '85vh', maxHeight: '85vh' }}
+        style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0e0c09' : '#ede6d8' }}
       >
         {/* Header */}
-        <div className={`px-6 pt-4 pb-3 border-b shrink-0 flex items-center justify-between ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"}`}>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <CurrencyPill amount={sap} />
-          </div>
+        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 8px', position: 'relative', zIndex: 10 }}>
+          <button
+            onClick={onClose}
+            className="transition-all"
+            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#8a8680' : '#7a7670' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+          <CurrencyPill amount={sap} />
         </div>
 
         {/* Plant Preview (when selected) */}
@@ -546,173 +541,70 @@ export const BoutiqueView = memo(function BoutiqueView({
         )}
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', backgroundColor: bg, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
-            <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingBottom: '8%' }}>
-              {/* Hanging vines + bottom oranges */}
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-                <svg viewBox="0 0 1060 700" style={{ width: '100%', height: '100%' }} fill="none" strokeLinecap="round" strokeLinejoin="round">
-                  {(() => { const g = isDark ? '#5a9a3a' : '#3a7a1e'; const gl = isDark ? '#7aba5a' : '#5a9a3a'; return (<>
-                    {/* Vine A — far left, long, detailed */}
-                    <g opacity={isDark ? 0.06 : 0.045}>
-                      <path d="M45 0 Q38 50 48 100 Q56 145 44 190 Q36 230 42 270 Q50 300 44 330" stroke={g} strokeWidth="1.5" />
-                      <path d="M45 0 Q40 50 50 100 Q58 145 46 190" stroke={gl} strokeWidth="0.4" opacity="0.3" />
-                      <path d="M48 35 Q35 28 30 38 Q38 41 48 35" fill={g} />
-                      <path d="M36 33 Q34 36 38 38" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M44 95 Q54 86 60 96 Q52 99 44 95" fill={gl} />
-                      <path d="M50 91 Q54 93 52 96" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M48 150 Q36 142 32 152 Q40 155 48 150" fill={g} />
-                      <path d="M42 210 Q52 202 58 212 Q50 215 42 210" fill={gl} />
-                      <path d="M44 275 Q32 268 28 278 Q36 280 44 275" fill={g} />
-                      {/* Tendrils */}
-                      <path d="M46 65 Q40 58 36 62 Q34 66 38 68" stroke={g} strokeWidth="0.5" fill="none" />
-                      <path d="M42 190 Q36 183 32 188 Q30 192 34 194" stroke={gl} strokeWidth="0.4" fill="none" />
-                      <path d="M44 310 Q38 304 34 308 Q33 312 36 314" stroke={g} strokeWidth="0.4" fill="none" />
+            <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+              {/* Botanical background */}
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                {/* Atmospheric gradient */}
+                <div style={{ position: 'absolute', inset: 0, background: isDark
+                  ? 'radial-gradient(ellipse 80% 60% at 50% 80%, rgba(14,28,10,0.4) 0%, transparent 70%)'
+                  : 'radial-gradient(ellipse 80% 60% at 50% 80%, rgba(80,120,60,0.08) 0%, transparent 70%)'
+                }} />
+                {/* Subtle terrain silhouette */}
+                <svg viewBox="0 0 200 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '35%', opacity: isDark ? 0.15 : 0.08 }}>
+                  <defs>
+                    <linearGradient id="shop-hill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#2a4a1e' : '#5a8a3a'} />
+                      <stop offset="100%" stopColor={isDark ? '#0e1a0c' : '#3a6a22'} />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 55 Q15 42 35 48 Q55 35 80 40 Q100 32 120 38 Q145 30 165 36 Q185 42 200 38 L200 100 L0 100 Z" fill="url(#shop-hill)" />
+                  <path d="M0 65 Q25 55 50 60 Q75 50 100 55 Q130 48 155 52 Q180 56 200 50 L200 100 L0 100 Z" fill="url(#shop-hill)" opacity="0.5" />
+                </svg>
+                {/* Scattered leaf silhouettes */}
+                <svg viewBox="0 0 400 300" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                  {[
+                    { x: 30, y: 40, r: -25, s: 1 },
+                    { x: 370, y: 60, r: 15, s: 0.8 },
+                    { x: 60, y: 250, r: 45, s: 0.6 },
+                    { x: 340, y: 230, r: -35, s: 0.7 },
+                    { x: 15, y: 150, r: 10, s: 0.5 },
+                    { x: 385, y: 140, r: -20, s: 0.55 },
+                  ].map((leaf, li) => (
+                    <g key={li} transform={`translate(${leaf.x},${leaf.y}) rotate(${leaf.r}) scale(${leaf.s})`} opacity={isDark ? 0.04 : 0.03}>
+                      <path d="M0 0 Q4 -8 0 -16 Q-4 -8 0 0" fill={isDark ? '#5a9a3a' : '#3a7a1e'} />
+                      <line x1="0" y1="0" x2="0" y2="-15" stroke={isDark ? '#5a9a3a' : '#3a7a1e'} strokeWidth="0.3" />
                     </g>
-
-                    {/* Vine B — left, textured */}
-                    <g opacity={isDark ? 0.05 : 0.035}>
-                      <path d="M150 0 Q145 40 155 75 Q162 105 152 140 Q146 168 150 195" stroke={g} strokeWidth="1.3" />
-                      <path d="M150 0 Q147 40 157 75 Q164 105 154 140" stroke={gl} strokeWidth="0.3" opacity="0.3" />
-                      <path d="M155 28 Q145 20 140 30 Q147 33 155 28" fill={g} />
-                      <path d="M146 25 Q144 28 148 30" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M152 80 Q162 72 167 82 Q160 85 152 80" fill={gl} />
-                      <path d="M150 135 Q140 128 136 138 Q143 140 150 135" fill={g} />
-                      <path d="M152 170 Q162 164 166 174 Q159 176 152 170" fill={gl} />
-                      <path d="M154 55 Q148 48 144 52 Q143 56 146 57" stroke={g} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine C — left-center, wispy with curls */}
-                    <g opacity={isDark ? 0.04 : 0.025}>
-                      <path d="M310 0 Q305 30 312 58 Q318 80 310 105 Q304 125 308 145" stroke={g} strokeWidth="1" />
-                      <path d="M312 35 Q302 28 298 38 Q305 40 312 35" fill={g} />
-                      <path d="M310 70 Q320 63 324 73 Q317 75 310 70" fill={gl} />
-                      <path d="M308 110 Q298 104 294 114 Q301 116 308 110" fill={g} />
-                      <path d="M312 48 Q316 42 314 38 Q312 36 310 40" stroke={gl} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine D — center-left, thick */}
-                    <g opacity={isDark ? 0.04 : 0.03}>
-                      <path d="M440 0 Q448 35 438 70 Q430 100 440 130 Q448 155 442 180" stroke={g} strokeWidth="1.2" />
-                      <path d="M440 0 Q450 35 440 70" stroke={gl} strokeWidth="0.3" opacity="0.3" />
-                      <path d="M438 40 Q450 32 454 42 Q447 45 438 40" fill={gl} />
-                      <path d="M448 37 Q452 39 450 42" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M440 90 Q428 83 424 93 Q432 95 440 90" fill={g} />
-                      <path d="M442 145 Q452 138 456 148 Q449 150 442 145" fill={gl} />
-                      <path d="M439 60 Q444 53 442 48 Q439 46 438 50" stroke={g} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine E — center, tiny */}
-                    <g opacity={isDark ? 0.03 : 0.02}>
-                      <path d="M560 0 Q555 20 560 42 Q565 58 558 72" stroke={g} strokeWidth="0.8" />
-                      <path d="M560 25 Q550 20 548 28 Q553 30 560 25" fill={g} />
-                      <path d="M558 50 Q566 44 570 52 Q564 54 558 50" fill={gl} />
-                    </g>
-
-                    {/* Vine F — center-right, long curvy */}
-                    <g opacity={isDark ? 0.05 : 0.04}>
-                      <path d="M650 0 Q658 45 648 95 Q640 135 652 180 Q660 215 650 250 Q644 275 648 300" stroke={g} strokeWidth="1.4" />
-                      <path d="M650 0 Q660 45 650 95 Q642 135 654 180" stroke={gl} strokeWidth="0.4" opacity="0.25" />
-                      <path d="M648 50 Q638 42 634 52 Q641 55 648 50" fill={g} />
-                      <path d="M640 47 Q637 50 641 52" stroke={gl} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M652 100 Q662 92 668 102 Q660 105 652 100" fill={gl} />
-                      <path d="M648 155 Q636 148 632 158 Q640 160 648 155" fill={g} />
-                      <path d="M650 215 Q660 208 664 218 Q657 220 650 215" fill={gl} />
-                      <path d="M648 265 Q638 258 634 268 Q641 270 648 265" fill={g} />
-                      <path d="M651 75 Q646 68 642 72 Q640 76 644 78" stroke={g} strokeWidth="0.5" fill="none" />
-                      <path d="M649 240 Q654 233 652 228 Q649 226 648 230" stroke={gl} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine G — right, medium */}
-                    <g opacity={isDark ? 0.04 : 0.03}>
-                      <path d="M780 0 Q785 30 778 65 Q772 90 780 115 Q786 135 782 155" stroke={g} strokeWidth="1.1" />
-                      <path d="M778 32 Q788 25 792 35 Q785 37 778 32" fill={gl} />
-                      <path d="M780 75 Q770 68 766 78 Q773 80 780 75" fill={g} />
-                      <path d="M782 120 Q792 114 796 124 Q789 126 782 120" fill={gl} />
-                      <path d="M779 52 Q784 45 782 40 Q779 38 778 42" stroke={g} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine H — right, long thick */}
-                    <g opacity={isDark ? 0.05 : 0.04}>
-                      <path d="M920 0 Q928 55 918 110 Q910 155 922 200 Q930 240 920 280" stroke={g} strokeWidth="1.5" />
-                      <path d="M920 0 Q930 55 920 110 Q912 155 924 200" stroke={gl} strokeWidth="0.4" opacity="0.25" />
-                      <path d="M918 45 Q930 38 934 48 Q927 50 918 45" fill={gl} />
-                      <path d="M928 42 Q932 44 930 48" stroke={g} strokeWidth="0.3" fill="none" opacity="0.5" />
-                      <path d="M922 100 Q910 93 906 103 Q914 105 922 100" fill={g} />
-                      <path d="M918 160 Q928 153 932 163 Q925 165 918 160" fill={gl} />
-                      <path d="M920 220 Q908 214 904 224 Q912 226 920 220" fill={g} />
-                      <path d="M919 75 Q924 68 922 62 Q919 60 918 64" stroke={gl} strokeWidth="0.5" fill="none" />
-                      <path d="M921 250 Q914 244 910 248 Q909 252 912 254" stroke={g} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine I — far right */}
-                    <g opacity={isDark ? 0.04 : 0.03}>
-                      <path d="M1020 0 Q1015 35 1022 70 Q1028 95 1018 125 Q1012 148 1016 170" stroke={g} strokeWidth="1.2" />
-                      <path d="M1022 30 Q1032 24 1036 34 Q1029 36 1022 30" fill={gl} />
-                      <path d="M1018 80 Q1008 73 1004 83 Q1011 85 1018 80" fill={g} />
-                      <path d="M1016 130 Q1026 123 1030 133 Q1023 135 1016 130" fill={gl} />
-                      <path d="M1020 52 Q1025 46 1023 40 Q1020 38 1019 42" stroke={g} strokeWidth="0.4" fill="none" />
-                    </g>
-
-                    {/* Vine J — tiny between B and C */}
-                    <g opacity={isDark ? 0.03 : 0.02}>
-                      <path d="M240 0 Q235 22 240 48 Q245 65 238 82" stroke={g} strokeWidth="0.8" />
-                      <path d="M240 30 Q232 24 228 32 Q234 34 240 30" fill={g} />
-                      <path d="M238 60 Q246 55 250 62 Q244 64 238 60" fill={gl} />
-                    </g>
-
-                  </>)})()}
+                  ))}
+                </svg>
+                {/* Corner botanical flourishes */}
+                <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, width: '15%', height: '20%', opacity: isDark ? 0.06 : 0.04 }}>
+                  <path d="M0 0 Q10 20 5 40 Q8 30 15 25 Q20 15 10 5 Z" fill={isDark ? '#4a7a30' : '#3a6a20'} />
+                  <path d="M0 0 Q15 10 25 5 Q15 8 8 15 Q5 20 0 10 Z" fill={isDark ? '#3a6a28' : '#2a5a18'} />
+                </svg>
+                <svg viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, right: 0, width: '15%', height: '20%', opacity: isDark ? 0.06 : 0.04, transform: 'scaleX(-1)' }}>
+                  <path d="M0 0 Q10 20 5 40 Q8 30 15 25 Q20 15 10 5 Z" fill={isDark ? '#4a7a30' : '#3a6a20'} />
+                  <path d="M0 0 Q15 10 25 5 Q15 8 8 15 Q5 20 0 10 Z" fill={isDark ? '#3a6a28' : '#2a5a18'} />
                 </svg>
               </div>
-              {/* Toggle + Timer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, position: 'relative', zIndex: 1 }}>
-                {/* Current / Seasonal toggle */}
-                <div className={`flex rounded-lg overflow-hidden p-0.5 text-[10px] font-semibold`} style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-                  {(['current', 'seasonal'] as const).map(mode => (
-                    <button
-                      key={mode}
-                      onClick={() => setShopMode(mode)}
-                      className="px-3 py-1 rounded-md transition-all"
-                      style={{
-                        background: shopMode === mode ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') : 'transparent',
-                        color: shopMode === mode ? textPrimary : textMuted,
-                        fontFamily: font, letterSpacing: '0.02em', textTransform: 'capitalize',
-                        border: 'none', cursor: 'pointer',
-                      }}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-                {/* Timer */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, backgroundColor: isDark ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.05)', padding: '4px 10px', borderRadius: '99px', border: `1px solid ${isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.1)'}` }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: '#ef4444', fontFamily: font }}>refreshes in</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', fontFamily: 'monospace', letterSpacing: '0.02em' }}>{countdown}</span>
-                </div>
-              </div>
 
-              {shopMode === 'seasonal' ? (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.4, position: 'relative', zIndex: 1 }}>
-                  <span style={{ fontSize: 28 }}>🍂</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: textMuted, fontFamily: font }}>Seasonal shop coming soon</span>
+
+              {(() => { return (<>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: 36, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
                 </div>
-              ) : (<>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 2, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 22, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Shop</span>
-                <svg width="180" height="20" viewBox="0 0 180 20" style={{ marginTop: 10, opacity: isDark ? 0.3 : 0.25 }}>
+                {/* Ornamental divider */}
+                <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.2 : 0.15 }}>
                   {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>
-                    <polygon points="5,10 10,6.5 15,10 10,13.5" fill={c} />
-                    <line x1="15" y1="10" x2="60" y2="10" stroke={c} strokeWidth="0.7" />
-                    <path d="M60 10 Q65 10 68 6.5 Q71 3 74 5.5 Q77 8 74 10 Q71 12 68 10" fill="none" stroke={c} strokeWidth="0.8" strokeLinecap="round" />
-                    <path d="M74 10 Q77 7.5 80 5 Q83 2.5 86 6 Q87.5 8.5 86 10" fill="none" stroke={c} strokeWidth="0.7" strokeLinecap="round" />
-                    <polygon points="90,5 93,10 90,15 87,10" fill="#d97706" />
-                    <path d="M94 10 Q92.5 8.5 94 6 Q97 2.5 100 5 Q103 7.5 106 10" fill="none" stroke={c} strokeWidth="0.7" strokeLinecap="round" />
-                    <path d="M106 10 Q109 12 112 10 Q115 8 112 5.5 Q109 3 112 6.5 Q115 10 120 10" fill="none" stroke={c} strokeWidth="0.8" strokeLinecap="round" />
-                    <line x1="120" y1="10" x2="165" y2="10" stroke={c} strokeWidth="0.7" />
-                    <polygon points="165,10 170,6.5 175,10 170,13.5" fill={c} />
+                    <line x1="0" y1="6" x2="95" y2="6" stroke={c} strokeWidth="0.5" />
+                    <polygon points="110,2 114,6 110,10 106,6" fill="#d97706" opacity="0.6" />
+                    <line x1="125" y1="6" x2="220" y2="6" stroke={c} strokeWidth="0.5" />
                   </>)})()}
                 </svg>
               </div>
@@ -725,7 +617,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -802,15 +694,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                           width: cardW, height: cardH, borderRadius: 14,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
-                          ['--pulse-col' as string]: `${rarityCol}30`,
-                          ['--pulse-col20' as string]: `${rarityCol}15`,
-                          ['--pulse-col40' as string]: `${rarityCol}30`,
-                          boxShadow: isRevealed
-                            ? `0 4px 20px ${rarityCol}20, 0 2px 8px rgba(0,0,0,0.15)`
-                            : isDailyDeal
-                              ? undefined
-                              : isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)',
-                          border: `1px solid ${isRevealed ? `${rarityCol}35` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
+
+                          boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)',
+                          border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
                         }}
                       >
                         {!isRevealed ? (
@@ -1419,7 +1305,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   return (
                   <div key={rarity} style={{ marginBottom: 44 }}>
                     {(() => {
-                      const owned = plants.filter(t => inventory.includes(t)).length
+                      const owned = plants.filter(t => inventory.includes(t) || t === 'tangerine').length
                       const total = plants.length
                       const pct = Math.round((owned / total) * 100)
                       const rc = RARITY_COLOR[rarity]
@@ -1442,29 +1328,30 @@ export const BoutiqueView = memo(function BoutiqueView({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 10px' }}>
                       {plants.map(type => {
                         const t = TREE_TYPES[type]
-                        const owned = inventory.includes(type)
+                        const owned = inventory.includes(type) || type === 'tangerine'
                         return (
                           <button
                             key={type}
-                            className={rarityCardClass(t.rarity)}
-                            onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') }}
+                            className={owned ? rarityCardClass(t.rarity) : ''}
+                            onClick={owned ? () => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') } : undefined}
                             style={{
-                              borderRadius: 10, border: `1px solid ${cardBorder}`, overflow: 'hidden',
-                              backgroundColor: cardBg, cursor: 'pointer', textAlign: 'left',
+                              borderRadius: 10, border: `1px solid ${owned ? cardBorder : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, overflow: 'hidden',
+                              backgroundColor: owned ? cardBg : isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', cursor: owned ? 'pointer' : 'default', textAlign: 'left',
                               transition: 'all 0.15s', position: 'relative', fontFamily: font,
                             }}
                           >
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               width: '100%', position: 'relative', aspectRatio: '1',
-                              background: RARITY_BG[t.rarity] || RARITY_BG.common,
+                              background: owned ? (RARITY_BG[t.rarity] || RARITY_BG.common) : isDark ? '#0f0f0f' : '#e8e8e8',
                             }}>
-                              <RarityScene rarity={t.rarity} isDark={isDark} />
+                              {owned && <RarityScene rarity={t.rarity} isDark={isDark} />}
                               <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 12px ${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.06)'}`, pointerEvents: 'none', zIndex: 4 }} />
-                              <Sparkles rarity={t.rarity} count={3} />
-                              <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', zIndex: 2, bottom: '7%' }}>
+                              {owned && <Sparkles rarity={t.rarity} count={3} />}
+                              <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', zIndex: 2, bottom: '7%', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})`, }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
                               </div>
+                              {owned && (
                               <svg viewBox="0 0 100 18" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '12%', zIndex: 3 }}>
                                 <defs>
                                   <linearGradient id={`soil-g-${type}`} x1="0" y1="0" x2="0" y2="1">
@@ -1485,23 +1372,26 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 <path d="M84 1.5 Q82.5 -0.5 81 -2 M85 1.5 Q85.5 0 86 -1.5 M86.5 1.5 Q88 0.2 89.5 -0.8" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
                                 <path d="M95 1 Q93.5 -0.5 92.5 -2 M96 1.2 Q96.5 -0.2 97 -1.5" stroke={isDark ? '#3a5a2a' : '#6a9a48'} strokeWidth="0.35" fill="none" opacity="0.4" strokeLinecap="round" />
                               </svg>
+                              )}
+                              {owned && (
                               <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
-                              {type === 'tangerine' ? (
+                              )}
+                              {owned && (type === 'tangerine' ? (
                                 <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
                                   Default
                                 </div>
-                              ) : owned && (
+                              ) : (
                                 <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: '50%', backgroundColor: isDark ? 'rgba(6,78,59,0.8)' : '#d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#34d399" : "#059669"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
-                              )}
+                              ))}
                             </div>
-                            <div style={{ padding: '6px 8px', borderTop: `1px solid ${dividerColor}` }}>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                            <div style={{ padding: '6px 8px', borderTop: `1px solid ${owned ? dividerColor : 'transparent'}` }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: owned ? textPrimary : textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: owned ? 1 : 0.4 }}>{owned ? t.name : '???'}</div>
                               <div style={{ marginTop: 2 }}>
-                                <span style={{ fontSize: 8, fontWeight: 600, color: RARITY_COLOR[t.rarity], letterSpacing: '0.06em', textTransform: 'uppercase' }}>{RARITY_LABEL[t.rarity]}</span>
+                                <span style={{ fontSize: 8, fontWeight: 600, color: owned ? RARITY_COLOR[t.rarity] : textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: owned ? 1 : 0.4 }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
                             </div>
                           </button>

@@ -3134,7 +3134,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
-                mini={orchardOpen || statsOpen}
+                mini={orchardOpen || statsOpen || shopOpen}
                 user={user}
                 sidebarWidth={sidebarWidth}
                 isDragging={isSidebarDragging}
@@ -4002,7 +4002,7 @@ export default function NoteApp() {
           </Suspense>}
 
           {shopOpen && <Suspense fallback={null}>
-            <motion.div key="shop-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><BoutiqueView
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><BoutiqueView
               isOpen={shopOpen}
               onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
               theme={theme}
@@ -4016,11 +4016,11 @@ export default function NoteApp() {
               initialTab={shopInitialTab}
               initialScrollTo={shopScrollTo}
               isAdmin={isAdmin}
-            /></motion.div>
+            /></div>
           </Suspense>}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
           {slashMenu && (

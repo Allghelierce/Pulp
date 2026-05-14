@@ -14,7 +14,7 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
   const owned = useMemo(() => new Set(grove.map(t => t.type)), [grove])
   const allTypes = Object.entries(TREE_TYPES)
   const total = allTypes.length
-  const collected = owned.size
+  const collected = owned.has('tangerine') ? owned.size : owned.size + 1
   const pct = total > 0 ? Math.round((collected / total) * 100) : 0
 
   return (
@@ -34,7 +34,7 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
         gap: 4, alignContent: 'start',
       }}>
         {allTypes.map(([key, tree]) => {
-          const has = owned.has(key)
+          const has = owned.has(key) || key === 'tangerine'
           return (
             <div
               key={key}
@@ -42,8 +42,8 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '4px 2px', borderRadius: 8,
-                opacity: has ? 1 : 0.4,
-                filter: has ? 'none' : 'grayscale(1) brightness(0.6)',
+                opacity: has ? 1 : 0.55,
+                filter: has ? 'none' : 'grayscale(1) brightness(0.15) contrast(1.2)',
               }}
             >
               <PlantIcon type={key} size={28} stage={4} hideGround disableSway />
