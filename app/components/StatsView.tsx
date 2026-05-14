@@ -1,11 +1,23 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { getLevel } from "@/app/constants"
+import { motion } from "framer-motion"
+import { getLevel, TREE_TYPES } from "@/app/constants"
+import type { Tree } from "@/app/types"
+import { PlantIcon } from "./PlantIcon"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
-import { LeaderboardView } from "./LeaderboardView"
 
-const RING_GOALS = { focus: 60, writing: 2000, sessions: 3 }
+const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
+
+function loadGoals(): typeof DEFAULT_GOALS {
+  if (typeof window === 'undefined') return DEFAULT_GOALS
+  try {
+    const saved = localStorage.getItem('pulp-ring-goals')
+    if (saved) return { ...DEFAULT_GOALS, ...JSON.parse(saved) }
+  } catch {}
+  return DEFAULT_GOALS
+}
+
+const RING_GOALS = loadGoals()
 
 export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () => void }) {
   const [today, setToday] = useState<DailyEntry | null>(null)
@@ -25,7 +37,7 @@ export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () =
 
   const size = 44
   const cx = size / 2, cy = size / 2
-  const strokeW = 4
+  const strokeW = 2.5
   const gap = 1.5
 
   const rings = [
@@ -67,60 +79,64 @@ export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () =
   )
 }
 
-function ActivityRings({ focus, writing, sessions, isDark }: { focus: number; writing: number; sessions: number; isDark: boolean }) {
-  const size = 180
+function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }: {
+  focus: number; writing: number; sessions: number; isDark: boolean
+  goals: typeof DEFAULT_GOALS; onEditGoals: () => void
+}) {
+  const size = 160
   const cx = size / 2, cy = size / 2
-  const strokeW = 14
-  const gap = 4
+  const strokeW = 7
+  const gap = 3
 
   const rings = [
-    { value: focus, goal: RING_GOALS.focus, color: '#ea580c', label: 'Focus', unit: 'min', radius: (size - strokeW) / 2 },
-    { value: writing, goal: RING_GOALS.writing, color: '#d97706', label: 'Write', unit: 'chars', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: sessions, goal: RING_GOALS.sessions, color: '#f59e0b', label: 'Sessions', unit: '', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: focus, goal: goals.focus, color: '#ea580c', label: 'Focus', unit: 'min', radius: (size - strokeW) / 2 },
+    { value: writing, goal: goals.writing, color: '#d97706', label: 'Write', unit: 'chars', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: sessions, goal: goals.sessions, color: '#f59e0b', label: 'Sessions', unit: '', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-      <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {rings.map((ring, i) => {
-            const circ = 2 * Math.PI * ring.radius
-            const pct = Math.min(ring.value / ring.goal, 1)
-            const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
-            return (
-              <g key={i}>
-                <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round" />
-                <motion.circle
-                  cx={cx} cy={cy} r={ring.radius} fill="none"
-                  stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
-                  strokeDasharray={circ}
-                  initial={{ strokeDashoffset: circ }}
-                  animate={{ strokeDashoffset: circ * (1 - pct) }}
-                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
-                  transform={`rotate(-90 ${cx} ${cy})`}
-                  style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
-                />
-              </g>
-            )
-          })}
-        </svg>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 8, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Goal</span>
+        <button
+          onClick={onEditGoals}
+          title="Edit goals"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: isDark ? '#5a5650' : '#a8a4a0', display: 'flex' }}
+        >
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+          </svg>
+        </button>
       </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {rings.map((ring, i) => {
+          const circ = 2 * Math.PI * ring.radius
+          const pct = Math.min(ring.value / ring.goal, 1)
+          const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+          return (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round" />
+              <motion.circle
+                cx={cx} cy={cy} r={ring.radius} fill="none"
+                stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
+                strokeDasharray={circ}
+                initial={{ strokeDashoffset: circ }}
+                animate={{ strokeDashoffset: circ * (1 - pct) }}
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
+                transform={`rotate(-90 ${cx} ${cy})`}
+                style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
+              />
+            </g>
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', gap: 10 }}>
         {rings.map((ring, i) => {
           const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
           return (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: ring.color, flexShrink: 0, boxShadow: `0 0 6px ${ring.color}44` }} />
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: ring.color, lineHeight: 1 }}>
-                  {ring.value}{ring.unit ? <span style={{ fontSize: 9, fontWeight: 500, opacity: 0.7 }}> {ring.unit}</span> : null}
-                  <span style={{ fontSize: 9, fontWeight: 500, color: isDark ? '#6a6660' : '#a0a0a0', marginLeft: 4 }}>/ {ring.goal}</span>
-                </div>
-                <div style={{ fontSize: 8, color: isDark ? '#5a5650' : '#a8a4a0', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: 1 }}>
-                  {ring.label} · {pct}%
-                </div>
-              </div>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: ring.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 8, fontWeight: 600, color: ring.color }}>{pct}%</span>
             </div>
           )
         })}
@@ -129,35 +145,51 @@ function ActivityRings({ focus, writing, sessions, isDark }: { focus: number; wr
   )
 }
 
-type StatsTab = 'stats' | 'leaderboard'
-
 interface StatsViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
   xp: number
-  streak?: number
-  sap?: number
+  grove?: Tree[]
 }
 
-function getMonthGrid(entries: DailyEntry[]): { date: string; level: number; minutes: number; dayNum: number }[] {
+function getMonthGrid(entries: DailyEntry[], monthOffset = 0): { date: string; level: number; minutes: number; dayNum: number }[] {
   const map = new Map(entries.map(e => [e.date, e]))
   const today = new Date()
+  const days = 60
+  const baseOffset = monthOffset * days
   const grid: { date: string; level: number; minutes: number; dayNum: number }[] = []
-  for (let i = 29; i >= 0; i--) {
+  for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
-    d.setDate(d.getDate() - i)
+    d.setDate(d.getDate() - i - baseOffset)
     const key = d.toISOString().split("T")[0]
     const entry = map.get(key)
     const minutes = entry?.focusMinutes ?? 0
+    const chars = entry?.charsWritten ?? 0
+    const sessions = entry?.sessionsCompleted ?? 0
+    const score = (Math.min(minutes / RING_GOALS.focus, 1) + Math.min(chars / RING_GOALS.writing, 1) + Math.min(sessions / RING_GOALS.sessions, 1)) / 3
     let level = 0
-    if (minutes > 0) level = 1
-    if (minutes >= 15) level = 2
-    if (minutes >= 45) level = 3
-    if (minutes >= 90) level = 4
+    if (score > 0) level = 1
+    if (score >= 0.25) level = 2
+    if (score >= 0.5) level = 3
+    if (score >= 0.75) level = 4
     grid.push({ date: key, level, minutes, dayNum: d.getDate() })
   }
   return grid
+}
+
+function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean {
+  const today = new Date()
+  const days = 60
+  const baseOffset = monthOffset * days
+  const map = new Map(entries.map(e => [e.date, e]))
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i - baseOffset)
+    const key = d.toISOString().split("T")[0]
+    if (map.has(key)) return true
+  }
+  return false
 }
 
 function getMonthData(entries: DailyEntry[]) {
@@ -214,11 +246,26 @@ function LineGraph({ data, isDark, focusColor, writingColor, textMuted }: {
   const gridLines = 4
   const labelInterval = Math.ceil(data.length / 6)
 
+  const niceStep = (max: number, ticks: number) => {
+    const raw = max / ticks
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)))
+    const norm = raw / mag
+    const step = norm <= 1.5 ? 1 : norm <= 3 ? 2 : norm <= 7 ? 5 : 10
+    return step * mag
+  }
+  const focusStep = niceStep(maxF, 3)
+  const focusTicks: number[] = []
+  for (let v = focusStep; v <= maxF; v += focusStep) focusTicks.push(v)
+
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
       {Array.from({ length: gridLines + 1 }).map((_, i) => {
         const y = padT + (i / gridLines) * gH
         return <line key={i} x1={padL} y1={y} x2={padL + gW} y2={y} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="0.5" />
+      })}
+      {focusTicks.map(v => {
+        const y = padT + gH - (v / maxF) * gH
+        return <text key={`fy-${v}`} x={padL - 4} y={y + 2.5} textAnchor="end" fontSize="6.5" fill={textMuted}>{v >= 1000 ? `${(v/1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : v}</text>
       })}
       {data.map((d, i) => {
         if (i % labelInterval !== 0 && i !== data.length - 1) return null
@@ -237,8 +284,8 @@ function LineGraph({ data, isDark, focusColor, writingColor, textMuted }: {
       </defs>
       {charsPath && <path d={buildArea(charsPath)} fill="url(#chars-area-g)" />}
       {focusPath && <path d={buildArea(focusPath)} fill="url(#focus-area-g)" />}
-      {charsPath && <path d={charsPath} fill="none" stroke={writingColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />}
-      {focusPath && <path d={focusPath} fill="none" stroke={focusColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+      {charsPath && <path d={charsPath} fill="none" stroke={writingColor} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />}
+      {focusPath && <path d={focusPath} fill="none" stroke={focusColor} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />}
     </svg>
   )
 }
@@ -281,10 +328,13 @@ function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
 }
 
 export const StatsView = memo(function StatsView({
-  isOpen, onClose, theme, xp, streak = 0, sap = 0,
+  isOpen, onClose, theme, xp, grove = [],
 }: StatsViewProps) {
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
-  const [activeTab, setActiveTab] = useState<StatsTab>('stats')
+  const [heatmapOffset, setHeatmapOffset] = useState(0)
+  const [goals, setGoals] = useState(loadGoals)
+  const [editingGoals, setEditingGoals] = useState(false)
+  const [draftGoals, setDraftGoals] = useState(loadGoals)
 
   const isDark = theme === 'dark'
   const bg = isDark ? '#09090b' : '#f5f3ef'
@@ -317,7 +367,8 @@ export const StatsView = memo(function StatsView({
   const lvl = getLevel(xp)
   const xpProgress = Math.min(100, Math.floor(lvl.progress * 100))
 
-  const monthGrid = useMemo(() => getMonthGrid(dailyStats), [dailyStats])
+  const monthGrid = useMemo(() => getMonthGrid(dailyStats, heatmapOffset), [dailyStats, heatmapOffset])
+  const canGoBack = useMemo(() => hasActivityInRange(dailyStats, heatmapOffset + 1), [dailyStats, heatmapOffset])
   const monthData = useMemo(() => getMonthData(dailyStats), [dailyStats])
 
   const totalFocusMonth = monthData.reduce((s, d) => s + d.focusMinutes, 0)
@@ -325,7 +376,7 @@ export const StatsView = memo(function StatsView({
   const totalCharsMonth = monthData.reduce((s, d) => s + d.charsWritten, 0)
 
   const totalMinutes = dailyStats.reduce((s, d) => s + (d.focusMinutes ?? 0), 0)
-  const totalSessions = dailyStats.reduce((s, d) => s + (d.sessionsCompleted ?? 0), 0)
+
 
   const todayKey = new Date().toISOString().split("T")[0]
   const todayEntry = dailyStats.find(e => e.date === todayKey)
@@ -387,104 +438,153 @@ export const StatsView = memo(function StatsView({
             </div>
           </div>
 
-          {/* Activity Rings + Summary */}
+          {/* Activity Rings + Consistency */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} />
+            <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* Streak + totals row */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{
-                  flex: 1, padding: '8px 10px', borderRadius: 10,
-                  background: isDark ? 'rgba(251,146,60,0.06)' : 'rgba(251,146,60,0.08)',
-                  border: `1px solid ${isDark ? 'rgba(251,146,60,0.12)' : 'rgba(251,146,60,0.15)'}`,
-                }}>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: '#d97706', fontFamily: font, display: 'block', lineHeight: 1 }}>{streak}</span>
-                  <span style={{ fontSize: 8, fontWeight: 600, color: isDark ? '#a1856a' : '#b8956a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>day streak</span>
-                </div>
-                <div style={{
-                  flex: 1, padding: '8px 10px', borderRadius: 10,
-                  background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-                  border: `1px solid ${cardBorder}`,
-                }}>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: textPrimary, fontFamily: font, display: 'block', lineHeight: 1 }}>{totalMinutes}</span>
-                  <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>total min</span>
-                </div>
-                <div style={{
-                  flex: 1, padding: '8px 10px', borderRadius: 10,
-                  background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-                  border: `1px solid ${cardBorder}`,
-                }}>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: textPrimary, fontFamily: font, display: 'block', lineHeight: 1 }}>{totalSessions}</span>
-                  <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>sessions</span>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {canGoBack && (
+                    <button onClick={() => setHeatmapOffset(o => o + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                  )}
+                  <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? '60 days' : `${heatmapOffset * 60 + 60}–${heatmapOffset * 60 + 1}d ago`}</span>
+                  {heatmapOffset > 0 && (
+                    <button onClick={() => setHeatmapOffset(o => o - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  )}
                 </div>
               </div>
 
-            </div>
-          </div>
-        </div>
-
-        {/* Tab bar */}
-        <div className="px-8 shrink-0 flex gap-1" style={{ borderBottom: `1px solid ${cardBorder}`, paddingTop: 6, paddingBottom: 0 }}>
-          {([['stats', 'Stats'], ['leaderboard', 'Leaderboard']] as [StatsTab, string][]).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              style={{
-                fontFamily: font, fontSize: 12, fontWeight: 600, padding: '6px 14px',
-                color: activeTab === id ? focusColor : textMuted,
-                borderBottom: activeTab === id ? `2px solid ${focusColor}` : '2px solid transparent',
-                background: 'none', border: 'none', cursor: 'pointer',
-                transition: 'color 0.15s, border-color 0.15s',
-                marginBottom: -1,
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'stats' ? (
-            <motion.div
-              key="stats"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              style={{ flex: 1, display: "flex", gap: 24, padding: "24px 32px", overflowY: "auto", minHeight: 0 }}
-            >
-              {/* Consistency Heatmap — 30 days */}
-              <div style={{ flex: '0 0 280px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
-                  <span style={{ fontSize: 9, color: textMuted }}>30 days</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3 }}>
-                  {monthGrid.map((cell) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 2 }}>
+                {monthGrid.map((cell) => {
+                  const isEmpty = cell.level === 0
+                  return (
                     <div
                       key={cell.date}
                       title={`${cell.date}: ${cell.minutes > 0 ? `${cell.minutes} min` : 'No activity'}`}
-                      style={{
-                        aspectRatio: '1', borderRadius: 4,
-                        backgroundColor: heatmapColors[cell.level],
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 7, color: cell.level >= 3 ? '#fff' : textMuted, fontWeight: 600,
-                      }}
+                      style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {cell.dayNum}
+                      <div style={{
+                        width: isEmpty ? '90%' : `${[0, 50, 65, 80, 95][cell.level]}%`,
+                        height: isEmpty ? '90%' : `${[0, 50, 65, 80, 95][cell.level]}%`,
+                        borderRadius: '50%',
+                        backgroundColor: isEmpty ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : heatmapColors[cell.level],
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {isEmpty && (
+                          <span style={{ fontSize: 6, color: textMuted, fontWeight: 500, lineHeight: 1 }}>{cell.dayNum}</span>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  )
+                })}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 6, justifyContent: "flex-start" }}>
+                <span style={{ fontSize: 7, color: textMuted, marginRight: 1 }}>Less</span>
+                {heatmapColors.slice(1).map((c, i) => {
+                  const s = [6, 8, 10, 12][i]
+                  return <div key={i} style={{ width: s, height: s, borderRadius: '50%', backgroundColor: c }} />
+                })}
+                <span style={{ fontSize: 7, color: textMuted, marginLeft: 2 }}>More</span>
+              </div>
+            </div>
+          </div>
+
+          {editingGoals && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, marginTop: 12,
+              padding: '10px 14px', borderRadius: 10,
+              background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+              border: `1px solid ${cardBorder}`,
+            }}>
+              {([
+                { key: 'focus' as const, label: 'Focus (min)', color: '#ea580c' },
+                { key: 'writing' as const, label: 'Writing (chars)', color: '#d97706' },
+                { key: 'sessions' as const, label: 'Sessions', color: '#f59e0b' },
+              ]).map(({ key, label, color }) => (
+                <div key={key} style={{ flex: 1 }}>
+                  <label style={{ fontSize: 8, fontWeight: 600, color: color, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 3 }}>{label}</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={draftGoals[key]}
+                    onChange={e => setDraftGoals(g => ({ ...g, [key]: Math.max(1, parseInt(e.target.value) || 1) }))}
+                    style={{
+                      width: '100%', fontSize: 13, fontWeight: 700, fontFamily: font,
+                      color: textPrimary, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                      borderRadius: 6, padding: '4px 8px', outline: 'none',
+                    }}
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  setGoals(draftGoals)
+                  localStorage.setItem('pulp-ring-goals', JSON.stringify(draftGoals))
+                  setEditingGoals(false)
+                }}
+                style={{
+                  alignSelf: 'flex-end', padding: '5px 14px', borderRadius: 6,
+                  background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer',
+                  fontSize: 10, fontWeight: 700, fontFamily: font,
+                }}
+              >
+                Save
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div style={{ borderBottom: `1px solid ${cardBorder}` }}>
+        </div>
+
+        <div style={{ flex: 1, display: "flex", gap: 24, padding: "24px 32px", overflowY: "auto", minHeight: 0 }}>
+              {/* Stats summary + Collection */}
+              <div style={{ flex: '0 0 280px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 10,
+                    background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                    border: `1px solid ${cardBorder}`,
+                  }}>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: textPrimary, fontFamily: font, display: 'block', lineHeight: 1 }}>{totalMinutes}</span>
+                    <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2, display: 'block' }}>total min</span>
+                  </div>
+                  <div style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 10,
+                    background: isDark ? 'rgba(217,119,6,0.06)' : 'rgba(217,119,6,0.08)',
+                    border: `1px solid ${isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.15)'}`,
+                  }}>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: '#d97706', fontFamily: font, display: 'block', lineHeight: 1 }}>{new Set(grove.map(t => t.type)).size}/{Object.keys(TREE_TYPES).length}</span>
+                    <span style={{ fontSize: 8, fontWeight: 600, color: isDark ? '#a1856a' : '#b8956a', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2, display: 'block' }}>collected</span>
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 8, justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: 8, color: textMuted, marginRight: 2 }}>Less</span>
-                  {heatmapColors.slice(1).map((c, i) => (
-                    <div key={i} style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: c }} />
-                  ))}
-                  <span style={{ fontSize: 8, color: textMuted, marginLeft: 2 }}>More</span>
-                </div>
+                {grove.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif', marginBottom: 8, display: 'block' }}>Recent</span>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {[...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 8).map((tree, i) => (
+                        <div key={tree.id ?? i} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
+                          width: 36, height: 36, borderRadius: 8,
+                          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                          border: `1px solid ${cardBorder}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <PlantIcon type={tree.type} size={24} stage={tree.stage} hideGround disableSway />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Activity Line Graph */}
@@ -527,20 +627,7 @@ export const StatsView = memo(function StatsView({
                   <LineGraph data={monthData} isDark={isDark} focusColor={focusColor} writingColor={writingColor} textMuted={textMuted} />
                 </div>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="leaderboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}
-            >
-              <LeaderboardView isOpen onClose={onClose} theme={theme} sap={sap} embedded />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </div>
     </div>
   )

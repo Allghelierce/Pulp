@@ -30,6 +30,7 @@ import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
+const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
 const _preloadFocus = () => import("@/app/components/FocusView")
 const _preloadSettings = () => import("@/app/components/settings/SettingsView")
@@ -43,6 +44,7 @@ const _preloadAiResult = () => import("@/app/components/AiResultModal")
 const OrchardView = lazy(() => _preloadOrchard().then(m => ({ default: m.OrchardView })))
 const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.BoutiqueView })))
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
+const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
 
 const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
@@ -1230,7 +1232,7 @@ export default function NoteApp() {
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const unlockedVaults = useRef<Set<string>>(new Set())
   const [grove, setGrove] = useState<Tree[]>([])
-  const [streak, setStreak] = useState(0)
+
   const [inventory, setInventory] = useState<string[]>([])
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
@@ -1243,7 +1245,7 @@ export default function NoteApp() {
 
   useEffect(() => {
     const id = requestIdleCallback(() => {
-      _preloadOrchard(); _preloadBoutique(); _preloadStats()
+      _preloadOrchard(); _preloadBoutique(); _preloadStats(); _preloadLeaderboard()
       _preloadFocus(); _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
@@ -1351,32 +1353,15 @@ export default function NoteApp() {
           if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
-        const today = new Date().toISOString().slice(0, 10)
-        if (profile.last_streak_date === today) {
-          setStreak(profile.streak)
-        } else {
-          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-          const newStreak = profile.last_streak_date === yesterday ? profile.streak + 1 : 1
-          setStreak(newStreak)
-          db.upsertPlayerProfile(user.id, { streak: newStreak, last_streak_date: today })
-        }
       } else {
         // First time — create profile from localStorage state, then migrate legacy
         const saved = localStorage.getItem('pulp-grove')
-        const streakData = JSON.parse(localStorage.getItem('pulp-streak') || '{"count":0,"lastDate":""}')
         const groveLocal = saved ? JSON.parse(saved) : null
-        const today = new Date().toISOString().slice(0, 10)
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-        let streakCount = 1
-        if (streakData.lastDate === today) streakCount = streakData.count
-        else if (streakData.lastDate === yesterday) streakCount = streakData.count + 1
 
         await db.upsertPlayerProfile(user.id, {
           gems: groveLocal?.gems ?? 3,
           juice: groveLocal?.juice ?? groveLocal?.sunshine ?? 50,
           last_char_count: groveLocal?.lastCharCount ?? 0,
-          streak: streakCount,
-          last_streak_date: today
         })
         // Migrate legacy user_settings blob
         await db.migrateFromLegacy(user.id)
@@ -3196,7 +3181,7 @@ export default function NoteApp() {
                 }}
                 onUnlockDev={handleUnlockDev}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
-                onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
+                onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                 onOpenFocus={() => setFocusOpen(true)}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
                 sap={sap}
@@ -3204,7 +3189,7 @@ export default function NoteApp() {
                 xp={xp}
                 totalNotes={notes.filter(n => !n.archived).length}
                 totalChars={totalChars}
-                streak={streak}
+
                 onSetCover={(noteId) => {
                   editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(0); setCurrentView("editor")
                   setTimeout(() => setShowCoverModal(true), 100)
@@ -3378,7 +3363,7 @@ export default function NoteApp() {
                   gems={isAdmin ? 999999 : gems}
                   userAvatarUrl={user?.user_metadata?.avatar_url}
                   userEmail={user?.email}
-                  onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
+                  onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                   onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
                   onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
@@ -3791,6 +3776,24 @@ export default function NoteApp() {
                              #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
                              #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
                              #editor-paper li { margin-bottom: 0.15em !important; }
+                             .pulp-table-wrap { position: relative; }
+                             .pulp-table-wrap::before {
+                               content: "⠿";
+                               position: absolute;
+                               top: -14px;
+                               left: -2px;
+                               font-size: 14px;
+                               line-height: 1;
+                               color: transparent;
+                               cursor: grab;
+                               z-index: 2;
+                               user-select: none;
+                               transition: color 0.15s;
+                             }
+                             .pulp-table-wrap:hover::before { color: ${accent}88; }
+                             .pulp-table-wrap:hover { outline: 2px solid ${accent}33; outline-offset: 4px; border-radius: 4px; }
+                             .pulp-table-wrap.pulp-table-selected { outline: 2px solid ${accent}; outline-offset: 4px; border-radius: 4px; }
+                             .pulp-table-wrap.pulp-table-selected::before { color: ${accent}; }
                            `}</style>
 
                               {/* Selection rectangle — always in DOM, shown/hidden via direct DOM style */}
@@ -3964,7 +3967,7 @@ export default function NoteApp() {
               userId={user?.id}
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
-              onOpenLeaderboard={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
+              onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
               onOpenShop={() => { setShopOpen(v => !v) }}
             />
           </div></Suspense>}
@@ -3975,7 +3978,15 @@ export default function NoteApp() {
               onClose={() => setStatsOpen(false)}
               theme={theme}
               xp={xp}
-              streak={streak}
+              grove={grove}
+            /></motion.div>
+          </Suspense>}
+
+          {leaderboardOpen && <Suspense fallback={null}>
+            <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><LeaderboardView
+              isOpen={leaderboardOpen}
+              onClose={() => setLeaderboardOpen(false)}
+              theme={theme}
               sap={sap}
             /></motion.div>
           </Suspense>}

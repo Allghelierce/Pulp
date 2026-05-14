@@ -359,21 +359,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     claimAchievementRef.current = claimAchievement
   }, [checkAchievement, claimAchievement, checkAchievementRef, claimAchievementRef])
 
-  // Daily streak — runs once on mount
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
-    const raw = localStorage.getItem('pulp-streak')
-    const { lastOpenDate = null, streak = 0 } = raw ? JSON.parse(raw) : {}
-    if (lastOpenDate === today) return
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-    const newStreak = lastOpenDate === yesterday ? streak + 1 : 1
-    localStorage.setItem('pulp-streak', JSON.stringify({ lastOpenDate: today, streak: newStreak }))
-    setAchievements(prev => prev.map(a => {
-      if (a.id !== 'daily_return' || a.completed) return a
-      const p = Math.min(3, newStreak)
-      return { ...a, progress: p, completed: p >= 3 }
-    }))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clean up localStorage backup when timer stops
   useEffect(() => {

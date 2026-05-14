@@ -187,11 +187,11 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
 
   const insertTable = useCallback((rows: number, cols: number) => {
     const cellStyle = "border:1.5px solid rgba(0,0,0,0.15);padding:8px 12px;font-size:13px;min-width:80px;outline:none;"
-    const headerRow = `<tr>${Array.from({ length: cols }, () => `<th contenteditable="true" style="${cellStyle}font-weight:600;text-align:left;"><br></th>`).join("")}</tr>`
+    const headerRow = `<tr>${Array.from({ length: cols }, () => `<th style="${cellStyle}font-weight:600;text-align:left;"><br></th>`).join("")}</tr>`
     const bodyRows = Array.from({ length: rows - 1 }, () =>
-      `<tr>${Array.from({ length: cols }, () => `<td contenteditable="true" style="${cellStyle}"><br></td>`).join("")}</tr>`
+      `<tr>${Array.from({ length: cols }, () => `<td style="${cellStyle}"><br></td>`).join("")}</tr>`
     ).join("")
-    const html = `<table style="border-collapse:collapse;width:100%;margin:16px 0;table-layout:fixed;">${headerRow}${bodyRows}</table><p><br></p>`
+    const html = `<div class="pulp-table-wrap" style="position:relative;margin:16px 0;"><table style="border-collapse:collapse;width:100%;table-layout:fixed;">${headerRow}${bodyRows}</table></div><p><br></p>`
     insertHTML(html)
   }, [insertHTML])
 
@@ -434,6 +434,57 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     document.addEventListener('keydown', handler, true)
     return () => document.removeEventListener('keydown', handler, true)
   }, [editorRef, commitToState])
+
+  // Table selection: click grip to select whole table, Backspace/Delete to remove
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      // Clicking the ::before pseudo-element fires on the .pulp-table-wrap itself
+      // at coordinates above the table (the grip area)
+      const wrap = target.closest('.pulp-table-wrap') as HTMLElement | null
+      if (!wrap) {
+        document.querySelectorAll('.pulp-table-selected').forEach(el => el.classList.remove('pulp-table-selected'))
+        return
+      }
+      const rect = wrap.getBoundingClientRect()
+      const isGripArea = e.clientY < rect.top + 4
+      if (isGripArea || target === wrap) {
+        e.preventDefault()
+        e.stopPropagation()
+        document.querySelectorAll('.pulp-table-selected').forEach(el => el.classList.remove('pulp-table-selected'))
+        wrap.classList.add('pulp-table-selected')
+        const sel = window.getSelection()
+        const r = document.createRange()
+        r.selectNode(wrap)
+        sel?.removeAllRanges()
+        sel?.addRange(r)
+      }
+    }
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Backspace' && e.key !== 'Delete') return
+      const selected = document.querySelector('.pulp-table-selected')
+      if (!selected) return
+      e.preventDefault()
+      const next = selected.nextSibling || selected.previousSibling
+      const parent = selected.parentNode
+      selected.remove()
+      if (next) {
+        const r = document.createRange()
+        r.setStart(next, 0); r.collapse(true)
+        window.getSelection()?.removeAllRanges()
+        window.getSelection()?.addRange(r)
+      }
+      if (parent) (parent as HTMLElement).dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    document.addEventListener('click', handleClick, true)
+    document.addEventListener('keydown', handleKey, true)
+    return () => {
+      document.removeEventListener('click', handleClick, true)
+      document.removeEventListener('keydown', handleKey, true)
+    }
+  }, [])
 
   return { savedRange, saveSelection, restoreSelection, execCmd, insertHTML, applyFontSize, applyBlockStyle, toggleScript, insertTable, insertColumns, handleEditorKeyDown, syncContent, flushSync }
 }

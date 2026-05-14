@@ -23,7 +23,7 @@ function generatePlayers(count: number) {
   const nouns = ['quill','moth','ink','fox','owl','cedar','fern','ash','drift','plume','prose','wolf','crow','reed','thorn','spark','rune','veil','tide','stone']
   const avatarColors = ['#d97706','#8b7aaa','#c06878','#5a9a6a','#5a88b0','#b07850','#6a8a5a','#9a6a8a','#5a7aaa','#aa7a5a','#7a9a7a','#8a6aaa','#aa8a5a','#6a7a9a','#9a8a6a']
 
-  const players: { name: string; level: number; sap: number; focusHours: number; streak: number; trees: number; avatar: string }[] = []
+  const players: { name: string; level: number; sap: number; focusHours: number; trees: number; avatar: string }[] = []
   const usedNames = new Set<string>()
 
   for (let i = 0; i < count; i++) {
@@ -38,11 +38,10 @@ function generatePlayers(count: number) {
     const sap = Math.round((90000 + rng() * 30000) * base)
     const focusHours = Math.round((420 + rng() * 180) * base)
     const level = Math.max(1, Math.round(10 + (50 - rank) * 0.85 + rng() * 5))
-    const streak = Math.max(1, Math.round((90 - rank * 1.2) + rng() * 15))
     const trees = Math.max(3, Math.round((60 - rank * 0.8) + rng() * 10))
     const avatar = avatarColors[Math.floor(rng() * avatarColors.length)]
 
-    players.push({ name, level, sap, focusHours, streak, trees, avatar })
+    players.push({ name, level, sap, focusHours, trees, avatar })
   }
   return players
 }
@@ -266,7 +265,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
                 <div className="flex-1 min-w-0">
                   <div className="text-[12px] font-semibold truncate" style={{ color: textPrimary, fontFamily: font }}>{p.name}</div>
-                  <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>Lv.{p.level} · {p.streak}d streak · {p.trees} trees</div>
+                  <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>Lv.{p.level} · {p.trees} trees</div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -326,7 +325,6 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           const statItems = [
             { label: 'Sap', value: p.sap.toLocaleString(), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> },
             { label: 'Focus Time', value: `${p.focusHours}h`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-            { label: 'Streak', value: `${p.streak}d`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 .67 2.5 1.73 4.2 3 5.5 2 2.08 2.5 4.5 1 7.5-1 2-3 3.5-5.5 3.5s-4-1-5-3.5c-.56-1.41-.56-3.18 0-4.5"/></svg> },
             { label: 'Trees', value: String(p.trees), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg> },
             { label: 'Level', value: String(p.level), icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={medalColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
           ]
@@ -420,7 +418,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   </div>
                   <p className="text-[14px] font-semibold mt-2" style={{ color: textPrimary, fontFamily: font }}>{p.name}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>
-                    Level {p.level} · {p.streak} day streak
+                    Level {p.level} · {p.trees} trees
                   </p>
                 </div>
 
