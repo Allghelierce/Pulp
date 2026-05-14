@@ -784,7 +784,7 @@ export const StatsView = memo(function StatsView({
           const doubled = [...styled, ...styled]
           return (
             <div style={{
-              position: 'relative', height: 90, shrink: 0, overflow: 'hidden',
+              position: 'relative', height: 90, flexShrink: 0, overflow: 'hidden',
             }}>
               <div style={{
                 position: 'absolute', inset: 0,

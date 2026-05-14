@@ -364,7 +364,7 @@ const BoxItem = memo(function BoxItem({
     if (!isSelected && mediaEditing) setMediaEditing(false)
   }, [isSelected, pristine, mediaEditing])
   const rawImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
-  const htmlImgMatch = !rawImage && /^<img\s[^>]*src="([^"]+)"/.exec(box.content.trim())
+  const htmlImgMatch = !rawImage ? /^<img\s[^>]*src="([^"]+)"/.exec(box.content.trim()) : null
   const isImage = rawImage || !!htmlImgMatch
   const imageSrc = rawImage ? box.content : htmlImgMatch?.[1] || ''
   const isSticky = !!box.boxHighlightColor
