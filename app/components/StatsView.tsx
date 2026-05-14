@@ -83,10 +83,10 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
   focus: number; writing: number; sessions: number; isDark: boolean
   goals: typeof DEFAULT_GOALS; onEditGoals: () => void
 }) {
-  const size = 160
+  const size = 190
   const cx = size / 2, cy = size / 2
-  const strokeW = 7
-  const gap = 3
+  const strokeW = 4
+  const gap = 5
 
   const rings = [
     { value: focus, goal: goals.focus, color: '#ea580c', label: 'Focus', unit: 'min', radius: (size - strokeW) / 2 },
@@ -156,7 +156,7 @@ interface StatsViewProps {
 function getMonthGrid(entries: DailyEntry[], monthOffset = 0): { date: string; level: number; minutes: number; dayNum: number }[] {
   const map = new Map(entries.map(e => [e.date, e]))
   const today = new Date()
-  const days = 60
+  const days = 90
   const baseOffset = monthOffset * days
   const grid: { date: string; level: number; minutes: number; dayNum: number }[] = []
   for (let i = days - 1; i >= 0; i--) {
@@ -180,7 +180,7 @@ function getMonthGrid(entries: DailyEntry[], monthOffset = 0): { date: string; l
 
 function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean {
   const today = new Date()
-  const days = 60
+  const days = 90
   const baseOffset = monthOffset * days
   const map = new Map(entries.map(e => [e.date, e]))
   for (let i = days - 1; i >= 0; i--) {
@@ -350,10 +350,10 @@ export const StatsView = memo(function StatsView({
 
   const heatmapColors = useMemo(() => [
     emptyCell,
-    isDark ? 'rgba(234,88,12,0.25)' : 'rgba(234,88,12,0.2)',
-    isDark ? 'rgba(234,88,12,0.45)' : 'rgba(234,88,12,0.4)',
-    isDark ? 'rgba(234,88,12,0.7)' : 'rgba(234,88,12,0.6)',
-    isDark ? 'rgba(234,88,12,0.95)' : 'rgba(234,88,12,0.85)',
+    isDark ? 'rgba(234,88,12,0.35)' : 'rgba(234,88,12,0.25)',
+    isDark ? 'rgba(234,88,12,0.55)' : 'rgba(234,88,12,0.45)',
+    isDark ? 'rgba(234,88,12,0.78)' : 'rgba(234,88,12,0.65)',
+    isDark ? 'rgba(234,88,12,1)' : 'rgba(234,88,12,0.9)',
   ], [isDark, emptyCell])
 
   useEffect(() => {
@@ -433,67 +433,184 @@ export const StatsView = memo(function StatsView({
                   </div>
                   <span style={{ fontSize: 9, color: textMuted, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {lvl.level + 1}</span>
                 </div>
-                <p className="text-[11px] mt-1" style={{ color: textMuted, fontFamily: '"EB Garamond", serif' }}>{lvl.currentXp} / {lvl.nextXp} XP</p>
               </div>
             </div>
           </div>
 
           {/* Activity Rings + Consistency */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
-
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {canGoBack && (
-                    <button onClick={() => setHeatmapOffset(o => o + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    </button>
-                  )}
-                  <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? '60 days' : `${heatmapOffset * 60 + 60}–${heatmapOffset * 60 + 1}d ago`}</span>
-                  {heatmapOffset > 0 && (
-                    <button onClick={() => setHeatmapOffset(o => o - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 2 }}>
-                {monthGrid.map((cell) => {
-                  const isEmpty = cell.level === 0
-                  return (
-                    <div
-                      key={cell.date}
-                      title={`${cell.date}: ${cell.minutes > 0 ? `${cell.minutes} min` : 'No activity'}`}
-                      style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      <div style={{
-                        width: isEmpty ? '90%' : `${[0, 50, 65, 80, 95][cell.level]}%`,
-                        height: isEmpty ? '90%' : `${[0, 50, 65, 80, 95][cell.level]}%`,
-                        borderRadius: '50%',
-                        backgroundColor: isEmpty ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : heatmapColors[cell.level],
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {isEmpty && (
-                          <span style={{ fontSize: 6, color: textMuted, fontWeight: 500, lineHeight: 1 }}>{cell.dayNum}</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 6, justifyContent: "flex-start" }}>
-                <span style={{ fontSize: 7, color: textMuted, marginRight: 1 }}>Less</span>
-                {heatmapColors.slice(1).map((c, i) => {
-                  const s = [6, 8, 10, 12][i]
-                  return <div key={i} style={{ width: s, height: s, borderRadius: '50%', backgroundColor: c }} />
-                })}
-                <span style={{ fontSize: 7, color: textMuted, marginLeft: 2 }}>More</span>
-              </div>
+            <div style={{ flex: '0 0 280px', display: 'flex', justifyContent: 'center' }}>
+              <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
             </div>
+
+            {(() => {
+              let currentStreak = 0
+              for (let i = monthGrid.length - 1; i >= 0; i--) {
+                if (monthGrid[i].level > 0) currentStreak++
+                else break
+              }
+
+              const streakColorTiers = [
+                { min: 0,  color: '#a1a1aa' },
+                { min: 3,  color: '#34d399' },
+                { min: 7,  color: '#60a5fa' },
+                { min: 14, color: '#4d8cff' },
+                { min: 30, color: '#a855f7' },
+                { min: 45, color: '#c4a6ff' },
+                { min: 60, color: '#ffd700' },
+              ]
+              const getStreakColor = (len: number) => {
+                let c = streakColorTiers[0].color
+                for (const t of streakColorTiers) if (len >= t.min) c = t.color
+                return c
+              }
+
+              const weekMap = new Map<string, typeof monthGrid[0]>()
+              for (const c of monthGrid) weekMap.set(c.date, c)
+
+              const today = new Date()
+              const baseOffset = heatmapOffset * 90
+              const endDate = new Date(today)
+              endDate.setDate(endDate.getDate() - baseOffset)
+              const startDate = new Date(endDate)
+              startDate.setDate(startDate.getDate() - 89)
+
+              const startDay = startDate.getDay()
+              const adjustedStart = new Date(startDate)
+              adjustedStart.setDate(adjustedStart.getDate() - startDay)
+
+              const endDay = endDate.getDay()
+              const adjustedEnd = new Date(endDate)
+              adjustedEnd.setDate(adjustedEnd.getDate() + (6 - endDay))
+
+              const grid: (typeof monthGrid[0] | null)[][] = []
+              const dateOrder: { col: number; row: number; cell: typeof monthGrid[0] }[] = []
+              const d = new Date(adjustedStart)
+              let col = 0
+              while (d <= adjustedEnd) {
+                const week: (typeof monthGrid[0] | null)[] = []
+                for (let dow = 0; dow < 7; dow++) {
+                  const key = d.toISOString().split('T')[0]
+                  const entry = weekMap.get(key) ?? null
+                  week.push(entry)
+                  if (entry) dateOrder.push({ col, row: dow, cell: entry })
+                  d.setDate(d.getDate() + 1)
+                }
+                grid.push(week)
+                col++
+              }
+
+              const numCols = grid.length
+              const cellSize = 11, colGap = 10, rowGap = 2
+              const colStep = cellSize + colGap, rowStep = cellSize + rowGap
+              const labelW = 20
+              const svgW = labelW + numCols * colStep - colGap, svgH = 7 * rowStep - rowGap
+              const px = (c: number) => labelW + c * colStep + cellSize / 2
+              const py = (r: number) => r * rowStep + cellSize / 2
+
+              const runs: { start: number; length: number }[] = []
+              let runStart = -1
+              for (let i = 0; i < dateOrder.length; i++) {
+                if (dateOrder[i].cell.level > 0) {
+                  if (runStart === -1) runStart = i
+                } else {
+                  if (runStart !== -1) { runs.push({ start: runStart, length: i - runStart }); runStart = -1 }
+                }
+              }
+              if (runStart !== -1) runs.push({ start: runStart, length: dateOrder.length - runStart })
+
+              const fireColor = currentStreak > 0 ? getStreakColor(currentStreak) : '#d97706'
+              const fireGlow = currentStreak >= 60 ? 12 : currentStreak >= 30 ? 8 : currentStreak >= 14 ? 5 : currentStreak >= 7 ? 3 : 0
+              const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
+              return (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
+                      {currentStreak > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <motion.svg
+                            width="14" height="14" viewBox="0 0 24 24" fill={fireColor} stroke="none"
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+                            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                            style={{ filter: fireGlow > 0 ? `drop-shadow(0 0 ${fireGlow}px ${fireColor})` : undefined }}
+                          >
+                            <path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z" />
+                            <path d="M12 12c0 2-1.5 3-1.5 4.5a1.5 1.5 0 003 0c0-1.5-1.5-2.5-1.5-4.5z" fill="#fbbf24" />
+                          </motion.svg>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: fireColor, fontFamily: '"EB Garamond", serif' }}>{currentStreak}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {canGoBack && (
+                        <button onClick={() => setHeatmapOffset(o => o + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        </button>
+                      )}
+                      <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? '90 days' : `${heatmapOffset * 90 + 60}–${heatmapOffset * 90 + 1}d ago`}</span>
+                      {heatmapOffset > 0 && (
+                        <button onClick={() => setHeatmapOffset(o => o - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%' }}>
+                    {dayLabels.map((l, i) => (
+                      <text key={i} x={4} y={py(i)} textAnchor="middle" dominantBaseline="central" fill={textMuted} fontSize="4" fontWeight="600">{l}</text>
+                    ))}
+                    {runs.map((run, ri) => {
+                      const color = getStreakColor(run.length)
+                      const segments: React.ReactNode[] = []
+                      for (let j = run.start; j < run.start + run.length - 1; j++) {
+                        const a = dateOrder[j], b = dateOrder[j + 1]
+                        const x1 = px(a.col), y1 = py(a.row), x2 = px(b.col), y2 = py(b.row)
+                        const dx = x2 - x1, dy = y2 - y1
+                        const dist = Math.sqrt(dx * dx + dy * dy)
+                        if (dist === 0) continue
+                        const rA = a.cell.level === 0 ? 4 : [0, 2.5, 3, 3.8, 4.5][a.cell.level]
+                        const rB = b.cell.level === 0 ? 4 : [0, 2.5, 3, 3.8, 4.5][b.cell.level]
+                        const nx = dx / dist, ny = dy / dist
+                        segments.push(
+                          <line key={`${ri}-${j}`}
+                            x1={x1 + nx * rA} y1={y1 + ny * rA}
+                            x2={x2 - nx * rB} y2={y2 - ny * rB}
+                            stroke={color} strokeWidth="0.5" strokeLinecap="round" />
+                        )
+                      }
+                      return <g key={ri}>{segments}</g>
+                    })}
+                    {grid.map((week, col) => week.map((c, row) => {
+                      if (!c) return null
+                      const isEmpty = c.level === 0
+                      const r = isEmpty ? 4 : [0, 2.5, 3, 3.8, 4.5][c.level]
+                      return (
+                        <g key={c.date}>
+                          <circle cx={px(col)} cy={py(row)} r={r}
+                            fill={isEmpty ? (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)') : heatmapColors[c.level]} />
+                          {isEmpty && (
+                            <text x={px(col)} y={py(row)} textAnchor="middle" dominantBaseline="central"
+                              fill={isDark ? '#6a6660' : '#8a8680'} fontSize="3" fontWeight="600">{c.dayNum}</text>
+                          )}
+                        </g>
+                      )
+                    }))}
+                  </svg>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 6, justifyContent: "flex-start" }}>
+                    <span style={{ fontSize: 7, color: textMuted, marginRight: 1 }}>Less</span>
+                    {heatmapColors.slice(1).map((c, i) => {
+                      const s = [6, 8, 10, 12][i]
+                      return <div key={i} style={{ width: s, height: s, borderRadius: '50%', backgroundColor: c }} />
+                    })}
+                    <span style={{ fontSize: 7, color: textMuted, marginLeft: 2 }}>More</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {editingGoals && (

@@ -85,6 +85,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to save" }, { status: 500 })
   }
 
+  // Update league focus minutes
+  const { data: standing } = await supabaseAdmin
+    .from('league_standings')
+    .select('current_league_id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (standing?.current_league_id) {
+    const roundedMinutes = Math.round(minutes)
+    const { data: member } = await supabaseAdmin
+      .from('league_members')
+      .select('focus_minutes')
+      .eq('league_id', standing.current_league_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (member) {
+      await supabaseAdmin
+        .from('league_members')
+        .update({ focus_minutes: (member.focus_minutes || 0) + roundedMinutes })
+        .eq('league_id', standing.current_league_id)
+        .eq('user_id', user.id)
+    }
+  }
+
   return NextResponse.json({
     tree: newTree,
     sap: profile.juice,
