@@ -30,6 +30,7 @@ interface OrchardViewProps {
   orchardTimeMode?: "theme" | "realtime"
   onOpenLeaderboard?: () => void
   onOpenShop?: () => void
+  onOpenSatchel?: () => void
 }
 
 type RGB = [number, number, number]
@@ -2401,8 +2402,8 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  sap, gems, xp, grove, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop,
+  sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
+  onOpenLeaderboard, onOpenShop, onOpenSatchel,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -3002,6 +3003,12 @@ export const OrchardView = memo(function OrchardView({
                 <GemIcon size={16} />
                 <span className="text-[15px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
               </div>
+              {onOpenSatchel && (
+                <button onClick={onOpenSatchel} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)', position: 'relative' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
+                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 700, color: '#d97706', fontFamily: '"EB Garamond", serif' }}>{inventory.length}</span>}
+                </button>
+              )}
               {onOpenShop && (
                 <button onClick={onOpenShop} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>

@@ -1390,7 +1390,7 @@ export default function NoteApp() {
     editorFont: "Georgia",
     headingFont: "Georgia",
     lineSpacing: "normal",
-    paperStyle: "lined",
+    paperStyle: "steno",
     showBinding: false,
     reduceMotion: false,
     reduceVisuals: false,
@@ -1406,7 +1406,7 @@ export default function NoteApp() {
     shortcuts: { ai: "ctrl+j", slash: "/", newNote: "ctrl+n", search: "ctrl+k", toggleSidebar: "ctrl+\\", aiCommand: "\\", timer: "ctrl+alt+t", prevPage: "alt+arrowleft", nextPage: "alt+arrowright", drawMode: "ctrl+d", cycleHeader: "alt+1" },
     blockedSites: [],
     blockedApps: [],
-    orchardTimeMode: "realtime",
+    orchardTimeMode: "theme",
     devMode: false,
     isDevUnlocked: false
   }
@@ -3969,6 +3969,7 @@ export default function NoteApp() {
               orchardTimeMode={orchardTimeMode || "theme"}
               onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
               onOpenShop={() => { setShopOpen(v => !v) }}
+              onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
             />
           </div></Suspense>}
 
@@ -4289,7 +4290,7 @@ export default function NoteApp() {
           {!user && (
             <button
               onClick={() => window.location.href = "/login"}
-              className="fixed bottom-6 right-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-40"
+              className="fixed bottom-6 left-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-40"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
               <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>

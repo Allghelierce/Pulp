@@ -550,13 +550,13 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
-            <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ padding: '2px 24px 12px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingBottom: '8%' }}>
               {/* Hanging vines + bottom oranges */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
                 <svg viewBox="0 0 1060 700" style={{ width: '100%', height: '100%' }} fill="none" strokeLinecap="round" strokeLinejoin="round">
                   {(() => { const g = isDark ? '#5a9a3a' : '#3a7a1e'; const gl = isDark ? '#7aba5a' : '#5a9a3a'; return (<>
                     {/* Vine A — far left, long, detailed */}
-                    <g opacity={isDark ? 0.18 : 0.14}>
+                    <g opacity={isDark ? 0.06 : 0.045}>
                       <path d="M45 0 Q38 50 48 100 Q56 145 44 190 Q36 230 42 270 Q50 300 44 330" stroke={g} strokeWidth="1.5" />
                       <path d="M45 0 Q40 50 50 100 Q58 145 46 190" stroke={gl} strokeWidth="0.4" opacity="0.3" />
                       <path d="M48 35 Q35 28 30 38 Q38 41 48 35" fill={g} />
@@ -573,7 +573,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine B — left, textured */}
-                    <g opacity={isDark ? 0.15 : 0.11}>
+                    <g opacity={isDark ? 0.05 : 0.035}>
                       <path d="M150 0 Q145 40 155 75 Q162 105 152 140 Q146 168 150 195" stroke={g} strokeWidth="1.3" />
                       <path d="M150 0 Q147 40 157 75 Q164 105 154 140" stroke={gl} strokeWidth="0.3" opacity="0.3" />
                       <path d="M155 28 Q145 20 140 30 Q147 33 155 28" fill={g} />
@@ -585,7 +585,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine C — left-center, wispy with curls */}
-                    <g opacity={isDark ? 0.11 : 0.08}>
+                    <g opacity={isDark ? 0.04 : 0.025}>
                       <path d="M310 0 Q305 30 312 58 Q318 80 310 105 Q304 125 308 145" stroke={g} strokeWidth="1" />
                       <path d="M312 35 Q302 28 298 38 Q305 40 312 35" fill={g} />
                       <path d="M310 70 Q320 63 324 73 Q317 75 310 70" fill={gl} />
@@ -594,7 +594,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine D — center-left, thick */}
-                    <g opacity={isDark ? 0.13 : 0.1}>
+                    <g opacity={isDark ? 0.04 : 0.03}>
                       <path d="M440 0 Q448 35 438 70 Q430 100 440 130 Q448 155 442 180" stroke={g} strokeWidth="1.2" />
                       <path d="M440 0 Q450 35 440 70" stroke={gl} strokeWidth="0.3" opacity="0.3" />
                       <path d="M438 40 Q450 32 454 42 Q447 45 438 40" fill={gl} />
@@ -605,14 +605,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine E — center, tiny */}
-                    <g opacity={isDark ? 0.09 : 0.065}>
+                    <g opacity={isDark ? 0.03 : 0.02}>
                       <path d="M560 0 Q555 20 560 42 Q565 58 558 72" stroke={g} strokeWidth="0.8" />
                       <path d="M560 25 Q550 20 548 28 Q553 30 560 25" fill={g} />
                       <path d="M558 50 Q566 44 570 52 Q564 54 558 50" fill={gl} />
                     </g>
 
                     {/* Vine F — center-right, long curvy */}
-                    <g opacity={isDark ? 0.16 : 0.12}>
+                    <g opacity={isDark ? 0.05 : 0.04}>
                       <path d="M650 0 Q658 45 648 95 Q640 135 652 180 Q660 215 650 250 Q644 275 648 300" stroke={g} strokeWidth="1.4" />
                       <path d="M650 0 Q660 45 650 95 Q642 135 654 180" stroke={gl} strokeWidth="0.4" opacity="0.25" />
                       <path d="M648 50 Q638 42 634 52 Q641 55 648 50" fill={g} />
@@ -626,7 +626,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine G — right, medium */}
-                    <g opacity={isDark ? 0.12 : 0.09}>
+                    <g opacity={isDark ? 0.04 : 0.03}>
                       <path d="M780 0 Q785 30 778 65 Q772 90 780 115 Q786 135 782 155" stroke={g} strokeWidth="1.1" />
                       <path d="M778 32 Q788 25 792 35 Q785 37 778 32" fill={gl} />
                       <path d="M780 75 Q770 68 766 78 Q773 80 780 75" fill={g} />
@@ -635,7 +635,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine H — right, long thick */}
-                    <g opacity={isDark ? 0.17 : 0.13}>
+                    <g opacity={isDark ? 0.05 : 0.04}>
                       <path d="M920 0 Q928 55 918 110 Q910 155 922 200 Q930 240 920 280" stroke={g} strokeWidth="1.5" />
                       <path d="M920 0 Q930 55 920 110 Q912 155 924 200" stroke={gl} strokeWidth="0.4" opacity="0.25" />
                       <path d="M918 45 Q930 38 934 48 Q927 50 918 45" fill={gl} />
@@ -648,7 +648,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine I — far right */}
-                    <g opacity={isDark ? 0.14 : 0.1}>
+                    <g opacity={isDark ? 0.04 : 0.03}>
                       <path d="M1020 0 Q1015 35 1022 70 Q1028 95 1018 125 Q1012 148 1016 170" stroke={g} strokeWidth="1.2" />
                       <path d="M1022 30 Q1032 24 1036 34 Q1029 36 1022 30" fill={gl} />
                       <path d="M1018 80 Q1008 73 1004 83 Q1011 85 1018 80" fill={g} />
@@ -657,142 +657,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </g>
 
                     {/* Vine J — tiny between B and C */}
-                    <g opacity={isDark ? 0.08 : 0.06}>
+                    <g opacity={isDark ? 0.03 : 0.02}>
                       <path d="M240 0 Q235 22 240 48 Q245 65 238 82" stroke={g} strokeWidth="0.8" />
                       <path d="M240 30 Q232 24 228 32 Q234 34 240 30" fill={g} />
                       <path d="M238 60 Q246 55 250 62 Q244 64 238 60" fill={gl} />
                     </g>
 
-                    {/* Bottom crates with oranges */}
-                    {(() => { const wb = isDark ? '#3a2e20' : '#8a7050'; const wl = isDark ? '#4a3e30' : '#a08a68'; const wd = isDark ? '#2a2018' : '#6a5840'; const o1 = '#d97706'; const o2 = '#c87a08'; const o3 = '#e09010'; return (<>
-                      {/* Crate 1 — left, tall */}
-                      <g opacity={isDark ? 0.14 : 0.11}>
-                        <rect x="20" y="630" width="80" height="60" rx="2" fill={wb} />
-                        <rect x="20" y="630" width="80" height="60" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="20" y1="645" x2="100" y2="645" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="20" y1="660" x2="100" y2="660" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="20" y1="675" x2="100" y2="675" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="40" y1="630" x2="40" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="80" y1="630" x2="80" y2="690" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Oranges in crate */}
-                        <circle cx="38" cy="625" r="8" fill={o1} /><circle cx="38" cy="625" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="60" cy="622" r="9" fill={o2} /><circle cx="60" cy="622" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="82" cy="624" r="7.5" fill={o3} /><circle cx="82" cy="624" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="50" cy="616" r="7" fill={o1} /><circle cx="50" cy="616" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="72" cy="617" r="6.5" fill={o2} /><circle cx="72" cy="617" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        {/* Highlights */}
-                        <ellipse cx="36" cy="622" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="58" cy="619" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="80" cy="621" rx="2.8" ry="1.4" fill="#f0b030" opacity="0.3" />
-                        {/* Leaves */}
-                        <path d="M60 614 Q65 608 68 612" fill={g} opacity="0.5" />
-                        <path d="M38 618 Q33 612 30 616" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 2 — center-left, short */}
-                      <g opacity={isDark ? 0.12 : 0.09}>
-                        <rect x="130" y="655" width="70" height="45" rx="2" fill={wb} />
-                        <rect x="130" y="655" width="70" height="45" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="130" y1="668" x2="200" y2="668" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="130" y1="681" x2="200" y2="681" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="155" y1="655" x2="155" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="180" y1="655" x2="180" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="148" cy="650" r="7" fill={o3} /><circle cx="148" cy="650" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="168" cy="648" r="8" fill={o1} /><circle cx="168" cy="648" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="188" cy="650" r="6.5" fill={o2} /><circle cx="188" cy="650" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="166" cy="645" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <path d="M168 641 Q173 636 176 640" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 3 — center, stacked (bottom) */}
-                      <g opacity={isDark ? 0.14 : 0.11}>
-                        <rect x="380" y="650" width="90" height="50" rx="2" fill={wb} />
-                        <rect x="380" y="650" width="90" height="50" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="380" y1="665" x2="470" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="380" y1="680" x2="470" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="410" y1="650" x2="410" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="440" y1="650" x2="440" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Stacked crate on top */}
-                        <rect x="392" y="618" width="76" height="35" rx="2" fill={wl} />
-                        <rect x="392" y="618" width="76" height="35" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
-                        <line x1="392" y1="630" x2="468" y2="630" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="392" y1="642" x2="468" y2="642" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="415" y1="618" x2="415" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="445" y1="618" x2="445" y2="653" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        {/* Oranges spilling from top crate */}
-                        <circle cx="408" cy="612" r="8" fill={o1} /><circle cx="408" cy="612" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="430" cy="610" r="9" fill={o3} /><circle cx="430" cy="610" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="454" cy="613" r="7.5" fill={o2} /><circle cx="454" cy="613" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="420" cy="604" r="7" fill={o1} /><circle cx="420" cy="604" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="442" cy="605" r="6.5" fill={o3} /><circle cx="442" cy="605" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="428" cy="607" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <ellipse cx="406" cy="609" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                        <path d="M430 602 Q435 596 438 600" fill={g} opacity="0.5" />
-                        <path d="M408 605 Q403 599 400 603" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 4 — right of center */}
-                      <g opacity={isDark ? 0.11 : 0.085}>
-                        <rect x="540" y="660" width="75" height="40" rx="2" fill={wb} />
-                        <rect x="540" y="660" width="75" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="540" y1="672" x2="615" y2="672" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="540" y1="684" x2="615" y2="684" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="565" y1="660" x2="565" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="590" y1="660" x2="590" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="555" cy="655" r="7.5" fill={o2} /><circle cx="555" cy="655" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="577" cy="653" r="8.5" fill={o1} /><circle cx="577" cy="653" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="600" cy="655" r="7" fill={o3} /><circle cx="600" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="575" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                      </g>
-
-                      {/* Crate 5 — right, tall */}
-                      <g opacity={isDark ? 0.13 : 0.1}>
-                        <rect x="750" y="635" width="85" height="65" rx="2" fill={wb} />
-                        <rect x="750" y="635" width="85" height="65" rx="2" fill="none" stroke={wd} strokeWidth="0.8" />
-                        <line x1="750" y1="650" x2="835" y2="650" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="750" y1="665" x2="835" y2="665" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="750" y1="680" x2="835" y2="680" stroke={wd} strokeWidth="0.5" opacity="0.5" />
-                        <line x1="775" y1="635" x2="775" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="810" y1="635" x2="810" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="768" cy="629" r="8.5" fill={o1} /><circle cx="768" cy="629" r="8.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="792" cy="627" r="9" fill={o3} /><circle cx="792" cy="627" r="9" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="818" cy="630" r="7.5" fill={o2} /><circle cx="818" cy="630" r="7.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="780" cy="621" r="7" fill={o2} /><circle cx="780" cy="621" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="805" cy="620" r="6.5" fill={o1} /><circle cx="805" cy="620" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="790" cy="624" rx="3.5" ry="1.8" fill="#f0b030" opacity="0.3" />
-                        <path d="M792 618 Q797 612 800 616" fill={g} opacity="0.5" />
-                        <path d="M768 622 Q763 616 760 620" fill={g} opacity="0.4" />
-                      </g>
-
-                      {/* Crate 6 — far right, small */}
-                      <g opacity={isDark ? 0.12 : 0.09}>
-                        <rect x="900" y="660" width="70" height="40" rx="2" fill={wl} />
-                        <rect x="900" y="660" width="70" height="40" rx="2" fill="none" stroke={wd} strokeWidth="0.7" />
-                        <line x1="900" y1="673" x2="970" y2="673" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="900" y1="686" x2="970" y2="686" stroke={wd} strokeWidth="0.4" opacity="0.5" />
-                        <line x1="925" y1="660" x2="925" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <line x1="950" y1="660" x2="950" y2="700" stroke={wd} strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="918" cy="655" r="7" fill={o3} /><circle cx="918" cy="655" r="7" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="938" cy="653" r="8" fill={o1} /><circle cx="938" cy="653" r="8" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <circle cx="958" cy="656" r="6.5" fill={o2} /><circle cx="958" cy="656" r="6.5" fill="none" stroke="#a05a04" strokeWidth="0.3" opacity="0.3" />
-                        <ellipse cx="936" cy="650" rx="3" ry="1.5" fill="#f0b030" opacity="0.3" />
-                      </g>
-
-                      {/* Loose oranges on ground between crates */}
-                      <g opacity={isDark ? 0.1 : 0.08}>
-                        <circle cx="115" cy="692" r="6" fill={o2} />
-                        <circle cx="250" cy="688" r="7" fill={o1} />
-                        <circle cx="330" cy="694" r="5.5" fill={o3} />
-                        <circle cx="505" cy="690" r="6.5" fill={o1} />
-                        <circle cx="680" cy="692" r="5.5" fill={o2} />
-                        <circle cx="860" cy="688" r="6" fill={o3} />
-                        <circle cx="1000" cy="694" r="5" fill={o1} />
-                        {/* Scattered leaves */}
-                        <path d="M270 686 Q276 680 282 684 Q276 688 270 686" fill={g} opacity="0.6" />
-                        <path d="M490 694 Q496 688 502 692 Q496 696 490 694" fill={gl} opacity="0.5" />
-                        <path d="M720 690 Q726 684 732 688 Q726 692 720 690" fill={g} opacity="0.5" />
-                      </g>
-                    </>)})()}
                   </>)})()}
                 </svg>
               </div>
@@ -831,8 +701,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </div>
               ) : (<>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 2, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Shop</span>
-                <svg width="180" height="20" viewBox="0 0 180 20" style={{ marginTop: 3, opacity: isDark ? 0.3 : 0.25 }}>
+                <span style={{ fontSize: 22, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Shop</span>
+                <svg width="180" height="20" viewBox="0 0 180 20" style={{ marginTop: 10, opacity: isDark ? 0.3 : 0.25 }}>
                   {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>
                     <polygon points="5,10 10,6.5 15,10 10,13.5" fill={c} />
                     <line x1="15" y1="10" x2="60" y2="10" stroke={c} strokeWidth="0.7" />
@@ -845,38 +715,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                     <polygon points="165,10 170,6.5 175,10 170,13.5" fill={c} />
                   </>)})()}
                 </svg>
-                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                  <button
-                    onClick={() => setActiveTab('satchel')}
-                    className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '5px 10px', borderRadius: 6,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 5,
-                      fontSize: 10, fontWeight: 600, fontFamily: font,
-                    }}
-                    title={`Satchel (${inventory.length} seeds)`}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                    {inventory.length}
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
-                    className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '5px 10px', borderRadius: 6,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 5,
-                      fontSize: 10, fontWeight: 600, fontFamily: font,
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                  </button>
-                </div>
               </div>
               {/* 5 Oval Seed Packets */}
               {(() => {
@@ -887,7 +725,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 18, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1, marginTop: -70 }}>
+              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -940,8 +778,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
-                  const cardW = 155
-                  const cardH = 260
+                  const cardW = 180
+                  const cardH = 320
 
                   return (
                     <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -961,7 +799,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
                         onClick={() => !isRevealed && revealCard(i)}
                         style={{
-                          width: cardW, height: cardH, borderRadius: '50%',
+                          width: cardW, height: cardH, borderRadius: 14,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
                           ['--pulse-col' as string]: `${rarityCol}30`,
@@ -972,53 +810,15 @@ export const BoutiqueView = memo(function BoutiqueView({
                             : isDailyDeal
                               ? undefined
                               : isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)',
-                          border: 'none',
+                          border: `1px solid ${isRevealed ? `${rarityCol}35` : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
                         }}
                       >
-                        {/* Decorative border */}
-                        <svg viewBox={`0 0 ${cardW} ${cardH}`} style={{ position: 'absolute', inset: -1, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)', zIndex: 15, pointerEvents: 'none' }}>
-                          <defs>
-                            <clipPath id={`oval-clip-${i}`}><ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-1} ry={cardH/2-1} /></clipPath>
-                          </defs>
-                          {isRevealed ? (
-                            <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-2} ry={cardH/2-2} fill="none"
-                              stroke={rarityCol} strokeWidth="1" opacity="0.35"
-                              strokeDasharray="6 3 2 3" />
-                          ) : (
-                            <>
-                              <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-1.5} ry={cardH/2-1.5} fill="none"
-                                stroke={isDark ? '#a09080' : '#8a7a6a'} strokeWidth="1.2" opacity={isDark ? 0.2 : 0.25}
-                                strokeDasharray="4 6 2 6" />
-                              <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-4} ry={cardH/2-4} fill="none"
-                                stroke={isDark ? '#a09080' : '#8a7a6a'} strokeWidth="0.5" opacity={isDark ? 0.1 : 0.12}
-                                strokeDasharray="1 8" />
-                              {/* Vine accents */}
-                              <g opacity={isDark ? 0.15 : 0.18} stroke={isDark ? '#8a9a6a' : '#6a8a4a'} fill="none" strokeWidth="0.8" strokeLinecap="round" clipPath={`url(#oval-clip-${i})`}>
-                                <path d="M20 35 Q30 28 35 40 Q38 48 32 55" />
-                                <path d="M30 32 Q33 27 36 32" />
-                                <path d="M36 46 Q40 42 42 47" />
-                                <path d={`M${cardW-20} 35 Q${cardW-30} 28 ${cardW-35} 40 Q${cardW-38} 48 ${cardW-32} 55`} />
-                                <path d={`M${cardW-30} 32 Q${cardW-33} 27 ${cardW-36} 32`} />
-                                <path d={`M${cardW-36} 46 Q${cardW-40} 42 ${cardW-42} 47`} />
-                                <path d={`M15 ${cardH-50} Q25 ${cardH-45} 28 ${cardH-35} Q30 ${cardH-28} 24 ${cardH-24}`} />
-                                <path d={`M22 ${cardH-42} Q26 ${cardH-45} 28 ${cardH-41}`} />
-                                <path d={`M${cardW-15} ${cardH-50} Q${cardW-25} ${cardH-45} ${cardW-28} ${cardH-35} Q${cardW-30} ${cardH-28} ${cardW-24} ${cardH-24}`} />
-                                <path d={`M${cardW-22} ${cardH-42} Q${cardW-26} ${cardH-45} ${cardW-28} ${cardH-41}`} />
-                              </g>
-                              {discount > 0 && (
-                                <ellipse cx={cardW/2} cy={cardH/2} rx={cardW/2-3} ry={cardH/2-3} fill="none"
-                                  stroke="#d97706" strokeWidth="1" opacity={isDark ? 0.15 : 0.12}
-                                  strokeDasharray="3 4 1 4" />
-                              )}
-                            </>
-                          )}
-                        </svg>
                         {!isRevealed ? (
                           /* Unrevealed — kraft paper seed packet */
                           <div
                             onClick={() => revealCard(i)}
                             style={{
-                              width: '100%', height: '100%', borderRadius: '50%',
+                              width: '100%', height: '100%', borderRadius: 'inherit',
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
@@ -1026,37 +826,22 @@ export const BoutiqueView = memo(function BoutiqueView({
                               position: 'relative',
                             }}
                           >
-                            {/* Organic paper texture */}
-                            <svg width="100%" height="100%" viewBox="0 0 170 230" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.05 : 0.06 }}>
-                              <defs>
-                                <radialGradient id={`paper-fade-${i}`} cx="50%" cy="50%" r="45%">
-                                  <stop offset="0%" stopOpacity="1" stopColor={isDark ? '#fff' : '#000'} />
-                                  <stop offset="100%" stopOpacity="0" stopColor={isDark ? '#fff' : '#000'} />
-                                </radialGradient>
-                              </defs>
-                              <g stroke={isDark ? '#fff' : '#000'} fill="none" strokeLinecap="round" mask={`url(#paper-fade-${i})`}>
-                                {/* Wood grain curves */}
-                                <path d="M30 55 Q55 50 85 53 Q120 57 145 52" strokeWidth="0.6" opacity="0.5" />
-                                <path d="M25 80 Q50 76 85 79 Q115 83 150 78" strokeWidth="0.4" opacity="0.35" />
-                                <path d="M35 105 Q60 100 90 103 Q125 107 140 102" strokeWidth="0.5" opacity="0.4" />
-                                <path d="M28 130 Q58 126 85 129 Q110 133 148 127" strokeWidth="0.4" opacity="0.3" />
-                                <path d="M32 155 Q62 150 88 153 Q118 157 142 151" strokeWidth="0.5" opacity="0.35" />
-                                <path d="M38 178 Q65 174 90 177 Q112 180 138 175" strokeWidth="0.3" opacity="0.25" />
-                                {/* Fiber wisps */}
-                                <path d="M45 68 Q52 65 60 67" strokeWidth="0.3" opacity="0.2" />
-                                <path d="M100 92 Q108 89 118 91" strokeWidth="0.3" opacity="0.2" />
-                                <path d="M55 140 Q63 137 72 139" strokeWidth="0.3" opacity="0.15" />
-                                <path d="M90 165 Q100 162 112 164" strokeWidth="0.3" opacity="0.2" />
-                              </g>
+                            {/* Botanical filigree border */}
+                            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                              {(() => { const fc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; return (<>
+                                <rect x="12" y="12" width="156" height="296" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M12 40 Q30 38 36 28 Q38 35 48 36" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M168 40 Q150 38 144 28 Q142 35 132 36" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M12 280 Q30 282 36 292 Q38 285 48 284" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M168 280 Q150 282 144 292 Q142 285 132 284" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <circle cx="12" cy="40" r="1.5" fill={fc} />
+                                <circle cx="168" cy="40" r="1.5" fill={fc} />
+                                <circle cx="12" cy="280" r="1.5" fill={fc} />
+                                <circle cx="168" cy="280" r="1.5" fill={fc} />
+                                <line x1="48" y1="16" x2="132" y2="16" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                                <line x1="48" y1="304" x2="132" y2="304" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                              </>)})()}
                             </svg>
-                            {/* Discount ring hint */}
-                            {discount > 0 && (
-                              <div style={{
-                                position: 'absolute', inset: 4, borderRadius: '50%',
-                                border: `1.5px solid ${isDark ? '#d97706' : '#d97706'}`,
-                                opacity: isDark ? 0.2 : 0.15,
-                              }} />
-                            )}
                             {/* Sprouting seed */}
                             {(() => {
                               const isRareUp = t.rarity === 'rare' || t.rarity === 'true rare' || t.rarity === 'sacred'
@@ -1098,7 +883,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               setPreviewStage(0)
                             }}
                             style={{
-                              width: '100%', height: '100%', borderRadius: '50%',
+                              width: '100%', height: '100%', borderRadius: 'inherit',
                               background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
                               position: 'relative', overflow: 'hidden',
@@ -1106,9 +891,25 @@ export const BoutiqueView = memo(function BoutiqueView({
                           >
                             <RarityScene rarity={t.rarity} isDark={isDark} />
                             <Sparkles rarity={t.rarity} count={3} />
+                            {/* Botanical filigree border */}
+                            <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6 }}>
+                              {(() => { const fc = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'; return (<>
+                                <rect x="10" y="10" width="160" height="300" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M10 38 Q28 36 34 26 Q36 33 46 34" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M170 38 Q152 36 146 26 Q144 33 134 34" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M10 282 Q28 284 34 294 Q36 287 46 286" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <path d="M170 282 Q152 284 146 294 Q144 287 134 286" fill="none" stroke={fc} strokeWidth="0.5" />
+                                <circle cx="10" cy="38" r="1.5" fill={fc} />
+                                <circle cx="170" cy="38" r="1.5" fill={fc} />
+                                <circle cx="10" cy="282" r="1.5" fill={fc} />
+                                <circle cx="170" cy="282" r="1.5" fill={fc} />
+                                <line x1="46" y1="14" x2="134" y2="14" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                                <line x1="46" y1="306" x2="134" y2="306" stroke={fc} strokeWidth="0.3" strokeDasharray="2 4" />
+                              </>)})()}
+                            </svg>
                             {/* Inner vignette */}
                             <div style={{
-                              position: 'absolute', inset: 0, borderRadius: '50%',
+                              position: 'absolute', inset: 0, borderRadius: 'inherit',
                               boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
                               pointerEvents: 'none', zIndex: 4,
                             }} />
@@ -1123,6 +924,18 @@ export const BoutiqueView = memo(function BoutiqueView({
                               whiteSpace: 'nowrap',
                             }}>
                               {RARITY_LABEL[t.rarity]}
+                            </div>
+                            {/* Tree name */}
+                            <div style={{
+                              position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+                              fontSize: 11, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
+                              fontFamily: '"EB Garamond", serif', letterSpacing: '0.04em',
+                              background: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)',
+                              padding: '2px 8px', borderRadius: 3,
+                              backdropFilter: 'blur(4px)', zIndex: 5,
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {t.name}
                             </div>
                             {/* Stock / sold out */}
                             {soldOut ? (
@@ -1143,8 +956,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 backdropFilter: 'blur(4px)', zIndex: 5,
                               }}>x{shopStock[type]}</div>
                             )}
-                            {/* Discount badge */}
-                            {discount > 0 && (
+                            {/* Discount badge - now on price tag */}
+                            {discount > 0 && false && (
                               <div style={{
                                 position: 'absolute', bottom: 36, right: 18,
                                 fontSize: 8, fontWeight: 800, color: '#fff',
@@ -1162,7 +975,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 animation: isRevealed && revealEffect?.index === i ? 'sprout-emerge 0.3s ease-out' : undefined,
                                 position: 'relative',
                               }}>
-                                <PlantIcon type={type} size={100} stage={3} hideGround />
+                                <PlantIcon type={type} size={120} stage={3} hideGround />
                                 {/* Ground blend */}
                                 <div style={{
                                   position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
@@ -1186,14 +999,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         {isCracking && (
                           <>
                             <div style={{
-                              position: 'absolute', inset: 0, borderRadius: '50%', zIndex: 10,
+                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
                               animation: 'seed-crack 0.6s ease-in forwards',
                             }} />
                             <div style={{
-                              position: 'absolute', inset: 0, borderRadius: '50%', zIndex: 10,
+                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
@@ -1202,57 +1015,63 @@ export const BoutiqueView = memo(function BoutiqueView({
                           </>
                         )}
                       </div>
-                      {/* Name below oval */}
-                      <div style={{ textAlign: 'center', marginTop: 4, visibility: isRevealed ? 'visible' : 'hidden', fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
-                        {t.name || ' '}
-                      </div>
-                      {/* Hanging price tag from oval bottom */}
-                      {isRevealed && (
+                      {/* Hanging parchment price tag */}
+                      {(() => {
+                        const tagRot = [(-3), 2, (-1.5), 3, (-2.5)][i % 5]
+                        const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
+                        const stringH = [18, 22, 16, 24, 20][i % 5]
+                        return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${tagRot}deg)`, transformOrigin: 'top center' }}>
+                        <svg width="2" height={stringH} style={{ overflow: 'visible' }}>
+                          <line x1="1" y1="0" x2={1 + tagRot * 0.3} y2={stringH} stroke={isDark ? 'rgba(180,160,130,0.4)' : 'rgba(120,100,70,0.35)'} strokeWidth="0.8" />
+                        </svg>
                         <div style={{
-                          position: 'absolute', top: cardH - 8, left: '50%', transform: 'translateX(-50%)',
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 16,
+                          position: 'relative',
+                          background: isDark
+                            ? 'linear-gradient(145deg, #2a2418 0%, #1e1a14 50%, #252018 100%)'
+                            : 'linear-gradient(145deg, #f2e8d4 0%, #e8dcc4 50%, #f0e4ce 100%)',
+                          border: `1px solid ${isDark ? 'rgba(180,160,130,0.15)' : 'rgba(140,120,80,0.2)'}`,
+                          borderRadius: 2,
+                          padding: '3px 8px 4px',
+                          minWidth: 44,
+                          textAlign: 'center' as const,
+                          boxShadow: isDark
+                            ? '0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)'
+                            : '0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
                         }}>
-                          {/* Twine string */}
-                          <svg width="4" height="22" viewBox="0 0 4 22">
-                            <path d="M2 0 Q3 5 1.5 10 Q0.5 15 2 22" stroke={isDark ? '#8a7a60' : '#6a5a40'} strokeWidth="1" fill="none" opacity={isDark ? 0.4 : 0.45} />
-                          </svg>
-                          {/* Parchment tag */}
-                          <div style={{
-                            position: 'relative',
-                            background: isDark
-                              ? 'linear-gradient(135deg, #2e2820 0%, #342e24 50%, #2a2418 100%)'
-                              : 'linear-gradient(135deg, #f5ead4 0%, #efe0c8 50%, #e8d8bc 100%)',
-                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(140,120,80,0.3)'}`,
-                            padding: '4px 10px 5px', borderRadius: 3,
-                            boxShadow: isDark ? '0 2px 5px rgba(0,0,0,0.4)' : '0 2px 5px rgba(0,0,0,0.08)',
-                            transform: `rotate(${i % 2 === 0 ? -2 : 2.5}deg)`,
-                            overflow: 'hidden',
-                          }}>
-                            {/* Parchment texture */}
-                            <svg width="100%" height="100%" viewBox="0 0 60 20" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.06 : 0.08 }}>
-                              <path d="M5 5 Q15 3 30 5 Q45 7 55 4" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.3" fill="none" />
-                              <path d="M3 10 Q18 8 35 10 Q50 12 58 9" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.2" fill="none" />
-                              <path d="M8 15 Q22 13 38 15 Q48 17 55 14" stroke={isDark ? '#fff' : '#000'} strokeWidth="0.2" fill="none" />
-                            </svg>
-                            {/* Hole punch */}
-                            <div style={{
-                              position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
-                              width: 5, height: 5, borderRadius: '50%',
-                              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
-                              background: isDark ? '#1a1816' : '#e8d8bc',
-                            }} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 3, position: 'relative' }}>
-                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#a09080' : '#8a7a60'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                              {discount > 0 ? (<>
-                                <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textDecoration: 'line-through', opacity: 0.5, fontFamily: font }}>{t.cost}</span>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: '#d97706', fontFamily: font }}>{price}</span>
-                              </>) : (
-                                <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#c0b8a8' : '#6a5a40', fontFamily: font }}>{price}</span>
-                              )}
-                            </div>
+                          <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', overflow: 'hidden', pointerEvents: 'none' }}>
+                            {[0.25, 0.5, 0.75].map(y => (
+                              <div key={y} style={{ position: 'absolute', left: '8%', right: '8%', top: `${y * 100}%`, height: 0.5, background: isDark ? 'rgba(180,160,130,0.05)' : 'rgba(140,120,80,0.05)' }} />
+                            ))}
                           </div>
+                          <div style={{
+                            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+                            width: 4, height: 4, borderRadius: '50%',
+                            background: isDark ? '#0e0d0b' : '#e0d8c8',
+                            border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
+                          }} />
+                          {discount > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                              <span style={{ fontSize: 7, fontWeight: 800, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 0 }}>
+                                <PulpIcon size={8} />
+                                <span style={{ fontSize: 7, fontWeight: 600, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <PulpIcon size={8} />
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', fontFamily: font }}>{price}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
+                              <PulpIcon size={8} />
+                              <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                        )
+                      })()}
 
                       {/* Leaf scatter effect on reveal (rare+) */}
                       {revealEffect?.index === i && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
@@ -1318,6 +1137,23 @@ export const BoutiqueView = memo(function BoutiqueView({
                 )
               })()}
 
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10, position: 'relative', zIndex: 2 }}>
+                <button
+                  onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
+                  className="transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    padding: '5px 14px', borderRadius: 6,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                    color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 10, fontWeight: 600, fontFamily: font, letterSpacing: '0.04em',
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  Catalog
+                </button>
+              </div>
 
               </>
               )}
