@@ -32,7 +32,19 @@ const RARITY_LABEL: Record<string, string> = {
 }
 
 const RARITY_COLOR: Record<string, string> = {
-  common: '#a1a1aa', uncommon: '#34d399', rare: '#60a5fa', 'true rare': '#4d8cff', sacred: '#c4b5fd',
+  common: '#a1a1aa',
+  uncommon: '#34d399',
+  rare: '#60a5fa',
+  'true rare': '#4d8cff',
+  sacred: '#c4b5fd',
+}
+
+const SHOP_RARITY_COLOR: Record<string, string> = {
+  common: '#8a7a6a',
+  uncommon: '#6b8f5e',
+  rare: '#b8860b',
+  'true rare': '#8b4513',
+  sacred: '#722f37',
 }
 
 const RARITY_BG: Record<string, string> = {
@@ -41,6 +53,22 @@ const RARITY_BG: Record<string, string> = {
   rare: 'linear-gradient(180deg, #0e1420 0%, #121e30 50%, #162840 100%)',
   'true rare': 'linear-gradient(180deg, #14102a 0%, #1a1636 50%, #201c42 100%)',
   sacred: 'linear-gradient(180deg, #0c0a14 0%, #141020 50%, #1c162c 100%)',
+}
+
+const SHOP_BG: Record<string, string> = {
+  common: 'linear-gradient(180deg, #e8e0d4 0%, #d4caba 100%)',
+  uncommon: 'linear-gradient(180deg, #dde8d4 0%, #c2d4b0 100%)',
+  rare: 'linear-gradient(180deg, #e8dcc4 0%, #d4c4a0 100%)',
+  'true rare': 'linear-gradient(180deg, #ddd0c0 0%, #c4aa88 100%)',
+  sacred: 'linear-gradient(180deg, #e0d0c8 0%, #c8a898 100%)',
+}
+
+const SHOP_BG_DARK: Record<string, string> = {
+  common: 'linear-gradient(180deg, #1e1c18 0%, #16140f 100%)',
+  uncommon: 'linear-gradient(180deg, #181e14 0%, #121a0e 100%)',
+  rare: 'linear-gradient(180deg, #1e1a10 0%, #18140a 100%)',
+  'true rare': 'linear-gradient(180deg, #1e1610 0%, #18100a 100%)',
+  sacred: 'linear-gradient(180deg, #1e1416 0%, #180e10 100%)',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -103,15 +131,15 @@ function Sparkles({ rarity, count }: { rarity: string; count: number }) {
   )
 }
 
-function RarityScene({ rarity }: { rarity: string }) {
+function RarityScene({ rarity, isDark }: { rarity: string; isDark: boolean }) {
   if (rarity === 'true rare') {
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
             <radialGradient id="trurerare-glow" cx="50%" cy="75%">
-              <stop offset="0%" stopColor="rgba(77,140,255,0.1)">
-                <animate attributeName="stopColor" values="rgba(77,140,255,0.06);rgba(77,140,255,0.14);rgba(77,140,255,0.06)" dur="6s" repeatCount="indefinite" />
+              <stop offset="0%" stopColor={isDark ? 'rgba(139,69,19,0.1)' : 'rgba(139,69,19,0.06)'}>
+                <animate attributeName="stopColor" values={isDark ? 'rgba(139,69,19,0.06);rgba(139,69,19,0.14);rgba(139,69,19,0.06)' : 'rgba(139,69,19,0.04);rgba(139,69,19,0.08);rgba(139,69,19,0.04)'} dur="6s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
@@ -123,36 +151,25 @@ function RarityScene({ rarity }: { rarity: string }) {
   }
   if (rarity === 'sacred') {
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
-            <radialGradient id="sac-core" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#1a1030" />
-              <stop offset="100%" stopColor="#08060e" />
-            </radialGradient>
             <radialGradient id="sac-glow" cx="50%" cy="60%">
-              <stop offset="0%" stopColor="rgba(196,166,255,0.06)">
-                <animate attributeName="stopColor" values="rgba(196,166,255,0.04);rgba(230,210,255,0.08);rgba(196,166,255,0.04)" dur="8s" repeatCount="indefinite" />
+              <stop offset="0%" stopColor={isDark ? 'rgba(114,47,55,0.06)' : 'rgba(114,47,55,0.04)'}>
+                <animate attributeName="stopColor" values={isDark ? 'rgba(114,47,55,0.04);rgba(160,80,60,0.08);rgba(114,47,55,0.04)' : 'rgba(114,47,55,0.03);rgba(160,80,60,0.06);rgba(114,47,55,0.03)'} dur="8s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
-            <radialGradient id="sac-halo" cx="50%" cy="30%">
-              <stop offset="0%" stopColor="rgba(230,210,255,0.06)" />
-              <stop offset="60%" stopColor="rgba(160,130,220,0.03)" />
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#sac-core)" />
           <rect width="100%" height="100%" fill="url(#sac-glow)" />
-          <rect width="100%" height="100%" fill="url(#sac-halo)" />
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <circle key={i}
-              cx={`${12 + (i * 23) % 76}%`}
+              cx={`${15 + (i * 23) % 70}%`}
               cy={`${20 + (i * 17) % 60}%`}
               r={0.4 + (i % 3) * 0.2}
-              fill={i % 3 === 0 ? '#d4b8ff' : i % 3 === 1 ? '#a78bfa' : '#e8deff'}
+              fill={isDark ? '#d4a574' : '#8b6040'}
             >
-              <animate attributeName="opacity" values="0;0.5;0" dur={`${6 + (i % 4) * 2}s`} begin={`${i * 1.2}s`} repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0;0.35;0" dur={`${6 + (i % 4) * 2}s`} begin={`${i * 1.2}s`} repeatCount="indefinite" />
             </circle>
           ))}
         </svg>
@@ -230,7 +247,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [previewStage, setPreviewStage] = useState(3)
   const [countdown, setCountdown] = useState('')
   const [revealedCards, setRevealedCards] = useState<Set<number>>(new Set())
-  const [flippingCard, setFlippingCard] = useState<number | null>(null)
+  const [crackingCard, setCrackingCard] = useState<number | null>(null)
   const [revealEffect, setRevealEffect] = useState<{ index: number; rarity: string } | null>(null)
   const [marketEpoch, setMarketEpoch] = useState(getMarketEpoch)
   const prevTabRef = useRef<TabId>('shop')
@@ -318,20 +335,20 @@ export const BoutiqueView = memo(function BoutiqueView({
   }, [isOpen, marketEpoch])
 
   const revealCard = (index: number) => {
-    if (revealedCards.has(index) || flippingCard !== null) return
+    if (revealedCards.has(index) || crackingCard !== null) return
     const type = dailySeeds[index]
     const rarity = type ? TREE_TYPES[type]?.rarity || 'common' : 'common'
-    setFlippingCard(index)
+    setCrackingCard(index)
     setTimeout(() => {
       const next = new Set(revealedCards)
       next.add(index)
       setRevealedCards(next)
       localStorage.setItem('pulp_revealed_cards', JSON.stringify([...next]))
-      setFlippingCard(null)
+      setCrackingCard(null)
       setRevealEffect({ index, rarity })
       const dur = rarity === 'sacred' ? 2500 : rarity === 'true rare' ? 1800 : rarity === 'rare' ? 1200 : rarity === 'uncommon' ? 800 : 500
       setTimeout(() => setRevealEffect(null), dur)
-    }, 400)
+    }, 600)
   }
 
   const forceRefresh = () => {
@@ -395,76 +412,66 @@ export const BoutiqueView = memo(function BoutiqueView({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4" onMouseDown={onClose}>
       <style>{`
-        .flip-card { perspective: 800px; }
-        .flip-card-inner {
-          position: relative; width: 100%; height: 100%;
-          transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-          transform-style: preserve-3d;
+        @keyframes seed-wobble {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          15% { transform: scale(1.04) rotate(-2deg); }
+          30% { transform: scale(0.97) rotate(2deg); }
+          45% { transform: scale(1.02) rotate(-1deg); }
+          60% { transform: scale(0.99) rotate(1deg); }
+          75% { transform: scale(1.01) rotate(0deg); }
         }
-        .flip-card-inner.flipped { transform: rotateY(180deg); }
-        .flip-card-face {
-          position: absolute; inset: 0;
-          backface-visibility: hidden; -webkit-backface-visibility: hidden;
-          border-radius: 14px; overflow: hidden;
+        @keyframes seed-crack {
+          0% { clip-path: inset(0); opacity: 1; }
+          40% { clip-path: inset(0); opacity: 1; }
+          60% { clip-path: polygon(0 0, 48% 0, 45% 50%, 42% 100%, 0 100%); opacity: 0.8; }
+          80% { clip-path: polygon(0 0, 46% 0, 40% 50%, 38% 100%, 0 100%); opacity: 0.3; }
+          100% { clip-path: polygon(0 0, 44% 0, 36% 50%, 34% 100%, 0 100%); opacity: 0; }
         }
-        .flip-card-back { transform: rotateY(180deg); }
-        .flip-card-front { cursor: pointer; }
-        .flip-card-front:hover { transform: translateY(-2px); }
-        @keyframes reveal-border-flash {
-          0% { box-shadow: inset 0 0 0 0 var(--reveal-color); }
-          20% { box-shadow: inset 0 0 60px 10px var(--reveal-color); }
-          100% { box-shadow: inset 0 0 0 0 transparent; }
+        @keyframes seed-crack-right {
+          0% { clip-path: inset(0); opacity: 1; }
+          40% { clip-path: inset(0); opacity: 1; }
+          60% { clip-path: polygon(52% 0, 100% 0, 100% 100%, 58% 100%, 55% 50%); opacity: 0.8; }
+          80% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 62% 100%, 60% 50%); opacity: 0.3; }
+          100% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 66% 100%, 64% 50%); opacity: 0; }
         }
-        @keyframes modal-shake-sm {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(-0.5px, 0.5px); }
-          50% { transform: translate(0.5px, -0.5px); }
-          75% { transform: translate(-0.5px, 0); }
+        @keyframes sprout-emerge {
+          0% { transform: scale(0) translateY(10px); opacity: 0; }
+          50% { transform: scale(0.3) translateY(5px); opacity: 0; }
+          70% { transform: scale(0.8) translateY(2px); opacity: 1; }
+          85% { transform: scale(1.05) translateY(-2px); opacity: 1; }
+          100% { transform: scale(1) translateY(0); opacity: 1; }
         }
-        @keyframes modal-shake-lg {
-          0%, 100% { transform: translate(0, 0); }
-          10% { transform: translate(-4px, 3px); }
-          20% { transform: translate(4px, -3px); }
-          30% { transform: translate(-3px, 4px); }
-          40% { transform: translate(3px, -2px); }
-          50% { transform: translate(-3px, 2px); }
-          60% { transform: translate(2px, -3px); }
-          70% { transform: translate(-2px, 2px); }
-          80% { transform: translate(2px, -1px); }
-          90% { transform: translate(-1px, 1px); }
+        @keyframes leaf-scatter {
+          0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 0; }
+          15% { opacity: 1; transform: translate(var(--lx1), var(--ly1)) rotate(45deg) scale(1); }
+          100% { opacity: 0; transform: translate(var(--lx2), var(--ly2)) rotate(var(--lr)) scale(0.3); }
         }
-        @keyframes sacred-vignette {
-          0% { opacity: 0; }
-          15% { opacity: 1; }
-          40% { opacity: 0.6; }
-          100% { opacity: 0; }
+        @keyframes pollen-drift {
+          0% { transform: translate(0, 0) scale(0); opacity: 0; }
+          20% { opacity: 0.7; transform: translate(var(--px1), var(--py1)) scale(1); }
+          100% { opacity: 0; transform: translate(var(--px2), var(--py2)) scale(0.5); }
         }
-        @keyframes sacred-screen-flash {
-          0% { opacity: 0; }
-          8% { opacity: 0.7; }
-          20% { opacity: 0; }
-          28% { opacity: 0.4; }
-          40% { opacity: 0; }
-          100% { opacity: 0; }
+        @keyframes vine-unfurl {
+          0% { stroke-dashoffset: 200; opacity: 0; }
+          20% { opacity: 0.4; }
+          100% { stroke-dashoffset: 0; opacity: 0; }
         }
-        @keyframes sacred-border-sweep {
-          0% { opacity: 0; box-shadow: inset 0 0 0 0 var(--reveal-color); }
-          15% { opacity: 1; box-shadow: inset 0 0 80px 20px var(--reveal-color); }
-          40% { box-shadow: inset 0 0 40px 5px var(--reveal-color); }
-          100% { opacity: 0; box-shadow: inset 0 0 0 0 transparent; }
+        @keyframes golden-bloom {
+          0% { transform: scale(0); opacity: 0; }
+          30% { transform: scale(1.2); opacity: 0.15; }
+          100% { transform: scale(3); opacity: 0; }
         }
-        @keyframes trurare-ripple {
-          0% { transform: scale(0); opacity: 0.6; }
-          100% { transform: scale(4); opacity: 0; }
+        @keyframes seed-packet-hover {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
         }
-        .modal-shake-rare { animation: modal-shake-sm 0.4s ease-out; }
-        .modal-shake-trurare { animation: modal-shake-lg 0.7s ease-out; }
-        .modal-shake-sacred { animation: modal-shake-lg 1s ease-out; }
+        .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .seed-packet:hover { transform: translateY(-4px); }
+        .seed-cracking { animation: seed-wobble 0.6s ease-in-out; }
       `}</style>
       <div
         onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1060px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} ${revealEffect?.rarity === 'sacred' ? 'modal-shake-sacred' : revealEffect?.rarity === 'true rare' ? 'modal-shake-trurare' : revealEffect?.rarity === 'rare' ? 'modal-shake-rare' : ''}`}
-        key={revealEffect ? `shake-${revealEffect.index}` : 'stable'}
+        className={`relative w-full max-w-[1060px] rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"}`}
         style={{ backgroundColor: bg, height: 720 }}
       >
         {/* Header */}
@@ -518,9 +525,53 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
-            <div style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+              {/* Botanical background */}
+              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }} preserveAspectRatio="none">
+                <defs>
+                  <radialGradient id="mkt-glow-center" cx="50%" cy="45%">
+                    <stop offset="0%" stopColor={isDark ? 'rgba(217,119,6,0.03)' : 'rgba(217,119,6,0.04)'} />
+                    <stop offset="100%" stopColor="transparent" />
+                  </radialGradient>
+                  <radialGradient id="mkt-glow-bl" cx="10%" cy="90%">
+                    <stop offset="0%" stopColor={isDark ? 'rgba(100,140,80,0.04)' : 'rgba(100,140,80,0.03)'} />
+                    <stop offset="100%" stopColor="transparent" />
+                  </radialGradient>
+                  <radialGradient id="mkt-glow-tr" cx="90%" cy="10%">
+                    <stop offset="0%" stopColor={isDark ? 'rgba(160,120,60,0.03)' : 'rgba(160,120,60,0.025)'} />
+                    <stop offset="100%" stopColor="transparent" />
+                  </radialGradient>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#mkt-glow-center)" />
+                <rect width="100%" height="100%" fill="url(#mkt-glow-bl)" />
+                <rect width="100%" height="100%" fill="url(#mkt-glow-tr)" />
+                {/* Scattered leaf shapes */}
+                <g opacity={isDark ? 0.04 : 0.035} fill={isDark ? '#8a9a6a' : '#6a8a4a'}>
+                  <path d="M80 580 Q90 560 110 555 Q95 570 100 590 Q85 580 80 580Z" />
+                  <path d="M920 520 Q935 505 950 510 Q940 520 945 535 Q930 525 920 520Z" />
+                  <path d="M60 120 Q75 105 90 108 Q82 118 85 132 Q68 124 60 120Z" />
+                  <path d="M960 140 Q970 125 985 128 Q978 138 980 150 Q965 142 960 140Z" />
+                  <path d="M150 480 Q160 465 175 468 Q168 478 170 490 Q155 482 150 480Z" />
+                  <path d="M850 460 Q862 448 875 452 Q868 460 870 472 Q856 464 850 460Z" />
+                </g>
+                {/* Vine tendrils */}
+                <g stroke={isDark ? 'rgba(120,150,90,0.04)' : 'rgba(90,120,60,0.03)'} fill="none" strokeWidth="1" strokeLinecap="round">
+                  <path d="M0 200 Q30 180 50 200 Q70 220 60 250" />
+                  <path d="M1060 350 Q1030 330 1010 350 Q990 370 1000 400" />
+                  <path d="M0 450 Q25 440 40 455 Q55 470 45 490" />
+                  <path d="M1060 150 Q1035 140 1020 155 Q1005 170 1015 190" />
+                </g>
+                {/* Small scattered dots like seeds/pollen */}
+                <g fill={isDark ? 'rgba(217,119,6,0.06)' : 'rgba(217,119,6,0.05)'}>
+                  {[[120, 100], [200, 520], [340, 80], [500, 560], [680, 90], [780, 530], [900, 100], [950, 480], [60, 350], [1000, 300]].map(([cx, cy], di) => (
+                    <circle key={di} cx={cx} cy={cy} r={1 + (di % 3) * 0.5} />
+                  ))}
+                </g>
+                {/* Faint horizontal botanical divider lines */}
+                <line x1="5%" y1="98%" x2="95%" y2="98%" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'} strokeWidth="0.5" />
+              </svg>
               {/* Toggle + Timer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 {/* Current / Seasonal toggle */}
                 <div className={`flex rounded-lg overflow-hidden p-0.5 text-[10px] font-semibold`} style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
                   {(['current', 'seasonal'] as const).map(mode => (
@@ -548,194 +599,296 @@ export const BoutiqueView = memo(function BoutiqueView({
               </div>
 
               {shopMode === 'seasonal' ? (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.4 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: 0.4, position: 'relative', zIndex: 1 }}>
                   <span style={{ fontSize: 28 }}>🍂</span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: textMuted, fontFamily: font }}>Seasonal shop coming soon</span>
                 </div>
               ) : (<>
-              <div style={{ textAlign: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 17, fontWeight: 500, fontFamily: font, color: '#d97706', letterSpacing: '0.06em', fontStyle: 'italic' }}>Daily Picks</span>
+              <div style={{ textAlign: 'center', marginBottom: 12, position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: 22, fontWeight: 600, fontFamily: font, color: isDark ? '#f0ece4' : '#fff', letterSpacing: '-0.02em' }}>Fresh Seeds</span>
               </div>
-              {/* 5 Flip Cards */}
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flex: 1, alignItems: 'center', maxHeight: 460 }}>
+              {/* 5 Oval Seed Packets */}
+              <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flex: 1, alignItems: 'center', maxHeight: 460, position: 'relative', zIndex: 1 }}>
                 {dailySeeds.map((type, i) => {
                   const t = TREE_TYPES[type]
                   if (!t) return null
                   const isRevealed = revealedCards.has(i)
-                  const isFlipping = flippingCard === i
+                  const isCracking = crackingCard === i
                   const soldOut = (shopStock[type] || 0) <= 0
-                  const rarityCol = RARITY_COLOR[t.rarity] || '#a1a1aa'
+                  const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
+                  const ovalW = 170
+                  const ovalH = 220
 
                   return (
-                    <div key={`${type}-${i}`} className="flip-card" style={{ width: '20%', maxWidth: 190, aspectRatio: '3/4.2', position: 'relative' }}>
-                      <div className={`flip-card-inner ${isRevealed || isFlipping ? 'flipped' : ''}`}>
-                        {/* Front - Unrevealed */}
-                        <div
-                          className="flip-card-face flip-card-front"
-                          onClick={() => revealCard(i)}
-                          style={{
-                            background: isDark
-                              ? `linear-gradient(180deg, #18181b 0%, #0f0f12 100%)`
-                              : `linear-gradient(180deg, #fafaf9 0%, #f0ede8 100%)`,
-                            border: `1px solid ${cardBorder}`,
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: isDark ? `0 2px 12px rgba(0,0,0,0.3), inset 0 0 30px ${rarityCol}08` : `0 2px 10px rgba(0,0,0,0.05), inset 0 0 30px ${rarityCol}06`,
-                          }}
-                        >
-                          {/* Rarity color hint — subtle bottom edge glow */}
-                          <div style={{
-                            position: 'absolute', bottom: 0, left: '10%', right: '10%', height: 2,
-                            borderRadius: '1px 1px 0 0',
-                            background: rarityCol, opacity: isDark ? 0.2 : 0.15,
-                          }} />
-                          {/* Rarity hint — faint radial at bottom */}
-                          <div style={{
-                            position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%',
-                            background: `radial-gradient(ellipse at bottom, ${rarityCol}${isDark ? '0a' : '08'} 0%, transparent 70%)`,
-                            pointerEvents: 'none',
-                          }} />
-                          {/* Inner border detail */}
-                          <div style={{
-                            position: 'absolute', inset: 6, borderRadius: 8,
-                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}`,
-                            pointerEvents: 'none',
-                          }} />
-                          {/* Center diamond */}
-                          <div style={{
-                            width: 10, height: 10, transform: 'rotate(45deg)',
-                            border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
-                            borderRadius: 2,
-                          }} />
-                          {/* Corner dots */}
-                          {[[8, 8], [8, undefined], [undefined, 8], [undefined, undefined]].map(([t2, l], ci) => (
-                            <div key={ci} style={{
-                              position: 'absolute',
-                              top: t2 !== undefined ? t2 : undefined,
-                              bottom: t2 === undefined ? 8 : undefined,
-                              left: l !== undefined ? l : undefined,
-                              right: l === undefined ? 8 : undefined,
-                              width: 3, height: 3, borderRadius: '50%',
-                              backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                            }} />
-                          ))}
-                          {/* Discount badge hint */}
-                          {discount > 0 && (
+                    <div key={`${type}-${i}`} style={{ position: 'relative', width: ovalW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      {/* The oval seed packet */}
+                      <div
+                        className={`seed-packet ${isCracking ? 'seed-cracking' : ''}`}
+                        onClick={() => !isRevealed && revealCard(i)}
+                        style={{
+                          width: ovalW, height: ovalH, borderRadius: '50%',
+                          position: 'relative', overflow: 'hidden',
+                          cursor: isRevealed ? 'pointer' : 'pointer',
+                          boxShadow: isRevealed
+                            ? `0 4px 20px ${rarityCol}20, 0 2px 8px rgba(0,0,0,0.15)`
+                            : isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.08)',
+                          border: isRevealed
+                            ? `2px solid ${rarityCol}40`
+                            : `2px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                        }}
+                      >
+                        {!isRevealed ? (
+                          /* Unrevealed — kraft paper seed packet */
+                          <div
+                            onClick={() => revealCard(i)}
+                            style={{
+                              width: '100%', height: '100%', borderRadius: '50%',
+                              background: isDark
+                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
+                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
+                              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                              position: 'relative',
+                            }}
+                          >
+                            {/* Paper texture lines */}
+                            <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.06 : 0.08 }}>
+                              {Array.from({ length: 8 }).map((_, li) => (
+                                <line key={li} x1="15%" y1={`${20 + li * 8}%`} x2="85%" y2={`${20 + li * 8}%`}
+                                  stroke={isDark ? '#fff' : '#000'} strokeWidth="0.5" />
+                              ))}
+                            </svg>
+                            {/* Rarity ring hint */}
                             <div style={{
-                              position: 'absolute', top: 8, right: 8,
-                              fontSize: 7, fontWeight: 800, color: '#ef4444',
-                              opacity: isDark ? 0.3 : 0.25,
-                            }}>%</div>
-                          )}
-                        </div>
-
-                        {/* Back - Revealed */}
-                        <div
-                          className={`flip-card-face flip-card-back ${rarityCardClass(t.rarity)}`}
-                          style={{
-                            background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
-                            border: `1px solid ${cardBorder}`,
-                            display: 'flex', flexDirection: 'column',
-                            cursor: 'pointer',
-                          }}
-                          onClick={() => {
-                            if (isRevealed) {
+                              position: 'absolute', inset: 4, borderRadius: '50%',
+                              border: `1.5px solid ${rarityCol}`,
+                              opacity: isDark ? 0.15 : 0.12,
+                            }} />
+                            {/* Seed icon */}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ opacity: isDark ? 0.25 : 0.3 }}>
+                              <path d="M12 22c4-4 8-8 8-13a8 8 0 0 0-16 0c0 5 4 9 8 13z" fill={rarityCol} opacity="0.4" />
+                              <path d="M12 22c4-4 8-8 8-13a8 8 0 0 0-16 0c0 5 4 9 8 13z" stroke={rarityCol} strokeWidth="1.5" fill="none" />
+                            </svg>
+                            {/* Small rarity dot */}
+                            <div style={{
+                              width: 5, height: 5, borderRadius: '50%', marginTop: 6,
+                              backgroundColor: rarityCol, opacity: isDark ? 0.25 : 0.2,
+                            }} />
+                            {/* Discount hint */}
+                            {discount > 0 && (
+                              <div style={{
+                                position: 'absolute', top: 14, right: 18,
+                                fontSize: 8, fontWeight: 800, color: '#d97706',
+                                opacity: isDark ? 0.4 : 0.35,
+                              }}>%</div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Revealed — plant on earthy ground */
+                          <div
+                            onClick={() => {
                               prevTabRef.current = activeTab
                               setSelectedPlant(type)
                               setPreviewStage(0)
-                            }
-                          }}
-                        >
-                          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                            <RarityScene rarity={t.rarity} />
-                            <Sparkles rarity={t.rarity} count={4} />
-                            <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 16px rgba(0,0,0,0.2)', pointerEvents: 'none', zIndex: 4 }} />
+                            }}
+                            style={{
+                              width: '100%', height: '100%', borderRadius: '50%',
+                              background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
+                              position: 'relative', overflow: 'hidden',
+                            }}
+                          >
+                            <RarityScene rarity={t.rarity} isDark={isDark} />
+                            <Sparkles rarity={t.rarity} count={3} />
+                            {/* Inner vignette */}
                             <div style={{
-                              position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700,
-                              color: rarityCol, letterSpacing: '0.06em', textTransform: 'uppercase',
-                              background: 'rgba(0,0,0,0.45)', padding: '2px 5px', borderRadius: 3,
+                              position: 'absolute', inset: 0, borderRadius: '50%',
+                              boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
+                              pointerEvents: 'none', zIndex: 4,
+                            }} />
+                            {/* Rarity label */}
+                            <div style={{
+                              position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+                              fontSize: 7, fontWeight: 700, color: rarityCol,
+                              letterSpacing: '0.08em', textTransform: 'uppercase',
+                              background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
+                              padding: '2px 6px', borderRadius: 3,
                               backdropFilter: 'blur(4px)', zIndex: 5,
+                              whiteSpace: 'nowrap',
                             }}>
                               {RARITY_LABEL[t.rarity]}
                             </div>
+                            {/* Stock / sold out */}
                             {soldOut ? (
                               <div style={{
-                                position: 'absolute', top: 6, right: 6, fontSize: 7, fontWeight: 700,
-                                color: textMuted, textTransform: 'uppercase',
-                                background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)', padding: '2px 6px', borderRadius: 3,
+                                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                                fontSize: 7, fontWeight: 700, color: textMuted, textTransform: 'uppercase',
+                                background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
+                                padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
                               }}>Sold out</div>
                             ) : (
                               <div style={{
-                                position: 'absolute', top: 6, right: 6, fontSize: 7, fontWeight: 700,
-                                color: 'rgba(255,255,255,0.5)',
-                                background: 'rgba(0,0,0,0.45)', padding: '2px 6px', borderRadius: 3,
+                                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                                fontSize: 7, fontWeight: 700,
+                                color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
+                                background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)',
+                                padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
                               }}>x{shopStock[type]}</div>
                             )}
+                            {/* Discount badge */}
                             {discount > 0 && (
                               <div style={{
-                                position: 'absolute', bottom: 6, left: 6, fontSize: 8, fontWeight: 800,
-                                color: '#fff', background: '#ef4444', padding: '2px 5px', borderRadius: 3,
+                                position: 'absolute', bottom: 36, right: 18,
+                                fontSize: 8, fontWeight: 800, color: '#fff',
+                                background: '#d97706', padding: '2px 5px', borderRadius: 3,
                                 zIndex: 5,
                               }}>-{discount}%</div>
                             )}
-                            <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', zIndex: 4, marginBottom: '10%' }}>
-                              <PlantIcon type={type} size={80} stage={3} hideGround />
+                            {/* Plant */}
+                            <div className={rarityPlantClass(t.rarity)} style={{
+                              position: 'relative', zIndex: 4, marginBottom: '18%',
+                              animation: isRevealed && revealEffect?.index === i ? 'sprout-emerge 0.5s ease-out backwards 0.1s' : undefined,
+                            }}>
+                              <PlantIcon type={type} size={70} stage={3} hideGround />
                             </div>
-                            {/* Grassy hill */}
-                            <svg viewBox="0 0 100 18" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '14%', zIndex: 3 }}>
+                            {/* Grassy ground arc */}
+                            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
                               <defs>
-                                <linearGradient id={`mkt-soil-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                <linearGradient id={`mkt-soil-c-${i}`} x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="0%" stopColor={isDark ? '#2e2414' : '#6e5c3a'} />
                                   <stop offset="100%" stopColor={isDark ? '#1a1408' : '#4e3e22'} />
                                 </linearGradient>
                               </defs>
-                              <rect y="3" width="100" height="15" fill={`url(#mkt-soil-${i})`} />
-                              <path d="M-1 4 Q4 2.5 10 3.5 Q16 1.5 24 3 Q30 1 38 2.8 Q44 1 52 3 Q58 0.5 66 2.5 Q72 1 80 2.8 Q86 0.5 94 2.5 Q98 1.5 101 3 L101 6.5 Q94 5 86 5.8 Q78 4.5 70 5.5 Q62 4 54 5.5 Q46 4 38 5.5 Q30 4 22 5.5 Q14 4 6 5.5 L-1 6Z" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
-                              <path d="M-1 3 Q5 1 12 2.5 Q18 0 26 2 Q32 0 40 1.8 Q46 0 54 2 Q60 0 68 1.8 Q74 0 82 2 Q88 0 96 2 Q100 1 101 2 L101 5 Q94 3.5 86 4.5 Q78 3 70 4 Q62 3 54 4 Q46 3 38 4 Q30 3 22 4 Q14 3 6 4 L-1 4.5Z" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
-                              <path d="M-1 2.5 Q6 1 14 2 Q20 0 28 1.5 Q34 0 42 1.5 Q48 0 56 1.5 Q62 0 70 1.5 Q76 0 84 1.5 Q90 0 98 1.5 L101 2 L101 4 Q92 3 84 3.5 Q76 2.5 68 3.2 Q60 2.5 52 3.2 Q44 2.5 36 3.2 Q28 2.5 20 3.2 Q12 2.5 4 3.2 L-1 3.5Z" fill={isDark ? '#345828' : '#6a9a4a'} />
-                              <path d="M4 2 Q3 -0.5 2 -2 M5 2.2 Q5.5 0 6.5 -1" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
-                              <path d="M30 1.5 Q28.5 -0.5 27.5 -2 M31 1.8 Q31.5 0 32 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
-                              <path d="M57 1.5 Q55.5 -0.5 54 -2 M58 1.5 Q58.5 0 59 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
-                              <path d="M84 1.5 Q82.5 -0.5 81 -2 M85 1.5 Q85.5 0 86 -1.5" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
+                              <ellipse cx="50" cy="28" rx="52" ry="18" fill={`url(#mkt-soil-c-${i})`} />
+                              <ellipse cx="50" cy="24" rx="48" ry="12" fill={isDark ? '#1e3e16' : '#4a7a2e'} />
+                              <ellipse cx="50" cy="22" rx="44" ry="9" fill={isDark ? '#2a4a1e' : '#5a8a3a'} />
+                              <ellipse cx="50" cy="21" rx="40" ry="7" fill={isDark ? '#345828' : '#6a9a4a'} />
+                              {/* Grass blades */}
+                              <path d="M25 18 Q24 14 22 12 M27 17 Q27 13 28 11 M42 16 Q40 12 39 10 M44 16 Q44 12 45 10 M58 16 Q56 12 55 10 M60 16 Q60 12 61 10 M75 18 Q74 14 72 12 M77 17 Q77 13 78 11"
+                                stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.5" fill="none" opacity="0.5" strokeLinecap="round" />
                             </svg>
                           </div>
-                          <div style={{
-                            padding: '7px 10px', borderTop: `1px solid ${dividerColor}`,
-                            background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)',
-                          }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {t.name}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-                              <span style={{ fontSize: 8, fontWeight: 600, color: rarityCol, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                                {getDropChance(t.weight)}
-                              </span>
-                              <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                <PulpIcon size={10} />
-                                {discount > 0 ? (
-                                  <>
-                                    <span style={{ textDecoration: 'line-through', opacity: 0.4, fontSize: 9 }}>{t.cost}</span>
-                                    <span>{price.toLocaleString()}</span>
-                                  </>
-                                ) : (
-                                  t.cost.toLocaleString()
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        )}
+                        {/* Crack overlay during reveal */}
+                        {isCracking && (
+                          <>
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: '50%', zIndex: 10,
+                              background: isDark
+                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
+                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
+                              animation: 'seed-crack 0.6s ease-in forwards',
+                            }} />
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: '50%', zIndex: 10,
+                              background: isDark
+                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
+                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
+                              animation: 'seed-crack-right 0.6s ease-in forwards',
+                            }} />
+                          </>
+                        )}
                       </div>
-                      {/* Reveal glow on card (rare+) */}
-                      {revealEffect?.index === i && revealEffect.rarity !== 'common' && revealEffect.rarity !== 'uncommon' && (
-                        <div style={{
-                          position: 'absolute', inset: 0, borderRadius: 14, pointerEvents: 'none', zIndex: 10,
-                          ['--reveal-color' as string]: `${RARITY_COLOR[revealEffect.rarity]}30`,
-                          animation: `reveal-border-flash ${revealEffect.rarity === 'sacred' ? '2s' : revealEffect.rarity === 'true rare' ? '1.2s' : '0.8s'} ease-out forwards`,
-                        }} />
+                      {/* Info below circle */}
+                      {isRevealed && (
+                        <div style={{ textAlign: 'center', marginTop: 8, width: '100%' }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {t.name}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 2 }}>
+                            <span style={{ fontSize: 8, fontWeight: 600, color: rarityCol, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                              {getDropChance(t.weight)}
+                            </span>
+                            <span style={{ fontSize: 2, color: textMuted }}>·</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: '#d97706', display: 'flex', alignItems: 'center', gap: 3 }}>
+                              <PulpIcon size={10} />
+                              {discount > 0 ? (
+                                <>
+                                  <span style={{ textDecoration: 'line-through', opacity: 0.4, fontSize: 9 }}>{t.cost}</span>
+                                  <span>{price.toLocaleString()}</span>
+                                </>
+                              ) : (
+                                t.cost.toLocaleString()
+                              )}
+                            </span>
+                          </div>
+                          {/* Buy button */}
+                          {!soldOut && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); buySeed(type) }}
+                              disabled={sap < price}
+                              className="transition-all hover:brightness-110"
+                              style={{
+                                marginTop: 6, fontSize: 10, fontWeight: 600, fontFamily: font,
+                                background: '#d97706', color: '#fff', border: 'none',
+                                padding: '3px 12px', borderRadius: 99, cursor: sap < price ? 'default' : 'pointer',
+                                opacity: sap < price ? 0.35 : 1,
+                              }}
+                            >
+                              Buy
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {/* Leaf scatter effect on reveal (rare+) */}
+                      {revealEffect?.index === i && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>
+                          {Array.from({ length: revealEffect.rarity === 'sacred' ? 12 : revealEffect.rarity === 'true rare' ? 8 : 5 }).map((_, li) => {
+                            const angle = (li / (revealEffect.rarity === 'sacred' ? 12 : revealEffect.rarity === 'true rare' ? 8 : 5)) * Math.PI * 2
+                            const dist1 = 20 + Math.random() * 15
+                            const dist2 = 50 + Math.random() * 40
+                            return (
+                              <div key={li} style={{
+                                position: 'absolute', width: 6, height: 4,
+                                backgroundColor: revealEffect.rarity === 'sacred' ? '#d97706' : revealEffect.rarity === 'true rare' ? '#8b6040' : '#6b8f5e',
+                                borderRadius: '50% 50% 50% 0',
+                                ['--lx1' as string]: `${Math.cos(angle) * dist1}px`,
+                                ['--ly1' as string]: `${Math.sin(angle) * dist1}px`,
+                                ['--lx2' as string]: `${Math.cos(angle) * dist2}px`,
+                                ['--ly2' as string]: `${Math.sin(angle) * dist2 + 20}px`,
+                                ['--lr' as string]: `${180 + Math.random() * 360}deg`,
+                                animation: `leaf-scatter ${revealEffect.rarity === 'sacred' ? '1.6s' : '1.2s'} ease-out ${li * 0.05}s forwards`,
+                              }} />
+                            )
+                          })}
+                        </div>
+                      )}
+                      {/* Pollen drift for true rare + sacred */}
+                      {revealEffect?.index === i && (revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 19 }}>
+                          {Array.from({ length: revealEffect.rarity === 'sacred' ? 16 : 8 }).map((_, pi) => {
+                            const angle = Math.random() * Math.PI * 2
+                            const d1 = 10 + Math.random() * 20
+                            const d2 = 40 + Math.random() * 60
+                            return (
+                              <div key={pi} style={{
+                                position: 'absolute', width: 3, height: 3, borderRadius: '50%',
+                                backgroundColor: revealEffect.rarity === 'sacred' ? '#d4a040' : '#a08050',
+                                ['--px1' as string]: `${Math.cos(angle) * d1}px`,
+                                ['--py1' as string]: `${Math.sin(angle) * d1 - 10}px`,
+                                ['--px2' as string]: `${Math.cos(angle) * d2}px`,
+                                ['--py2' as string]: `${Math.sin(angle) * d2 - 30}px`,
+                                animation: `pollen-drift ${revealEffect.rarity === 'sacred' ? '2s' : '1.5s'} ease-out ${pi * 0.08}s forwards`,
+                              }} />
+                            )
+                          })}
+                        </div>
+                      )}
+                      {/* Golden bloom burst for sacred */}
+                      {revealEffect?.index === i && revealEffect.rarity === 'sacred' && (
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 18 }}>
+                          {[0, 0.1, 0.2].map((delay, ri) => (
+                            <div key={ri} style={{
+                              position: 'absolute', width: ovalW * 0.6, height: ovalH * 0.6,
+                              borderRadius: '50%', left: -(ovalW * 0.3), top: -(ovalH * 0.3),
+                              background: `radial-gradient(circle, ${rarityCol}30 0%, transparent 70%)`,
+                              animation: `golden-bloom 2s ease-out ${delay}s forwards`,
+                            }} />
+                          ))}
+                        </div>
                       )}
                     </div>
                   )
@@ -743,7 +896,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               </div>
 
               {/* Nav buttons below cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 18 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 18, position: 'relative', zIndex: 1 }}>
                 <button
                   onClick={() => setActiveTab('satchel')}
                   className={`px-5 py-2 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-2 w-48 justify-center ${isDark ? 'bg-zinc-800/60 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
@@ -774,11 +927,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                 width: '100%', maxWidth: 520, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
                 height: 320,
-                background: previewInfo.sceneBg || RARITY_BG[previewInfo.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                background: isDark
+                  ? (SHOP_BG_DARK[previewInfo.rarity] || SHOP_BG_DARK.common)
+                  : (SHOP_BG[previewInfo.rarity] || SHOP_BG.common),
               }}>
-                <RarityScene rarity={previewInfo.rarity} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: 'linear-gradient(180deg, transparent 0%, rgba(40,32,20,0.35) 100%)', zIndex: 1 }} />
-                <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)', borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
+                <RarityScene rarity={previewInfo.rarity} isDark={isDark} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60, background: `linear-gradient(180deg, transparent 0%, ${isDark ? 'rgba(20,16,10,0.35)' : 'rgba(40,32,20,0.15)'} 100%)`, zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 40px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`, borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
                 <Sparkles rarity={previewInfo.rarity} count={10} />
                 <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 12, zIndex: 2 }}>
                   {previewStage === 0
@@ -985,10 +1140,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <div style={{
                               display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
                               width: '100%', position: 'relative', aspectRatio: '1',
-                              background: RARITY_BG[t.rarity] || (isDark ? 'linear-gradient(180deg, #1a1a1e 0%, #141416 100%)' : 'linear-gradient(180deg, #f0ede8 0%, #e8e4dd 100%)'),
+                              background: RARITY_BG[t.rarity] || RARITY_BG.common,
                             }}>
-                              <RarityScene rarity={t.rarity} />
-                              <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 12px rgba(0,0,0,0.25)', pointerEvents: 'none', zIndex: 4 }} />
+                              <RarityScene rarity={t.rarity} isDark={isDark} />
+                              <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 12px ${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.06)'}`, pointerEvents: 'none', zIndex: 4 }} />
                               <Sparkles rarity={t.rarity} count={3} />
                               <div className={rarityPlantClass(t.rarity)} style={{ position: 'relative', zIndex: 2, bottom: '7%' }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
@@ -1013,11 +1168,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 <path d="M84 1.5 Q82.5 -0.5 81 -2 M85 1.5 Q85.5 0 86 -1.5 M86.5 1.5 Q88 0.2 89.5 -0.8" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
                                 <path d="M95 1 Q93.5 -0.5 92.5 -2 M96 1.2 Q96.5 -0.2 97 -1.5" stroke={isDark ? '#3a5a2a' : '#6a9a48'} strokeWidth="0.35" fill="none" opacity="0.4" strokeLinecap="round" />
                               </svg>
-                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: 'rgba(0,0,0,0.5)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
+                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
                               {type === 'tangerine' ? (
-                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#fb923c', letterSpacing: '0.06em', background: 'rgba(0,0,0,0.5)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
+                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
                                   Default
                                 </div>
                               ) : owned && (
@@ -1067,64 +1222,6 @@ export const BoutiqueView = memo(function BoutiqueView({
             </svg>
           </button>
         )}
-
-        {/* Reveal effects overlay */}
-        {revealEffect && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (() => {
-          const col = RARITY_COLOR[revealEffect.rarity]
-          const isSacred = revealEffect.rarity === 'sacred'
-          const isTrueRare = revealEffect.rarity === 'true rare'
-          return (
-            <>
-              {/* Vignette */}
-              <div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 50, borderRadius: 16, overflow: 'hidden',
-                background: `radial-gradient(ellipse at 50% 50%, transparent 30%, ${col}${isSacred ? '18' : isTrueRare ? '0c' : '08'} 100%)`,
-                animation: `sacred-vignette ${isSacred ? '2.5s' : isTrueRare ? '1.5s' : '1s'} ease-out forwards`,
-              }} />
-              {/* Border sweep for true rare + sacred */}
-              {(isTrueRare || isSacred) && (
-                <div style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 51, borderRadius: 16,
-                  ['--reveal-color' as string]: `${col}20`,
-                  animation: `sacred-border-sweep ${isSacred ? '2s' : '1.2s'} ease-out forwards`,
-                }} />
-              )}
-              {/* Expanding ripples for true rare */}
-              {isTrueRare && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 49, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16 }}>
-                  {[0, 0.15, 0.3].map((delay, ri) => (
-                    <div key={ri} style={{
-                      position: 'absolute', width: 100, height: 100, borderRadius: '50%',
-                      border: `1.5px solid ${col}40`,
-                      animation: `trurare-ripple 1.2s ease-out ${delay}s forwards`,
-                      opacity: 0,
-                    }} />
-                  ))}
-                </div>
-              )}
-              {/* Sacred: screen flash + more ripples + center burst */}
-              {isSacred && (
-                <>
-                  <div style={{
-                    position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 52, borderRadius: 16,
-                    background: `radial-gradient(circle at 50% 50%, ${col}30 0%, ${col}08 50%, transparent 70%)`,
-                    animation: 'sacred-screen-flash 2.5s ease-out forwards',
-                  }} />
-                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 49, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 16 }}>
-                    {[0, 0.12, 0.24, 0.36, 0.48].map((delay, ri) => (
-                      <div key={ri} style={{
-                        position: 'absolute', width: 80, height: 80, borderRadius: '50%',
-                        border: `2px solid ${col}50`,
-                        animation: `trurare-ripple 1.6s ease-out ${delay}s forwards`,
-                        opacity: 0,
-                      }} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )
-        })()}
 
         {/* Satchel full popup */}
         {satchelFullPopup && (

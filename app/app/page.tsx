@@ -578,7 +578,7 @@ const BoxItem = memo(function BoxItem({
         }} />
       )}
 
-      <div style={{ padding: isSticky ? "40px 10px 10px" : "5px 7px 7px", height: isSticky ? "100%" : undefined, boxSizing: isSticky ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
+      <div style={{ padding: isSticky ? "40px 10px 10px" : box.sizeLocked ? "0" : "5px 7px 7px", height: isSticky || box.sizeLocked ? "100%" : undefined, boxSizing: isSticky || box.sizeLocked ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage && !mediaEditing ? (
@@ -1130,8 +1130,8 @@ const BoxTextarea = memo(function BoxTextarea({
       }}
       style={{
         width: "100%", outline: "none",
-        height: isSticky ? "100%" : undefined,
-        minHeight: isSticky ? undefined : 32,
+        height: isSticky || sizeLocked ? "100%" : undefined,
+        minHeight: isSticky || sizeLocked ? undefined : 32,
         fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
         lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
