@@ -164,20 +164,11 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
         {rings.map((ring, i) => {
           const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
           const abbr = ['mins', 'char', 'sesh'][i]
-          const y = cy - 12 + i * 16
+          const y = cy - 10 + i * 13
           return (
-            <g key={`label-${i}`}>
-              <text x={cx} y={y} textAnchor="middle" dominantBaseline="central"
-                style={{ fontSize: 9, fontWeight: 600, fill: ring.color }}
-              >
-                {pct}%
-              </text>
-              <text x={cx} y={y + 8} textAnchor="middle" dominantBaseline="central"
-                style={{ fontSize: 5.5, fontWeight: 500, fill: ring.color, opacity: 0.5 }}
-              >
-                {abbr}
-              </text>
-            </g>
+            <text key={`label-${i}`} x={cx} y={y} textAnchor="middle" dominantBaseline="central">
+              <tspan style={{ fontSize: 9, fontWeight: 600, fill: ring.color }}>{pct}% {abbr}</tspan>
+            </text>
           )
         })}
       </svg>
@@ -804,14 +795,14 @@ export const StatsView = memo(function StatsView({
                 WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
               }}>
                 <div style={{
-                  display: 'flex', alignItems: 'flex-end', gap: 40, width: 'max-content',
+                  display: 'flex', alignItems: 'flex-end', width: 'max-content',
                   animation: 'conveyorScroll 40s linear infinite',
                   willChange: 'transform',
                 }}>
                   {doubled.map(({ tree, yOff, tilt, size }, i) => (
                     <div key={`${tree.id ?? tree.type}-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
                       display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0,
-                      marginBottom: yOff,
+                      marginBottom: yOff, paddingLeft: 20, paddingRight: 20,
                       transform: `rotate(${tilt}deg)`,
                     }}>
                       <PlantIcon type={tree.type} size={size} stage={tree.stage} hideGround disableSway />
