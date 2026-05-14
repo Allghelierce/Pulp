@@ -3980,6 +3980,8 @@ export default function NoteApp() {
               theme={theme}
               xp={xp}
               grove={grove}
+              activeNotebookId={activeTabId ?? undefined}
+              activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
             /></motion.div>
           </Suspense>}
 

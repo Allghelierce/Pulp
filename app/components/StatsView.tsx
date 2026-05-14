@@ -89,10 +89,10 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
   focus: number; writing: number; sessions: number; isDark: boolean
   goals: typeof DEFAULT_GOALS; onEditGoals: () => void
 }) {
-  const size = 140
+  const size = 200
   const cx = size / 2, cy = size / 2
-  const strokeW = 3.5
-  const gap = 4
+  const strokeW = 5.5
+  const gap = 6
 
   const rings = [
     { value: focus, goal: goals.focus, color: '#ea580c', label: 'Focus', unit: 'min', radius: (size - strokeW) / 2 },
@@ -103,7 +103,7 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 8, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
         <button
           onClick={onEditGoals}
           title="Edit goals"
@@ -164,10 +164,10 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
         {rings.map((ring, i) => {
           const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
           const abbr = ['mins', 'char', 'sesh'][i]
-          const y = cy - 8 + i * 11
+          const y = cy - 12 + i * 15
           return (
             <text key={`label-${i}`} x={cx} y={y} textAnchor="middle" dominantBaseline="central">
-              <tspan style={{ fontSize: 8, fontWeight: 600, fill: ring.color }}>{pct}% {abbr}</tspan>
+              <tspan style={{ fontSize: 11, fontWeight: 600, fill: ring.color }}>{pct}% {abbr}</tspan>
             </text>
           )
         })}
@@ -182,6 +182,8 @@ interface StatsViewProps {
   theme: "light" | "dark"
   xp: number
   grove?: Tree[]
+  activeNotebookId?: string
+  activeNotebookName?: string
 }
 
 function getMonthGrid(entries: DailyEntry[], monthOffset = 0): { date: string; level: number; minutes: number; dayNum: number }[] {
@@ -261,7 +263,7 @@ function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
 }
 
 export const StatsView = memo(function StatsView({
-  isOpen, onClose, theme, xp, grove = [],
+  isOpen, onClose, theme, xp, grove = [], activeNotebookId, activeNotebookName,
 }: StatsViewProps) {
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
   const [heatmapOffset, setHeatmapOffset] = useState(0)
@@ -304,8 +306,6 @@ export const StatsView = memo(function StatsView({
   const totalMinutes = dailyStats.reduce((s, d) => s + (d.focusMinutes ?? 0), 0)
   const totalSessions = dailyStats.reduce((s, d) => s + (d.sessionsCompleted ?? 0), 0)
   const totalChars = dailyStats.reduce((s, d) => s + (d.charsWritten ?? 0), 0)
-  const totalSap = dailyStats.reduce((s, d) => s + (d.sapEarned ?? 0), 0)
-  const avgSession = totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0
   const activeDays = dailyStats.filter(d => (d.focusMinutes ?? 0) > 0 || (d.charsWritten ?? 0) > 0).length
 
   const bestStreak = useMemo(() => {
@@ -323,97 +323,133 @@ export const StatsView = memo(function StatsView({
   }, [dailyStats])
 
   const todayKey = new Date().toISOString().split("T")[0]
+  const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+  const yesterdayKey = yesterdayDate.toISOString().split("T")[0]
   const todayEntry = dailyStats.find(e => e.date === todayKey)
+  const yesterdayEntry = dailyStats.find(e => e.date === yesterdayKey)
   const todayFocus = todayEntry?.focusMinutes ?? 0
   const todayChars = todayEntry?.charsWritten ?? 0
   const todaySessions = todayEntry?.sessionsCompleted ?? 0
+  const yesterdayFocus = yesterdayEntry?.focusMinutes ?? 0
+  const focusDelta = todayFocus - yesterdayFocus
+
+  const notebookTrees = useMemo(() => activeNotebookId ? grove.filter(t => t.notebookId === activeNotebookId) : [], [grove, activeNotebookId])
+  const notebookFocus = useMemo(() => {
+    if (!activeNotebookId) return 0
+    return notebookTrees.length * 25
+  }, [notebookTrees, activeNotebookId])
+  const notebookSpecies = useMemo(() => new Set(notebookTrees.map(t => t.type)).size, [notebookTrees])
 
   if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/60 p-4"
+      onClick={onClose}
     >
       <div
-        onMouseDown={e => e.stopPropagation()}
-        className={`relative w-full max-w-[1050px] rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]`}
-        style={{ backgroundColor: bg, maxHeight: '72vh' }}
+        onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-[1050px] flex flex-col gap-3"
+        style={{ maxHeight: '80vh', overflowY: 'auto' }}
       >
-        {/* Header with stats */}
-        <div className="px-8 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3" style={{ flex: 1 }}>
-              <button
-                onClick={onClose}
-                className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <div
-                style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  border: `1.5px solid ${levelColor}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <span style={{ fontSize: 14, fontWeight: 800, color: levelColor, fontFamily: font, lineHeight: 1 }}>{lvl.level}</span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div>
-                    <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap', lineHeight: 1 }}>{lvl.name}</h2>
-                    <span style={{ fontSize: 8, color: textMuted, fontWeight: 500 }}>{lvl.currentXp} / {lvl.nextXp} XP</span>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 60, padding: '4px 0', cursor: 'default' }} title={`${lvl.currentXp} / ${lvl.nextXp} XP`}>
-                    <div style={{
-                      height: 5, borderRadius: 3,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                      overflow: "hidden",
-                    }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${xpProgress}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        style={{ height: "100%", borderRadius: 3, background: levelColor }}
-                      />
-                    </div>
-                  </div>
-                  <span style={{ fontSize: 9, color: textMuted, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {lvl.level + 1}</span>
+        {/* Close button floating */}
+        <button
+          onClick={onClose}
+          className={`absolute -top-1 -right-1 z-10 w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 bg-zinc-900/80" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80 bg-white/80"}`}
+          style={{ backdropFilter: 'blur(8px)' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+
+        {/* Card: Level + Rings + Stats */}
+        <div
+          className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
+          style={{ backgroundColor: bg, padding: '24px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                border: `1.5px solid ${levelColor}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 800, color: levelColor, fontFamily: font, lineHeight: 1 }}>{lvl.level}</span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div>
+                  <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap', lineHeight: 1 }}>{lvl.name}</h2>
+                  <span style={{ fontSize: 8, color: textMuted, fontWeight: 500 }}>{lvl.currentXp} / {lvl.nextXp} XP</span>
                 </div>
+                <div style={{ flex: 1, minWidth: 60, padding: '4px 0', cursor: 'default' }} title={`${lvl.currentXp} / ${lvl.nextXp} XP`}>
+                  <div style={{
+                    height: 5, borderRadius: 3,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    overflow: "hidden",
+                  }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${xpProgress}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      style={{ height: "100%", borderRadius: 3, background: levelColor }}
+                    />
+                  </div>
+                </div>
+                <span style={{ fontSize: 9, color: textMuted, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {lvl.level + 1}</span>
               </div>
             </div>
           </div>
 
-          {/* Activity Rings + Stats */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
-            <div style={{ display: 'flex', gap: 24, flex: 1 }}>
-              {[
-                [
-                  { label: 'Total Focus', value: totalMinutes >= 60 ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m` : `${totalMinutes}m` },
-                  { label: 'Sessions', value: totalSessions.toLocaleString() },
-                  { label: 'Avg Session', value: `${avgSession}m` },
-                ],
-                [
-                  { label: 'Chars Written', value: totalChars >= 1000 ? `${(totalChars / 1000).toFixed(1)}k` : totalChars.toLocaleString() },
-                  { label: 'Trees Grown', value: grove.length.toLocaleString() },
-                  { label: 'Collected', value: `${new Set(grove.map(t => t.type)).size}/${Object.keys(TREE_TYPES).length}` },
-                ],
-                [
-                  { label: 'Sap Earned', value: totalSap.toLocaleString() },
-                  { label: 'Best Streak', value: `${bestStreak}d` },
-                  { label: 'Active Days', value: activeDays.toLocaleString() },
-                ],
-              ].map((col, ci) => (
-                <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {col.map(({ label, value }) => (
-                    <div key={label}>
-                      <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: textPrimary, fontFamily: font }}>{value}</span>
-                    </div>
-                  ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+              <div style={{ display: 'flex', gap: 24 }}>
+                {[
+                  [
+                    { label: 'Total Focus', value: totalMinutes >= 60 ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m` : `${totalMinutes}m` },
+                    { label: 'Sessions', value: totalSessions.toLocaleString() },
+                  ],
+                  [
+                    { label: 'Chars Written', value: totalChars >= 1000 ? `${(totalChars / 1000).toFixed(1)}k` : totalChars.toLocaleString() },
+                    { label: 'Trees Grown', value: grove.length.toLocaleString() },
+                  ],
+                  [
+                    { label: 'Best Streak', value: `${bestStreak}d` },
+                    { label: 'Active Days', value: activeDays.toLocaleString() },
+                  ],
+                ].map((col, ci) => (
+                  <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {col.map(({ label, value }) => (
+                      <div key={label}>
+                        <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: textPrimary, fontFamily: font }}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Today vs Yesterday */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Today</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{todayFocus}m</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: focusDelta > 0 ? '#22c55e' : focusDelta < 0 ? '#ef4444' : textMuted }}>
+                  {focusDelta > 0 ? `+${focusDelta}m` : focusDelta < 0 ? `${focusDelta}m` : '—'}
+                </span>
+                <span style={{ fontSize: 7, color: textMuted }}>vs yesterday</span>
+              </div>
+
+              {/* Notebook Stats */}
+              {activeNotebookId && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{activeNotebookName || 'Notebook'}</span>
+                  <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{notebookTrees.length} trees</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{notebookSpecies} species</span>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -463,10 +499,11 @@ export const StatsView = memo(function StatsView({
           )}
         </div>
 
-        {/* Divider */}
-        <div style={{ borderBottom: `1px solid ${cardBorder}` }} />
-
-        <div style={{ padding: "24px 32px", overflowY: "auto" }}>
+        {/* Card: Consistency Graph */}
+        <div
+          className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
+          style={{ backgroundColor: bg, padding: '20px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+        >
                 {/* Consistency Graph */}
                 {(() => {
                   let currentStreak = 0
@@ -552,7 +589,7 @@ export const StatsView = memo(function StatsView({
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: textSecondary, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: '"EB Garamond", serif' }}>Consistency</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: '"EB Garamond", serif' }}>Consistency</span>
                           {currentStreak > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                               <motion.svg
@@ -637,11 +674,7 @@ export const StatsView = memo(function StatsView({
                 })()}
         </div>
 
-        <div style={{
-          height: 3, flexShrink: 0,
-          background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-        }} />
-
+        {/* Card: Recently Grown */}
         {grove.length > 0 && (() => {
           const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 10)
           const itemW = 80
@@ -652,10 +685,11 @@ export const StatsView = memo(function StatsView({
           const halfW = styled.length * itemW
           const doubled = [...styled, ...styled]
           return (
-            <div style={{
-              position: 'relative', height: 90, flexShrink: 0, overflow: 'hidden',
-            }}>
-              <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 8, fontWeight: 600, color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: '"EB Garamond", serif', zIndex: 2 }}>Recently Grown</span>
+            <div
+              className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
+              style={{ position: 'relative', height: 90, overflow: 'hidden', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+            >
+              <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: '"EB Garamond", serif', zIndex: 2 }}>Recently Grown</span>
               <div style={{
                 position: 'absolute', inset: 0,
                 background: isDark
