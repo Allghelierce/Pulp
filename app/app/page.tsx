@@ -26,6 +26,7 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { MiniRings } from "@/app/components/StatsView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
+import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
@@ -3090,6 +3091,7 @@ export default function NoteApp() {
       <>
 
         <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
+          <PlantImagePreloader />
           {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
           {showSettings && <Suspense fallback={null}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>

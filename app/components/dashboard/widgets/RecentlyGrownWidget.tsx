@@ -1,7 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
-import { PlantIcon } from "../../PlantIcon"
+import { CachedPlantImage } from "./CachedPlantImage"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = 'Crimson Pro, serif'
@@ -66,7 +66,7 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
               width: itemW, flexShrink: 0, marginBottom: yOff,
               transform: `rotate(${tilt}deg)`,
             }}>
-              <PlantIcon type={tree.type} size={size} stage={tree.stage} hideGround disableSway />
+              <CachedPlantImage type={tree.type} size={size} stage={tree.stage} />
               <div style={{
                 width: size * 0.6, height: 3, borderRadius: '50%', marginTop: -2,
                 background: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',
