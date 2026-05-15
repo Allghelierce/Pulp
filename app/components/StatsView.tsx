@@ -25,7 +25,7 @@ function getTodayEntry(): DailyEntry | null {
   return loadDailyStats().find(e => e.date === key) ?? null
 }
 
-export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () => void }) {
+export function MiniRings({ isDark, onClick, stretch }: { isDark: boolean; onClick?: () => void; stretch?: boolean }) {
   const [today, setToday] = useState<DailyEntry | null>(getTodayEntry)
 
   useEffect(() => {
@@ -54,16 +54,17 @@ export function MiniRings({ isDark, onClick }: { isDark: boolean; onClick?: () =
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'none', border: 'none', padding: 0,
         cursor: onClick ? 'pointer' : 'default',
+        ...(stretch ? { width: '100%' } : {}),
       }}
     >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={stretch ? '100%' : size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
           const gapLen = circ * 0.04
           const trackLen = circ - gapLen
           const pct = Math.min(ring.value / ring.goal, 1)
           const fillLen = trackLen * pct
-          const track = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'
+          const track = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
           return (
             <g key={i}>
               <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round"
