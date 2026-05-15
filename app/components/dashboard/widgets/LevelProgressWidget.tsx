@@ -1,6 +1,5 @@
 "use client"
 import { memo } from "react"
-import { motion } from "framer-motion"
 import { getLevel } from "@/app/constants"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
@@ -24,12 +23,7 @@ const LevelProgressWidget = memo(function LevelProgressWidget({ isDark, xp }: Wi
         height: 6, borderRadius: 3, overflow: 'hidden',
         background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
       }}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          style={{ height: '100%', borderRadius: 3, background: '#d97706' }}
-        />
+        <div style={{ height: '100%', borderRadius: 3, background: '#d97706', width: `${pct}%` }} />
       </div>
       <span style={{ fontSize: 9, color: textMuted }}>
         {lvl.currentXp} / {lvl.nextXp} XP — {pct}% to Lv. {lvl.level + 1}

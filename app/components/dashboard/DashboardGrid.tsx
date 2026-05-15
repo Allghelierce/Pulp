@@ -12,37 +12,58 @@ interface DashboardGridProps {
   onRemove: (instanceId: string) => void
 }
 
+interface DragState {
+  instanceId: string
+  offsetX: number
+  offsetY: number
+  ghostX: number
+  ghostY: number
+  ghostW: number
+  ghostH: number
+  snapCol: number
+  snapRow: number
+  widgetSize: [number, number]
+}
+
 export const DashboardGrid = memo(function DashboardGrid({
   widgets, widgetProps, editMode, onMove, onPin, onRemove,
 }: DashboardGridProps) {
   const gridRef = useRef<HTMLDivElement>(null)
-  const dragRef = useRef<{
-    instanceId: string
-    startX: number
-    startY: number
-    origPos: [number, number]
-    el: HTMLElement | null
-    ghost: HTMLDivElement | null
-  } | null>(null)
+  const [drag, setDrag] = useState<DragState | null>(null)
+  const [contentReady, setContentReady] = useState(false)
+  const dragRef = useRef<DragState | null>(null)
+  const rafRef = useRef<number>(0)
 
-  const cellW = useCallback(() => {
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setContentReady(true))
+    return () => { cancelAnimationFrame(id); setContentReady(false) }
+  }, [])
+
+  const getCellWidth = useCallback(() => {
     if (!gridRef.current) return 160
     return (gridRef.current.clientWidth - GRID_PAD * 2 - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
   }, [])
 
-  const posToGrid = useCallback((clientX: number, clientY: number): [number, number] => {
+  const clampGrid = useCallback((col: number, row: number, size: [number, number]): [number, number] => {
+    return [
+      Math.max(0, Math.min(col, GRID_COLS - size[0])),
+      Math.max(0, row),
+    ]
+  }, [])
+
+  const posToGrid = useCallback((topLeftX: number, topLeftY: number, size: [number, number]): [number, number] => {
     if (!gridRef.current) return [0, 0]
     const rect = gridRef.current.getBoundingClientRect()
-    const x = clientX - rect.left - GRID_PAD
-    const y = clientY - rect.top - GRID_PAD + gridRef.current.scrollTop
-    const cw = cellW()
-    const col = Math.max(0, Math.min(GRID_COLS - 1, Math.round(x / (cw + GRID_GAP))))
-    const row = Math.max(0, Math.round(y / (ROW_HEIGHT + GRID_GAP)))
-    return [col, row]
-  }, [cellW])
+    const cw = getCellWidth()
+    const x = topLeftX - rect.left - GRID_PAD
+    const y = topLeftY - rect.top - GRID_PAD + gridRef.current.scrollTop
+    const col = Math.round(x / (cw + GRID_GAP))
+    const row = Math.round(y / (ROW_HEIGHT + GRID_GAP))
+    return clampGrid(col, row, size)
+  }, [getCellWidth, clampGrid])
 
   const handleDragStart = useCallback((instanceId: string, e: React.PointerEvent) => {
-    if (!editMode) return
+    if (!editMode || !gridRef.current) return
     e.preventDefault()
     const widget = widgets.find(w => w.instanceId === instanceId)
     if (!widget) return
@@ -50,63 +71,58 @@ export const DashboardGrid = memo(function DashboardGrid({
     const el = (e.target as HTMLElement).closest('[data-widget-id]') as HTMLElement
     if (!el) return
 
-    const ghost = document.createElement('div')
-    ghost.style.cssText = `
-      position: fixed; pointer-events: none; z-index: 9999;
-      width: ${el.offsetWidth}px; height: ${el.offsetHeight}px;
-      border-radius: 20px; opacity: 0.7;
-      background: ${widgetProps.isDark ? '#141210' : '#f5f3ef'};
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      transition: none;
-    `
-    ghost.style.left = `${e.clientX - el.offsetWidth / 2}px`
-    ghost.style.top = `${e.clientY - el.offsetHeight / 2}px`
-    document.body.appendChild(ghost)
+    const elRect = el.getBoundingClientRect()
 
-    dragRef.current = {
+    const state: DragState = {
       instanceId,
-      startX: e.clientX,
-      startY: e.clientY,
-      origPos: widget.position,
-      el,
-      ghost,
+      offsetX: e.clientX - elRect.left,
+      offsetY: e.clientY - elRect.top,
+      ghostX: elRect.left,
+      ghostY: elRect.top,
+      ghostW: elRect.width,
+      ghostH: elRect.height,
+      snapCol: widget.position[0],
+      snapRow: widget.position[1],
+      widgetSize: widget.size,
     }
 
-    el.style.opacity = '0.3'
+    dragRef.current = state
+    setDrag(state)
 
     const onPointerMove = (ev: PointerEvent) => {
-      if (!dragRef.current?.ghost) return
-      dragRef.current.ghost.style.left = `${ev.clientX - el.offsetWidth / 2}px`
-      dragRef.current.ghost.style.top = `${ev.clientY - el.offsetHeight / 2}px`
+      if (!dragRef.current || !gridRef.current) return
+      const gx = ev.clientX - dragRef.current.offsetX
+      const gy = ev.clientY - dragRef.current.offsetY
+      const [col, row] = posToGrid(gx, gy, dragRef.current.widgetSize)
+
+      const next = { ...dragRef.current, ghostX: gx, ghostY: gy, snapCol: col, snapRow: row }
+      dragRef.current = next
+
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => setDrag({ ...next }))
     }
 
-    const onPointerUp = (ev: PointerEvent) => {
+    const onPointerUp = () => {
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
-      if (!dragRef.current) return
-
-      const [col, row] = posToGrid(ev.clientX, ev.clientY)
-      dragRef.current.ghost?.remove()
-      if (dragRef.current.el) dragRef.current.el.style.opacity = '1'
-
-      const w = widgets.find(w => w.instanceId === instanceId)
-      const clampedCol = Math.min(col, GRID_COLS - (w?.size[0] ?? 1))
-      onMove(instanceId, [clampedCol, row] as [number, number])
+      cancelAnimationFrame(rafRef.current)
+      if (dragRef.current) {
+        onMove(instanceId, [dragRef.current.snapCol, dragRef.current.snapRow])
+      }
       dragRef.current = null
+      setDrag(null)
     }
 
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
-  }, [editMode, widgets, widgetProps.isDark, posToGrid, onMove, cellW])
+  }, [editMode, widgets, getCellWidth, posToGrid, onMove])
 
-  const [ready, setReady] = useState(false)
   useEffect(() => {
-    const id = requestAnimationFrame(() => setReady(true))
-    return () => cancelAnimationFrame(id)
+    return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
   const maxRow = widgets.reduce((m, w) => Math.max(m, w.position[1] + w.size[1]), 0)
-  const cw = cellW()
+  const cw = getCellWidth()
 
   return (
     <div
@@ -115,14 +131,31 @@ export const DashboardGrid = memo(function DashboardGrid({
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         padding: GRID_PAD,
         position: 'relative',
-        minHeight: (maxRow + 1) * (ROW_HEIGHT + GRID_GAP) + GRID_PAD,
+        minHeight: (maxRow + 2) * (ROW_HEIGHT + GRID_GAP) + GRID_PAD,
       }}
     >
       <div style={{ position: 'relative', width: '100%', minHeight: maxRow * (ROW_HEIGHT + GRID_GAP) }}>
+        {drag && (
+          <div style={{
+            position: 'absolute',
+            left: drag.snapCol * (cw + GRID_GAP),
+            top: drag.snapRow * (ROW_HEIGHT + GRID_GAP),
+            width: drag.widgetSize[0] * cw + (drag.widgetSize[0] - 1) * GRID_GAP,
+            height: drag.widgetSize[1] * ROW_HEIGHT + (drag.widgetSize[1] - 1) * GRID_GAP,
+            borderRadius: 20,
+            border: `2px dashed ${widgetProps.isDark ? 'rgba(217,119,6,0.5)' : 'rgba(217,119,6,0.4)'}`,
+            background: widgetProps.isDark ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)',
+            transition: 'left 150ms ease, top 150ms ease',
+            pointerEvents: 'none',
+            zIndex: 5,
+          }} />
+        )}
+
         {widgets.map(widget => {
           const def = getWidgetDef(widget.widgetId)
           if (!def) return null
           const Component = def.component
+          const isDragging = drag?.instanceId === widget.instanceId
           const left = widget.position[0] * (cw + GRID_GAP)
           const top = widget.position[1] * (ROW_HEIGHT + GRID_GAP)
           const width = widget.size[0] * cw + (widget.size[0] - 1) * GRID_GAP
@@ -133,9 +166,16 @@ export const DashboardGrid = memo(function DashboardGrid({
               key={widget.instanceId}
               data-widget-id={widget.instanceId}
               style={{
-                position: 'absolute',
-                left, top, width, height,
-                transition: editMode ? 'none' : 'left 300ms ease, top 300ms ease, width 300ms ease, height 300ms ease',
+                position: isDragging ? 'fixed' : 'absolute',
+                left: isDragging ? drag.ghostX : left,
+                top: isDragging ? drag.ghostY : top,
+                width: isDragging ? drag.ghostW : width,
+                height: isDragging ? drag.ghostH : height,
+                zIndex: isDragging ? 100 : 1,
+                opacity: isDragging ? 0.85 : 1,
+                transform: isDragging ? 'scale(1.03)' : 'none',
+                transition: isDragging ? 'none' : 'left 300ms ease, top 300ms ease, width 300ms ease, height 300ms ease, opacity 150ms ease',
+                pointerEvents: isDragging ? 'none' : 'auto',
               }}
             >
               <WidgetWrapper
@@ -147,7 +187,7 @@ export const DashboardGrid = memo(function DashboardGrid({
                 onRemove={() => onRemove(widget.instanceId)}
                 onDragStart={handleDragStart}
               >
-                {ready && <Component {...widgetProps} size={widget.size} />}
+                {contentReady && <Component {...widgetProps} size={widget.size} />}
               </WidgetWrapper>
             </div>
           )

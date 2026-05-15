@@ -1,6 +1,5 @@
 "use client"
 import { memo, useState } from "react"
-import { motion } from "framer-motion"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = '"EB Garamond", serif'
@@ -67,23 +66,19 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
             <g key={i}>
               <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${trackLen} ${gapLen}`} strokeDashoffset={-gapLen / 2} transform={`rotate(-90 ${cx} ${cy})`} />
-              <motion.circle
+              <circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
                 stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${fillLen} ${circ - fillLen}`}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
                 transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
                 style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
               />
               {complete && (
-                <motion.g initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 1.2 + i * 0.1 }}
-                  style={{ transformOrigin: `${checkX}px ${checkY}px` }}>
+                <g>
                   <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" stroke={ring.color} strokeWidth={0.5} opacity={0.35} />
                   <circle cx={checkX} cy={checkY} r={strokeW + 1} fill={ring.color} />
                   <path d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`} fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </motion.g>
+                </g>
               )}
             </g>
           )
