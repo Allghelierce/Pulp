@@ -1839,7 +1839,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         })()}
 
                 {/* Foreground windmills */}
-        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.45 }].map((wm, wi) => renderWindmill(wm, wi))}
+        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
 
         {/* Sap barrels around foreground windmills */}
         {(() => {
