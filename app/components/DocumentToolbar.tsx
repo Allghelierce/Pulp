@@ -268,13 +268,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             style={{ ...(insertOpen ? neonStyle : {}), ...btnFont }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            {!compact && <><span>Insert</span>
+            {!compact && <><span>insert</span>
             <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5 }}><path d="M0 0l5 6 5-6z" /></svg></>}
           </button>
 
           {insertOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className={`px-2.5 py-1 text-[9px] font-normal uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Elements</div>
+              <div className={`px-2.5 py-1 text-[9px] font-normal tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>elements</div>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky'); setInsertOpen(false) }}
                 className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
@@ -407,7 +407,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {alignOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className={`px-2.5 py-1 text-[9px] font-normal uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
+              <div className={`px-2.5 py-1 text-[9px] font-normal tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>arrange boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
                 className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
@@ -589,7 +589,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         {!ultraCompact && <div ref={aiRef} className="relative flex shrink-0">
           <button
             onMouseDown={e => { e.preventDefault(); if (isTextActive) setAiOpen(!aiOpen) }}
-            title={isTextActive ? "Quick Prompts" : "Click on a text box first"}
+            title={isTextActive ? "quick prompts" : "Click on a text box first"}
             className={`${btn(aiOpen)} flex items-center gap-1.5`}
             style={{
               ...(aiOpen ? neonStyle : {}),
@@ -598,13 +598,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             }}
           >
             <AiMascotIcon size={14} />
-            {!compact && <span>Quick Prompts</span>}
+            {!compact && <span>quick prompts</span>}
             {!compact && <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5, marginLeft: 2 }}><path d="M0 0l5 6 5-6z" /></svg>}
           </button>
 
           {aiOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
+              <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 tracking-tight mb-0.5">quick prompts</div>
               {COMMON_PROMPTS.map((item, idx) => (
                 <button
                   key={idx}
@@ -623,7 +623,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               {onAiAction && (
                 <>
                   <div className="h-px bg-zinc-200/50 my-1 mx-1" />
-                  <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 uppercase tracking-tight mb-0.5">Study Tools</div>
+                  <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 tracking-tight mb-0.5">study tools</div>
                   {[
                     { label: "Quiz me", action: "quiz" },
                   ].map((item, idx) => (
