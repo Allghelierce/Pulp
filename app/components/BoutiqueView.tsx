@@ -1473,7 +1473,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </button>
               </div>
 
-              </>)})()}
+              </>); })()}
             </div>
           )}
 
