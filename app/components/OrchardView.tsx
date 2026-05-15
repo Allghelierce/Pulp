@@ -375,7 +375,7 @@ const CONSTELLATION_LINES: [number, number][] = [
   [1, 6],
 ]
 
-const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
+const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode, onOpenShop }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime"; onOpenShop?: () => void }) {
   const [realtimeState, setRealtimeState] = useState(getTimePhase)
   useEffect(() => {
     if (orchardTimeMode !== 'realtime') return
@@ -3230,7 +3230,7 @@ export const OrchardView = memo(function OrchardView({
           <canvas data-orchard-ui id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
           <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
-          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} />
+          <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} onOpenShop={onOpenShop} />
 
 
           {/* Orchard scene */}
