@@ -1247,7 +1247,7 @@ export default function NoteApp() {
 
   useEffect(() => {
     const id = requestIdleCallback(() => {
-      _preloadOrchard(); _preloadBoutique(); _preloadStats(); _preloadLeaderboard()
+      _preloadOrchard(); _preloadBoutique(); _preloadStats(); _preloadDashboard(); _preloadLeaderboard()
       _preloadFocus(); _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()

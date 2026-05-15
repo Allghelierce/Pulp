@@ -1,5 +1,5 @@
 "use client"
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { Tree, Achievement, NoteData } from "@/app/types"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
 import { DashboardToolbar } from "./dashboard/DashboardToolbar"
@@ -42,6 +42,7 @@ export const DashboardView = memo(function DashboardView({
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
   const [goals] = useState(loadGoals)
   const [libraryOpen, setLibraryOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const {
     layout, editMode, setEditMode,
@@ -51,9 +52,10 @@ export const DashboardView = memo(function DashboardView({
   useEffect(() => {
     if (!isOpen) return
     setDailyStats(loadDailyStats())
+    requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)))
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
     window.addEventListener("keydown", handler)
-    return () => window.removeEventListener("keydown", handler)
+    return () => { window.removeEventListener("keydown", handler); setMounted(false) }
   }, [isOpen, onClose])
 
   const widgetProps: WidgetProps = useMemo(() => ({
@@ -80,6 +82,9 @@ export const DashboardView = memo(function DashboardView({
       background: bg,
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden',
+      opacity: mounted ? 1 : 0,
+      transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+      transition: 'opacity 0.25s ease-out, transform 0.25s ease-out',
     }}>
       <DashboardToolbar
         isDark={isDark}
