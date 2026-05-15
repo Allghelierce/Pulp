@@ -602,22 +602,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
 
         {/* Distant cliff hills — behind mountains, angular and steep */}
-        <defs>
-          <clipPath id="cliff-clip">
-            <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" />
-          </clipPath>
-        </defs>
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
-        {/* Cliff face shadows — clipped to cliff shape */}
-        <g clipPath="url(#cliff-clip)">
-          <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
-          <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
-          <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
-          <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
-          <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
-          <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
-          <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
-        </g>
 
         {/* Sun — between distant cliffs and mountains */}
         {(() => {
@@ -645,120 +630,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <ellipse cx={sx} cy={sy} rx={1.8 / squeeze} ry={1.8} fill="#fff4d0" />
             </g>
           )
-        })()}
-
-        {/* Mountain range — back layer (darker, depth) */}
-        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
-        {/* Mountain range — main */}
-        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
-        {/* Slope shadows & highlights — clipped to mountain shape */}
-        <defs>
-          <clipPath id="mtn-clip">
-            <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
-          </clipPath>
-        </defs>
-        <g clipPath="url(#mtn-clip)">
-          <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
-          <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
-          <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
-          <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
-          <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
-          <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
-          <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
-          <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
-          <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
-          <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
-          <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
-        </g>
-        {/* Ridge highlights — thin bright edge along peaks */}
-        <path d="M15,12 L25,22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
-        <path d="M35,10 L42,18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
-        <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
-        <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        {/* Snow caps */}
-        <defs>
-          <linearGradient id="snow-blend-c" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#e8ecf0' : '#fafbfd'} />
-            <stop offset="55%" stopColor={isDark ? '#c8cdd4' : '#e8eaee'} />
-            <stop offset="100%" stopColor={isDark ? '#8a94a0' : '#b8bcc4'} stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="snow-blend-l" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#d8dce2' : '#f0f2f5'} />
-            <stop offset="60%" stopColor={isDark ? '#b0b8c2' : '#dcdee4'} />
-            <stop offset="100%" stopColor={isDark ? '#7a8490' : '#a8aeb8'} stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="snow-blend-r" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#dce0e6' : '#f2f4f7'} />
-            <stop offset="55%" stopColor={isDark ? '#b8c0ca' : '#e0e2e8'} />
-            <stop offset="100%" stopColor={isDark ? '#808a96' : '#aab0ba'} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* Center peak snow — slopes follow (42,18)→(50,8)→(58,16) exactly */}
-        <path d="M46,13 L48,10.5 L50,8 L52.5,10.5 L55,13 C54,13.5 53.2,12.7 52,13.3 C51,12.5 50.3,13.4 49.5,12.8 C48.5,13.5 47.4,12.7 46,13 Z" fill="url(#snow-blend-c)" />
-        <path d="M47.6,11.5 L50,8 L52.1,11 C51.4,11.5 50.7,10.8 50,11.2 C49.3,10.7 48.4,11.3 47.6,11.5 Z" fill={isDark ? '#e8ecf2' : '#fcfcfd'} opacity="0.85" />
-        <path d="M46,13 L50,8 L50,12.5 C49.2,12.8 48,13.2 46.8,12.8 Z" fill="rgba(0,0,0,0.06)" />
-        {/* Left peak snow — exact slopes (25,22)→(35,10)→(42,18) */}
-        <path d="M32.3,13 L33.7,11.5 L35,10 L36.2,11.5 L37.6,13 C37,13.4 36.4,12.8 35.8,13.2 C35.2,12.6 34.5,13.3 33.8,12.8 C33.2,13.3 32.7,13 32.3,13 Z" fill="url(#snow-blend-l)" />
-        <path d="M33.5,11.5 L35,10 L36.2,11.2 C35.7,11.6 35.3,11 35,11.4 C34.6,11 34,11.5 33.5,11.5 Z" fill={isDark ? '#dce0e6' : '#f8f9fb'} opacity="0.75" />
-        {/* Right peak snow — exact slopes (95,22)→(105,9)→(115,18) */}
-        <path d="M102.7,12.5 L103.8,10.7 L105,9 L107,10.8 L108.9,12.5 C108.1,13 107.2,12.3 106.4,12.8 C105.7,12.2 105.1,12.9 104.4,12.4 C103.6,12.9 103.1,12.5 102.7,12.5 Z" fill="url(#snow-blend-r)" />
-        <path d="M103.8,10.8 L105,9 L106.6,10.8 C106,11.2 105.5,10.5 105,10.9 C104.5,10.5 104.2,11.1 103.8,10.8 Z" fill={isDark ? '#e2e6ec' : '#fafbfc'} opacity="0.8" />
-        <path d="M102.7,12.5 L105,9 L105,12 C104.3,12.4 103.5,12.6 102.7,12.5 Z" fill="rgba(0,0,0,0.05)" />
-        {/* Tiny cabin on right slope below peak */}
-        <g transform="translate(52.8,11.5) scale(0.55)">
-          <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
-          <path d="M-1.6,0.2 Q0,0.35 1.6,0.2" fill="none" stroke={isDark ? '#d0d4da' : '#f0f2f5'} strokeWidth="0.2" opacity="0.5" />
-          <rect x={-0.8} y={-0.95} width="1.6" height="1.1" fill={isDark ? '#3a3530' : '#7a6a58'} />
-          <rect x={-0.8} y={-0.95} width="1.6" height="0.12" fill={isDark ? '#44403a' : '#8a7a65'} opacity="0.4" />
-          <polygon points="-1,-0.95 0,-1.75 1,-0.95" fill={isDark ? '#4a3028' : '#8a5040'} />
-          <polygon points="-1,-0.95 0,-1.75 0,-0.95" fill={isDark ? '#3a2820' : '#7a4438'} />
-          <path d="M-1.05,-0.95 L0,-1.8 L1.05,-0.95 Q0.7,-1.08 0.3,-1 Q0,-1.1 -0.3,-1 Q-0.7,-1.08 -1.05,-0.95 Z" fill={isDark ? '#c8ccd2' : '#eef0f4'} opacity="0.6" />
-          <rect x={0.4} y={-1.55} width="0.25" height="0.65" fill={isDark ? '#3a3530' : '#6a5a48'} />
-          <path d="M0.52,-1.55 Q0.58,-1.85 0.48,-2.1 Q0.56,-2.3 0.5,-2.55" stroke={isDark ? 'rgba(180,180,190,0.3)' : 'rgba(100,100,110,0.15)'} strokeWidth="0.1" fill="none" strokeLinecap="round" />
-          <rect x={-0.35} y={-0.6} width="0.28" height="0.25" rx="0.02" fill={isDark ? '#fbbf24' : '#c8b888'} opacity={isDark ? 0.6 : 0.3} />
-          <ellipse cx={0} cy={0.2} rx="1.1" ry="0.15" fill="rgba(0,0,0,0.12)" />
-        </g>
-        {/* Base shadow — atmospheric haze at mountain feet */}
-        <path d="M-10,30 L210,30 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
-        {/* Sunlit faces — soft warm wash across upper mountain faces */}
-        {p.mtnLightOpacity > 0.01 && (
-          <g>
-            <defs>
-              <linearGradient id="mtn-light-wash" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 2.5} />
-                <stop offset="40%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 1.2} />
-                <stop offset="100%" stopColor={p.sunColor || '#ffc864'} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M-10,8 L210,8 L210,34 L-10,34 Z" fill="url(#mtn-light-wash)" opacity={p.mtnLightOpacity * 0.6} />
-          </g>
-        )}
-
-
-        {/* Moonlight on mountain faces */}
-        {(() => {
-          const isNight = timeState.hour >= 18 || timeState.hour < 6
-          if (!isNight) return null
-          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
-          const moonT = Math.max(0, Math.min(1, nightHour / 12))
-          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
-          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
-          return <g opacity={intensity * 0.4} style={{ pointerEvents: 'none' }}>
-            <defs>
-              <radialGradient id="moonlight-mtn" cx="50%" cy="60%" r="60%">
-                <stop offset="0%" stopColor="rgba(180,200,235,0.2)" />
-                <stop offset="50%" stopColor="rgba(160,185,220,0.08)" />
-                <stop offset="100%" stopColor="rgba(140,170,210,0)" />
-              </radialGradient>
-              <clipPath id="moonlight-clip-mtn">
-                <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
-              </clipPath>
-            </defs>
-            <g clipPath="url(#moonlight-clip-mtn)">
-              <ellipse cx={mx} cy="18" rx="50" ry="20" fill="url(#moonlight-mtn)" />
-            </g>
-          </g>
         })()}
 
         {/* Windmills — behind hills, on mountain slopes */}
@@ -1805,7 +1676,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
                 {/* Lamppost */}
         {(() => {
-          const lx = 170, ly = 46
+          const lx = 170, ly = 46, sc = 0.65
           const iron = isDark ? '#3a3a3a' : '#4a4a4a'
           const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
           const isNight = isDark
@@ -1842,26 +1713,298 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 </linearGradient>
               </defs>
               {isNight && <>
-              <ellipse cx={lx + 14} cy={ly} rx="42" ry="17" fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx + 22} cy={ly + 1} rx="30" ry="13" fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx + 8} cy={ly + 6} rx="20" ry="6" fill="url(#lamp-ground)" />
-              <ellipse cx={lx + 20} cy={ly + 5} rx="16" ry="5" fill="url(#lamp-ground)" opacity="0.7" />
-              <path d={`M${lx + 0.5},${ly - 7} L${lx - 4},${ly + 4} L${lx + 6},${ly + 4} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              <circle cx={lx + 1.5} cy={ly - 7.5} r="5" fill="url(#lamp-glow)" />
-              <circle cx={lx + 1.5} cy={ly - 7.5} r="2" fill={glassL} opacity="0.08" />
+              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
               {/* Pole */}
-              <rect x={lx - 0.3} y={ly - 8} width="0.6" height="9" rx="0.15" fill={iron} />
+              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
-              <ellipse cx={lx} cy={ly + 1} rx="1.2" ry="0.4" fill={ironD} />
+              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
               {/* Arm */}
-              <path d={`M${lx},${ly - 7.5} Q${lx + 0.8},${ly - 8.5} ${lx + 1.5},${ly - 8}`} stroke={iron} strokeWidth="0.3" fill="none" />
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
               {/* Lantern housing */}
-              <rect x={lx + 0.8} y={ly - 8.5} width="1.4" height="1.8" rx="0.15" fill={ironD} />
-              <rect x={lx + 0.95} y={ly - 8.3} width="1.1" height="1.4" rx="0.1" fill={glass} opacity="0.8" />
-              <rect x={lx + 1.2} y={ly - 8.3} width="0.3" height="1.4" fill={glassL} opacity="0.4" />
+              <rect x={lx + 0.8 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx + 0.95 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx + 1.2 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
               {/* Top cap */}
-              <polygon points={`${lx + 0.6},${ly - 8.5} ${lx + 1.5},${ly - 9.2} ${lx + 2.4},${ly - 8.5}`} fill={iron} />
+              <polygon points={`${lx + 0.6 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 9.2 * sc} ${lx + 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
+            </g>
+          )
+        })()}
+
+        {/* Shopkeeper stall — scaled from BoutiqueView */}
+        {(() => {
+          const eyeC = isDark ? '#1a1410' : '#3a3020'
+          return (
+            <g transform="translate(10, 38) scale(0.065) skewY(-1)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
+              <defs>
+                <radialGradient id="o-body-orch" cx="38%" cy="35%">
+                  <stop offset="0%" stopColor="#e8a030" />
+                  <stop offset="50%" stopColor="#d97706" />
+                  <stop offset="100%" stopColor="#b06205" />
+                </radialGradient>
+              </defs>
+              {/* Canopy poles */}
+              <rect x="113" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="114" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <path d="M115 110 L118 110 M115 125 L118 125 M115 145 L118 145 M115 170 L118 170 M115 195 L118 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+              <path d="M113 132 L120 129 M113 148 L120 145 M113 162 L120 159 M113 178 L120 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+              <circle cx="117" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
+              <rect x="279" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="280" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <path d="M281 110 L284 110 M281 125 L284 125 M281 145 L284 145 M281 170 L284 170 M281 195 L284 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+              <path d="M279 132 L286 129 M279 148 L286 145 M279 162 L286 159 M279 178 L286 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+              <circle cx="283" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
+              {/* Pole finials */}
+              <circle cx="117" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <circle cx="117" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+              <circle cx="117" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <circle cx="117" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+              <circle cx="283" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <circle cx="283" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+              <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+              {/* String lights */}
+              <path d="M117 125 Q200 158 283 125" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.5" fill="none" />
+              {[130, 145, 160, 175, 190, 205, 220, 235, 250, 265].map((slx, sli) => {
+                const t = (slx - 117) / (283 - 117)
+                const sly = 125 + 2 * t * (1 - t) * 33
+                return (
+                  <g key={`osl-${sli}`}>
+                    <line x1={slx} y1={sly} x2={slx} y2={sly + 4} stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.3" />
+                    <circle cx={slx} cy={sly + 4.5} r={1.4} fill="#d97706" opacity="0.8" />
+                    <circle cx={slx} cy={sly + 4.5} r={0.6} fill="#f0c050" />
+                  </g>
+                )
+              })}
+              {/* Canopy fabric */}
+              <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
+              <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
+              <path d="M107 116 Q200 97 293 116 L290 125 Q200 108 110 125 Z" fill={isDark ? '#a06820' : '#c8a050'} />
+              <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
+              <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
+              <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
+              {/* Lanterns */}
+              <defs>
+                <radialGradient id="lantern-glow-orch">
+                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.35" />
+                  <stop offset="25%" stopColor="#d97706" stopOpacity="0.18" />
+                  <stop offset="50%" stopColor="#d97706" stopOpacity="0.07" />
+                  <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Left lantern */}
+              <line x1="140" y1="126" x2="140" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+              <circle cx="140" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <path d="M140 147 L142 147 L140 146 L138 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+              <rect x="131" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+              <rect x="133" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+              <line x1="133" y1="158" x2="147" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+              <line x1="140" y1="149" x2="140" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+              <line x1="134" y1="150" x2="139" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="141" y1="150" x2="146" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="134" y1="159" x2="139" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="141" y1="159" x2="146" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <circle cx="140" cy="158" r="4.5" fill="#d97706" />
+              <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
+              <circle cx="140" cy="157" r="1" fill="#f0c050" />
+              <circle cx="140" cy="158" r="35" fill="url(#lantern-glow-orch)" />
+              <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+              <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+              {/* Right lantern */}
+              <line x1="260" y1="126" x2="260" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+              <circle cx="260" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+              <path d="M260 147 L262 147 L260 146 L258 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+              <rect x="251" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+              <rect x="253" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+              <line x1="253" y1="158" x2="267" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+              <line x1="260" y1="149" x2="260" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+              <line x1="254" y1="150" x2="259" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="261" y1="150" x2="266" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="254" y1="159" x2="259" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <line x1="261" y1="159" x2="266" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+              <circle cx="260" cy="158" r="4.5" fill="#d97706" />
+              <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
+              <circle cx="260" cy="157" r="1" fill="#f0c050" />
+              <circle cx="260" cy="158" r="35" fill="url(#lantern-glow-orch)" />
+              <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+              <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+              {/* The Orange (shopkeeper) */}
+              <circle cx="200" cy="210" r="20" fill="url(#o-body-orch)" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.15" />
+              <ellipse cx="194" cy="201" rx="5" ry="7" fill="#e0a830" opacity="0.35" transform="rotate(-15 194 201)" />
+              <rect x="199" y="188" width="2.5" height="4" rx="1" fill="#4a6a2a" />
+              <rect x="199.3" y="188.5" width="1.8" height="1.5" rx="0.5" fill="#5a7a3a" />
+              <path d="M201.5 190 Q206 184 210 186 Q206 189 201.5 190" fill="#4a7a2a" />
+              <path d="M201.5 190 Q206 185.5 209 186" stroke="#3a6a1a" strokeWidth="0.3" fill="none" />
+              {/* Earrings */}
+              <line x1="181" y1="212" x2="179" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+              <circle cx="179" cy="216" r="1.2" fill="#d97706" />
+              <circle cx="179" cy="216" r="0.5" fill="#e8a030" />
+              <line x1="219" y1="212" x2="221" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+              <circle cx="221" cy="216" r="1.2" fill="#d97706" />
+              <circle cx="221" cy="216" r="0.5" fill="#e8a030" />
+              {/* Eyes */}
+              <circle cx="194" cy="207" r="2.5" fill={eyeC} />
+              <circle cx="206" cy="207" r="2.5" fill={eyeC} />
+              <circle cx="195" cy="205.8" r="1" fill="#fff" />
+              <circle cx="207" cy="205.8" r="1" fill="#fff" />
+              <circle cx="194.3" cy="206.8" r="0.5" fill="#fff" />
+              <circle cx="206.3" cy="206.8" r="0.5" fill="#fff" />
+              {/* Mouth */}
+              <ellipse cx="200" cy="216" rx="2.2" ry="2.8" fill="#8a4a05" />
+              <ellipse cx="200" cy="216" rx="1.5" ry="2" fill="#6a3a04" />
+              {/* Cart body — 3D side face and bottom edge */}
+              <path d="M300 218 L310 224 L310 268 L300 262 Z" fill={isDark ? '#2a2018' : '#7a6a4a'} />
+              <path d="M100 262 L110 268 L310 268 L300 262 Z" fill={isDark ? '#221a12' : '#6a5a3a'} />
+              <path d="M300 218 L310 224" stroke={isDark ? '#1a1408' : '#5a4a30'} strokeWidth="0.5" />
+              <rect x="100" y="218" width="200" height="44" rx="3" fill={isDark ? '#3a2e20' : '#a09070'} />
+              <rect x="100" y="218" width="200" height="10" rx="2" fill={isDark ? '#4a3a28' : '#b0a080'} />
+              <path d="M110 220 Q130 221 150 220 Q170 219 190 220 Q210 221 230 220 Q260 219 290 220" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+              <path d="M115 224 Q135 225 155 224 Q180 223 200 224 Q230 225 260 224 Q280 223 295 224" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+              <circle cx="145" cy="222" r="1.5" fill={isDark ? '#3e3018' : '#a89878'} />
+              <circle cx="145" cy="222" r="0.8" fill={isDark ? '#342a1c' : '#988868'} />
+              <rect x="100" y="228" width="200" height="9" fill={isDark ? '#423626' : '#a89878'} />
+              <path d="M108 231 Q140 232 170 231 Q200 230 240 231 Q270 232 295 231" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
+              <ellipse cx="230" cy="232" rx="2" ry="1.2" fill={isDark ? '#3a2e1e' : '#988868'} />
+              <rect x="100" y="237" width="200" height="9" fill={isDark ? '#4a3a28' : '#b0a080'} />
+              <path d="M105 240 Q140 241 175 240 Q210 239 250 240 Q280 241 298 240" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+              <circle cx="180" cy="241" r="1.2" fill={isDark ? '#3e3018' : '#a89878'} />
+              <circle cx="180" cy="241" r="0.5" fill={isDark ? '#342a1c' : '#988868'} />
+              <rect x="100" y="246" width="200" height="9" fill={isDark ? '#3e3222' : '#a09070'} />
+              <path d="M108 249 Q145 250 185 249 Q225 248 270 249 Q290 250 298 249" stroke={isDark ? '#342a1a' : '#988868'} strokeWidth="0.3" fill="none" />
+              <ellipse cx="270" cy="250" rx="1.5" ry="1" fill={isDark ? '#342a1a' : '#988868'} />
+              <rect x="100" y="255" width="200" height="7" fill={isDark ? '#4a3a28' : '#b0a080'} />
+              <path d="M110 258 Q150 259 200 258 Q250 257 290 258" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+              {/* Vertical plank seams */}
+              <line x1="148" y1="218" x2="147" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+              <circle cx="148" cy="222" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <circle cx="147" cy="240" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <circle cx="147" cy="255" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <line x1="205" y1="218" x2="204" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+              <circle cx="205" cy="225" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <circle cx="204" cy="248" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <line x1="260" y1="218" x2="261" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+              <circle cx="260" cy="230" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              <circle cx="261" cy="252" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+              {/* Top rail — 3D side */}
+              <path d="M305 212 L315 218 L315 226 L305 220 Z" fill={isDark ? '#3a2a18' : '#8a7a58'} />
+              <path d="M95 220 L105 226 L315 226 L305 220 Z" fill={isDark ? '#2a2014' : '#7a6a48'} />
+              <rect x="95" y="212" width="210" height="8" rx="3" fill={isDark ? '#4a3a28' : '#b0a080'} />
+              <rect x="95" y="212" width="210" height="4" rx="2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+              <rect x="95" y="212" width="210" height="2" rx="1" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+              <path d="M120 214 L125 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+              <path d="M180 215 L188 215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+              <path d="M250 214 L258 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+              <rect x="109" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="149" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="199" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="249" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+              <rect x="289" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+              {/* Iron corner brackets */}
+              <path d="M97 212 L97 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+              <path d="M97 212 L112 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+              <circle cx="97" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="97" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="97" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="105" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <path d="M303 212 L303 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+              <path d="M288 212 L303 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+              <circle cx="303" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="303" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="303" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              <circle cx="295" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+              {/* Potted plant */}
+              <ellipse cx="287" cy="211" rx="9" ry="2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.35" />
+              <path d="M278 200 L280 212 L294 212 L296 200 Z" fill="#7a4a2a" />
+              <path d="M278 200 L280 212 L287 212 L285 200 Z" fill="#8a5a3a" opacity="0.3" />
+              <path d="M287 200 L287 212 L294 212 L296 200 Z" fill="#5a3a1a" opacity="0.2" />
+              <rect x="277" y="198" width="20" height="3" rx="0.8" fill="#8a5a3a" />
+              <rect x="277" y="198" width="20" height="1.5" rx="0.5" fill="#9a6a4a" opacity="0.4" />
+              <path d="M278 200 L296 200" stroke="#6a3a1a" strokeWidth="0.5" />
+              <ellipse cx="287" cy="200" rx="7" ry="1.5" fill={isDark ? '#3a2a18' : '#6a5a40'} />
+              <path d="M287 200 Q284 193 281 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <path d="M281 189 Q279 187 277 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+              <path d="M287 200 Q287 192 287 187" stroke={isDark ? '#4a7a3a' : '#7aaa6a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <path d="M287 187 Q286 185 285 186" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+              <path d="M287 187 Q288 185 289 186" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+              <path d="M287 200 Q290 193 293 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <path d="M293 189 Q295 187 297 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+              <path d="M287 194 Q289 192 291 193" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+              <path d="M284 192 Q282 193 281 192" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+              {/* Seed jars on counter */}
+              {[[155,12,14],[170,14,12],[185,10,10],[240,13,12],[255,11,11]].map(([jx,jh,jw], si) => {
+                const jy = 212 - jh
+                return (
+                  <g key={`oj-${si}`}>
+                    <ellipse cx={jx} cy={211.5} rx={jw / 2 + 1} ry={1.2} fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x={jx - jw / 2} y={jy} width={jw} height={jh} rx={jw / 2 - 2} fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x={jx - jw / 2 + 1} y={jy + 1} width={jw - 2} height={jh - 2} rx={jw / 2 - 2.5} fill="#3a4a3a" opacity="0.4" />
+                    <rect x={jx - 3} y={jy - 3} width={6} height={3.5} rx={1.8} fill="#4a5a4a" opacity="0.5" />
+                    <rect x={jx - 2.5} y={jy - 4.5} width={5} height={2.5} rx={1.2} fill={isDark ? '#6a5a42' : '#c8b898'} />
+                  </g>
+                )
+              })}
+              {/* Trade sign */}
+              <line x1="200" y1="220" x2="200" y2="228" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="1" />
+              <rect x="178" y="228" width="44" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+              <path d="M182 232 Q200 231 218 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+              <path d="M182 238 Q200 237 218 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+              <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
+              {/* Root arms */}
+              <path d="M186 212 Q174 213 164 214 Q156 215 150 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              <path d="M150 216 Q146 218 144 222 Q142 228 141 235 Q140 242 140 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              <path d="M140 248 Q139 252 139 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+              <path d="M140 248 Q141 252 142 254" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+              <path d="M168 214 Q164 211 160 208" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+              <path d="M160 208 Q158 206 156 205" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+              <path d="M214 212 Q226 213 236 214 Q244 215 250 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M250 216 Q254 218 256 222 Q258 228 259 235 Q260 242 260 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+              <path d="M260 248 Q261 252 261 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <path d="M260 248 Q259 252 258 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1" fill="none" strokeLinecap="round" />
+              <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+              {/* Cart base shadow — grounds it on the hill */}
+              <ellipse cx="200" cy="262" rx="110" ry="8" fill={isDark ? '#0a0806' : '#4a4030'} opacity="0.2" />
+            </g>
+          )
+        })()}
+
+        {/* Left lamppost — mirrored, lamp points outward (left), over shop */}
+        {(() => {
+          const lx = 22, ly = 42, sc = 0.65
+          const iron = isDark ? '#3a3a3a' : '#4a4a4a'
+          const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
+          const isNight = isDark
+          const glass = isNight ? '#fbbf24' : '#8a8a82'
+          const glassL = isNight ? '#fcd34d' : '#9a9a92'
+          return (
+            <g>
+              {isNight && <>
+              <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <path d={`M${lx - 0.5},${ly - 7 * sc} L${lx + 4 * sc},${ly + 4 * sc} L${lx - 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
+              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
+              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
+              </>}
+              {/* Pole */}
+              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
+              {/* Base */}
+              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
+              {/* Arm — flipped to point left */}
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx - 0.8 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+              {/* Lantern housing — flipped */}
+              <rect x={lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+              {/* Top cap — flipped */}
+              <polygon points={`${lx - 0.6 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 9.2 * sc} ${lx - 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
             </g>
           )
         })()}

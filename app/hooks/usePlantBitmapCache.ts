@@ -43,8 +43,12 @@ export function rasterizePlantSvg(
   if (cache.has(key) || pending.has(key)) return
   pending.add(key)
 
+  const clone = svgElement.cloneNode(true) as SVGSVGElement
+  clone.setAttribute("width", String(width))
+  clone.setAttribute("height", String(height))
+
   const serializer = new XMLSerializer()
-  const svgString = serializer.serializeToString(svgElement)
+  const svgString = serializer.serializeToString(clone)
   const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
   const url = URL.createObjectURL(blob)
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
