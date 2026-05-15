@@ -321,6 +321,71 @@ const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingC
   )
 })
 
+const ScrollModePage = memo(function ScrollModePage({
+  pageIdx, html, boxes, isActive, onClick, paperBg, paperImg, paperSize, theme, editorFont, baseFontSize, paperStyle, inkColor
+}: {
+  pageIdx: number; html: string; boxes: TextBoxType[]; isActive: boolean;
+  onClick: () => void; paperBg: string; paperImg?: string; paperSize?: string;
+  theme: "light" | "dark"; editorFont: string; baseFontSize: string; paperStyle: string; inkColor: string
+}) {
+  return (
+    <div
+      data-page-idx={pageIdx}
+      onClick={isActive ? undefined : onClick}
+      style={{
+        position: "relative",
+        minHeight: 1100,
+        backgroundColor: paperBg,
+        backgroundImage: paperImg,
+        backgroundSize: paperSize,
+        cursor: isActive ? undefined : "pointer",
+        outline: isActive ? `2px solid #d97706` : "2px solid transparent",
+        outlineOffset: 2,
+        transition: "outline-color 0.15s",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute", left: "7rem", top: 0, bottom: 0, width: 1,
+          backgroundColor: theme === "dark" ? "rgba(248,113,113,0.3)" : "rgba(252,165,165,0.6)",
+          zIndex: 20, pointerEvents: "none"
+        }}
+      />
+      <div
+        style={{
+          fontFamily: `"${editorFont}", Crimson Pro, serif`,
+          fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
+          fontWeight: 400, letterSpacing: "0.1px", lineHeight: 1.8,
+          color: inkColor, minHeight: 1000, pointerEvents: "none", userSelect: "none",
+        }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {boxes.map(box => (
+        <div
+          key={box.id}
+          style={{
+            position: "absolute", left: box.x, top: box.y, width: box.w,
+            minHeight: box.h, pointerEvents: "none", userSelect: "none",
+            fontFamily: box.boxFontFamily || `"${editorFont}", Crimson Pro, serif`,
+            fontSize: box.boxFontSize || (baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18),
+            color: box.boxTextColor || inkColor,
+            backgroundColor: box.boxHighlightColor || undefined,
+            transform: box.boxRotation ? `rotate(${box.boxRotation}deg)` : undefined,
+          }}
+          dangerouslySetInnerHTML={{ __html: box.content }}
+        />
+      ))}
+      {!isActive && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 30,
+          background: theme === "dark" ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.01)",
+          transition: "background 0.15s",
+        }} />
+      )}
+    </div>
+  )
+})
+
 const BoxItem = memo(function BoxItem({
   box, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
@@ -1411,7 +1476,8 @@ export default function NoteApp() {
     blockedApps: [],
     orchardTimeMode: "theme",
     devMode: false,
-    isDevUnlocked: false
+    isDevUnlocked: false,
+    scrollMode: false
   }
   const _savedSettingsRef = useRef<any>(undefined)
   if (_savedSettingsRef.current === undefined) {
@@ -1431,7 +1497,7 @@ export default function NoteApp() {
     accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
     lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
+    shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked, scrollMode
   } = settings
 
   const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
@@ -1456,6 +1522,8 @@ export default function NoteApp() {
 
   const editorRef = useRef<HTMLDivElement>(null)
   const paperRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollPageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   const pendingImageBoxId = useRef<string | null>(null)
   const pendingTableBoxId = useRef<string | null>(null)
@@ -2523,7 +2591,7 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(settingsSaveTimer.current)
     settingsSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode }
+      const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
       if (user) {
         db.upsertSettings(user.id, {
@@ -2538,7 +2606,7 @@ export default function NoteApp() {
       }
     }), 1000)
     return () => clearTimeout(settingsSaveTimer.current)
-  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, user])
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode, user])
 
   const folderSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
@@ -2601,12 +2669,52 @@ export default function NoteApp() {
   const lastSyncKey = useRef<string>("")
   useEffect(() => {
     if (!activeTabId || gridView) return
-    const key = `${activeTabId}:${currentPageIdx}:${gridView}`
+    const key = `${activeTabId}:${currentPageIdx}:${gridView}:${scrollMode}`
     if (!gridView && editorRef.current && lastSyncKey.current !== key) {
       editorRef.current.innerHTML = sanitizeHTML(activeNote?.pages[currentPageIdx] || "")
       lastSyncKey.current = key
     }
-  }, [activeTabId, currentPageIdx, gridView, activeNote?.pages])
+  }, [activeTabId, currentPageIdx, gridView, scrollMode, activeNote?.pages])
+
+  // Scroll mode: IntersectionObserver to track visible page
+  const scrollObserverSkip = useRef(false)
+  useEffect(() => {
+    if (!scrollMode || !scrollContainerRef.current || !activeNote) return
+    const container = scrollContainerRef.current
+    const observer = new IntersectionObserver(
+      entries => {
+        if (scrollObserverSkip.current) return
+        let maxRatio = 0
+        let maxIdx = currentPageIdx
+        entries.forEach(entry => {
+          const idx = Number(entry.target.getAttribute("data-page-idx"))
+          if (entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio
+            maxIdx = idx
+          }
+        })
+        if (maxRatio > 0.3 && maxIdx !== currentPageIdx) {
+          editor.flushSync()
+          setCurrentPageIdx(maxIdx)
+        }
+      },
+      { root: container, threshold: [0.1, 0.3, 0.5, 0.7] }
+    )
+    scrollPageRefs.current.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [scrollMode, activeNote?.pages?.length, activeTabId])
+
+  const handleScrollPageClick = useCallback((pageIdx: number) => {
+    if (pageIdx === currentPageIdx) return
+    editor.flushSync()
+    scrollObserverSkip.current = true
+    setCurrentPageIdx(pageIdx)
+    requestAnimationFrame(() => {
+      const el = scrollPageRefs.current.get(pageIdx)
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+      setTimeout(() => { scrollObserverSkip.current = false }, 500)
+    })
+  }, [currentPageIdx, editor, setCurrentPageIdx])
 
   // AI Easter Egg Expression Loop
   useEffect(() => {
@@ -3533,13 +3641,50 @@ export default function NoteApp() {
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
               ) : (
-                <main className="flex-1 shrink-0 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
+                <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-16 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
                   <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 680, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
-                    <div style={{ position: "relative", overflow: "visible" }}>
+                    {/* Scroll mode: preceding pages */}
+                    {scrollMode && activeNote.pages.map((pageHtml, idx) => {
+                      if (idx >= currentPageIdx) return null
+                      const inkColor = getInkColor(paperStyle, theme === "dark")
+                      return (
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} style={{ marginBottom: 32 }}>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                            <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                            <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>
+                            <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                          </div>
+                          <ScrollModePage
+                            pageIdx={idx}
+                            html={sanitizeHTML(pageHtml || "")}
+                            boxes={activeNote.boxes[idx] || []}
+                            isActive={false}
+                            onClick={() => handleScrollPageClick(idx)}
+                            paperBg={paperBg}
+                            paperImg={paperImg}
+                            paperSize={paperSize}
+                            theme={theme}
+                            editorFont={editorFont}
+                            baseFontSize={baseFontSize}
+                            paperStyle={paperStyle}
+                            inkColor={inkColor}
+                          />
+                        </div>
+                      )
+                    })}
+                    {/* Active page divider in scroll mode */}
+                    {scrollMode && currentPageIdx > 0 && (
+                      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                        <div style={{ flex: 1, height: 1, background: accent }} />
+                        <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: accent, fontWeight: 600, userSelect: "none" }}>Page {currentPageIdx + 1}</span>
+                        <div style={{ flex: 1, height: 1, background: accent }} />
+                      </div>
+                    )}
+                    <div style={{ position: "relative", overflow: "visible" }} ref={el => { if (el && scrollMode) scrollPageRefs.current.set(currentPageIdx, el); }} data-page-idx={currentPageIdx}>
                       <div style={{ position: "relative", overflow: "visible" }}>
-                        <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: paperBg, borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)", filter: "brightness(0.97)" }} />
-                        <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: paperBg, borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)", filter: "brightness(0.94)" }} />
-                        <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: paperBg, borderRadius: 2, zIndex: -1, filter: "brightness(0.91)" }} />
+                        {!scrollMode && <div style={{ position: "absolute", top: 0, left: 4, right: -4, bottom: -2, backgroundColor: paperBg, borderRadius: 2, zIndex: 1, boxShadow: "2px 2px 10px rgba(0,0,0,0.08)", filter: "brightness(0.97)" }} />}
+                        {!scrollMode && <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: paperBg, borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)", filter: "brightness(0.94)" }} />}
+                        {!scrollMode && <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: paperBg, borderRadius: 2, zIndex: -1, filter: "brightness(0.91)" }} />}
 
                         <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
@@ -3939,14 +4084,61 @@ export default function NoteApp() {
                               >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 18 6-6-6-6" /><path d="m12 18 6-6-6-6" /></svg>
                               </button>
+                              {/* Scroll mode toggle */}
+                              {activeNote.pages.length > 1 && (
+                                <>
+                                  <div style={{ width: 1, height: 16, background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)", margin: "0 4px" }} />
+                                  <button
+                                    onClick={() => updateSettings({ scrollMode: !scrollMode })}
+                                    className="p-1.5 rounded-md transition-all hover:bg-black/8 hover:scale-110 active:scale-95"
+                                    style={{ color: scrollMode ? accent : "#3f3f46" }}
+                                    title={scrollMode ? "Single page mode" : "Continuous scroll mode"}
+                                  >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="4" y="2" width="16" height="6" rx="1" />
+                                      <rect x="4" y="10" width="16" height="6" rx="1" />
+                                      <rect x="4" y="18" width="16" height="4" rx="1" />
+                                    </svg>
+                                  </button>
+                                </>
+                              )}
                             </div>{/* end inner flex */}
 
                           </div>{/* end deadzone */}
 
                         </div>
                       </div>
-                      <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />
+                      {!scrollMode && <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />}
                     </div>
+                    {/* Scroll mode: following pages */}
+                    {scrollMode && activeNote.pages.map((pageHtml, idx) => {
+                      if (idx <= currentPageIdx) return null
+                      const inkColor = getInkColor(paperStyle, theme === "dark")
+                      return (
+                        <div key={`scroll-page-${idx}`} ref={el => { if (el) scrollPageRefs.current.set(idx, el); else scrollPageRefs.current.delete(idx) }} style={{ marginTop: 32 }}>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "6px 0", marginBottom: 8 }}>
+                            <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                            <span style={{ padding: "0 12px", fontFamily: "Crimson Pro, serif", fontSize: 12, color: theme === "dark" ? "#71717a" : "#a1a1aa", userSelect: "none" }}>Page {idx + 1}</span>
+                            <div style={{ flex: 1, height: 1, background: theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+                          </div>
+                          <ScrollModePage
+                            pageIdx={idx}
+                            html={sanitizeHTML(pageHtml || "")}
+                            boxes={activeNote.boxes[idx] || []}
+                            isActive={false}
+                            onClick={() => handleScrollPageClick(idx)}
+                            paperBg={paperBg}
+                            paperImg={paperImg}
+                            paperSize={paperSize}
+                            theme={theme}
+                            editorFont={editorFont}
+                            baseFontSize={baseFontSize}
+                            paperStyle={paperStyle}
+                            inkColor={inkColor}
+                          />
+                        </div>
+                      )
+                    })}
                   </div>
                   {/* Botanical margin engravings */}
                   <MarginEngravings theme={theme} />
