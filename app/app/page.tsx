@@ -3406,12 +3406,16 @@ export default function NoteApp() {
                   selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
                   unlockedCosmetics={unlockedCosmetics}
                 />
-                <div style={{ position: 'absolute', top: 57, left: 12, zIndex: 80 }}>
-                  <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} />
-                </div>
               </div>
             )}
 
+
+            {/* Mini rings — above zoom tray, bottom right */}
+            {notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
+              <div className="fixed z-[80]" style={{ bottom: 56, right: 16, display: 'flex', justifyContent: 'center' }}>
+                <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} stretch />
+              </div>
+            )}
 
             {/* Floating zoom + undo/redo bar — bottom right */}
             {notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
