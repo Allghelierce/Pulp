@@ -26,8 +26,6 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { MiniRings } from "@/app/components/StatsView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
-import { DashboardView as DashboardViewDirect } from "@/app/components/DashboardView"
-
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
@@ -3977,9 +3975,9 @@ export default function NoteApp() {
             />
           </div></Suspense>}
 
-          {statsOpen && (
+          {statsOpen && <Suspense fallback={null}>
             <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
-              <DashboardViewDirect
+              <DashboardView
                 isOpen={statsOpen}
                 onClose={() => setStatsOpen(false)}
                 theme={theme}
@@ -3992,7 +3990,7 @@ export default function NoteApp() {
                 notes={notes}
               />
             </div>
-          )}
+          </Suspense>}
 
           {leaderboardOpen && <Suspense fallback={null}>
             <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><LeaderboardView
