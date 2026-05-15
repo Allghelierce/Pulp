@@ -1,5 +1,5 @@
 "use client"
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "../../PlantIcon"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
@@ -9,6 +9,15 @@ const font = 'Crimson Pro, serif'
 const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }: WidgetProps) {
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
 
+  const styled = useMemo(() => {
+    if (grove.length === 0) return []
+    const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 12)
+    return recent.map((tree, i) => {
+      const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
+      return { tree, yOff: Math.round(seed * 6 - 1), tilt: ((seed * 6) - 3) * 0.5, size: 34 + Math.round(seed * 4) }
+    })
+  }, [grove])
+
   if (grove.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
@@ -17,12 +26,7 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
     )
   }
 
-  const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 12)
   const itemW = 70
-  const styled = recent.map((tree, i) => {
-    const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
-    return { tree, yOff: Math.round(seed * 6 - 1), tilt: ((seed * 6) - 3) * 0.5, size: 34 + Math.round(seed * 4) }
-  })
   const halfW = styled.length * itemW
   const doubled = [...styled, ...styled]
 
