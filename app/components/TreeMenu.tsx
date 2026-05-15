@@ -114,7 +114,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
           <path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none"/>
           <ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)"/>
         </svg>
-        <span className="text-[10px] text-zinc-500 group-hover:text-zinc-300 font-medium tracking-wide">
+        <span className="text-[10px] text-zinc-500 group-hover:text-zinc-300 font-normal tracking-wide">
           Shelf
         </span>
       </button>
@@ -127,7 +127,7 @@ export function TreeMenu({ notes, onOpenNote }: TreeMenuProps) {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <span className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: '#d97706' }}>
+            <span className="text-[11px] font-normal tracking-[0.2em] uppercase" style={{ color: '#d97706' }}>
               Pulp — {notes.length} {notes.length === 1 ? 'notebook' : 'notebooks'}
             </span>
             <button

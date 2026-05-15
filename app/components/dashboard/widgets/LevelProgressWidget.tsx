@@ -3,7 +3,7 @@ import { memo } from "react"
 import { getLevel } from "@/app/constants"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const LevelProgressWidget = memo(function LevelProgressWidget({ isDark, xp }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -15,9 +15,9 @@ const LevelProgressWidget = memo(function LevelProgressWidget({ isDark, xp }: Wi
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: 16, gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span style={{
-          fontSize: 28, fontWeight: 800, color: '#d97706', fontFamily: font, lineHeight: 1,
+          fontSize: 28, fontWeight: 400, color: '#d97706', fontFamily: font, lineHeight: 1,
         }}>{lvl.level}</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color: textPrimary, fontFamily: font }}>{lvl.name}</span>
+        <span style={{ fontSize: 14, fontWeight: 400, color: textPrimary, fontFamily: font }}>{lvl.name}</span>
       </div>
       <div style={{
         height: 6, borderRadius: 3, overflow: 'hidden',

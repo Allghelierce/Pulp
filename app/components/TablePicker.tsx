@@ -6,7 +6,7 @@ export function TablePicker({ onSelect, accent }: { onSelect: (rows: number, col
   const MAX = 8
   return (
     <div className="select-none">
-      <p className="text-[11px] font-semibold text-zinc-500 mb-2.5 text-center tracking-wide">
+      <p className="text-[11px] font-normal text-zinc-500 mb-2.5 text-center tracking-wide">
         {hover.r > 0 && hover.c > 0 ? `${hover.c} × ${hover.r}` : "Insert Table"}
       </p>
       <div onMouseLeave={() => setHover({ r: 0, c: 0 })}>

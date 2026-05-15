@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-white text-zinc-900 px-6 py-16">
       <article className="max-w-2xl mx-auto prose prose-zinc">
-        <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
+        <h1 className="text-3xl font-normal mb-2">Privacy Policy</h1>
         <p className="text-sm text-zinc-500 mb-10">Last updated: April 15, 2026</p>
 
         <p>
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <a href="https://pulp-omega.vercel.app">pulp-omega.vercel.app</a>.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">1. Information We Collect</h2>
+        <h2 className="mt-8 font-normal text-xl">1. Information We Collect</h2>
         <p>When you sign in to Pulp, we collect:</p>
         <ul className="list-disc pl-6">
           <li>
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
-        <h2 className="mt-8 font-semibold text-xl">2. How We Use Your Information</h2>
+        <h2 className="mt-8 font-normal text-xl">2. How We Use Your Information</h2>
         <p>We use your information only to:</p>
         <ul className="list-disc pl-6">
           <li>Authenticate you and keep your account secure.</li>
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           models.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">3. Google User Data</h2>
+        <h2 className="mt-8 font-normal text-xl">3. Google User Data</h2>
         <p>
           If you choose to sign in with Google, we request the minimum profile scopes
           needed to create an account (name, email, profile picture). We do not access
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
           , including the Limited Use requirements.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">4. Third-Party Services</h2>
+        <h2 className="mt-8 font-normal text-xl">4. Third-Party Services</h2>
         <p>We share data with a small number of processors that help us run the service:</p>
         <ul className="list-disc pl-6">
           <li>
@@ -73,39 +73,39 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
-        <h2 className="mt-8 font-semibold text-xl">5. Data Retention</h2>
+        <h2 className="mt-8 font-normal text-xl">5. Data Retention</h2>
         <p>
           We retain your account information and notes for as long as your account is
           active. You can delete your account at any time by contacting us, and your
           associated notes and profile data will be removed from our systems.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">6. Security</h2>
+        <h2 className="mt-8 font-normal text-xl">6. Security</h2>
         <p>
           Data is stored with Supabase using industry-standard encryption in transit
           (TLS) and at rest. No method of transmission or storage is perfectly secure,
           but we take reasonable precautions to protect your information.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">7. Your Rights</h2>
+        <h2 className="mt-8 font-normal text-xl">7. Your Rights</h2>
         <p>
           You can request access to, correction of, or deletion of your personal data at
           any time by emailing us.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">8. Children</h2>
+        <h2 className="mt-8 font-normal text-xl">8. Children</h2>
         <p>
           Pulp is not directed to children under 13, and we do not knowingly collect
           personal data from them.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">9. Changes to This Policy</h2>
+        <h2 className="mt-8 font-normal text-xl">9. Changes to This Policy</h2>
         <p>
           We may update this policy from time to time. Material changes will be posted on
           this page with a new &quot;Last updated&quot; date.
         </p>
 
-        <h2 className="mt-8 font-semibold text-xl">10. Contact</h2>
+        <h2 className="mt-8 font-normal text-xl">10. Contact</h2>
         <p>
           For privacy questions or data requests, contact us at{" "}
           <a href="mailto:pulpsupport@gmail.com">pulpsupport@gmail.com</a>.

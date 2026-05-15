@@ -233,7 +233,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
       position: "fixed", top: 0, right: 0, bottom: 0, width: 380, zIndex: 9998,
       background: bg, borderLeft: `1px solid ${borderColor}`,
       display: "flex", flexDirection: "column",
-      fontFamily: '"EB Garamond", serif',
+      fontFamily: 'Crimson Pro, serif',
       boxShadow: isDark ? "-8px 0 32px rgba(0,0,0,0.4)" : "-4px 0 24px rgba(0,0,0,0.06)",
     }}>
 
@@ -243,7 +243,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? "#e4e4e7" : "#18181b", letterSpacing: "0.01em" }}>
+          <div style={{ fontSize: 14, fontWeight: 400, color: isDark ? "#e4e4e7" : "#18181b", letterSpacing: "0.01em" }}>
             Notebook Chat
           </div>
           <div style={{ fontSize: 11, color: mutedText, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
@@ -253,10 +253,10 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
               style={{
                 background: activePersonality.id !== "default" ? `${accent}20` : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
                 border: activePersonality.id !== "default" ? `1px solid ${accent}40` : `1px solid ${borderColor}`,
-                borderRadius: 4, padding: "1px 6px", fontSize: 9, fontWeight: 700,
+                borderRadius: 4, padding: "1px 6px", fontSize: 9, fontWeight: 400,
                 color: activePersonality.id !== "default" ? accent : mutedText,
                 cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.08em",
-                fontFamily: '"EB Garamond", serif', whiteSpace: "nowrap",
+                fontFamily: 'Crimson Pro, serif', whiteSpace: "nowrap",
               }}
             >
               {activePersonality.name}
@@ -276,7 +276,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
       {/* Personality panel */}
       {showPersonalityPanel && (
         <div style={{ borderBottom: `1px solid ${borderColor}`, padding: "10px 16px", maxHeight: 320, overflowY: "auto" }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, marginBottom: 8 }}>
             AI Personality
           </div>
 
@@ -290,7 +290,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                   background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
                   border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px",
                   fontSize: 12, color: isDark ? "#e4e4e7" : "#18181b", outline: "none",
-                  fontFamily: '"EB Garamond", serif',
+                  fontFamily: 'Crimson Pro, serif',
                 }}
               />
               <textarea
@@ -302,7 +302,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                   background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
                   border: `1px solid ${borderColor}`, borderRadius: 6, padding: "6px 10px",
                   fontSize: 12, color: isDark ? "#e4e4e7" : "#18181b", outline: "none", resize: "none",
-                  fontFamily: '"EB Garamond", serif', lineHeight: 1.5,
+                  fontFamily: 'Crimson Pro, serif', lineHeight: 1.5,
                 }}
               />
               <div style={{ display: "flex", gap: 6 }}>
@@ -310,10 +310,10 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                   onClick={handleSavePersonality}
                   disabled={!editName.trim() || !editPrompt.trim()}
                   style={{
-                    flex: 1, padding: "5px 0", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 700,
+                    flex: 1, padding: "5px 0", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 400,
                     background: editName.trim() && editPrompt.trim() ? accent : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
                     color: editName.trim() && editPrompt.trim() ? "#fff" : mutedText, cursor: "pointer",
-                    fontFamily: '"EB Garamond", serif',
+                    fontFamily: 'Crimson Pro, serif',
                   }}
                 >
                   Save
@@ -323,7 +323,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                   style={{
                     padding: "5px 12px", borderRadius: 6, border: `1px solid ${borderColor}`, fontSize: 11,
                     background: "transparent", color: subtleText, cursor: "pointer",
-                    fontFamily: '"EB Garamond", serif',
+                    fontFamily: 'Crimson Pro, serif',
                   }}
                 >
                   Cancel
@@ -345,7 +345,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                     onClick={() => { setActivePersonality(p); setShowPersonalityPanel(false) }}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: activePersonality.id === p.id ? accent : (isDark ? "#d4d4d8" : "#3f3f46") }}>{p.name}</div>
+                      <div style={{ fontSize: 12, fontWeight: 400, color: activePersonality.id === p.id ? accent : (isDark ? "#d4d4d8" : "#3f3f46") }}>{p.name}</div>
                       {p.systemPrompt && (
                         <div style={{ fontSize: 10, color: mutedText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.systemPrompt}</div>
                       )}
@@ -374,8 +374,8 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                 style={{
                   width: "100%", marginTop: 8, padding: "6px 0", borderRadius: 6,
                   border: `1px dashed ${borderColor}`, background: "transparent",
-                  fontSize: 11, fontWeight: 600, color: subtleText, cursor: "pointer",
-                  fontFamily: '"EB Garamond", serif', display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  fontSize: 11, fontWeight: 400, color: subtleText, cursor: "pointer",
+                  fontFamily: 'Crimson Pro, serif', display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                 }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -396,7 +396,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
               </svg>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? "#d4d4d8" : "#3f3f46", marginBottom: 4 }}>Reading your notebook...</div>
+              <div style={{ fontSize: 13, fontWeight: 400, color: isDark ? "#d4d4d8" : "#3f3f46", marginBottom: 4 }}>Reading your notebook...</div>
               <div style={{ fontSize: 11, color: mutedText, maxWidth: 220, lineHeight: 1.5 }}>Indexing {note.pages.length} page{note.pages.length !== 1 ? "s" : ""} for context</div>
             </div>
             <div style={{ width: "100%", maxWidth: 200, height: 4, borderRadius: 2, background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", overflow: "hidden" }}>
@@ -415,21 +415,21 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
               </svg>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? "#d4d4d8" : "#3f3f46", marginBottom: 4 }}>Chat with your notebook</div>
+              <div style={{ fontSize: 13, fontWeight: 400, color: isDark ? "#d4d4d8" : "#3f3f46", marginBottom: 4 }}>Chat with your notebook</div>
               <div style={{ fontSize: 11, color: mutedText, maxWidth: 220, lineHeight: 1.5 }}>Ask questions, get summaries, or quiz yourself on your notes.</div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", marginTop: 8 }}>
-              <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, paddingLeft: 2 }}>Quick Actions</div>
+              <div style={{ fontSize: 9, fontWeight: 400, letterSpacing: "0.12em", textTransform: "uppercase", color: mutedText, paddingLeft: 2 }}>Quick Actions</div>
               {QUIZ_PROMPTS.map((p, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(p)}
                   style={{
-                    textAlign: "left", fontSize: 12, fontWeight: 500, padding: "8px 12px", borderRadius: 8,
+                    textAlign: "left", fontSize: 12, fontWeight: 400, padding: "8px 12px", borderRadius: 8,
                     border: `1px solid ${borderColor}`, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
                     color: subtleText, cursor: "pointer", transition: "all 0.1s",
-                    fontFamily: '"EB Garamond", serif',
+                    fontFamily: 'Crimson Pro, serif',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.color = subtleText }}
@@ -543,7 +543,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
             flex: 1, background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
             border: `1px solid ${borderColor}`, borderRadius: 10, padding: "8px 12px",
             fontSize: 13, color: isDark ? "#e4e4e7" : "#18181b", outline: "none", resize: "none",
-            fontFamily: '"EB Garamond", serif', lineHeight: 1.5,
+            fontFamily: 'Crimson Pro, serif', lineHeight: 1.5,
             maxHeight: 100, overflowY: "auto",
           }}
         />

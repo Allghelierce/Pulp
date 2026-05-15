@@ -183,13 +183,13 @@ export function ShelfView({ notes, onOpenNote, onCreateNote, theme }: ShelfViewP
         style={{ maxWidth: 1180 }}>
         <div>
           <h1 style={{
-            fontFamily: '"EB Garamond", serif', fontStyle: 'italic',
+            fontFamily: 'Crimson Pro, serif', fontStyle: 'italic',
             fontSize: 44, lineHeight: 1, marginBottom: 7, margin: 0,
             color: dk ? '#E8701A' : '#C04A08',
           }}>Pulp</h1>
           <p style={{
             marginTop: 6, fontSize: 9, letterSpacing: '0.36em',
-            textTransform: 'uppercase', fontWeight: 600,
+            textTransform: 'uppercase', fontWeight: 400,
             color: dk ? '#9A5830' : '#B07040',
           }}>
             {notes.length} {notes.length === 1 ? 'note' : 'notes'} on the shelf
@@ -199,7 +199,7 @@ export function ShelfView({ notes, onOpenNote, onCreateNote, theme }: ShelfViewP
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '10px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
           background: 'linear-gradient(135deg, #E0601A, #B83E0E)',
-          color: 'white', fontWeight: 700, fontSize: 9, letterSpacing: '0.22em',
+          color: 'white', fontWeight: 400, fontSize: 9, letterSpacing: '0.22em',
           textTransform: 'uppercase',
           boxShadow: `0 4px 20px rgba(200,70,10,${dk ? '0.55' : '0.36'})`,
         }}>
@@ -366,7 +366,7 @@ export function ShelfView({ notes, onOpenNote, onCreateNote, theme }: ShelfViewP
                                           writingMode:'vertical-rl',
                                           transform:'rotate(180deg)',
                                           fontSize:8,
-                                          fontFamily:'"EB Garamond", serif',
+                                          fontFamily:'Crimson Pro, serif',
                                           fontWeight:700,
                                           color:'rgba(255,248,228,0.72)',
                                           userSelect:'none',

@@ -11,7 +11,7 @@ const COLORS_DARK = [
   "#6ee7b7", "#93c5fd", "#c4b5fd", "#f9a8d4", "#d4d4d8",
 ]
 
-const font: React.CSSProperties = { fontFamily: '"EB Garamond", serif', letterSpacing: "0.01em" }
+const font: React.CSSProperties = { fontFamily: 'Crimson Pro, serif', letterSpacing: "0.01em" }
 
 export const FloatingToolbar = memo(function FloatingToolbar({
   accent, activeTool, onToolChange, onClearDrawing, isVisible,
@@ -147,7 +147,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({
 
           {popup && (
             <div className="absolute top-full left-0 mt-1.5 bg-white rounded-[8px] border border-zinc-200 shadow-lg p-2 z-50" style={{ width: 140, ...font }}>
-              <div className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">Color</div>
+              <div className="text-[9px] font-normal text-zinc-400 uppercase tracking-wider mb-1.5">Color</div>
               <div className="grid grid-cols-5 gap-1">
                 {COLORS.map(c => (
                   <button key={c} onMouseDown={e => {
@@ -209,7 +209,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({
           style={font}
         >
           <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-          <span className="text-zinc-300 font-medium">esc</span>
+          <span className="text-zinc-300 font-normal">esc</span>
         </button>
       </div>
     </div>

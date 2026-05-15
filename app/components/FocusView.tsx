@@ -66,7 +66,7 @@ export const FocusView = memo(function FocusView({
   const isDark = theme === "dark"
   const extensionInstalled = useExtensionDetected()
   const [input, setInput] = useState("")
-  const font = '"EB Garamond", serif'
+  const font = 'Crimson Pro, serif'
 
   useEffect(() => {
     if (!isOpen) return
@@ -121,7 +121,7 @@ export const FocusView = memo(function FocusView({
               }}
             />
             <div>
-              <h2 className="text-[15px] font-semibold tracking-tight" style={{ fontFamily: font, color: isDark ? '#dcd8d0' : '#2a2620' }}>Focus Blocker</h2>
+              <h2 className="text-[15px] font-normal tracking-tight" style={{ fontFamily: font, color: isDark ? '#dcd8d0' : '#2a2620' }}>Focus Blocker</h2>
               <p className="text-[11px] mt-0.5" style={{ fontFamily: font, color: isDark ? '#5a5650' : '#a8a4a0' }}>Sites blocked while your timer is running</p>
             </div>
           </div>
@@ -148,7 +148,7 @@ export const FocusView = memo(function FocusView({
                 href="https://chromewebstore.google.com/detail/pulp-focus/YOUR_EXTENSION_ID"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all hover:brightness-110"
+                className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-normal text-white transition-all hover:brightness-110"
                 style={{ background: "#e67e22", fontFamily: font }}
               >
                 Get Extension
@@ -178,7 +178,7 @@ export const FocusView = memo(function FocusView({
             />
             <button
               onClick={addSite}
-              className="px-5 py-2.5 rounded-lg text-[12px] font-bold text-white transition-all hover:brightness-110"
+              className="px-5 py-2.5 rounded-lg text-[12px] font-normal text-white transition-all hover:brightness-110"
               style={{ background: "#e67e22", fontFamily: font }}
             >
               Block
@@ -189,10 +189,10 @@ export const FocusView = memo(function FocusView({
           {blockedSites.length > 0 ? (
             <div className={`rounded-lg overflow-hidden border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
               <div className={`px-4 py-2.5 flex items-center justify-between ${isDark ? "bg-zinc-900/80" : "bg-zinc-50"}`}>
-                <span className={`text-[10px] font-bold uppercase tracking-[0.12em] ${isDark ? "text-zinc-500" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+                <span className={`text-[10px] font-normal uppercase tracking-[0.12em] ${isDark ? "text-zinc-500" : "text-zinc-400"}`} style={{ fontFamily: font }}>
                   Blocked Sites
                 </span>
-                <span className={`text-[10px] font-bold tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>
+                <span className={`text-[10px] font-normal tabular-nums ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: font }}>
                   {blockedSites.length}
                 </span>
               </div>
@@ -215,7 +215,7 @@ export const FocusView = memo(function FocusView({
                   </span>
                   <button
                     onClick={() => removeSite(site)}
-                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-normal transition-all"
                     style={{
                       fontFamily: font,
                       background: gems >= 50 ? "rgba(168,85,247,0.1)" : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),

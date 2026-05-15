@@ -2,7 +2,7 @@
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const NotebookStatsWidget = memo(function NotebookStatsWidget({ isDark, grove, activeNotebookId, activeNotebookName }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -22,16 +22,16 @@ const NotebookStatsWidget = memo(function NotebookStatsWidget({ isDark, grove, a
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', padding: 16, gap: 6 }}>
-      <span style={{ fontSize: 8, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+      <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
         {activeNotebookName || 'Notebook'}
       </span>
       <div style={{ display: 'flex', gap: 20, alignItems: 'baseline' }}>
         <div>
-          <span style={{ fontSize: 24, fontWeight: 700, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{notebookTrees.length}</span>
+          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{notebookTrees.length}</span>
           <span style={{ fontSize: 10, color: textSecondary, marginLeft: 4 }}>trees</span>
         </div>
         <div>
-          <span style={{ fontSize: 24, fontWeight: 700, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{species}</span>
+          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{species}</span>
           <span style={{ fontSize: 10, color: textSecondary, marginLeft: 4 }}>species</span>
         </div>
       </div>

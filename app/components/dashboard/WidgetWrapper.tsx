@@ -12,7 +12,7 @@ interface WidgetWrapperProps {
   children: React.ReactNode
 }
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 export const WidgetWrapper = memo(function WidgetWrapper({
   isDark, pinned, editMode, instanceId, onPin, onRemove, onDragStart, children,

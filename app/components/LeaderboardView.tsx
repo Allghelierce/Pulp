@@ -13,7 +13,7 @@ interface LeaderboardViewProps {
   embedded?: boolean
 }
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const TIER_ORDER: LeagueTier[] = ['bronze', 'silver', 'gold', 'platinum', 'diamond']
 
@@ -173,7 +173,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                 <div className="flex items-center gap-2.5">
                   <TierBadge tier={league?.tier || 'bronze'} size="md" isDark={isDark} />
                   <div>
-                    <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: font }}>
+                    <h2 className="text-[15px] font-normal tracking-widest" style={{ color: textPrimary, fontFamily: font }}>
                       {tierName} League
                     </h2>
                     <p className="text-[10px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>
@@ -184,7 +184,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
               </div>
               {league && (
                 <div
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-normal"
                   style={{
                     background: `${tierColor}15`,
                     color: tierColor,
@@ -206,7 +206,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TierBadge tier={league.tier} size="sm" isDark={isDark} />
-                <span className="text-[11px] font-bold" style={{ color: tierColor, fontFamily: font }}>{tierName}</span>
+                <span className="text-[11px] font-normal" style={{ color: tierColor, fontFamily: font }}>{tierName}</span>
                 <span className="text-[9px]" style={{ color: textMuted }}>{daysLeftInWeek()}d left</span>
               </div>
             </div>
@@ -219,7 +219,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
           </div>
         ) : !league ? (
           <div className="flex-1 flex items-center justify-center flex-col gap-3 px-8">
-            <div className="text-[13px] font-semibold" style={{ color: textSecondary, fontFamily: font }}>No league yet</div>
+            <div className="text-[13px] font-normal" style={{ color: textSecondary, fontFamily: font }}>No league yet</div>
             <div className="text-[11px] text-center" style={{ color: textMuted, fontFamily: font }}>
               Sign in to join a weekly league and compete with other writers.
             </div>
@@ -261,7 +261,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     >
                       <div className="relative mb-2 group-hover:scale-110 transition-transform">
                         <div
-                          className="rounded-full flex items-center justify-center font-bold shrink-0"
+                          className="rounded-full flex items-center justify-center font-normal shrink-0"
                           style={{
                             width: isFirst ? 48 : 40,
                             height: isFirst ? 48 : 40,
@@ -284,12 +284,12 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 max-w-full">
-                        <span className="font-bold tabular-nums shrink-0" style={{ color: podiumMedals[i], fontSize: isFirst ? 16 : 14, fontFamily: font }}>
+                        <span className="font-normal tabular-nums shrink-0" style={{ color: podiumMedals[i], fontSize: isFirst ? 16 : 14, fontFamily: font }}>
                           {['#2', '#1', '#3'][i]}
                         </span>
-                        <p className="font-bold truncate" style={{ color: textPrimary, fontFamily: font, fontSize: isFirst ? 14 : 12 }}>{p.display_name}</p>
+                        <p className="font-normal truncate" style={{ color: textPrimary, fontFamily: font, fontSize: isFirst ? 14 : 12 }}>{p.display_name}</p>
                       </div>
-                      <p className="text-[10px] font-bold tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>
+                      <p className="text-[10px] font-normal tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>
                         {formatMinutes(p.focus_minutes)}
                       </p>
                       {reward > 0 && (
@@ -313,7 +313,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                             : <circle cx="12" cy="12" r="10"/>
                           }
                         </svg>
-                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: podiumMedals[i], fontFamily: font }}>
+                        <span className="text-[10px] font-normal uppercase tracking-widest" style={{ color: podiumMedals[i], fontFamily: font }}>
                           {podiumLabels[i]}
                         </span>
                       </div>
@@ -347,21 +347,21 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     onClick={() => setSelectedPlayer(members.indexOf(p))}
                   >
                     <span
-                      className="text-[12px] font-bold w-6 text-center tabular-nums"
+                      className="text-[12px] font-normal w-6 text-center tabular-nums"
                       style={{ color: isUser ? accent : textMuted, fontFamily: font }}
                     >
                       {rank}
                     </span>
 
                     <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0"
                       style={{ background: p.avatar_color, color: '#fff', fontFamily: font }}
                     >
                       {p.display_name[0].toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-semibold truncate" style={{ color: isUser ? accent : textPrimary, fontFamily: font }}>
+                      <div className="text-[12px] font-normal truncate" style={{ color: isUser ? accent : textPrimary, fontFamily: font }}>
                         {p.display_name}{isUser ? ' (You)' : ''}
                       </div>
                       <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>Lv.{p.level}</div>
@@ -375,7 +375,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isUser ? accent : textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        <span className="text-[12px] font-bold tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
+                        <span className="text-[12px] font-normal tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
                           {formatMinutes(p.focus_minutes)}
                         </span>
                       </div>
@@ -392,17 +392,17 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
                   style={{ background: isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.05)', border: `1px solid ${isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.12)'}` }}
                 >
-                  <span className="text-[12px] font-bold w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>
+                  <span className="text-[12px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>
                     #{league.user_rank}
                   </span>
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0"
                     style={{ background: accent, color: '#fff', fontFamily: font }}
                   >
                     Y
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-semibold" style={{ color: accent, fontFamily: font }}>You</div>
+                    <div className="text-[12px] font-normal" style={{ color: accent, fontFamily: font }}>You</div>
                     <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>
                       {league.user_rank <= promoteCount && promoteCount > 0
                         ? 'Promotion zone!'
@@ -415,7 +415,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    <span className="text-[12px] font-bold tabular-nums" style={{ color: accent, fontFamily: font }}>
+                    <span className="text-[12px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
                       {formatMinutes(league.user_focus)}
                     </span>
                   </div>
@@ -500,14 +500,14 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                     </div>
                   )}
                   <div
-                    className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-bold"
+                    className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-normal"
                     style={{ background: `${medalColor}20`, color: medalColor, fontFamily: font }}
                   >
                     #{rank}
                   </div>
                   {league && (
                     <div
-                      className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1"
+                      className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-normal flex items-center gap-1"
                       style={{ background: `${tierColor}20`, color: tierColor, fontFamily: font }}
                     >
                       <TierBadge tier={league.tier} size="sm" isDark={isDark} />
@@ -518,7 +518,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
 
                 <div className="flex flex-col items-center -mt-8 relative z-10">
                   <div
-                    className="rounded-full flex items-center justify-center font-bold"
+                    className="rounded-full flex items-center justify-center font-normal"
                     style={{
                       width: 56, height: 56,
                       background: p.avatar_color,
@@ -530,7 +530,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                   >
                     {p.display_name[0].toUpperCase()}
                   </div>
-                  <p className="text-[14px] font-semibold mt-2" style={{ color: textPrimary, fontFamily: font }}>{p.display_name}</p>
+                  <p className="text-[14px] font-normal mt-2" style={{ color: textPrimary, fontFamily: font }}>{p.display_name}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>
                     Level {p.level}
                     {reward > 0 ? ` · Earns ${reward} gems` : ''}
@@ -549,8 +549,8 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                         }}
                       >
                         {s.icon}
-                        <span className="text-[14px] font-bold tabular-nums" style={{ color: textPrimary, fontFamily: font }}>{s.value}</span>
-                        <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: textMuted, fontFamily: font }}>{s.label}</span>
+                        <span className="text-[14px] font-normal tabular-nums" style={{ color: textPrimary, fontFamily: font }}>{s.value}</span>
+                        <span className="text-[8px] font-normal uppercase tracking-widest" style={{ color: textMuted, fontFamily: font }}>{s.label}</span>
                       </div>
                     ))}
                   </div>
@@ -559,7 +559,7 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
                 <div className="px-5 pb-4">
                   <button
                     onClick={() => setSelectedPlayer(null)}
-                    className="w-full py-2 rounded-lg text-[11px] font-semibold transition-all"
+                    className="w-full py-2 rounded-lg text-[11px] font-normal transition-all"
                     style={{
                       background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                       color: textSecondary,

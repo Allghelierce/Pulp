@@ -118,7 +118,7 @@ export function IconPicker({ x, y, onSelect, onClose }: IconPickerProps) {
               key={cat.label}
               onClick={() => setActiveCategory(i)}
               style={{
-                flexShrink: 0, fontSize: 10, fontWeight: 600,
+                flexShrink: 0, fontSize: 10, fontWeight: 400,
                 padding: "3px 8px", borderRadius: 5, border: "none", cursor: "pointer",
                 background: activeCategory === i ? "rgba(255,255,255,0.15)" : "transparent",
                 color: activeCategory === i ? "#fff" : "#71717a",

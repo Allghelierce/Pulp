@@ -214,7 +214,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const textColor = isDark ? "#e4e4e7" : "#27272a"
   const dimColor = isDark ? "#a1a1aa" : "#71717a"
   const subtleColor = isDark ? "#71717a" : "#a1a1aa"
-  const serifFont = '"EB Garamond", serif'
+  const serifFont = 'Crimson Pro, serif'
   const monoFont = '"SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace'
 
   const handleMainButton = () => {
@@ -275,7 +275,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
       >
         <span
           className="tabular-nums"
-          style={{ fontFamily: serifFont, fontWeight: 600, fontSize: 16, color: mainColor, lineHeight: 1 }}
+          style={{ fontFamily: serifFont, fontWeight: 400, fontSize: 16, color: mainColor, lineHeight: 1 }}
         >
           {String(minutes).padStart(2, "0")}
           <span style={{ opacity: 0.5 }}>:{String(seconds).padStart(2, "0")}</span>
@@ -297,7 +297,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2c0 0-8 7.5-8 12a8 8 0 0 0 16 0c0-4.5-8-12-8-12z" />
             </svg>
-            <span className="tabular-nums" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.02em' }}>
+            <span className="tabular-nums" style={{ fontSize: 10, fontWeight: 400, letterSpacing: '0.02em' }}>
               {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
             </span>
           </button>
@@ -371,7 +371,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-bold tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1" }}>
+                  <span className="text-[9px] font-normal tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1" }}>
                     {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
                   </span>
                 </div>
@@ -449,7 +449,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   ref={el => el?.focus()}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                    <span style={{ fontSize: 10, fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                       Choose a plant
                     </span>
                     <button
@@ -490,7 +490,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                               <PlantIcon type={type} size={38} stage={3} />
                             </div>
                             {count > 1 && (
-                              <span className="absolute bottom-1 right-1 text-[7px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
+                              <span className="absolute bottom-1 right-1 text-[7px] font-normal rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
                                 {count}
                               </span>
                             )}
@@ -529,7 +529,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   className="tabular-nums"
                   style={{
                     fontFamily: serifFont,
-                    fontWeight: 500,
+                    fontWeight: 400,
                     fontSize: 44,
                     lineHeight: 1,
                     ...(running && !done ? {
@@ -576,7 +576,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <button
                     onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
                     className="transition-all hover:opacity-90 active:scale-95"
-                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: '"EB Garamond", serif', fontSize: 12, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'Crimson Pro, serif', fontSize: 12, fontWeight: 400, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                     title={`Satchel (${inventory.length} seeds)`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
@@ -591,7 +591,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-[12px] mt-2 text-center"
-                  style={{ color: subtleColor, fontFamily: '"EB Garamond", serif' }}
+                  style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}
                 >
                   {deathReason}
                 </motion.p>
@@ -614,16 +614,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 >
                   <div className="px-4 py-3.5 flex flex-col items-center gap-2.5">
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[13px] font-bold inline-flex items-center gap-1" style={{ color: isDark ? '#fca5a5' : '#dc2626', fontFamily: serifFont }}>
+                      <span className="text-[13px] font-normal inline-flex items-center gap-1" style={{ color: isDark ? '#fca5a5' : '#dc2626', fontFamily: serifFont }}>
                         −{lostSap} <PulpIcon size={13} />
                       </span>
-                      <span className="text-[9px] uppercase tracking-[0.12em] font-semibold" style={{ color: isDark ? 'rgba(252,165,165,0.5)' : 'rgba(220,38,38,0.4)', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                      <span className="text-[9px] uppercase tracking-[0.12em] font-normal" style={{ color: isDark ? 'rgba(252,165,165,0.5)' : 'rgba(220,38,38,0.4)', fontFamily: 'Inter, system-ui, sans-serif' }}>
                         sap lost (15%)
                       </span>
                     </div>
                     <button
                       onClick={onRecoverSap}
-                      className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+                      className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
                       style={{
                         background: isDark
                           ? 'linear-gradient(135deg, rgba(217,119,6,0.25) 0%, rgba(217,119,6,0.15) 100%)'
@@ -666,7 +666,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <path d="M15 13l5-3v8l-5-3" />
                     <path d="M7 8c0-2 2-3 2-3" />
                   </svg>
-                  <span className="text-[11px] font-semibold">Water</span>
+                  <span className="text-[11px] font-normal">Water</span>
                 </button>
               )}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -698,7 +698,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       <button
                         key={m}
                         onClick={() => onSetTotal(m * 60)}
-                        className="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold transition-all"
+                        className="px-2.5 py-0.5 rounded-lg text-[10px] font-normal transition-all"
                         style={{
                           fontFamily: 'Inter, system-ui, sans-serif',
                           color: Math.floor(total / 60) === m ? textColor : subtleColor,
@@ -736,7 +736,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </div>
                   <div className="flex justify-between text-[9px] uppercase tracking-[0.1em]" style={{ color: subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                     <span>5m</span>
-                    <span className="tabular-nums" style={{ color: textColor, fontWeight: 600 }}>
+                    <span className="tabular-nums" style={{ color: textColor, fontWeight: 400 }}>
                       {Math.floor(total / 60)} min
                     </span>
                     <span>180m</span>
@@ -758,7 +758,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     handleMainButton()
                   }
                 }}
-                className="w-full py-2 rounded-[6px] transition-all text-[11px] font-semibold"
+                className="w-full py-2 rounded-[6px] transition-all text-[11px] font-normal"
                 style={{
                   fontFamily: serifFont,
                   letterSpacing: '0.01em',
@@ -780,7 +780,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 800 }}>You will lose 15% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose 15% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
             </div>
           </div>
@@ -815,7 +815,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             }}
           >
             <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
-              <h2 style={{ fontSize: 14, fontWeight: 600, fontFamily: serifFont, color: isDark ? '#e4e0d8' : '#18181b', margin: 0 }}>
+              <h2 style={{ fontSize: 14, fontWeight: 400, fontFamily: serifFont, color: isDark ? '#e4e0d8' : '#18181b', margin: 0 }}>
                 Timer Guide
               </h2>
               <button
@@ -848,7 +848,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               <button
                 onClick={() => setShowGuide(false)}
                 style={{
-                  width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
                   fontFamily: serifFont, color: '#fff', background: mainColor, border: 'none', cursor: 'pointer',
                 }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
