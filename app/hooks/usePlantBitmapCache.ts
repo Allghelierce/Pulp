@@ -19,8 +19,8 @@ function notifyListeners() {
   for (const fn of listeners) fn()
 }
 
-export function getCacheKey(type: string, size: number, stage: number, dirtSeed: number, dirtDark: boolean, dirtDepth: number, dirtTilt: number): string {
-  return `${type}:${size}:${stage}:${dirtSeed}:${dirtDark ? 1 : 0}:${dirtDepth.toFixed(2)}:${dirtTilt.toFixed(1)}`
+export function getCacheKey(type: string, size: number, stage: number, isDark: boolean): string {
+  return `${type}:${size}:${stage}:${isDark ? 1 : 0}`
 }
 
 export function getPlantBitmap(key: string): { dataUrl: string; w: number; h: number } | null {

@@ -31,7 +31,6 @@ const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
 const _preloadDashboard = () => import("@/app/components/DashboardView")
-import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
 const _preloadFocus = () => import("@/app/components/FocusView")
