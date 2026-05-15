@@ -3,7 +3,7 @@ import { memo, useMemo, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 import type { DailyEntry } from "@/app/lib/dailyStats"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 const RING_GOALS = { focus: 60, writing: 2000, sessions: 3 }
 
 function getMonthGrid(entries: DailyEntry[], monthOffset = 0) {
@@ -134,9 +134,9 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>Consistency</span>
+          <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>Consistency</span>
           {currentStreak > 0 && (
-            <span style={{ fontSize: 10, fontWeight: 700, color: getStreakColor(currentStreak), fontFamily: font }}>
+            <span style={{ fontSize: 10, fontWeight: 400, color: getStreakColor(currentStreak), fontFamily: font }}>
               {currentStreak}d streak
             </span>
           )}

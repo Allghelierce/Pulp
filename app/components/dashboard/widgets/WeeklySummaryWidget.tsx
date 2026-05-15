@@ -2,7 +2,7 @@
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const WeeklySummaryWidget = memo(function WeeklySummaryWidget({ isDark, dailyStats }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -44,13 +44,13 @@ const WeeklySummaryWidget = memo(function WeeklySummaryWidget({ isDark, dailySta
 
   return (
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>This Week</span>
+      <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>This Week</span>
       {rows.map(row => (
         <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, width: 42, textTransform: 'uppercase' }}>{row.label}</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: textPrimary, fontFamily: font, flex: 1 }}>{row.this}</span>
+          <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, width: 42, textTransform: 'uppercase' }}>{row.label}</span>
+          <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, flex: 1 }}>{row.this}</span>
           <span style={{
-            fontSize: 10, fontWeight: 600,
+            fontSize: 10, fontWeight: 400,
             color: row.delta > 0 ? '#22c55e' : row.delta < 0 ? '#ef4444' : textMuted,
           }}>
             {row.delta > 0 ? '+' : ''}{row.delta}{row.unit}

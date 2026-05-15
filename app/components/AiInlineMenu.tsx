@@ -162,7 +162,7 @@ export const AiInlineMenu = memo(function AiInlineMenu({
           padding: "8px 12px 6px",
           borderBottom: isDark ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(0,0,0,0.06)",
         }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: mutedColor, marginBottom: 4 }}>
+          <div style={{ fontSize: 9, fontWeight: 400, letterSpacing: "0.1em", textTransform: "uppercase", color: mutedColor, marginBottom: 4 }}>
             Selected text
           </div>
           <div style={{

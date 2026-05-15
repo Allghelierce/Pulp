@@ -150,7 +150,7 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
           {/* Time */}
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{
-              fontFamily: serif, fontWeight: 500, fontSize: 44, lineHeight: 1,
+              fontFamily: serif, fontWeight: 400, fontSize: 44, lineHeight: 1,
               fontVariantNumeric: 'tabular-nums',
             }}>
               <span style={{ color: started ? mainColor : textColor }}>{String(mins).padStart(2, '0')}</span>
@@ -226,7 +226,7 @@ function DemoTimer({ serif, mono }: { serif: string, mono: string }) {
           </div>
 
           <span style={{
-            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 9, fontWeight: 500,
+            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 9, fontWeight: 400,
             textTransform: 'uppercase', letterSpacing: '0.15em',
             marginTop: 16, cursor: 'default',
             color: done ? '#22c55e' : 'transparent',
@@ -300,7 +300,7 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
           </div>
         ) : (
           <>
-            <h3 style={{ fontFamily: serif, fontSize: '1.2rem', fontWeight: 500, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 4px 0' }}>
+            <h3 style={{ fontFamily: serif, fontSize: '1.2rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 4px 0' }}>
               {type}
             </h3>
             <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#a1a1aa', textTransform: 'lowercase', margin: '0 0 20px 0' }}>
@@ -519,7 +519,7 @@ export default function PulpLanding() {
       }}>
         <span
           onClick={() => { setActiveSlide(0); if (slide2Ref.current) slide2Ref.current.scrollTop = 0 }}
-          style={{ fontFamily: serif, fontSize: 18, fontWeight: 600, color: accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+          style={{ fontFamily: serif, fontSize: 18, fontWeight: 400, color: accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
         >
           <img src="/pulp_logo.svg" alt="pulp" style={{ width: 22, height: 22 }} />
           <span style={{ transform: 'translateY(-2px)' }}>pulp</span>
@@ -730,7 +730,7 @@ export default function PulpLanding() {
                   {section.items.map(([l, r], i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid rgba(15,15,16,0.05)' }}>
                       <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#bdb9b2', textTransform: 'lowercase', textDecoration: 'line-through', textDecorationColor: 'rgba(15,15,16,0.15)' }}>{l}</span>
-                      <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#6b6864', textTransform: 'lowercase', fontWeight: 500 }}>{r}</span>
+                      <span style={{ fontFamily: serif, fontSize: '0.85rem', color: '#6b6864', textTransform: 'lowercase', fontWeight: 400 }}>{r}</span>
                     </div>
                   ))}
                 </div>
@@ -757,7 +757,7 @@ export default function PulpLanding() {
                     transition: 'opacity 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)',
                   }}
                 >
-                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 600, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
+                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
                     {f.label}
                   </h3>
                   <p style={{ fontFamily: serif, fontSize: '0.92rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
@@ -836,7 +836,7 @@ export default function PulpLanding() {
           padding: '24px 40px',
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: serif, fontSize: 14, fontWeight: 600, color: accent }}>pulp</span>
+            <span style={{ fontFamily: serif, fontSize: 14, fontWeight: 400, color: accent }}>pulp</span>
             <div style={{ display: 'flex', gap: 24 }}>
               <a href="/privacy" style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', textDecoration: 'none', textTransform: 'lowercase', letterSpacing: '0.06em' }}>privacy</a>
               <a href="/terms" style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', textDecoration: 'none', textTransform: 'lowercase', letterSpacing: '0.06em' }}>terms</a>

@@ -757,13 +757,13 @@ export function ShelfRoom3D({ notes, onOpenNote, onCreateNote, onBack }: ShelfRo
       {/* Top bar */}
       <div className="absolute top-5 left-5 z-10 flex items-center gap-4">
         <button onClick={onBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wide uppercase backdrop-blur-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-normal tracking-wide uppercase backdrop-blur-sm"
           style={{ background: 'rgba(0,0,0,0.5)', color: '#eecf78', border: '1px solid rgba(238,207,120,0.22)' }}>
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
         <div>
           <h1 className="font-serif italic text-3xl leading-none" style={{ color: '#eecf78' }}>Pulp</h1>
-          <p className="text-[9px] tracking-[0.28em] uppercase font-medium mt-0.5" style={{ color: '#aa7e2c' }}>
+          <p className="text-[9px] tracking-[0.28em] uppercase font-normal mt-0.5" style={{ color: '#aa7e2c' }}>
             {notes.length} {notes.length === 1 ? 'note' : 'notes'}
           </p>
         </div>
@@ -777,7 +777,7 @@ export function ShelfRoom3D({ notes, onOpenNote, onCreateNote, onBack }: ShelfRo
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex flex-col items-center gap-2">
-          <span className="text-[10px] tracking-[0.22em] uppercase font-semibold" style={{ color: '#ddb855' }}>
+          <span className="text-[10px] tracking-[0.22em] uppercase font-normal" style={{ color: '#ddb855' }}>
             {VIEW_LABELS[viewIdx]}
           </span>
           <div className="flex gap-2">
@@ -801,7 +801,7 @@ export function ShelfRoom3D({ notes, onOpenNote, onCreateNote, onBack }: ShelfRo
 
       {/* New note */}
       <button onClick={onCreateNote}
-        className="absolute bottom-8 right-6 z-10 flex items-center gap-2 px-5 py-2.5 rounded-full text-white font-bold text-[10px] tracking-[0.18em] uppercase transition-all hover:scale-105 active:scale-95"
+        className="absolute bottom-8 right-6 z-10 flex items-center gap-2 px-5 py-2.5 rounded-full text-white font-normal text-[10px] tracking-[0.18em] uppercase transition-all hover:scale-105 active:scale-95"
         style={{ background: 'linear-gradient(135deg, #e0601a, #b83e0e)', boxShadow: '0 4px 20px rgba(200,70,10,0.6)' }}>
         <Plus className="w-3.5 h-3.5" /> New Note
       </button>

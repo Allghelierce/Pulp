@@ -1,7 +1,7 @@
 "use client"
 import { memo } from "react"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 interface DashboardToolbarProps {
   isDark: boolean
@@ -41,7 +41,7 @@ export const DashboardToolbar = memo(function DashboardToolbar({
             <path d="M18 6 6 18M6 6l12 12"/>
           </svg>
         </button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: textPrimary, fontFamily: font, letterSpacing: '0.02em' }}>
+        <span style={{ fontSize: 16, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '0.02em' }}>
           Stats
         </span>
       </div>
@@ -53,7 +53,7 @@ export const DashboardToolbar = memo(function DashboardToolbar({
             height: 30, borderRadius: 10, padding: '0 12px',
             background: btnBg, border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 5,
-            color: textMuted, fontSize: 11, fontWeight: 600, fontFamily: font,
+            color: textMuted, fontSize: 11, fontWeight: 400, fontFamily: font,
             transition: 'background 150ms',
           }}
           onMouseEnter={e => (e.currentTarget.style.background = btnHover)}
@@ -73,7 +73,7 @@ export const DashboardToolbar = memo(function DashboardToolbar({
             cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 5,
             color: editMode ? '#d97706' : textMuted,
-            fontSize: 11, fontWeight: 600, fontFamily: font,
+            fontSize: 11, fontWeight: 400, fontFamily: font,
             transition: 'all 150ms',
           }}
         >

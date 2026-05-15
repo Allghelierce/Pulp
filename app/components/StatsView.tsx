@@ -104,7 +104,7 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
+        <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
         <button
           onClick={onEditGoals}
           title="Edit goals"
@@ -168,7 +168,7 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
           const y = cy - 12 + i * 15
           return (
             <text key={`label-${i}`} x={cx} y={y} textAnchor="middle" dominantBaseline="central">
-              <tspan style={{ fontSize: 11, fontWeight: 600, fill: ring.color }}>{pct}% {abbr}</tspan>
+              <tspan style={{ fontSize: 11, fontWeight: 400, fill: ring.color }}>{pct}% {abbr}</tspan>
             </text>
           )
         })}
@@ -226,7 +226,7 @@ function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean
   return false
 }
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 function LevelIcon({ level, size = 20 }: { level: number; size?: number }) {
   const s = size
@@ -375,13 +375,13 @@ export const StatsView = memo(function StatsView({
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
-              <span style={{ fontSize: 14, fontWeight: 800, color: levelColor, fontFamily: font, lineHeight: 1 }}>{lvl.level}</span>
+              <span style={{ fontSize: 14, fontWeight: 400, color: levelColor, fontFamily: font, lineHeight: 1 }}>{lvl.level}</span>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div>
-                  <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: '"EB Garamond", serif', whiteSpace: 'nowrap', lineHeight: 1 }}>{lvl.name}</h2>
-                  <span style={{ fontSize: 8, color: textMuted, fontWeight: 500 }}>{lvl.currentXp} / {lvl.nextXp} XP</span>
+                  <h2 className="text-[15px] font-normal tracking-widest" style={{ color: textPrimary, fontFamily: 'Crimson Pro, serif', whiteSpace: 'nowrap', lineHeight: 1 }}>{lvl.name}</h2>
+                  <span style={{ fontSize: 8, color: textMuted, fontWeight: 400 }}>{lvl.currentXp} / {lvl.nextXp} XP</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 60, padding: '4px 0', cursor: 'default' }} title={`${lvl.currentXp} / ${lvl.nextXp} XP`}>
                   <div style={{
@@ -397,7 +397,7 @@ export const StatsView = memo(function StatsView({
                     />
                   </div>
                 </div>
-                <span style={{ fontSize: 9, color: textMuted, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {lvl.level + 1}</span>
+                <span style={{ fontSize: 9, color: textMuted, fontWeight: 400, whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {lvl.level + 1}</span>
               </div>
             </div>
           </div>
@@ -423,8 +423,8 @@ export const StatsView = memo(function StatsView({
                   <div key={ci} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {col.map(({ label, value }) => (
                       <div key={label}>
-                        <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: textPrimary, fontFamily: font }}>{value}</span>
+                        <span style={{ fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
+                        <span style={{ fontSize: 14, fontWeight: 400, color: textPrimary, fontFamily: font }}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -433,9 +433,9 @@ export const StatsView = memo(function StatsView({
 
               {/* Today vs Yesterday */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Today</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{todayFocus}m</span>
-                <span style={{ fontSize: 10, fontWeight: 600, color: focusDelta > 0 ? '#22c55e' : focusDelta < 0 ? '#ef4444' : textMuted }}>
+                <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Today</span>
+                <span style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font }}>{todayFocus}m</span>
+                <span style={{ fontSize: 10, fontWeight: 400, color: focusDelta > 0 ? '#22c55e' : focusDelta < 0 ? '#ef4444' : textMuted }}>
                   {focusDelta > 0 ? `+${focusDelta}m` : focusDelta < 0 ? `${focusDelta}m` : '—'}
                 </span>
                 <span style={{ fontSize: 7, color: textMuted }}>vs yesterday</span>
@@ -444,10 +444,10 @@ export const StatsView = memo(function StatsView({
               {/* Notebook Stats */}
               {activeNotebookId && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{activeNotebookName || 'Notebook'}</span>
+                  <span style={{ fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{activeNotebookName || 'Notebook'}</span>
                   <div style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{notebookTrees.length} trees</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: textPrimary, fontFamily: font }}>{notebookSpecies} species</span>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font }}>{notebookTrees.length} trees</span>
+                    <span style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font }}>{notebookSpecies} species</span>
                   </div>
                 </div>
               )}
@@ -467,14 +467,14 @@ export const StatsView = memo(function StatsView({
                 { key: 'sessions' as const, label: 'Sessions', color: '#f59e0b' },
               ]).map(({ key, label, color }) => (
                 <div key={key} style={{ flex: 1 }}>
-                  <label style={{ fontSize: 8, fontWeight: 600, color: color, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 3 }}>{label}</label>
+                  <label style={{ fontSize: 8, fontWeight: 400, color: color, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 3 }}>{label}</label>
                   <input
                     type="number"
                     min={1}
                     value={draftGoals[key]}
                     onChange={e => setDraftGoals(g => ({ ...g, [key]: Math.max(1, parseInt(e.target.value) || 1) }))}
                     style={{
-                      width: '100%', fontSize: 13, fontWeight: 700, fontFamily: font,
+                      width: '100%', fontSize: 13, fontWeight: 400, fontFamily: font,
                       color: textPrimary, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                       border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                       borderRadius: 6, padding: '4px 8px', outline: 'none',
@@ -491,7 +491,7 @@ export const StatsView = memo(function StatsView({
                 style={{
                   alignSelf: 'flex-end', padding: '5px 14px', borderRadius: 6,
                   background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer',
-                  fontSize: 10, fontWeight: 700, fontFamily: font,
+                  fontSize: 10, fontWeight: 400, fontFamily: font,
                 }}
               >
                 Save
@@ -590,7 +590,7 @@ export const StatsView = memo(function StatsView({
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: '"EB Garamond", serif' }}>Consistency</span>
+                          <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Crimson Pro, serif' }}>Consistency</span>
                           {currentStreak > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                               <motion.svg
@@ -602,7 +602,7 @@ export const StatsView = memo(function StatsView({
                                 <path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z" />
                                 <path d="M12 12c0 2-1.5 3-1.5 4.5a1.5 1.5 0 003 0c0-1.5-1.5-2.5-1.5-4.5z" fill="#fbbf24" />
                               </motion.svg>
-                              <span style={{ fontSize: 12, fontWeight: 800, color: fireColor, fontFamily: '"EB Garamond", serif' }}>{currentStreak}</span>
+                              <span style={{ fontSize: 12, fontWeight: 400, color: fireColor, fontFamily: 'Crimson Pro, serif' }}>{currentStreak}</span>
                             </div>
                           )}
                         </div>
@@ -690,7 +690,7 @@ export const StatsView = memo(function StatsView({
               className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
               style={{ position: 'relative', height: 90, overflow: 'hidden', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
             >
-              <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: '"EB Garamond", serif', zIndex: 2 }}>Recently Grown</span>
+              <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Crimson Pro, serif', zIndex: 2 }}>Recently Grown</span>
               <div style={{
                 position: 'absolute', inset: 0,
                 background: isDark

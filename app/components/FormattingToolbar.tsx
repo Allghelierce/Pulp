@@ -27,7 +27,7 @@ export const FormattingToolbar = memo(function FormattingToolbar({
 
         {/* Text style */}
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
-          <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-bold text-[13px]`} title="Bold">B</button>
+          <button onMouseDown={e=>{e.preventDefault();execCmd("bold")}} className={`${btnBase} font-normal text-[13px]`} title="Bold">B</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("italic")}} className={`${btnBase} italic font-serif text-[14px]`} title="Italic">I</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("underline")}} className={`${btnBase} underline text-[13px]`} title="Underline">U</button>
           <button onMouseDown={e=>{e.preventDefault();execCmd("strikeThrough")}} className={`${btnBase} line-through text-[13px]`} title="Strikethrough">S</button>
@@ -37,7 +37,7 @@ export const FormattingToolbar = memo(function FormattingToolbar({
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
           <div className="relative" title="Text color">
             <input type="color" onMouseDown={saveSelection} onInput={e => execCmd("foreColor", (e.target as HTMLInputElement).value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-            <div className={`${btnBase} text-[11px] font-bold pointer-events-none`}>A</div>
+            <div className={`${btnBase} text-[11px] font-normal pointer-events-none`}>A</div>
           </div>
           <button
             onMouseDown={e=>{
@@ -56,7 +56,7 @@ export const FormattingToolbar = memo(function FormattingToolbar({
               saveSelection()
               editorRef.current?.focus()
             }}
-            className={`${btnBase} text-[10px] font-bold`}
+            className={`${btnBase} text-[10px] font-normal`}
             style={{ backgroundColor: "#fef08a" }}
             title="Highlight (click again to remove)"
           >H</button>
@@ -94,13 +94,13 @@ export const FormattingToolbar = memo(function FormattingToolbar({
         {/* Blocks */}
         <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-zinc-200">
           <button onMouseDown={e=>{e.preventDefault();insertHTML(`<blockquote style="border-left:4px solid ${accent};padding:8px 16px;margin:8px 0;color:#888;font-style:italic;background:#f7f0f2;border-radius:0 8px 8px 0">Quote…</blockquote><br/>`)}} className={`${btnBase} text-base`} title="Blockquote">❝</button>
-          <button onMouseDown={e=>{e.preventDefault(); onInsertHLine?.()}} className={`${btnBase} font-bold text-xs`} title="Divider">—</button>
+          <button onMouseDown={e=>{e.preventDefault(); onInsertHLine?.()}} className={`${btnBase} font-normal text-xs`} title="Divider">—</button>
         </div>
 
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: '"EB Garamond", serif' }}>
+      <div className="flex items-center gap-3 shrink-0 pl-2 pr-1" style={{ fontFamily: 'Crimson Pro, serif' }}>
         
 
         {/* Share Button */}

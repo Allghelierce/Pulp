@@ -15,7 +15,7 @@ const GEM_PACKS = [
   { id: "chest", amount: 40, price: "$5.99", label: "Chest" },
 ]
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 const accent = '#d97706'
 
 function GemShape({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
@@ -143,11 +143,11 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
             {/* Header */}
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <div>
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: '#dcd8d0', fontFamily: font, margin: 0, letterSpacing: '-0.01em' }}>
+                <h2 style={{ fontSize: 15, fontWeight: 400, color: '#dcd8d0', fontFamily: font, margin: 0, letterSpacing: '-0.01em' }}>
                   Get Gems
                 </h2>
                 <p style={{ fontSize: 11, color: '#5a5650', marginTop: 2, fontFamily: font }}>
-                  You have <span style={{ color: accent, fontWeight: 600 }}>{gems}</span> <GemIcon size={11} />
+                  You have <span style={{ color: accent, fontWeight: 400 }}>{gems}</span> <GemIcon size={11} />
                 </p>
               </div>
               <button
@@ -185,19 +185,19 @@ export const GemStoreModal = memo(function GemStoreModal({ isOpen, onClose, gems
                   {pack.popular && (
                     <div style={{
                       position: 'absolute', top: 0, left: 0, right: 0,
-                      fontSize: 8, fontWeight: 700, color: '#fff', background: accent,
+                      fontSize: 8, fontWeight: 400, color: '#fff', background: accent,
                       padding: '2px 0', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em',
                     }}>
                       Popular
                     </div>
                   )}
                   <span style={{ marginTop: pack.popular ? 4 : 0 }}>{(() => { const Sprite = PACK_SPRITES[pack.id]; return Sprite ? <Sprite size={52} /> : <GemIcon size={26} /> })()}</span>
-                  <span style={{ fontSize: 18, fontWeight: 600, color: '#dcd8d0', fontFamily: font }}>
+                  <span style={{ fontSize: 18, fontWeight: 400, color: '#dcd8d0', fontFamily: font }}>
                     {pack.amount}
                   </span>
                   <span style={{ fontSize: 10, color: '#5a5650', fontFamily: font }}>{pack.label}</span>
                   <span style={{
-                    fontSize: 12, fontWeight: 600, color: accent,
+                    fontSize: 12, fontWeight: 400, color: accent,
                     background: `${accent}10`, borderRadius: 8, padding: '4px 12px',
                     width: '100%', textAlign: 'center', fontFamily: font,
                   }}>

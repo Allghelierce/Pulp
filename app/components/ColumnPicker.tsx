@@ -5,7 +5,7 @@ export function ColumnPicker({ onSelect }: { onSelect: (n: number) => void }) {
   const [hovered, setHovered] = useState(0)
   return (
     <div>
-      <p className="text-[11px] font-medium text-zinc-500 mb-2.5 text-center">Insert columns</p>
+      <p className="text-[11px] font-normal text-zinc-500 mb-2.5 text-center">Insert columns</p>
       <div className="flex gap-2">
         {[1, 2, 3].map(n => (
           <button
@@ -23,7 +23,7 @@ export function ColumnPicker({ onSelect }: { onSelect: (n: number) => void }) {
                 />
               ))}
             </div>
-            <span className={`text-[10px] font-medium transition-colors ${hovered === n ? "text-blue-600" : "text-zinc-400"}`}>
+            <span className={`text-[10px] font-normal transition-colors ${hovered === n ? "text-blue-600" : "text-zinc-400"}`}>
               {n === 1 ? "One" : n === 2 ? "Two" : "Three"}
             </span>
           </button>

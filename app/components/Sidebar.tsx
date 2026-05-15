@@ -41,7 +41,7 @@ function ArchiveSection({ archivedNotes, onUnarchiveNote }: {
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 shrink-0" style={{ display: 'block', transform: 'translateY(0.5px)' }}>
           <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
         </svg>
-        <span className="text-[10px] font-bold text-zinc-400 tracking-wide leading-none">Archive</span>
+        <span className="text-[10px] font-normal text-zinc-400 tracking-wide leading-none">Archive</span>
         <span className="text-[9px] text-zinc-700 tabular-nums leading-none">({archivedNotes.length})</span>
       </div>
       {/* Scrollable list */}
@@ -606,7 +606,7 @@ export const Sidebar = memo(function Sidebar({
 
         {mini ? (
           <div className="relative flex flex-col items-center h-full z-10 pt-5 pb-4">
-            <span className="mb-6 shrink-0" style={{ fontFamily: '"EB Garamond", serif', fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
+            <span className="mb-6 shrink-0" style={{ fontFamily: '"EB Garamond", serif', fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
             <div className="flex flex-col items-center gap-1.5 px-2 w-full">
               {onOpenShop && (
                 <button onClick={onOpenShop} title="Market" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
@@ -654,7 +654,7 @@ export const Sidebar = memo(function Sidebar({
               <circle cx="14" cy="14" r="1.8" fill="#92400e" fillOpacity="0.75" />
               <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
             </svg>
-            <h1 style={{ fontFamily: '"EB Garamond", serif', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp <span style={{ fontSize: 10, fontWeight: 500, color: '#71717a', letterSpacing: '0.05em', verticalAlign: 'super' }}>beta</span></h1>
+            <h1 style={{ fontFamily: '"EB Garamond", serif', fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp <span style={{ fontSize: 10, fontWeight: 400, color: '#71717a', letterSpacing: '0.05em', verticalAlign: 'super' }}>beta</span></h1>
           </div>
           <div ref={searchRef} className="relative">
             <div className="relative">
@@ -700,7 +700,7 @@ export const Sidebar = memo(function Sidebar({
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
-                          <span className="text-[11px] font-semibold text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
+                          <span className="text-[11px] font-normal text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
                           {r.matchType !== "title" && (
                             <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
                           )}
@@ -708,7 +708,7 @@ export const Sidebar = memo(function Sidebar({
                         {r.matchType !== "title" && (
                           <p className="text-[10px] text-zinc-500 leading-relaxed truncate">{r.snippet}</p>
                         )}
-                        <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5" style={{ color: r.matchType === "title" ? "#f59e0b" : r.matchType === "box" ? "#8b5cf6" : "#71717a" }}>
+                        <span className="text-[8px] uppercase tracking-widest font-normal mt-0.5" style={{ color: r.matchType === "title" ? "#f59e0b" : r.matchType === "box" ? "#8b5cf6" : "#71717a" }}>
                           {r.matchType === "title" ? "Title" : r.matchType === "box" ? "Textbox" : "Page content"}
                         </span>
                       </button>
@@ -722,7 +722,7 @@ export const Sidebar = memo(function Sidebar({
                               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" />
                             </svg>
                           )}
-                          <span className="text-[9px] uppercase tracking-widest font-bold text-orange-400/70">
+                          <span className="text-[9px] uppercase tracking-widest font-normal text-orange-400/70">
                             {aiSearching ? "Searching with AI…" : "AI Results"}
                           </span>
                         </div>
@@ -740,11 +740,11 @@ export const Sidebar = memo(function Sidebar({
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
-                              <span className="text-[11px] font-semibold text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
+                              <span className="text-[11px] font-normal text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
                               <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
                             </div>
                             <p className="text-[10px] text-orange-400/60 leading-relaxed truncate">{r.reason}</p>
-                            <span className="text-[8px] uppercase tracking-widest font-bold mt-0.5 text-orange-400/50">Semantic match</span>
+                            <span className="text-[8px] uppercase tracking-widest font-normal mt-0.5 text-orange-400/50">Semantic match</span>
                           </button>
                         ))}
                       </>
@@ -761,20 +761,20 @@ export const Sidebar = memo(function Sidebar({
           {onOpenShop && (
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
-              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Market</span>
+              <span className="text-[12px] font-normal text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>Market</span>
               <ShopCountdown />
             </button>
           )}
           {onOpenStats && (
             <button onClick={onOpenStats} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Stats</span>
+              <span className="text-[12px] font-normal text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>Stats</span>
             </button>
           )}
           {onOpenLeaderboard && (
             <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-              <span className="text-[12px] font-medium text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>Leaderboard</span>
+              <span className="text-[12px] font-normal text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>Leaderboard</span>
             </button>
           )}
           <div className="mt-1.5 mx-[-8px] border-b border-white/5" />
@@ -785,7 +785,7 @@ export const Sidebar = memo(function Sidebar({
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Binder</p>
+                <p className="text-[10px] font-normal text-zinc-400 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>Binder</p>
                 {/* Get rid of the shelf for now
                 <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
@@ -797,13 +797,13 @@ export const Sidebar = memo(function Sidebar({
                 <div className="relative flex items-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); onAddNote(null) }}
-                    className="text-[10px] px-2 py-1 rounded transition-colors leading-none font-medium text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40"
-                    style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}
+                    className="text-[10px] px-2 py-1 rounded transition-colors leading-none font-normal text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40"
+                    style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}
                   >
                     + New
                   </button>
                 </div>
-                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-medium ml-0.5" style={{ fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }}>+ Folder</button>
+                <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-normal ml-0.5" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>+ Folder</button>
               </div>
             </div>
 
@@ -838,14 +838,14 @@ export const Sidebar = memo(function Sidebar({
               </div>
             ))}
             {topLevelNotes.length === 0 && folders.length === 0 && (
-              <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+              <p className="px-10 py-1 text-[10px] text-zinc-700 font-normal italic">None</p>
             )}
           </div>
 
           {/* Bookmarks Section */}
           <div className="mb-6 pt-4">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Bookmarks</p>
+              <p className="text-[10px] font-normal text-zinc-400 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>Bookmarks</p>
             </div>
             {bookmarks && bookmarks.length > 0 ? (
               bookmarks.filter(b => b.noteId === activeTabId).map((b: Bookmark, idx: number) => (
@@ -859,7 +859,7 @@ export const Sidebar = memo(function Sidebar({
                   className={`relative group flex items-center cursor-pointer py-1.5 pl-6 pr-2 text-[#a1a1aa] hover:bg-white/5 transition-all ${draggedBookmarkId === b.id ? "opacity-30" : ""} ${bookmarkTargetId === b.id ? "border-t-2" : ""}`}
                   style={{ borderTopColor: bookmarkTargetId === b.id ? accent : "transparent" }}
                 >
-                  <span className="shrink-0 text-[10px] font-bold text-zinc-600 w-4 text-right">{idx + 1}.</span>
+                  <span className="shrink-0 text-[10px] font-normal text-zinc-600 w-4 text-right">{idx + 1}.</span>
                   {renamingBookmarkId === b.id ? (
                     <input
                       autoFocus
@@ -909,20 +909,20 @@ export const Sidebar = memo(function Sidebar({
                 </div>
               ))
             ) : (
-              <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+              <p className="px-10 py-1 text-[10px] text-zinc-700 font-normal italic">None</p>
             )}
           </div>
           {/* Backlinks Section */}
           <div className="mb-6 pt-4">
             <div className="flex items-center justify-between px-6 mb-2">
-              <p className="text-[10px] font-bold text-zinc-400 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>Backlinks</p>
+              <p className="text-[10px] font-normal text-zinc-400 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>Backlinks</p>
             </div>
             {(() => {
               const bls = activeTabId ? notes.filter(n => n.id !== activeTabId && (
                 n.pages.some(p => p.includes(`data-backlink-id="${activeTabId}"`)) ||
                 Object.values(n.boxes).some(pageBoxes => (pageBoxes || []).some(b => b.content.includes(`data-backlink-id="${activeTabId}"`)))
               )) : []
-              if (bls.length === 0) return <p className="px-10 py-1 text-[10px] text-zinc-700 font-medium italic">None</p>
+              if (bls.length === 0) return <p className="px-10 py-1 text-[10px] text-zinc-700 font-normal italic">None</p>
               return bls.map(b => (
                 <div key={b.id} className="relative group flex items-center transition-all">
                   <div
@@ -967,7 +967,7 @@ export const Sidebar = memo(function Sidebar({
                 <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
                 <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
               </svg>
-              <span className={`text-[13px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
+              <span className={`text-[13px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50 group-hover:text-amber-500/70"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>Focus</span>
             </button>
           </div>
         )}

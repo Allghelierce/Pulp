@@ -3,7 +3,7 @@ import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const rarityColors: Record<string, string> = {
   common: '#a1a1aa',
@@ -34,7 +34,7 @@ const GroveOverviewWidget = memo(function GroveOverviewWidget({ isDark, grove }:
   return (
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <span style={{ fontSize: 28, fontWeight: 700, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{total}</span>
+        <span style={{ fontSize: 28, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{total}</span>
         <span style={{ fontSize: 10, color: textMuted }}>total trees</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -42,13 +42,13 @@ const GroveOverviewWidget = memo(function GroveOverviewWidget({ isDark, grove }:
           const pct = total > 0 ? (count / total) * 100 : 0
           return (
             <div key={rarity} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 8, fontWeight: 600, color: rarityColors[rarity] ?? textMuted, textTransform: 'capitalize', width: 55, flexShrink: 0 }}>
+              <span style={{ fontSize: 8, fontWeight: 400, color: rarityColors[rarity] ?? textMuted, textTransform: 'capitalize', width: 55, flexShrink: 0 }}>
                 {rarity}
               </span>
               <div style={{ flex: 1, height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: rarityColors[rarity] ?? textMuted, transition: 'width 500ms ease' }} />
               </div>
-              <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, width: 20, textAlign: 'right' }}>{count}</span>
+              <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, width: 20, textAlign: 'right' }}>{count}</span>
             </div>
           )
         })}

@@ -100,7 +100,7 @@ function SegmentedControl({ options, value, onChange, isDark }: {
   isDark: boolean;
 }) {
   return (
-    <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-semibold`}>
+    <div className={`flex rounded-lg overflow-hidden border p-0.5 gap-0.5 ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-zinc-100"} text-[11px] font-normal`}>
       {options.map(([val, label]) => (
         <button
           key={val}
@@ -245,12 +245,12 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-            <p className={`text-[11px] font-bold tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Settings</p>
+            <p className={`text-[11px] font-normal tracking-widest ${isDark ? "text-zinc-600" : "text-zinc-400"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>Settings</p>
           </div>
           <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-0.5">
             {visibleGroups.map(group => (
               <div key={group.name} className={group.name === "Premium" ? (isDark ? "pt-3 mt-3 border-t border-zinc-800" : "pt-3 mt-3 border-t border-zinc-300/40") : "mb-1"}>
-                <p className={`text-[9.5px] font-bold tracking-wide px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
+                <p className={`text-[9.5px] font-normal tracking-wide px-3 mb-1.5 ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>{group.name}</p>
                 {group.tabs.map(tab => {
                   const isPremium = tab.id === "subscription"
                   const isActive = activeTab === tab.id
@@ -258,7 +258,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     <button
                       key={tab.id}
                       onClick={() => { setActiveTab(tab.id as SettingsTabId); setSearchQuery("") }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[12.5px] font-normal transition-all ${
                         isActive
                           ? isPremium
                             ? isDark ? "bg-[#d97706]/10 text-[#d97706]" : "bg-[#d97706]/10 text-[#d97706]"
@@ -277,7 +277,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             ))}
           </nav>
           <div className={`px-5 py-4 border-t ${isDark ? "border-zinc-800" : "border-zinc-200/60"}`}>
-            <p className={`text-[10px] font-medium ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Pulp · v1.0.0</p>
+            <p className={`text-[10px] font-normal ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Pulp · v1.0.0</p>
           </div>
         </div>
 
@@ -285,10 +285,10 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className={`px-8 pt-6 pb-4 border-b ${isDark ? "border-zinc-800/80" : "border-zinc-200/70"} shrink-0 flex items-start justify-between`}>
             <div>
-              <h2 className="text-[15px] font-bold tracking-widest" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
+              <h2 className="text-[15px] font-normal tracking-widest" style={{ fontFamily: 'Crimson Pro, serif', color: isDark ? '#dcd8d0' : '#2a2620' }}>
                 {SETTINGS_TABS.find(t => t.id === activeTab)?.label}
               </h2>
-              <p className="text-[11px] mt-0.5" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
+              <p className="text-[11px] mt-0.5" style={{ fontFamily: 'Crimson Pro, serif', color: isDark ? '#5a5650' : '#a8a4a0' }}>
                 {TAB_DESCRIPTIONS[activeTab] ?? ""}
               </p>
             </div>
@@ -325,7 +325,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <span className="flex items-center justify-center w-full h-full text-[15px] font-bold text-white">
+                      <span className="flex items-center justify-center w-full h-full text-[15px] font-normal text-white">
                         {user?.email?.[0]?.toUpperCase() ?? "?"}
                       </span>
                     )}
@@ -338,8 +338,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     </div>
                   </button>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[13px] font-semibold truncate ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{user?.email ?? "Not signed in"}</p>
-                    <span className={`inline-flex items-center gap-1 mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
+                    <p className={`text-[13px] font-normal truncate ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{user?.email ?? "Not signed in"}</p>
+                    <span className={`inline-flex items-center gap-1 mt-0.5 text-[10px] font-normal px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
                   </div>
                 </div>
                 {user ? (
@@ -350,7 +350,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     control={
                       <button
                         onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
-                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-red-400 bg-red-950/40 hover:bg-red-950/70 border border-red-900/50" : "text-red-600 bg-red-50 hover:bg-red-100 border border-red-100"}`}
+                        className={`text-[11.5px] font-normal px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-red-400 bg-red-950/40 hover:bg-red-950/70 border border-red-900/50" : "text-red-600 bg-red-50 hover:bg-red-100 border border-red-100"}`}
                       >
                         Sign Out
                       </button>
@@ -364,7 +364,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     control={
                       <button
                         onClick={() => window.location.href = "/login"}
-                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-900/50" : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100"}`}
+                        className={`text-[11.5px] font-normal px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/70 border border-emerald-900/50" : "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100"}`}
                       >
                         Sign In
                       </button>
@@ -379,7 +379,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     control={
                       <button
                         onClick={() => { setPwOpen(!pwOpen); setPwMsg(null) }}
-                        className={`text-[11.5px] font-semibold px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}
+                        className={`text-[11.5px] font-normal px-3.5 py-1.5 rounded-lg transition-all ${isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200"}`}
                       >
                         {pwOpen ? "Cancel" : "Change"}
                       </button>
@@ -413,7 +413,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
                     />
                     {pwMsg && (
-                      <p className={`text-[11px] font-medium ${pwMsg.ok ? "text-emerald-500" : "text-red-500"}`}>{pwMsg.text}</p>
+                      <p className={`text-[11px] font-normal ${pwMsg.ok ? "text-emerald-500" : "text-red-500"}`}>{pwMsg.text}</p>
                     )}
                     <button
                       disabled={pwLoading || !pwCurrent || !pwNew || !pwConfirm}
@@ -431,7 +431,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           setPwMsg({ ok: false, text: res.error || "Failed" })
                         }
                       }}
-                      className={`text-[11.5px] font-semibold px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                      className={`text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all mt-1 ${(!pwCurrent || !pwNew || !pwConfirm || pwLoading) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
                     >
                       {pwLoading ? "Updating..." : "Update Password"}
                     </button>
@@ -520,7 +520,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
               <SettingSection title="Personalization" isDark={isDark}>
                 <div className="px-5 py-4">
-                  <p className={`text-[12px] font-semibold mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Accent Color</p>
+                  <p className={`text-[12px] font-normal mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Accent Color</p>
                   <div className="flex flex-wrap gap-3">
                     {ACCENT_COLORS.map(({ hex, name, cost, pro }) => {
                       const id = `accent_${hex}`
@@ -549,13 +549,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <div className="absolute -top-1 -right-1 flex items-center justify-center">
                               {pro ? (
-                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
                             </div>
                           )}
-                          <span className={`text-[9px] font-medium transition-colors ${selected ? (isDark ? "text-zinc-200" : "text-zinc-700") : isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"}`}>{name}</span>
+                          <span className={`text-[9px] font-normal transition-colors ${selected ? (isDark ? "text-zinc-200" : "text-zinc-700") : isDark ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-zinc-600"}`}>{name}</span>
                         </button>
                       )
                     })}
@@ -579,7 +579,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
               <SettingSection title="Font Selection" isDark={isDark}>
                 <div className="px-5 py-4">
-                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Heading Font</p>
+                  <p className={`text-[12px] font-normal mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Heading Font</p>
                   <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Used for large titles and notebook covers</p>
                   <div className="flex flex-wrap gap-2 mb-5">
                     {HEADING_FONT_OPTIONS.map(({ value, label, cost, pro }) => {
@@ -594,7 +594,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                             if (pro) return
                             undefined
                           }}
-                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-normal border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
@@ -608,7 +608,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -618,7 +618,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       )
                     })}
                   </div>
-                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Body Copy Font</p>
+                  <p className={`text-[12px] font-normal mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Body Copy Font</p>
                   <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>The default font for notes and boxes</p>
                   <div className="flex flex-wrap gap-2">
                     {FONT_OPTIONS.map(({ value, label, cost, pro }) => {
@@ -633,7 +633,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                             if (pro) return
                             undefined
                           }}
-                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-normal border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
@@ -647,7 +647,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -674,7 +674,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
               <SettingSection title="Paper & Page" isDark={isDark}>
                 <div className="px-5 py-4">
-                  <p className={`text-[12px] font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Page Style</p>
+                  <p className={`text-[12px] font-normal mb-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Page Style</p>
                   <p className={`text-[10px] mb-3 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>Background ruling on your note pages</p>
                   <div className="flex flex-wrap gap-2">
                     {PAGE_STYLE_OPTIONS.map(({ value, label, cost, pro }) => {
@@ -689,7 +689,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                             if (pro) return
                             undefined
                           }}
-                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-medium border transition-all ${
+                          className={`relative px-3 py-1.5 rounded-md text-[11px] font-normal border transition-all ${
                             selected
                               ? isDark ? "bg-zinc-700 border-zinc-600 text-white" : "bg-zinc-900 border-zinc-900 text-white"
                               : unlocked
@@ -702,7 +702,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                           {!unlocked && (
                             <span className="absolute -top-1.5 -right-1.5">
                               {pro ? (
-                                <span className="text-[7px] font-black bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
+                                <span className="text-[7px] font-normal bg-amber-500 text-white px-1 rounded-full leading-tight">PRO</span>
                               ) : (
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isDark ? "#a1a1aa" : "#71717a"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                               )}
@@ -816,13 +816,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 className={`text-[13px] font-bold ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{a.title}</h4>
-                            {isClaimed && <span className="text-[10px] text-green-500 font-bold uppercase tracking-widest text-[9px]">Claimed ✓</span>}
+                            <h4 className={`text-[13px] font-normal ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{a.title}</h4>
+                            {isClaimed && <span className="text-[10px] text-green-500 font-normal uppercase tracking-widest text-[9px]">Claimed ✓</span>}
                           </div>
                           <p className={`text-[11px] mt-1 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{a.description}</p>
                         </div>
                         <div className="flex flex-col items-end shrink-0">
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-normal border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
                             <PulpIcon size={10} /> {a.reward}
                           </div>
                         </div>
@@ -845,18 +845,18 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       )}
 
                       {isClaimed ? (
-                        <div className={`text-[10px] font-bold uppercase tracking-[0.2em] text-center py-2.5 rounded-lg ${isDark ? "bg-zinc-800/20 text-zinc-600" : "bg-zinc-50 text-zinc-300"}`}>
+                        <div className={`text-[10px] font-normal uppercase tracking-[0.2em] text-center py-2.5 rounded-lg ${isDark ? "bg-zinc-800/20 text-zinc-600" : "bg-zinc-50 text-zinc-300"}`}>
                           Claimed
                         </div>
                       ) : isClaimable ? (
                         <button 
                           onClick={() => onClaimAchievement(a.id)}
-                          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] ring-1 ring-white/20"
+                          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] ring-1 ring-white/20"
                         >
                           Claim Reward
                         </button>
                       ) : (
-                        <div className={`text-[10px] font-bold uppercase tracking-[0.2em] text-center py-2.5 rounded-lg border border-dashed transition-colors ${isDark ? "border-zinc-800/80 text-zinc-700" : "border-zinc-200/60 text-zinc-300"}`}>
+                        <div className={`text-[10px] font-normal uppercase tracking-[0.2em] text-center py-2.5 rounded-lg border border-dashed transition-colors ${isDark ? "border-zinc-800/80 text-zinc-700" : "border-zinc-200/60 text-zinc-300"}`}>
                           {a.goal ? "In Progress" : "Locked"}
                         </div>
                       )}
@@ -892,7 +892,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                          </span>
                          <button
                            onClick={() => onUnarchiveNote?.(an.id)}
-                           className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
+                           className={`text-[11px] font-normal px-2.5 py-1 rounded transition-colors opacity-0 group-hover:opacity-100 ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
                          >
                            Unarchive
                          </button>
@@ -910,12 +910,12 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                </SettingSection>
                <SettingSection title="Exports" isDark={isDark}>
                  <div className="flex flex-col gap-2 p-5">
-                   <button className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm"}`}>
+                   <button className={`w-full py-2.5 rounded-lg border text-[12px] font-normal transition-all ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm"}`}>
                      Export Binder as JSON
                    </button>
                    <button 
                      onClick={() => { if (confirm("Clear all local storage? This cannot be undone.")) { localStorage.clear(); window.location.reload(); } }}
-                     className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all ${isDark ? "bg-red-900/20 border-red-900/30 hover:bg-red-900/30 text-red-400" : "bg-red-50 border-red-100 hover:bg-red-100/50 text-red-600 shadow-sm"}`}
+                     className={`w-full py-2.5 rounded-lg border text-[12px] font-normal transition-all ${isDark ? "bg-red-900/20 border-red-900/30 hover:bg-red-900/30 text-red-400" : "bg-red-50 border-red-100 hover:bg-red-100/50 text-red-600 shadow-sm"}`}
                    >
                      Clear Local Cache
                    </button>
@@ -934,13 +934,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                          <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                            <button
                              onClick={() => onRestoreNote(tn.id)}
-                             className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
+                             className={`text-[11px] font-normal px-2.5 py-1 rounded transition-colors ${isDark ? "text-green-400 hover:bg-green-500/20" : "text-green-600 hover:bg-green-100/50"}`}
                            >
                              Restore
                            </button>
                            <button
                              onClick={() => onPermanentlyDeleteNote(tn.id)}
-                             className={`text-[11px] font-medium px-2.5 py-1 rounded transition-colors ${isDark ? "text-red-400 hover:bg-red-500/20" : "text-red-600 hover:bg-red-100/50"}`}
+                             className={`text-[11px] font-normal px-2.5 py-1 rounded transition-colors ${isDark ? "text-red-400 hover:bg-red-500/20" : "text-red-600 hover:bg-red-100/50"}`}
                            >
                              Delete
                            </button>
@@ -957,7 +957,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                      title={
                        <div className="flex items-center gap-2">
                          Dev Mode
-                         <span className="px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-500 text-[8px] font-black uppercase tracking-tighter border border-orange-500/30">
+                         <span className="px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-500 text-[8px] font-normal uppercase tracking-tighter border border-orange-500/30">
                            Verified Authority
                          </span>
                        </div>
@@ -973,7 +973,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                )}
 
                <div className="mb-7">
-                <p className={`text-[10px] font-semibold tracking-wide mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
+                <p className={`text-[10px] font-normal tracking-wide mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
                   Danger Zone
                 </p>
                 <div className={`rounded-xl border overflow-hidden divide-y ${
@@ -1029,11 +1029,11 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(217,119,6,0.15)' }}>
                         <Sparkles className="w-4.5 h-4.5" style={{ color: '#d97706' }} />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: '#d97706' }}>
+                      <span className="text-[9px] font-normal uppercase tracking-[0.15em] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: '#d97706' }}>
                         Upgrade
                       </span>
                     </div>
-                    <h3 className={`text-[18px] font-extrabold tracking-tight ${isDark ? "text-zinc-50" : "text-zinc-900"}`}>
+                    <h3 className={`text-[18px] font-normal tracking-tight ${isDark ? "text-zinc-50" : "text-zinc-900"}`}>
                       Grow your world
                     </h3>
                     <p className={`text-[12px] mt-1 max-w-[320px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
@@ -1053,7 +1053,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-zinc-800 text-amber-500" : "bg-amber-50 text-amber-600"}`}>
                         {perk.icon}
                       </div>
-                      <span className={`text-[11px] font-bold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{perk.label}</span>
+                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{perk.label}</span>
                       <span className={`text-[9.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{perk.sub}</span>
                     </div>
                   ))}
@@ -1104,17 +1104,17 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6 9 17l-5-5"/></svg>
                     </div>
                     <div>
-                      <span className={`text-[11px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>7-day free trial</span>
+                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>7-day free trial</span>
                       <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>· Cancel anytime, no questions asked</span>
                     </div>
                   </div>
 
                   <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-zinc-50 border-zinc-200/60"}`}>
                     <div className="flex-1 min-w-0">
-                      <span className={`text-[11px] font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
+                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
                       <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Volume licensing</span>
                     </div>
-                    <button onClick={() => window.open("mailto:pulpsupport@gmail.com?subject=Pulp Enterprise %26 Education Inquiry", "_blank")} className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-semibold transition-all shrink-0`}>
+                    <button onClick={() => window.open("mailto:pulpsupport@gmail.com?subject=Pulp Enterprise %26 Education Inquiry", "_blank")} className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-normal transition-all shrink-0`}>
                       Contact Sales
                     </button>
                   </div>
@@ -1146,7 +1146,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         {item.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
+                        <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
                         <p className={`text-[11.5px] leading-relaxed mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{item.desc}</p>
                       </div>
                     </div>
@@ -1166,7 +1166,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                         {item.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
+                        <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{item.title}</p>
                         <p className={`text-[11.5px] leading-relaxed mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{item.desc}</p>
                       </div>
                     </div>
@@ -1204,7 +1204,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     </div>
                     <div className="min-w-0">
-                      <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>General Support</p>
+                      <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>General Support</p>
                       <a href="mailto:pulpsupport@gmail.com" className="text-[11.5px] text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
                     </div>
                   </div>
@@ -1213,7 +1213,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     </div>
                     <div className="min-w-0">
-                      <p className={`text-[12px] font-semibold ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Report a Bug</p>
+                      <p className={`text-[12px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>Report a Bug</p>
                       <p className={`text-[11.5px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                         Found something broken? Email us at{" "}
                         <a href="mailto:pulpsupport@gmail.com?subject=Bug%20Report" className="text-[#d97706] hover:underline">pulpsupport@gmail.com</a>
@@ -1230,7 +1230,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             <p className={`text-[11px] ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>Changes save automatically</p>
             <button
               onClick={onClose}
-              className="px-6 py-2 rounded-xl text-[12.5px] font-bold text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+              className="px-6 py-2 rounded-xl text-[12.5px] font-normal text-white transition-all hover:scale-105 active:scale-[0.97] shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
               style={{ backgroundColor: '#d97706' }}
             >Save changes</button>
           </div>
@@ -1245,7 +1245,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
               <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-1 shrink-0">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
               </div>
-              <p className="text-[15px] font-semibold">
+              <p className="text-[15px] font-normal">
                 {deleteConfirmType === "notes" ? "Delete all notes?" : "Delete account?"}
               </p>
               <p className={`text-[12.5px] leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
@@ -1256,7 +1256,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
               <div className="mt-2 space-y-3">
                 <div className="space-y-1">
-                  <label className={`text-[11px] font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Username or Email</label>
+                  <label className={`text-[11px] font-normal ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Username or Email</label>
                   <input
                     type="text"
                     value={deleteUsername}
@@ -1267,7 +1267,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className={`text-[11px] font-medium ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Password</label>
+                  <label className={`text-[11px] font-normal ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>Verify Password</label>
                   <input
                     type="password"
                     value={deletePassword}
@@ -1283,7 +1283,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             <div className="flex items-center gap-2.5 mt-2">
               <button
                 onClick={() => { setDeleteConfirmType(null); setDeleteUsername(""); setDeletePassword(""); }}
-                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl border transition-all ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
+                className={`flex-1 text-[12.5px] font-normal py-2.5 rounded-xl border transition-all ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
               >
                 Cancel
               </button>
@@ -1331,7 +1331,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     setDeleting(false);
                   }
                 }}
-                className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword || deleting) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
+                className={`flex-1 text-[12.5px] font-normal py-2.5 rounded-xl transition-all active:scale-[0.97] ${(!deleteUsername || !deletePassword || deleting) ? "bg-red-500/50 text-white/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
               >
                 {deleting ? "Deleting..." : (deleteConfirmType === "notes" ? "Delete All" : "Delete Account")}
               </button>
@@ -1367,7 +1367,7 @@ function SyncSection({ isDark, onSyncNow }: { isDark: boolean; onSyncNow: () => 
         <button
           onClick={handleSync}
           disabled={syncing}
-          className={`w-full py-2.5 rounded-lg border text-[12px] font-semibold transition-all flex items-center justify-center gap-2 ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 disabled:opacity-50" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm disabled:opacity-50"}`}
+          className={`w-full py-2.5 rounded-lg border text-[12px] font-normal transition-all flex items-center justify-center gap-2 ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300 disabled:opacity-50" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm disabled:opacity-50"}`}
         >
           {syncing ? (
             <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Syncing...</>
@@ -1413,8 +1413,8 @@ function StorageBar({ isDark }: { isDark: boolean }) {
   return (
     <div className="px-5 py-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className={`text-[12px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Used space</span>
-        <span className={`text-[11px] font-mono tabular-nums ${isHigh ? "text-amber-500 font-semibold" : (isDark ? "text-zinc-500" : "text-zinc-400")}`}>
+        <span className={`text-[12px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Used space</span>
+        <span className={`text-[11px] font-mono tabular-nums ${isHigh ? "text-amber-500 font-normal" : (isDark ? "text-zinc-500" : "text-zinc-400")}`}>
           {usedMB} MB / {quotaMB} MB
         </span>
       </div>
@@ -1499,7 +1499,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
         )}
         <button
           onClick={() => setIsRecording(true)}
-          className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-bold border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
+          className={`min-w-[40px] px-2 py-1 rounded text-[10px] font-mono font-normal border transition-all active:scale-95 ${isRecording ? (isDark ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500" : "bg-white border-zinc-200 text-zinc-600 shadow-sm hover:border-zinc-400")}`}
         >
           {isRecording ? "Press keys..." : formatShortcutDisplay(currentKey)}
         </button>
@@ -1550,7 +1550,7 @@ function FocusBlockerSection({ isDark, blockedSites, onUpdateConfig, openConfirm
               placeholder="Add a website to block..."
               className={`flex-1 px-4 py-2.5 text-[12px] rounded-xl outline-none transition-colors ${isDark ? "bg-zinc-900/80 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-600" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
             />
-            <button onClick={addSite} className="px-5 py-2.5 rounded-xl text-[11px] font-bold text-white transition-all hover:brightness-110" style={{ background: "#e67e22" }}>
+            <button onClick={addSite} className="px-5 py-2.5 rounded-xl text-[11px] font-normal text-white transition-all hover:brightness-110" style={{ background: "#e67e22" }}>
               Block
             </button>
           </div>
@@ -1563,7 +1563,7 @@ function FocusBlockerSection({ isDark, blockedSites, onUpdateConfig, openConfirm
                   <span className={`flex-1 text-[12px] min-w-0 truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{site}</span>
                   <button
                     onClick={() => removeSite(site)}
-                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-normal transition-all cursor-pointer"
                     style={{
                       background: "rgba(239,68,68,0.1)",
                       border: "1px solid rgba(239,68,68,0.2)",
@@ -1601,7 +1601,7 @@ function BlockList({ placeholder, items, onChange, isDark, description }: {
        <p className={`text-[11.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{description}</p>
        <div className="flex flex-wrap gap-2">
           {items.map((it, i) => (
-             <div key={i} className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border text-[11px] font-bold group ${
+             <div key={i} className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border text-[11px] font-normal group ${
                 isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-700"
              }`}>
                 {it}
@@ -1625,7 +1625,7 @@ function BlockList({ placeholder, items, onChange, isDark, description }: {
           />
           <button 
             onClick={add}
-            className={`px-4 py-2 rounded-xl text-[11px] font-bold tracking-wide ${
+            className={`px-4 py-2 rounded-xl text-[11px] font-normal tracking-wide ${
                isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 shadow-sm"
             }`}
           >

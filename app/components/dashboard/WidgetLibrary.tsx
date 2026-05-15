@@ -3,7 +3,7 @@ import { memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { getWidgetRegistry, type WidgetInstance } from "./widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const categoryLabels: Record<string, string> = {
   progress: 'Progress',
@@ -66,7 +66,7 @@ export const WidgetLibrary = memo(function WidgetLibrary({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: textPrimary, fontFamily: font }}>Widget Library</span>
+              <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>Widget Library</span>
               <button
                 onClick={onClose}
                 style={{
@@ -85,7 +85,7 @@ export const WidgetLibrary = memo(function WidgetLibrary({
             {grouped.map(group => (
               <div key={group.category} style={{ marginBottom: 20 }}>
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: textMuted,
+                  fontSize: 9, fontWeight: 400, color: textMuted,
                   textTransform: 'uppercase', letterSpacing: '0.1em',
                   display: 'block', marginBottom: 8,
                 }}>
@@ -104,7 +104,7 @@ export const WidgetLibrary = memo(function WidgetLibrary({
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: textPrimary, fontFamily: font }}>{def.name}</div>
+                          <div style={{ fontSize: 12, fontWeight: 400, color: textPrimary, fontFamily: font }}>{def.name}</div>
                           <div style={{ fontSize: 9, color: textSecondary, marginTop: 1 }}>{def.description}</div>
                         </div>
                         {existing ? (
@@ -112,7 +112,7 @@ export const WidgetLibrary = memo(function WidgetLibrary({
                             onClick={() => onRemove(existing.instanceId)}
                             style={{
                               flexShrink: 0, marginLeft: 8,
-                              fontSize: 9, fontWeight: 600, fontFamily: font,
+                              fontSize: 9, fontWeight: 400, fontFamily: font,
                               color: isDark ? '#ef4444' : '#dc2626',
                               background: 'none', border: 'none', cursor: 'pointer',
                               padding: '4px 8px', borderRadius: 6,
@@ -125,7 +125,7 @@ export const WidgetLibrary = memo(function WidgetLibrary({
                             onClick={() => onAdd(def.id, def.defaultSize)}
                             style={{
                               flexShrink: 0, marginLeft: 8,
-                              fontSize: 9, fontWeight: 600, fontFamily: font,
+                              fontSize: 9, fontWeight: 400, fontFamily: font,
                               color: '#d97706',
                               background: isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.1)',
                               border: 'none', cursor: 'pointer',

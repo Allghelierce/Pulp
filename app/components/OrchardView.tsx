@@ -2969,7 +2969,7 @@ export const OrchardView = memo(function OrchardView({
               ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
               : 'none',
           }}>
-            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
+            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
               {onOpenLeaderboard && (
                 <button onClick={onOpenLeaderboard} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
@@ -2978,21 +2978,21 @@ export const OrchardView = memo(function OrchardView({
               <div className="flex flex-col items-center justify-center">
                 <div ref={sapCounterRef} className="flex items-center gap-2">
                   <PulpIcon size={18} />
-                  <span className="text-[15px] font-semibold tabular-nums" style={{
+                  <span className="text-[15px] font-normal tabular-nums" style={{
                     color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)',
                     transition: 'transform 0.3s ease, color 0.3s ease',
                     transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
                   }}>{sap}</span>
                 </div>
                 {collectAllAnim.active && collectAllAnim.current < collectAllAnim.total && (
-                  <span className="text-[11px] font-bold tabular-nums" style={{
+                  <span className="text-[11px] font-normal tabular-nums" style={{
                     color: '#d97706',
                     transition: 'opacity 0.3s, transform 0.3s',
                     opacity: 0.85,
                   }}>+{collectAllAnim.current}</span>
                 )}
                 {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
-                  <span className="text-[11px] font-bold tabular-nums" style={{
+                  <span className="text-[11px] font-normal tabular-nums" style={{
                     color: '#d97706',
                     animation: 'sap-merge 0.5s ease-out forwards',
                   }}>+{collectAllAnim.total}</span>
@@ -3001,12 +3001,12 @@ export const OrchardView = memo(function OrchardView({
               <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
               <div className="flex items-center gap-2">
                 <GemIcon size={16} />
-                <span className="text-[15px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
+                <span className="text-[15px] font-normal tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
               </div>
               {onOpenSatchel && (
                 <button onClick={onOpenSatchel} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)', position: 'relative' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 700, color: '#d97706', fontFamily: '"EB Garamond", serif' }}>{inventory.length}</span>}
+                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 400, color: '#d97706', fontFamily: 'Crimson Pro, serif' }}>{inventory.length}</span>}
                 </button>
               )}
               {onOpenShop && (
@@ -3017,7 +3017,7 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
           {/* Collect sap meter button — bottom center */}
-          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
+          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: 'Crimson Pro, serif' }}>
               <div style={{ position: 'relative' }}>
                 {(() => {
                   const available = getAvailableSap()
@@ -3033,7 +3033,7 @@ export const OrchardView = memo(function OrchardView({
                           padding: '8px 22px',
                           minWidth: 145,
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 400,
                           letterSpacing: '0.03em',
                           color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'),
                           cursor: hasSap ? 'pointer' : 'default',
@@ -3064,7 +3064,7 @@ export const OrchardView = memo(function OrchardView({
                     position: 'absolute', left: '50%', top: -28,
                     transform: 'translateX(-50%)',
                     pointerEvents: 'none', zIndex: 999,
-                    fontFamily: '"EB Garamond", serif', fontWeight: 800, fontSize: 20,
+                    fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 20,
                     color: '#d97706', textShadow: '0 1px 6px rgba(0,0,0,0.4)',
                     animation: 'sap-collect 1.2s ease-out forwards',
                   }}>
@@ -3102,7 +3102,7 @@ export const OrchardView = memo(function OrchardView({
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
-                  <span className="text-[9px] tabular-nums font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <span className="text-[9px] tabular-nums font-normal uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Plot {plotPage + 1} <span className="opacity-50">/ {nbUnlocked}</span>
                   </span>
                   {plotPage + 1 < nbUnlocked ? (
@@ -3113,7 +3113,7 @@ export const OrchardView = memo(function OrchardView({
                     <button
                       onClick={unlockNextPlot}
                       disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all disabled:opacity-40"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
                       style={{ color: '#d97706' }}
                       title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
                     >
@@ -3233,7 +3233,7 @@ export const OrchardView = memo(function OrchardView({
                     {tillSvg}
                     {filteredTrees.length === 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
-                        <p className="text-[11px] font-medium" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
+                        <p className="text-[11px] font-normal" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
                           {selectedNotebook === null ? 'Your orchard is empty.' :
                            selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                            'No trees grown for this notebook yet.'}
@@ -3405,7 +3405,7 @@ export const OrchardView = memo(function OrchardView({
                               }}>
                                 <div className="flex items-center gap-1.5">
                                   <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
-                                  <span className="text-[10px] font-bold tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
+                                  <span className="text-[10px] font-normal tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
                                     {typeInfo?.name || tree.type}
                                   </span>
                                 </div>
@@ -3439,10 +3439,10 @@ export const OrchardView = memo(function OrchardView({
           </div>
 
           {/* Tool buttons — left center */}
-          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
+          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
+              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
               style={{
                 width: 36, height: 36,
                 backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
@@ -3456,14 +3456,14 @@ export const OrchardView = memo(function OrchardView({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
             </button>
             {activeTool === 'axe' && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
+              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
                 Tap tree
               </span>
             )}
 
             <button
               onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
+              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
               style={{
                 width: 36, height: 36,
                 backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
@@ -3477,7 +3477,7 @@ export const OrchardView = memo(function OrchardView({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             {editMode && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
+              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
                 Drag to move
               </span>
             )}
@@ -3528,17 +3528,17 @@ export const OrchardView = memo(function OrchardView({
                   <div style={{ transform: 'scale(0.8)' }}>
                     <PlantIcon type={chopTarget.tree.type} size={80} stage={chopTarget.tree.stage} hideGround />
                   </div>
-                  <span className="text-[13px] font-bold" style={{ color: isDark ? '#d4d0c8' : '#3a3630', fontFamily: 'EB Garamond, serif' }}>
+                  <span className="text-[13px] font-normal" style={{ color: isDark ? '#d4d0c8' : '#3a3630', fontFamily: 'EB Garamond, serif' }}>
                     Chop {TREE_TYPES[chopTarget.tree.type]?.name || chopTarget.tree.type}?
                   </span>
                   <div className="flex items-center gap-1.5">
                     <PulpIcon size={14} />
-                    <span className="text-[14px] font-bold" style={{ color: '#d97706' }}>+{chopTarget.sap} sap</span>
+                    <span className="text-[14px] font-normal" style={{ color: '#d97706' }}>+{chopTarget.sap} sap</span>
                   </div>
                   <div className="flex gap-2 mt-1 w-full">
                     <button
                       onClick={() => setChopTarget(null)}
-                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-colors"
                       style={{
                         backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                         color: isDark ? '#8a8780' : '#7a7670',
@@ -3548,7 +3548,7 @@ export const OrchardView = memo(function OrchardView({
                     </button>
                     <button
                       onClick={confirmChop}
-                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-colors"
                       style={{
                         backgroundColor: 'rgba(217,119,6,0.15)',
                         color: '#d97706',
@@ -3635,7 +3635,7 @@ export const OrchardView = memo(function OrchardView({
                         ? `0 20px 60px rgba(0,0,0,0.4), 0 0 ${currentAscension * 12}px ${tierGlow}40, 0 0 0 1px ${tierGlow}60`
                         : `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
                       minWidth: ascensionMode ? 360 : 240, maxWidth: ascensionMode ? 400 : 300,
-                      fontFamily: '"EB Garamond", serif',
+                      fontFamily: 'Crimson Pro, serif',
                       transition: 'min-width 0.2s, max-width 0.2s',
                     }}
                     onClick={e => e.stopPropagation()}
@@ -3653,12 +3653,12 @@ export const OrchardView = memo(function OrchardView({
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: tierGlow || meta.color }} />
-                      <span className="text-[16px] font-bold tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
+                      <span className="text-[16px] font-normal tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
                         {typeInfo?.name || ft.type}
                       </span>
                       {currentAscension > 0 && (
                         <span style={{
-                          fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                          fontSize: 9, fontWeight: 400, letterSpacing: '0.08em',
                           padding: '1px 6px', borderRadius: 4,
                           backgroundColor: `${tierGlow}20`, color: tierGlow,
                           textTransform: 'uppercase',
@@ -3673,7 +3673,7 @@ export const OrchardView = memo(function OrchardView({
                         <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
                           <div className="flex justify-between">
                             <span>Stage</span>
-                            <span style={{ color: meta.color, fontWeight: 600 }}>{stageNames[ft.stage] || 'Unknown'}</span>
+                            <span style={{ color: meta.color, fontWeight: 400 }}>{stageNames[ft.stage] || 'Unknown'}</span>
                           </div>
                           {ft.stage < 4 && (
                             <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
@@ -3692,12 +3692,12 @@ export const OrchardView = memo(function OrchardView({
                           </div>
                           <div className="flex justify-between">
                             <span>Sap rate</span>
-                            <span style={{ color: '#d97706', fontWeight: 600 }}>{sapPerTick}/cycle</span>
+                            <span style={{ color: '#d97706', fontWeight: 400 }}>{sapPerTick}/cycle</span>
                           </div>
                           {currentAscension > 0 && (
                             <div className="flex justify-between">
                               <span>Ascension</span>
-                              <span style={{ color: tierGlow, fontWeight: 600 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
+                              <span style={{ color: tierGlow, fontWeight: 400 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
                             </div>
                           )}
                           {notebook && (
@@ -3711,7 +3711,7 @@ export const OrchardView = memo(function OrchardView({
                           {canAscend && (
                             <button
                               onClick={() => { setAscensionMode(true); setSelectedSacrifices([]) }}
-                              className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                              className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
                               style={{
                                 background: `linear-gradient(135deg, ${tierColors[currentAscension]}30, ${tierColors[currentAscension]}15)`,
                                 border: `1px solid ${tierColors[currentAscension]}40`,
@@ -3723,7 +3723,7 @@ export const OrchardView = memo(function OrchardView({
                           )}
                           <button
                             onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
-                            className="w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            className="w-full py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                             style={{
                               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                               color: isDark ? '#6a6860' : '#9a9690',
@@ -3742,11 +3742,11 @@ export const OrchardView = memo(function OrchardView({
                           }}>
                             <div className="flex justify-between mb-1">
                               <span>Sap cost</span>
-                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 600 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
+                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 400 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
                             </div>
                             <div className="flex justify-between">
                               <span>Sacrifices needed</span>
-                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 600 }}>
+                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 400 }}>
                                 {selectedSacrifices.length}/{sacrificeCount} <span style={{ opacity: 0.5 }}>({rarity}+ mature)</span>
                               </span>
                             </div>
@@ -3796,7 +3796,7 @@ export const OrchardView = memo(function OrchardView({
                                   >
                                     <PlantIcon type={t.type} size={28} stage={4} hideGround />
                                     <div className="flex-1 text-left">
-                                      <div style={{ fontWeight: 600, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
+                                      <div style={{ fontWeight: 400, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
                                       <div style={{ fontSize: 9, opacity: 0.5 }}>{ti?.rarity}{t.ascension ? ` · ${ASCENSION_TIERS[t.ascension - 1]?.name}` : ''}</div>
                                     </div>
                                     <div style={{
@@ -3817,7 +3817,7 @@ export const OrchardView = memo(function OrchardView({
                         <div className="w-full flex gap-2 mt-1">
                           <button
                             onClick={() => { setAscensionMode(false); setSelectedSacrifices([]) }}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                             style={{
                               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                               color: isDark ? '#6a6860' : '#9a9690',
@@ -3828,7 +3828,7 @@ export const OrchardView = memo(function OrchardView({
                           <button
                             onClick={doAscend}
                             disabled={!canAfford}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
                             style={{
                               background: canAfford
                                 ? `linear-gradient(135deg, ${tierColors[currentAscension]}, ${tierColors[currentAscension]}cc)`
@@ -3871,7 +3871,7 @@ export const OrchardView = memo(function OrchardView({
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                     boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     maxWidth: '85vw', maxHeight: '80vh',
-                    fontFamily: '"EB Garamond", serif',
+                    fontFamily: 'Crimson Pro, serif',
                   }}
                   onClick={e => e.stopPropagation()}
                 >
@@ -3884,7 +3884,7 @@ export const OrchardView = memo(function OrchardView({
                   <div className="flex gap-2 w-full">
                     <button
                       onClick={() => setScreenshotData(null)}
-                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                      className="flex-1 py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                       style={{
                         backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                         color: isDark ? '#8a8780' : '#7a7670',
@@ -3894,7 +3894,7 @@ export const OrchardView = memo(function OrchardView({
                     </button>
                     <button
                       onClick={shareScreenshot}
-                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider flex items-center justify-center gap-1.5"
                       style={{
                         backgroundColor: 'rgba(217,119,6,0.15)',
                         color: '#d97706',

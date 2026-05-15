@@ -2,7 +2,7 @@
 import { memo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const TodayVsYesterdayWidget = memo(function TodayVsYesterdayWidget({ isDark, dailyStats }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -18,10 +18,10 @@ const TodayVsYesterdayWidget = memo(function TodayVsYesterdayWidget({ isDark, da
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 12, gap: 4 }}>
-      <span style={{ fontSize: 8, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Today</span>
-      <span style={{ fontSize: 28, fontWeight: 700, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{todayFocus}m</span>
+      <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Today</span>
+      <span style={{ fontSize: 28, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{todayFocus}m</span>
       <span style={{
-        fontSize: 12, fontWeight: 600,
+        fontSize: 12, fontWeight: 400,
         color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : textMuted,
       }}>
         {delta > 0 ? `+${delta}m` : delta < 0 ? `${delta}m` : '—'}

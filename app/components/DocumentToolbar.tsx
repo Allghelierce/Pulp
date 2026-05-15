@@ -171,11 +171,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => ro.disconnect()
   }, [])
 
-  const btnBaseInactive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnBaseActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnIconOnly = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnIconOnlyActive = "text-[12px] font-medium border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
-  const btnFont: React.CSSProperties = { fontFamily: '"EB Garamond", serif', letterSpacing: '0.01em' }
+  const btnBaseInactive = "text-[12px] font-normal border border-zinc-200 rounded-[5px] px-3 py-1 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnBaseActive = "text-[12px] font-normal border border-zinc-200 rounded-[5px] px-3 py-1 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnIconOnly = "text-[12px] font-normal border border-zinc-200 rounded-[5px] p-1.5 bg-white hover:bg-zinc-100 text-zinc-700 shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnIconOnlyActive = "text-[12px] font-normal border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
+  const btnFont: React.CSSProperties = { fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }
 
   const [currencyTooltip, setCurrencyTooltip] = useState<'sap' | 'gem' | null>(null)
 
@@ -264,7 +264,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           <button
             onClick={() => setInsertOpen(!insertOpen)}
             title="Insert elements"
-            className={`text-[12px] font-medium border border-zinc-200 rounded-[5px] ${compact ? 'p-1.5' : 'px-3 py-1'} bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
+            className={`text-[12px] font-normal border border-zinc-200 rounded-[5px] ${compact ? 'p-1.5' : 'px-3 py-1'} bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97] flex items-center gap-1.5 ${insertOpen ? '' : 'text-zinc-700 hover:bg-zinc-100'}`}
             style={{ ...(insertOpen ? neonStyle : {}), ...btnFont }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -274,10 +274,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {insertOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[180px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Elements</div>
+              <div className={`px-2.5 py-1 text-[9px] font-normal uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Elements</div>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'sticky' ? 'select' : 'sticky'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -298,7 +298,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'hr' ? 'select' : 'hr'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0"><line x1="3" y1="12" x2="21" y2="12" /></svg>
@@ -306,7 +306,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'vr' ? 'select' : 'vr'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0"><line x1="12" y1="3" x2="12" y2="21" /></svg>
@@ -314,7 +314,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); setActiveTool(activeTool === 'image' ? 'select' : 'image'); setInsertOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
@@ -324,7 +324,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <div ref={tablePickerRef} className="relative">
                 <button
                   onMouseDown={e => { e.preventDefault(); setTablePickerOpen(!tablePickerOpen) }}
-                  className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                  className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer flex items-center gap-2 transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                   style={btnFont}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>
@@ -342,7 +342,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                     }}
                     onMouseLeave={() => setTableHover([0, 0])}
                   >
-                    <div style={{ fontSize: 10, color: theme === "dark" ? "#a1a1aa" : "#71717a", marginBottom: 8, textAlign: "center", fontWeight: 600 }}>
+                    <div style={{ fontSize: 10, color: theme === "dark" ? "#a1a1aa" : "#71717a", marginBottom: 8, textAlign: "center", fontWeight: 400 }}>
                       {tableHover[0] > 0 ? `${tableHover[0]} × ${tableHover[1]}` : "Select size"}
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 20px)", gap: 3 }}>
@@ -407,24 +407,24 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {alignOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[170px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
+              <div className={`px-2.5 py-1 text-[9px] font-normal uppercase tracking-tight mb-0.5 ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>Arrange Boxes</div>
               <button
                 onMouseDown={e => { e.preventDefault(); autoAlign(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 Snap to Grid
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); verticalAlign(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 Stack Vertically
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); centerStack(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 Center on Page
@@ -432,14 +432,14 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <button
                 onMouseDown={e => { e.preventDefault(); if (selectedBoxCount === 2) { twoColumnGrid(); setAlignOpen(false) } }}
                 disabled={selectedBoxCount !== 2}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] block transition-colors ${selectedBoxCount === 2 ? `cursor-pointer ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}` : `cursor-default ${theme === "dark" ? "text-zinc-600" : "text-zinc-400"}`}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] block transition-colors ${selectedBoxCount === 2 ? `cursor-pointer ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}` : `cursor-default ${theme === "dark" ? "text-zinc-600" : "text-zinc-400"}`}`}
                 style={btnFont}
               >
                 Two-Column Grid{selectedBoxCount !== 2 ? ' (select 2 boxes)' : ''}
               </button>
               <button
                 onMouseDown={e => { e.preventDefault(); distributeEvenly(); setAlignOpen(false) }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                 style={btnFont}
               >
                 Distribute Top Edges
@@ -604,7 +604,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {aiOpen && (
             <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
+              <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 uppercase tracking-tight mb-0.5">Quick Prompts</div>
               {COMMON_PROMPTS.map((item, idx) => (
                 <button
                   key={idx}
@@ -614,7 +614,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                     onQuickPrompt(item.prompt, btnRect)
                     setAiOpen(false)
                   }}
-                  className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                  className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                   style={btnFont}
                 >
                   {item.label}
@@ -623,7 +623,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               {onAiAction && (
                 <>
                   <div className="h-px bg-zinc-200/50 my-1 mx-1" />
-                  <div className="px-2.5 py-1 text-[9px] font-bold text-zinc-400 uppercase tracking-tight mb-0.5">Study Tools</div>
+                  <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 uppercase tracking-tight mb-0.5">Study Tools</div>
                   {[
                     { label: "Quiz me", action: "quiz" },
                   ].map((item, idx) => (
@@ -634,7 +634,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                         onAiAction(item.action)
                         setAiOpen(false)
                       }}
-                      className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
+                      className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
                       style={btnFont}
                     >
                       {item.label}
@@ -650,7 +650,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   onOpenAiMenu(btnRect.left, btnRect.bottom + 8)
                   setAiOpen(false)
                 }}
-                className={`w-full text-left text-[11px] font-medium px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
+                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
                 style={btnFont}
               >
                 Custom Prompt...
@@ -687,7 +687,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
       {/* Currency Display - Centered */}
       {!hideCurrencies && <div className="relative">
-        <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-bold text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+        <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           <div
             className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
             onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'gem' ? null : 'gem') }}
@@ -699,7 +699,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           {userAvatarUrl ? (
             <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
           ) : userEmail ? (
-            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-bold text-zinc-600 uppercase ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }}>
+            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-normal text-zinc-600 uppercase ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }}>
               {userEmail[0]}
             </div>
           ) : null}
@@ -730,7 +730,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-2">
                   <GemIcon size={14} />
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e4e0d8', fontFamily: '"EB Garamond", serif' }}>
+                  <span style={{ fontSize: 14, fontWeight: 400, color: '#e4e0d8', fontFamily: 'Crimson Pro, serif' }}>
                     Time
                   </span>
                 </div>
@@ -743,7 +743,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
-                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: '"EB Garamond", serif', lineHeight: 1.4, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: 'Crimson Pro, serif', lineHeight: 1.4, margin: 0 }}>
                       {item.text}
                     </p>
                   </div>
@@ -757,8 +757,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                     if (currencyTooltip === 'sap') onOpenGrove?.()
                   }}
                   style={{
-                    width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 600,
-                    fontFamily: '"EB Garamond", serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
+                    width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 400,
+                    fontFamily: 'Crimson Pro, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
                   }}
                   onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                   onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}

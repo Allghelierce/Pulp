@@ -35,15 +35,15 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
       {/* Top Header */}
       <div className="flex items-center justify-between px-10 py-5 z-50 pointer-events-none sticky top-0 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex flex-col gap-1">
-          <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-bold pointer-events-auto">{activeNote.pages.length} Pages</p>
+          <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-normal pointer-events-auto">{activeNote.pages.length} Pages</p>
         </div>
 
         <button
           onClick={() => setGridView(false)}
           className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-none bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 hover:scale-105 group"
         >
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em]">Escape</span>
-          <span className="px-1.5 py-0.5 rounded-none bg-white/10 text-[8px] font-bold opacity-40 group-hover:opacity-100 transition-opacity">ESC</span>
+          <span className="text-[9px] font-normal uppercase tracking-[0.2em]">Escape</span>
+          <span className="px-1.5 py-0.5 rounded-none bg-white/10 text-[8px] font-normal opacity-40 group-hover:opacity-100 transition-opacity">ESC</span>
         </button>
       </div>
 
@@ -113,7 +113,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
                       <div key={box.id} style={{
                         position: 'absolute',
                         left: box.x, top: box.y, width: box.w, height: box.h,
-                        fontFamily: box.boxFontFamily || editorFont || '"EB Garamond", serif',
+                        fontFamily: box.boxFontFamily || editorFont || 'Crimson Pro, serif',
                         fontSize: (box.boxFontSize || 16) + 'px',
                         textAlign: box.textAlign,
                         color: "#1A1A1A",
@@ -130,7 +130,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
                 <div className="absolute top-2.5 right-3 z-[50] pointer-events-none">
-                  <span className="text-[10px] font-medium text-black/30 tracking-wide" style={{ fontFamily: '"EB Garamond", serif' }}>
+                  <span className="text-[10px] font-normal text-black/30 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>
                     {idx + 1}
                   </span>
                 </div>
@@ -153,7 +153,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
             <div className="w-12 h-12 bg-white/10 flex items-center justify-center text-2xl text-white/30 group-hover:text-white transition-colors">
               +
             </div>
-            <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.5em] group-hover:text-white/60 transition-colors">
+            <span className="text-[10px] font-normal text-white/20 uppercase tracking-[0.5em] group-hover:text-white/60 transition-colors">
               New Page
             </span>
           </div>

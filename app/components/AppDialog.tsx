@@ -3,7 +3,7 @@ import { useState, memo } from "react"
 import { motion } from "framer-motion"
 import type { DialogConfig } from "@/app/types"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { config: DialogConfig; accent: string; onClose: () => void }) {
   const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
@@ -50,7 +50,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
         }}
       >
         <div className="px-6 pt-5 pb-5">
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: '#e4e0d8', fontFamily: font, margin: 0, lineHeight: 1.3 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 400, color: '#e4e0d8', fontFamily: font, margin: 0, lineHeight: 1.3 }}>
             {config.title}
           </h2>
 
@@ -109,7 +109,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
               <button
                 onClick={onClose}
                 style={{
-                  flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 500,
+                  flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
                   fontFamily: font, color: '#8a8680', background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer',
                 }}
@@ -122,7 +122,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
             <button
               onClick={confirm}
               style={{
-                flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
                 fontFamily: font, color: '#fff', background: btnColor, border: 'none', cursor: 'pointer',
               }}
               onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}

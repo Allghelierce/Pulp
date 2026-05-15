@@ -139,14 +139,14 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
           <div className="flex gap-6">
             <button
               onClick={() => setTab("import")}
-              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "import" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "import" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
               {tab === "import" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Import
             </button>
             <button
               onClick={() => setTab("draw")}
-              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "draw" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "draw" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
               {tab === "draw" && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Draw
@@ -161,7 +161,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
           {tab === "import" ? (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Notebook Cover</h3>
+                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>Notebook Cover</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Supported formats: PNG, JPG, WebP</p>
               </div>
 
@@ -183,7 +183,7 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
                     <Upload className="h-6 w-6 text-zinc-400" />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-300">Click to upload cover</p>
+                    <p className="text-xs font-normal uppercase tracking-[0.1em] text-zinc-300">Click to upload cover</p>
                     <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-widest">or drag and drop here</p>
                   </div>
                 </div>
@@ -270,12 +270,12 @@ export function CoverModal({ existingCover, onConfirm, onClose }: CoverModalProp
               if (tab === "import" && previewUrl) onConfirm(previewUrl)
               else if (tab === "draw" && canvasRef.current) onConfirm(canvasRef.current.toDataURL("image/png"))
             }}
-            className="w-full py-4 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            className="w-full py-4 rounded-lg text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
             style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
           >
             Apply Cover Decoration
           </button>
-          <button onClick={onClose} className="w-full py-2.5 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] hover:text-zinc-300 transition-all">
+          <button onClick={onClose} className="w-full py-2.5 text-[10px] font-normal text-zinc-500 uppercase tracking-[0.2em] hover:text-zinc-300 transition-all">
             Cancel
           </button>
         </div>

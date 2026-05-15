@@ -48,11 +48,11 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
           background: bg,
           border: `1px solid ${border}`,
           animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)",
-          fontFamily: '"EB Garamond", serif',
+          fontFamily: 'Crimson Pro, serif',
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold" style={{ color: isDark ? "#e4e4e7" : "#111827" }}>{title}</h2>
+          <h2 className="text-xl font-normal" style={{ color: isDark ? "#e4e4e7" : "#111827" }}>{title}</h2>
           <button
             onClick={onClose}
             className="ml-4 flex h-7 w-7 items-center justify-center rounded-full transition-colors"
@@ -112,7 +112,7 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
           <div className="flex gap-2 ml-auto">
             <button
               onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="rounded-lg px-4 py-2 text-sm font-normal transition-colors"
               style={{ color: mutedColor }}
             >
               Close
@@ -120,7 +120,7 @@ export function AiResultModal({ title, result, loading, prompt, onClose, onInser
             {onInsert && !loading && result && (
               <button
                 onClick={() => onInsert(result)}
-                className="rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all"
+                className="rounded-lg px-5 py-2 text-sm font-normal text-white transition-all"
                 style={{ background: "linear-gradient(135deg, #d97706, #b45309)" }}
               >
                 Insert into note

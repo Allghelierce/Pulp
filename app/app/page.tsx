@@ -67,7 +67,7 @@ function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
   const [draft, setDraft] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const color = "#3f3f46"
-  const fontStyle: React.CSSProperties = { color, fontFamily: '"EB Garamond", serif', fontWeight: 500, fontSize: 12, letterSpacing: '0.01em' }
+  const fontStyle: React.CSSProperties = { color, fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 12, letterSpacing: '0.01em' }
 
   const commit = (val: string) => {
     const n = parseInt(val, 10)
@@ -512,7 +512,7 @@ const BoxItem = memo(function BoxItem({
               cursor: "pointer", fontSize: 13,
               display: "flex", alignItems: "center", justifyContent: "center",
               lineHeight: 1, color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)", flexShrink: 0,
-              fontFamily: 'cursive', fontWeight: 600,
+              fontFamily: 'cursive', fontWeight: 400,
               filter: "url(#handwritten-jitter-subtle)"
             }}>×</button>
           <button
@@ -548,7 +548,7 @@ const BoxItem = memo(function BoxItem({
             cursor: "pointer", fontSize: 13, width: 17, height: 17,
             display: "flex", alignItems: "center", justifyContent: "center",
             borderRadius: "50%", lineHeight: 1, color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
-            zIndex: 120, fontFamily: 'cursive', fontWeight: 600,
+            zIndex: 120, fontFamily: 'cursive', fontWeight: 400,
             filter: "url(#handwritten-jitter-subtle)"
           }}>×</button>
       )}
@@ -690,10 +690,10 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
     letterSpacing: "0.05em",
   })
   const triggerStyle: React.CSSProperties = {
-    fontSize: 13, fontWeight: 500, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
+    fontSize: 13, fontWeight: 400, fontStyle: "italic", color: "#71717a", background: "none", border: "none",
     cursor: "pointer", paddingTop: 2, paddingBottom: 2, paddingLeft: 6, paddingRight: 6, borderRadius: 4,
     display: "flex", alignItems: "center", gap: 3, letterSpacing: "0.01em",
-    fontFamily: '"EB Garamond", serif',
+    fontFamily: 'Crimson Pro, serif',
   }
   const chevron = <svg width="7" height="5" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.45, flexShrink: 0 }}><path d="M0 0l5 6 5-6z" /></svg>
   // Handlers
@@ -754,7 +754,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
           <button ref={styleBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("style") }}>
             {BOX_STYLES.find(s => s.value === styleKey)?.label} {chevron}
           </button>
-          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || '"EB Garamond", serif' }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
+          <button ref={fontBtnRef} style={{ ...triggerStyle, fontFamily: currentFont.value || 'Crimson Pro, serif' }} onMouseDown={e => { e.preventDefault(); openDropdown("font") }}>
             {currentFont.label.toLowerCase()} {chevron}
           </button>
           <button ref={sizeBtnRef} style={triggerStyle} onMouseDown={e => { e.preventDefault(); openDropdown("size") }}>
@@ -786,9 +786,9 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
           {open === "font" && (
             <div style={dropdownBase}>
               {BOX_FONTS.map(f => (
-                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || '"EB Garamond", serif' }} onMouseDown={e => {
+                <button key={f.value} style={{ ...optionBtn(currentFont.value === f.value), fontFamily: f.value || 'Crimson Pro, serif' }} onMouseDown={e => {
                   e.preventDefault()
-                  if (!applyInlineCSS(`font-family: ${f.value || '"EB Garamond", serif'}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
+                  if (!applyInlineCSS(`font-family: ${f.value || 'Crimson Pro, serif'}`)) onUpdateBox(box.id, { boxFontFamily: f.value })
                   setOpen(null)
                 }}>{f.label.toLowerCase()}</button>
               ))}
@@ -857,7 +857,7 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
                     }}
                     style={{ width: 16, height: 16, padding: 0, border: "none", borderRadius: 3, cursor: "pointer", background: "transparent" }}
                   />
-                  <span style={{ fontSize: 10, color: dk ? "#a1a1aa" : "#71717a", fontWeight: 500 }}>Custom color</span>
+                  <span style={{ fontSize: 10, color: dk ? "#a1a1aa" : "#71717a", fontWeight: 400 }}>Custom color</span>
                 </label>
               </div>
             </div>
@@ -933,7 +933,7 @@ const BoxTextarea = memo(function BoxTextarea({
   const styleKey = boxHeadingStyle || "default"
   const isMarginStyle = styleKey === "margin"
   const resolvedSize = boxFontSize ?? BOX_HEADING_SIZES[styleKey]
-  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || '"EB Garamond", serif')
+  const resolvedFont = isMarginStyle ? "cursive" : (boxFontFamily || 'Crimson Pro, serif')
   const inkColor = boxTextColor
     ? boxTextColor
     : isMarginStyle
@@ -1136,7 +1136,7 @@ const BoxTextarea = memo(function BoxTextarea({
         width: "100%", outline: "none",
         height: isSticky || sizeLocked ? "100%" : undefined,
         minHeight: isSticky || sizeLocked ? undefined : 32,
-        fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 500,
+        fontFamily: resolvedFont, fontSize: resolvedSize, fontWeight: 400,
         lineHeight: 1.45, color: inkColor, cursor: "text", caretColor: isDarkPaper(paperStyle) ? "#e4e4e7" : "#18181b",
         letterSpacing: "0.1px",
         fontStyle: isMarginStyle ? "italic" : "normal",
@@ -3448,7 +3448,7 @@ export default function NoteApp() {
                 <select
                   value={zoom}
                   onChange={e => setZoom(e.target.value)}
-                  className={`text-[11px] font-medium rounded px-1.5 py-0.5 outline-none cursor-pointer border-none ${theme === 'dark' ? 'bg-transparent text-zinc-400' : 'bg-transparent text-zinc-500'}`}
+                  className={`text-[11px] font-normal rounded px-1.5 py-0.5 outline-none cursor-pointer border-none ${theme === 'dark' ? 'bg-transparent text-zinc-400' : 'bg-transparent text-zinc-500'}`}
                 >
                   {[["0.43", "50%"], ["0.64", "75%"], ["0.85", "100%"], ["1.06", "125%"], ["1.28", "150%"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
@@ -3460,14 +3460,14 @@ export default function NoteApp() {
                 <main className="flex-1 flex items-center justify-center px-4 overflow-hidden">
                   <div className="text-center max-w-md overflow-hidden">
                     {/* Heading */}
-                    <h1 className="text-3xl font-medium tracking-tight mb-5" style={{ fontFamily: '"EB Garamond", serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
+                    <h1 className="text-3xl font-normal tracking-tight mb-5" style={{ fontFamily: 'Crimson Pro, serif', color: theme === "dark" ? "#fafafa" : "#1a1a1a" }}>Create your first notebook now.</h1>
 
                     {/* Primary Button */}
                     <AnimatedCreateButton onClick={addFirstNotebook} accent={accent} theme={theme} />
 
                     {/* Quick Tips */}
                     <div className="mt-5 pt-4" style={{ borderTop: theme === "dark" ? "1px solid #333" : "1px solid #ddd" }}>
-                      <p className="text-xs font-medium mb-2" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
+                      <p className="text-xs font-normal mb-2" style={{ color: theme === "dark" ? "#888" : "#999" }}>Quick Tips</p>
                       <ul className="text-xs space-y-1.5 flex flex-col items-center" style={{ color: theme === "dark" ? "#999" : "#777" }}>
                         <li className="flex items-center gap-2">📝 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+N</code> to create notes</li>
                         <li className="flex items-center gap-2">🔍 <span style={{ opacity: 0.3 }}>|</span> Press <code style={{ background: theme === "dark" ? "#1a1a1a" : "#f0f0f0", padding: "2px 6px", borderRadius: "3px", fontFamily: "monospace", marginLeft: "4px" }}>Ctrl+K</code> to search</li>
@@ -3586,7 +3586,7 @@ export default function NoteApp() {
                                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-300"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                                 </div>
                                 <div>
-                                  <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Vault Locked</h3>
+                                  <h3 className="text-xl font-normal text-zinc-800 dark:text-zinc-100 tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>Vault Locked</h3>
                                   <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-[200px]">This notebook is securely encrypted.</p>
                                 </div>
                                 <button
@@ -3603,7 +3603,7 @@ export default function NoteApp() {
                                       })
                                     }
                                   }}
-                                  className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
+                                  className="mt-2 px-8 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-normal rounded-full shadow-lg transition-all active:scale-95 uppercase tracking-widest"
                                 >
                                   Unlock Now
                                 </button>
@@ -3737,7 +3737,7 @@ export default function NoteApp() {
                                 ref={editorRef}
                                 className={`w-full min-h-[1000px] outline-none pointer-events-none transition-opacity duration-300 ${focusMode ? "opacity-40 focus-within:opacity-100" : ""}`}
                                 style={{
-                                  fontFamily: `"${editorFont}", "EB Garamond", serif`,
+                                  fontFamily: `"${editorFont}", Crimson Pro, serif`,
                                   fontSize: baseFontSize === "small" ? 14 : baseFontSize === "large" ? 22 : 18,
                                   filter: "url(#handwritten-jitter-subtle)",
                                   fontWeight: 400,
@@ -3754,7 +3754,7 @@ export default function NoteApp() {
                                color: ${getInkColor(paperStyle, theme === "dark")} !important;
                                caret-color: ${accent.length > 7 ? accent.slice(0, 7) : accent} !important;
                                opacity: 1 !important;
-                               font-family: "${editorFont}", "EB Garamond", serif !important;
+                               font-family: "${editorFont}", Crimson Pro, serif !important;
                                font-weight: 500 !important;
                                letter-spacing: 0.1px !important;
                                line-height: 1.8 !important;
@@ -3777,7 +3777,7 @@ export default function NoteApp() {
                                font-weight: 400;
                                pointer-events: none;
                                user-select: none;
-                               font-family: "${editorFont}", "EB Garamond", serif;
+                               font-family: "${editorFont}", Crimson Pro, serif;
                              }
                              #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
                              #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
@@ -4195,27 +4195,27 @@ export default function NoteApp() {
                       <button onClick={() => setQuizState(null)} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       </button>
-                      <span className="text-lg font-semibold text-gray-900">Quiz</span>
-                      <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <span className="text-lg font-normal text-gray-900">Quiz</span>
+                      <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                         {quizState.current + 1} / {quizState.questions.length}
                       </span>
                     </div>
 
                     <div className="rounded-xl bg-gray-50 border border-gray-200 p-5">
-                      <p className="text-[15px] font-medium text-gray-800 leading-relaxed">
+                      <p className="text-[15px] font-normal text-gray-800 leading-relaxed">
                         {quizState.questions[quizState.current]?.q}
                       </p>
                     </div>
 
                     {quizState.revealed ? (
                       <div className="rounded-xl border border-green-200 bg-green-50 p-4" style={{ animation: "slide-up-fade 0.15s ease" }}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1.5">Answer</div>
+                        <div className="text-[10px] font-normal uppercase tracking-wider text-green-600 mb-1.5">Answer</div>
                         <p className="text-sm text-green-900 leading-relaxed">{quizState.questions[quizState.current]?.a}</p>
                       </div>
                     ) : (
                       <button
                         onClick={() => setQuizState(prev => prev ? { ...prev, revealed: true } : null)}
-                        className="w-full rounded-xl py-3 text-sm font-semibold transition-all"
+                        className="w-full rounded-xl py-3 text-sm font-normal transition-all"
                         style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                       >
                         Reveal Answer
@@ -4227,7 +4227,7 @@ export default function NoteApp() {
                         {quizState.current < quizState.questions.length - 1 ? (
                           <button
                             onClick={() => setQuizState(prev => prev ? { ...prev, current: prev.current + 1, revealed: false } : null)}
-                            className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
+                            className="flex-1 rounded-xl py-2.5 text-sm font-normal transition-all"
                             style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                           >
                             Next Question
@@ -4235,7 +4235,7 @@ export default function NoteApp() {
                         ) : (
                           <button
                             onClick={() => setQuizState(null)}
-                            className="flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all"
+                            className="flex-1 rounded-xl py-2.5 text-sm font-normal transition-all"
                             style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
                           >
                             Done
@@ -4306,7 +4306,7 @@ export default function NoteApp() {
               className="fixed bottom-6 left-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-40"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-              <span className="text-[11px] font-bold tracking-[0.05em] uppercase">Sign In to Sync</span>
+              <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>
             </button>
           )}
 
@@ -4379,7 +4379,7 @@ export default function NoteApp() {
               <path d="M18 4 L18.5 3 L19 4 L18.5 5Z" fill="currentColor" opacity="0.3" />
               <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
             </svg>
-            <span className={`text-[8px] font-semibold tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: '"EB Garamond", serif' }}>Focus</span>
+            <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>Focus</span>
           </button>
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}

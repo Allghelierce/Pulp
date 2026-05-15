@@ -2,7 +2,7 @@
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 function FlameIcon({ color, size = 20 }: { color: string; size?: number }) {
   return (
@@ -61,9 +61,9 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 12, gap: 2 }}>
-      <span style={{ fontSize: 8, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Streak</span>
+      <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Streak</span>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-        <span style={{ fontSize: 32, fontWeight: 700, color: streakColor, fontFamily: font, lineHeight: 1 }}>{current}</span>
+        <span style={{ fontSize: 32, fontWeight: 400, color: streakColor, fontFamily: font, lineHeight: 1 }}>{current}</span>
         <span style={{ fontSize: 11, color: textMuted }}>days</span>
       </div>
       {current > 0 && (
