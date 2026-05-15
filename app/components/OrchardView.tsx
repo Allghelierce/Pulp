@@ -375,6 +375,142 @@ const CONSTELLATION_LINES: [number, number][] = [
   [1, 6],
 ]
 
+interface OrchardTreeProps {
+  tree: any; x: number; y: number; slotIndex: number; renderIdx: number
+  baseSize: number; isDark: boolean; editMode: boolean; activeTool: string | null
+  textSecondary: string; textMuted: string
+  hoveredElRef: React.MutableRefObject<HTMLElement | null>
+  hoveredZRef: React.MutableRefObject<string>
+  dragElRef: React.MutableRefObject<HTMLElement | null>
+  onDragStart: (id: string, slot: number, cx: number, cy: number) => void
+  onChop: (data: { tree: any; sap: number }) => void
+  onFocus: (data: { tree: any; x: number; y: number }) => void
+}
+
+const OrchardTree = memo(function OrchardTree({
+  tree, x, y, slotIndex, renderIdx, baseSize, isDark, editMode, activeTool,
+  textSecondary, textMuted, hoveredElRef, hoveredZRef, dragElRef,
+  onDragStart, onChop, onFocus,
+}: OrchardTreeProps) {
+  const typeInfo = TREE_TYPES[tree.type]
+  const rarity = typeInfo?.rarity || 'common'
+  const meta = RARITY_META[rarity] || RARITY_META.common
+  const shape = typeInfo?.shape || 'oak'
+  const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
+  const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
+  const depthScale = 0.55 + depthT * 0.55
+  const treeSize = Math.round(baseSize * depthScale * shapeScale)
+  const scaleY = 0.75 + depthT * 0.25
+  const dimAmount = Math.round((1 - depthT) * 25)
+  const skewX = ((x - 50) / 50) * (1 - depthT) * -2
+
+  const planted = tree.plantedAt ? new Date(tree.plantedAt) : null
+  const plantedStr = planted ? planted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null
+  const ageMs = planted ? Date.now() - planted.getTime() : 0
+  const ageDays = Math.floor(ageMs / 86400000)
+  const ageHrs = Math.floor(ageMs / 3600000)
+  const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
+
+  return (
+    <div
+      className="absolute flex flex-col items-center group"
+      onMouseEnter={(e) => {
+        if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
+        hoveredElRef.current = e.currentTarget
+        hoveredZRef.current = e.currentTarget.style.zIndex
+        e.currentTarget.style.zIndex = '998'
+      }}
+      onMouseLeave={(e) => {
+        if (hoveredElRef.current === e.currentTarget) {
+          e.currentTarget.style.zIndex = hoveredZRef.current
+          hoveredElRef.current = null
+        }
+      }}
+      onPointerDown={(e) => {
+        if (editMode) {
+          e.preventDefault()
+          dragElRef.current = e.currentTarget as HTMLElement
+          onDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+          return
+        }
+        if (activeTool === 'axe') {
+          onChop({ tree, sap: getSapYield(tree) })
+          return
+        }
+        onFocus({ tree, x, y })
+      }}
+      style={{
+        left: `${x}%`, top: `${y}%`,
+        transform: `translate(-50%, -${(75 + depthT * 10).toFixed(0)}%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
+        transformOrigin: 'center bottom',
+        zIndex: Math.round(y),
+        cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
+        transformOrigin: 'center bottom',
+      }}>
+        <div style={{ animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`, transformOrigin: 'center bottom' }}>
+          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+            filter: `brightness(${100 - dimAmount}%)`, transition: 'filter 0.3s', position: 'relative',
+          }}>
+            {(tree.ascension || 0) > 0 && (
+              <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
+                position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
+              }} />
+            )}
+            <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+          </div>
+          <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
+            <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
+            <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
+          </svg>
+          <div style={{
+            position: 'absolute', left: '50%', bottom: -4, transform: 'translateX(-50%)',
+            width: treeSize * 1.4, height: treeSize * 0.2, borderRadius: '50%', zIndex: -1,
+            background: isDark ? 'rgba(0,0,0,0.12)' : 'rgba(30,25,15,0.18)', filter: 'blur(3px)', pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)',
+            width: treeSize * 0.3, height: treeSize * 0.15, zIndex: 1,
+            background: isDark ? 'linear-gradient(to top, rgba(10,8,4,0.4) 0%, transparent 100%)' : 'linear-gradient(to top, rgba(40,30,15,0.2) 0%, transparent 100%)',
+            pointerEvents: 'none', borderRadius: '50%',
+          }} />
+        </div>
+      </div>
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+        zIndex: 300, position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 4,
+      }}>
+        <div className="px-3 py-2 rounded-lg" style={{
+          backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
+          border: `1.5px solid ${meta.border}`, boxShadow: `0 4px 16px rgba(0,0,0,0.2), inset 0 0 0 0.5px ${meta.border}`,
+          minWidth: 110,
+        }}>
+          <div className="flex items-center gap-1.5">
+            <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
+            <span className="text-[10px] font-bold tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
+              {typeInfo?.name || tree.type}
+            </span>
+          </div>
+          {plantedStr && (
+            <div className="mt-1.5 flex flex-col gap-0.5">
+              <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}> Planted {plantedStr}</span>
+              <span className="text-[8px] whitespace-nowrap" style={{ color: textMuted }}>{ageStr}</span>
+            </div>
+          )}
+          {tree.stage < 4 && (
+            <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+})
+
 const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
   const [realtimeState, setRealtimeState] = useState(getTimePhase)
   useEffect(() => {
@@ -2888,6 +3024,92 @@ export const OrchardView = memo(function OrchardView({
     )
   }, [isDark])
 
+  const grassPaths = useMemo(() => {
+    const pad = 3
+    const yT = 38, yB = 100, steps = 24
+    const getL = (_y: number) => 0
+    const getR = (_y: number) => 100
+
+    const rngE = seededRng(4477)
+    let pathD = ''
+    const rightSeg: string[] = []
+    for (let i = 0; i <= steps; i++) {
+      const y = yT - pad + i * (yB - yT + pad * 2) / steps
+      const lx = getL(y) - pad + (rngE() - 0.5) * 1.0
+      const rx = getR(y) + pad + (rngE() - 0.5) * 1.0
+      if (i === 0) pathD += `M${lx.toFixed(1)},${y.toFixed(1)}`
+      else pathD += ` L${lx.toFixed(1)},${y.toFixed(1)}`
+      rightSeg.push(`${rx.toFixed(1)},${y.toFixed(1)}`)
+    }
+    for (let i = rightSeg.length - 1; i >= 0; i--) pathD += ` L${rightSeg[i]}`
+    pathD += 'Z'
+
+    const tufts: string[] = []
+    const blades: string[] = []
+    const clover: string[] = []
+    const bushes: string[] = []
+    for (let i = 0; i < 1500; i++) {
+      const rng = seededRng(i * 43 + 997)
+      const ty = yT - pad + rng() * (yB - yT + pad * 2)
+      const lE = getL(ty) - pad
+      const rE = getR(ty) + pad
+      const tx = lE + rng() * (rE - lE)
+      const edgeDist = Math.min(tx - lE, rE - tx, ty - (yT - pad), (yB + pad) - ty)
+      const fade = Math.min(1, edgeDist / 5)
+      if (fade < 0.05) continue
+      const h = (0.4 + rng() * 0.8) * fade
+      const sway = (rng() - 0.5) * 0.4
+      tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+      tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
+      tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
+    }
+    for (let i = 0; i < 500; i++) {
+      const rng = seededRng(i * 59 + 1231)
+      const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
+      const lE = getL(by) - pad + 1
+      const rE = getR(by) + pad - 1
+      const bx = lE + rng() * (rE - lE)
+      const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+      const fade = Math.min(1, edgeDist / 4)
+      if (fade < 0.08) continue
+      const bh = (0.5 + rng() * 1.0) * fade
+      const curve = (rng() - 0.5) * 0.7
+      blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+    }
+    for (let i = 0; i < 60; i++) {
+      const rng = seededRng(i * 37 + 2099)
+      const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
+      const lE = getL(cy) - pad + 3
+      const rE = getR(cy) + pad - 3
+      const cx = lE + rng() * (rE - lE)
+      const cs = 0.12 + rng() * 0.1
+      for (let l = 0; l < 3; l++) {
+        const la = (l / 3) * Math.PI * 2 + rng() * 0.4
+        clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
+      }
+    }
+    for (let i = 0; i < 100; i++) {
+      const rng = seededRng(i * 83 + 6601)
+      const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
+      const lE = getL(by) - pad + 2
+      const rE = getR(by) + pad - 2
+      const bx = lE + rng() * (rE - lE)
+      const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+      const fade = Math.min(1, edgeDist / 5)
+      if (fade < 0.1) continue
+      const bw = (0.5 + rng() * 0.9) * fade
+      const bh2 = (0.25 + rng() * 0.5) * fade
+      bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
+    }
+    return { tufts: tufts.join(''), blades: blades.join(''), clover: clover.join(''), bushes: bushes.join('') }
+  }, [])
+
+  const [detailReady, setDetailReady] = useState(false)
+  useEffect(() => {
+    const id = requestIdleCallback(() => setDetailReady(true))
+    return () => cancelIdleCallback(id)
+  }, [])
+
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredTrees.forEach(t => {
@@ -3144,93 +3366,15 @@ export const OrchardView = memo(function OrchardView({
               >
                 {(() => { return (
                   <>
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
-                      {(() => {
-                        const pad = 3
-                        const yT = 38, yB = 100, steps = 24
-                        const getL = (_y: number) => 0
-                        const getR = (_y: number) => 100
-
-                        const rngE = seededRng(4477)
-                        let pathD = ''
-                        const rightSeg: string[] = []
-                        for (let i = 0; i <= steps; i++) {
-                          const y = yT - pad + i * (yB - yT + pad * 2) / steps
-                          const lx = getL(y) - pad + (rngE() - 0.5) * 1.0
-                          const rx = getR(y) + pad + (rngE() - 0.5) * 1.0
-                          if (i === 0) pathD += `M${lx.toFixed(1)},${y.toFixed(1)}`
-                          else pathD += ` L${lx.toFixed(1)},${y.toFixed(1)}`
-                          rightSeg.push(`${rx.toFixed(1)},${y.toFixed(1)}`)
-                        }
-                        for (let i = rightSeg.length - 1; i >= 0; i--) pathD += ` L${rightSeg[i]}`
-                        pathD += 'Z'
-
-                        const tufts: string[] = []
-                        const blades: string[] = []
-                        const clover: string[] = []
-                        const bushes: string[] = []
-                        for (let i = 0; i < 1500; i++) {
-                          const rng = seededRng(i * 43 + 997)
-                          const ty = yT - pad + rng() * (yB - yT + pad * 2)
-                          const lE = getL(ty) - pad
-                          const rE = getR(ty) + pad
-                          const tx = lE + rng() * (rE - lE)
-                          const edgeDist = Math.min(tx - lE, rE - tx, ty - (yT - pad), (yB + pad) - ty)
-                          const fade = Math.min(1, edgeDist / 5)
-                          if (fade < 0.05) continue
-                          const h = (0.4 + rng() * 0.8) * fade
-                          const sway = (rng() - 0.5) * 0.4
-                          tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
-                          tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
-                          tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
-                        }
-                        for (let i = 0; i < 500; i++) {
-                          const rng = seededRng(i * 59 + 1231)
-                          const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
-                          const lE = getL(by) - pad + 1
-                          const rE = getR(by) + pad - 1
-                          const bx = lE + rng() * (rE - lE)
-                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
-                          const fade = Math.min(1, edgeDist / 4)
-                          if (fade < 0.08) continue
-                          const bh = (0.5 + rng() * 1.0) * fade
-                          const curve = (rng() - 0.5) * 0.7
-                          blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
-                        }
-                        for (let i = 0; i < 60; i++) {
-                          const rng = seededRng(i * 37 + 2099)
-                          const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
-                          const lE = getL(cy) - pad + 3
-                          const rE = getR(cy) + pad - 3
-                          const cx = lE + rng() * (rE - lE)
-                          const cs = 0.12 + rng() * 0.1
-                          for (let l = 0; l < 3; l++) {
-                            const la = (l / 3) * Math.PI * 2 + rng() * 0.4
-                            clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
-                          }
-                        }
-                        for (let i = 0; i < 100; i++) {
-                          const rng = seededRng(i * 83 + 6601)
-                          const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
-                          const lE = getL(by) - pad + 2
-                          const rE = getR(by) + pad - 2
-                          const bx = lE + rng() * (rE - lE)
-                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
-                          const fade = Math.min(1, edgeDist / 5)
-                          if (fade < 0.1) continue
-                          const bw = (0.5 + rng() * 0.9) * fade
-                          const bh2 = (0.25 + rng() * 0.5) * fade
-                          bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
-                        }
-                        return <>
-                          <path d={bushes.join('')} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.06 : 0.035} />
-                          <path d={tufts.join('')} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.12 : 0.07} />
-                          <path d={blades.join('')} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} />
-                          <path d={clover.join('')} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.06" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.08 : 0.04} />
-                        </>
-                      })()}
-                    </svg>
-                    {tillSvg}
+                    {detailReady && (
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
+                        <path d={grassPaths.bushes} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.06 : 0.035} />
+                        <path d={grassPaths.tufts} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.12 : 0.07} />
+                        <path d={grassPaths.blades} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} />
+                        <path d={grassPaths.clover} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.06" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.08 : 0.04} />
+                      </svg>
+                    )}
+                    {detailReady && tillSvg}
                     {filteredTrees.length === 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
                         <p className="text-[11px] font-medium" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
@@ -3270,167 +3414,16 @@ export const OrchardView = memo(function OrchardView({
                         </div>
                       )
                     })}
-                    {placed.map(({ x, y, tree, slotIndex }, renderIdx) => {
-                      const typeInfo = TREE_TYPES[tree.type]
-                      const rarity = typeInfo?.rarity || 'common'
-                      const meta = RARITY_META[rarity] || RARITY_META.common
-                      const shape = typeInfo?.shape || 'oak'
-                      const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
-                      const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
-                      const depthScale = 0.55 + depthT * 0.55
-                      const treeSize = Math.round(baseSize * depthScale * shapeScale)
-                      const scaleY = 0.75 + depthT * 0.25
-                      const dimAmount = Math.round((1 - depthT) * 25)
-                      const skewX = ((x - 50) / 50) * (1 - depthT) * -2
-                      const glowColor = meta.color
-
-                      return (
-                        <div
-                          key={`${tree.id ?? 'tree'}-${renderIdx}`}
-                          className="absolute flex flex-col items-center group"
-                          onMouseEnter={(e) => {
-                            if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
-                            hoveredElRef.current = e.currentTarget
-                            hoveredZRef.current = e.currentTarget.style.zIndex
-                            e.currentTarget.style.zIndex = '998'
-                          }}
-                          onMouseLeave={(e) => {
-                            if (hoveredElRef.current === e.currentTarget) {
-                              e.currentTarget.style.zIndex = hoveredZRef.current
-                              hoveredElRef.current = null
-                            }
-                          }}
-                          onPointerDown={(e) => {
-                            if (editMode) {
-                              e.preventDefault()
-                              dragElRef.current = e.currentTarget as HTMLElement
-                              handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
-                              return
-                            }
-                            if (activeTool === 'axe') {
-                              setChopTarget({ tree, sap: getSapYield(tree) })
-                              return
-                            }
-                            setFocusedTree({ tree, x, y })
-                          }}
-                          style={{
-                            left: `${x}%`,
-                            top: `${y}%`,
-                            transform: `translate(-50%, -${(75 + depthT * 10).toFixed(0)}%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
-                            transformOrigin: 'center bottom',
-                            zIndex: Math.round(y),
-                            cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
-                            opacity: 1,
-                          }}
-                        >
-                          <div style={{
-                            position: 'relative',
-                            transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
-                            transformOrigin: 'center bottom',
-                          }}>
-                          <div style={{
-                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
-                            transformOrigin: 'center bottom',
-                          }}>
-                            <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-                              filter: `brightness(${100 - dimAmount}%)`,
-                              transition: 'filter 0.3s',
-                              position: 'relative',
-                            }}>
-                              {(tree.ascension || 0) > 0 && (
-                                <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
-                                  position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
-                                }} />
-                              )}
-                              <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
-                            </div>
-                            {/* Dirt mound */}
-                            <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
-                              <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
-                              <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
-                            </svg>
-                            {/* Ground shadow */}
-                            <div style={{
-                              position: 'absolute',
-                              left: '50%',
-                              bottom: -4,
-                              transform: 'translateX(-50%)',
-                              width: treeSize * 1.4,
-                              height: treeSize * 0.2,
-                              borderRadius: '50%',
-                              zIndex: -1,
-                              background: isDark
-                                ? 'rgba(0,0,0,0.12)'
-                                : 'rgba(30,25,15,0.18)',
-                              filter: 'blur(3px)',
-                              pointerEvents: 'none',
-                            }} />
-                            {/* Trunk base darkening */}
-                            <div style={{
-                              position: 'absolute',
-                              left: '50%',
-                              bottom: 0,
-                              transform: 'translateX(-50%)',
-                              width: treeSize * 0.3,
-                              height: treeSize * 0.15,
-                              zIndex: 1,
-                              background: isDark
-                                ? 'linear-gradient(to top, rgba(10,8,4,0.4) 0%, transparent 100%)'
-                                : 'linear-gradient(to top, rgba(40,30,15,0.2) 0%, transparent 100%)',
-                              pointerEvents: 'none',
-                              borderRadius: '50%',
-                            }} />
-                          </div>
-                          </div>
-
-                          {(() => {
-                            const popLeft = x > 50
-                            const planted = tree.plantedAt ? new Date(tree.plantedAt) : null
-                            const plantedStr = planted ? planted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null
-                            const ageMs = planted ? Date.now() - planted.getTime() : 0
-                            const ageDays = Math.floor(ageMs / 86400000)
-                            const ageHrs = Math.floor(ageMs / 3600000)
-                            const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
-                            return (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
-                              zIndex: 300, position: 'absolute',
-                              top: '100%', left: '50%', transform: 'translateX(-50%)',
-                              marginTop: 4,
-                            }}>
-                              <div className="px-3 py-2 rounded-lg" style={{
-                                backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
-                                border: `1.5px solid ${meta.border}`,
-                                boxShadow: `0 4px 16px rgba(0,0,0,0.2), inset 0 0 0 0.5px ${meta.border}`,
-                                minWidth: 110,
-                              }}>
-                                <div className="flex items-center gap-1.5">
-                                  <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
-                                  <span className="text-[10px] font-bold tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
-                                    {typeInfo?.name || tree.type}
-                                  </span>
-                                </div>
-                                {plantedStr && (
-                                  <div className="mt-1.5 flex flex-col gap-0.5">
-                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}>
-                                      Planted {plantedStr}
-                                    </span>
-                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textMuted }}>
-                                      {ageStr}
-                                    </span>
-                                  </div>
-                                )}
-                                {tree.stage < 4 && (
-                                  <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
-                                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            )
-                          })()}
-                        </div>
-                      )
-                    })}
+                    {placed.map(({ x, y, tree, slotIndex }, renderIdx) => (
+                      <OrchardTree
+                        key={`${tree.id ?? 'tree'}-${renderIdx}`}
+                        tree={tree} x={x} y={y} slotIndex={slotIndex} renderIdx={renderIdx}
+                        baseSize={baseSize} isDark={isDark} editMode={editMode} activeTool={activeTool}
+                        textSecondary={textSecondary} textMuted={textMuted}
+                        hoveredElRef={hoveredElRef} hoveredZRef={hoveredZRef} dragElRef={dragElRef}
+                        onDragStart={handleDragStart} onChop={setChopTarget} onFocus={setFocusedTree}
+                      />
+                    ))}
                   </>
                 ); })()}
               </motion.div>

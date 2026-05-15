@@ -17,7 +17,7 @@ export const CachedPlantIcon = memo(function CachedPlantIcon({
   const shape = (TREE_TYPES[type] || TREE_TYPES.tangerine).shape || "oak"
   const isAnimated = ANIMATED_SHAPES.has(shape)
 
-  const key = getCacheKey(type, size, stage, dirtSeed, dirtDark, dirtDepth, dirtTilt)
+  const key = getCacheKey(type, size, stage, dirtDark)
   const cached = getPlantBitmap(key)
 
   const [, rerender] = useState(0)
