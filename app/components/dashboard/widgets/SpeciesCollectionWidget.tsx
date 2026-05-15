@@ -6,13 +6,22 @@ import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = 'Crimson Pro, serif'
 
+const LockedPlaceholder = memo(function LockedPlaceholder({ isDark }: { isDark: boolean }) {
+  return (
+    <svg width={38} height={38} viewBox="0 0 38 38">
+      <circle cx={19} cy={22} r={10} fill={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)'} />
+      <text x={19} y={23} textAnchor="middle" dominantBaseline="central"
+        fill={isDark ? '#3a3630' : '#c8c4c0'} fontSize={12} fontWeight={700}>?</text>
+    </svg>
+  )
+})
+
 const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, grove }: WidgetProps) {
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
 
   const owned = useMemo(() => new Set(grove.map(t => t.type)), [grove])
-  const allTypes = Object.entries(TREE_TYPES)
+  const allTypes = useMemo(() => Object.entries(TREE_TYPES), [])
   const total = allTypes.length
   const collected = owned.has('tangerine') ? owned.size : owned.size + 1
   const pct = total > 0 ? Math.round((collected / total) * 100) : 0
@@ -43,10 +52,12 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '4px 2px', borderRadius: 8,
                 opacity: has ? 1 : 0.55,
-                filter: has ? 'none' : 'grayscale(1) brightness(0.15) contrast(1.2)',
               }}
             >
-              <PlantIcon type={key} size={38} stage={4} hideGround disableSway />
+              {has
+                ? <PlantIcon type={key} size={38} stage={4} hideGround disableSway />
+                : <LockedPlaceholder isDark={isDark} />
+              }
               <span style={{
                 fontSize: 6, fontWeight: 400, marginTop: 2,
                 color: has ? textSecondary : textMuted,

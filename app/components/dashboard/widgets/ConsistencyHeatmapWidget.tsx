@@ -174,7 +174,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
             const nx = dx / dist, ny = dy / dist
             segments.push(
               <line key={`${ri}-${j}`} x1={x1 + nx * rA} y1={y1 + ny * rA} x2={x2 - nx * rB} y2={y2 - ny * rB}
-                stroke={color} strokeWidth="0.5" strokeLinecap="round" />
+                stroke={color} strokeWidth="0.3" strokeLinecap="round" opacity={0.4} />
             )
           }
           return <g key={ri}>{segments}</g>
