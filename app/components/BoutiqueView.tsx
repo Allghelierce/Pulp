@@ -88,7 +88,7 @@ function getDropChance(weight: number): string {
   return `${pct.toFixed(2)}%`
 }
 
-const font = 'Crimson Pro, serif'
+const font = '"EB Garamond", serif'
 
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
@@ -391,7 +391,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
   const CurrencyPill = ({ amount }: { amount: number }) => (
-    <span className={`inline-flex items-center gap-1.5 text-[12px] font-normal tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
+    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
@@ -488,10 +488,6 @@ export const BoutiqueView = memo(function BoutiqueView({
           0%, 100% { box-shadow: 0 0 12px #d9770630, 0 0 24px #d9770610; }
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
-        @keyframes card-float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
-        @keyframes card-float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
-        @keyframes card-float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
-        @keyframes card-float-3 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
         .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .seed-packet:hover { transform: translateY(-4px); }
         .seed-cracking { animation: seed-spin-reveal 0.6s ease-in-out, seed-wobble 0.6s ease-in-out !important; }
@@ -503,7 +499,13 @@ export const BoutiqueView = memo(function BoutiqueView({
       >
         {/* Header */}
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 8px', position: 'relative', zIndex: 10 }}>
-          <div style={{ width: 28 }} />
+          <button
+            onClick={onClose}
+            className="transition-all"
+            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#8a8680' : '#7a7670' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
           <CurrencyPill amount={sap} />
         </div>
 
@@ -520,7 +522,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 400,
+                  color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 500,
                   display: 'flex', alignItems: 'center', gap: 4,
                 }}
               >
@@ -528,8 +530,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                 Back
               </button>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
-                <span style={{ fontSize: 10, fontWeight: 400, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   {RARITY_LABEL[previewInfo.rarity]}
                 </span>
               </div>
@@ -546,144 +548,18 @@ export const BoutiqueView = memo(function BoutiqueView({
             <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {/* Terraced landscape background */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                {/* Terrain background */}
-                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-                  <defs>
-                    <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#08060a' : '#c8b8a0'} />
-                      <stop offset="25%" stopColor={isDark ? '#0c0a10' : '#d0c0a8'} />
-                      <stop offset="50%" stopColor={isDark ? '#10100e' : '#d8c8b0'} />
-                      <stop offset="70%" stopColor={isDark ? '#161410' : '#dcd0b8'} />
-                      <stop offset="85%" stopColor={isDark ? '#1a1810' : '#e0d4bc'} />
-                      <stop offset="100%" stopColor={isDark ? '#1e1a12' : '#e4d8c0'} />
-                    </linearGradient>
-                    <linearGradient id="m-hill-far" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#0e1210' : '#8a9880'} />
-                      <stop offset="100%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
-                    </linearGradient>
-                    <linearGradient id="m-hill-mid" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#121810' : '#6a7a60'} />
-                      <stop offset="100%" stopColor={isDark ? '#0e140c' : '#5a6a50'} />
-                    </linearGradient>
-                    <linearGradient id="m-hill-near" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#161e14' : '#4a5a40'} />
-                      <stop offset="100%" stopColor={isDark ? '#121a10' : '#3a4a30'} />
-                    </linearGradient>
-                    <linearGradient id="m-ground" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#1a2014' : '#3e4e34'} />
-                      <stop offset="100%" stopColor={isDark ? '#141810' : '#2e3e24'} />
-                    </linearGradient>
-                    <radialGradient id="m-haze1" cx="30%" cy="40%" r="50%">
-                      <stop offset="0%" stopColor={isDark ? '#1a1430' : '#c8b8d0'} stopOpacity={isDark ? '0.12' : '0.06'} />
-                      <stop offset="100%" stopColor={isDark ? '#1a1430' : '#c8b8d0'} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="m-haze2" cx="70%" cy="35%" r="45%">
-                      <stop offset="0%" stopColor={isDark ? '#201020' : '#d0c0b0'} stopOpacity={isDark ? '0.1' : '0.05'} />
-                      <stop offset="100%" stopColor={isDark ? '#201020' : '#d0c0b0'} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="m-horizon-glow" cx="50%" cy="75%" r="50%">
-                      <stop offset="0%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity={isDark ? '0.06' : '0.04'} />
-                      <stop offset="60%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity={isDark ? '0.02' : '0.01'} />
-                      <stop offset="100%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id="m-star-g">
-                      <stop offset="0%" stopColor="#ffeedd" stopOpacity="1" />
-                      <stop offset="40%" stopColor="#ffeedd" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#ffeedd" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-
-                  <style>{`
-                    @keyframes m-twinkle { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-                    @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 15% { opacity: 0.8; } 50% { transform: translate(8px,-12px); opacity: 0.6; } 85% { opacity: 0.8; } 100% { transform: translate(-4px,6px); opacity: 0; } }
-                    @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 20% { opacity: 0.7; } 55% { transform: translate(-10px,-8px); opacity: 0.5; } 80% { opacity: 0.7; } 100% { transform: translate(5px,10px); opacity: 0; } }
-                    @keyframes m-haze-drift { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.7; } }
-                  `}</style>
-
-                  {/* Sky */}
-                  <rect width="400" height="300" fill="url(#m-sky)" />
-
-                  {/* Atmospheric haze */}
-                  <rect width="400" height="180" fill="url(#m-haze1)" />
-                  <rect width="400" height="180" fill="url(#m-haze2)" />
-
-                  {/* Stars */}
-                  {isDark && <>
-                    {[[32,18,1.2],[78,12,0.8],[125,28,1.0],[168,8,0.7],[210,22,1.1],[258,15,0.9],[305,25,0.7],[350,10,1.0],[55,40,0.6],[145,42,0.8],[240,38,0.7],[310,35,0.9],[380,42,0.6],[20,55,0.5],[95,50,0.7],[195,52,0.6],[280,48,0.8],[365,55,0.5]].map(([x,y,r], i) => (
-                      <circle key={`st${i}`} cx={x} cy={y} r={r as number} fill="url(#m-star-g)" opacity={0.5 + (i % 3) * 0.15} style={{ animation: `m-twinkle ${3 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 4}s infinite` }} />
-                    ))}
-                    {[[15,30],[48,22],[90,35],[140,15],[185,32],[230,10],[275,28],[320,18],[360,30],[65,48],[200,45],[330,50],[110,55],[250,52],[50,8],[170,45],[295,42],[385,20]].map(([x,y], i) => (
-                      <circle key={`sp${i}`} cx={x} cy={y} r={0.4} fill="#e0e0d8" opacity={0.2 + (i % 3) * 0.1} />
-                    ))}
-                  </>}
-
-                  {/* Distant hills — far layer */}
-                  <path d="M-10,130 L20,118 L50,105 L70,112 L100,98 L120,108 L150,95 L175,102 L200,92 L230,100 L260,96 L285,106 L310,100 L340,110 L370,104 L410,115 L410,160 L-10,160 Z" fill="url(#m-hill-far)" />
-                  {/* Cliff face shadows */}
-                  <polygon points="50,105 70,112 50,112" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="150,95 175,102 150,102" fill="rgba(0,0,0,0.07)" />
-                  <polygon points="200,92 230,100 200,100" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="310,100 340,110 310,110" fill="rgba(0,0,0,0.06)" />
-                  {/* Ridge highlights */}
-                  <path d="M50,105 L70,112" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
-                  <path d="M150,95 L175,102" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
-                  <path d="M200,92 L230,100" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
-
-                  {/* Mid hills */}
-                  <path d="M-10,150 L30,138 L60,128 L90,136 L120,122 L145,132 L170,120 L200,128 L230,118 L260,130 L290,124 L320,134 L350,126 L380,138 L410,132 L410,180 L-10,180 Z" fill="url(#m-hill-mid)" />
-                  <polygon points="60,128 90,136 60,136" fill="rgba(0,0,0,0.1)" />
-                  <polygon points="170,120 200,128 170,128" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="230,118 260,130 230,130" fill="rgba(0,0,0,0.1)" />
-                  <path d="M120,122 L145,132" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-                  <path d="M230,118 L260,130" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
-
-                  {/* Near hills */}
-                  <path d="M-10,170 L20,158 L55,148 L85,156 L110,142 L140,152 L165,140 L195,150 L220,138 L255,148 L285,140 L310,152 L340,144 L375,155 L410,148 L410,200 L-10,200 Z" fill="url(#m-hill-near)" />
-                  <polygon points="55,148 85,156 55,156" fill="rgba(0,0,0,0.1)" />
-                  <polygon points="165,140 195,150 165,150" fill="rgba(0,0,0,0.09)" />
-                  <polygon points="285,140 310,152 285,152" fill="rgba(0,0,0,0.1)" />
-
-                  {/* Ground field */}
-                  <path d="M-10,185 L30,178 L70,175 L120,180 L170,172 L220,176 L280,170 L340,175 L410,172 L410,300 L-10,300 Z" fill="url(#m-ground)" />
-
-                  {/* Grass tufts on near hills */}
-                  {[[30,176],[55,172],[80,170],[110,168],[140,174],[170,168],[200,172],[230,166],[260,170],[290,168],[320,174],[350,170],[375,174]].map(([gx,gy], i) => (
-                    <g key={`gr${i}`} opacity={isDark ? 0.3 : 0.2}>
-                      <path d={`M${gx},${gy} Q${gx-1},${gy-3} ${gx-2},${gy-5}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
-                      <path d={`M${gx},${gy} Q${gx+0.5},${gy-3.5} ${gx+1},${gy-4.5}`} stroke={isDark ? '#243418' : '#4a6a38'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
-                      <path d={`M${gx+1},${gy} Q${gx+2},${gy-2.5} ${gx+3},${gy-4}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                    </g>
-                  ))}
-
-                  {/* Haze between hill layers */}
-                  <rect x="0" y="125" width="400" height="30" fill={isDark ? '#0e0c09' : '#c8b898'} opacity={isDark ? '0.15' : '0.06'} style={{ animation: 'm-haze-drift 12s ease-in-out infinite' }} />
-                  <rect x="0" y="155" width="400" height="25" fill={isDark ? '#0e0c09' : '#b8a888'} opacity={isDark ? '0.2' : '0.08'} style={{ animation: 'm-haze-drift 16s ease-in-out 4s infinite' }} />
-
-                  {/* Horizon glow — warm amber from stall area */}
-                  <rect width="400" height="300" fill="url(#m-horizon-glow)" />
-
-                  {/* Fireflies */}
-                  {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => (
-                    <g key={`ff${i}`}>
-                      <circle cx={fx} cy={fy} r={1.2} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite` }} />
-                      <circle cx={fx} cy={fy} r={3} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite`, filter: 'blur(1px)' }} />
-                    </g>
-                  ))}
-                </svg>
+                {/* Warm sky */}
+                <div style={{ position: 'absolute', inset: 0, background: isDark
+                  ? 'linear-gradient(to bottom, transparent 30%, rgba(20,16,10,0.4) 100%)'
+                  : 'linear-gradient(to bottom, transparent 30%, rgba(200,180,140,0.12) 100%)'
+                }} />
                 {/* Shopkeeper stall SVG */}
-                <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '80%' }}>
+                <svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '55%' }}>
                   <defs>
                     <radialGradient id="o-body" cx="38%" cy="35%">
                       <stop offset="0%" stopColor="#e8a030" />
                       <stop offset="50%" stopColor="#d97706" />
                       <stop offset="100%" stopColor="#b06205" />
-                    </radialGradient>
-                    <radialGradient id="lantern-glow">
-                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.35" />
-                      <stop offset="25%" stopColor="#d97706" stopOpacity="0.18" />
-                      <stop offset="50%" stopColor="#d97706" stopOpacity="0.07" />
-                      <stop offset="75%" stopColor="#d97706" stopOpacity="0.02" />
-                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
                     </radialGradient>
                   </defs>
 
@@ -719,21 +595,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
                   <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
 
-                  {/* String lights between posts — behind canopy */}
-                  <path d="M117 125 Q200 158 283 125" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.5" fill="none" />
-                  {[130, 145, 160, 175, 190, 205, 220, 235, 250, 265].map((lx, li) => {
-                    const t = (lx - 117) / (283 - 117)
-                    const ly = 125 + 2 * t * (1 - t) * 33
-                    return (
-                      <g key={`sl-${li}`}>
-                        <line x1={lx} y1={ly} x2={lx} y2={ly + 4} stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.3" />
-                        <circle cx={lx} cy={ly + 4.5} r={1.4} fill="#d97706" opacity="0.8" />
-                        <circle cx={lx} cy={ly + 4.5} r={0.6} fill="#f0c050" />
-                        <circle cx={lx} cy={ly + 4} r={3} fill="#d97706" opacity="0.06" />
-                      </g>
-                    )
-                  })}
-
                   {/* Canopy fabric */}
                   <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
                   <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
@@ -741,6 +602,19 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
                   <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
                   <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
+                  {/* Hanging beads */}
+                  <line x1="155" y1="120" x2="155" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="155" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="155" cy="145" r="2.2" fill="#d97706" />
+                  <circle cx="155" cy="145" r="1" fill="#e8a030" />
+                  <line x1="200" y1="117" x2="200" y2="142" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="200" cy="117" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="200" cy="143" r="2.2" fill="#d97706" />
+                  <circle cx="200" cy="143" r="1" fill="#e8a030" />
+                  <line x1="245" y1="120" x2="245" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="245" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="245" cy="145" r="2.2" fill="#d97706" />
+                  <circle cx="245" cy="145" r="1" fill="#e8a030" />
 
                   {/* ============ LANTERNS ============ */}
                   {/* Left lantern */}
@@ -758,7 +632,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="140" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="140" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="140" cy="158" r="35" fill="url(#lantern-glow)" />
                   <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -777,7 +650,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="260" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="260" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="260" cy="158" r="35" fill="url(#lantern-glow)" />
                   <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -966,28 +838,72 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <path d="M289 200 Q290 197 291 196" stroke={isDark ? '#5a8a3a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
                   <path d="M291 196 Q292 195 293 196" fill={isDark ? '#5a8a3a' : '#8aaa6a'} />
 
-                  {/* Dynamic seed jars matching daily seeds */}
+                  {/* Seed jars */}
                   <g transform="translate(0,2)">
-                    {dailySeeds.map((seedType, si) => {
-                      const jx = [155, 170, 185, 240, 255][si]
-                      const jh = [12, 14, 10, 13, 11][si]
-                      const jw = [14, 12, 10, 12, 11][si]
-                      const jy = 212 - jh
-                      const sc = TREE_TYPES[seedType]?.color || '#8a7a5a'
-                      const sdull = sc + '90'
-                      return (
-                        <g key={`jar-${si}`}>
-                          <ellipse cx={jx} cy={211.5} rx={jw / 2 + 1} ry={1.2} fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                          <rect x={jx - jw / 2} y={jy} width={jw} height={jh} rx={jw / 2 - 2} fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                          <rect x={jx - jw / 2 + 1} y={jy + 1} width={jw - 2} height={jh - 2} rx={jw / 2 - 2.5} fill="#3a4a3a" opacity="0.4" />
-                          <rect x={jx - 3} y={jy - 3} width={6} height={3.5} rx={1.8} fill="#4a5a4a" opacity="0.5" />
-                          <rect x={jx - 2.5} y={jy - 4.5} width={5} height={2.5} rx={1.2} fill={isDark ? '#6a5a42' : '#c8b898'} />
-                          <ellipse cx={jx} cy={jy + jh / 2} rx={1.8} ry={2.5} fill={sdull} opacity="0.7" />
-                          <path d={`M${jx} ${jy + jh / 2 - 2.5} Q${jx} ${jy + jh / 2} ${jx} ${jy + jh / 2 + 2.5}`} stroke={sc} strokeWidth="0.4" fill="none" opacity="0.3" />
-                          <path d={`M${jx} ${jy + jh / 2 - 2} Q${jx - 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 4.5} Q${jx + 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 2}`} fill="#4a6a2a" opacity="0.5" />
-                        </g>
-                      )
-                    })}
+                    {/* Jar 1: Tangerine */}
+                    <ellipse cx="115" cy="211.5" rx="5.5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="108" y="200" width="14" height="12" rx="5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="109" y="201" width="12" height="10" rx="4.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="110" y1="202" x2="110" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="112" y="197" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="112.5" y="195.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="113" y1="196.5" x2="117" y2="196.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#a86a10" opacity="0.7" />
+                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#7a5008" opacity="0.2" />
+                    <path d="M115 203 Q115 206 115 209" stroke="#7a5008" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M115 203.5 Q114 201.5 115 200.5 Q116 201.5 115 203.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 2: Plum */}
+                    <ellipse cx="131" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="125" y="198" width="12" height="14" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="126" y="199" width="10" height="12" rx="4" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="127" y1="200" x2="127" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="128" y="195" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="128.5" y="193.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="129" y1="194.5" x2="133" y2="194.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#5a2a8a" opacity="0.6" />
+                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#4a1a6a" opacity="0.15" />
+                    <path d="M131 202.5 Q131 205 131 207.5" stroke="#4a1a6a" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M131 203 Q130 201 131 200 Q132 201 131 203" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 3: Lemon */}
+                    <ellipse cx="145" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="140" y="202" width="10" height="10" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="141" y="203" width="8" height="8" rx="3.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="142" y1="204" x2="142" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="142.5" y="199.5" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="143" y="198" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="143.5" y1="199" x2="146.5" y2="199" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#a89a18" opacity="0.6" />
+                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#8a7a10" opacity="0.15" />
+                    <path d="M145 205 Q145 207 145 209" stroke="#8a7a10" strokeWidth="0.3" fill="none" opacity="0.4" />
+                    <path d="M145 205.5 Q144.2 204 145 203.2 Q145.8 204 145 205.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 4: Coconut */}
+                    <ellipse cx="248" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="242" y="199" width="12" height="13" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="243" y="200" width="10" height="11" rx="4" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="244" y1="201" x2="244" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="245" y="196" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="245.5" y="194.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="246" y1="195.5" x2="250" y2="195.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#1a6a3a" opacity="0.6" />
+                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#105a2a" opacity="0.15" />
+                    <path d="M248 202 Q248 205 248 208" stroke="#105a2a" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M248 202.5 Q247 201 248 200 Q249 201 248 202.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 5: Pomegranate */}
+                    <ellipse cx="261" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="255.5" y="201" width="11" height="11" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="256.5" y="202" width="9" height="9" rx="3.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="257.5" y1="203" x2="257.5" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="258.5" y="198" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="259" y="196.5" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="259.5" y1="197.5" x2="262.5" y2="197.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#7a2828" opacity="0.6" />
+                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#5a1818" opacity="0.15" />
+                    <path d="M261 204.8 Q261 207 261 209.2" stroke="#5a1818" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M261 205.2 Q260.2 203.8 261 203 Q261.8 203.8 261 205.2" fill="#4a6a2a" opacity="0.5" />
                   </g>
 
                   {/* SEEDS sign */}
@@ -995,21 +911,122 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <rect x="178" y="228" width="44" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
                   <path d="M182 232 Q200 231 218 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
                   <path d="M182 238 Q200 237 218 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <text x="200" y="242" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="12" fontFamily="'Brush Script MT', 'Segoe Script', 'Comic Sans MS', cursive" fontWeight="normal" fontStyle="italic" opacity="0.9" letterSpacing="1">Trade</text>
+                  <text x="200" y="240" textAnchor="middle" fill="#d97706" fontSize="7.5" fontFamily="serif" fontWeight="bold">SEEDS</text>
                   <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
 
-                  {/* Cart base shadow */}
-                  <ellipse cx="200" cy="262" rx="60" ry="3" fill={isDark ? '#0a0806' : '#b0a890'} opacity="0.3" />
+                  {/* ============ GROUND ============ */}
+                  <rect x="0" y="262" width="400" height="78" fill={isDark ? '#1a1410' : '#d8d0c0'} />
+                  <path d="M80 262 Q200 260 320 262 L320 265 Q200 263 80 265 Z" fill={isDark ? '#1e1812' : '#cec6b6'} opacity="0.6" />
+                  <path d="M0 264 Q60 262 120 264 Q200 266 280 264 Q340 262 400 264 L400 272 Q340 270 280 272 Q200 274 120 272 Q60 270 0 272 Z" fill={isDark ? '#1c1610' : '#c8c0b0'} opacity="0.5" />
+                  <path d="M0 272 Q100 270 200 272 Q300 274 400 272 L400 282 Q300 280 200 282 Q100 284 0 282 Z" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+
+                  {/* Worn dirt path */}
+                  <path d="M110 264 Q160 262 200 264 Q240 262 290 264 L285 270 Q240 268 200 270 Q160 268 115 270 Z" fill={isDark ? '#1e1812' : '#cec6b6'} opacity="0.4" />
+                  <path d="M130 266 Q170 265 200 266 Q230 265 270 266" stroke={isDark ? '#161210' : '#b8b0a0'} strokeWidth="0.25" fill="none" opacity="0.5" />
+
+                  {/* Pebbles */}
+                  <ellipse cx="42" cy="268" rx="2.5" ry="1.5" fill={isDark ? '#242018' : '#c0b8a8'} opacity="0.8" />
+                  <ellipse cx="48" cy="270" rx="1.5" ry="0.8" fill={isDark ? '#2a2418' : '#c8c0b0'} opacity="0.6" />
+                  <ellipse cx="88" cy="266" rx="1.8" ry="1" fill={isDark ? '#282218' : '#c4bca8'} />
+                  <circle cx="135" cy="268" r="1.2" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <ellipse cx="165" cy="266" rx="1.6" ry="0.9" fill={isDark ? '#2a2418' : '#c8c0b0'} opacity="0.7" />
+                  <ellipse cx="200" cy="267" rx="2" ry="1.1" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="235" cy="266" r="1" fill={isDark ? '#282218' : '#c4bca8'} opacity="0.6" />
+                  <ellipse cx="268" cy="268" rx="1.8" ry="1" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <ellipse cx="310" cy="266" rx="2.2" ry="1.2" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="355" cy="268" r="1.5" fill={isDark ? '#242018' : '#c0b8a8'} opacity="0.7" />
+                  <ellipse cx="380" cy="267" rx="1.3" ry="0.7" fill={isDark ? '#282218' : '#c4bca8'} />
+                  {/* Tiny gravel */}
+                  <circle cx="60" cy="269" r="0.6" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="115" cy="267" r="0.5" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="182" cy="268" r="0.5" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="220" cy="267" r="0.6" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="290" cy="268" r="0.5" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="340" cy="267" r="0.6" fill={isDark ? '#242018' : '#c0b8a8'} />
+
+                  {/* Dense grass tufts */}
+                  <path d="M12 265 Q13 258 14 264 Q15 256 16 263 Q17 259 18 265 Q19 257 20 264" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M28 266 Q29 260 30 265 Q31 258 32 264 Q33 261 34 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M55 267 Q56 261 57 266 Q58 259 59 265 Q60 262 61 267" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M73 266 Q75 259 76 265 Q77 257 79 264 Q80 260 82 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                  <path d="M98 266 Q99 261 100 265 Q101 259 102 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M148 267 Q149 262 150 266 Q151 260 152 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                  <path d="M248 267 Q249 262 250 266 Q251 260 252 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                  <path d="M298 266 Q299 260 300 265 Q301 258 302 264 Q303 261 304 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M320 266 Q321 261 322 265 Q323 259 324 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M348 265 Q349 258 350 264 Q351 256 352 263 Q353 259 354 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M375 266 Q376 260 377 265 Q378 258 379 264 Q380 261 381 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M392 266 Q393 261 394 265 Q395 259 396 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+
+                  {/* Secondary grass blades */}
+                  <path d="M8 266 C9 263 10 261 11 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M22 266 C23 263 24 261 25 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M40 267 C41 264 42 262 43 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M66 267 C67 264 68 262 69 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M110 267 C111 264 112 262 113 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M280 267 C281 264 282 262 283 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M330 266 C331 263 332 261 333 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M365 267 C366 264 367 262 368 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+
+                  {/* Small bush clumps */}
+                  <path d="M18 266 Q21 262 24 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.5" />
+                  <path d="M70 266 Q74 261 78 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.4" />
+                  <path d="M295 266 Q299 261 303 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.5" />
+                  <path d="M362 266 Q366 261 370 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.4" />
+
+                  {/* Fallen leaves */}
+                  <path d="M35 274 Q38 271 41 274 Q38 277 35 274" fill="#7a5a18" opacity="0.7" transform="rotate(15 38 274)" />
+                  <path d="M85 272 Q87 269 89 272 Q87 275 85 272" fill="#8a6a20" opacity="0.6" transform="rotate(-25 87 272)" />
+                  <path d="M155 276 Q158 273 161 276 Q158 279 155 276" fill={isDark ? '#4a6a2a' : '#7a9a5a'} opacity="0.5" transform="rotate(40 158 276)" />
+                  <path d="M215 274 Q217 272 219 274 Q217 276 215 274" fill="#7a5a18" opacity="0.6" transform="rotate(-15 217 274)" />
+                  <path d="M265 275 Q268 272 271 275 Q268 278 265 275" fill={isDark ? '#5a7a2a' : '#8aaa5a'} opacity="0.5" transform="rotate(30 268 275)" />
+                  <path d="M340 273 Q342 271 344 273 Q342 275 340 273" fill="#8a6a20" opacity="0.6" transform="rotate(-35 342 273)" />
+                  <path d="M388 274 Q390 272 392 274 Q390 276 388 274" fill={isDark ? '#4a6a2a' : '#7a9a5a'} opacity="0.5" transform="rotate(20 390 274)" />
+                  <path d="M175 278 Q178 274 180 277 Q182 274 180 278" fill="#6a5a20" opacity="0.5" />
+
+                  {/* Tiny mushrooms */}
+                  <ellipse cx="62" cy="269" rx="1.8" ry="1" fill={isDark ? '#6a5a40' : '#a09070'} opacity="0.7" />
+                  <rect x="61.5" y="269" width="1" height="2.5" rx="0.3" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.7" />
+                  <ellipse cx="63" cy="269.5" rx="0.5" ry="0.3" fill={isDark ? '#7a6a48' : '#b0a078'} opacity="0.5" />
+                  <ellipse cx="345" cy="270" rx="1.5" ry="0.8" fill={isDark ? '#6a5a40' : '#a09070'} opacity="0.6" />
+                  <rect x="344.5" y="270" width="1" height="2" rx="0.3" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.6" />
+                  <ellipse cx="192" cy="271" rx="1.2" ry="0.7" fill={isDark ? '#7a6a48' : '#b0a078'} opacity="0.5" />
+                  <rect x="191.7" y="271" width="0.8" height="1.5" rx="0.2" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.5" />
+
+                  {/* Dirt cracks */}
+                  <path d="M10 278 Q18 276 30 278 Q42 280 55 278 Q65 276 75 278" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.4" fill="none" opacity="0.6" />
+                  <path d="M130 280 Q145 278 160 280 Q170 282 180 280" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M220 279 Q235 277 250 279 Q260 281 270 279" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.4" fill="none" opacity="0.6" />
+                  <path d="M310 280 Q325 278 340 280 Q350 282 360 280" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M80 285 Q95 283 110 285 Q115 286 120 285 Q130 283 140 285" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.4" />
+                  <path d="M260 286 Q275 284 290 286 Q300 288 310 286" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.4" />
+
+                  {/* Dirt spots */}
+                  <ellipse cx="50" cy="280" rx="4" ry="2" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+                  <ellipse cx="160" cy="282" rx="5" ry="2.5" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.25" />
+                  <ellipse cx="280" cy="281" rx="4.5" ry="2" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+                  <ellipse cx="370" cy="280" rx="3.5" ry="1.8" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.25" />
+
+                  {/* Stray roots from cart base */}
+                  <path d="M155 262 Q148 268 140 274 Q134 278 130 280" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.7" />
+                  <path d="M155 262 Q150 265 146 268" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M245 262 Q252 268 260 274 Q266 278 270 280" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" opacity="0.7" />
+                  <path d="M245 262 Q250 265 254 268" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M200 262 Q200 268 198 274 Q196 278 195 282" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M198 274 Q196 273 195 274" fill={isDark ? '#3a5a1a' : '#7a9a5a'} opacity="0.5" />
+
+                  {/* Far ground */}
+                  <path d="M0 290 Q100 288 200 290 Q300 292 400 290 L400 340 L0 340 Z" fill={isDark ? '#161210' : '#c8c0b0'} opacity="0.4" />
                 </svg>
               </div>
 
 
               {(() => { return (<>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: -8, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, position: 'relative', zIndex: 1 }}>
+                <span style={{ fontSize: 36, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 400, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
                 </div>
                 {/* Ornamental divider */}
                 <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.2 : 0.15 }}>
@@ -1029,7 +1046,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 56, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 44, position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flex: 1, alignItems: 'center', position: 'relative', zIndex: 1 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -1082,19 +1099,16 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
-                  if (i >= 4) return null
-                  const cardW = 130
-                  const cardH = 220
-                  const arcOffset = [18, 0, 0, 18][i] || 0
-                  const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
+                  const cardW = 180
+                  const cardH = 320
 
                   return (
-                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, animation: `card-float-${i} ${4 + i * 0.8}s ease-in-out infinite` }}>
+                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       {/* Daily deal label */}
                       {isDailyDeal && (
                         <div style={{
                           position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                          fontSize: 7, fontWeight: 400, color: '#d97706', letterSpacing: '0.1em',
+                          fontSize: 7, fontWeight: 800, color: '#d97706', letterSpacing: '0.1em',
                           textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
                           background: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)',
                           padding: '2px 8px', borderRadius: 4,
@@ -1106,7 +1120,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
                         onClick={() => !isRevealed && revealCard(i)}
                         style={{
-                          width: cardW, height: cardH, borderRadius: 12,
+                          width: cardW, height: cardH, borderRadius: 14,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
 
@@ -1115,12 +1129,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         }}
                       >
                         {!isRevealed ? (
-                          /* Unrevealed — matches catalog bg */
+                          /* Unrevealed — kraft paper seed packet */
                           <div
                             onClick={() => revealCard(i)}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              background: isDark
+                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
+                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                               position: 'relative',
                             }}
@@ -1168,7 +1184,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {discount > 0 && (
                               <div style={{
                                 position: 'absolute', top: 14, right: 18,
-                                fontSize: 8, fontWeight: 400, color: '#d97706',
+                                fontSize: 8, fontWeight: 800, color: '#d97706',
                                 opacity: isDark ? 0.4 : 0.35,
                               }}>%</div>
                             )}
@@ -1215,7 +1231,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* Rarity label */}
                             <div style={{
                               position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 7, fontWeight: 400, color: rarityCol,
+                              fontSize: 7, fontWeight: 700, color: rarityCol,
                               letterSpacing: '0.08em', textTransform: 'uppercase',
                               background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
                               padding: '2px 6px', borderRadius: 3,
@@ -1227,8 +1243,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* Tree name */}
                             <div style={{
                               position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 11, fontWeight: 400, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
-                              fontFamily: 'Crimson Pro, serif', letterSpacing: '0.04em',
+                              fontSize: 11, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
+                              fontFamily: '"EB Garamond", serif', letterSpacing: '0.04em',
                               background: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)',
                               padding: '2px 8px', borderRadius: 3,
                               backdropFilter: 'blur(4px)', zIndex: 5,
@@ -1240,7 +1256,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {soldOut ? (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
+                                fontSize: 7, fontWeight: 700, color: textMuted, textTransform: 'uppercase',
                                 background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
                                 padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
@@ -1248,7 +1264,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             ) : (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 400,
+                                fontSize: 7, fontWeight: 700,
                                 color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
                                 background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)',
                                 padding: '2px 6px', borderRadius: 3,
@@ -1259,7 +1275,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {discount > 0 && false && (
                               <div style={{
                                 position: 'absolute', bottom: 36, right: 18,
-                                fontSize: 8, fontWeight: 400, color: '#fff',
+                                fontSize: 8, fontWeight: 800, color: '#fff',
                                 background: '#d97706', padding: '2px 5px', borderRadius: 3,
                                 zIndex: 5,
                               }}>-{discount}%</div>
@@ -1355,20 +1371,20 @@ export const BoutiqueView = memo(function BoutiqueView({
                           }} />
                           {discount > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                              <span style={{ fontSize: 7, fontWeight: 400, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
+                              <span style={{ fontSize: 7, fontWeight: 800, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 0 }}>
                                 <PulpIcon size={8} />
-                                <span style={{ fontSize: 7, fontWeight: 400, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
+                                <span style={{ fontSize: 7, fontWeight: 600, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <PulpIcon size={8} />
-                                <span style={{ fontSize: 10, fontWeight: 400, color: '#dc2626', fontFamily: font }}>{price}</span>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', fontFamily: font }}>{price}</span>
                               </div>
                             </div>
                           ) : (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
                               <PulpIcon size={8} />
-                              <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
                             </div>
                           )}
                         </div>
@@ -1440,22 +1456,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 )
               })()}
 
-              <div style={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                  onClick={() => { setActiveTab('satchel'); setSelectedPlant(null) }}
-                  className="transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    padding: '5px 14px', borderRadius: 6,
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                    color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  Satchel
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10, position: 'relative', zIndex: 2 }}>
                 <button
                   onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
                   className="transition-all hover:scale-105 active:scale-95"
@@ -1465,7 +1466,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                     color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
+                    fontSize: 10, fontWeight: 600, fontFamily: font, letterSpacing: '0.04em',
                   }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
@@ -1473,7 +1474,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </button>
               </div>
 
-              </>); })()}
+              </>)})()}
             </div>
           )}
 
@@ -1535,7 +1536,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         onClick={() => setPreviewStage(si)}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
-                          fontSize: 8, fontWeight: 400, letterSpacing: '0.04em', textTransform: 'uppercase',
+                          fontSize: 8, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
                           color: previewStage === si ? textPrimary : textMuted,
                           fontFamily: font, transition: 'color 0.15s',
                         }}
@@ -1551,20 +1552,20 @@ export const BoutiqueView = memo(function BoutiqueView({
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                 {/* Rarity badge */}
                 <span style={{
-                  fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em',
+                  fontSize: 9, fontWeight: 700, color: rarityCol, letterSpacing: '0.08em',
                   textTransform: 'uppercase', fontFamily: font, marginBottom: 6,
                 }}>
                   {RARITY_LABEL[previewInfo.rarity]}
                 </span>
 
                 {/* Name */}
-                <div style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
+                <div style={{ fontSize: 24, fontWeight: 600, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
                   {previewInfo.name}
                 </div>
 
                 {/* Category */}
                 {cat !== 'none' && (
-                  <span style={{ fontSize: 10, fontWeight: 400, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
                     {CATEGORY_LABEL[cat]}
                   </span>
                 )}
@@ -1577,26 +1578,26 @@ export const BoutiqueView = memo(function BoutiqueView({
                 {/* Stats row */}
                 <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <PulpIcon size={12} />
                       {previewInfo.sapYield || 2}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
                   </div>
                 </div>
 
                 {/* Price + Buy */}
                 {stock <= 0 ? (
                   <div style={{
-                    fontSize: 13, fontWeight: 400, fontFamily: font,
+                    fontSize: 13, fontWeight: 700, fontFamily: font,
                     color: isDark ? '#71717a' : '#a1a1aa',
                     padding: '10px 0',
                   }}>
@@ -1613,7 +1614,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         background: '#d97706', color: '#fff',
                         opacity: cantAfford ? 0.35 : 1,
-                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 400,
+                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                       }}
                     >
                       Buy Seed
@@ -1626,7 +1627,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         </>
                       ) : previewInfo.cost.toLocaleString()}
                     </button>
-                    <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: textMuted, fontFamily: font }}>
                       ×{stock} left
                     </span>
                   </div>
@@ -1641,18 +1642,18 @@ export const BoutiqueView = memo(function BoutiqueView({
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setActiveTab('shop')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                   Back
                 </button>
-                <span className={`text-[10px] font-normal uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Satchel</span>
-                <span className={`text-[11px] font-normal ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{inventory.length}/{MAX_SEEDS}</span>
+                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Satchel</span>
+                <span className={`text-[11px] font-semibold ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{inventory.length}/{MAX_SEEDS}</span>
               </div>
               {inventory.length === 0 ? (
                 <div className={`text-center py-16 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
                   <div className="text-[32px] mb-3 opacity-40">🌱</div>
-                  <div className="text-[14px] font-normal">No seeds yet</div>
+                  <div className="text-[14px] font-medium">No seeds yet</div>
                   <div className="text-[12px] mt-1 opacity-70">Buy seeds from the market to grow your orchard.</div>
                 </div>
               ) : (
@@ -1687,8 +1688,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <PlantIcon type={type} size={22} isSeed />
                           </div>
                           <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: 11, fontWeight: 400, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                            <div style={{ fontSize: 8, fontWeight: 400, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                            <div style={{ fontSize: 8, fontWeight: 700, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
                           </div>
                         </button>
                         <button
@@ -1710,21 +1711,20 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* CATALOG */}
           {activeTab === 'catalog' && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.5)' }} onMouseDown={() => setActiveTab('shop')}>
-              <div onMouseDown={e => e.stopPropagation()} style={{ width: '90%', maxWidth: 700, maxHeight: '80vh', overflowY: 'auto', borderRadius: 20, background: isDark ? '#141210' : '#f5f3ef', boxShadow: '0 32px 80px -12px rgba(0,0,0,0.5)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <span style={{ fontSize: 18, fontWeight: 700, fontFamily: font, color: textPrimary, letterSpacing: '0.06em' }}>Catalog</span>
+            <div style={{ padding: 24 }}>
+              <div style={{ marginBottom: 16 }}>
                 <button
                   onClick={() => setActiveTab('shop')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  Back
                 </button>
               </div>
               {isRenderingCatalog ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', opacity: 0.6 }}>
                   <span style={{ fontSize: 24, marginBottom: 12 }}>📖</span>
-                  <span style={{ fontSize: 13, fontWeight: 400, color: textMuted, fontFamily: font }}>Opening catalog...</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: textMuted, fontFamily: font }}>Opening catalog...</span>
                 </div>
               ) : (
                 RARITY_ORDER.map(rarity => {
@@ -1743,9 +1743,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: rc, boxShadow: complete ? `0 0 8px ${rc}60` : 'none' }} />
-                          <span style={{ fontSize: 11, fontWeight: 400, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 400, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
                       </div>
                       <div style={{ height: 6, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
                         <div style={{ width: `${pct}%`, height: '100%', background: complete ? rc : `linear-gradient(90deg, ${rc}90, ${rc}50)`, borderRadius: 3, transition: 'width 0.4s ease', boxShadow: pct > 0 ? `0 0 8px ${rc}30` : 'none' }} />
@@ -1802,12 +1802,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                               </svg>
                               )}
                               {owned && (
-                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 400, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
+                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
                               )}
                               {owned && (type === 'tangerine' ? (
-                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 400, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
+                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
                                   Default
                                 </div>
                               ) : (
@@ -1817,9 +1817,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                               ))}
                             </div>
                             <div style={{ padding: '6px 8px', borderTop: `1px solid ${owned ? dividerColor : 'transparent'}` }}>
-                              <div style={{ fontSize: 11, fontWeight: 400, color: owned ? textPrimary : textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: owned ? 1 : 0.4 }}>{owned ? t.name : '???'}</div>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: owned ? textPrimary : textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: owned ? 1 : 0.4 }}>{owned ? t.name : '???'}</div>
                               <div style={{ marginTop: 2 }}>
-                                <span style={{ fontSize: 8, fontWeight: 400, color: owned ? RARITY_COLOR[t.rarity] : textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: owned ? 1 : 0.4 }}>{RARITY_LABEL[t.rarity]}</span>
+                                <span style={{ fontSize: 8, fontWeight: 600, color: owned ? RARITY_COLOR[t.rarity] : textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: owned ? 1 : 0.4 }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
                             </div>
                           </button>
@@ -1831,7 +1831,6 @@ export const BoutiqueView = memo(function BoutiqueView({
               })
               )}
             </div>
-            </div>
           )}
 
         </div>
@@ -1841,7 +1840,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           <button
             onClick={forceRefresh}
             style={{
-              position: 'absolute', bottom: 16, left: 16,
+              position: 'absolute', bottom: 16, right: 16,
               width: 36, height: 36, borderRadius: '50%',
               background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
               border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
@@ -1870,21 +1869,21 @@ export const BoutiqueView = memo(function BoutiqueView({
               className={`rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}
               style={{ fontFamily: font }}
             >
-              <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, marginBottom: 6 }}>Satchel Full</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, marginBottom: 6 }}>Satchel Full</div>
               <div style={{ fontSize: 12, color: textSecondary, lineHeight: 1.5 }}>
                 You have {MAX_SEEDS}/{MAX_SEEDS} seeds. Plant or discard some before buying more.
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setSatchelFullPopup(false); setActiveTab('satchel') }}
-                  className="px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all"
+                  className="px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
                   style={{ background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer' }}
                 >
                   Open Satchel
                 </button>
                 <button
                   onClick={() => setSatchelFullPopup(false)}
-                  className={`px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all ${isDark ? 'text-zinc-400 hover:bg-zinc-800' : 'text-zinc-500 hover:bg-zinc-100'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${isDark ? 'text-zinc-400 hover:bg-zinc-800' : 'text-zinc-500 hover:bg-zinc-100'}`}
                   style={{ background: 'none', border: `1px solid ${cardBorder}`, cursor: 'pointer' }}
                 >
                   Close
