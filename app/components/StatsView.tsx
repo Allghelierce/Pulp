@@ -353,7 +353,6 @@ export const StatsView = memo(function StatsView({
         className="relative w-full max-w-[1050px] flex flex-col gap-3"
         style={{ maxHeight: '80vh', overflowY: 'auto' }}
       >
-
         {/* Card: Level + Rings + Stats */}
         <div
           className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
