@@ -257,8 +257,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
     mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
     snowTop: '#2a2820', snowFade: '#10100c',
-    hillMidTop: '#0c180e', hillMidBot: '#0a140c',
-    hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
+    hillMidTop: '#0e100c', hillMidBot: '#0a0e0a',
+    hillNearTop: '#0c140a', hillNearBot: '#0a100a',
     fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
     moonGlow: 0.25, moonY: 4,
@@ -272,8 +272,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#3a2818', oceanMid: '#2a1c10', oceanBot: '#3a2a18',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3020', snowFade: '#1a1610',
-    hillMidTop: '#142016', hillMidBot: '#101a12',
-    hillNearTop: '#1a2818', hillNearBot: '#162214',
+    hillMidTop: '#141410', hillMidBot: '#10100c',
+    hillNearTop: '#181814', hillNearBot: '#141410',
     fieldTop: '#1a2c16', fieldMid1: '#182814', fieldMid2: '#1a2814', fieldBot: '#162210',
     sunGlow: 0.5, sunColor: '#d97706', sunY: 18,
     moonGlow: 0.15, moonY: 30,
@@ -287,8 +287,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
     mtnTop: '#5a6878', mtnMid: '#4a5868', mtnBot: '#3e4e5e',
     snowTop: '#b0b8c0', snowFade: '#6a7480',
-    hillMidTop: '#3e6e34', hillMidBot: '#34602c',
-    hillNearTop: '#486a3c', hillNearBot: '#3e5e34',
+    hillMidTop: '#5a6a50', hillMidBot: '#4e5e46',
+    hillNearTop: '#4a6040', hillNearBot: '#405838',
     fieldTop: '#4a6e38', fieldMid1: '#446634', fieldMid2: '#3e5e30', fieldBot: '#38562c',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
@@ -302,8 +302,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
     mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
     snowTop: '#a0a4a0', snowFade: '#6a7070',
-    hillMidTop: '#2e4828', hillMidBot: '#284222',
-    hillNearTop: '#365030', hillNearBot: '#304a2a',
+    hillMidTop: '#3e4a38', hillMidBot: '#384434',
+    hillNearTop: '#364a30', hillNearBot: '#30442c',
     fieldTop: '#344c2e', fieldMid1: '#30482a', fieldMid2: '#2e4428', fieldBot: '#2a4024',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
@@ -317,8 +317,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3428', snowFade: '#1a1610',
-    hillMidTop: '#142416', hillMidBot: '#101e12',
-    hillNearTop: '#1a2e18', hillNearBot: '#162614',
+    hillMidTop: '#161612', hillMidBot: '#12120e',
+    hillNearTop: '#1a1e16', hillNearBot: '#161a14',
     fieldTop: '#1e3218', fieldMid1: '#1a2c16', fieldMid2: '#1c2e16', fieldBot: '#182812',
     sunGlow: 1, sunColor: '#d97706', sunY: 20,
     moonGlow: 0.15, moonY: 28,
@@ -608,16 +608,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           </clipPath>
         </defs>
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
-        {/* Cliff face shadows — clipped to cliff shape */}
-        <g clipPath="url(#cliff-clip)">
-          <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
-          <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
-          <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
-          <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
-          <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
-          <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
-          <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
-        </g>
 
         {/* Sun — between distant cliffs and mountains */}
         {(() => {
@@ -647,119 +637,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-        {/* Mountain range — back layer (darker, depth) */}
-        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
-        {/* Mountain range — main */}
-        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
-        {/* Slope shadows & highlights — clipped to mountain shape */}
-        <defs>
-          <clipPath id="mtn-clip">
-            <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
-          </clipPath>
-        </defs>
-        <g clipPath="url(#mtn-clip)">
-          <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
-          <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
-          <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
-          <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
-          <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
-          <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
-          <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
-          <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
-          <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
-          <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
-          <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
-        </g>
-        {/* Ridge highlights — thin bright edge along peaks */}
-        <path d="M15,12 L25,22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
-        <path d="M35,10 L42,18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
-        <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
-        <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
-        {/* Snow caps */}
-        <defs>
-          <linearGradient id="snow-blend-c" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#e8ecf0' : '#fafbfd'} />
-            <stop offset="55%" stopColor={isDark ? '#c8cdd4' : '#e8eaee'} />
-            <stop offset="100%" stopColor={isDark ? '#8a94a0' : '#b8bcc4'} stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="snow-blend-l" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#d8dce2' : '#f0f2f5'} />
-            <stop offset="60%" stopColor={isDark ? '#b0b8c2' : '#dcdee4'} />
-            <stop offset="100%" stopColor={isDark ? '#7a8490' : '#a8aeb8'} stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="snow-blend-r" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isDark ? '#dce0e6' : '#f2f4f7'} />
-            <stop offset="55%" stopColor={isDark ? '#b8c0ca' : '#e0e2e8'} />
-            <stop offset="100%" stopColor={isDark ? '#808a96' : '#aab0ba'} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* Center peak snow — slopes follow (42,18)→(50,8)→(58,16) exactly */}
-        <path d="M46,13 L48,10.5 L50,8 L52.5,10.5 L55,13 C54,13.5 53.2,12.7 52,13.3 C51,12.5 50.3,13.4 49.5,12.8 C48.5,13.5 47.4,12.7 46,13 Z" fill="url(#snow-blend-c)" />
-        <path d="M47.6,11.5 L50,8 L52.1,11 C51.4,11.5 50.7,10.8 50,11.2 C49.3,10.7 48.4,11.3 47.6,11.5 Z" fill={isDark ? '#e8ecf2' : '#fcfcfd'} opacity="0.85" />
-        <path d="M46,13 L50,8 L50,12.5 C49.2,12.8 48,13.2 46.8,12.8 Z" fill="rgba(0,0,0,0.06)" />
-        {/* Left peak snow — exact slopes (25,22)→(35,10)→(42,18) */}
-        <path d="M32.3,13 L33.7,11.5 L35,10 L36.2,11.5 L37.6,13 C37,13.4 36.4,12.8 35.8,13.2 C35.2,12.6 34.5,13.3 33.8,12.8 C33.2,13.3 32.7,13 32.3,13 Z" fill="url(#snow-blend-l)" />
-        <path d="M33.5,11.5 L35,10 L36.2,11.2 C35.7,11.6 35.3,11 35,11.4 C34.6,11 34,11.5 33.5,11.5 Z" fill={isDark ? '#dce0e6' : '#f8f9fb'} opacity="0.75" />
-        {/* Right peak snow — exact slopes (95,22)→(105,9)→(115,18) */}
-        <path d="M102.7,12.5 L103.8,10.7 L105,9 L107,10.8 L108.9,12.5 C108.1,13 107.2,12.3 106.4,12.8 C105.7,12.2 105.1,12.9 104.4,12.4 C103.6,12.9 103.1,12.5 102.7,12.5 Z" fill="url(#snow-blend-r)" />
-        <path d="M103.8,10.8 L105,9 L106.6,10.8 C106,11.2 105.5,10.5 105,10.9 C104.5,10.5 104.2,11.1 103.8,10.8 Z" fill={isDark ? '#e2e6ec' : '#fafbfc'} opacity="0.8" />
-        <path d="M102.7,12.5 L105,9 L105,12 C104.3,12.4 103.5,12.6 102.7,12.5 Z" fill="rgba(0,0,0,0.05)" />
-        {/* Tiny cabin on right slope below peak */}
-        <g transform="translate(52.8,11.5) scale(0.55)">
-          <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
-          <path d="M-1.6,0.2 Q0,0.35 1.6,0.2" fill="none" stroke={isDark ? '#d0d4da' : '#f0f2f5'} strokeWidth="0.2" opacity="0.5" />
-          <rect x={-0.8} y={-0.95} width="1.6" height="1.1" fill={isDark ? '#3a3530' : '#7a6a58'} />
-          <rect x={-0.8} y={-0.95} width="1.6" height="0.12" fill={isDark ? '#44403a' : '#8a7a65'} opacity="0.4" />
-          <polygon points="-1,-0.95 0,-1.75 1,-0.95" fill={isDark ? '#4a3028' : '#8a5040'} />
-          <polygon points="-1,-0.95 0,-1.75 0,-0.95" fill={isDark ? '#3a2820' : '#7a4438'} />
-          <path d="M-1.05,-0.95 L0,-1.8 L1.05,-0.95 Q0.7,-1.08 0.3,-1 Q0,-1.1 -0.3,-1 Q-0.7,-1.08 -1.05,-0.95 Z" fill={isDark ? '#c8ccd2' : '#eef0f4'} opacity="0.6" />
-          <rect x={0.4} y={-1.55} width="0.25" height="0.65" fill={isDark ? '#3a3530' : '#6a5a48'} />
-          <path d="M0.52,-1.55 Q0.58,-1.85 0.48,-2.1 Q0.56,-2.3 0.5,-2.55" stroke={isDark ? 'rgba(180,180,190,0.3)' : 'rgba(100,100,110,0.15)'} strokeWidth="0.1" fill="none" strokeLinecap="round" />
-          <rect x={-0.35} y={-0.6} width="0.28" height="0.25" rx="0.02" fill={isDark ? '#fbbf24' : '#c8b888'} opacity={isDark ? 0.6 : 0.3} />
-          <ellipse cx={0} cy={0.2} rx="1.1" ry="0.15" fill="rgba(0,0,0,0.12)" />
-        </g>
-        {/* Base shadow — atmospheric haze at mountain feet */}
-        <path d="M-10,30 L210,30 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
-        {/* Sunlit faces — soft warm wash across upper mountain faces */}
-        {p.mtnLightOpacity > 0.01 && (
-          <g>
-            <defs>
-              <linearGradient id="mtn-light-wash" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 2.5} />
-                <stop offset="40%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 1.2} />
-                <stop offset="100%" stopColor={p.sunColor || '#ffc864'} stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M-10,8 L210,8 L210,34 L-10,34 Z" fill="url(#mtn-light-wash)" opacity={p.mtnLightOpacity * 0.6} />
-          </g>
-        )}
-
-
-        {/* Moonlight on mountain faces */}
-        {(() => {
-          const isNight = timeState.hour >= 18 || timeState.hour < 6
-          if (!isNight) return null
-          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
-          const moonT = Math.max(0, Math.min(1, nightHour / 12))
-          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
-          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
-          return <g opacity={intensity * 0.4} style={{ pointerEvents: 'none' }}>
-            <defs>
-              <radialGradient id="moonlight-mtn" cx="50%" cy="60%" r="60%">
-                <stop offset="0%" stopColor="rgba(180,200,235,0.2)" />
-                <stop offset="50%" stopColor="rgba(160,185,220,0.08)" />
-                <stop offset="100%" stopColor="rgba(140,170,210,0)" />
-              </radialGradient>
-              <clipPath id="moonlight-clip-mtn">
-                <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
-              </clipPath>
-            </defs>
-            <g clipPath="url(#moonlight-clip-mtn)">
-              <ellipse cx={mx} cy="18" rx="50" ry="20" fill="url(#moonlight-mtn)" />
-            </g>
-          </g>
-        })()}
 
         {/* Windmills — behind hills, on mountain slopes */}
         {(() => {
@@ -918,7 +795,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={wornPatches.join('')} fill={dirtLight} opacity={isDark ? 0.06 : 0.04} />
             <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.12 : 0.08} strokeLinecap="round" />
             <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.15 : 0.1} />
-            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.18 : 0.1} />
             <path d={branchD} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
             <path d={branchD} fill="none" stroke={dirtBase} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
             <path d={spurD} fill="none" stroke={dirtBase} strokeWidth="0.2" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" />
@@ -1018,48 +894,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={ripples.join('')} stroke={sparkle} strokeWidth="0.12" fill="none" />
             <path d={reeds.join('')} stroke={isDark ? '#1a3018' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.5" />
           </g>
-        })()}
-        {/* Back hill — grass tufts along contour */}
-        {(() => {
-          const tufts: string[] = []
-          const bushPaths: string[] = []
-          const bladesPaths: string[] = []
-          const getBackY = (x: number) => {
-            if (x < 70) return 36 - (x + 10) * 10 / 80
-            if (x < 140) return 26 - (x - 70) * 7 / 70
-            return 19 + (x - 140) * 10 / 70
-          }
-          for (let i = 0; i < 60; i++) {
-            const rng = seededRng(i * 37 + 449)
-            const x = -5 + rng() * 215
-            const ridgeY = getBackY(x)
-            const baseY = ridgeY + 1 + rng() * 5
-            const h = 0.25 + rng() * 0.5
-            tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.15).toFixed(2)},${(-h).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.08).toFixed(2)},${(-h * 0.9).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
-          }
-          for (let i = 0; i < 35; i++) {
-            const rng = seededRng(i * 67 + 3311)
-            const x = 5 + rng() * 200
-            const ridgeY = getBackY(x)
-            const by = ridgeY + 2 + rng() * 4
-            const bw = 0.3 + rng() * 0.6
-            const bh = 0.15 + rng() * 0.3
-            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
-          }
-          for (let i = 0; i < 40; i++) {
-            const rng = seededRng(i * 51 + 7723)
-            const x = 5 + rng() * 200
-            const ridgeY = getBackY(x)
-            const by = ridgeY + 1.5 + rng() * 5
-            const bh = 0.4 + rng() * 0.7
-            const curve = (rng() - 0.5) * 0.5
-            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
-          }
-          return <>
-            <path d={bushPaths.join('')} fill={isDark ? '#142810' : '#3a6a2e'} opacity={isDark ? 0.08 : 0.05} />
-            <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity={isDark ? 0.15 : 0.1} />
-            <path d={bladesPaths.join('')} stroke={isDark ? '#1a3416' : '#3a6830'} strokeWidth="0.15" fill="none" opacity={isDark ? 0.12 : 0.08} />
-          </>
         })()}
 
         {/* Distant orange grove — all orange trees on mid-hill contour */}
@@ -1318,48 +1152,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.65} />
           </g>
         })()}
-        {/* Front hill — grass tufts and brush */}
-        {(() => {
-          const tufts: string[] = []
-          const bushPaths: string[] = []
-          const bladesPaths: string[] = []
-          const getFrontY = (x: number) => {
-            if (x < 35) return 34 - (x + 10) * 7 / 45
-            if (x < 75) return 27 + (x - 35) * 3 / 40
-            return 30 + (x - 75) * 8 / 65
-          }
-          for (let i = 0; i < 50; i++) {
-            const rng = seededRng(i * 41 + 557)
-            const x = -5 + rng() * 150
-            const ridgeY = getFrontY(x)
-            const baseY = ridgeY + 1 + rng() * 4
-            const h = 0.4 + rng() * 0.7
-            tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
-          }
-          for (let i = 0; i < 30; i++) {
-            const rng = seededRng(i * 73 + 4411)
-            const x = 0 + rng() * 140
-            const ridgeY = getFrontY(x)
-            const by = ridgeY + 2 + rng() * 4
-            const bw = 0.4 + rng() * 0.8
-            const bh = 0.2 + rng() * 0.4
-            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
-          }
-          for (let i = 0; i < 35; i++) {
-            const rng = seededRng(i * 47 + 8833)
-            const x = 0 + rng() * 140
-            const ridgeY = getFrontY(x)
-            const by = ridgeY + 1.5 + rng() * 5
-            const bh = 0.5 + rng() * 0.9
-            const curve = (rng() - 0.5) * 0.6
-            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
-          }
-          return <>
-            <path d={bushPaths.join('')} fill={isDark ? '#182c12' : '#3a6a2e'} opacity={isDark ? 0.2 : 0.12} />
-            <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
-            <path d={bladesPaths.join('')} stroke={isDark ? '#1e3818' : '#3e6e34'} strokeWidth="0.16" fill="none" opacity="0.3" />
-          </>
-        })()}
 
         {/* Front hill — dirt paths */}
         {(() => {
@@ -1417,7 +1209,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={mainPath} fill="none" stroke={dirtBase} strokeWidth="0.4" strokeLinecap="round" opacity={isDark ? 0.22 : 0.15} />
             <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} strokeLinecap="round" />
             <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.12 : 0.08} />
-            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.15 : 0.1} />
             <path d={branchPath} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
             <path d={branchPath} fill="none" stroke={dirtBase} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
             <path d={branchPath2} fill="none" stroke={dirtDark} strokeWidth="0.45" strokeLinecap="round" opacity={isDark ? 0.08 : 0.05} />
@@ -1451,8 +1242,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b0b8c8" />
                 </radialGradient>
                 <mask id="moon-crescent-mask">
-                  <circle cx={mx} cy={my} r="1.8" fill="white" />
-                  <circle cx={mx + 1.4} cy={my - 0.15} r="1.7" fill="black" />
+                  <circle cx={mx} cy={my} r="1.1" fill="white" />
+                  <circle cx={mx + 0.85} cy={my - 0.1} r="1.05" fill="black" />
                 </mask>
                 <radialGradient id="moon-edge-glow" cx="20%" cy="45%" r="80%">
                   <stop offset="0%" stopColor="#f0f4ff" />
@@ -1460,8 +1251,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b8c4d8" />
                 </radialGradient>
               </defs>
-              <ellipse cx={mx} cy={my} rx="6" ry="4" fill="url(#moon-glow-bg)" />
-              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx} cy={my} rx="4" ry="2.8" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="1.1" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
               {/* Craters — subtle darkening baked into the surface */}
               <circle cx={mx - 0.6} cy={my - 0.3} r="0.22" fill="rgba(160,170,190,0.35)" mask="url(#moon-crescent-mask)" />
               <circle cx={mx - 0.62} cy={my - 0.32} r="0.18" fill="rgba(180,188,205,0.25)" mask="url(#moon-crescent-mask)" />
@@ -1714,7 +1505,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
 
-        {/* Grass tufts and ground texture — baked */}
+        {/* Foreground grass tufts and ground texture */}
         {(() => {
           const grassC = isDark ? '#3a5a2e' : '#6a9a50'
           const grassL = isDark ? '#4a6a3a' : '#7aaa60'
@@ -1728,7 +1519,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 120; i++) {
             const rng = seededRng(i * 53 + 101)
             const x = 6 + rng() * 188
-            const y = 40 + rng() * 56
+            const y = 50 + rng() * 46
             const h = 0.4 + rng() * 0.7
             const sway = (rng() - 0.5) * 0.3
             d1.push(`M${x.toFixed(1)},${y.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
@@ -1740,7 +1531,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 25; i++) {
             const rng = seededRng(i * 71 + 3311)
             const px = 10 + rng() * 180
-            const py = 42 + rng() * 52
+            const py = 52 + rng() * 42
             const pw = 1.5 + rng() * 3
             const ph = 0.5 + rng() * 1.5
             patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${(px - pw * 0.3).toFixed(1)},${(py - ph).toFixed(1)} ${px.toFixed(1)},${(py - ph * 0.8).toFixed(1)}Q${(px + pw * 0.4).toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
@@ -1748,7 +1539,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 15; i++) {
             const rng = seededRng(i * 93 + 5511)
             const dx = 10 + rng() * 180
-            const dy = 42 + rng() * 52
+            const dy = 52 + rng() * 42
             const dr = 0.3 + rng() * 0.5
             dirtSpots.push(`M${(dx + dr).toFixed(2)},${dy.toFixed(2)}a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 -${(dr * 2).toFixed(2)},0a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 ${(dr * 2).toFixed(2)},0Z`)
           }
@@ -1912,7 +1703,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         })()}
 
                 {/* Foreground windmills */}
-        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
+        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.45 }].map((wm, wi) => renderWindmill(wm, wi))}
 
         {/* Sap barrels around foreground windmills */}
         {(() => {
