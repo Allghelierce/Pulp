@@ -45,7 +45,7 @@ export const DashboardView = memo(function DashboardView({
 
   const {
     layout, editMode, setEditMode,
-    moveWidget, pinWidget, addWidget, removeWidget,
+    moveWidget, pinWidget, addWidget, removeWidget, resetLayout,
   } = useWidgetLayout()
 
   useEffect(() => {
@@ -87,6 +87,7 @@ export const DashboardView = memo(function DashboardView({
         onClose={onClose}
         onToggleEdit={() => setEditMode(!editMode)}
         onOpenLibrary={() => setLibraryOpen(true)}
+        onResetLayout={resetLayout}
       />
 
       <DashboardGrid

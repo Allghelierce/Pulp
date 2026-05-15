@@ -257,8 +257,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
     mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
     snowTop: '#2a2820', snowFade: '#10100c',
-    hillMidTop: '#0e100c', hillMidBot: '#0a0e0a',
-    hillNearTop: '#0c140a', hillNearBot: '#0a100a',
+    hillMidTop: '#0c180e', hillMidBot: '#0a140c',
+    hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
     fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
     moonGlow: 0.25, moonY: 4,
@@ -272,8 +272,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#3a2818', oceanMid: '#2a1c10', oceanBot: '#3a2a18',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3020', snowFade: '#1a1610',
-    hillMidTop: '#141410', hillMidBot: '#10100c',
-    hillNearTop: '#181814', hillNearBot: '#141410',
+    hillMidTop: '#142016', hillMidBot: '#101a12',
+    hillNearTop: '#1a2818', hillNearBot: '#162214',
     fieldTop: '#1a2c16', fieldMid1: '#182814', fieldMid2: '#1a2814', fieldBot: '#162210',
     sunGlow: 0.5, sunColor: '#d97706', sunY: 18,
     moonGlow: 0.15, moonY: 30,
@@ -287,8 +287,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
     mtnTop: '#5a6878', mtnMid: '#4a5868', mtnBot: '#3e4e5e',
     snowTop: '#b0b8c0', snowFade: '#6a7480',
-    hillMidTop: '#5a6a50', hillMidBot: '#4e5e46',
-    hillNearTop: '#4a6040', hillNearBot: '#405838',
+    hillMidTop: '#3e6e34', hillMidBot: '#34602c',
+    hillNearTop: '#486a3c', hillNearBot: '#3e5e34',
     fieldTop: '#4a6e38', fieldMid1: '#446634', fieldMid2: '#3e5e30', fieldBot: '#38562c',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
@@ -302,8 +302,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
     mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
     snowTop: '#a0a4a0', snowFade: '#6a7070',
-    hillMidTop: '#3e4a38', hillMidBot: '#384434',
-    hillNearTop: '#364a30', hillNearBot: '#30442c',
+    hillMidTop: '#2e4828', hillMidBot: '#284222',
+    hillNearTop: '#365030', hillNearBot: '#304a2a',
     fieldTop: '#344c2e', fieldMid1: '#30482a', fieldMid2: '#2e4428', fieldBot: '#2a4024',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
@@ -317,8 +317,8 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3428', snowFade: '#1a1610',
-    hillMidTop: '#161612', hillMidBot: '#12120e',
-    hillNearTop: '#1a1e16', hillNearBot: '#161a14',
+    hillMidTop: '#142416', hillMidBot: '#101e12',
+    hillNearTop: '#1a2e18', hillNearBot: '#162614',
     fieldTop: '#1e3218', fieldMid1: '#1a2c16', fieldMid2: '#1c2e16', fieldBot: '#182812',
     sunGlow: 1, sunColor: '#d97706', sunY: 20,
     moonGlow: 0.15, moonY: 28,
@@ -374,142 +374,6 @@ const CONSTELLATION_LINES: [number, number][] = [
   [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0],
   [1, 6],
 ]
-
-interface OrchardTreeProps {
-  tree: any; x: number; y: number; slotIndex: number; renderIdx: number
-  baseSize: number; isDark: boolean; editMode: boolean; activeTool: string | null
-  textSecondary: string; textMuted: string
-  hoveredElRef: React.MutableRefObject<HTMLElement | null>
-  hoveredZRef: React.MutableRefObject<string>
-  dragElRef: React.MutableRefObject<HTMLElement | null>
-  onDragStart: (id: string, slot: number, cx: number, cy: number) => void
-  onChop: (data: { tree: any; sap: number }) => void
-  onFocus: (data: { tree: any; x: number; y: number }) => void
-}
-
-const OrchardTree = memo(function OrchardTree({
-  tree, x, y, slotIndex, renderIdx, baseSize, isDark, editMode, activeTool,
-  textSecondary, textMuted, hoveredElRef, hoveredZRef, dragElRef,
-  onDragStart, onChop, onFocus,
-}: OrchardTreeProps) {
-  const typeInfo = TREE_TYPES[tree.type]
-  const rarity = typeInfo?.rarity || 'common'
-  const meta = RARITY_META[rarity] || RARITY_META.common
-  const shape = typeInfo?.shape || 'oak'
-  const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
-  const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
-  const depthScale = 0.55 + depthT * 0.55
-  const treeSize = Math.round(baseSize * depthScale * shapeScale)
-  const scaleY = 0.75 + depthT * 0.25
-  const dimAmount = Math.round((1 - depthT) * 25)
-  const skewX = ((x - 50) / 50) * (1 - depthT) * -2
-
-  const planted = tree.plantedAt ? new Date(tree.plantedAt) : null
-  const plantedStr = planted ? planted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null
-  const ageMs = planted ? Date.now() - planted.getTime() : 0
-  const ageDays = Math.floor(ageMs / 86400000)
-  const ageHrs = Math.floor(ageMs / 3600000)
-  const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
-
-  return (
-    <div
-      className="absolute flex flex-col items-center group"
-      onMouseEnter={(e) => {
-        if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
-        hoveredElRef.current = e.currentTarget
-        hoveredZRef.current = e.currentTarget.style.zIndex
-        e.currentTarget.style.zIndex = '998'
-      }}
-      onMouseLeave={(e) => {
-        if (hoveredElRef.current === e.currentTarget) {
-          e.currentTarget.style.zIndex = hoveredZRef.current
-          hoveredElRef.current = null
-        }
-      }}
-      onPointerDown={(e) => {
-        if (editMode) {
-          e.preventDefault()
-          dragElRef.current = e.currentTarget as HTMLElement
-          onDragStart(tree.id, slotIndex, e.clientX, e.clientY)
-          return
-        }
-        if (activeTool === 'axe') {
-          onChop({ tree, sap: getSapYield(tree) })
-          return
-        }
-        onFocus({ tree, x, y })
-      }}
-      style={{
-        left: `${x}%`, top: `${y}%`,
-        transform: `translate(-50%, -${(75 + depthT * 10).toFixed(0)}%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
-        transformOrigin: 'center bottom',
-        zIndex: Math.round(y),
-        cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
-      }}
-    >
-      <div style={{
-        position: 'relative',
-        transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
-        transformOrigin: 'center bottom',
-      }}>
-        <div style={{ animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`, transformOrigin: 'center bottom' }}>
-          <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-            filter: `brightness(${100 - dimAmount}%)`, transition: 'filter 0.3s', position: 'relative',
-          }}>
-            {(tree.ascension || 0) > 0 && (
-              <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
-                position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
-              }} />
-            )}
-            <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
-          </div>
-          <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
-            <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
-            <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
-          </svg>
-          <div style={{
-            position: 'absolute', left: '50%', bottom: -4, transform: 'translateX(-50%)',
-            width: treeSize * 1.4, height: treeSize * 0.2, borderRadius: '50%', zIndex: -1,
-            background: isDark ? 'rgba(0,0,0,0.12)' : 'rgba(30,25,15,0.18)', filter: 'blur(3px)', pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)',
-            width: treeSize * 0.3, height: treeSize * 0.15, zIndex: 1,
-            background: isDark ? 'linear-gradient(to top, rgba(10,8,4,0.4) 0%, transparent 100%)' : 'linear-gradient(to top, rgba(40,30,15,0.2) 0%, transparent 100%)',
-            pointerEvents: 'none', borderRadius: '50%',
-          }} />
-        </div>
-      </div>
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
-        zIndex: 300, position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 4,
-      }}>
-        <div className="px-3 py-2 rounded-lg" style={{
-          backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
-          border: `1.5px solid ${meta.border}`, boxShadow: `0 4px 16px rgba(0,0,0,0.2), inset 0 0 0 0.5px ${meta.border}`,
-          minWidth: 110,
-        }}>
-          <div className="flex items-center gap-1.5">
-            <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
-            <span className="text-[10px] font-bold tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
-              {typeInfo?.name || tree.type}
-            </span>
-          </div>
-          {plantedStr && (
-            <div className="mt-1.5 flex flex-col gap-0.5">
-              <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}> Planted {plantedStr}</span>
-              <span className="text-[8px] whitespace-nowrap" style={{ color: textMuted }}>{ageStr}</span>
-            </div>
-          )}
-          {tree.stage < 4 && (
-            <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
-              <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-})
 
 const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases, chopMode, onToggleChop, showChopHint, orchardTimeMode }: { isDark: boolean; treeCount: number; treeBases: { x: number; y: number; col: number }[]; chopMode: boolean; onToggleChop: () => void; showChopHint: boolean; orchardTimeMode?: "theme" | "realtime" }) {
   const [realtimeState, setRealtimeState] = useState(getTimePhase)
@@ -738,7 +602,22 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
 
         {/* Distant cliff hills — behind mountains, angular and steep */}
+        <defs>
+          <clipPath id="cliff-clip">
+            <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" />
+          </clipPath>
+        </defs>
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
+        {/* Cliff face shadows — clipped to cliff shape */}
+        <g clipPath="url(#cliff-clip)">
+          <polygon points="2,6 6,5 6,18 2,18" fill="rgba(0,0,0,0.08)" />
+          <polygon points="14,4 18,6 18,18 14,18" fill="rgba(0,0,0,0.06)" />
+          <polygon points="32,8 36,6 36,18 32,18" fill="rgba(0,0,0,0.08)" />
+          <polygon points="56,6 60,4 60,16 56,16" fill="rgba(0,0,0,0.07)" />
+          <polygon points="110,8 114,5 116,3 116,14 110,14" fill="rgba(0,0,0,0.08)" />
+          <polygon points="144,10 148,6 148,16 144,16" fill="rgba(0,0,0,0.07)" />
+          <polygon points="176,16 180,10 180,18 176,18" fill="rgba(0,0,0,0.06)" />
+        </g>
 
         {/* Sun — between distant cliffs and mountains */}
         {(() => {
@@ -768,6 +647,119 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
+        {/* Mountain range — back layer (darker, depth) */}
+        <path d="M-10,30 L0,26 L12,18 L22,24 L32,14 L40,20 L48,12 L56,18 L65,14 L75,22 L82,17 L92,24 L102,13 L112,20 L122,16 L132,24 L142,18 L152,13 L162,22 L172,18 L182,24 L192,20 L210,26 L210,36 L-10,36 Z" fill={p.mtnBot} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
+        {/* Mountain range — main */}
+        <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" fill="url(#hill-far)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
+        {/* Slope shadows & highlights — clipped to mountain shape */}
+        <defs>
+          <clipPath id="mtn-clip">
+            <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#mtn-clip)">
+          <polygon points="15,12 25,22 15,22" fill="rgba(0,0,0,0.12)" />
+          <polygon points="50,8 58,16 50,16" fill="rgba(0,0,0,0.1)" />
+          <polygon points="68,11 78,20 68,20" fill="rgba(0,0,0,0.12)" />
+          <polygon points="105,9 115,18 105,18" fill="rgba(0,0,0,0.1)" />
+          <polygon points="155,10 165,20 155,20" fill="rgba(0,0,0,0.12)" />
+          <polygon points="15,12 5,24 15,22" fill="rgba(255,255,255,0.04)" />
+          <polygon points="35,10 25,22 35,20" fill="rgba(255,255,255,0.05)" />
+          <polygon points="50,8 42,18 50,16" fill="rgba(255,255,255,0.04)" />
+          <polygon points="105,9 95,22 105,18" fill="rgba(255,255,255,0.05)" />
+          <polygon points="125,13 115,18 125,18" fill="rgba(255,255,255,0.04)" />
+          <polygon points="155,10 145,16 155,16" fill="rgba(255,255,255,0.05)" />
+        </g>
+        {/* Ridge highlights — thin bright edge along peaks */}
+        <path d="M15,12 L25,22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+        <path d="M35,10 L42,18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
+        <path d="M50,8 L58,16" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="0.3" />
+        <path d="M105,9 L115,18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.3" />
+        <path d="M155,10 L165,20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.25" />
+        {/* Snow caps */}
+        <defs>
+          <linearGradient id="snow-blend-c" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#e8ecf0' : '#fafbfd'} />
+            <stop offset="55%" stopColor={isDark ? '#c8cdd4' : '#e8eaee'} />
+            <stop offset="100%" stopColor={isDark ? '#8a94a0' : '#b8bcc4'} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="snow-blend-l" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#d8dce2' : '#f0f2f5'} />
+            <stop offset="60%" stopColor={isDark ? '#b0b8c2' : '#dcdee4'} />
+            <stop offset="100%" stopColor={isDark ? '#7a8490' : '#a8aeb8'} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="snow-blend-r" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isDark ? '#dce0e6' : '#f2f4f7'} />
+            <stop offset="55%" stopColor={isDark ? '#b8c0ca' : '#e0e2e8'} />
+            <stop offset="100%" stopColor={isDark ? '#808a96' : '#aab0ba'} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Center peak snow — slopes follow (42,18)→(50,8)→(58,16) exactly */}
+        <path d="M46,13 L48,10.5 L50,8 L52.5,10.5 L55,13 C54,13.5 53.2,12.7 52,13.3 C51,12.5 50.3,13.4 49.5,12.8 C48.5,13.5 47.4,12.7 46,13 Z" fill="url(#snow-blend-c)" />
+        <path d="M47.6,11.5 L50,8 L52.1,11 C51.4,11.5 50.7,10.8 50,11.2 C49.3,10.7 48.4,11.3 47.6,11.5 Z" fill={isDark ? '#e8ecf2' : '#fcfcfd'} opacity="0.85" />
+        <path d="M46,13 L50,8 L50,12.5 C49.2,12.8 48,13.2 46.8,12.8 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Left peak snow — exact slopes (25,22)→(35,10)→(42,18) */}
+        <path d="M32.3,13 L33.7,11.5 L35,10 L36.2,11.5 L37.6,13 C37,13.4 36.4,12.8 35.8,13.2 C35.2,12.6 34.5,13.3 33.8,12.8 C33.2,13.3 32.7,13 32.3,13 Z" fill="url(#snow-blend-l)" />
+        <path d="M33.5,11.5 L35,10 L36.2,11.2 C35.7,11.6 35.3,11 35,11.4 C34.6,11 34,11.5 33.5,11.5 Z" fill={isDark ? '#dce0e6' : '#f8f9fb'} opacity="0.75" />
+        {/* Right peak snow — exact slopes (95,22)→(105,9)→(115,18) */}
+        <path d="M102.7,12.5 L103.8,10.7 L105,9 L107,10.8 L108.9,12.5 C108.1,13 107.2,12.3 106.4,12.8 C105.7,12.2 105.1,12.9 104.4,12.4 C103.6,12.9 103.1,12.5 102.7,12.5 Z" fill="url(#snow-blend-r)" />
+        <path d="M103.8,10.8 L105,9 L106.6,10.8 C106,11.2 105.5,10.5 105,10.9 C104.5,10.5 104.2,11.1 103.8,10.8 Z" fill={isDark ? '#e2e6ec' : '#fafbfc'} opacity="0.8" />
+        <path d="M102.7,12.5 L105,9 L105,12 C104.3,12.4 103.5,12.6 102.7,12.5 Z" fill="rgba(0,0,0,0.05)" />
+        {/* Tiny cabin on right slope below peak */}
+        <g transform="translate(52.8,11.5) scale(0.55)">
+          <path d="M-1.8,0.15 Q-1,0.3 0,0.15 Q1,0.3 1.8,0.15 L1.5,0.5 Q0.5,0.6 -0.5,0.6 L-1.5,0.5 Z" fill="url(#hill-far)" />
+          <path d="M-1.6,0.2 Q0,0.35 1.6,0.2" fill="none" stroke={isDark ? '#d0d4da' : '#f0f2f5'} strokeWidth="0.2" opacity="0.5" />
+          <rect x={-0.8} y={-0.95} width="1.6" height="1.1" fill={isDark ? '#3a3530' : '#7a6a58'} />
+          <rect x={-0.8} y={-0.95} width="1.6" height="0.12" fill={isDark ? '#44403a' : '#8a7a65'} opacity="0.4" />
+          <polygon points="-1,-0.95 0,-1.75 1,-0.95" fill={isDark ? '#4a3028' : '#8a5040'} />
+          <polygon points="-1,-0.95 0,-1.75 0,-0.95" fill={isDark ? '#3a2820' : '#7a4438'} />
+          <path d="M-1.05,-0.95 L0,-1.8 L1.05,-0.95 Q0.7,-1.08 0.3,-1 Q0,-1.1 -0.3,-1 Q-0.7,-1.08 -1.05,-0.95 Z" fill={isDark ? '#c8ccd2' : '#eef0f4'} opacity="0.6" />
+          <rect x={0.4} y={-1.55} width="0.25" height="0.65" fill={isDark ? '#3a3530' : '#6a5a48'} />
+          <path d="M0.52,-1.55 Q0.58,-1.85 0.48,-2.1 Q0.56,-2.3 0.5,-2.55" stroke={isDark ? 'rgba(180,180,190,0.3)' : 'rgba(100,100,110,0.15)'} strokeWidth="0.1" fill="none" strokeLinecap="round" />
+          <rect x={-0.35} y={-0.6} width="0.28" height="0.25" rx="0.02" fill={isDark ? '#fbbf24' : '#c8b888'} opacity={isDark ? 0.6 : 0.3} />
+          <ellipse cx={0} cy={0.2} rx="1.1" ry="0.15" fill="rgba(0,0,0,0.12)" />
+        </g>
+        {/* Base shadow — atmospheric haze at mountain feet */}
+        <path d="M-10,30 L210,30 L210,34 L-10,34 Z" fill="rgba(0,0,0,0.06)" />
+        {/* Sunlit faces — soft warm wash across upper mountain faces */}
+        {p.mtnLightOpacity > 0.01 && (
+          <g>
+            <defs>
+              <linearGradient id="mtn-light-wash" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 2.5} />
+                <stop offset="40%" stopColor={p.sunColor || '#ffc864'} stopOpacity={p.mtnLightOpacity * 1.2} />
+                <stop offset="100%" stopColor={p.sunColor || '#ffc864'} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M-10,8 L210,8 L210,34 L-10,34 Z" fill="url(#mtn-light-wash)" opacity={p.mtnLightOpacity * 0.6} />
+          </g>
+        )}
+
+
+        {/* Moonlight on mountain faces */}
+        {(() => {
+          const isNight = timeState.hour >= 18 || timeState.hour < 6
+          if (!isNight) return null
+          const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+          const moonT = Math.max(0, Math.min(1, nightHour / 12))
+          const intensity = moonT < 0.15 ? moonT / 0.15 : moonT > 0.85 ? (1 - moonT) / 0.15 : 1
+          const mx = (1-moonT)*(1-moonT)*50 + 2*(1-moonT)*moonT*85 + moonT*moonT*120
+          return <g opacity={intensity * 0.4} style={{ pointerEvents: 'none' }}>
+            <defs>
+              <radialGradient id="moonlight-mtn" cx="50%" cy="60%" r="60%">
+                <stop offset="0%" stopColor="rgba(180,200,235,0.2)" />
+                <stop offset="50%" stopColor="rgba(160,185,220,0.08)" />
+                <stop offset="100%" stopColor="rgba(140,170,210,0)" />
+              </radialGradient>
+              <clipPath id="moonlight-clip-mtn">
+                <path d="M-10,28 L5,24 L15,12 L25,22 L35,10 L42,18 L50,8 L58,16 L68,11 L78,20 L85,14 L95,22 L105,9 L115,18 L125,13 L135,22 L145,16 L155,10 L165,20 L175,15 L185,22 L195,18 L210,24 L210,34 L-10,34 Z" />
+              </clipPath>
+            </defs>
+            <g clipPath="url(#moonlight-clip-mtn)">
+              <ellipse cx={mx} cy="18" rx="50" ry="20" fill="url(#moonlight-mtn)" />
+            </g>
+          </g>
+        })()}
 
         {/* Windmills — behind hills, on mountain slopes */}
         {(() => {
@@ -850,7 +842,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             })() + 0.5 + rng() * 3
             dots.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.06,0.06 0 1 1 0.01,0Z`)
           }
-          return <path d={dots.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.3" />
+          return <path d={dots.join('')} fill={isDark ? '#b07010' : '#e08010'} opacity="0.35" />
         })()}
 
         {/* Winding paths on hills — layered for terrain integration */}
@@ -863,8 +855,10 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const dirtBase = isDark ? '#2a2014' : '#8a7050'
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const dirtLight = isDark ? '#342a1a' : '#a08a60'
+          const edgeGrass = isDark ? '#1a2c14' : '#4a7a3a'
           const rng = seededRng(5599)
           const pebbles: string[] = []
+          const grassEdge: string[] = []
           const ruts: string[] = []
           const pts = [[-5,36.5],[10,34.5],[25,32],[35,30],[45,29],[55,28],[65,27.5],[80,25.5],[95,23.5],[110,21.5],[125,20.5],[140,20],[155,20],[165,20.5],[175,22.5],[185,24.5],[200,27.5]]
           const wornPatches: string[] = []
@@ -880,11 +874,22 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.03 + rng() * 0.06
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
-          // Advance RNG state to preserve downstream sequences (grass edge paths were removed)
           for (let i = 0; i < 50; i++) {
-            rng(); rng(); rng(); rng(); rng() // t, side, gx, gy, gh
-            rng() // gsway
-            if (rng() > 0.5) { rng(); rng() } // conditional blades
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const side = rng() > 0.5 ? 1 : -1
+            const gx = px + side * (0.35 + rng() * 0.4)
+            const gy = py + side * (0.08 + rng() * 0.2)
+            const gh = 0.2 + rng() * 0.4
+            const gsway = (rng() - 0.5) * 0.25
+            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
+            if (rng() > 0.5) {
+              grassEdge.push(`M${(gx + 0.1).toFixed(2)},${gy.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-gh * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-gh * 0.6).toFixed(2)}`)
+            }
           }
           for (let i = 0; i < 15; i++) {
             const t = 0.05 + rng() * 0.9
@@ -913,6 +918,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={wornPatches.join('')} fill={dirtLight} opacity={isDark ? 0.06 : 0.04} />
             <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.12 : 0.08} strokeLinecap="round" />
             <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.15 : 0.1} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.18 : 0.1} />
             <path d={branchD} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
             <path d={branchD} fill="none" stroke={dirtBase} strokeWidth="0.25" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
             <path d={spurD} fill="none" stroke={dirtBase} strokeWidth="0.2" opacity={isDark ? 0.15 : 0.1} strokeLinecap="round" />
@@ -1012,6 +1018,48 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={ripples.join('')} stroke={sparkle} strokeWidth="0.12" fill="none" />
             <path d={reeds.join('')} stroke={isDark ? '#1a3018' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity="0.5" />
           </g>
+        })()}
+        {/* Back hill — grass tufts along contour */}
+        {(() => {
+          const tufts: string[] = []
+          const bushPaths: string[] = []
+          const bladesPaths: string[] = []
+          const getBackY = (x: number) => {
+            if (x < 70) return 36 - (x + 10) * 10 / 80
+            if (x < 140) return 26 - (x - 70) * 7 / 70
+            return 19 + (x - 140) * 10 / 70
+          }
+          for (let i = 0; i < 60; i++) {
+            const rng = seededRng(i * 37 + 449)
+            const x = -5 + rng() * 215
+            const ridgeY = getBackY(x)
+            const baseY = ridgeY + 1 + rng() * 5
+            const h = 0.25 + rng() * 0.5
+            tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.15).toFixed(2)},${(-h).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.08).toFixed(2)},${(-h * 0.9).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
+          }
+          for (let i = 0; i < 35; i++) {
+            const rng = seededRng(i * 67 + 3311)
+            const x = 5 + rng() * 200
+            const ridgeY = getBackY(x)
+            const by = ridgeY + 2 + rng() * 4
+            const bw = 0.3 + rng() * 0.6
+            const bh = 0.15 + rng() * 0.3
+            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 40; i++) {
+            const rng = seededRng(i * 51 + 7723)
+            const x = 5 + rng() * 200
+            const ridgeY = getBackY(x)
+            const by = ridgeY + 1.5 + rng() * 5
+            const bh = 0.4 + rng() * 0.7
+            const curve = (rng() - 0.5) * 0.5
+            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+          }
+          return <>
+            <path d={bushPaths.join('')} fill={isDark ? '#142810' : '#3a6a2e'} opacity={isDark ? 0.08 : 0.05} />
+            <path d={tufts.join('')} stroke={isDark ? '#1e3818' : '#4a7a3a'} strokeWidth="0.2" fill="none" opacity={isDark ? 0.15 : 0.1} />
+            <path d={bladesPaths.join('')} stroke={isDark ? '#1a3416' : '#3a6830'} strokeWidth="0.15" fill="none" opacity={isDark ? 0.12 : 0.08} />
+          </>
         })()}
 
         {/* Distant orange grove — all orange trees on mid-hill contour */}
@@ -1218,7 +1266,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           }
           return <>
             <path d={rocks.join('')} fill={isDark ? '#1c1c1e' : '#929288'} opacity="0.22" />
-            <path d={flowers.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.25" />
+            <path d={flowers.join('')} fill={isDark ? '#b07010' : '#e08010'} opacity="0.3" />
           </>
         })()}
         {/* Front hill — tangerine trees */}
@@ -1270,6 +1318,48 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={fruits.join('')} fill={isDark ? '#b06810' : '#d97706'} opacity={0.65} />
           </g>
         })()}
+        {/* Front hill — grass tufts and brush */}
+        {(() => {
+          const tufts: string[] = []
+          const bushPaths: string[] = []
+          const bladesPaths: string[] = []
+          const getFrontY = (x: number) => {
+            if (x < 35) return 34 - (x + 10) * 7 / 45
+            if (x < 75) return 27 + (x - 35) * 3 / 40
+            return 30 + (x - 75) * 8 / 65
+          }
+          for (let i = 0; i < 50; i++) {
+            const rng = seededRng(i * 41 + 557)
+            const x = -5 + rng() * 150
+            const ridgeY = getFrontY(x)
+            const baseY = ridgeY + 1 + rng() * 4
+            const h = 0.4 + rng() * 0.7
+            tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
+          }
+          for (let i = 0; i < 30; i++) {
+            const rng = seededRng(i * 73 + 4411)
+            const x = 0 + rng() * 140
+            const ridgeY = getFrontY(x)
+            const by = ridgeY + 2 + rng() * 4
+            const bw = 0.4 + rng() * 0.8
+            const bh = 0.2 + rng() * 0.4
+            bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
+          }
+          for (let i = 0; i < 35; i++) {
+            const rng = seededRng(i * 47 + 8833)
+            const x = 0 + rng() * 140
+            const ridgeY = getFrontY(x)
+            const by = ridgeY + 1.5 + rng() * 5
+            const bh = 0.5 + rng() * 0.9
+            const curve = (rng() - 0.5) * 0.6
+            bladesPaths.push(`M${x.toFixed(1)},${by.toFixed(1)}C${(x + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(x + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(x + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+          }
+          return <>
+            <path d={bushPaths.join('')} fill={isDark ? '#182c12' : '#3a6a2e'} opacity={isDark ? 0.2 : 0.12} />
+            <path d={tufts.join('')} stroke={isDark ? '#223e1e' : '#527e42'} strokeWidth="0.22" fill="none" opacity="0.4" />
+            <path d={bladesPaths.join('')} stroke={isDark ? '#1e3818' : '#3e6e34'} strokeWidth="0.16" fill="none" opacity="0.3" />
+          </>
+        })()}
 
         {/* Front hill — dirt paths */}
         {(() => {
@@ -1278,8 +1368,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const branchPath2 = "M 72,31 C 75,33 76,35 75,38 C 74,39.5 73,40.5 72,41"
           const dirtBase = isDark ? '#2a2418' : '#8a7a5a'
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
+          const dirtLight = isDark ? '#342a1a' : '#a08a60'
+          const edgeGrass = isDark ? '#1a2e14' : '#4a7a3a'
           const rng = seededRng(7733)
           const pebbles: string[] = []
+          const grassEdge: string[] = []
           const ruts: string[] = []
           const pts = [[-5,35],[5,33],[12,30],[22,28.5],[30,27.5],[38,27],[45,27.5],[55,28],[62,29],[72,31],[82,33.5],[90,36],[100,37.5]]
           for (let i = 0; i < 35; i++) {
@@ -1294,9 +1387,19 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.05 + rng() * 0.08
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
-          // Advance RNG state to preserve downstream sequences (grass edge paths were removed)
           for (let i = 0; i < 25; i++) {
-            rng(); rng(); rng(); rng(); rng(); rng() // t, side, gx, gy, gh, gsway
+            const t = rng()
+            const idx = Math.floor(t * (pts.length - 1))
+            const frac = t * (pts.length - 1) - idx
+            const nxt = Math.min(idx + 1, pts.length - 1)
+            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
+            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
+            const side = rng() > 0.5 ? 1 : -1
+            const gx = px + side * (0.5 + rng() * 0.4)
+            const gy = py + side * (0.12 + rng() * 0.2)
+            const gh = 0.25 + rng() * 0.45
+            const gsway = (rng() - 0.5) * 0.25
+            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
           }
           for (let i = 0; i < 6; i++) {
             const t = 0.1 + rng() * 0.8
@@ -1314,6 +1417,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             <path d={mainPath} fill="none" stroke={dirtBase} strokeWidth="0.4" strokeLinecap="round" opacity={isDark ? 0.22 : 0.15} />
             <path d={ruts.join('')} stroke={dirtDark} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} strokeLinecap="round" />
             <path d={pebbles.join('')} fill={dirtDark} opacity={isDark ? 0.12 : 0.08} />
+            <path d={grassEdge.join('')} stroke={edgeGrass} strokeWidth="0.1" fill="none" opacity={isDark ? 0.15 : 0.1} />
             <path d={branchPath} fill="none" stroke={dirtDark} strokeWidth="0.5" strokeLinecap="round" opacity={isDark ? 0.1 : 0.06} />
             <path d={branchPath} fill="none" stroke={dirtBase} strokeWidth="0.3" strokeLinecap="round" opacity={isDark ? 0.18 : 0.12} />
             <path d={branchPath2} fill="none" stroke={dirtDark} strokeWidth="0.45" strokeLinecap="round" opacity={isDark ? 0.08 : 0.05} />
@@ -1347,8 +1451,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b0b8c8" />
                 </radialGradient>
                 <mask id="moon-crescent-mask">
-                  <circle cx={mx} cy={my} r="1.1" fill="white" />
-                  <circle cx={mx + 0.85} cy={my - 0.1} r="1.05" fill="black" />
+                  <circle cx={mx} cy={my} r="1.8" fill="white" />
+                  <circle cx={mx + 1.4} cy={my - 0.15} r="1.7" fill="black" />
                 </mask>
                 <radialGradient id="moon-edge-glow" cx="20%" cy="45%" r="80%">
                   <stop offset="0%" stopColor="#f0f4ff" />
@@ -1356,8 +1460,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b8c4d8" />
                 </radialGradient>
               </defs>
-              <ellipse cx={mx} cy={my} rx="4" ry="2.8" fill="url(#moon-glow-bg)" />
-              <circle cx={mx} cy={my} r="1.1" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx} cy={my} rx="6" ry="4" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
               {/* Craters — subtle darkening baked into the surface */}
               <circle cx={mx - 0.6} cy={my - 0.3} r="0.22" fill="rgba(160,170,190,0.35)" mask="url(#moon-crescent-mask)" />
               <circle cx={mx - 0.62} cy={my - 0.32} r="0.18" fill="rgba(180,188,205,0.25)" mask="url(#moon-crescent-mask)" />
@@ -1550,11 +1654,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const svgParts: string[] = []
           const stems: string[] = []
           const petalCols = isDark
-            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
-            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+            ? ['#d08520', '#c07010', '#e09830', '#b06a08']
+            : ['#e88510', '#f09a20', '#d97706', '#f5a835']
           const centerCols = isDark
-            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
-            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+            ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
+            : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
           for (let i = 0; i < 60; i++) {
             const rng = seededRng(i * 67 + 1237)
             const inField = rng() < 0.75
@@ -1610,7 +1714,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         <path d="M0,74 Q60,72 120,74 Q160,76 200,74" fill="none" stroke="rgba(40,60,30,0.1)" strokeWidth="0.3" />
         <path d="M0,86 Q50,84.5 100,86 Q150,87.5 200,86" fill="none" stroke="rgba(40,60,30,0.08)" strokeWidth="0.25" />
 
-        {/* Foreground grass tufts and ground texture */}
+        {/* Grass tufts and ground texture — baked */}
         {(() => {
           const grassC = isDark ? '#3a5a2e' : '#6a9a50'
           const grassL = isDark ? '#4a6a3a' : '#7aaa60'
@@ -1624,7 +1728,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 120; i++) {
             const rng = seededRng(i * 53 + 101)
             const x = 6 + rng() * 188
-            const y = 50 + rng() * 46
+            const y = 40 + rng() * 56
             const h = 0.4 + rng() * 0.7
             const sway = (rng() - 0.5) * 0.3
             d1.push(`M${x.toFixed(1)},${y.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
@@ -1636,7 +1740,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 25; i++) {
             const rng = seededRng(i * 71 + 3311)
             const px = 10 + rng() * 180
-            const py = 52 + rng() * 42
+            const py = 42 + rng() * 52
             const pw = 1.5 + rng() * 3
             const ph = 0.5 + rng() * 1.5
             patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${(px - pw * 0.3).toFixed(1)},${(py - ph).toFixed(1)} ${px.toFixed(1)},${(py - ph * 0.8).toFixed(1)}Q${(px + pw * 0.4).toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
@@ -1644,7 +1748,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           for (let i = 0; i < 15; i++) {
             const rng = seededRng(i * 93 + 5511)
             const dx = 10 + rng() * 180
-            const dy = 52 + rng() * 42
+            const dy = 42 + rng() * 52
             const dr = 0.3 + rng() * 0.5
             dirtSpots.push(`M${(dx + dr).toFixed(2)},${dy.toFixed(2)}a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 -${(dr * 2).toFixed(2)},0a${dr.toFixed(2)},${(dr * 0.4).toFixed(2)} 0 1 1 ${(dr * 2).toFixed(2)},0Z`)
           }
@@ -1768,11 +1872,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const rng = seededRng(6677)
           const petalCols = isDark
-            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
-            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+            ? ['#d08520', '#c07010', '#e09830', '#b06a08']
+            : ['#e88510', '#f09a20', '#d97706', '#f5a835']
           const centerCols = isDark
-            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
-            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+            ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
+            : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
           const flowerSvg: string[] = []
           const flowerStems: string[] = []
           const spots: [number, number][] = [
@@ -2021,9 +2125,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 `}</style>
                 <div className="absolute rounded-full" style={{
                   left: `${x}%`, top: `${y}%`,
-                  width: 3, height: 3,
-                  background: 'radial-gradient(circle, rgba(57,255,20,0.95) 0%, rgba(57,255,20,0) 70%)',
-                  boxShadow: '0 0 6px 2px rgba(57,255,20,0.5)',
+                  width: 4, height: 4,
+                  background: 'radial-gradient(circle, rgba(240,160,40,1) 0%, rgba(217,119,6,0.8) 40%, rgba(217,119,6,0) 70%)',
+                  boxShadow: '0 0 10px 4px rgba(217,119,6,0.7), 0 0 20px 6px rgba(217,119,6,0.25)',
                   animation: `firefly-glow ${glowDur}s ease-in-out ${delay}s infinite both, ${name} ${driftDur}s ease-in-out ${delay}s infinite both`,
                 }} />
               </div>
@@ -2255,15 +2359,15 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       <style>{`
         @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
         @keyframes firefly-glow {
-          0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+          0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
           15% { opacity: 0.06; }
           30% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
           45% { opacity: 0.6; }
-          50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(57,255,20,0.5); }
+          50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(217,119,6,0.5); }
           55% { opacity: 0.6; }
           70% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
           85% { opacity: 0.06; }
-          100% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+          100% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
         }
         @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
 @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
@@ -2784,92 +2888,6 @@ export const OrchardView = memo(function OrchardView({
     )
   }, [isDark])
 
-  const grassPaths = useMemo(() => {
-    const pad = 3
-    const yT = 38, yB = 100, steps = 24
-    const getL = (_y: number) => 0
-    const getR = (_y: number) => 100
-
-    const rngE = seededRng(4477)
-    let pathD = ''
-    const rightSeg: string[] = []
-    for (let i = 0; i <= steps; i++) {
-      const y = yT - pad + i * (yB - yT + pad * 2) / steps
-      const lx = getL(y) - pad + (rngE() - 0.5) * 1.0
-      const rx = getR(y) + pad + (rngE() - 0.5) * 1.0
-      if (i === 0) pathD += `M${lx.toFixed(1)},${y.toFixed(1)}`
-      else pathD += ` L${lx.toFixed(1)},${y.toFixed(1)}`
-      rightSeg.push(`${rx.toFixed(1)},${y.toFixed(1)}`)
-    }
-    for (let i = rightSeg.length - 1; i >= 0; i--) pathD += ` L${rightSeg[i]}`
-    pathD += 'Z'
-
-    const tufts: string[] = []
-    const blades: string[] = []
-    const clover: string[] = []
-    const bushes: string[] = []
-    for (let i = 0; i < 1500; i++) {
-      const rng = seededRng(i * 43 + 997)
-      const ty = yT - pad + rng() * (yB - yT + pad * 2)
-      const lE = getL(ty) - pad
-      const rE = getR(ty) + pad
-      const tx = lE + rng() * (rE - lE)
-      const edgeDist = Math.min(tx - lE, rE - tx, ty - (yT - pad), (yB + pad) - ty)
-      const fade = Math.min(1, edgeDist / 5)
-      if (fade < 0.05) continue
-      const h = (0.4 + rng() * 0.8) * fade
-      const sway = (rng() - 0.5) * 0.4
-      tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
-      tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
-      tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
-    }
-    for (let i = 0; i < 500; i++) {
-      const rng = seededRng(i * 59 + 1231)
-      const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
-      const lE = getL(by) - pad + 1
-      const rE = getR(by) + pad - 1
-      const bx = lE + rng() * (rE - lE)
-      const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
-      const fade = Math.min(1, edgeDist / 4)
-      if (fade < 0.08) continue
-      const bh = (0.5 + rng() * 1.0) * fade
-      const curve = (rng() - 0.5) * 0.7
-      blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
-    }
-    for (let i = 0; i < 60; i++) {
-      const rng = seededRng(i * 37 + 2099)
-      const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
-      const lE = getL(cy) - pad + 3
-      const rE = getR(cy) + pad - 3
-      const cx = lE + rng() * (rE - lE)
-      const cs = 0.12 + rng() * 0.1
-      for (let l = 0; l < 3; l++) {
-        const la = (l / 3) * Math.PI * 2 + rng() * 0.4
-        clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
-      }
-    }
-    for (let i = 0; i < 100; i++) {
-      const rng = seededRng(i * 83 + 6601)
-      const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
-      const lE = getL(by) - pad + 2
-      const rE = getR(by) + pad - 2
-      const bx = lE + rng() * (rE - lE)
-      const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
-      const fade = Math.min(1, edgeDist / 5)
-      if (fade < 0.1) continue
-      const bw = (0.5 + rng() * 0.9) * fade
-      const bh2 = (0.25 + rng() * 0.5) * fade
-      bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
-    }
-    return { tufts: tufts.join(''), blades: blades.join(''), clover: clover.join(''), bushes: bushes.join('') }
-  }, [])
-
-  const [detailReady, setDetailReady] = useState(false)
-  useEffect(() => {
-    const id = requestIdleCallback(() => setDetailReady(true))
-    return () => cancelIdleCallback(id)
-  }, [])
-
   const rarityCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     filteredTrees.forEach(t => {
@@ -2951,7 +2969,7 @@ export const OrchardView = memo(function OrchardView({
               ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
               : 'none',
           }}>
-            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: '"EB Garamond", serif' }}>
+            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
               {onOpenLeaderboard && (
                 <button onClick={onOpenLeaderboard} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
@@ -2960,21 +2978,21 @@ export const OrchardView = memo(function OrchardView({
               <div className="flex flex-col items-center justify-center">
                 <div ref={sapCounterRef} className="flex items-center gap-2">
                   <PulpIcon size={18} />
-                  <span className="text-[15px] font-semibold tabular-nums" style={{
+                  <span className="text-[15px] font-normal tabular-nums" style={{
                     color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)',
                     transition: 'transform 0.3s ease, color 0.3s ease',
                     transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
                   }}>{sap}</span>
                 </div>
                 {collectAllAnim.active && collectAllAnim.current < collectAllAnim.total && (
-                  <span className="text-[11px] font-bold tabular-nums" style={{
+                  <span className="text-[11px] font-normal tabular-nums" style={{
                     color: '#d97706',
                     transition: 'opacity 0.3s, transform 0.3s',
                     opacity: 0.85,
                   }}>+{collectAllAnim.current}</span>
                 )}
                 {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
-                  <span className="text-[11px] font-bold tabular-nums" style={{
+                  <span className="text-[11px] font-normal tabular-nums" style={{
                     color: '#d97706',
                     animation: 'sap-merge 0.5s ease-out forwards',
                   }}>+{collectAllAnim.total}</span>
@@ -2983,12 +3001,12 @@ export const OrchardView = memo(function OrchardView({
               <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
               <div className="flex items-center gap-2">
                 <GemIcon size={16} />
-                <span className="text-[15px] font-semibold tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
+                <span className="text-[15px] font-normal tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
               </div>
               {onOpenSatchel && (
                 <button onClick={onOpenSatchel} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)', position: 'relative' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 700, color: '#d97706', fontFamily: '"EB Garamond", serif' }}>{inventory.length}</span>}
+                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 400, color: '#d97706', fontFamily: 'Crimson Pro, serif' }}>{inventory.length}</span>}
                 </button>
               )}
               {onOpenShop && (
@@ -2999,7 +3017,7 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
           {/* Collect sap meter button — bottom center */}
-          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: '"EB Garamond", serif' }}>
+          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: 'Crimson Pro, serif' }}>
               <div style={{ position: 'relative' }}>
                 {(() => {
                   const available = getAvailableSap()
@@ -3015,7 +3033,7 @@ export const OrchardView = memo(function OrchardView({
                           padding: '8px 22px',
                           minWidth: 145,
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 400,
                           letterSpacing: '0.03em',
                           color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'),
                           cursor: hasSap ? 'pointer' : 'default',
@@ -3046,7 +3064,7 @@ export const OrchardView = memo(function OrchardView({
                     position: 'absolute', left: '50%', top: -28,
                     transform: 'translateX(-50%)',
                     pointerEvents: 'none', zIndex: 999,
-                    fontFamily: '"EB Garamond", serif', fontWeight: 800, fontSize: 20,
+                    fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 20,
                     color: '#d97706', textShadow: '0 1px 6px rgba(0,0,0,0.4)',
                     animation: 'sap-collect 1.2s ease-out forwards',
                   }}>
@@ -3084,7 +3102,7 @@ export const OrchardView = memo(function OrchardView({
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
-                  <span className="text-[9px] tabular-nums font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  <span className="text-[9px] tabular-nums font-normal uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Plot {plotPage + 1} <span className="opacity-50">/ {nbUnlocked}</span>
                   </span>
                   {plotPage + 1 < nbUnlocked ? (
@@ -3095,7 +3113,7 @@ export const OrchardView = memo(function OrchardView({
                     <button
                       onClick={unlockNextPlot}
                       disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all disabled:opacity-40"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
                       style={{ color: '#d97706' }}
                       title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
                     >
@@ -3126,18 +3144,96 @@ export const OrchardView = memo(function OrchardView({
               >
                 {(() => { return (
                   <>
-                    {detailReady && (
-                      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
-                        <path d={grassPaths.bushes} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.06 : 0.035} />
-                        <path d={grassPaths.tufts} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.12 : 0.07} />
-                        <path d={grassPaths.blades} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} />
-                        <path d={grassPaths.clover} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.06" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.08 : 0.04} />
-                      </svg>
-                    )}
-                    {detailReady && tillSvg}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 0 }}>
+                      {(() => {
+                        const pad = 3
+                        const yT = 38, yB = 100, steps = 24
+                        const getL = (_y: number) => 0
+                        const getR = (_y: number) => 100
+
+                        const rngE = seededRng(4477)
+                        let pathD = ''
+                        const rightSeg: string[] = []
+                        for (let i = 0; i <= steps; i++) {
+                          const y = yT - pad + i * (yB - yT + pad * 2) / steps
+                          const lx = getL(y) - pad + (rngE() - 0.5) * 1.0
+                          const rx = getR(y) + pad + (rngE() - 0.5) * 1.0
+                          if (i === 0) pathD += `M${lx.toFixed(1)},${y.toFixed(1)}`
+                          else pathD += ` L${lx.toFixed(1)},${y.toFixed(1)}`
+                          rightSeg.push(`${rx.toFixed(1)},${y.toFixed(1)}`)
+                        }
+                        for (let i = rightSeg.length - 1; i >= 0; i--) pathD += ` L${rightSeg[i]}`
+                        pathD += 'Z'
+
+                        const tufts: string[] = []
+                        const blades: string[] = []
+                        const clover: string[] = []
+                        const bushes: string[] = []
+                        for (let i = 0; i < 1500; i++) {
+                          const rng = seededRng(i * 43 + 997)
+                          const ty = yT - pad + rng() * (yB - yT + pad * 2)
+                          const lE = getL(ty) - pad
+                          const rE = getR(ty) + pad
+                          const tx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(tx - lE, rE - tx, ty - (yT - pad), (yB + pad) - ty)
+                          const fade = Math.min(1, edgeDist / 5)
+                          if (fade < 0.05) continue
+                          const h = (0.4 + rng() * 0.8) * fade
+                          const sway = (rng() - 0.5) * 0.4
+                          tufts.push(`M${tx.toFixed(1)},${ty.toFixed(1)}q${sway.toFixed(2)},${(-h * 0.5).toFixed(2)} ${(sway * 0.3).toFixed(2)},${(-h).toFixed(2)}`)
+                          tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
+                          tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
+                        }
+                        for (let i = 0; i < 500; i++) {
+                          const rng = seededRng(i * 59 + 1231)
+                          const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
+                          const lE = getL(by) - pad + 1
+                          const rE = getR(by) + pad - 1
+                          const bx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+                          const fade = Math.min(1, edgeDist / 4)
+                          if (fade < 0.08) continue
+                          const bh = (0.5 + rng() * 1.0) * fade
+                          const curve = (rng() - 0.5) * 0.7
+                          blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
+                        }
+                        for (let i = 0; i < 60; i++) {
+                          const rng = seededRng(i * 37 + 2099)
+                          const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
+                          const lE = getL(cy) - pad + 3
+                          const rE = getR(cy) + pad - 3
+                          const cx = lE + rng() * (rE - lE)
+                          const cs = 0.12 + rng() * 0.1
+                          for (let l = 0; l < 3; l++) {
+                            const la = (l / 3) * Math.PI * 2 + rng() * 0.4
+                            clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
+                          }
+                        }
+                        for (let i = 0; i < 100; i++) {
+                          const rng = seededRng(i * 83 + 6601)
+                          const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
+                          const lE = getL(by) - pad + 2
+                          const rE = getR(by) + pad - 2
+                          const bx = lE + rng() * (rE - lE)
+                          const edgeDist = Math.min(bx - lE, rE - bx, by - (yT - pad), (yB + pad) - by)
+                          const fade = Math.min(1, edgeDist / 5)
+                          if (fade < 0.1) continue
+                          const bw = (0.5 + rng() * 0.9) * fade
+                          const bh2 = (0.25 + rng() * 0.5) * fade
+                          bushes.push(`M${(bx - bw).toFixed(1)},${by.toFixed(1)}Q${(bx - bw * 0.4).toFixed(1)},${(by - bh2 * 1.4).toFixed(1)} ${bx.toFixed(1)},${(by - bh2).toFixed(1)}Q${(bx + bw * 0.5).toFixed(1)},${(by - bh2 * 1.3).toFixed(1)} ${(bx + bw).toFixed(1)},${by.toFixed(1)}Z`)
+                        }
+                        return <>
+                          <path d={bushes.join('')} fill={isDark ? '#1e3414' : '#3a7a2e'} opacity={isDark ? 0.06 : 0.035} />
+                          <path d={tufts.join('')} stroke={isDark ? '#2a5a1e' : '#4a8a3a'} strokeWidth="0.12" fill="none" opacity={isDark ? 0.12 : 0.07} />
+                          <path d={blades.join('')} stroke={isDark ? '#3a6a2a' : '#5a9a48'} strokeWidth="0.08" fill="none" opacity={isDark ? 0.1 : 0.06} />
+                          <path d={clover.join('')} stroke={isDark ? '#3a6a2a' : '#4a8a38'} strokeWidth="0.06" fill={isDark ? '#2a4a1e' : '#3a7a2e'} opacity={isDark ? 0.08 : 0.04} />
+                        </>
+                      })()}
+                    </svg>
+                    {tillSvg}
                     {filteredTrees.length === 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
-                        <p className="text-[11px] font-medium" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
+                        <p className="text-[11px] font-normal" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
                           {selectedNotebook === null ? 'Your orchard is empty.' :
                            selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                            'No trees grown for this notebook yet.'}
@@ -3174,16 +3270,167 @@ export const OrchardView = memo(function OrchardView({
                         </div>
                       )
                     })}
-                    {placed.map(({ x, y, tree, slotIndex }, renderIdx) => (
-                      <OrchardTree
-                        key={`${tree.id ?? 'tree'}-${renderIdx}`}
-                        tree={tree} x={x} y={y} slotIndex={slotIndex} renderIdx={renderIdx}
-                        baseSize={baseSize} isDark={isDark} editMode={editMode} activeTool={activeTool}
-                        textSecondary={textSecondary} textMuted={textMuted}
-                        hoveredElRef={hoveredElRef} hoveredZRef={hoveredZRef} dragElRef={dragElRef}
-                        onDragStart={handleDragStart} onChop={setChopTarget} onFocus={setFocusedTree}
-                      />
-                    ))}
+                    {placed.map(({ x, y, tree, slotIndex }, renderIdx) => {
+                      const typeInfo = TREE_TYPES[tree.type]
+                      const rarity = typeInfo?.rarity || 'common'
+                      const meta = RARITY_META[rarity] || RARITY_META.common
+                      const shape = typeInfo?.shape || 'oak'
+                      const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
+                      const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
+                      const depthScale = 0.55 + depthT * 0.55
+                      const treeSize = Math.round(baseSize * depthScale * shapeScale)
+                      const scaleY = 0.75 + depthT * 0.25
+                      const dimAmount = Math.round((1 - depthT) * 25)
+                      const skewX = ((x - 50) / 50) * (1 - depthT) * -2
+                      const glowColor = meta.color
+
+                      return (
+                        <div
+                          key={`${tree.id ?? 'tree'}-${renderIdx}`}
+                          className="absolute flex flex-col items-center group"
+                          onMouseEnter={(e) => {
+                            if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
+                            hoveredElRef.current = e.currentTarget
+                            hoveredZRef.current = e.currentTarget.style.zIndex
+                            e.currentTarget.style.zIndex = '998'
+                          }}
+                          onMouseLeave={(e) => {
+                            if (hoveredElRef.current === e.currentTarget) {
+                              e.currentTarget.style.zIndex = hoveredZRef.current
+                              hoveredElRef.current = null
+                            }
+                          }}
+                          onPointerDown={(e) => {
+                            if (editMode) {
+                              e.preventDefault()
+                              dragElRef.current = e.currentTarget as HTMLElement
+                              handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+                              return
+                            }
+                            if (activeTool === 'axe') {
+                              setChopTarget({ tree, sap: getSapYield(tree) })
+                              return
+                            }
+                            setFocusedTree({ tree, x, y })
+                          }}
+                          style={{
+                            left: `${x}%`,
+                            top: `${y}%`,
+                            transform: `translate(-50%, -${(75 + depthT * 10).toFixed(0)}%) scaleY(${scaleY.toFixed(3)}) skewX(${skewX.toFixed(1)}deg)`,
+                            transformOrigin: 'center bottom',
+                            zIndex: Math.round(y),
+                            cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
+                            opacity: 1,
+                          }}
+                        >
+                          <div style={{
+                            position: 'relative',
+                            transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
+                            transformOrigin: 'center bottom',
+                          }}>
+                          <div style={{
+                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
+                            transformOrigin: 'center bottom',
+                          }}>
+                            <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+                              filter: `brightness(${100 - dimAmount}%)`,
+                              transition: 'filter 0.3s',
+                              position: 'relative',
+                            }}>
+                              {(tree.ascension || 0) > 0 && (
+                                <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
+                                  position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
+                                }} />
+                              )}
+                              <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+                            </div>
+                            {/* Dirt mound */}
+                            <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
+                              <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
+                              <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
+                            </svg>
+                            {/* Ground shadow */}
+                            <div style={{
+                              position: 'absolute',
+                              left: '50%',
+                              bottom: -4,
+                              transform: 'translateX(-50%)',
+                              width: treeSize * 1.4,
+                              height: treeSize * 0.2,
+                              borderRadius: '50%',
+                              zIndex: -1,
+                              background: isDark
+                                ? 'rgba(0,0,0,0.12)'
+                                : 'rgba(30,25,15,0.18)',
+                              filter: 'blur(3px)',
+                              pointerEvents: 'none',
+                            }} />
+                            {/* Trunk base darkening */}
+                            <div style={{
+                              position: 'absolute',
+                              left: '50%',
+                              bottom: 0,
+                              transform: 'translateX(-50%)',
+                              width: treeSize * 0.3,
+                              height: treeSize * 0.15,
+                              zIndex: 1,
+                              background: isDark
+                                ? 'linear-gradient(to top, rgba(10,8,4,0.4) 0%, transparent 100%)'
+                                : 'linear-gradient(to top, rgba(40,30,15,0.2) 0%, transparent 100%)',
+                              pointerEvents: 'none',
+                              borderRadius: '50%',
+                            }} />
+                          </div>
+                          </div>
+
+                          {(() => {
+                            const popLeft = x > 50
+                            const planted = tree.plantedAt ? new Date(tree.plantedAt) : null
+                            const plantedStr = planted ? planted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null
+                            const ageMs = planted ? Date.now() - planted.getTime() : 0
+                            const ageDays = Math.floor(ageMs / 86400000)
+                            const ageHrs = Math.floor(ageMs / 3600000)
+                            const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
+                            return (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+                              zIndex: 300, position: 'absolute',
+                              top: '100%', left: '50%', transform: 'translateX(-50%)',
+                              marginTop: 4,
+                            }}>
+                              <div className="px-3 py-2 rounded-lg" style={{
+                                backgroundColor: isDark ? 'rgba(12,12,14,0.95)' : 'rgba(255,255,255,0.97)',
+                                border: `1.5px solid ${meta.border}`,
+                                boxShadow: `0 4px 16px rgba(0,0,0,0.2), inset 0 0 0 0.5px ${meta.border}`,
+                                minWidth: 110,
+                              }}>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="rounded-full" style={{ width: 5, height: 5, backgroundColor: meta.color, flexShrink: 0 }} />
+                                  <span className="text-[10px] font-normal tracking-wide whitespace-nowrap" style={{ color: meta.color }}>
+                                    {typeInfo?.name || tree.type}
+                                  </span>
+                                </div>
+                                {plantedStr && (
+                                  <div className="mt-1.5 flex flex-col gap-0.5">
+                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}>
+                                      Planted {plantedStr}
+                                    </span>
+                                    <span className="text-[8px] whitespace-nowrap" style={{ color: textMuted }}>
+                                      {ageStr}
+                                    </span>
+                                  </div>
+                                )}
+                                {tree.stage < 4 && (
+                                  <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+                                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            )
+                          })()}
+                        </div>
+                      )
+                    })}
                   </>
                 ); })()}
               </motion.div>
@@ -3192,10 +3439,10 @@ export const OrchardView = memo(function OrchardView({
           </div>
 
           {/* Tool buttons — left center */}
-          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: '"EB Garamond", serif' }}>
+          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
             <button
               onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
+              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
               style={{
                 width: 36, height: 36,
                 backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
@@ -3209,14 +3456,14 @@ export const OrchardView = memo(function OrchardView({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
             </button>
             {activeTool === 'axe' && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
+              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
                 Tap tree
               </span>
             )}
 
             <button
               onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-semibold transition-all"
+              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
               style={{
                 width: 36, height: 36,
                 backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
@@ -3230,7 +3477,7 @@ export const OrchardView = memo(function OrchardView({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             {editMode && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
+              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
                 Drag to move
               </span>
             )}
@@ -3281,17 +3528,17 @@ export const OrchardView = memo(function OrchardView({
                   <div style={{ transform: 'scale(0.8)' }}>
                     <PlantIcon type={chopTarget.tree.type} size={80} stage={chopTarget.tree.stage} hideGround />
                   </div>
-                  <span className="text-[13px] font-bold" style={{ color: isDark ? '#d4d0c8' : '#3a3630', fontFamily: 'EB Garamond, serif' }}>
+                  <span className="text-[13px] font-normal" style={{ color: isDark ? '#d4d0c8' : '#3a3630', fontFamily: 'EB Garamond, serif' }}>
                     Chop {TREE_TYPES[chopTarget.tree.type]?.name || chopTarget.tree.type}?
                   </span>
                   <div className="flex items-center gap-1.5">
                     <PulpIcon size={14} />
-                    <span className="text-[14px] font-bold" style={{ color: '#d97706' }}>+{chopTarget.sap} sap</span>
+                    <span className="text-[14px] font-normal" style={{ color: '#d97706' }}>+{chopTarget.sap} sap</span>
                   </div>
                   <div className="flex gap-2 mt-1 w-full">
                     <button
                       onClick={() => setChopTarget(null)}
-                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-colors"
                       style={{
                         backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                         color: isDark ? '#8a8780' : '#7a7670',
@@ -3301,7 +3548,7 @@ export const OrchardView = memo(function OrchardView({
                     </button>
                     <button
                       onClick={confirmChop}
-                      className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-colors"
                       style={{
                         backgroundColor: 'rgba(217,119,6,0.15)',
                         color: '#d97706',
@@ -3388,7 +3635,7 @@ export const OrchardView = memo(function OrchardView({
                         ? `0 20px 60px rgba(0,0,0,0.4), 0 0 ${currentAscension * 12}px ${tierGlow}40, 0 0 0 1px ${tierGlow}60`
                         : `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
                       minWidth: ascensionMode ? 360 : 240, maxWidth: ascensionMode ? 400 : 300,
-                      fontFamily: '"EB Garamond", serif',
+                      fontFamily: 'Crimson Pro, serif',
                       transition: 'min-width 0.2s, max-width 0.2s',
                     }}
                     onClick={e => e.stopPropagation()}
@@ -3406,12 +3653,12 @@ export const OrchardView = memo(function OrchardView({
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: tierGlow || meta.color }} />
-                      <span className="text-[16px] font-bold tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
+                      <span className="text-[16px] font-normal tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
                         {typeInfo?.name || ft.type}
                       </span>
                       {currentAscension > 0 && (
                         <span style={{
-                          fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+                          fontSize: 9, fontWeight: 400, letterSpacing: '0.08em',
                           padding: '1px 6px', borderRadius: 4,
                           backgroundColor: `${tierGlow}20`, color: tierGlow,
                           textTransform: 'uppercase',
@@ -3426,7 +3673,7 @@ export const OrchardView = memo(function OrchardView({
                         <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
                           <div className="flex justify-between">
                             <span>Stage</span>
-                            <span style={{ color: meta.color, fontWeight: 600 }}>{stageNames[ft.stage] || 'Unknown'}</span>
+                            <span style={{ color: meta.color, fontWeight: 400 }}>{stageNames[ft.stage] || 'Unknown'}</span>
                           </div>
                           {ft.stage < 4 && (
                             <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
@@ -3445,12 +3692,12 @@ export const OrchardView = memo(function OrchardView({
                           </div>
                           <div className="flex justify-between">
                             <span>Sap rate</span>
-                            <span style={{ color: '#d97706', fontWeight: 600 }}>{sapPerTick}/cycle</span>
+                            <span style={{ color: '#d97706', fontWeight: 400 }}>{sapPerTick}/cycle</span>
                           </div>
                           {currentAscension > 0 && (
                             <div className="flex justify-between">
                               <span>Ascension</span>
-                              <span style={{ color: tierGlow, fontWeight: 600 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
+                              <span style={{ color: tierGlow, fontWeight: 400 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
                             </div>
                           )}
                           {notebook && (
@@ -3464,7 +3711,7 @@ export const OrchardView = memo(function OrchardView({
                           {canAscend && (
                             <button
                               onClick={() => { setAscensionMode(true); setSelectedSacrifices([]) }}
-                              className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                              className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
                               style={{
                                 background: `linear-gradient(135deg, ${tierColors[currentAscension]}30, ${tierColors[currentAscension]}15)`,
                                 border: `1px solid ${tierColors[currentAscension]}40`,
@@ -3476,7 +3723,7 @@ export const OrchardView = memo(function OrchardView({
                           )}
                           <button
                             onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
-                            className="w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            className="w-full py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                             style={{
                               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                               color: isDark ? '#6a6860' : '#9a9690',
@@ -3495,11 +3742,11 @@ export const OrchardView = memo(function OrchardView({
                           }}>
                             <div className="flex justify-between mb-1">
                               <span>Sap cost</span>
-                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 600 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
+                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 400 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
                             </div>
                             <div className="flex justify-between">
                               <span>Sacrifices needed</span>
-                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 600 }}>
+                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 400 }}>
                                 {selectedSacrifices.length}/{sacrificeCount} <span style={{ opacity: 0.5 }}>({rarity}+ mature)</span>
                               </span>
                             </div>
@@ -3549,7 +3796,7 @@ export const OrchardView = memo(function OrchardView({
                                   >
                                     <PlantIcon type={t.type} size={28} stage={4} hideGround />
                                     <div className="flex-1 text-left">
-                                      <div style={{ fontWeight: 600, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
+                                      <div style={{ fontWeight: 400, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
                                       <div style={{ fontSize: 9, opacity: 0.5 }}>{ti?.rarity}{t.ascension ? ` · ${ASCENSION_TIERS[t.ascension - 1]?.name}` : ''}</div>
                                     </div>
                                     <div style={{
@@ -3570,7 +3817,7 @@ export const OrchardView = memo(function OrchardView({
                         <div className="w-full flex gap-2 mt-1">
                           <button
                             onClick={() => { setAscensionMode(false); setSelectedSacrifices([]) }}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                             style={{
                               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                               color: isDark ? '#6a6860' : '#9a9690',
@@ -3581,7 +3828,7 @@ export const OrchardView = memo(function OrchardView({
                           <button
                             onClick={doAscend}
                             disabled={!canAfford}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all"
+                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
                             style={{
                               background: canAfford
                                 ? `linear-gradient(135deg, ${tierColors[currentAscension]}, ${tierColors[currentAscension]}cc)`
@@ -3624,7 +3871,7 @@ export const OrchardView = memo(function OrchardView({
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                     boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                     maxWidth: '85vw', maxHeight: '80vh',
-                    fontFamily: '"EB Garamond", serif',
+                    fontFamily: 'Crimson Pro, serif',
                   }}
                   onClick={e => e.stopPropagation()}
                 >
@@ -3637,7 +3884,7 @@ export const OrchardView = memo(function OrchardView({
                   <div className="flex gap-2 w-full">
                     <button
                       onClick={() => setScreenshotData(null)}
-                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider"
+                      className="flex-1 py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                       style={{
                         backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
                         color: isDark ? '#8a8780' : '#7a7670',
@@ -3647,7 +3894,7 @@ export const OrchardView = memo(function OrchardView({
                     </button>
                     <button
                       onClick={shareScreenshot}
-                      className="flex-1 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider flex items-center justify-center gap-1.5"
                       style={{
                         backgroundColor: 'rgba(217,119,6,0.15)',
                         color: '#d97706',
