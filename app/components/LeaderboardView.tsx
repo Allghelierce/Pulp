@@ -161,39 +161,20 @@ export const LeaderboardView = memo(function LeaderboardView({ isOpen, onClose, 
       >
         {/* Header */}
         {!embedded && (
-          <div className="px-6 pt-5 pb-3 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+          <div className="px-6 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => { if (selectedPlayer !== null) setSelectedPlayer(null); else onClose() }}
-                  className={`w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </button>
-                <div className="flex items-center gap-2.5">
-                  <TierBadge tier={league?.tier || 'bronze'} size="md" isDark={isDark} />
-                  <div>
-                    <h2 className="text-[15px] font-bold tracking-widest" style={{ color: textPrimary, fontFamily: font }}>
-                      {tierName} League
-                    </h2>
-                    <p className="text-[10px] mt-0.5" style={{ color: textMuted, fontFamily: font }}>
-                      {daysLeftInWeek()}d left · {members.length} players
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <h2 style={{ fontFamily: font, fontSize: 20, fontWeight: 500, color: tierColor, letterSpacing: '-0.01em', textTransform: 'lowercase', margin: 0, lineHeight: 1.2 }}>
+                  {tierName} league
+                </h2>
+                <p style={{ fontFamily: font, fontSize: 12, color: textMuted, margin: '4px 0 0', textTransform: 'lowercase' }}>
+                  {daysLeftInWeek()}d left · {members.length} players
+                </p>
               </div>
               {league && (
-                <div
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold"
-                  style={{
-                    background: `${tierColor}15`,
-                    color: tierColor,
-                    border: `1px solid ${tierColor}25`,
-                    fontFamily: font,
-                  }}
-                >
-                  Week {Math.ceil((new Date().getTime() - new Date('2025-01-06').getTime()) / (7 * 86400000))}
-                </div>
+                <span style={{ fontFamily: font, fontSize: 11, color: textMuted, textTransform: 'lowercase' }}>
+                  week {Math.ceil((new Date().getTime() - new Date('2025-01-06').getTime()) / (7 * 86400000))}
+                </span>
               )}
             </div>
             <TierProgressBar currentTier={league?.tier || 'bronze'} isDark={isDark} />
