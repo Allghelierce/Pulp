@@ -546,131 +546,87 @@ export const BoutiqueView = memo(function BoutiqueView({
           {/* SHOP */}
           {activeTab === 'shop' && !selectedPlant && (
             <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-              {/* Botanical background */}
+              {/* Terraced landscape background */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                {/* Sky gradient */}
+                {/* Warm sky */}
                 <div style={{ position: 'absolute', inset: 0, background: isDark
-                  ? 'linear-gradient(to bottom, transparent 40%, rgba(14,28,10,0.3) 100%)'
-                  : 'linear-gradient(to bottom, transparent 40%, rgba(80,120,60,0.06) 100%)'
+                  ? 'linear-gradient(to bottom, transparent 30%, rgba(20,16,10,0.4) 100%)'
+                  : 'linear-gradient(to bottom, transparent 30%, rgba(200,180,140,0.12) 100%)'
                 }} />
-                {/* Terrain + trees */}
+                {/* Terraces SVG */}
                 <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '55%' }}>
                   <defs>
-                    <linearGradient id="sh-far" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#1a3012' : '#7aaa5a'} />
-                      <stop offset="100%" stopColor={isDark ? '#0c1a08' : '#5a8a3a'} />
+                    <linearGradient id="sh-t1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#3a3020' : '#c8b890'} />
+                      <stop offset="100%" stopColor={isDark ? '#2a2418' : '#b0a070'} />
                     </linearGradient>
-                    <linearGradient id="sh-mid" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#1e3816' : '#6a9a4a'} />
-                      <stop offset="100%" stopColor={isDark ? '#0e200a' : '#4a7a2a'} />
+                    <linearGradient id="sh-t2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#342a1c' : '#baa878'} />
+                      <stop offset="100%" stopColor={isDark ? '#241e14' : '#a09060'} />
                     </linearGradient>
-                    <linearGradient id="sh-near" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#243e1a' : '#5a8a3a'} />
-                      <stop offset="100%" stopColor={isDark ? '#121e0c' : '#3a6a22'} />
+                    <linearGradient id="sh-t3" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#2e2618' : '#a89868'} />
+                      <stop offset="100%" stopColor={isDark ? '#1e1a10' : '#908050'} />
                     </linearGradient>
-                    <linearGradient id="sh-front" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#2a4a1e' : '#4a7a2e'} />
-                      <stop offset="100%" stopColor={isDark ? '#162810' : '#2a5a18'} />
+                    <linearGradient id="sh-t4" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#282014' : '#988858'} />
+                      <stop offset="100%" stopColor={isDark ? '#18140c' : '#807040'} />
                     </linearGradient>
                   </defs>
 
-                  {/* Far hill */}
-                  <path d="M0 260 Q80 220 160 235 Q240 210 320 225 Q400 205 480 218 Q560 208 640 222 Q720 232 800 215 L800 400 L0 400Z" fill="url(#sh-far)" opacity={isDark ? 0.5 : 0.25} />
+                  {/* Terrace 1 — far, flat step */}
+                  <path d="M0 250 L0 240 L200 240 L200 244 Q300 238 400 242 L400 238 L600 238 L600 242 Q700 236 800 240 L800 250 L800 400 L0 400Z" fill="url(#sh-t1)" opacity={isDark ? 0.4 : 0.2} />
+                  <line x1="0" y1="240" x2="800" y2="238" stroke={isDark ? '#4a4030' : '#a09060'} strokeWidth="1" opacity={isDark ? 0.3 : 0.15} />
 
-                  {/* Far tangerine trees (small, silhouetted) */}
+                  {/* Terrace 2 */}
+                  <path d="M0 290 L0 275 Q100 272 200 275 L300 273 Q400 270 500 273 L600 271 Q700 268 800 272 L800 290 L800 400 L0 400Z" fill="url(#sh-t2)" opacity={isDark ? 0.5 : 0.28} />
+                  <line x1="0" y1="275" x2="800" y2="271" stroke={isDark ? '#4a3e2a' : '#98885a'} strokeWidth="1.2" opacity={isDark ? 0.35 : 0.18} />
+
+                  {/* Terrace 3 */}
+                  <path d="M0 330 L0 310 Q80 306 160 308 L300 306 Q400 304 520 306 L650 305 Q740 303 800 306 L800 330 L800 400 L0 400Z" fill="url(#sh-t3)" opacity={isDark ? 0.6 : 0.35} />
+                  <line x1="0" y1="308" x2="800" y2="305" stroke={isDark ? '#483a26' : '#908050'} strokeWidth="1.5" opacity={isDark ? 0.4 : 0.2} />
+
+                  {/* Terrace 4 — front */}
+                  <path d="M0 400 L0 345 Q100 342 200 344 L400 342 Q550 340 700 342 L800 341 L800 400Z" fill="url(#sh-t4)" opacity={isDark ? 0.7 : 0.4} />
+                  <line x1="0" y1="344" x2="800" y2="341" stroke={isDark ? '#443828' : '#887848'} strokeWidth="1.8" opacity={isDark ? 0.45 : 0.22} />
+
+                  {/* Grass tufts along terrace edges */}
                   {[
-                    { x: 120, y: 228 }, { x: 310, y: 220 }, { x: 520, y: 213 }, { x: 690, y: 222 },
-                  ].map((t, i) => (
-                    <g key={`ft${i}`} opacity={isDark ? 0.25 : 0.12}>
-                      <line x1={t.x} y1={t.y} x2={t.x} y2={t.y - 18} stroke={isDark ? '#2a3a1e' : '#5a7a3a'} strokeWidth="2" />
-                      <ellipse cx={t.x} cy={t.y - 24} rx={10} ry={9} fill={isDark ? '#1e3016' : '#5a8a3a'} />
-                      <circle cx={t.x + 4} cy={t.y - 20} r={2} fill={isDark ? '#6a4a10' : '#d97706'} opacity={0.6} />
-                    </g>
-                  ))}
-
-                  {/* Mid hill */}
-                  <path d="M0 290 Q60 265 130 275 Q200 255 280 262 Q360 248 440 258 Q520 250 600 260 Q680 268 750 255 Q780 252 800 260 L800 400 L0 400Z" fill="url(#sh-mid)" opacity={isDark ? 0.55 : 0.3} />
-
-                  {/* Mid tangerine trees */}
-                  {[
-                    { x: 70, y: 272 }, { x: 220, y: 258 }, { x: 400, y: 254 }, { x: 580, y: 256 }, { x: 740, y: 256 },
-                  ].map((t, i) => (
-                    <g key={`mt${i}`} opacity={isDark ? 0.35 : 0.18}>
-                      <line x1={t.x} y1={t.y} x2={t.x} y2={t.y - 28} stroke={isDark ? '#2a3a1a' : '#4a6a2a'} strokeWidth="2.5" />
-                      <ellipse cx={t.x - 5} cy={t.y - 32} rx={12} ry={11} fill={isDark ? '#1e3014' : '#5a8a3a'} />
-                      <ellipse cx={t.x + 7} cy={t.y - 30} rx={10} ry={10} fill={isDark ? '#223816' : '#4a7a30'} />
-                      <circle cx={t.x - 2} cy={t.y - 26} r={2.5} fill={isDark ? '#7a5a10' : '#d97706'} opacity={0.5} />
-                      <circle cx={t.x + 8} cy={t.y - 34} r={2} fill={isDark ? '#7a5a10' : '#d97706'} opacity={0.4} />
-                    </g>
-                  ))}
-
-                  {/* Near hill */}
-                  <path d="M0 320 Q50 300 110 308 Q180 292 260 298 Q340 286 420 294 Q500 288 580 296 Q660 302 730 292 Q770 290 800 298 L800 400 L0 400Z" fill="url(#sh-near)" opacity={isDark ? 0.6 : 0.35} />
-
-                  {/* Near tangerine trees (larger, more detail) */}
-                  {[
-                    { x: 55, y: 306 }, { x: 180, y: 295 }, { x: 340, y: 290 }, { x: 480, y: 291 }, { x: 630, y: 295 }, { x: 760, y: 292 },
-                  ].map((t, i) => (
-                    <g key={`nt${i}`} opacity={isDark ? 0.45 : 0.22}>
-                      <line x1={t.x} y1={t.y} x2={t.x} y2={t.y - 36} stroke={isDark ? '#2a3a18' : '#3a5a20'} strokeWidth="3" />
-                      <line x1={t.x} y1={t.y - 20} x2={t.x - 12} y2={t.y - 30} stroke={isDark ? '#2a3a18' : '#3a5a20'} strokeWidth="1.5" />
-                      <line x1={t.x} y1={t.y - 24} x2={t.x + 10} y2={t.y - 34} stroke={isDark ? '#2a3a18' : '#3a5a20'} strokeWidth="1.5" />
-                      <ellipse cx={t.x} cy={t.y - 42} rx={16} ry={14} fill={isDark ? '#1e3012' : '#4a7a2e'} />
-                      <ellipse cx={t.x - 10} cy={t.y - 34} rx={11} ry={10} fill={isDark ? '#223816' : '#5a8a3a'} />
-                      <ellipse cx={t.x + 10} cy={t.y - 36} rx={12} ry={10} fill={isDark ? '#1a2c10' : '#4a7828'} />
-                      <circle cx={t.x - 6} cy={t.y - 36} r={3} fill={isDark ? '#8a6a14' : '#d97706'} opacity={0.5} />
-                      <circle cx={t.x + 8} cy={t.y - 42} r={2.5} fill={isDark ? '#8a6a14' : '#d97706'} opacity={0.45} />
-                      <circle cx={t.x + 2} cy={t.y - 30} r={2.5} fill={isDark ? '#8a6a14' : '#d97706'} opacity={0.4} />
-                    </g>
-                  ))}
-
-                  {/* Front hill */}
-                  <path d="M0 345 Q40 332 100 338 Q160 328 240 333 Q320 324 400 330 Q480 326 560 332 Q640 336 720 328 Q760 326 800 332 L800 400 L0 400Z" fill="url(#sh-front)" opacity={isDark ? 0.7 : 0.4} />
-
-                  {/* Grass tufts on front hill */}
-                  {[
-                    { x: 20, y: 342 }, { x: 65, y: 336 }, { x: 110, y: 338 }, { x: 155, y: 332 },
-                    { x: 200, y: 334 }, { x: 250, y: 332 }, { x: 300, y: 328 }, { x: 350, y: 326 },
-                    { x: 400, y: 330 }, { x: 450, y: 328 }, { x: 500, y: 330 }, { x: 545, y: 332 },
-                    { x: 590, y: 333 }, { x: 640, y: 336 }, { x: 685, y: 330 }, { x: 730, y: 328 },
-                    { x: 775, y: 330 },
+                    { x: 60, y: 275 }, { x: 180, y: 274 }, { x: 350, y: 272 }, { x: 500, y: 273 }, { x: 680, y: 270 },
+                    { x: 100, y: 308 }, { x: 260, y: 306 }, { x: 420, y: 305 }, { x: 580, y: 306 }, { x: 740, y: 304 },
+                    { x: 50, y: 344 }, { x: 200, y: 343 }, { x: 350, y: 342 }, { x: 520, y: 341 }, { x: 680, y: 342 },
                   ].map((g, i) => {
-                    const gc = isDark ? '#2a4a1c' : '#4a7a2e'
+                    const gc = isDark ? '#4a4028' : '#7a7040'
                     return (
-                      <g key={`g${i}`} opacity={isDark ? 0.6 : 0.3}>
-                        <path d={`M${g.x} ${g.y} Q${g.x - 3} ${g.y - 10} ${g.x - 6} ${g.y - 14}`} stroke={gc} strokeWidth="1" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 1} ${g.y - 12} ${g.x - 1} ${g.y - 16}`} stroke={gc} strokeWidth="1" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 4} ${g.y - 10} ${g.x + 7} ${g.y - 13}`} stroke={gc} strokeWidth="1" fill="none" />
+                      <g key={`g${i}`} opacity={isDark ? 0.5 : 0.3}>
+                        <path d={`M${g.x} ${g.y} Q${g.x - 2} ${g.y - 6} ${g.x - 5} ${g.y - 9}`} stroke={gc} strokeWidth="0.8" fill="none" />
+                        <path d={`M${g.x} ${g.y} Q${g.x + 1} ${g.y - 8} ${g.x} ${g.y - 11}`} stroke={gc} strokeWidth="0.8" fill="none" />
+                        <path d={`M${g.x} ${g.y} Q${g.x + 3} ${g.y - 6} ${g.x + 6} ${g.y - 8}`} stroke={gc} strokeWidth="0.8" fill="none" />
                       </g>
                     )
                   })}
-
-                  {/* Grass tufts on near hill */}
-                  {[
-                    { x: 40, y: 308 }, { x: 95, y: 306 }, { x: 150, y: 300 }, { x: 210, y: 296 },
-                    { x: 270, y: 296 }, { x: 380, y: 290 }, { x: 440, y: 292 }, { x: 510, y: 292 },
-                    { x: 570, y: 294 }, { x: 660, y: 300 }, { x: 710, y: 294 }, { x: 790, y: 296 },
-                  ].map((g, i) => {
-                    const gc = isDark ? '#243e18' : '#5a8a3a'
-                    return (
-                      <g key={`gn${i}`} opacity={isDark ? 0.4 : 0.2}>
-                        <path d={`M${g.x} ${g.y} Q${g.x - 2} ${g.y - 7} ${g.x - 4} ${g.y - 10}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 1} ${g.y - 9} ${g.x} ${g.y - 12}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 3} ${g.y - 7} ${g.x + 5} ${g.y - 10}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                      </g>
-                    )
-                  })}
-
-                  {/* Scattered wildflowers */}
-                  {[
-                    { x: 85, y: 336 }, { x: 280, y: 326 }, { x: 460, y: 328 }, { x: 620, y: 334 }, { x: 750, y: 328 },
-                  ].map((f, i) => (
-                    <g key={`fl${i}`} opacity={isDark ? 0.35 : 0.2}>
-                      <line x1={f.x} y1={f.y} x2={f.x} y2={f.y - 8} stroke={isDark ? '#3a5a24' : '#5a8a3a'} strokeWidth="0.6" />
-                      <circle cx={f.x} cy={f.y - 9} r={1.5} fill={isDark ? '#8a6a20' : '#d97706'} />
-                    </g>
-                  ))}
                 </svg>
+
+                {/* Tangerine trees using PlantIcon sprites */}
+                {[
+                  { left: '8%', bottom: '32%', size: 22, opacity: isDark ? 0.5 : 0.35 },
+                  { left: '28%', bottom: '34%', size: 20, opacity: isDark ? 0.45 : 0.3 },
+                  { left: '62%', bottom: '33%', size: 22, opacity: isDark ? 0.5 : 0.35 },
+                  { left: '85%', bottom: '35%', size: 18, opacity: isDark ? 0.4 : 0.28 },
+                  { left: '15%', bottom: '22%', size: 30, opacity: isDark ? 0.6 : 0.45 },
+                  { left: '40%', bottom: '23%', size: 28, opacity: isDark ? 0.55 : 0.4 },
+                  { left: '55%', bottom: '21%', size: 32, opacity: isDark ? 0.6 : 0.45 },
+                  { left: '78%', bottom: '22%', size: 26, opacity: isDark ? 0.55 : 0.4 },
+                  { left: '5%', bottom: '11%', size: 38, opacity: isDark ? 0.7 : 0.55 },
+                  { left: '25%', bottom: '12%', size: 36, opacity: isDark ? 0.65 : 0.5 },
+                  { left: '48%', bottom: '10%', size: 40, opacity: isDark ? 0.7 : 0.55 },
+                  { left: '70%', bottom: '11%', size: 34, opacity: isDark ? 0.65 : 0.5 },
+                  { left: '92%', bottom: '12%', size: 36, opacity: isDark ? 0.7 : 0.55 },
+                ].map((t, i) => (
+                  <div key={`tree${i}`} style={{ position: 'absolute', left: t.left, bottom: t.bottom, opacity: t.opacity, transform: 'translateX(-50%)' }}>
+                    <PlantIcon type="tangerine" size={t.size} stage={4} hideGround disableSway />
+                  </div>
+                ))}
               </div>
 
 
