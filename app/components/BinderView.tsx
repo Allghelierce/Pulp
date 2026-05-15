@@ -35,7 +35,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       <div className="w-12 h-12 rounded-full bg-zinc-400/5 flex items-center justify-center group-hover:scale-110 transition-transform">
         <span className="text-2xl opacity-20 grayscale">🎴</span>
       </div>
-      <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-10">Empty Slot</span>
+      <span className="text-[10px] font-normal uppercase tracking-[0.2em] opacity-10">Empty Slot</span>
     </div>
   )
 
@@ -58,9 +58,9 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
 
       {/* Rarity Tag */}
       <div className="absolute top-2 left-2 flex flex-col">
-        <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">{typeInfo.rarity}</span>
+        <span className="text-[8px] font-normal uppercase tracking-[0.2em] opacity-30">{typeInfo.rarity}</span>
         {typeInfo.rarity === 'sacred' && (
-          <span className="text-[6px] font-bold italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
+          <span className="text-[6px] font-normal italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
         )}
       </div>
 
@@ -73,7 +73,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
             backgroundColor: `${tierColors[tier]}20`,
             border: `1px solid ${tierColors[tier]}40`,
           }}>
-            <span style={{ fontSize: 7, fontWeight: 800, color: tierColors[tier], letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 7, fontWeight: 400, color: tierColors[tier], letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {ASCENSION_TIERS[tier]?.name}
             </span>
           </div>
@@ -87,15 +87,15 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
           <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-50 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         </div>
         <div className="text-center z-10 transition-transform group-hover:scale-105 duration-500">
-          <h4 className="font-black text-xs uppercase tracking-tight leading-none mb-0.5">{typeInfo.name}</h4>
-          <p className="text-[9px] font-bold opacity-40 uppercase tracking-widest italic">Estate Collection</p>
+          <h4 className="font-normal text-xs uppercase tracking-tight leading-none mb-0.5">{typeInfo.name}</h4>
+          <p className="text-[9px] font-normal opacity-40 uppercase tracking-widest italic">Estate Collection</p>
         </div>
       </div>
 
       {/* Progress & Actions */}
       <div className="w-full mt-2 space-y-1.5 z-10">
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
+          <div className="flex items-center justify-between text-[8px] font-normal uppercase tracking-widest opacity-40">
             <span>Growth Progress</span>
             <span>{Math.floor(card.progress)}%</span>
           </div>
@@ -111,7 +111,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
         
         <div className="flex gap-2">
           <button 
-            className="flex-1 py-1.5 rounded-md bg-black/5 hover:bg-black/10 text-[8px] font-black uppercase tracking-[0.15em] transition-all opacity-40 hover:opacity-100 hover:scale-95"
+            className="flex-1 py-1.5 rounded-md bg-black/5 hover:bg-black/10 text-[8px] font-normal uppercase tracking-[0.15em] transition-all opacity-40 hover:opacity-100 hover:scale-95"
             onClick={(e) => { e.stopPropagation(); alert("Trading system coming soon!"); }}
           >
             Initiate Trade
@@ -130,8 +130,8 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
           >
             <div className="flex flex-col items-center gap-2 -mt-4">
               <span className="text-4xl">💰</span>
-              <span className="font-black text-xs tracking-widest uppercase">Redeem Estate</span>
-              <div className="px-4 py-1 rounded-full bg-white/20 text-[10px] font-bold">
+              <span className="font-normal text-xs tracking-widest uppercase">Redeem Estate</span>
+              <div className="px-4 py-1 rounded-full bg-white/20 text-[10px] font-normal">
                 +{Math.floor(typeInfo.cost * 1.5)} {typeInfo.currency === 'sap' ? <PulpIcon size={12} /> : <GemIcon size={12} />}
               </div>
             </div>
@@ -285,10 +285,10 @@ export const BinderView = memo(function BinderView({
              <div className="flex-1 p-10 flex flex-col relative">
                 <div className="flex items-center justify-between mb-6">
                    <div className="flex flex-col">
-                      <h2 className="text-3xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">PULP ESTATE</h2>
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mt-2">Folio Archetype v2.4</span>
+                      <h2 className="text-3xl font-normal italic tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">PULP ESTATE</h2>
+                      <span className="text-[10px] font-normal uppercase tracking-[0.3em] text-zinc-400 mt-2">Folio Archetype v2.4</span>
                    </div>
-                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 1}</div>
+                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-normal tracking-widest text-black">PG {page * 2 + 1}</div>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-4 flex-1">
@@ -305,14 +305,14 @@ export const BinderView = memo(function BinderView({
                 <div className="flex items-center justify-between mb-6">
                    <div className="flex items-center gap-6">
                       <div className="flex flex-col">
-                         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Yield Balance</span>
-                         <div className="flex items-center gap-4 mt-1 font-black text-sm">
+                         <span className="text-[8px] font-normal uppercase tracking-widest text-zinc-400">Yield Balance</span>
+                         <div className="flex items-center gap-4 mt-1 font-normal text-sm">
                             <span className="flex items-center gap-1.5"><PulpIcon size={18} /> {sap}</span>
                             <span className="flex items-center gap-1.5"><GemIcon size={18} /> {gems}</span>
                          </div>
                       </div>
                    </div>
-                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-black tracking-widest text-black">PG {page * 2 + 2}</div>
+                   <div className="px-3 py-1 bg-black/5 rounded-full text-[10px] font-normal tracking-widest text-black">PG {page * 2 + 2}</div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 flex-1">
@@ -332,15 +332,15 @@ export const BinderView = memo(function BinderView({
                 disabled={page === 0}
                 className="group flex flex-col items-center gap-1 transition-all disabled:opacity-20 hover:scale-105 active:scale-95"
              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-black group-hover:text-white transition-colors">Previous</span>
+                <span className="text-[10px] font-normal uppercase tracking-widest text-black group-hover:text-white transition-colors">Previous</span>
                 <div className="w-12 h-1 bg-zinc-700 rounded-full group-hover:bg-emerald-500 transition-colors" />
              </button>
 
              <div className="flex items-center gap-4">
-                <div className="text-[10px] font-black text-black bg-black/20 px-4 py-2 rounded-full uppercase tracking-[0.2em]">{page + 1} / {totalPages}</div>
+                <div className="text-[10px] font-normal text-black bg-black/20 px-4 py-2 rounded-full uppercase tracking-[0.2em]">{page + 1} / {totalPages}</div>
                 <button
                   onClick={() => setPlantingPlot(-1)}
-                  className="flex items-center gap-4 px-10 py-4 rounded-lg bg-[#fbf9f6] text-[#121214] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white active:scale-95 transition-all group"
+                  className="flex items-center gap-4 px-10 py-4 rounded-lg bg-[#fbf9f6] text-[#121214] font-normal text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white active:scale-95 transition-all group"
                 >
                   <span className="text-xl -mt-1 group-hover:rotate-90 transition-transform">+</span> 
                   Deposit Asset
@@ -352,7 +352,7 @@ export const BinderView = memo(function BinderView({
                 disabled={page >= totalPages - 1}
                 className="group flex flex-col items-center gap-1 transition-all disabled:opacity-20 hover:scale-105 active:scale-95"
              >
-                <span className="text-[10px] font-black uppercase tracking-widest text-black group-hover:text-white transition-colors">Next</span>
+                <span className="text-[10px] font-normal uppercase tracking-widest text-black group-hover:text-white transition-colors">Next</span>
                 <div className="w-12 h-1 bg-zinc-700 rounded-full group-hover:bg-emerald-500 transition-colors" />
              </button>
           </div>
@@ -375,8 +375,8 @@ export const BinderView = memo(function BinderView({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                       <h3 className="text-2xl font-black italic tracking-tighter uppercase leading-none">Select Asset</h3>
-                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2">{inventory.length} seeds available in cold storage</span>
+                       <h3 className="text-2xl font-normal italic tracking-tighter uppercase leading-none">Select Asset</h3>
+                       <span className="text-[10px] font-normal text-zinc-400 uppercase tracking-widest mt-2">{inventory.length} seeds available in cold storage</span>
                     </div>
                     <button onClick={() => setPlantingPlot(null)} className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-black/10 transition-colors">
                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -397,8 +397,8 @@ export const BinderView = memo(function BinderView({
                              <PlantIcon type={type} size={40} />
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-black text-sm uppercase tracking-tight">{TREE_TYPES[type].name}</span>
-                            <span className="text-[9px] text-zinc-400 uppercase font-black tracking-widest mt-1 italic">{TREE_TYPES[type].rarity}</span>
+                            <span className="font-normal text-sm uppercase tracking-tight">{TREE_TYPES[type].name}</span>
+                            <span className="text-[9px] text-zinc-400 uppercase font-normal tracking-widest mt-1 italic">{TREE_TYPES[type].rarity}</span>
                           </div>
                         </button>
                       ))

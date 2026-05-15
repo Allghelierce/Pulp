@@ -3,7 +3,7 @@ import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const FocusDistributionWidget = memo(function FocusDistributionWidget({ isDark, grove, notes }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -27,14 +27,14 @@ const FocusDistributionWidget = memo(function FocusDistributionWidget({ isDark, 
 
   return (
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
+      <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
         Focus by Notebook
       </span>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5 }}>
         {distribution.map((item, i) => (
           <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
-              fontSize: 8, fontWeight: 600, color: textMuted,
+              fontSize: 8, fontWeight: 400, color: textMuted,
               width: 60, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>{item.name}</span>
             <div style={{ flex: 1, height: 5, borderRadius: 3, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
@@ -43,7 +43,7 @@ const FocusDistributionWidget = memo(function FocusDistributionWidget({ isDark, 
                 background: colors[i % colors.length], transition: 'width 500ms ease',
               }} />
             </div>
-            <span style={{ fontSize: 8, fontWeight: 600, color: textMuted, width: 16, textAlign: 'right' }}>{item.count}</span>
+            <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, width: 16, textAlign: 'right' }}>{item.count}</span>
           </div>
         ))}
       </div>

@@ -150,7 +150,7 @@ export const TimerPanel = memo(function TimerPanel({
   const timeText = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
   const progress = isStopwatch ? Math.min(1, elapsed / 3600) : (total > 0 ? (elapsed / total) : 0)
 
-  const btnBase = `px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all`
+  const btnBase = `px-4 py-1.5 rounded-full text-[9px] font-normal uppercase tracking-widest transition-all`
   const btnInactive = `${isDark ? "bg-zinc-900 text-zinc-600" : "bg-white text-zinc-300"} hover:text-zinc-500`
 
   return (
@@ -177,10 +177,10 @@ export const TimerPanel = memo(function TimerPanel({
 
           <div className="relative z-10 flex flex-col items-center w-full text-center px-6">
             <header className="mb-10" style={{ filter: 'url(#cozy-sketch)' }}>
-              <span className={`text-[10px] font-black uppercase tracking-[0.4em] mb-3 block ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
+              <span className={`text-[10px] font-normal uppercase tracking-[0.4em] mb-3 block ${isDark ? "text-zinc-700" : "text-zinc-400"}`}>
                 Concentration Sanctuary
               </span>
-              <h2 className="text-2xl font-medium tracking-tighter" style={{ fontFamily: '"EB Garamond", serif', color: isDark ? "#fff" : "#1a1a1a" }}>
+              <h2 className="text-2xl font-normal tracking-tighter" style={{ fontFamily: 'Crimson Pro, serif', color: isDark ? "#fff" : "#1a1a1a" }}>
                 Distraction Blocker
               </h2>
               <div className="h-[1px] w-12 bg-orange-500/40 mx-auto mt-4" />
@@ -189,8 +189,8 @@ export const TimerPanel = memo(function TimerPanel({
             <div className="flex flex-col items-center w-full mb-12">
               <motion.div
                 animate={{ scale: running ? [1, 1.02, 1] : 1 }}
-                className="text-7xl font-bold tabular-nums mb-8"
-                style={{ fontFamily: '"EB Garamond", serif', color: isDark ? "#fff" : "#1a1a1a", filter: 'url(#cozy-sketch)' }}
+                className="text-7xl font-normal tabular-nums mb-8"
+                style={{ fontFamily: 'Crimson Pro, serif', color: isDark ? "#fff" : "#1a1a1a", filter: 'url(#cozy-sketch)' }}
               >
                 {timeText}
               </motion.div>
@@ -229,7 +229,7 @@ export const TimerPanel = memo(function TimerPanel({
                          onChange={(e) => handleSliderChange(e.target.value)}
                          className="flex-1 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#d97706]"
                        />
-                       <span className="text-[10px] text-zinc-500 font-bold whitespace-nowrap">{total / 60}m</span>
+                       <span className="text-[10px] text-zinc-500 font-normal whitespace-nowrap">{total / 60}m</span>
                     </div>
                   )}
                </div>
@@ -243,7 +243,7 @@ export const TimerPanel = memo(function TimerPanel({
                         exit={{ opacity: 0, y: 10, scale: 0.9 }}
                         className="absolute bottom-full mb-2 bg-zinc-900 border border-zinc-800 rounded-lg py-3 px-4 shadow-xl z-50 flex flex-col items-center gap-2 min-w-[140px]"
                       >
-                        <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider whitespace-nowrap">Are you sure?</span>
+                        <span className="text-[10px] text-zinc-300 font-normal uppercase tracking-wider whitespace-nowrap">Are you sure?</span>
                         <div className="flex gap-4">
                           <button 
                             onClick={(e) => { 
@@ -251,13 +251,13 @@ export const TimerPanel = memo(function TimerPanel({
                               onSetRunning(false); onSetElapsed(0); onSetDone(false)
                               setConfirmGiveUp(false); onClose()
                             }}
-                            className="text-[9px] text-red-500 font-black uppercase hover:underline"
+                            className="text-[9px] text-red-500 font-normal uppercase hover:underline"
                           >
                             Yes
                           </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); setConfirmGiveUp(false) }}
-                            className="text-[9px] text-zinc-500 font-black uppercase hover:underline"
+                            className="text-[9px] text-zinc-500 font-normal uppercase hover:underline"
                           >
                             No
                           </button>
@@ -276,14 +276,14 @@ export const TimerPanel = memo(function TimerPanel({
                       animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                     />
-                    <span className="relative z-10 text-white font-black text-[11px] tracking-[0.3em] uppercase drop-shadow-sm">
+                    <span className="relative z-10 text-white font-normal text-[11px] tracking-[0.3em] uppercase drop-shadow-sm">
                        {done ? "TAKE REWARD" : running ? "PAUSE SESSION" : "PLANT SEEDS"}
                     </span>
                   </button>
 
                   <button 
                     onClick={() => setConfirmGiveUp(true)} 
-                    className="text-[9px] font-black uppercase tracking-[0.3em] transition-all opacity-40 hover:opacity-100 hover:text-red-500 hover:underline py-2"
+                    className="text-[9px] font-normal uppercase tracking-[0.3em] transition-all opacity-40 hover:opacity-100 hover:text-red-500 hover:underline py-2"
                   >
                     Give Up
                   </button>

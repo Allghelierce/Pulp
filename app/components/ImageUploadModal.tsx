@@ -95,14 +95,14 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           <div className="flex gap-6">
             <button
               onClick={() => setTab("upload")}
-              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "upload" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
               {tab === "upload" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Upload
             </button>
             <button
               onClick={() => setTab("link")}
-              className={cn("pb-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative", tab === "link" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
+              className={cn("pb-2 text-[10px] font-normal uppercase tracking-[0.2em] transition-all relative", tab === "link" ? "text-white" : "text-zinc-500 hover:text-zinc-300")}
             >
               {tab === "link" && <motion.div layoutId="mediaTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />}
               Embed
@@ -117,7 +117,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           {tab === "upload" ? (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>Insert Media</h3>
+                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>Insert Media</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">Photos, GIFs, or short videos.</p>
               </div>
 
@@ -139,7 +139,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                     <Upload className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-zinc-300">Choose File</p>
+                    <p className="text-xs font-normal uppercase tracking-[0.1em] text-zinc-300">Choose File</p>
                     <p className="text-[9px] text-zinc-500 mt-1 uppercase tracking-widest">or drop here</p>
                   </div>
                 </div>
@@ -177,7 +177,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
           ) : (
             <div className="flex flex-col gap-6">
               <div className="space-y-1">
-                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: '"EB Garamond", serif' }}>External Link</h3>
+                <h3 className="text-xl text-white tracking-widest" style={{ fontFamily: 'Crimson Pro, serif' }}>External Link</h3>
                 <p className="text-xs text-zinc-500 leading-relaxed font-serif italic">YouTube, Vimeo, or direct image URL.</p>
               </div>
 
@@ -213,7 +213,7 @@ export function ImageUploadModal({ onConfirm, onClose }: ImageUploadModalProps) 
                 triggerLinkEmbed()
               }
             }}
-            className="w-full py-4 rounded-lg text-white text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+            className="w-full py-4 rounded-lg text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
             style={{ backgroundColor: pulpOrange, boxShadow: `0 8px 24px -6px ${pulpOrange}44` }}
           >
             Insert Selection

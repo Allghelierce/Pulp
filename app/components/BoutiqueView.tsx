@@ -88,7 +88,7 @@ function getDropChance(weight: number): string {
   return `${pct.toFixed(2)}%`
 }
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
@@ -391,7 +391,7 @@ export const BoutiqueView = memo(function BoutiqueView({
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
   const CurrencyPill = ({ amount }: { amount: number }) => (
-    <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
+    <span className={`inline-flex items-center gap-1.5 text-[12px] font-normal tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
@@ -522,7 +522,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 500,
+                  color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 400,
                   display: 'flex', alignItems: 'center', gap: 4,
                 }}
               >
@@ -530,8 +530,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                 Back
               </button>
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
-                <span style={{ fontSize: 10, fontWeight: 600, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
+                <span style={{ fontSize: 10, fontWeight: 400, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                   {RARITY_LABEL[previewInfo.rarity]}
                 </span>
               </div>
@@ -632,10 +632,10 @@ export const BoutiqueView = memo(function BoutiqueView({
 
               {(() => { return (<>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 36, fontWeight: 700, fontFamily: '"EB Garamond", serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
+                <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 500, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
+                  <span style={{ fontSize: 11, fontWeight: 400, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
                 </div>
                 {/* Ornamental divider */}
                 <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.2 : 0.15 }}>
@@ -717,7 +717,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                       {isDailyDeal && (
                         <div style={{
                           position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                          fontSize: 7, fontWeight: 800, color: '#d97706', letterSpacing: '0.1em',
+                          fontSize: 7, fontWeight: 400, color: '#d97706', letterSpacing: '0.1em',
                           textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
                           background: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)',
                           padding: '2px 8px', borderRadius: 4,
@@ -793,7 +793,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {discount > 0 && (
                               <div style={{
                                 position: 'absolute', top: 14, right: 18,
-                                fontSize: 8, fontWeight: 800, color: '#d97706',
+                                fontSize: 8, fontWeight: 400, color: '#d97706',
                                 opacity: isDark ? 0.4 : 0.35,
                               }}>%</div>
                             )}
@@ -840,7 +840,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* Rarity label */}
                             <div style={{
                               position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 7, fontWeight: 700, color: rarityCol,
+                              fontSize: 7, fontWeight: 400, color: rarityCol,
                               letterSpacing: '0.08em', textTransform: 'uppercase',
                               background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
                               padding: '2px 6px', borderRadius: 3,
@@ -852,8 +852,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* Tree name */}
                             <div style={{
                               position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 11, fontWeight: 700, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
-                              fontFamily: '"EB Garamond", serif', letterSpacing: '0.04em',
+                              fontSize: 11, fontWeight: 400, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
+                              fontFamily: 'Crimson Pro, serif', letterSpacing: '0.04em',
                               background: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)',
                               padding: '2px 8px', borderRadius: 3,
                               backdropFilter: 'blur(4px)', zIndex: 5,
@@ -865,7 +865,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {soldOut ? (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 700, color: textMuted, textTransform: 'uppercase',
+                                fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
                                 background: isDark ? 'rgba(39,39,42,0.8)' : 'rgba(228,228,231,0.9)',
                                 padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
@@ -873,7 +873,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             ) : (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 700,
+                                fontSize: 7, fontWeight: 400,
                                 color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
                                 background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)',
                                 padding: '2px 6px', borderRadius: 3,
@@ -884,7 +884,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {discount > 0 && false && (
                               <div style={{
                                 position: 'absolute', bottom: 36, right: 18,
-                                fontSize: 8, fontWeight: 800, color: '#fff',
+                                fontSize: 8, fontWeight: 400, color: '#fff',
                                 background: '#d97706', padding: '2px 5px', borderRadius: 3,
                                 zIndex: 5,
                               }}>-{discount}%</div>
@@ -980,20 +980,20 @@ export const BoutiqueView = memo(function BoutiqueView({
                           }} />
                           {discount > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                              <span style={{ fontSize: 7, fontWeight: 800, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
+                              <span style={{ fontSize: 7, fontWeight: 400, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 0 }}>
                                 <PulpIcon size={8} />
-                                <span style={{ fontSize: 7, fontWeight: 600, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
+                                <span style={{ fontSize: 7, fontWeight: 400, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <PulpIcon size={8} />
-                                <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', fontFamily: font }}>{price}</span>
+                                <span style={{ fontSize: 10, fontWeight: 400, color: '#dc2626', fontFamily: font }}>{price}</span>
                               </div>
                             </div>
                           ) : (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
                               <PulpIcon size={8} />
-                              <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
+                              <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
                             </div>
                           )}
                         </div>
@@ -1075,7 +1075,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
                     color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 600, fontFamily: font, letterSpacing: '0.04em',
+                    fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
                   }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
@@ -1145,7 +1145,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         onClick={() => setPreviewStage(si)}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
-                          fontSize: 8, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
+                          fontSize: 8, fontWeight: 400, letterSpacing: '0.04em', textTransform: 'uppercase',
                           color: previewStage === si ? textPrimary : textMuted,
                           fontFamily: font, transition: 'color 0.15s',
                         }}
@@ -1161,20 +1161,20 @@ export const BoutiqueView = memo(function BoutiqueView({
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                 {/* Rarity badge */}
                 <span style={{
-                  fontSize: 9, fontWeight: 700, color: rarityCol, letterSpacing: '0.08em',
+                  fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em',
                   textTransform: 'uppercase', fontFamily: font, marginBottom: 6,
                 }}>
                   {RARITY_LABEL[previewInfo.rarity]}
                 </span>
 
                 {/* Name */}
-                <div style={{ fontSize: 24, fontWeight: 600, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
+                <div style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
                   {previewInfo.name}
                 </div>
 
                 {/* Category */}
                 {cat !== 'none' && (
-                  <span style={{ fontSize: 10, fontWeight: 600, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
+                  <span style={{ fontSize: 10, fontWeight: 400, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
                     {CATEGORY_LABEL[cat]}
                   </span>
                 )}
@@ -1187,26 +1187,26 @@ export const BoutiqueView = memo(function BoutiqueView({
                 {/* Stats row */}
                 <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
+                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <PulpIcon size={12} />
                       {previewInfo.sapYield || 2}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
+                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
+                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
+                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
+                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
                   </div>
                 </div>
 
                 {/* Price + Buy */}
                 {stock <= 0 ? (
                   <div style={{
-                    fontSize: 13, fontWeight: 700, fontFamily: font,
+                    fontSize: 13, fontWeight: 400, fontFamily: font,
                     color: isDark ? '#71717a' : '#a1a1aa',
                     padding: '10px 0',
                   }}>
@@ -1223,7 +1223,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         background: '#d97706', color: '#fff',
                         opacity: cantAfford ? 0.35 : 1,
-                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 400,
                       }}
                     >
                       Buy Seed
@@ -1236,7 +1236,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         </>
                       ) : previewInfo.cost.toLocaleString()}
                     </button>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: textMuted, fontFamily: font }}>
+                    <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>
                       ×{stock} left
                     </span>
                   </div>
@@ -1251,18 +1251,18 @@ export const BoutiqueView = memo(function BoutiqueView({
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setActiveTab('shop')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                   Back
                 </button>
-                <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Satchel</span>
-                <span className={`text-[11px] font-semibold ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{inventory.length}/{MAX_SEEDS}</span>
+                <span className={`text-[10px] font-normal uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Satchel</span>
+                <span className={`text-[11px] font-normal ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{inventory.length}/{MAX_SEEDS}</span>
               </div>
               {inventory.length === 0 ? (
                 <div className={`text-center py-16 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
                   <div className="text-[32px] mb-3 opacity-40">🌱</div>
-                  <div className="text-[14px] font-medium">No seeds yet</div>
+                  <div className="text-[14px] font-normal">No seeds yet</div>
                   <div className="text-[12px] mt-1 opacity-70">Buy seeds from the market to grow your orchard.</div>
                 </div>
               ) : (
@@ -1297,8 +1297,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             <PlantIcon type={type} size={22} isSeed />
                           </div>
                           <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                            <div style={{ fontSize: 8, fontWeight: 700, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
+                            <div style={{ fontSize: 11, fontWeight: 400, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                            <div style={{ fontSize: 8, fontWeight: 400, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
                           </div>
                         </button>
                         <button
@@ -1324,7 +1324,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               <div style={{ marginBottom: 16 }}>
                 <button
                   onClick={() => setActiveTab('shop')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                   Back
@@ -1333,7 +1333,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               {isRenderingCatalog ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', opacity: 0.6 }}>
                   <span style={{ fontSize: 24, marginBottom: 12 }}>📖</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: textMuted, fontFamily: font }}>Opening catalog...</span>
+                  <span style={{ fontSize: 13, fontWeight: 400, color: textMuted, fontFamily: font }}>Opening catalog...</span>
                 </div>
               ) : (
                 RARITY_ORDER.map(rarity => {
@@ -1352,9 +1352,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: rc, boxShadow: complete ? `0 0 8px ${rc}60` : 'none' }} />
-                          <span style={{ fontSize: 11, fontWeight: 700, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
+                          <span style={{ fontSize: 11, fontWeight: 400, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
+                        <span style={{ fontSize: 11, fontWeight: 400, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
                       </div>
                       <div style={{ height: 6, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
                         <div style={{ width: `${pct}%`, height: '100%', background: complete ? rc : `linear-gradient(90deg, ${rc}90, ${rc}50)`, borderRadius: 3, transition: 'width 0.4s ease', boxShadow: pct > 0 ? `0 0 8px ${rc}30` : 'none' }} />
@@ -1411,12 +1411,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                               </svg>
                               )}
                               {owned && (
-                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 700, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
+                              <div style={{ position: 'absolute', top: 6, left: 6, fontSize: 7, fontWeight: 400, color: RARITY_COLOR[t.rarity], letterSpacing: '0.04em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '1px 4px', borderRadius: 3, backdropFilter: 'blur(4px)', zIndex: 2 }}>
                                 {getDropChance(t.weight)}
                               </div>
                               )}
                               {owned && (type === 'tangerine' ? (
-                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 700, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
+                                <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 8, fontWeight: 400, color: '#d97706', letterSpacing: '0.06em', background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, backdropFilter: 'blur(4px)', zIndex: 2, textTransform: 'uppercase' }}>
                                   Default
                                 </div>
                               ) : (
@@ -1426,9 +1426,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                               ))}
                             </div>
                             <div style={{ padding: '6px 8px', borderTop: `1px solid ${owned ? dividerColor : 'transparent'}` }}>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: owned ? textPrimary : textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: owned ? 1 : 0.4 }}>{owned ? t.name : '???'}</div>
+                              <div style={{ fontSize: 11, fontWeight: 400, color: owned ? textPrimary : textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: owned ? 1 : 0.4 }}>{owned ? t.name : '???'}</div>
                               <div style={{ marginTop: 2 }}>
-                                <span style={{ fontSize: 8, fontWeight: 600, color: owned ? RARITY_COLOR[t.rarity] : textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: owned ? 1 : 0.4 }}>{RARITY_LABEL[t.rarity]}</span>
+                                <span style={{ fontSize: 8, fontWeight: 400, color: owned ? RARITY_COLOR[t.rarity] : textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: owned ? 1 : 0.4 }}>{RARITY_LABEL[t.rarity]}</span>
                               </div>
                             </div>
                           </button>
@@ -1478,21 +1478,21 @@ export const BoutiqueView = memo(function BoutiqueView({
               className={`rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}
               style={{ fontFamily: font }}
             >
-              <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary, marginBottom: 6 }}>Satchel Full</div>
+              <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, marginBottom: 6 }}>Satchel Full</div>
               <div style={{ fontSize: 12, color: textSecondary, lineHeight: 1.5 }}>
                 You have {MAX_SEEDS}/{MAX_SEEDS} seeds. Plant or discard some before buying more.
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setSatchelFullPopup(false); setActiveTab('satchel') }}
-                  className="px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
+                  className="px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all"
                   style={{ background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer' }}
                 >
                   Open Satchel
                 </button>
                 <button
                   onClick={() => setSatchelFullPopup(false)}
-                  className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${isDark ? 'text-zinc-400 hover:bg-zinc-800' : 'text-zinc-500 hover:bg-zinc-100'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all ${isDark ? 'text-zinc-400 hover:bg-zinc-800' : 'text-zinc-500 hover:bg-zinc-100'}`}
                   style={{ background: 'none', border: `1px solid ${cardBorder}`, cursor: 'pointer' }}
                 >
                   Close

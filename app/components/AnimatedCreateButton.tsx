@@ -16,7 +16,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
   return (
     <motion.button
       onClick={onClick}
-      className="relative w-full rounded-lg font-medium overflow-hidden active:scale-95"
+      className="relative w-full rounded-lg font-normal overflow-hidden active:scale-95"
       style={{ height: "48px", paddingTop: "4px" }}
       whileHover="hover"
       initial="initial"
@@ -57,7 +57,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
 
       {/* Layer 1 - Main button (on top) */}
       <motion.div
-        className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 text-white font-medium overflow-hidden"
+        className="absolute inset-0 rounded-lg flex items-center justify-center gap-2 text-white font-normal overflow-hidden"
         style={{
           backgroundColor: color,
           zIndex: 2,
@@ -84,7 +84,7 @@ export function AnimatedCreateButton({ onClick, accent, theme }: AnimatedCreateB
 
         {/* Hover text */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center font-bold text-white z-10"
+          className="absolute inset-0 flex items-center justify-center font-normal text-white z-10"
           style={{ height: "48px" }}
           variants={{
             initial: { y: 48, opacity: 0 },

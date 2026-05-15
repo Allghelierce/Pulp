@@ -3,7 +3,7 @@ import { memo, useState } from "react"
 import { motion } from "framer-motion"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
 
 function loadGoals() {
@@ -41,7 +41,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 12, gap: 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
+        <span style={{ fontSize: 9, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
         <button
           onClick={() => { setDraftGoals(goals); setEditingGoals(e => !e) }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: textMuted, display: 'flex' }}
@@ -93,7 +93,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           const abbr = ['mins', 'char', 'sesh'][i]
           return (
             <text key={`l-${i}`} x={cx} y={cy - 10 + i * 13} textAnchor="middle" dominantBaseline="central">
-              <tspan style={{ fontSize: 10, fontWeight: 600, fill: ring.color }}>{pct}% {abbr}</tspan>
+              <tspan style={{ fontSize: 10, fontWeight: 400, fill: ring.color }}>{pct}% {abbr}</tspan>
             </text>
           )
         })}

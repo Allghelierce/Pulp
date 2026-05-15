@@ -96,7 +96,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
       <div
         className={`w-[340px] h-full flex flex-col shadow-2xl border-l ${isDark ? "bg-[#09090b] border-zinc-800" : "bg-white border-zinc-200"}`}
         onClick={e => e.stopPropagation()}
-        style={{ fontFamily: '"EB Garamond", serif' }}
+        style={{ fontFamily: 'Crimson Pro, serif' }}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
@@ -110,14 +110,14 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-zinc-400" : "text-zinc-500"}>
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
             </svg>
-            <span className={`text-[13px] font-semibold truncate ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
+            <span className={`text-[13px] font-normal truncate ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
               Version History
             </span>
           </div>
           <button
             onClick={() => { const updated = onSaveSnapshot(); setLocalVersions(updated) }}
             title="Save snapshot now"
-            className={`text-[10px] font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
+            className={`text-[10px] font-normal px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
           >
             Save now
           </button>
@@ -132,20 +132,20 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
         {/* Preview pane */}
         {previewVersion && (
           <div className={`mx-3 mb-2 rounded-lg border p-3 ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
-            <div className={`text-[10px] font-bold uppercase tracking-wide mb-1.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Preview</div>
+            <div className={`text-[10px] font-normal uppercase tracking-wide mb-1.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Preview</div>
             <div className={`text-[11px] leading-relaxed line-clamp-4 ${isDark ? "text-zinc-300" : "text-zinc-600"}`}>
               {getPagePreview(previewVersion.pages)}
             </div>
             <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => { onRestore(previewVersion); onClose() }}
-                className="text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer"
+                className="text-[10px] font-normal px-2.5 py-1 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors cursor-pointer"
               >
                 Restore this version
               </button>
               <button
                 onClick={() => setPreviewIdx(null)}
-                className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
+                className={`text-[10px] font-normal px-2 py-1 rounded-lg transition-colors cursor-pointer ${isDark ? "text-zinc-400 hover:bg-zinc-800" : "text-zinc-500 hover:bg-zinc-100"}`}
               >
                 Cancel
               </button>
@@ -163,14 +163,14 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-3 opacity-40">
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
-              <p className="text-[12px] font-medium">No versions yet</p>
+              <p className="text-[12px] font-normal">No versions yet</p>
               <p className="text-[10px] mt-1 opacity-70">Versions are saved automatically every 5 minutes and when you switch notes.</p>
             </div>
           )}
 
           {grouped.map(group => (
             <div key={group.label} className="mt-3 first:mt-0">
-              <div className={`text-[9px] font-bold uppercase tracking-widest px-1 mb-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+              <div className={`text-[9px] font-normal uppercase tracking-widest px-1 mb-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
                 {group.label}
               </div>
               <div className="space-y-1">
@@ -189,7 +189,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className={`text-[11px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+                          <div className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
                             {formatTimestamp(v.timestamp)}
                           </div>
                           <div className={`text-[10px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
@@ -222,7 +222,7 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
                           ) : (
                             <button
                               onClick={() => { onDelete(v.timestamp); setLocalVersions(prev => prev.filter(x => x.timestamp !== v.timestamp)); setConfirmIdx(null) }}
-                              className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                              className="text-[9px] font-normal px-1.5 py-0.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
                             >
                               Delete?
                             </button>

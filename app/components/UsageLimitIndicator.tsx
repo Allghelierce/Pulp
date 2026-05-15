@@ -30,13 +30,13 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
         <div>
           <div className="flex items-center justify-between mb-2">
             <label
-              className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              className={`text-xs font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
               style={{ transform: `rotate(${Math.random() * 0.5 - 0.25}deg)` }}
             >
               AI Sketches
             </label>
             <span
-              className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
+              className={`text-xs font-normal ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
               style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
             >
               {limits.sketchesRemaining === Infinity ? "∞" : Math.floor(limits.sketchesRemaining)} remaining
@@ -59,13 +59,13 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
         <div>
           <div className="flex items-center justify-between mb-2">
             <label
-              className={`text-xs font-semibold ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+              className={`text-xs font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
               style={{ transform: `rotate(${Math.random() * 0.5 - 0.25}deg)` }}
             >
               AI Tokens
             </label>
             <span
-              className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
+              className={`text-xs font-normal ${isDark ? "text-zinc-500" : "text-zinc-500"}`}
               style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
             >
               {limits.tokensRemaining.toLocaleString()} remaining
@@ -98,7 +98,7 @@ export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" 
             }}
           />
           <span
-            className={`text-xs font-semibold capitalize ${isDark ? "text-zinc-400" : "text-zinc-600"}`}
+            className={`text-xs font-normal capitalize ${isDark ? "text-zinc-400" : "text-zinc-600"}`}
             style={{ transform: `rotate(${Math.random() * 0.4 - 0.2}deg)` }}
           >
             {usage.tier} tier

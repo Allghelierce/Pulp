@@ -2,7 +2,7 @@
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const StatsSummaryWidget = memo(function StatsSummaryWidget({ isDark, dailyStats, grove }: WidgetProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -39,8 +39,8 @@ const StatsSummaryWidget = memo(function StatsSummaryWidget({ isDark, dailyStats
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: 16, height: '100%', alignContent: 'center' }}>
       {stats.map(({ label, value }) => (
         <div key={label}>
-          <span style={{ fontSize: 7, fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: textPrimary, fontFamily: font }}>{value}</span>
+          <span style={{ fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
+          <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{value}</span>
         </div>
       ))}
     </div>

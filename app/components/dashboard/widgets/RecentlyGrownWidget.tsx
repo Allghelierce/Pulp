@@ -4,7 +4,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "../../PlantIcon"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = '"EB Garamond", serif'
+const font = 'Crimson Pro, serif'
 
 const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }: WidgetProps) {
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -29,7 +29,7 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
   return (
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', borderRadius: 20 }}>
       <span style={{
-        position: 'absolute', top: 8, left: 14, fontSize: 10, fontWeight: 700,
+        position: 'absolute', top: 8, left: 14, fontSize: 10, fontWeight: 400,
         color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em',
         textTransform: 'uppercase', fontFamily: font, zIndex: 2,
       }}>Recently Grown</span>
