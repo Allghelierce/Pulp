@@ -11,15 +11,15 @@ import { GlassFilter } from "@/components/ui/liquid-glass-button"
 const ShopCountdown = memo(function ShopCountdown() {
   const [cd, setCd] = useState('')
   useEffect(() => {
-    const THREE_H = 3 * 60 * 60 * 1000
+    const TWELVE_H = 12 * 60 * 60 * 1000
     const tick = () => {
-      const next = (Math.floor(Date.now() / THREE_H) + 1) * THREE_H
+      const next = (Math.floor(Date.now() / TWELVE_H) + 1) * TWELVE_H
       const diff = next - Date.now()
       if (diff <= 0) { setCd('0:00'); return }
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-      setCd(`${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`)
+      setCd(`${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`)
     }
     tick()
     const id = setInterval(tick, 1000)
