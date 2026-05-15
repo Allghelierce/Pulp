@@ -4,7 +4,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { CachedPlantImage } from "./CachedPlantImage"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
-const font = 'Crimson Pro, serif'
+const font = '"EB Garamond", serif'
 
 const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, grove }: WidgetProps) {
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -19,10 +19,10 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
   return (
     <div style={{ padding: 14, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
           Collection
         </span>
-        <span style={{ fontSize: 10, fontWeight: 400, color: '#d97706', fontFamily: font }}>
+        <span style={{ fontSize: 10, fontWeight: 600, color: '#d97706', fontFamily: font }}>
           {collected}/{total} ({pct}%)
         </span>
       </div>
@@ -47,7 +47,7 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
             >
               <CachedPlantImage type={key} size={38} stage={4} />
               <span style={{
-                fontSize: 6, fontWeight: 400, marginTop: 2,
+                fontSize: 6, fontWeight: 600, marginTop: 2,
                 color: has ? textSecondary : textMuted,
                 textAlign: 'center', lineHeight: 1.1,
                 maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

@@ -4,6 +4,9 @@ import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "../../PlantIcon"
 
 const cache = new Map<string, string>()
+let preloadDone = false
+const listeners = new Set<() => void>()
+
 const RENDER_SIZE = 64
 
 function cacheKey(type: string, stage: number) {
@@ -15,8 +18,8 @@ function serializeSvg(svg: SVGElement): string {
   return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(str)))}`
 }
 
-export function isPlantCached(type: string, stage: number): boolean {
-  return cache.has(cacheKey(type, stage))
+function notifyListeners() {
+  listeners.forEach(fn => fn())
 }
 
 export const CachedPlantImage = memo(function CachedPlantImage({
@@ -26,38 +29,50 @@ export const CachedPlantImage = memo(function CachedPlantImage({
 }) {
   const key = cacheKey(type, stage)
   const [src, setSrc] = useState(() => cache.get(key) || '')
-  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (src) return
     const cached = cache.get(key)
     if (cached) { setSrc(cached); return }
-    if (!containerRef.current) return
-    const svg = containerRef.current.querySelector('svg')
-    if (!svg) return
-
-    const url = serializeSvg(svg)
-    cache.set(key, url)
-    setSrc(url)
+    const listener = () => {
+      const url = cache.get(key)
+      if (url) { setSrc(url); listeners.delete(listener) }
+    }
+    listeners.add(listener)
+    return () => { listeners.delete(listener) }
   }, [key, src])
 
   if (src) {
     return <img src={src} width={size} height={size} alt="" style={{ display: 'block' }} />
   }
 
+  const color = TREE_TYPES[type]?.color || '#888'
   return (
-    <div ref={containerRef} style={{ width: RENDER_SIZE, height: RENDER_SIZE, position: 'absolute', left: -9999, top: -9999, pointerEvents: 'none' }}>
-      <PlantIcon type={type} size={RENDER_SIZE} stage={stage} hideGround disableSway />
-    </div>
+    <svg width={size} height={size} viewBox="0 0 38 38">
+      <circle cx={19} cy={22} r={8} fill={color} opacity={0.3} />
+    </svg>
   )
 })
 
 export const PlantImagePreloader = memo(function PlantImagePreloader() {
   const ref = useRef<HTMLDivElement>(null)
-  const [done, setDone] = useState(false)
+  const [batch, setBatch] = useState(0)
+  const [done, setDone] = useState(preloadDone)
+
+  const types = Object.keys(TREE_TYPES)
+  const BATCH_SIZE = 8
 
   useEffect(() => {
-    const id = requestIdleCallback(() => {
+    if (done) return
+    const start = batch * BATCH_SIZE
+    if (start >= types.length) {
+      preloadDone = true
+      setDone(true)
+      notifyListeners()
+      return
+    }
+
+    const id = requestAnimationFrame(() => {
       if (!ref.current) return
       const svgs = ref.current.querySelectorAll<SVGElement>('[data-plant-key] svg')
       svgs.forEach(svg => {
@@ -66,18 +81,20 @@ export const PlantImagePreloader = memo(function PlantImagePreloader() {
           cache.set(key, serializeSvg(svg))
         }
       })
-      setDone(true)
-    }, { timeout: 5000 })
-    return () => cancelIdleCallback(id)
-  }, [])
+      notifyListeners()
+      setBatch(b => b + 1)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [batch, done, types.length])
 
   if (done) return null
 
-  const types = Object.keys(TREE_TYPES)
+  const start = batch * BATCH_SIZE
+  const slice = types.slice(start, start + BATCH_SIZE)
 
   return (
     <div ref={ref} style={{ position: 'absolute', left: -9999, top: -9999, width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none' }} aria-hidden>
-      {types.map(type => (
+      {slice.map(type => (
         <div key={type} data-plant-key={cacheKey(type, 4)}>
           <PlantIcon type={type} size={RENDER_SIZE} stage={4} hideGround disableSway />
         </div>
