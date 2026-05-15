@@ -115,6 +115,7 @@ interface SidebarProps {
   onSearchNavigate?: (noteId: string, pageIdx: number) => void
   onSetCover?: (noteId: string) => void
   mini?: boolean
+  onCloseAllPanels?: () => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -125,7 +126,7 @@ export const Sidebar = memo(function Sidebar({
   onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
-  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini,
+  archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini, onCloseAllPanels,
 }: SidebarProps) {
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
@@ -606,27 +607,27 @@ export const Sidebar = memo(function Sidebar({
 
         {mini ? (
           <div className="relative flex flex-col items-center h-full z-10 pt-5 pb-4">
-            <span className="mb-6 shrink-0" style={{ fontFamily: '"EB Garamond", serif', fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
-            <div className="flex flex-col items-center gap-1.5 px-2 w-full">
+            <span className="mb-6 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={onCloseAllPanels} style={{ fontFamily: '"EB Garamond", serif', fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
+            <div className="flex flex-col items-center gap-1 px-2 w-full">
               {onOpenShop && (
-                <button onClick={onOpenShop} title="Market" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
+                <button onClick={onOpenShop} title="Market" className="w-11 h-11 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
                 </button>
               )}
               {onOpenStats && (
-                <button onClick={onOpenStats} title="Stats" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                <button onClick={onOpenStats} title="Stats" className="w-11 h-11 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
                 </button>
               )}
               {onOpenLeaderboard && (
-                <button onClick={onOpenLeaderboard} title="Leaderboard" className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                <button onClick={onOpenLeaderboard} title="Leaderboard" className="w-11 h-11 flex items-center justify-center rounded-xl transition-colors hover:bg-white/[0.07] text-zinc-500 hover:text-zinc-300">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                 </button>
               )}
             </div>
             <div className="mt-auto flex justify-center">
-              <button onClick={onOpenSettings} title="Settings" className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06] text-zinc-600 hover:text-zinc-400">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <button onClick={onOpenSettings} title="Settings" className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors hover:bg-white/[0.06] text-zinc-600 hover:text-zinc-400">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               </button>
             </div>
           </div>

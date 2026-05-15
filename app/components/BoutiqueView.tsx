@@ -488,6 +488,10 @@ export const BoutiqueView = memo(function BoutiqueView({
           0%, 100% { box-shadow: 0 0 12px #d9770630, 0 0 24px #d9770610; }
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
+        @keyframes card-float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        @keyframes card-float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
+        @keyframes card-float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
+        @keyframes card-float-3 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
         .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .seed-packet:hover { transform: translateY(-4px); }
         .seed-cracking { animation: seed-spin-reveal 0.6s ease-in-out, seed-wobble 0.6s ease-in-out !important; }
@@ -499,13 +503,7 @@ export const BoutiqueView = memo(function BoutiqueView({
       >
         {/* Header */}
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 8px', position: 'relative', zIndex: 10 }}>
-          <button
-            onClick={onClose}
-            className="transition-all"
-            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#8a8680' : '#7a7670' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+          <div style={{ width: 28 }} />
           <CurrencyPill amount={sap} />
         </div>
 
@@ -561,6 +559,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                       <stop offset="50%" stopColor="#d97706" />
                       <stop offset="100%" stopColor="#b06205" />
                     </radialGradient>
+                    <radialGradient id="lantern-glow">
+                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.35" />
+                      <stop offset="25%" stopColor="#d97706" stopOpacity="0.18" />
+                      <stop offset="50%" stopColor="#d97706" stopOpacity="0.07" />
+                      <stop offset="75%" stopColor="#d97706" stopOpacity="0.02" />
+                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+                    </radialGradient>
                   </defs>
 
                   <style>{`
@@ -595,6 +600,21 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
                   <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
 
+                  {/* String lights between posts — behind canopy */}
+                  <path d="M117 125 Q200 158 283 125" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.5" fill="none" />
+                  {[130, 145, 160, 175, 190, 205, 220, 235, 250, 265].map((lx, li) => {
+                    const t = (lx - 117) / (283 - 117)
+                    const ly = 125 + 2 * t * (1 - t) * 33
+                    return (
+                      <g key={`sl-${li}`}>
+                        <line x1={lx} y1={ly} x2={lx} y2={ly + 4} stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.3" />
+                        <circle cx={lx} cy={ly + 4.5} r={1.4} fill="#d97706" opacity="0.8" />
+                        <circle cx={lx} cy={ly + 4.5} r={0.6} fill="#f0c050" />
+                        <circle cx={lx} cy={ly + 4} r={3} fill="#d97706" opacity="0.06" />
+                      </g>
+                    )
+                  })}
+
                   {/* Canopy fabric */}
                   <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
                   <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
@@ -602,19 +622,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
                   <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
                   <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
-                  {/* Hanging beads */}
-                  <line x1="155" y1="120" x2="155" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
-                  <circle cx="155" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="155" cy="145" r="2.2" fill="#d97706" />
-                  <circle cx="155" cy="145" r="1" fill="#e8a030" />
-                  <line x1="200" y1="117" x2="200" y2="142" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
-                  <circle cx="200" cy="117" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="200" cy="143" r="2.2" fill="#d97706" />
-                  <circle cx="200" cy="143" r="1" fill="#e8a030" />
-                  <line x1="245" y1="120" x2="245" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
-                  <circle cx="245" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
-                  <circle cx="245" cy="145" r="2.2" fill="#d97706" />
-                  <circle cx="245" cy="145" r="1" fill="#e8a030" />
 
                   {/* ============ LANTERNS ============ */}
                   {/* Left lantern */}
@@ -632,6 +639,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="140" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="140" cy="157" r="1" fill="#f0c050" />
+                  <circle cx="140" cy="158" r="35" fill="url(#lantern-glow)" />
                   <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -650,6 +658,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="260" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="260" cy="157" r="1" fill="#f0c050" />
+                  <circle cx="260" cy="158" r="35" fill="url(#lantern-glow)" />
                   <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -838,72 +847,28 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <path d="M289 200 Q290 197 291 196" stroke={isDark ? '#5a8a3a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
                   <path d="M291 196 Q292 195 293 196" fill={isDark ? '#5a8a3a' : '#8aaa6a'} />
 
-                  {/* Seed jars */}
+                  {/* Dynamic seed jars matching daily seeds */}
                   <g transform="translate(0,2)">
-                    {/* Jar 1: Tangerine */}
-                    <ellipse cx="115" cy="211.5" rx="5.5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                    <rect x="108" y="200" width="14" height="12" rx="5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                    <rect x="109" y="201" width="12" height="10" rx="4.5" fill="#3a4a3a" opacity="0.4" />
-                    <line x1="110" y1="202" x2="110" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
-                    <rect x="112" y="197" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
-                    <rect x="112.5" y="195.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                    <line x1="113" y1="196.5" x2="117" y2="196.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#a86a10" opacity="0.7" />
-                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#7a5008" opacity="0.2" />
-                    <path d="M115 203 Q115 206 115 209" stroke="#7a5008" strokeWidth="0.4" fill="none" opacity="0.4" />
-                    <path d="M115 203.5 Q114 201.5 115 200.5 Q116 201.5 115 203.5" fill="#4a6a2a" opacity="0.5" />
-
-                    {/* Jar 2: Plum */}
-                    <ellipse cx="131" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                    <rect x="125" y="198" width="12" height="14" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                    <rect x="126" y="199" width="10" height="12" rx="4" fill="#3a4a3a" opacity="0.4" />
-                    <line x1="127" y1="200" x2="127" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
-                    <rect x="128" y="195" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
-                    <rect x="128.5" y="193.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                    <line x1="129" y1="194.5" x2="133" y2="194.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#5a2a8a" opacity="0.6" />
-                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#4a1a6a" opacity="0.15" />
-                    <path d="M131 202.5 Q131 205 131 207.5" stroke="#4a1a6a" strokeWidth="0.4" fill="none" opacity="0.4" />
-                    <path d="M131 203 Q130 201 131 200 Q132 201 131 203" fill="#4a6a2a" opacity="0.5" />
-
-                    {/* Jar 3: Lemon */}
-                    <ellipse cx="145" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                    <rect x="140" y="202" width="10" height="10" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                    <rect x="141" y="203" width="8" height="8" rx="3.5" fill="#3a4a3a" opacity="0.4" />
-                    <line x1="142" y1="204" x2="142" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
-                    <rect x="142.5" y="199.5" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
-                    <rect x="143" y="198" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                    <line x1="143.5" y1="199" x2="146.5" y2="199" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#a89a18" opacity="0.6" />
-                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#8a7a10" opacity="0.15" />
-                    <path d="M145 205 Q145 207 145 209" stroke="#8a7a10" strokeWidth="0.3" fill="none" opacity="0.4" />
-                    <path d="M145 205.5 Q144.2 204 145 203.2 Q145.8 204 145 205.5" fill="#4a6a2a" opacity="0.5" />
-
-                    {/* Jar 4: Coconut */}
-                    <ellipse cx="248" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                    <rect x="242" y="199" width="12" height="13" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                    <rect x="243" y="200" width="10" height="11" rx="4" fill="#3a4a3a" opacity="0.4" />
-                    <line x1="244" y1="201" x2="244" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
-                    <rect x="245" y="196" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
-                    <rect x="245.5" y="194.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                    <line x1="246" y1="195.5" x2="250" y2="195.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#1a6a3a" opacity="0.6" />
-                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#105a2a" opacity="0.15" />
-                    <path d="M248 202 Q248 205 248 208" stroke="#105a2a" strokeWidth="0.4" fill="none" opacity="0.4" />
-                    <path d="M248 202.5 Q247 201 248 200 Q249 201 248 202.5" fill="#4a6a2a" opacity="0.5" />
-
-                    {/* Jar 5: Pomegranate */}
-                    <ellipse cx="261" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
-                    <rect x="255.5" y="201" width="11" height="11" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
-                    <rect x="256.5" y="202" width="9" height="9" rx="3.5" fill="#3a4a3a" opacity="0.4" />
-                    <line x1="257.5" y1="203" x2="257.5" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
-                    <rect x="258.5" y="198" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
-                    <rect x="259" y="196.5" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
-                    <line x1="259.5" y1="197.5" x2="262.5" y2="197.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
-                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#7a2828" opacity="0.6" />
-                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#5a1818" opacity="0.15" />
-                    <path d="M261 204.8 Q261 207 261 209.2" stroke="#5a1818" strokeWidth="0.4" fill="none" opacity="0.4" />
-                    <path d="M261 205.2 Q260.2 203.8 261 203 Q261.8 203.8 261 205.2" fill="#4a6a2a" opacity="0.5" />
+                    {dailySeeds.map((seedType, si) => {
+                      const jx = [155, 170, 185, 240, 255][si]
+                      const jh = [12, 14, 10, 13, 11][si]
+                      const jw = [14, 12, 10, 12, 11][si]
+                      const jy = 212 - jh
+                      const sc = TREE_TYPES[seedType]?.color || '#8a7a5a'
+                      const sdull = sc + '90'
+                      return (
+                        <g key={`jar-${si}`}>
+                          <ellipse cx={jx} cy={211.5} rx={jw / 2 + 1} ry={1.2} fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                          <rect x={jx - jw / 2} y={jy} width={jw} height={jh} rx={jw / 2 - 2} fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                          <rect x={jx - jw / 2 + 1} y={jy + 1} width={jw - 2} height={jh - 2} rx={jw / 2 - 2.5} fill="#3a4a3a" opacity="0.4" />
+                          <rect x={jx - 3} y={jy - 3} width={6} height={3.5} rx={1.8} fill="#4a5a4a" opacity="0.5" />
+                          <rect x={jx - 2.5} y={jy - 4.5} width={5} height={2.5} rx={1.2} fill={isDark ? '#6a5a42' : '#c8b898'} />
+                          <ellipse cx={jx} cy={jy + jh / 2} rx={1.8} ry={2.5} fill={sdull} opacity="0.7" />
+                          <path d={`M${jx} ${jy + jh / 2 - 2.5} Q${jx} ${jy + jh / 2} ${jx} ${jy + jh / 2 + 2.5}`} stroke={sc} strokeWidth="0.4" fill="none" opacity="0.3" />
+                          <path d={`M${jx} ${jy + jh / 2 - 2} Q${jx - 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 4.5} Q${jx + 1} ${jy + jh / 2 - 3.5} ${jx} ${jy + jh / 2 - 2}`} fill="#4a6a2a" opacity="0.5" />
+                        </g>
+                      )
+                    })}
                   </g>
 
                   {/* SEEDS sign */}
@@ -911,7 +876,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <rect x="178" y="228" width="44" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
                   <path d="M182 232 Q200 231 218 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
                   <path d="M182 238 Q200 237 218 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <text x="200" y="240" textAnchor="middle" fill="#d97706" fontSize="7.5" fontFamily="serif" fontWeight="bold">SEEDS</text>
+                  <text x="200" y="242" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="12" fontFamily="'Brush Script MT', 'Segoe Script', 'Comic Sans MS', cursive" fontWeight="normal" fontStyle="italic" opacity="0.9" letterSpacing="1">Trade</text>
                   <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
 
                   {/* Cart base shadow */}
@@ -921,7 +886,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
 
               {(() => { return (<>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: -8, position: 'relative', zIndex: 1 }}>
                 <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <span style={{ fontSize: 11, fontWeight: 400, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
@@ -945,7 +910,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 52, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 60, position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', gap: 56, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 44, position: 'relative', zIndex: 2 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -998,14 +963,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
-                  const cardW = 180
-                  const cardH = 320
-
-                  const arcOffset = [14, 4, 0, 4, 14][i] || 0
-                  const arcRotate = [-3, -1.2, 0, 1.2, 3][i] || 0
+                  if (i >= 4) return null
+                  const cardW = 130
+                  const cardH = 220
+                  const arcOffset = [18, 0, 0, 18][i] || 0
+                  const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
 
                   return (
-                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', transform: `translateY(${arcOffset}px) rotate(${arcRotate}deg)` }}>
+                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, animation: `card-float-${i} ${4 + i * 0.8}s ease-in-out infinite` }}>
                       {/* Daily deal label */}
                       {isDailyDeal && (
                         <div style={{
@@ -1022,7 +987,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         className={`seed-packet ${isCracking ? 'seed-cracking' : ''} ${isRevealed ? 'seed-revealed' : ''} ${isDailyDeal && !isRevealed ? 'daily-deal' : ''}`}
                         onClick={() => !isRevealed && revealCard(i)}
                         style={{
-                          width: cardW, height: cardH, borderRadius: 14,
+                          width: cardW, height: cardH, borderRadius: 12,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
 
@@ -1031,14 +996,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                         }}
                       >
                         {!isRevealed ? (
-                          /* Unrevealed — kraft paper seed packet */
+                          /* Unrevealed — matches catalog bg */
                           <div
                             onClick={() => revealCard(i)}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark
-                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
-                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
+                              background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                               position: 'relative',
                             }}
@@ -1634,7 +1597,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <span style={{ fontSize: 18, fontWeight: 700, fontFamily: font, color: textPrimary, letterSpacing: '0.06em' }}>Catalog</span>
                 <button
                   onClick={() => setActiveTab('shop')}
-<<<<<<< HEAD
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>

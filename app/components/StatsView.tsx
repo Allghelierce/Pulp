@@ -353,14 +353,6 @@ export const StatsView = memo(function StatsView({
         className="relative w-full max-w-[1050px] flex flex-col gap-3"
         style={{ maxHeight: '80vh', overflowY: 'auto' }}
       >
-        {/* Close button floating */}
-        <button
-          onClick={onClose}
-          className={`absolute -top-1 -right-1 z-10 w-7 h-7 flex items-center justify-center rounded-full text-sm transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 bg-zinc-900/80" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80 bg-white/80"}`}
-          style={{ backdropFilter: 'blur(8px)' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
 
         {/* Card: Level + Rings + Stats */}
         <div
