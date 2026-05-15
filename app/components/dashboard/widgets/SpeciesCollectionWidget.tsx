@@ -30,8 +30,8 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
       <div style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))',
-        gap: 4, alignContent: 'start',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))',
+        gap: 6, alignContent: 'start',
       }}>
         {allTypes.map(([key, tree]) => {
           const has = owned.has(key) || key === 'tangerine'
@@ -46,12 +46,12 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
                 filter: has ? 'none' : 'grayscale(1) brightness(0.15) contrast(1.2)',
               }}
             >
-              <PlantIcon type={key} size={28} stage={4} hideGround disableSway />
+              <PlantIcon type={key} size={38} stage={4} hideGround disableSway />
               <span style={{
                 fontSize: 6, fontWeight: 600, marginTop: 2,
                 color: has ? textSecondary : textMuted,
                 textAlign: 'center', lineHeight: 1.1,
-                maxWidth: 40, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                maxWidth: 52, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {has ? tree.name : '???'}
               </span>
