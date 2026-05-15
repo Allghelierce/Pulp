@@ -52,7 +52,7 @@ export const DashboardView = memo(function DashboardView({
   useEffect(() => {
     if (!isOpen) return
     setDailyStats(loadDailyStats())
-    requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)))
+    requestAnimationFrame(() => setMounted(true))
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
     window.addEventListener("keydown", handler)
     return () => { window.removeEventListener("keydown", handler); setMounted(false) }

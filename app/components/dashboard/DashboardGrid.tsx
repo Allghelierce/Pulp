@@ -1,5 +1,5 @@
 "use client"
-import { memo, useCallback, useRef } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { GRID_COLS, ROW_HEIGHT, GRID_GAP, GRID_PAD, getWidgetDef, type WidgetInstance, type WidgetProps } from "./widgetRegistry"
 import { WidgetWrapper } from "./WidgetWrapper"
 
@@ -99,6 +99,12 @@ export const DashboardGrid = memo(function DashboardGrid({
     window.addEventListener('pointerup', onPointerUp)
   }, [editMode, widgets, widgetProps.isDark, posToGrid, onMove, cellW])
 
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
   const maxRow = widgets.reduce((m, w) => Math.max(m, w.position[1] + w.size[1]), 0)
   const cw = cellW()
 
@@ -141,7 +147,7 @@ export const DashboardGrid = memo(function DashboardGrid({
                 onRemove={() => onRemove(widget.instanceId)}
                 onDragStart={handleDragStart}
               >
-                <Component {...widgetProps} size={widget.size} />
+                {ready && <Component {...widgetProps} size={widget.size} />}
               </WidgetWrapper>
             </div>
           )
