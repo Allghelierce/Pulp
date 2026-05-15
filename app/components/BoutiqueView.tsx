@@ -1,5 +1,5 @@
 "use client"
-import { memo, useState, useEffect, useRef, useCallback } from "react"
+import { memo, useState, useEffect, useRef, useCallback, type ReactNode } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
@@ -108,6 +108,33 @@ function rarityCardClass(rarity: string): string {
     default: return ''
   }
 }
+
+const LazyCard = memo(function LazyCard({ children, className, style }: { children: ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className={className} style={style}>
+      {visible ? children : null}
+    </div>
+  )
+})
 
 function Sparkles({ rarity, count }: { rarity: string; count: number }) {
   if (rarity !== 'sacred' && rarity !== 'true rare') return null
@@ -239,7 +266,6 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [activeTab, setActiveTab] = useState<TabId>('shop')
   const [satchelFullPopup, setSatchelFullPopup] = useState(false)
   const [shopMode, setShopMode] = useState<'current' | 'seasonal'>('current')
-  const [isRenderingCatalog, setIsRenderingCatalog] = useState(false)
   const [dailySeeds, setDailySeeds] = useState<string[]>([])
   const [shopStock, setShopStock] = useState<Record<string, number>>({})
   const [shopDiscounts, setShopDiscounts] = useState<Record<string, number>>({})
@@ -257,10 +283,6 @@ export const BoutiqueView = memo(function BoutiqueView({
   useEffect(() => {
     if (isOpen && initialTab) {
       setActiveTab(initialTab)
-      if (initialTab === 'catalog') {
-        setIsRenderingCatalog(true)
-        setTimeout(() => setIsRenderingCatalog(false), 20)
-      }
     }
   }, [isOpen, initialTab, initialScrollTo])
 
@@ -1352,7 +1374,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               })()}
 
               <button
-                onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
+                onClick={() => { setActiveTab('catalog'); setSelectedPlant(null) }}
                 className="transition-all hover:scale-105 active:scale-95"
                 style={{
                   position: 'absolute', bottom: 16, right: 16, zIndex: 10,
@@ -1616,13 +1638,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
               </div>
-              {isRenderingCatalog ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', opacity: 0.6 }}>
-                  <span style={{ fontSize: 24, marginBottom: 12 }}>📖</span>
-                  <span style={{ fontSize: 13, fontWeight: 400, color: textMuted, fontFamily: font }}>Opening catalog...</span>
-                </div>
-              ) : (
-                RARITY_ORDER.map(rarity => {
+              {RARITY_ORDER.map(rarity => {
                   const plants = Object.keys(TREE_TYPES).filter(t => TREE_TYPES[t].rarity === rarity && t !== 'spoiled')
                   if (plants.length === 0) return null
                   return (
@@ -1653,14 +1669,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         const t = TREE_TYPES[type]
                         const owned = inventory.includes(type) || type === 'tangerine'
                         return (
+                          <LazyCard key={type} style={{ aspectRatio: 'auto' }}>
                           <button
-                            key={type}
                             className={owned ? rarityCardClass(t.rarity) : ''}
                             onClick={owned ? () => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') } : undefined}
                             style={{
                               borderRadius: 10, border: `1px solid ${owned ? cardBorder : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, overflow: 'hidden',
                               backgroundColor: owned ? cardBg : isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', cursor: owned ? 'pointer' : 'default', textAlign: 'left',
-                              transition: 'all 0.15s', position: 'relative', fontFamily: font,
+                              transition: 'all 0.15s', position: 'relative', fontFamily: font, width: '100%',
                             }}
                           >
                             <div style={{
@@ -1718,13 +1734,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                               </div>
                             </div>
                           </button>
+                          </LazyCard>
                         )
                       })}
                     </div>
                   </div>
                 )
-              })
-              )}
+              })}
             </div>
             </div>
           )}
