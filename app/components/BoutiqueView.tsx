@@ -1612,14 +1612,15 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {/* CATALOG */}
           {activeTab === 'catalog' && (
-            <div style={{ padding: 24 }}>
-              <div style={{ marginBottom: 16 }}>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.5)' }} onMouseDown={() => setActiveTab('shop')}>
+              <div onMouseDown={e => e.stopPropagation()} style={{ width: '90%', maxWidth: 700, maxHeight: '80vh', overflowY: 'auto', borderRadius: 20, background: isDark ? '#141210' : '#f5f3ef', boxShadow: '0 32px 80px -12px rgba(0,0,0,0.5)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, fontFamily: font, color: textPrimary, letterSpacing: '0.06em' }}>Catalog</span>
                 <button
                   onClick={() => setActiveTab('shop')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: 'none', cursor: 'pointer', background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#8a8680' : '#7a7670' }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                  Back
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
               </div>
               {isRenderingCatalog ? (
@@ -1731,6 +1732,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 )
               })
               )}
+            </div>
             </div>
           )}
 
