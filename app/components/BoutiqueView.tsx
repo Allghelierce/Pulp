@@ -546,11 +546,130 @@ export const BoutiqueView = memo(function BoutiqueView({
             <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {/* Terraced landscape background */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-                {/* Warm sky */}
-                <div style={{ position: 'absolute', inset: 0, background: isDark
-                  ? 'linear-gradient(to bottom, transparent 30%, rgba(20,16,10,0.4) 100%)'
-                  : 'linear-gradient(to bottom, transparent 30%, rgba(200,180,140,0.12) 100%)'
-                }} />
+                {/* Terrain background */}
+                <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                  <defs>
+                    <linearGradient id="m-sky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#08060a' : '#c8b8a0'} />
+                      <stop offset="25%" stopColor={isDark ? '#0c0a10' : '#d0c0a8'} />
+                      <stop offset="50%" stopColor={isDark ? '#10100e' : '#d8c8b0'} />
+                      <stop offset="70%" stopColor={isDark ? '#161410' : '#dcd0b8'} />
+                      <stop offset="85%" stopColor={isDark ? '#1a1810' : '#e0d4bc'} />
+                      <stop offset="100%" stopColor={isDark ? '#1e1a12' : '#e4d8c0'} />
+                    </linearGradient>
+                    <linearGradient id="m-hill-far" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#0e1210' : '#8a9880'} />
+                      <stop offset="100%" stopColor={isDark ? '#0a0e0c' : '#7a8870'} />
+                    </linearGradient>
+                    <linearGradient id="m-hill-mid" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#121810' : '#6a7a60'} />
+                      <stop offset="100%" stopColor={isDark ? '#0e140c' : '#5a6a50'} />
+                    </linearGradient>
+                    <linearGradient id="m-hill-near" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#161e14' : '#4a5a40'} />
+                      <stop offset="100%" stopColor={isDark ? '#121a10' : '#3a4a30'} />
+                    </linearGradient>
+                    <linearGradient id="m-ground" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? '#1a2014' : '#3e4e34'} />
+                      <stop offset="100%" stopColor={isDark ? '#141810' : '#2e3e24'} />
+                    </linearGradient>
+                    <radialGradient id="m-haze1" cx="30%" cy="40%" r="50%">
+                      <stop offset="0%" stopColor={isDark ? '#1a1430' : '#c8b8d0'} stopOpacity={isDark ? '0.12' : '0.06'} />
+                      <stop offset="100%" stopColor={isDark ? '#1a1430' : '#c8b8d0'} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id="m-haze2" cx="70%" cy="35%" r="45%">
+                      <stop offset="0%" stopColor={isDark ? '#201020' : '#d0c0b0'} stopOpacity={isDark ? '0.1' : '0.05'} />
+                      <stop offset="100%" stopColor={isDark ? '#201020' : '#d0c0b0'} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id="m-horizon-glow" cx="50%" cy="75%" r="50%">
+                      <stop offset="0%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity={isDark ? '0.06' : '0.04'} />
+                      <stop offset="60%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity={isDark ? '0.02' : '0.01'} />
+                      <stop offset="100%" stopColor={isDark ? '#d97706' : '#d97706'} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id="m-star-g">
+                      <stop offset="0%" stopColor="#ffeedd" stopOpacity="1" />
+                      <stop offset="40%" stopColor="#ffeedd" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#ffeedd" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+
+                  <style>{`
+                    @keyframes m-twinkle { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+                    @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 15% { opacity: 0.8; } 50% { transform: translate(8px,-12px); opacity: 0.6; } 85% { opacity: 0.8; } 100% { transform: translate(-4px,6px); opacity: 0; } }
+                    @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 20% { opacity: 0.7; } 55% { transform: translate(-10px,-8px); opacity: 0.5; } 80% { opacity: 0.7; } 100% { transform: translate(5px,10px); opacity: 0; } }
+                    @keyframes m-haze-drift { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.7; } }
+                  `}</style>
+
+                  {/* Sky */}
+                  <rect width="400" height="300" fill="url(#m-sky)" />
+
+                  {/* Atmospheric haze */}
+                  <rect width="400" height="180" fill="url(#m-haze1)" />
+                  <rect width="400" height="180" fill="url(#m-haze2)" />
+
+                  {/* Stars */}
+                  {isDark && <>
+                    {[[32,18,1.2],[78,12,0.8],[125,28,1.0],[168,8,0.7],[210,22,1.1],[258,15,0.9],[305,25,0.7],[350,10,1.0],[55,40,0.6],[145,42,0.8],[240,38,0.7],[310,35,0.9],[380,42,0.6],[20,55,0.5],[95,50,0.7],[195,52,0.6],[280,48,0.8],[365,55,0.5]].map(([x,y,r], i) => (
+                      <circle key={`st${i}`} cx={x} cy={y} r={r as number} fill="url(#m-star-g)" opacity={0.5 + (i % 3) * 0.15} style={{ animation: `m-twinkle ${3 + (i % 4) * 1.5}s ease-in-out ${(i * 0.7) % 4}s infinite` }} />
+                    ))}
+                    {[[15,30],[48,22],[90,35],[140,15],[185,32],[230,10],[275,28],[320,18],[360,30],[65,48],[200,45],[330,50],[110,55],[250,52],[50,8],[170,45],[295,42],[385,20]].map(([x,y], i) => (
+                      <circle key={`sp${i}`} cx={x} cy={y} r={0.4} fill="#e0e0d8" opacity={0.2 + (i % 3) * 0.1} />
+                    ))}
+                  </>}
+
+                  {/* Distant hills — far layer */}
+                  <path d="M-10,130 L20,118 L50,105 L70,112 L100,98 L120,108 L150,95 L175,102 L200,92 L230,100 L260,96 L285,106 L310,100 L340,110 L370,104 L410,115 L410,160 L-10,160 Z" fill="url(#m-hill-far)" />
+                  {/* Cliff face shadows */}
+                  <polygon points="50,105 70,112 50,112" fill="rgba(0,0,0,0.08)" />
+                  <polygon points="150,95 175,102 150,102" fill="rgba(0,0,0,0.07)" />
+                  <polygon points="200,92 230,100 200,100" fill="rgba(0,0,0,0.08)" />
+                  <polygon points="310,100 340,110 310,110" fill="rgba(0,0,0,0.06)" />
+                  {/* Ridge highlights */}
+                  <path d="M50,105 L70,112" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+                  <path d="M150,95 L175,102" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
+                  <path d="M200,92 L230,100" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+
+                  {/* Mid hills */}
+                  <path d="M-10,150 L30,138 L60,128 L90,136 L120,122 L145,132 L170,120 L200,128 L230,118 L260,130 L290,124 L320,134 L350,126 L380,138 L410,132 L410,180 L-10,180 Z" fill="url(#m-hill-mid)" />
+                  <polygon points="60,128 90,136 60,136" fill="rgba(0,0,0,0.1)" />
+                  <polygon points="170,120 200,128 170,128" fill="rgba(0,0,0,0.08)" />
+                  <polygon points="230,118 260,130 230,130" fill="rgba(0,0,0,0.1)" />
+                  <path d="M120,122 L145,132" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+                  <path d="M230,118 L260,130" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+
+                  {/* Near hills */}
+                  <path d="M-10,170 L20,158 L55,148 L85,156 L110,142 L140,152 L165,140 L195,150 L220,138 L255,148 L285,140 L310,152 L340,144 L375,155 L410,148 L410,200 L-10,200 Z" fill="url(#m-hill-near)" />
+                  <polygon points="55,148 85,156 55,156" fill="rgba(0,0,0,0.1)" />
+                  <polygon points="165,140 195,150 165,150" fill="rgba(0,0,0,0.09)" />
+                  <polygon points="285,140 310,152 285,152" fill="rgba(0,0,0,0.1)" />
+
+                  {/* Ground field */}
+                  <path d="M-10,185 L30,178 L70,175 L120,180 L170,172 L220,176 L280,170 L340,175 L410,172 L410,300 L-10,300 Z" fill="url(#m-ground)" />
+
+                  {/* Grass tufts on near hills */}
+                  {[[30,176],[55,172],[80,170],[110,168],[140,174],[170,168],[200,172],[230,166],[260,170],[290,168],[320,174],[350,170],[375,174]].map(([gx,gy], i) => (
+                    <g key={`gr${i}`} opacity={isDark ? 0.3 : 0.2}>
+                      <path d={`M${gx},${gy} Q${gx-1},${gy-3} ${gx-2},${gy-5}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                      <path d={`M${gx},${gy} Q${gx+0.5},${gy-3.5} ${gx+1},${gy-4.5}`} stroke={isDark ? '#243418' : '#4a6a38'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                      <path d={`M${gx+1},${gy} Q${gx+2},${gy-2.5} ${gx+3},${gy-4}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    </g>
+                  ))}
+
+                  {/* Haze between hill layers */}
+                  <rect x="0" y="125" width="400" height="30" fill={isDark ? '#0e0c09' : '#c8b898'} opacity={isDark ? '0.15' : '0.06'} style={{ animation: 'm-haze-drift 12s ease-in-out infinite' }} />
+                  <rect x="0" y="155" width="400" height="25" fill={isDark ? '#0e0c09' : '#b8a888'} opacity={isDark ? '0.2' : '0.08'} style={{ animation: 'm-haze-drift 16s ease-in-out 4s infinite' }} />
+
+                  {/* Horizon glow — warm amber from stall area */}
+                  <rect width="400" height="300" fill="url(#m-horizon-glow)" />
+
+                  {/* Fireflies */}
+                  {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => (
+                    <g key={`ff${i}`}>
+                      <circle cx={fx} cy={fy} r={1.2} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite` }} />
+                      <circle cx={fx} cy={fy} r={3} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite`, filter: 'blur(1px)' }} />
+                    </g>
+                  ))}
+                </svg>
                 {/* Shopkeeper stall SVG */}
                 <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '80%' }}>
                   <defs>

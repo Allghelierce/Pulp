@@ -154,6 +154,14 @@ export function useWidgetLayout() {
     })
   }, [])
 
+  const resetLayout = useCallback(() => {
+    const next = { ...DEFAULT_LAYOUT, lastModified: Date.now() }
+    setLayout(next)
+    saveLocal(next)
+    if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
+    supabaseTimer.current = setTimeout(() => saveToSupabase(next), SUPABASE_DEBOUNCE)
+  }, [])
+
   const removeWidget = useCallback((instanceId: string) => {
     setLayout(prev => {
       const widgets = prev.widgets.filter(w => w.instanceId !== instanceId)
@@ -176,6 +184,7 @@ export function useWidgetLayout() {
     pinWidget,
     addWidget,
     removeWidget,
+    resetLayout,
     commitLayout,
   }
 }

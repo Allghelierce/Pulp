@@ -842,7 +842,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             })() + 0.5 + rng() * 3
             dots.push(`M${fx.toFixed(1)},${fy.toFixed(1)}a0.06,0.06 0 1 1 0.01,0Z`)
           }
-          return <path d={dots.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.3" />
+          return <path d={dots.join('')} fill={isDark ? '#b07010' : '#e08010'} opacity="0.35" />
         })()}
 
         {/* Winding paths on hills — layered for terrain integration */}
@@ -1266,7 +1266,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           }
           return <>
             <path d={rocks.join('')} fill={isDark ? '#1c1c1e' : '#929288'} opacity="0.22" />
-            <path d={flowers.join('')} fill={isDark ? '#6a5a20' : '#e8c040'} opacity="0.25" />
+            <path d={flowers.join('')} fill={isDark ? '#b07010' : '#e08010'} opacity="0.3" />
           </>
         })()}
         {/* Front hill — tangerine trees */}
@@ -1654,11 +1654,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const svgParts: string[] = []
           const stems: string[] = []
           const petalCols = isDark
-            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
-            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+            ? ['#d08520', '#c07010', '#e09830', '#b06a08']
+            : ['#e88510', '#f09a20', '#d97706', '#f5a835']
           const centerCols = isDark
-            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
-            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+            ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
+            : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
           for (let i = 0; i < 60; i++) {
             const rng = seededRng(i * 67 + 1237)
             const inField = rng() < 0.75
@@ -1872,11 +1872,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const rng = seededRng(6677)
           const petalCols = isDark
-            ? ['#c4a040', '#9a80c0', '#c06060', '#70aa70']
-            : ['#f0c040', '#c090dd', '#ee7070', '#80cc80']
+            ? ['#d08520', '#c07010', '#e09830', '#b06a08']
+            : ['#e88510', '#f09a20', '#d97706', '#f5a835']
           const centerCols = isDark
-            ? ['#e0c060', '#c0a0e0', '#e08080', '#90cc90']
-            : ['#ffdd66', '#ddaaee', '#ff9090', '#a0dda0']
+            ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
+            : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
           const flowerSvg: string[] = []
           const flowerStems: string[] = []
           const spots: [number, number][] = [
@@ -2125,9 +2125,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 `}</style>
                 <div className="absolute rounded-full" style={{
                   left: `${x}%`, top: `${y}%`,
-                  width: 3, height: 3,
-                  background: 'radial-gradient(circle, rgba(57,255,20,0.95) 0%, rgba(57,255,20,0) 70%)',
-                  boxShadow: '0 0 6px 2px rgba(57,255,20,0.5)',
+                  width: 4, height: 4,
+                  background: 'radial-gradient(circle, rgba(240,160,40,1) 0%, rgba(217,119,6,0.8) 40%, rgba(217,119,6,0) 70%)',
+                  boxShadow: '0 0 10px 4px rgba(217,119,6,0.7), 0 0 20px 6px rgba(217,119,6,0.25)',
                   animation: `firefly-glow ${glowDur}s ease-in-out ${delay}s infinite both, ${name} ${driftDur}s ease-in-out ${delay}s infinite both`,
                 }} />
               </div>
@@ -2359,15 +2359,15 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       <style>{`
         @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
         @keyframes firefly-glow {
-          0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+          0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
           15% { opacity: 0.06; }
           30% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
           45% { opacity: 0.6; }
-          50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(57,255,20,0.5); }
+          50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(217,119,6,0.5); }
           55% { opacity: 0.6; }
           70% { opacity: 0.2; box-shadow: 0 0 4px 1px rgba(57,255,20,0.2); }
           85% { opacity: 0.06; }
-          100% { opacity: 0; box-shadow: 0 0 2px 0px rgba(57,255,20,0); }
+          100% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
         }
         @keyframes firefly-drift { 0% { transform: translate(0, 0); } 25% { transform: translate(var(--drift-x), var(--drift-y)); } 50% { transform: translate(calc(var(--drift-x) * -0.5), calc(var(--drift-y) * 0.5)); } 75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); } 100% { transform: translate(0, 0); } }
 @keyframes leaf-fall { 0% { top: -5%; transform: rotate(0deg) translateX(0); } 25% { transform: rotate(40deg) translateX(15px); } 50% { transform: rotate(-20deg) translateX(-10px); } 75% { transform: rotate(30deg) translateX(12px); } 100% { top: 95%; transform: rotate(10deg) translateX(5px); } }
