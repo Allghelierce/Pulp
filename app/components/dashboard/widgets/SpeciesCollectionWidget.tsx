@@ -1,20 +1,10 @@
 "use client"
 import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
-import { PlantIcon } from "../../PlantIcon"
+import { CachedPlantImage } from "./CachedPlantImage"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = '"EB Garamond", serif'
-
-const LockedPlaceholder = memo(function LockedPlaceholder({ isDark }: { isDark: boolean }) {
-  return (
-    <svg width={38} height={38} viewBox="0 0 38 38">
-      <circle cx={19} cy={22} r={10} fill={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)'} />
-      <text x={19} y={23} textAnchor="middle" dominantBaseline="central"
-        fill={isDark ? '#3a3630' : '#c8c4c0'} fontSize={12} fontWeight={700}>?</text>
-    </svg>
-  )
-})
 
 const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, grove }: WidgetProps) {
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
@@ -52,12 +42,10 @@ const SpeciesCollectionWidget = memo(function SpeciesCollectionWidget({ isDark, 
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '4px 2px', borderRadius: 8,
                 opacity: has ? 1 : 0.55,
+                filter: has ? 'none' : 'grayscale(1) brightness(0.15) contrast(1.2)',
               }}
             >
-              {has
-                ? <PlantIcon type={key} size={38} stage={4} hideGround disableSway />
-                : <LockedPlaceholder isDark={isDark} />
-              }
+              <CachedPlantImage type={key} size={38} stage={4} />
               <span style={{
                 fontSize: 6, fontWeight: 600, marginTop: 2,
                 color: has ? textSecondary : textMuted,
