@@ -1,19 +1,31 @@
 "use client"
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
 
+const darkenCache = new Map<string, string>()
 function darken(hex: string, amount: number) {
+  const key = hex + '|' + amount
+  let cached = darkenCache.get(key)
+  if (cached) return cached
   const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - amount)
   const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - amount)
   const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - amount)
-  return `rgb(${r},${g},${b})`
+  cached = `rgb(${r},${g},${b})`
+  darkenCache.set(key, cached)
+  return cached
 }
 
+const lightenCache = new Map<string, string>()
 function lighten(hex: string, amount: number) {
+  const key = hex + '|' + amount
+  let cached = lightenCache.get(key)
+  if (cached) return cached
   const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount)
   const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount)
   const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount)
-  return `rgb(${r},${g},${b})`
+  cached = `rgb(${r},${g},${b})`
+  lightenCache.set(key, cached)
+  return cached
 }
 
 export const ANIMATED_SHAPES = new Set([
@@ -35,6 +47,40 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
   const swayDelay = -(swayHash * 0.7)
   const swayDeg = stage >= 4 ? 0.6 : stage >= 3 ? 1.0 : stage >= 2 ? 1.5 : 2.0
 
+  const containerStyle = useMemo(() => ({
+    width: size, height: Math.round(size * 1.3), display: 'flex' as const, alignItems: 'flex-end' as const, justifyContent: 'center' as const,
+  }), [size])
+
+  const swayStyle = useMemo(() => disableSway ? {
+    transformOrigin: '24px 46px',
+  } as React.CSSProperties : {
+    transformOrigin: '24px 46px',
+    '--sway-deg': `${swayDeg}deg`,
+    animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
+  } as React.CSSProperties, [disableSway, swayDeg, swayDuration, swayDelay])
+
+  const seedSwayStyle = useMemo(() => ({
+    transformOrigin: '24px 38px',
+    '--sway-deg': `${swayDeg}deg`,
+    animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
+  }) as React.CSSProperties, [swayDeg, swayDuration, swayDelay])
+
+  const s = Math.min(3, Math.max(0, stage))
+  const trunk = "#6b5b3e"
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const shapeElement = useMemo(() => renderShapeInner(), [type, stage, size])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groundElement = useMemo(() => renderGroundInner(), [type, stage, size])
+
+  const dirtEllipse = useMemo(() => {
+    if (!hideGround || dirtSeed <= 0) return null
+    const dt = dirtDepth
+    const rx = 6 + dt * 10
+    const ry = 1.8 + dt * 3
+    return <ellipse cx={24} cy={46} rx={rx} ry={ry} fill="#000" opacity={dirtDark ? 0.22 : 0.14} />
+  }, [hideGround, dirtSeed, dirtDepth, dirtDark])
+
   if (isSeed) {
     return (
       <svg width={size} height={size} viewBox="0 0 48 48">
@@ -45,11 +91,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           </radialGradient>
         </defs>
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
-        <g style={{
-          transformOrigin: '24px 38px',
-          '--sway-deg': `${swayDeg}deg`,
-          animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
-        } as React.CSSProperties}>
+        <g style={seedSwayStyle}>
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
           <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
           <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
@@ -60,10 +102,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
     )
   }
 
-  const s = Math.min(3, Math.max(0, stage))
-  const trunk = "#6b5b3e"
-
-  const renderShape = () => {
+  function renderShapeInner() {
     switch (shape) {
       case 'oak':
         if (s === 0) return (
@@ -5117,7 +5156,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
     }
   }
 
-  const renderGround = () => {
+  function renderGroundInner() {
     const r = 10 + s * 4
     switch (shape) {
       case 'void':
@@ -5176,8 +5215,11 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
     }
   }
 
+  const mainFilter = s >= 2 ? `url(#${uid}-3d)` : `url(#${uid}-edge)`
+  const edgeFilter = `url(#${uid}-edge)`
+
   return (
-    <div style={{ width: size, height: Math.round(size * 1.3), display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+    <div style={containerStyle}>
       <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id={`${uid}-edge`} x="-5%" y="-5%" width="110%" height="110%">
@@ -5202,27 +5244,25 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             </filter>
           }
         </defs>
-        {!hideGround && renderGround()}
-        {hideGround && dirtSeed > 0 && (() => {
-          const dt = dirtDepth
-          const rx = 6 + dt * 10
-          const ry = 1.8 + dt * 3
-          return (
-            <ellipse cx={24} cy={46} rx={rx} ry={ry} fill="#000" opacity={dirtDark ? 0.22 : 0.14} />
-          )
-        })()}
-        <g style={disableSway ? {
-          transformOrigin: '24px 46px',
-        } : {
-          transformOrigin: '24px 46px',
-          '--sway-deg': `${swayDeg}deg`,
-          animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
-        } as React.CSSProperties} filter={s >= 2 ? `url(#${uid}-3d)` : `url(#${uid}-edge)`}>
-          <g filter={`url(#${uid}-edge)`}>
-            {renderShape()}
+        {!hideGround && groundElement}
+        {dirtEllipse}
+        <g style={swayStyle} filter={mainFilter}>
+          <g filter={edgeFilter}>
+            {shapeElement}
           </g>
         </g>
       </svg>
     </div>
   )
-})
+}, (prev, next) =>
+  prev.type === next.type &&
+  prev.size === next.size &&
+  prev.stage === next.stage &&
+  prev.isSeed === next.isSeed &&
+  prev.hideGround === next.hideGround &&
+  prev.dirtSeed === next.dirtSeed &&
+  prev.dirtDark === next.dirtDark &&
+  prev.dirtDepth === next.dirtDepth &&
+  prev.dirtTilt === next.dirtTilt &&
+  prev.disableSway === next.disableSway
+)
