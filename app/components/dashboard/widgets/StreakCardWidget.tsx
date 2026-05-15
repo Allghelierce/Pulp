@@ -1,5 +1,6 @@
 "use client"
 import { memo, useMemo } from "react"
+import { motion } from "framer-motion"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = '"EB Garamond", serif'
@@ -13,21 +14,32 @@ function FlameIcon({ color, size = 20 }: { color: string; size?: number }) {
           <stop offset="100%" stopColor="#fbbf24" />
         </linearGradient>
       </defs>
-      <path
+      <motion.path
         d="M12 2C12 2 7 8 7 13a5 5 0 0 0 10 0c0-5-5-11-5-11z"
         fill="url(#flameGrad)"
+        animate={{ d: [
+          "M12 2C12 2 7 8 7 13a5 5 0 0 0 10 0c0-5-5-11-5-11z",
+          "M12 3C12 3 6 9 6 13.5a6 6 0 0 0 12 0c0-4.5-6-10.5-6-10.5z",
+          "M12 2C12 2 7 8 7 13a5 5 0 0 0 10 0c0-5-5-11-5-11z",
+        ] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
       />
-      <path
+      <motion.path
         d="M12 10c0 0-2 2.5-2 4.5a2 2 0 0 0 4 0c0-2-2-4.5-2-4.5z"
         fill="#fef3c7"
         opacity={0.8}
+        animate={{ d: [
+          "M12 10c0 0-2 2.5-2 4.5a2 2 0 0 0 4 0c0-2-2-4.5-2-4.5z",
+          "M12 11c0 0-1.5 2-1.5 3.8a1.5 1.5 0 0 0 3 0c0-1.8-1.5-3.8-1.5-3.8z",
+          "M12 10c0 0-2 2.5-2 4.5a2 2 0 0 0 4 0c0-2-2-4.5-2-4.5z",
+        ] }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
       />
     </svg>
   )
 }
 
 const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: WidgetProps) {
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
 
   const { current, best } = useMemo(() => {
@@ -67,9 +79,13 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: 
         <span style={{ fontSize: 11, color: textMuted }}>days</span>
       </div>
       {current > 0 && (
-        <div style={{ filter: `drop-shadow(0 0 6px ${streakColor}66)` }}>
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ filter: `drop-shadow(0 0 6px ${streakColor}66)` }}
+        >
           <FlameIcon color={streakColor} size={22} />
-        </div>
+        </motion.div>
       )}
       <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>best: {best}d</span>
     </div>

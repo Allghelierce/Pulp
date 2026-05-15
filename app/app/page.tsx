@@ -30,6 +30,7 @@ const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
 const _preloadStats = () => import("@/app/components/StatsView")
 const _preloadDashboard = () => import("@/app/components/DashboardView")
+import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
 const _preloadFocus = () => import("@/app/components/FocusView")
@@ -4379,6 +4380,7 @@ export default function NoteApp() {
           </button>
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
+        <PlantImagePreloader />
       </>
     </LazyMotion>
   )
