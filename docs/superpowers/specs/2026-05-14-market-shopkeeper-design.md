@@ -20,7 +20,7 @@ Replaces the terraced hills background in the BoutiqueView market tab with an SV
 - **Stem:** Small rect on top (`#4a6a2a`) with a leaf path (`#4a7a2a`)
 - **Face:** Eyes (dot circles with white shine highlights) + O-shaped mouth (nested ellipses `#8a4a05`/`#6a3a04`). No cheeks, no nose, no eyebrows
 - **Eyes animate:** Blink every ~5s using opacity keyframes on open/closed eye groups
-- **Root arms:** Short, thin (1.8-2px), brown (`#5a3e1e`) branching paths that emerge from body sides, drape over the cart rail, and grip the front face with finger-roots. Each arm has different branching patterns, bark knots, tiny leaf buds. Arms are layered BEHIND the orange body
+- **Root arms:** Long, thin (1.8-2px base, tapering to 0.3px tips), deep brown (`#5a3e1e`/`#4a3218`/`#3e2a14`), highly branchy. Each arm has 3+ branch forks with sub-forks, bark knots, tiny leaf buds at tips. Left arm: 3 grip fingers, upward branch with leaf bud, downward twig. Right arm: thicker at base, 4 grip fingers splayed wider, upward branch that sub-forks, more bark knots. Arms reach over rail and curl down cart face. Arms are layered BEHIND the orange body
 - **Outline:** Hairline 0.15px `#1a1410` stroke on body
 - **Position:** Behind the cart — bottom half hidden by the counter. Centered in scene
 
