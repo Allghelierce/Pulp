@@ -93,9 +93,12 @@ export function useWidgetLayout() {
 
   const moveWidget = useCallback((instanceId: string, newPos: [number, number]) => {
     setLayout(prev => {
-      const widgets = prev.widgets.map(w =>
-        w.instanceId === instanceId ? { ...w, position: [Math.max(0, Math.min(newPos[0], GRID_COLS - w.size[0])), Math.max(0, newPos[1])] as [number, number] } : w
-      )
+      const widgets = prev.widgets.map(w => {
+        if (w.instanceId !== instanceId) return w
+        const col = Math.max(0, Math.min(newPos[0], GRID_COLS - w.size[0]))
+        const row = Math.max(0, newPos[1])
+        return { ...w, position: [col, row] as [number, number] }
+      })
       const resolved = resolveCollisions(widgets)
       const next = { ...prev, widgets: resolved, lastModified: Date.now() }
       saveLocal(next)

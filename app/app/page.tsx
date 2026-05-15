@@ -26,6 +26,7 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { MiniRings } from "@/app/components/StatsView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
+import { DashboardView as DashboardViewDirect } from "@/app/components/DashboardView"
 
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
@@ -1246,8 +1247,9 @@ export default function NoteApp() {
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
 
   useEffect(() => {
+    _preloadDashboard(); _preloadStats()
     const id = requestIdleCallback(() => {
-      _preloadOrchard(); _preloadBoutique(); _preloadStats(); _preloadDashboard(); _preloadLeaderboard()
+      _preloadOrchard(); _preloadBoutique(); _preloadLeaderboard()
       _preloadFocus(); _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
@@ -3185,7 +3187,7 @@ export default function NoteApp() {
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                 onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                 onOpenFocus={() => setFocusOpen(true)}
-                onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
+                onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { closeAllPanels(); setStatsOpen(true) } }}
                 sap={sap}
                 gems={gems}
                 xp={xp}
@@ -3281,7 +3283,7 @@ export default function NoteApp() {
             })()}
 
             {!showSettings && notes.filter(n => !n.archived).length > 0 && (
-              <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, height: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, overflow: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'hidden' : undefined, transition: 'opacity 0.15s ease' }}>
+              <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, height: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, overflow: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'hidden' : undefined }}>
                 <DocumentToolbar
                   activeTool={activeTool}
                   setActiveTool={setActiveTool}
@@ -3407,7 +3409,7 @@ export default function NoteApp() {
                   unlockedCosmetics={unlockedCosmetics}
                 />
                 <div style={{ position: 'absolute', top: 57, left: 12, zIndex: 80 }}>
-                  <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} />
+                  <MiniRings isDark={theme === 'dark'} onClick={() => { closeAllPanels(); setStatsOpen(true) }} />
                 </div>
               </div>
             )}
@@ -3975,9 +3977,9 @@ export default function NoteApp() {
             />
           </div></Suspense>}
 
-          {statsOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
-              <DashboardView
+          {statsOpen && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 300 }}>
+              <DashboardViewDirect
                 isOpen={statsOpen}
                 onClose={() => setStatsOpen(false)}
                 theme={theme}
@@ -3990,7 +3992,7 @@ export default function NoteApp() {
                 notes={notes}
               />
             </div>
-          </Suspense>}
+          )}
 
           {leaderboardOpen && <Suspense fallback={null}>
             <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><LeaderboardView
