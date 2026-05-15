@@ -738,11 +738,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
 
         {/* Distant cliff hills — behind mountains, angular and steep */}
-        <defs>
-          <clipPath id="cliff-clip">
-            <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" />
-          </clipPath>
-        </defs>
         <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill={isDark ? '#161820' : '#8898a8'} opacity={isDark ? 0.7 : 0.25} />
 
         {/* Sun — between distant cliffs and mountains */}
@@ -868,10 +863,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const dirtBase = isDark ? '#2a2014' : '#8a7050'
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
           const dirtLight = isDark ? '#342a1a' : '#a08a60'
-          const edgeGrass = isDark ? '#1a2c14' : '#4a7a3a'
           const rng = seededRng(5599)
           const pebbles: string[] = []
-          const grassEdge: string[] = []
           const ruts: string[] = []
           const pts = [[-5,36.5],[10,34.5],[25,32],[35,30],[45,29],[55,28],[65,27.5],[80,25.5],[95,23.5],[110,21.5],[125,20.5],[140,20],[155,20],[165,20.5],[175,22.5],[185,24.5],[200,27.5]]
           const wornPatches: string[] = []
@@ -887,22 +880,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.03 + rng() * 0.06
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
+          // Advance RNG state to preserve downstream sequences (grass edge paths were removed)
           for (let i = 0; i < 50; i++) {
-            const t = rng()
-            const idx = Math.floor(t * (pts.length - 1))
-            const frac = t * (pts.length - 1) - idx
-            const nxt = Math.min(idx + 1, pts.length - 1)
-            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
-            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
-            const side = rng() > 0.5 ? 1 : -1
-            const gx = px + side * (0.35 + rng() * 0.4)
-            const gy = py + side * (0.08 + rng() * 0.2)
-            const gh = 0.2 + rng() * 0.4
-            const gsway = (rng() - 0.5) * 0.25
-            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
-            if (rng() > 0.5) {
-              grassEdge.push(`M${(gx + 0.1).toFixed(2)},${gy.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-gh * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-gh * 0.6).toFixed(2)}`)
-            }
+            rng(); rng(); rng(); rng(); rng() // t, side, gx, gy, gh
+            rng() // gsway
+            if (rng() > 0.5) { rng(); rng() } // conditional blades
           }
           for (let i = 0; i < 15; i++) {
             const t = 0.05 + rng() * 0.9
@@ -1296,11 +1278,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const branchPath2 = "M 72,31 C 75,33 76,35 75,38 C 74,39.5 73,40.5 72,41"
           const dirtBase = isDark ? '#2a2418' : '#8a7a5a'
           const dirtDark = isDark ? '#1a1408' : '#6a5030'
-          const dirtLight = isDark ? '#342a1a' : '#a08a60'
-          const edgeGrass = isDark ? '#1a2e14' : '#4a7a3a'
           const rng = seededRng(7733)
           const pebbles: string[] = []
-          const grassEdge: string[] = []
           const ruts: string[] = []
           const pts = [[-5,35],[5,33],[12,30],[22,28.5],[30,27.5],[38,27],[45,27.5],[55,28],[62,29],[72,31],[82,33.5],[90,36],[100,37.5]]
           for (let i = 0; i < 35; i++) {
@@ -1315,19 +1294,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.05 + rng() * 0.08
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
+          // Advance RNG state to preserve downstream sequences (grass edge paths were removed)
           for (let i = 0; i < 25; i++) {
-            const t = rng()
-            const idx = Math.floor(t * (pts.length - 1))
-            const frac = t * (pts.length - 1) - idx
-            const nxt = Math.min(idx + 1, pts.length - 1)
-            const px = pts[idx][0] + (pts[nxt][0] - pts[idx][0]) * frac
-            const py = pts[idx][1] + (pts[nxt][1] - pts[idx][1]) * frac
-            const side = rng() > 0.5 ? 1 : -1
-            const gx = px + side * (0.5 + rng() * 0.4)
-            const gy = py + side * (0.12 + rng() * 0.2)
-            const gh = 0.25 + rng() * 0.45
-            const gsway = (rng() - 0.5) * 0.25
-            grassEdge.push(`M${gx.toFixed(1)},${gy.toFixed(1)}q${gsway.toFixed(2)},${(-gh * 0.5).toFixed(2)} ${(gsway * 0.3).toFixed(2)},${(-gh).toFixed(2)}`)
+            rng(); rng(); rng(); rng(); rng(); rng() // t, side, gx, gy, gh, gsway
           }
           for (let i = 0; i < 6; i++) {
             const t = 0.1 + rng() * 0.8
