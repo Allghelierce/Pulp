@@ -553,80 +553,471 @@ export const BoutiqueView = memo(function BoutiqueView({
                   ? 'linear-gradient(to bottom, transparent 30%, rgba(20,16,10,0.4) 100%)'
                   : 'linear-gradient(to bottom, transparent 30%, rgba(200,180,140,0.12) 100%)'
                 }} />
-                {/* Terraces SVG */}
-                <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '55%' }}>
+                {/* Shopkeeper stall SVG */}
+                <svg viewBox="0 0 400 340" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '55%' }}>
                   <defs>
-                    <linearGradient id="sh-t1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#3a3020' : '#c8b890'} />
-                      <stop offset="100%" stopColor={isDark ? '#2a2418' : '#b0a070'} />
-                    </linearGradient>
-                    <linearGradient id="sh-t2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#342a1c' : '#baa878'} />
-                      <stop offset="100%" stopColor={isDark ? '#241e14' : '#a09060'} />
-                    </linearGradient>
-                    <linearGradient id="sh-t3" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#2e2618' : '#a89868'} />
-                      <stop offset="100%" stopColor={isDark ? '#1e1a10' : '#908050'} />
-                    </linearGradient>
-                    <linearGradient id="sh-t4" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={isDark ? '#282014' : '#988858'} />
-                      <stop offset="100%" stopColor={isDark ? '#18140c' : '#807040'} />
-                    </linearGradient>
+                    <radialGradient id="o-body" cx="38%" cy="35%">
+                      <stop offset="0%" stopColor="#e8a030" />
+                      <stop offset="50%" stopColor="#d97706" />
+                      <stop offset="100%" stopColor="#b06205" />
+                    </radialGradient>
                   </defs>
 
-                  {/* Terrace 1 — far, flat step */}
-                  <path d="M0 250 L0 240 L200 240 L200 244 Q300 238 400 242 L400 238 L600 238 L600 242 Q700 236 800 240 L800 250 L800 400 L0 400Z" fill="url(#sh-t1)" opacity={isDark ? 0.4 : 0.2} />
-                  <line x1="0" y1="240" x2="800" y2="238" stroke={isDark ? '#4a4030' : '#a09060'} strokeWidth="1" opacity={isDark ? 0.3 : 0.15} />
+                  <style>{`
+                    @keyframes root-sway-l { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-0.3px,-0.4px); } }
+                    @keyframes root-sway-r { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(0.3px,-0.4px); } }
+                    @keyframes blink-open { 0%, 90%, 95%, 100% { opacity: 1; } 92.5% { opacity: 0; } }
+                    @keyframes blink-shut { 0%, 90%, 95%, 100% { opacity: 0; } 92.5% { opacity: 1; } }
+                  `}</style>
 
-                  {/* Terrace 2 */}
-                  <path d="M0 290 L0 275 Q100 272 200 275 L300 273 Q400 270 500 273 L600 271 Q700 268 800 272 L800 290 L800 400 L0 400Z" fill="url(#sh-t2)" opacity={isDark ? 0.5 : 0.28} />
-                  <line x1="0" y1="275" x2="800" y2="271" stroke={isDark ? '#4a3e2a' : '#98885a'} strokeWidth="1.2" opacity={isDark ? 0.35 : 0.18} />
+                  {/* ============ CANOPY ============ */}
+                  {/* Left pole */}
+                  <rect x="113" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="114" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <path d="M115 110 L118 110 M115 125 L118 125 M115 145 L118 145 M115 170 L118 170 M115 195 L118 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+                  <path d="M113 132 L120 129 M113 148 L120 145 M113 162 L120 159 M113 178 L120 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+                  <circle cx="117" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
 
-                  {/* Terrace 3 */}
-                  <path d="M0 330 L0 310 Q80 306 160 308 L300 306 Q400 304 520 306 L650 305 Q740 303 800 306 L800 330 L800 400 L0 400Z" fill="url(#sh-t3)" opacity={isDark ? 0.6 : 0.35} />
-                  <line x1="0" y1="308" x2="800" y2="305" stroke={isDark ? '#483a26' : '#908050'} strokeWidth="1.5" opacity={isDark ? 0.4 : 0.2} />
+                  {/* Right pole */}
+                  <rect x="279" y="103" width="7" height="114" rx="2.5" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="280" y="103" width="5" height="114" rx="2" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <path d="M281 110 L284 110 M281 125 L284 125 M281 145 L284 145 M281 170 L284 170 M281 195 L284 195" stroke={isDark ? '#6a5a42' : '#c8b898'} strokeWidth="0.3" fill="none" />
+                  <path d="M279 132 L286 129 M279 148 L286 145 M279 162 L286 159 M279 178 L286 175" stroke={isDark ? '#7a6a4a' : '#b0a080'} strokeWidth="0.8" fill="none" />
+                  <circle cx="283" cy="150" r="1.2" fill={isDark ? '#7a6a4a' : '#b0a080'} />
 
-                  {/* Terrace 4 — front */}
-                  <path d="M0 400 L0 345 Q100 342 200 344 L400 342 Q550 340 700 342 L800 341 L800 400Z" fill="url(#sh-t4)" opacity={isDark ? 0.7 : 0.4} />
-                  <line x1="0" y1="344" x2="800" y2="341" stroke={isDark ? '#443828' : '#887848'} strokeWidth="1.8" opacity={isDark ? 0.45 : 0.22} />
+                  {/* Pole finials */}
+                  <circle cx="117" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="117" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                  <circle cx="117" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="117" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+                  <circle cx="283" cy="103" r="5" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="283" cy="103" r="3.5" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                  <circle cx="283" cy="103" r="1.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="283" cy="103" r="0.6" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
 
-                  {/* Grass tufts along terrace edges */}
-                  {[
-                    { x: 60, y: 275 }, { x: 180, y: 274 }, { x: 350, y: 272 }, { x: 500, y: 273 }, { x: 680, y: 270 },
-                    { x: 100, y: 308 }, { x: 260, y: 306 }, { x: 420, y: 305 }, { x: 580, y: 306 }, { x: 740, y: 304 },
-                    { x: 50, y: 344 }, { x: 200, y: 343 }, { x: 350, y: 342 }, { x: 520, y: 341 }, { x: 680, y: 342 },
-                  ].map((g, i) => {
-                    const gc = isDark ? '#4a4028' : '#7a7040'
-                    return (
-                      <g key={`g${i}`} opacity={isDark ? 0.5 : 0.3}>
-                        <path d={`M${g.x} ${g.y} Q${g.x - 2} ${g.y - 6} ${g.x - 5} ${g.y - 9}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 1} ${g.y - 8} ${g.x} ${g.y - 11}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                        <path d={`M${g.x} ${g.y} Q${g.x + 3} ${g.y - 6} ${g.x + 6} ${g.y - 8}`} stroke={gc} strokeWidth="0.8" fill="none" />
-                      </g>
-                    )
-                  })}
+                  {/* Canopy fabric */}
+                  <path d="M103 105 Q200 84 297 105 L293 116 Q200 97 107 116 Z" fill="#d97706" />
+                  <path d="M120 110 L130 107 M150 107 L160 105 M190 104 L200 103 M230 104 L240 105 M260 106 L270 108 M280 109 L290 112" stroke="#c06e05" strokeWidth="0.3" fill="none" strokeDasharray="2 3" />
+                  <path d="M107 116 Q200 97 293 116 L290 125 Q200 108 110 125 Z" fill={isDark ? '#a06820' : '#c8a050'} />
+                  <path d="M110 125 Q200 108 290 125 L287 132 Q200 116 113 132 Z" fill="#c48a18" />
+                  <path d="M103 105 Q110 112 117 105 Q124 112 131 105 Q138 112 145 105 Q152 112 159 105 Q166 112 173 105 Q180 112 187 105 Q194 112 201 105 Q208 112 215 105 Q222 112 229 105 Q236 112 243 105 Q250 112 257 105 Q264 112 271 105 Q278 112 285 105 Q292 112 297 105" fill="none" stroke="#b07a10" strokeWidth="1.5" />
+                  <path d="M110 108 L111 110 M124 108 L125 110 M138 108 L139 110 M152 108 L153 110 M166 108 L167 110 M180 108 L181 110 M194 108 L195 110 M222 108 L223 110 M250 108 L251 110 M278 108 L279 110" stroke="#9a6818" strokeWidth="0.4" fill="none" />
+                  {/* Hanging beads */}
+                  <line x1="155" y1="120" x2="155" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="155" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="155" cy="145" r="2.2" fill="#d97706" />
+                  <circle cx="155" cy="145" r="1" fill="#e8a030" />
+                  <line x1="200" y1="117" x2="200" y2="142" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="200" cy="117" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="200" cy="143" r="2.2" fill="#d97706" />
+                  <circle cx="200" cy="143" r="1" fill="#e8a030" />
+                  <line x1="245" y1="120" x2="245" y2="144" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="0.6" />
+                  <circle cx="245" cy="120" r="0.8" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <circle cx="245" cy="145" r="2.2" fill="#d97706" />
+                  <circle cx="245" cy="145" r="1" fill="#e8a030" />
+
+                  {/* ============ LANTERNS ============ */}
+                  {/* Left lantern */}
+                  <line x1="140" y1="126" x2="140" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+                  <circle cx="140" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <path d="M140 147 L142 147 L140 146 L138 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+                  <rect x="131" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+                  <rect x="133" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+                  <line x1="133" y1="158" x2="147" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+                  <line x1="140" y1="149" x2="140" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+                  <line x1="134" y1="150" x2="139" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="141" y1="150" x2="146" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="134" y1="159" x2="139" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="141" y1="159" x2="146" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <circle cx="140" cy="158" r="4.5" fill="#d97706" />
+                  <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
+                  <circle cx="140" cy="157" r="1" fill="#f0c050" />
+                  <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+                  <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+
+                  {/* Right lantern */}
+                  <line x1="260" y1="126" x2="260" y2="147" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="1" />
+                  <circle cx="260" cy="126" r="1" fill={isDark ? '#5a4a32' : '#b8a888'} />
+                  <path d="M260 147 L262 147 L260 146 L258 147 Z" fill={isDark ? '#5a4a32' : '#a89878'} />
+                  <rect x="251" y="147" width="18" height="22" rx="4.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+                  <rect x="253" y="149" width="14" height="18" rx="3.5" fill={isDark ? '#2a2418' : '#8a8070'} />
+                  <line x1="253" y1="158" x2="267" y2="158" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+                  <line x1="260" y1="149" x2="260" y2="167" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.6" />
+                  <line x1="254" y1="150" x2="259" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="261" y1="150" x2="266" y2="157" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="254" y1="159" x2="259" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <line x1="261" y1="159" x2="266" y2="166" stroke={isDark ? '#3a3020' : '#988868'} strokeWidth="0.3" />
+                  <circle cx="260" cy="158" r="4.5" fill="#d97706" />
+                  <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
+                  <circle cx="260" cy="157" r="1" fill="#f0c050" />
+                  <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
+                  <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
+
+                  {/* ============ ROOT ARMS ============ */}
+                  {/* Left root arm */}
+                  <g style={{ animation: 'root-sway-l 6s ease-in-out infinite', transformOrigin: '186px 210px' }}>
+                    <path d="M186 212 Q174 213 164 214 Q156 215 150 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    <path d="M150 216 Q146 218 144 222 Q142 228 141 235 Q140 242 140 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                    <path d="M140 248 Q139 252 139 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+                    <path d="M140 248 Q141 252 142 254" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                    <path d="M140 248 Q138 251 137 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                    <path d="M139 255 Q138 257 137 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M142 254 Q143 256 142 257" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M137 254 Q136 256 135 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+                    <path d="M168 214 Q164 211 160 208" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+                    <path d="M160 208 Q158 206 156 205" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                    <path d="M160 208 Q157 208 155 209" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                    <path d="M156 205 Q155 203 154 204" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <path d="M144 226 Q140 224 137 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                    <path d="M137 223 Q135 222 134 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                    <path d="M137 223 Q136 221 135 222" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <path d="M141 238 Q138 236 136 235" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                    <path d="M136 235 Q134 234 133 235" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M178 213 Q176 210 174 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                    <path d="M174 209 Q173 208 172 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <circle cx="172" cy="213.5" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <circle cx="158" cy="215" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+                    <circle cx="148" cy="218" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <circle cx="143" cy="230" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+                    <circle cx="141" cy="242" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <path d="M163 214 Q162 215 163 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+                    <path d="M145 224 Q144 225 145 226" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+                  </g>
+
+                  {/* Right root arm */}
+                  <g style={{ animation: 'root-sway-r 7s ease-in-out infinite', transformOrigin: '214px 210px' }}>
+                    <path d="M214 212 Q226 213 236 214 Q244 215 250 216" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="2" fill="none" strokeLinecap="round" />
+                    <path d="M250 216 Q254 218 256 222 Q258 228 259 235 Q260 242 260 248" stroke={isDark ? '#5a3e1e' : '#8a7050'} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                    <path d="M260 248 Q261 252 261 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                    <path d="M260 248 Q259 252 258 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1" fill="none" strokeLinecap="round" />
+                    <path d="M260 248 Q262 251 263 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                    <path d="M260 248 Q258 250 256 253" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                    <path d="M261 255 Q262 257 263 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M258 255 Q257 257 256 256" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M263 254 Q264 256 265 255" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+                    <path d="M256 253 Q255 255 254 254" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" strokeLinecap="round" />
+                    <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                    <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                    <path d="M236 207 Q238 207 240 208" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                    <path d="M238 203 Q239 201 238 200" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M238 200 Q237 198 236 199" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <path d="M240 208 Q242 207 241 209" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <path d="M257 226 Q260 224 263 223" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                    <path d="M263 223 Q265 222 266 223" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                    <path d="M259 240 Q262 238 264 237" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                    <path d="M264 237 Q266 236 267 237" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" />
+                    <path d="M264 237 Q265 235 264 234" fill={isDark ? '#3a5a1a' : '#7a9a5a'} />
+                    <path d="M222 213 Q224 210 226 209" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                    <circle cx="230" cy="214" r="0.6" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <circle cx="242" cy="215" r="0.7" fill={isDark ? '#3e2a14' : '#6a5030'} />
+                    <circle cx="252" cy="219" r="0.5" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <circle cx="258" cy="232" r="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+                    <circle cx="260" cy="244" r="0.4" fill={isDark ? '#4a3218' : '#7a6040'} />
+                    <ellipse cx="248" cy="217" rx="0.8" ry="0.5" fill={isDark ? '#3e2a14' : '#6a5030'} />
+                    <path d="M238 214 Q237 215 238 216" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+                    <path d="M255 225 Q254 226 255 227" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.3" fill="none" />
+                  </g>
+
+                  {/* ============ THE ORANGE ============ */}
+                  <circle cx="200" cy="210" r="20" fill="url(#o-body)" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.15" />
+                  <ellipse cx="194" cy="201" rx="5" ry="7" fill="#e0a830" opacity="0.35" transform="rotate(-15 194 201)" />
+                  <rect x="199" y="188" width="2.5" height="4" rx="1" fill="#4a6a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
+                  <rect x="199.3" y="188.5" width="1.8" height="1.5" rx="0.5" fill="#5a7a3a" />
+                  <path d="M201.5 190 Q206 184 210 186 Q206 189 201.5 190" fill="#4a7a2a" stroke={isDark ? '#1a1410' : '#8a7050'} strokeWidth="0.12" />
+                  <path d="M201.5 190 Q206 185.5 209 186" stroke="#3a6a1a" strokeWidth="0.3" fill="none" />
+
+                  {/* Tiny earrings */}
+                  <line x1="181" y1="212" x2="179" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+                  <circle cx="179" cy="216" r="1.2" fill="#d97706" />
+                  <circle cx="179" cy="216" r="0.5" fill="#e8a030" />
+                  <line x1="219" y1="212" x2="221" y2="215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.4" />
+                  <circle cx="221" cy="216" r="1.2" fill="#d97706" />
+                  <circle cx="221" cy="216" r="0.5" fill="#e8a030" />
+
+                  {/* Face */}
+                  <g style={{ animation: 'blink-open 5s ease-in-out infinite' }}>
+                    <circle cx="194" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
+                    <circle cx="206" cy="207" r="2.5" fill={isDark ? '#1a1410' : '#3a3020'} />
+                    <circle cx="195" cy="205.8" r="1" fill="#fff" />
+                    <circle cx="207" cy="205.8" r="1" fill="#fff" />
+                    <circle cx="194.3" cy="206.8" r="0.5" fill="#fff" />
+                    <circle cx="206.3" cy="206.8" r="0.5" fill="#fff" />
+                  </g>
+                  <g style={{ animation: 'blink-shut 5s ease-in-out infinite' }}>
+                    <path d="M192 207 Q194 209 196 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+                    <path d="M204 207 Q206 209 208 207" stroke={isDark ? '#1a1410' : '#3a3020'} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+                  </g>
+                  <ellipse cx="200" cy="216" rx="2.2" ry="2.8" fill="#8a4a05" />
+                  <ellipse cx="200" cy="216" rx="1.5" ry="2" fill="#6a3a04" />
+
+                  {/* ============ CART ============ */}
+                  {/* Cart body planks */}
+                  <rect x="100" y="218" width="200" height="44" rx="3" fill={isDark ? '#3a2e20' : '#a09070'} />
+                  <rect x="100" y="218" width="200" height="10" rx="2" fill={isDark ? '#4a3a28' : '#b0a080'} />
+                  <path d="M110 220 Q130 221 150 220 Q170 219 190 220 Q210 221 230 220 Q260 219 290 220" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+                  <path d="M115 224 Q135 225 155 224 Q180 223 200 224 Q230 225 260 224 Q280 223 295 224" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+                  <circle cx="145" cy="222" r="1.5" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <circle cx="145" cy="222" r="0.8" fill={isDark ? '#342a1c' : '#988868'} />
+                  <rect x="100" y="228" width="200" height="9" fill={isDark ? '#423626' : '#a89878'} />
+                  <path d="M108 231 Q140 232 170 231 Q200 230 240 231 Q270 232 295 231" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
+                  <path d="M110 234 Q150 235 180 234 Q220 233 260 234 Q285 235 295 234" stroke={isDark ? '#3a2e1e' : '#988868'} strokeWidth="0.3" fill="none" />
+                  <ellipse cx="230" cy="232" rx="2" ry="1.2" fill={isDark ? '#3a2e1e' : '#988868'} />
+                  <rect x="100" y="237" width="200" height="9" fill={isDark ? '#4a3a28' : '#b0a080'} />
+                  <path d="M105 240 Q140 241 175 240 Q210 239 250 240 Q280 241 298 240" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+                  <circle cx="180" cy="241" r="1.2" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <circle cx="180" cy="241" r="0.5" fill={isDark ? '#342a1c' : '#988868'} />
+                  <rect x="100" y="246" width="200" height="9" fill={isDark ? '#3e3222' : '#a09070'} />
+                  <path d="M108 249 Q145 250 185 249 Q225 248 270 249 Q290 250 298 249" stroke={isDark ? '#342a1a' : '#988868'} strokeWidth="0.3" fill="none" />
+                  <ellipse cx="270" cy="250" rx="1.5" ry="1" fill={isDark ? '#342a1a' : '#988868'} />
+                  <rect x="100" y="255" width="200" height="7" fill={isDark ? '#4a3a28' : '#b0a080'} />
+                  <path d="M110 258 Q150 259 200 258 Q250 257 290 258" stroke={isDark ? '#3e3018' : '#a89878'} strokeWidth="0.3" fill="none" />
+
+                  {/* Vertical plank seams */}
+                  <line x1="148" y1="218" x2="147" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+                  <circle cx="148" cy="222" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <circle cx="147" cy="240" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <circle cx="147" cy="255" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <line x1="205" y1="218" x2="204" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+                  <circle cx="205" cy="225" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <circle cx="204" cy="248" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <line x1="260" y1="218" x2="261" y2="262" stroke={isDark ? '#342a1c' : '#988868'} strokeWidth="0.6" />
+                  <circle cx="260" cy="230" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+                  <circle cx="261" cy="252" r="0.5" fill={isDark ? '#2a2218' : '#8a8070'} />
+
+                  {/* Top rail */}
+                  <rect x="95" y="212" width="210" height="8" rx="3" fill={isDark ? '#4a3a28' : '#b0a080'} />
+                  <rect x="95" y="212" width="210" height="4" rx="2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                  <rect x="95" y="212" width="210" height="2" rx="1" fill={isDark ? '#7a6a52' : '#d0c0a0'} />
+                  <path d="M120 214 L125 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                  <path d="M180 215 L188 215" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                  <path d="M250 214 L258 214" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                  <rect x="109" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="149" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="199" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="249" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+                  <rect x="289" y="215" width="2" height="2" rx="0.3" fill={isDark ? '#3e3018' : '#a89878'} />
+
+                  {/* Iron corner brackets */}
+                  <path d="M97 212 L97 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+                  <path d="M97 212 L112 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="97" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="97" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="97" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="105" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <path d="M303 212 L303 230" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+                  <path d="M288 212 L303 212" stroke={isDark ? '#3a3018' : '#9a9080'} strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="303" cy="215" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="303" cy="222" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="303" cy="228" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+                  <circle cx="295" cy="212.5" r="0.8" fill={isDark ? '#4a4028' : '#b0a890'} />
+
+                  {/* ============ CART GOODS ============ */}
+                  {/* Potted plant */}
+                  <ellipse cx="287" cy="211" rx="9" ry="2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.35" />
+                  <path d="M278 200 L280 212 L294 212 L296 200 Z" fill="#7a4a2a" />
+                  <path d="M278 200 L280 212 L287 212 L285 200 Z" fill="#8a5a3a" opacity="0.3" />
+                  <path d="M287 200 L287 212 L294 212 L296 200 Z" fill="#5a3a1a" opacity="0.2" />
+                  <rect x="277" y="198" width="20" height="3" rx="0.8" fill="#8a5a3a" />
+                  <rect x="277" y="198" width="20" height="1.5" rx="0.5" fill="#9a6a4a" opacity="0.4" />
+                  <path d="M278 200 L296 200" stroke="#6a3a1a" strokeWidth="0.5" />
+                  <path d="M280 211 L294 211" stroke="#6a3a1a" strokeWidth="0.4" />
+                  <path d="M282 210 L292 210" stroke="#6a3a1a" strokeWidth="0.3" opacity="0.5" />
+                  <ellipse cx="287" cy="200" rx="7" ry="1.5" fill={isDark ? '#3a2a18' : '#6a5a40'} />
+                  <ellipse cx="287" cy="199.5" rx="5" ry="0.8" fill={isDark ? '#4a3a22' : '#7a6a48'} opacity="0.4" />
+                  <path d="M287 200 Q283 193 280 188" stroke={isDark ? '#2a4a1a' : '#5a8a4a'} strokeWidth="1.4" fill="none" strokeLinecap="round" opacity="0.3" />
+                  <path d="M287 200 Q284 193 281 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M281 189 Q279 187 277 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+                  <path d="M281 189 Q280 186 279 187" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+                  <path d="M287 200 Q287 192 287 187" stroke={isDark ? '#4a7a3a' : '#7aaa6a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M287 187 Q286 185 285 186" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+                  <path d="M287 187 Q288 185 289 186" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+                  <path d="M287 200 Q290 193 293 189" stroke={isDark ? '#3a6a2a' : '#6a9a5a'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                  <path d="M293 189 Q295 187 297 188" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+                  <path d="M287 194 Q289 192 291 193" fill={isDark ? '#4a7a3a' : '#7aaa6a'} />
+                  <path d="M284 192 Q282 193 281 192" fill={isDark ? '#3a6a2a' : '#6a9a5a'} />
+                  <path d="M289 200 Q290 197 291 196" stroke={isDark ? '#5a8a3a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M291 196 Q292 195 293 196" fill={isDark ? '#5a8a3a' : '#8aaa6a'} />
+
+                  {/* Seed jars */}
+                  <g transform="translate(0,2)">
+                    {/* Jar 1: Tangerine */}
+                    <ellipse cx="115" cy="211.5" rx="5.5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="108" y="200" width="14" height="12" rx="5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="109" y="201" width="12" height="10" rx="4.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="110" y1="202" x2="110" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="112" y="197" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="112.5" y="195.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="113" y1="196.5" x2="117" y2="196.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#a86a10" opacity="0.7" />
+                    <ellipse cx="115" cy="206" rx="2" ry="2.8" fill="#7a5008" opacity="0.2" />
+                    <path d="M115 203 Q115 206 115 209" stroke="#7a5008" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M115 203.5 Q114 201.5 115 200.5 Q116 201.5 115 203.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 2: Plum */}
+                    <ellipse cx="131" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="125" y="198" width="12" height="14" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="126" y="199" width="10" height="12" rx="4" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="127" y1="200" x2="127" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="128" y="195" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="128.5" y="193.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="129" y1="194.5" x2="133" y2="194.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#5a2a8a" opacity="0.6" />
+                    <ellipse cx="131" cy="205" rx="1.8" ry="2.5" fill="#4a1a6a" opacity="0.15" />
+                    <path d="M131 202.5 Q131 205 131 207.5" stroke="#4a1a6a" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M131 203 Q130 201 131 200 Q132 201 131 203" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 3: Lemon */}
+                    <ellipse cx="145" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="140" y="202" width="10" height="10" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="141" y="203" width="8" height="8" rx="3.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="142" y1="204" x2="142" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="142.5" y="199.5" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="143" y="198" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="143.5" y1="199" x2="146.5" y2="199" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#a89a18" opacity="0.6" />
+                    <ellipse cx="145" cy="207" rx="1.5" ry="2.2" fill="#8a7a10" opacity="0.15" />
+                    <path d="M145 205 Q145 207 145 209" stroke="#8a7a10" strokeWidth="0.3" fill="none" opacity="0.4" />
+                    <path d="M145 205.5 Q144.2 204 145 203.2 Q145.8 204 145 205.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 4: Coconut */}
+                    <ellipse cx="248" cy="211.5" rx="5" ry="1.2" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="242" y="199" width="12" height="13" rx="4.5" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="243" y="200" width="10" height="11" rx="4" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="244" y1="201" x2="244" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="245" y="196" width="6" height="4" rx="2" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="245.5" y="194.5" width="5" height="2.5" rx="1.2" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="246" y1="195.5" x2="250" y2="195.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#1a6a3a" opacity="0.6" />
+                    <ellipse cx="248" cy="205" rx="1.8" ry="2.8" fill="#105a2a" opacity="0.15" />
+                    <path d="M248 202 Q248 205 248 208" stroke="#105a2a" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M248 202.5 Q247 201 248 200 Q249 201 248 202.5" fill="#4a6a2a" opacity="0.5" />
+
+                    {/* Jar 5: Pomegranate */}
+                    <ellipse cx="261" cy="211.5" rx="4.5" ry="1" fill={isDark ? '#1a1410' : '#a09070'} opacity="0.3" />
+                    <rect x="255.5" y="201" width="11" height="11" rx="4" fill="#4a5a4a" opacity="0.5" stroke="#3a4a3a" strokeWidth="0.3" />
+                    <rect x="256.5" y="202" width="9" height="9" rx="3.5" fill="#3a4a3a" opacity="0.4" />
+                    <line x1="257.5" y1="203" x2="257.5" y2="209" stroke="#4a5a4a" strokeWidth="0.25" opacity="0.4" />
+                    <rect x="258.5" y="198" width="5" height="3.5" rx="1.8" fill="#4a5a4a" opacity="0.5" />
+                    <rect x="259" y="196.5" width="4" height="2.5" rx="1" fill={isDark ? '#6a5a42' : '#c8b898'} />
+                    <line x1="259.5" y1="197.5" x2="262.5" y2="197.5" stroke={isDark ? '#5a4a32' : '#b8a888'} strokeWidth="0.3" />
+                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#7a2828" opacity="0.6" />
+                    <ellipse cx="261" cy="207" rx="1.6" ry="2.3" fill="#5a1818" opacity="0.15" />
+                    <path d="M261 204.8 Q261 207 261 209.2" stroke="#5a1818" strokeWidth="0.4" fill="none" opacity="0.4" />
+                    <path d="M261 205.2 Q260.2 203.8 261 203 Q261.8 203.8 261 205.2" fill="#4a6a2a" opacity="0.5" />
+                  </g>
+
+                  {/* SEEDS sign */}
+                  <line x1="200" y1="220" x2="200" y2="228" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="1" />
+                  <rect x="178" y="228" width="44" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+                  <path d="M182 232 Q200 231 218 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+                  <path d="M182 238 Q200 237 218 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+                  <text x="200" y="240" textAnchor="middle" fill="#d97706" fontSize="7.5" fontFamily="serif" fontWeight="bold">SEEDS</text>
+                  <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
+
+                  {/* ============ GROUND ============ */}
+                  <rect x="0" y="262" width="400" height="78" fill={isDark ? '#1a1410' : '#d8d0c0'} />
+                  <path d="M80 262 Q200 260 320 262 L320 265 Q200 263 80 265 Z" fill={isDark ? '#1e1812' : '#cec6b6'} opacity="0.6" />
+                  <path d="M0 264 Q60 262 120 264 Q200 266 280 264 Q340 262 400 264 L400 272 Q340 270 280 272 Q200 274 120 272 Q60 270 0 272 Z" fill={isDark ? '#1c1610' : '#c8c0b0'} opacity="0.5" />
+                  <path d="M0 272 Q100 270 200 272 Q300 274 400 272 L400 282 Q300 280 200 282 Q100 284 0 282 Z" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+
+                  {/* Worn dirt path */}
+                  <path d="M110 264 Q160 262 200 264 Q240 262 290 264 L285 270 Q240 268 200 270 Q160 268 115 270 Z" fill={isDark ? '#1e1812' : '#cec6b6'} opacity="0.4" />
+                  <path d="M130 266 Q170 265 200 266 Q230 265 270 266" stroke={isDark ? '#161210' : '#b8b0a0'} strokeWidth="0.25" fill="none" opacity="0.5" />
+
+                  {/* Pebbles */}
+                  <ellipse cx="42" cy="268" rx="2.5" ry="1.5" fill={isDark ? '#242018' : '#c0b8a8'} opacity="0.8" />
+                  <ellipse cx="48" cy="270" rx="1.5" ry="0.8" fill={isDark ? '#2a2418' : '#c8c0b0'} opacity="0.6" />
+                  <ellipse cx="88" cy="266" rx="1.8" ry="1" fill={isDark ? '#282218' : '#c4bca8'} />
+                  <circle cx="135" cy="268" r="1.2" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <ellipse cx="165" cy="266" rx="1.6" ry="0.9" fill={isDark ? '#2a2418' : '#c8c0b0'} opacity="0.7" />
+                  <ellipse cx="200" cy="267" rx="2" ry="1.1" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="235" cy="266" r="1" fill={isDark ? '#282218' : '#c4bca8'} opacity="0.6" />
+                  <ellipse cx="268" cy="268" rx="1.8" ry="1" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <ellipse cx="310" cy="266" rx="2.2" ry="1.2" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="355" cy="268" r="1.5" fill={isDark ? '#242018' : '#c0b8a8'} opacity="0.7" />
+                  <ellipse cx="380" cy="267" rx="1.3" ry="0.7" fill={isDark ? '#282218' : '#c4bca8'} />
+                  {/* Tiny gravel */}
+                  <circle cx="60" cy="269" r="0.6" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="115" cy="267" r="0.5" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="182" cy="268" r="0.5" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="220" cy="267" r="0.6" fill={isDark ? '#242018' : '#c0b8a8'} />
+                  <circle cx="290" cy="268" r="0.5" fill={isDark ? '#2a2418' : '#c8c0b0'} />
+                  <circle cx="340" cy="267" r="0.6" fill={isDark ? '#242018' : '#c0b8a8'} />
+
+                  {/* Dense grass tufts */}
+                  <path d="M12 265 Q13 258 14 264 Q15 256 16 263 Q17 259 18 265 Q19 257 20 264" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M28 266 Q29 260 30 265 Q31 258 32 264 Q33 261 34 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M55 267 Q56 261 57 266 Q58 259 59 265 Q60 262 61 267" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M73 266 Q75 259 76 265 Q77 257 79 264 Q80 260 82 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                  <path d="M98 266 Q99 261 100 265 Q101 259 102 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M148 267 Q149 262 150 266 Q151 260 152 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                  <path d="M248 267 Q249 262 250 266 Q251 260 252 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+                  <path d="M298 266 Q299 260 300 265 Q301 258 302 264 Q303 261 304 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M320 266 Q321 261 322 265 Q323 259 324 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M348 265 Q349 258 350 264 Q351 256 352 263 Q353 259 354 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.7" fill="none" strokeLinecap="round" />
+                  <path d="M375 266 Q376 260 377 265 Q378 258 379 264 Q380 261 381 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
+                  <path d="M392 266 Q393 261 394 265 Q395 259 396 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
+
+                  {/* Secondary grass blades */}
+                  <path d="M8 266 C9 263 10 261 11 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M22 266 C23 263 24 261 25 265" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M40 267 C41 264 42 262 43 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M66 267 C67 264 68 262 69 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M110 267 C111 264 112 262 113 266" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M280 267 C281 264 282 262 283 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+                  <path d="M330 266 C331 263 332 261 333 265" stroke={isDark ? '#3a5a1a' : '#7a9a5a'} strokeWidth="0.3" fill="none" opacity="0.6" />
+                  <path d="M365 267 C366 264 367 262 368 266" stroke={isDark ? '#4a6a2a' : '#8aaa6a'} strokeWidth="0.25" fill="none" opacity="0.5" />
+
+                  {/* Small bush clumps */}
+                  <path d="M18 266 Q21 262 24 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.5" />
+                  <path d="M70 266 Q74 261 78 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.4" />
+                  <path d="M295 266 Q299 261 303 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.5" />
+                  <path d="M362 266 Q366 261 370 266" fill={isDark ? '#2a3a18' : '#6a8a48'} opacity="0.4" />
+
+                  {/* Fallen leaves */}
+                  <path d="M35 274 Q38 271 41 274 Q38 277 35 274" fill="#7a5a18" opacity="0.7" transform="rotate(15 38 274)" />
+                  <path d="M85 272 Q87 269 89 272 Q87 275 85 272" fill="#8a6a20" opacity="0.6" transform="rotate(-25 87 272)" />
+                  <path d="M155 276 Q158 273 161 276 Q158 279 155 276" fill={isDark ? '#4a6a2a' : '#7a9a5a'} opacity="0.5" transform="rotate(40 158 276)" />
+                  <path d="M215 274 Q217 272 219 274 Q217 276 215 274" fill="#7a5a18" opacity="0.6" transform="rotate(-15 217 274)" />
+                  <path d="M265 275 Q268 272 271 275 Q268 278 265 275" fill={isDark ? '#5a7a2a' : '#8aaa5a'} opacity="0.5" transform="rotate(30 268 275)" />
+                  <path d="M340 273 Q342 271 344 273 Q342 275 340 273" fill="#8a6a20" opacity="0.6" transform="rotate(-35 342 273)" />
+                  <path d="M388 274 Q390 272 392 274 Q390 276 388 274" fill={isDark ? '#4a6a2a' : '#7a9a5a'} opacity="0.5" transform="rotate(20 390 274)" />
+                  <path d="M175 278 Q178 274 180 277 Q182 274 180 278" fill="#6a5a20" opacity="0.5" />
+
+                  {/* Tiny mushrooms */}
+                  <ellipse cx="62" cy="269" rx="1.8" ry="1" fill={isDark ? '#6a5a40' : '#a09070'} opacity="0.7" />
+                  <rect x="61.5" y="269" width="1" height="2.5" rx="0.3" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.7" />
+                  <ellipse cx="63" cy="269.5" rx="0.5" ry="0.3" fill={isDark ? '#7a6a48' : '#b0a078'} opacity="0.5" />
+                  <ellipse cx="345" cy="270" rx="1.5" ry="0.8" fill={isDark ? '#6a5a40' : '#a09070'} opacity="0.6" />
+                  <rect x="344.5" y="270" width="1" height="2" rx="0.3" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.6" />
+                  <ellipse cx="192" cy="271" rx="1.2" ry="0.7" fill={isDark ? '#7a6a48' : '#b0a078'} opacity="0.5" />
+                  <rect x="191.7" y="271" width="0.8" height="1.5" rx="0.2" fill={isDark ? '#5a4a30' : '#908060'} opacity="0.5" />
+
+                  {/* Dirt cracks */}
+                  <path d="M10 278 Q18 276 30 278 Q42 280 55 278 Q65 276 75 278" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.4" fill="none" opacity="0.6" />
+                  <path d="M130 280 Q145 278 160 280 Q170 282 180 280" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M220 279 Q235 277 250 279 Q260 281 270 279" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.4" fill="none" opacity="0.6" />
+                  <path d="M310 280 Q325 278 340 280 Q350 282 360 280" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.5" />
+                  <path d="M80 285 Q95 283 110 285 Q115 286 120 285 Q130 283 140 285" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.4" />
+                  <path d="M260 286 Q275 284 290 286 Q300 288 310 286" stroke={isDark ? '#141210' : '#b8b0a0'} strokeWidth="0.3" fill="none" opacity="0.4" />
+
+                  {/* Dirt spots */}
+                  <ellipse cx="50" cy="280" rx="4" ry="2" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+                  <ellipse cx="160" cy="282" rx="5" ry="2.5" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.25" />
+                  <ellipse cx="280" cy="281" rx="4.5" ry="2" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.3" />
+                  <ellipse cx="370" cy="280" rx="3.5" ry="1.8" fill={isDark ? '#181410' : '#c0b8a8'} opacity="0.25" />
+
+                  {/* Stray roots from cart base */}
+                  <path d="M155 262 Q148 268 140 274 Q134 278 130 280" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.7" />
+                  <path d="M155 262 Q150 265 146 268" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M245 262 Q252 268 260 274 Q266 278 270 280" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.5" fill="none" strokeLinecap="round" opacity="0.7" />
+                  <path d="M245 262 Q250 265 254 268" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M200 262 Q200 268 198 274 Q196 278 195 282" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                  <path d="M198 274 Q196 273 195 274" fill={isDark ? '#3a5a1a' : '#7a9a5a'} opacity="0.5" />
+
+                  {/* Far ground */}
+                  <path d="M0 290 Q100 288 200 290 Q300 292 400 290 L400 340 L0 340 Z" fill={isDark ? '#161210' : '#c8c0b0'} opacity="0.4" />
                 </svg>
-
-                {/* Tangerine trees using PlantIcon sprites */}
-                {[
-                  { left: '8%', bottom: '32%', size: 22, opacity: isDark ? 0.5 : 0.35 },
-                  { left: '28%', bottom: '34%', size: 20, opacity: isDark ? 0.45 : 0.3 },
-                  { left: '62%', bottom: '33%', size: 22, opacity: isDark ? 0.5 : 0.35 },
-                  { left: '85%', bottom: '35%', size: 18, opacity: isDark ? 0.4 : 0.28 },
-                  { left: '15%', bottom: '22%', size: 30, opacity: isDark ? 0.6 : 0.45 },
-                  { left: '40%', bottom: '23%', size: 28, opacity: isDark ? 0.55 : 0.4 },
-                  { left: '55%', bottom: '21%', size: 32, opacity: isDark ? 0.6 : 0.45 },
-                  { left: '78%', bottom: '22%', size: 26, opacity: isDark ? 0.55 : 0.4 },
-                  { left: '5%', bottom: '11%', size: 38, opacity: isDark ? 0.7 : 0.55 },
-                  { left: '25%', bottom: '12%', size: 36, opacity: isDark ? 0.65 : 0.5 },
-                  { left: '48%', bottom: '10%', size: 40, opacity: isDark ? 0.7 : 0.55 },
-                  { left: '70%', bottom: '11%', size: 34, opacity: isDark ? 0.65 : 0.5 },
-                  { left: '92%', bottom: '12%', size: 36, opacity: isDark ? 0.7 : 0.55 },
-                ].map((t, i) => (
-                  <div key={`tree${i}`} style={{ position: 'absolute', left: t.left, bottom: t.bottom, opacity: t.opacity, transform: 'translateX(-50%)' }}>
-                    <PlantIcon type="tangerine" size={t.size} stage={4} hideGround disableSway />
-                  </div>
-                ))}
               </div>
 
 
