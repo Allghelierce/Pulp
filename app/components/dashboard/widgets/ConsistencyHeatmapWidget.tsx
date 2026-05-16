@@ -45,7 +45,12 @@ function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean
   return false
 }
 
-const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark, dailyStats }: WidgetProps) {
+const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark, dailyStats, hibernation, hibernationScheduled }: WidgetProps) {
+  const isHibernationDate = (date: string) => {
+    if (hibernation && date >= hibernation.startDate && date <= hibernation.endDate) return true
+    if (hibernationScheduled && date >= hibernationScheduled.startDate && date <= hibernationScheduled.endDate) return true
+    return false
+  }
   const [heatmapOffset, setHeatmapOffset] = useState(0)
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
   const textSecondary = isDark ? '#8a8680' : '#7a7670'
@@ -181,6 +186,17 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
         })}
         {grid.map((week, col) => week.map((c, row) => {
           if (!c) return null
+          const isHiber = isHibernationDate(c.date)
+          if (isHiber) {
+            return (
+              <g key={c.date}>
+                <circle cx={px(col)} cy={py(row)} r={4}
+                  fill={isDark ? 'rgba(161,161,170,0.15)' : 'rgba(161,161,170,0.2)'} />
+                <line x1={px(col) - 2.5} y1={py(row) - 2.5} x2={px(col) + 2.5} y2={py(row) + 2.5}
+                  stroke={isDark ? '#71717a' : '#52525b'} strokeWidth="0.8" strokeLinecap="round" />
+              </g>
+            )
+          }
           const isEmpty = c.level === 0
           const r = isEmpty ? 4 : [0, 2.5, 3, 3.8, 4.5][c.level]
           return (
@@ -202,6 +218,16 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
           <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: c }} />
         ))}
         <span style={{ fontSize: 8, color: textMuted }}>More</span>
+        {(hibernation || hibernationScheduled) && (
+          <>
+            <span style={{ fontSize: 8, color: textMuted, marginLeft: 8 }}>|</span>
+            <svg width="8" height="8" viewBox="0 0 8 8">
+              <circle cx="4" cy="4" r="4" fill={isDark ? 'rgba(161,161,170,0.15)' : 'rgba(161,161,170,0.2)'} />
+              <line x1="1.5" y1="1.5" x2="6.5" y2="6.5" stroke={isDark ? '#71717a' : '#52525b'} strokeWidth="0.8" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: 8, color: textMuted }}>Hibernating</span>
+          </>
+        )}
       </div>
     </div>
   )

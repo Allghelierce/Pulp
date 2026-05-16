@@ -24,6 +24,8 @@ export interface DashboardViewProps {
   goalStreak?: number
   sap?: number
   dailyGoalMinutes?: number
+  hibernation?: { startDate: string; endDate: string; streakFrozen: number } | null
+  hibernationScheduled?: { startDate: string; endDate: string } | null
 }
 
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -40,7 +42,7 @@ function loadGoals() {
 export const DashboardView = memo(function DashboardView({
   isOpen, onClose, theme, xp, grove, inventory,
   activeNotebookId, activeNotebookName, achievements, notes,
-  goalStreak, sap, dailyGoalMinutes,
+  goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled,
 }: DashboardViewProps) {
   const isDark = theme === 'dark'
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
@@ -75,7 +77,9 @@ export const DashboardView = memo(function DashboardView({
     goalStreak,
     sap,
     dailyGoalMinutes,
-  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes, goalStreak, sap, dailyGoalMinutes])
+    hibernation,
+    hibernationScheduled,
+  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes, goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled])
 
   if (!isOpen) return null
 

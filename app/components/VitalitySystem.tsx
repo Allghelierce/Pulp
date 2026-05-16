@@ -31,6 +31,7 @@ interface VitalitySystemProps {
   goalStreakLastDate: string
   setGoalStreakLastDate: React.Dispatch<React.SetStateAction<string>>
   dailyGoalMinutes: number
+  isHibernating?: boolean
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -41,6 +42,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   inventory, activeTabId, initialNotes, onOpenSatchel,
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
+  isHibernating = false,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -156,7 +158,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   // Streak break detection — wipe sap if goal streak is broken
   const streakCheckedRef = useRef(false)
   useEffect(() => {
-    if (streakCheckedRef.current || !goalStreakLastDate) return
+    if (streakCheckedRef.current || !goalStreakLastDate || isHibernating) return
     streakCheckedRef.current = true
     const today = new Date().toISOString().split('T')[0]
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
@@ -164,7 +166,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       setSap(0)
       setGoalStreak(0)
     }
-  }, [goalStreakLastDate, goalStreak, setSap, setGoalStreak])
+  }, [goalStreakLastDate, goalStreak, setSap, setGoalStreak, isHibernating])
 
   // Request notification permission when a session starts
   useEffect(() => {
@@ -327,13 +329,15 @@ export const VitalitySystem = memo(function VitalitySystem({
     const minutes = timerTotal / 60
     const treeType = selectedSeed || 'tangerine'
 
-    const totalSapYield = grove.reduce((sum, t) => {
-      const info = TREE_TYPES[t.type]
-      return sum + (info?.sapYield || 0)
-    }, 0)
-    const newTreeSap = TREE_TYPES[treeType]?.sapYield || 0
-    const sapEarned = totalSapYield + newTreeSap
-    setSap(s => s + sapEarned)
+    if (!isHibernating) {
+      const totalSapYield = grove.reduce((sum, t) => {
+        const info = TREE_TYPES[t.type]
+        return sum + (info?.sapYield || 0)
+      }, 0)
+      const newTreeSap = TREE_TYPES[treeType]?.sapYield || 0
+      const sapEarned = totalSapYield + newTreeSap
+      setSap(s => s + sapEarned)
+    }
 
     updateGoalStreak(minutes)
 
@@ -369,7 +373,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 

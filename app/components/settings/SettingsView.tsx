@@ -134,7 +134,107 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp }: {
+function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: {
+  isDark: boolean
+  onSchedule?: (startDate: string, endDate: string) => void
+  cooldownEnd?: string | null
+  openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
+}) {
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const today = new Date().toISOString().split('T')[0]
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  const maxEnd = (() => {
+    if (!startDate) return ''
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + 90)
+    return d.toISOString().split('T')[0]
+  })()
+  const minEnd = (() => {
+    if (!startDate) return ''
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + 4)
+    return d.toISOString().split('T')[0]
+  })()
+
+  const inCooldown = cooldownEnd && today < cooldownEnd
+
+  const valid = startDate && endDate && startDate >= tomorrow && (!cooldownEnd || startDate >= cooldownEnd) && (() => {
+    const days = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000)
+    return days >= 4 && days <= 90
+  })()
+
+  const handleSchedule = () => {
+    if (!valid || !onSchedule) return
+    if (openConfirm) {
+      openConfirm(
+        'Confirm Hibernation',
+        `Hibernate from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}? This cannot be undone. Your streak will freeze and you won't earn sap during this period.`,
+        () => {
+          openConfirm(
+            'Are you sure?',
+            'Once hibernation begins, it cannot be cancelled. Your sap is protected but you cannot participate in competitions.',
+            () => onSchedule(startDate, endDate),
+            'Confirm Hibernation'
+          )
+        },
+        'Schedule Hibernation'
+      )
+    } else {
+      onSchedule(startDate, endDate)
+    }
+  }
+
+  const font = 'Crimson Pro, serif'
+  const inputStyle = {
+    fontFamily: font, fontSize: 12, fontWeight: 400 as const,
+    padding: '6px 10px', borderRadius: 6,
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+    color: isDark ? '#dcd8d0' : '#2a2620',
+  }
+
+  return (
+    <div className="px-5 py-4 space-y-3">
+      {inCooldown ? (
+        <p className={`text-[11px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+          Cooldown active until {new Date(cooldownEnd!).toLocaleDateString()}. You can schedule again after.
+        </p>
+      ) : (
+        <>
+          <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            Freeze your streak and protect your sap during breaks. Must be planned 24h ahead, 4–90 days. Cannot be undone.
+          </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <label className={`text-[9px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Start</label>
+              <input type="date" value={startDate} min={cooldownEnd || tomorrow} onChange={e => { setStartDate(e.target.value); setEndDate('') }} style={inputStyle} />
+            </div>
+            <div>
+              <label className={`text-[9px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>End</label>
+              <input type="date" value={endDate} min={minEnd} max={maxEnd} onChange={e => setEndDate(e.target.value)} disabled={!startDate} style={{ ...inputStyle, opacity: startDate ? 1 : 0.4 }} />
+            </div>
+          </div>
+          <button
+            onClick={handleSchedule}
+            disabled={!valid}
+            className="transition-all"
+            style={{
+              fontFamily: font, fontSize: 11, fontWeight: 400, padding: '7px 16px', borderRadius: 8, border: 'none', cursor: valid ? 'pointer' : 'default',
+              background: valid ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+              color: valid ? '#fff' : (isDark ? '#5a5650' : '#a8a4a0'),
+              opacity: valid ? 1 : 0.6,
+            }}
+          >
+            Schedule Hibernation
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -152,6 +252,10 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   xp?: number
   archivedNotes?: NoteData[]
   onUnarchiveNote?: (id: string) => void
+  hibernation?: { startDate: string; endDate: string; streakFrozen: number } | null
+  hibernationScheduled?: { startDate: string; endDate: string } | null
+  onScheduleHibernation?: (startDate: string, endDate: string) => void
+  hibernationCooldownEnd?: string | null
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -469,6 +573,32 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <ShortcutKey label="Previous Page" id="prevPage" currentKey={shortcuts.prevPage || "alt+arrowleft"} defaultKey="alt+arrowleft" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                 </div>
+              </SettingSection>
+
+              <SettingSection title="Hibernation" isDark={isDark}>
+                {hibernation ? (
+                  <div className="px-5 py-4">
+                    <div className={`flex items-center gap-2 text-[12px] font-normal ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                      Hibernating until {new Date(hibernation.endDate).toLocaleDateString()}
+                    </div>
+                    <p className={`text-[10px] mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                      Streak frozen at {hibernation.streakFrozen} days. No sap gain or loss.
+                    </p>
+                  </div>
+                ) : hibernationScheduled ? (
+                  <div className="px-5 py-4">
+                    <div className={`flex items-center gap-2 text-[12px] font-normal ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      Hibernation scheduled: {new Date(hibernationScheduled.startDate).toLocaleDateString()} — {new Date(hibernationScheduled.endDate).toLocaleDateString()}
+                    </div>
+                    <p className={`text-[10px] mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                      Cannot be cancelled once it starts.
+                    </p>
+                  </div>
+                ) : (
+                  <HibernationScheduler isDark={isDark} onSchedule={onScheduleHibernation} cooldownEnd={hibernationCooldownEnd} openConfirm={openConfirm} />
+                )}
               </SettingSection>
 
               <SettingSection title="About" isDark={isDark}>

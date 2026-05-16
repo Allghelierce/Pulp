@@ -1292,6 +1292,8 @@ export default function NoteApp() {
   const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
   const [streakNudgeDismissed, setStreakNudgeDismissed] = useState(false)
+  const [hibernation, setHibernation] = useState<{ startDate: string; endDate: string; streakFrozen: number } | null>(null)
+  const [hibernationScheduled, setHibernationScheduled] = useState<{ startDate: string; endDate: string } | null>(null)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [allCompacted, setAllCompacted] = useState(false)
@@ -1389,6 +1391,8 @@ export default function NoteApp() {
       if (data.grove) {
         setGrove([...data.grove])
       }
+      if (data.hibernation) setHibernation(data.hibernation)
+      if (data.hibernationScheduled) setHibernationScheduled(data.hibernationScheduled)
       if (data.unlockedCosmetics) setUnlockedCosmetics(data.unlockedCosmetics)
       if (data.lastCharCount) setLastCharCount(data.lastCharCount)
       if (data.achievements) {
@@ -1400,6 +1404,58 @@ export default function NoteApp() {
       setAchievements(prev => applyTimeChecks(prev))
     }
   }, [])
+
+  // Hibernation: activate scheduled hibernation, expire active hibernation
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    if (hibernationScheduled && today >= hibernationScheduled.startDate && !hibernation) {
+      setHibernation({ startDate: hibernationScheduled.startDate, endDate: hibernationScheduled.endDate, streakFrozen: goalStreak })
+      setHibernationScheduled(null)
+    }
+    if (hibernation && today > hibernation.endDate) {
+      setGoalStreak(hibernation.streakFrozen)
+      setGoalStreakLastDate(hibernation.endDate)
+      const saved = localStorage.getItem('pulp-grove')
+      if (saved) {
+        try {
+          const data = JSON.parse(saved)
+          data.lastHibernationEnd = hibernation.endDate
+          localStorage.setItem('pulp-grove', JSON.stringify(data))
+        } catch {}
+      }
+      setHibernation(null)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isHibernating = !!hibernation
+  const hibernationCooldownEnd = (() => {
+    if (!hibernation) {
+      const saved = localStorage.getItem('pulp-grove')
+      if (saved) {
+        try {
+          const data = JSON.parse(saved)
+          if (data.lastHibernationEnd) {
+            const end = new Date(data.lastHibernationEnd)
+            end.setDate(end.getDate() + 14)
+            return end.toISOString().split('T')[0]
+          }
+        } catch {}
+      }
+    }
+    return null
+  })()
+
+  const scheduleHibernation = useCallback((startDate: string, endDate: string) => {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const days = Math.round((end.getTime() - start.getTime()) / 86400000)
+    if (days < 4 || days > 90) return
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    if (start < new Date(tomorrow.toISOString().split('T')[0])) return
+    if (hibernationCooldownEnd && startDate < hibernationCooldownEnd) return
+    setHibernationScheduled({ startDate, endDate })
+  }, [hibernationCooldownEnd])
 
   // DEV: inject flag — actual injection happens after Supabase load
   const devTreesInjectedRef = useRef(false)
@@ -2642,7 +2698,7 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const groveData = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes }
+      const groveData = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
@@ -2652,7 +2708,7 @@ export default function NoteApp() {
       }
     }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, user])
+  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -3237,6 +3293,10 @@ export default function NoteApp() {
                 onUnarchiveNote={unarchiveNote}
                 onSyncNow={handleSyncNow}
                 xp={xp}
+                hibernation={hibernation}
+                hibernationScheduled={hibernationScheduled}
+                onScheduleHibernation={scheduleHibernation}
+                hibernationCooldownEnd={hibernationCooldownEnd}
               />
             </div>
           </Suspense>}
@@ -4201,6 +4261,8 @@ export default function NoteApp() {
                 goalStreak={goalStreak}
                 sap={sap}
                 dailyGoalMinutes={dailyGoalMinutes}
+                hibernation={hibernation}
+                hibernationScheduled={hibernationScheduled}
               />
             </div>
           </Suspense>}
@@ -4555,6 +4617,7 @@ export default function NoteApp() {
           goalStreakLastDate={goalStreakLastDate}
           setGoalStreakLastDate={setGoalStreakLastDate}
           dailyGoalMinutes={dailyGoalMinutes}
+          isHibernating={isHibernating}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}
