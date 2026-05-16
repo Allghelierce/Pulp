@@ -573,7 +573,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
                       {Math.floor(priorMinutes)}/{growthTarget} min
                     </span>
-                  : <span className="inline-flex items-center gap-0.5 italic" style={{ color: subtleColor }}>grow your tree</span>}
+                  : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>plant your seed</span>}
                 </p>
                 {!treeDead && goalStreak > 0 && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
@@ -622,14 +622,24 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
               {/* Death reason */}
               {treeDead && deathReason && (
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-[12px] mt-2 text-center"
-                  style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}
+                  className="mt-2 text-center"
                 >
-                  {deathReason}
-                </motion.p>
+                  <svg width="28" height="28" viewBox="0 0 28 28">
+                    <circle cx="14" cy="14" r="13" fill="#ef4444" opacity={0.15} stroke="#ef4444" strokeWidth="1.5" />
+                    <line x1="7" y1="9" x2="11" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="11" y1="9" x2="7" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="17" y1="9" x2="21" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="21" y1="9" x2="17" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M10 19 Q14 16 18 19" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="14" y1="19" x2="14" y2="23" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <p className="text-[12px] mt-1" style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}>
+                    {deathReason}
+                  </p>
+                </motion.div>
               )}
 
 
@@ -686,8 +696,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
-                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
-                  <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="flex items-center justify-center gap-2 mb-3">
                     {[15, 45, 90].map(m => (
                       <button
                         key={m}
@@ -735,7 +744,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                     <span>180m</span>
                   </div>
-                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
                 </div>
               )}
             </div>
@@ -824,7 +832,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             <div className="px-5 py-4 space-y-3">
               {[
                 { icon: '🌱', text: 'Focus to grow your tree. Rarer trees take multiple sessions.' },
-                { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
+                { icon: '💧', text: 'Sessions 10min+ need watering every 15 min.' },
                 { icon: '💀', text: 'Quit or miss water → tree gone for good.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">

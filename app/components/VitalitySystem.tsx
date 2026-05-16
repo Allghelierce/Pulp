@@ -133,6 +133,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [setGrove])
 
   const WATER_REQUIRED_THRESHOLD = 10 * 60
+  const WATER_INTERVAL_SEC = 15 * 60
   const WATER_GRACE_SEC = 90
 
   // Timer state is now initialized from sessionStorage in useState initializers above
@@ -240,8 +241,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerRunning(true)
     setWaterCount(0)
     if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
-      const thirdSec = Math.floor(timerTotal / 3)
-      setWaterDeadline(Date.now() + (thirdSec + WATER_GRACE_SEC) * 1000)
+      setWaterDeadline(Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000)
     } else {
       setWaterDeadline(null)
     }
@@ -275,23 +275,19 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (waterClicksRef.current.length >= 10) {
       setTimerRunning(false)
       setTreeDead(true)
-      setDeathReason("You overwatered your tree")
+      setDeathReason("You overwatered your tree lol")
       waterClicksRef.current = []
       return
     }
 
-    const nextCount = waterCount + 1
-    setWaterCount(nextCount)
-    if (nextCount >= 2) {
-      setWaterDeadline(null)
+    setWaterCount(c => c + 1)
+    const remainingSec = timerTotal - timerElapsed
+    if (remainingSec > WATER_INTERVAL_SEC) {
+      setWaterDeadline(Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000)
     } else {
-      const thirdSec = Math.floor(timerTotal / 3)
-      const nextThirdEnd = (nextCount + 1) * thirdSec
-      const nowElapsed = timerElapsed
-      const remaining = Math.max(10, nextThirdEnd - nowElapsed + WATER_GRACE_SEC)
-      setWaterDeadline(Date.now() + remaining * 1000)
+      setWaterDeadline(null)
     }
-  }, [timerRunning, treeDead, waterCount, timerTotal, timerElapsed])
+  }, [timerRunning, treeDead, timerTotal, timerElapsed])
 
   // Achievement Methods — defined before claimReward which depends on them
   const checkAchievement = useCallback((id: string, update?: (a: Achievement) => Partial<Achievement>) => {
