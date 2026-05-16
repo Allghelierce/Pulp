@@ -13,12 +13,10 @@ interface VitalitySystemProps {
   onSetTimerOpen: (open: boolean) => void
   sap: number
   gems: number
-  xp: number
   grove: Tree[]
   achievements: Achievement[]
   setSap: React.Dispatch<React.SetStateAction<number>>
   setGems: React.Dispatch<React.SetStateAction<number>>
-  setXp: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
   setAchievements: React.Dispatch<React.SetStateAction<Achievement[]>>
   lastCharCount: number
@@ -40,7 +38,7 @@ interface VitalitySystemProps {
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  sap, gems, xp, grove, achievements, setSap, setGems, setXp, setGrove, setAchievements,
+  sap, gems, grove, achievements, setSap, setGems, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
   inventory, activeTabId, initialNotes, onOpenSatchel,
@@ -215,9 +213,6 @@ export const VitalitySystem = memo(function VitalitySystem({
             const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
             checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
           }
-          if (next > 0 && next % 600 === 0 && Math.random() < 0.125) {
-            setXp(x => x + 5)
-          }
           return next
         })
       }, 1000)
@@ -336,8 +331,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
-    const xpReward = Math.max(10, Math.round(minutes * 3 + Math.pow(minutes / 10, 1.5)))
-
     try {
       const res = await apiFetch('/api/grove', {
         method: 'POST',
@@ -345,7 +338,6 @@ export const VitalitySystem = memo(function VitalitySystem({
       })
       if (res.ok) {
         const data = await res.json()
-        setXp(x => x + data.xpReward)
         if (data.tree) {
           setGrove(g => {
             const next = [...g, data.tree]
@@ -355,11 +347,9 @@ export const VitalitySystem = memo(function VitalitySystem({
           })
         }
       } else {
-        setXp(x => x + xpReward)
         setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
       }
     } catch {
-      setXp(x => x + xpReward)
       setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
     }
 
@@ -367,7 +357,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setXp, setGrove, checkAchievement, activeTabId, getMultiplier, setTimeBalance, updateGoalStreak])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, getMultiplier, setTimeBalance, updateGoalStreak])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
@@ -388,10 +378,9 @@ export const VitalitySystem = memo(function VitalitySystem({
       if (!target || !target.completed || target.claimed) return prev
       if (target.rewardType === 'time') setGems(g => g + target.reward)
       else setSap(s => s + target.reward)
-      setXp(x => x + target.reward * 5)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setSap, setXp, setAchievements])
+  }, [setGems, setSap, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
@@ -425,12 +414,10 @@ export const VitalitySystem = memo(function VitalitySystem({
         const typedDiff = Math.min(diff, 30)
         checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
         checkAchievement('wordsmith', a => ({ progress: Math.min(200000, (a.progress || 0) + typedDiff) }))
-        const xpFromWriting = Math.max(1, Math.floor(typedDiff / 10))
-        setXp(x => x + xpFromWriting)
       }
 
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setXp, setSap, setLastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setSap, setLastCharCount])
 
   return (
     <TimerSidebarPanel

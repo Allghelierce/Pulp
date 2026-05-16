@@ -558,7 +558,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       {multiplier > 1 && <span style={{ opacity: 0.5 }}> × {multiplier}</span>}
                       <span style={{ color: mainColor }}> = +{Math.round(Math.floor(total / 60) * multiplier)} time</span>
                     </span>
-                  ) : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.max(10, Math.round(Math.floor(total / 60) * 3 + Math.pow(Math.floor(total / 60) / 10, 1.5)))} XP</span>}
+                  ) : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.round(Math.floor(total / 60) * multiplier)} time</span>}
                 </p>
                 {!treeDead && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
@@ -856,7 +856,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             <div className="px-5 py-4 space-y-3">
               {[
-                { icon: '✨', text: 'Complete a session to earn XP and grow your tree.' },
+                { icon: '✨', text: 'Complete a session to earn time and grow your tree.' },
                 { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
                 { icon: '💀', text: 'Leaving, giving up, or missing water kills your plant.' },
                 { icon: '⚠️', text: 'A dead plant costs you 25% of your sap.' },

@@ -1,7 +1,7 @@
 "use client"
 import { memo, useState, useMemo } from "react"
 
-import { TREE_TYPES, getLevel, LEADERBOARD_BOTS } from "@/app/constants"
+import { TREE_TYPES, LEADERBOARD_BOTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
@@ -12,7 +12,7 @@ interface RightSidebarProps {
   accent: string
   sap: number
   gems: number
-  xp: number
+  xp?: number
   grove: any[]
   userName?: string
   setSap: (v: number | ((p: number) => number)) => void
@@ -27,14 +27,13 @@ export const RightSidebar = memo(function RightSidebar({
   const [gemsTooltip, setGemsTooltip] = useState(false)
   const [tab, setTab] = useState<"grove" | "leaderboard">("grove")
 
-  const lvl = getLevel(xp)
   const isDark = theme === "dark"
 
   const leaderboard = useMemo(() => {
-    const you = { name: userName || "you", xp, sap, isYou: true }
+    const you = { name: userName || "you", xp: 0, sap, isYou: true }
     const others = LEADERBOARD_BOTS.map(b => ({ ...b, isYou: false }))
     return [...others, you].sort((a, b) => b.sap - a.sap)
-  }, [xp, sap, userName])
+  }, [sap, userName])
 
   const yourRank = leaderboard.findIndex(e => e.isYou) + 1
 
@@ -71,33 +70,20 @@ export const RightSidebar = memo(function RightSidebar({
           </button>
         </div>
 
-        {/* XP / Level Banner */}
+        {/* Currency Banner */}
         <div className={`mx-4 mt-4 p-3 rounded-lg border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-gradient-to-r from-amber-50/60 to-orange-50/40 border-orange-100/40'}`}>
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className={`text-[18px] font-normal tabular-nums ${isDark ? 'text-amber-400' : 'text-amber-600'}`} style={{ fontFamily: 'Crimson Pro, serif' }}>
-                Lv.{lvl.level}
-              </span>
-              <span className={`text-[10px] font-normal uppercase tracking-[0.08em] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                {lvl.name}
-              </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <PulpIcon size={13} />
+                <span className={`text-[13px] font-normal tabular-nums ${isDark ? 'text-amber-400' : 'text-amber-600'}`} style={{ fontFamily: 'Crimson Pro, serif' }}>{sap.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <GemIcon size={12} />
+                <span className={`text-[13px] font-normal tabular-nums ${isDark ? 'text-blue-400' : 'text-blue-600'}`} style={{ fontFamily: 'Crimson Pro, serif' }}>{gems}</span>
+              </div>
             </div>
-            <span className="text-[9px] tabular-nums text-zinc-400 font-normal">
-              {xp.toLocaleString()} XP
-            </span>
-          </div>
-          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-zinc-800' : 'bg-zinc-200/60'}`}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.max(2, lvl.progress * 100)}%`,
-                background: `linear-gradient(90deg, #f59e0b, #d97706)`,
-              }}
-            />
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-[8px] text-zinc-400 tabular-nums">{lvl.currentXp}/{lvl.nextXp} XP</span>
-            <span className="text-[8px] text-zinc-400">Next: {getLevel(xp + lvl.nextXp - lvl.currentXp).name}</span>
+            <span className="text-[9px] text-zinc-400 font-normal">{grove.filter(t => t?.type !== 'spoiled').length} trees</span>
           </div>
         </div>
 
@@ -207,7 +193,6 @@ export const RightSidebar = memo(function RightSidebar({
               <div className="space-y-1">
                 {leaderboard.map((entry, i) => {
                   const rank = i + 1
-                  const entryLevel = getLevel(entry.xp)
                   const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null
                   return (
                     <div
@@ -235,7 +220,7 @@ export const RightSidebar = memo(function RightSidebar({
                           )}
                         </div>
                         <span className={`text-[8px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                          Lv.{entryLevel.level} {entryLevel.name}
+                          {entry.sap.toLocaleString()} sap
                         </span>
                       </div>
                       <span className={`text-[10px] font-normal tabular-nums ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>

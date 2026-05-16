@@ -14,7 +14,7 @@ export interface DashboardViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  xp: number
+  xp?: number
   grove: Tree[]
   inventory: string[]
   activeNotebookId?: string

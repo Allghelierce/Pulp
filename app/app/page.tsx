@@ -1288,7 +1288,7 @@ export default function NoteApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [gems, setGems] = useState(3)
   const [sap, setSap] = useState(50)
-  const [xp, setXp] = useState(0)
+  const xp = 0
   const [timeBalance, setTimeBalance] = useState(0)
   const [goalStreak, setGoalStreak] = useState(0)
   const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
@@ -4551,8 +4551,6 @@ export default function NoteApp() {
           onSetTimerOpen={setTimerOpen}
           sap={sap}
           gems={gems}
-          xp={xp}
-          setXp={setXp}
           grove={grove}
           achievements={achievements}
           setSap={setSap}
