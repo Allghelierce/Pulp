@@ -573,7 +573,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
                       {Math.floor(priorMinutes)}/{growthTarget} min
                     </span>
-                  : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>plant your seed</span>}
+                  : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>lock in</span>}
                 </p>
                 {!treeDead && goalStreak > 0 && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
@@ -749,7 +749,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             </div>
 
             {/* Main button */}
-            <div className="pt-2">
+            <div className="pt-5">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {
@@ -771,14 +771,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ? "rgba(239,68,68,0.1)"
                         : done
                           ? `${mainColor}1a`
-                          : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.06)",
+                          : isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.1)",
                   color: treeDead ? "#ef4444"
                     : running && !done && elapsed < 60
                       ? dimColor
                       : running && !done
                         ? "#ef4444"
-                        : done ? mainColor : textColor,
-                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : borderColor}`,
+                        : done ? mainColor : isDark ? "#4ade80" : "#16a34a",
+                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? "rgba(34,197,94,0.25)" : "rgba(34,197,94,0.2)"}`,
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
