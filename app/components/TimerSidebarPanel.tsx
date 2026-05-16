@@ -99,7 +99,7 @@ function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { p
       </div>
 
       {/* Plant — positioned from the bottom so it sits on the hill */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: stage === 0 ? 18 : 30 }}>
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: (stage <= 0) ? 18 : 30 }}>
         {!idle && (
           <div
             className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
