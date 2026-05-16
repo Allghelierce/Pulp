@@ -15,7 +15,9 @@ export interface WidgetProps {
   achievements: Achievement[]
   notes: NoteData[]
   goalStreak?: number
-  timeBalance?: number
+  sap?: number
+  hibernation?: { startDate: string; endDate: string; streakFrozen: number } | null
+  hibernationScheduled?: { startDate: string; endDate: string } | null
   dailyGoalMinutes?: number
 }
 

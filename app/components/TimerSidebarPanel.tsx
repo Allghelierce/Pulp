@@ -2,6 +2,7 @@
 import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
+import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 
@@ -39,15 +40,13 @@ interface TimerSidebarPanelProps {
   onWater: () => void
   onClaim: () => void
   onDismissDead: () => void
-  lostSap: number
-  onRecoverSap: () => void
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
   onOpenSatchel?: () => void
-  timeBalance?: number
-  multiplier?: number
+  grove?: Tree[]
   goalStreak?: number
+  isHibernating?: boolean
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -81,15 +80,16 @@ function MossyHill({ isDark, overlap = 6 }: { isDark: boolean; overlap?: number 
   )
 }
 
-function TreeVisualization({ progress, type, idle, isDark }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean }) {
+function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean; priorRatio?: number }) {
   const p = Math.max(0, Math.min(1, progress))
   const plantType = type || 'tangerine'
   const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 
-  const stage = idle ? -1 : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
-  const plantSize = idle ? 100 : stage === 0 ? 50 : 70 + stage * 12
+  const idleStage = priorRatio >= 0.85 ? 3 : priorRatio >= 0.6 ? 2 : priorRatio >= 0.3 ? 1 : priorRatio >= 0.1 ? 0 : -1
+  const stage = idle ? idleStage : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
+  const plantSize = (idle && idleStage === -1) ? 60 : stage === 0 ? 50 : 70 + Math.max(0, stage) * 12
 
   return (
     <div className="relative w-full h-full">
@@ -99,7 +99,7 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
       </div>
 
       {/* Plant — positioned from the bottom so it sits on the hill */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: stage === 0 ? 18 : 30 }}>
+      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: (stage <= 0) ? 18 : 30 }}>
         {!idle && (
           <div
             className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
@@ -107,8 +107,10 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
           />
         )}
 
-        {idle ? (
-          <PlantIcon type={plantType} size={plantSize} stage={4} />
+        {idle && idleStage === -1 ? (
+          <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+        ) : idle ? (
+          <PlantIcon type={plantType} size={plantSize} stage={idleStage} />
         ) : stage === 0 ? (
           <div className="relative">
             <PlantIcon type={plantType} size={plantSize} isSeed={true} />
@@ -161,9 +163,8 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
-  lostSap, onRecoverSap,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  timeBalance, multiplier = 1, goalStreak = 0,
+  grove = [], goalStreak = 0, isHibernating = false,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -205,6 +206,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     }, 20 * 60 * 1000) // 20 minutes
     return () => clearInterval(interval)
   }, [running])
+
+  const treeType = selectedSeed || 'tangerine'
+  const treeInfo = TREE_TYPES[treeType]
+  const growthTarget = treeInfo?.growthMinutes || 25
+  const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+  const priorMinutes = existingPartial?.focusMinutes || 0
+  const sessionMinutes = total > 0 ? elapsed / 60 : 0
+  const cumulativeMinutes = priorMinutes + sessionMinutes
+  const cumulativeRatio = Math.min(1, cumulativeMinutes / growthTarget)
+  const priorRatio = priorMinutes / growthTarget
 
   const remainingTime = Math.max(0, total - elapsed)
   const minutes = Math.floor(remainingTime / 60)
@@ -552,29 +563,23 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {treeDead ? "tree withered" : running ? "in session" : done ? (
-                    <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12 }}>
-                      <span style={{ opacity: 0.5 }}>{Math.floor(total / 60)} min</span>
-                      {multiplier > 1 && <span style={{ opacity: 0.5 }}> × {multiplier}</span>}
-                      <span style={{ color: mainColor }}> = +{Math.round(Math.floor(total / 60) * multiplier)} time</span>
+                  {treeDead ? "tree withered" : done
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12, color: mainColor }}>complete</span>
+                  : running
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
+                      {Math.floor(cumulativeMinutes)}/{growthTarget} min
                     </span>
-                  ) : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.round(Math.floor(total / 60) * multiplier)} time</span>}
+                  : priorMinutes > 0
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
+                      {Math.floor(priorMinutes)}/{growthTarget} min
+                    </span>
+                  : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>lock in</span>}
                 </p>
-                {!treeDead && (
+                {!treeDead && goalStreak > 0 && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
-                    <span style={{ color: multiplier >= 2 ? '#d97706' : subtleColor, fontWeight: multiplier >= 2 ? 500 : 400 }}>
-                      {multiplier}x
+                    <span style={{ fontSize: 10, opacity: goalStreak >= 7 ? 1 : 0.5, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
+                      {goalStreak >= 7 ? `${goalStreak}d streak` : `${goalStreak}/7 to streak`}
                     </span>
-                    <span style={{ opacity: 0.3 }}>·</span>
-                    <span>+{Math.round(Math.floor(total / 60) * multiplier)} time</span>
-                    {goalStreak > 0 && (
-                      <>
-                        <span style={{ opacity: 0.3 }}>·</span>
-                        <span style={{ fontSize: 10, opacity: goalStreak >= 7 ? 1 : 0.5, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
-                          {goalStreak >= 7 ? `${goalStreak}d` : `${goalStreak}/7`}
-                        </span>
-                      </>
-                    )}
                   </div>
                 )}
               </div>
@@ -582,7 +587,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Tree view */}
               <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 32 }}>
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                      <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
+                      <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
                     </div>
                   </div>
 
@@ -590,9 +595,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {(running || done) && !treeDead && (
                 <div className="relative mx-auto" style={{ width: '70%', height: 12, marginTop: 4 }}>
                   <div style={{ position: 'absolute', top: 5, left: 0, right: 0, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-                  <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, progress * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
+                  {priorRatio > 0 && (
+                    <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, priorRatio * 100)}%`, height: 2, borderRadius: 1, background: isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)' }} />
+                  )}
+                  <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, cumulativeRatio * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
                   {[0.1, 0.3, 0.6, 0.85].map(t => (
-                    <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: progress >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
+                    <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: cumulativeRatio >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
                   ))}
                 </div>
               )}
@@ -614,58 +622,27 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
               {/* Death reason */}
               {treeDead && deathReason && (
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-[12px] mt-2 text-center"
-                  style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}
+                  className="mt-2 text-center"
                 >
-                  {deathReason}
-                </motion.p>
-              )}
-
-
-              {/* Sap recovery */}
-              {lostSap > 0 && !running && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full mt-5 relative overflow-hidden rounded-xl"
-                  style={{
-                    background: isDark
-                      ? 'linear-gradient(135deg, rgba(127,29,29,0.15) 0%, rgba(239,68,68,0.06) 100%)'
-                      : 'linear-gradient(135deg, rgba(254,226,226,0.6) 0%, rgba(254,242,242,0.4) 100%)',
-                    border: `1px solid ${isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.18)'}`,
-                  }}
-                >
-                  <div className="px-4 py-3.5 flex flex-col items-center gap-2.5">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[13px] font-normal inline-flex items-center gap-1" style={{ color: isDark ? '#fca5a5' : '#dc2626', fontFamily: serifFont }}>
-                        −{lostSap} <PulpIcon size={13} />
-                      </span>
-                      <span className="text-[9px] uppercase tracking-[0.12em] font-normal" style={{ color: isDark ? 'rgba(252,165,165,0.5)' : 'rgba(220,38,38,0.4)', fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        sap lost (15%)
-                      </span>
-                    </div>
-                    <button
-                      onClick={onRecoverSap}
-                      className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
-                      style={{
-                        background: isDark
-                          ? 'linear-gradient(135deg, rgba(217,119,6,0.25) 0%, rgba(217,119,6,0.15) 100%)'
-                          : 'linear-gradient(135deg, rgba(217,119,6,0.18) 0%, rgba(217,119,6,0.10) 100%)',
-                        border: `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)'}`,
-                        color: isDark ? '#fbbf24' : '#92400e',
-                        fontFamily: 'Inter, system-ui, sans-serif',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Recover Sap
-                    </button>
-                  </div>
+                  <svg width="28" height="28" viewBox="0 0 28 28">
+                    <circle cx="14" cy="14" r="13" fill="#ef4444" opacity={0.15} stroke="#ef4444" strokeWidth="1.5" />
+                    <line x1="7" y1="9" x2="11" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="11" y1="9" x2="7" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="17" y1="9" x2="21" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="21" y1="9" x2="17" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M10 19 Q14 16 18 19" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="14" y1="19" x2="14" y2="23" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <p className="text-[12px] mt-1" style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}>
+                    {deathReason}
+                  </p>
                 </motion.div>
               )}
+
+
 
             </motion.div>
             )}
@@ -719,8 +696,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Duration slider (hidden while running) */}
               {!running && (
                 <div className="w-full">
-                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
-                  <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="flex items-center justify-center gap-2 mb-3">
                     {[15, 45, 90].map(m => (
                       <button
                         key={m}
@@ -768,13 +744,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                     <span>180m</span>
                   </div>
-                  <div className="w-full h-px my-3" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
                 </div>
               )}
             </div>
 
             {/* Main button */}
-            <div className="pt-2">
+            <div className="pt-5">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {
@@ -796,14 +771,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ? "rgba(239,68,68,0.1)"
                         : done
                           ? `${mainColor}1a`
-                          : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.06)",
+                          : isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.1)",
                   color: treeDead ? "#ef4444"
                     : running && !done && elapsed < 60
                       ? dimColor
                       : running && !done
                         ? "#ef4444"
-                        : done ? mainColor : textColor,
-                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : borderColor}`,
+                        : done ? mainColor : isDark ? "#4ade80" : "#16a34a",
+                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? "rgba(34,197,94,0.25)" : "rgba(34,197,94,0.2)"}`,
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
@@ -856,11 +831,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             <div className="px-5 py-4 space-y-3">
               {[
-                { icon: '✨', text: 'Complete a session to earn time and grow your tree.' },
-                { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
-                { icon: '💀', text: 'Leaving, giving up, or missing water kills your plant.' },
-                { icon: '⚠️', text: 'A dead plant costs you 25% of your sap.' },
-                { icon: <PulpIcon size={14} />, text: 'Giving up costs your planted seed.' },
+                { icon: '🌱', text: 'Focus to grow your tree. Rarer trees take multiple sessions.' },
+                { icon: '💧', text: 'Sessions 10min+ need watering every 15 min.' },
+                { icon: '💀', text: 'Quit or miss water → tree gone for good.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>

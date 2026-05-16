@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShoppingBag } from "lucide-react"
-import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
+import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { ACCENT_COLORS } from '@/app/components/settings/SettingsView'
 
 interface DocumentToolbarProps {
@@ -46,7 +46,6 @@ interface DocumentToolbarProps {
   sidebarWidth: number
   isSidebarDragging: boolean
   sap: number
-  gems: number
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
   onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
   onAiAction?: (action: string) => void
@@ -124,7 +123,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   stickyColor, setStickyColor,
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
-  sap, gems, isVault, isUnlocked, onLock,
+  sap, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, onAiAction, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
@@ -674,14 +673,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       {/* Currency Display - Centered */}
       {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
-          <div
-            className="flex items-center gap-1.5 hover:scale-105 transition-transform cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); setCurrencyTooltip(currencyTooltip === 'gem' ? null : 'gem') }}
-            title="Time earned"
-          >
-            <GemIcon size={15} />
-            <span>{gems >= 999999 ? "∞" : gems}</span>
-          </div>
           {userAvatarUrl ? (
             <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
           ) : userEmail ? (
@@ -715,17 +706,17 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             >
               <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-2">
-                  <GemIcon size={14} />
+                  <PulpIcon size={14} />
                   <span style={{ fontSize: 14, fontWeight: 400, color: '#e4e0d8', fontFamily: 'Crimson Pro, serif' }}>
-                    time
+                    Sap
                   </span>
                 </div>
               </div>
               <div className="px-4 py-3 space-y-2">
                 {[
-                  { icon: '⏳', text: 'Earned 1:1 from focus sessions. 1 minute = 1 time.' },
-                  { icon: '🌱', text: 'Spend time to buy seeds.' },
-                  { icon: '🏆', text: 'Lifetime time earned is your leaderboard score.' },
+                  { icon: '🌳', text: 'Collected from trees in your grove.' },
+                  { icon: '🌱', text: 'Spend sap to buy seeds.' },
+                  { icon: '🏆', text: 'Grow trees by completing focus sessions.' },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
