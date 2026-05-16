@@ -2,6 +2,7 @@
 import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
+import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 
@@ -39,13 +40,11 @@ interface TimerSidebarPanelProps {
   onWater: () => void
   onClaim: () => void
   onDismissDead: () => void
-  lostSap: number
-  onRecoverSap: () => void
   inventory: string[]
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
   onOpenSatchel?: () => void
-  sapPreview?: number
+  grove?: Tree[]
   goalStreak?: number
   isHibernating?: boolean
 }
@@ -81,15 +80,16 @@ function MossyHill({ isDark, overlap = 6 }: { isDark: boolean; overlap?: number 
   )
 }
 
-function TreeVisualization({ progress, type, idle, isDark }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean }) {
+function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { progress: number; type: string | null; idle?: boolean; isDark?: boolean; priorRatio?: number }) {
   const p = Math.max(0, Math.min(1, progress))
   const plantType = type || 'tangerine'
   const typeInfo = TREE_TYPES[plantType] || TREE_TYPES.tangerine
   const color = typeInfo.color
   const shape = typeInfo.shape || 'oak'
 
-  const stage = idle ? -1 : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
-  const plantSize = idle ? 100 : stage === 0 ? 50 : 70 + stage * 12
+  const idleStage = priorRatio >= 0.85 ? 3 : priorRatio >= 0.6 ? 2 : priorRatio >= 0.3 ? 1 : priorRatio >= 0.1 ? 0 : -1
+  const stage = idle ? idleStage : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
+  const plantSize = (idle && idleStage === -1) ? 60 : stage === 0 ? 50 : 70 + Math.max(0, stage) * 12
 
   return (
     <div className="relative w-full h-full">
@@ -107,8 +107,10 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
           />
         )}
 
-        {idle ? (
-          <PlantIcon type={plantType} size={plantSize} stage={4} />
+        {idle && idleStage === -1 ? (
+          <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+        ) : idle ? (
+          <PlantIcon type={plantType} size={plantSize} stage={idleStage} />
         ) : stage === 0 ? (
           <div className="relative">
             <PlantIcon type={plantType} size={plantSize} isSeed={true} />
@@ -161,9 +163,8 @@ function TreeVisualization({ progress, type, idle, isDark }: { progress: number;
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
-  lostSap, onRecoverSap,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  sapPreview = 0, goalStreak = 0, isHibernating = false,
+  grove = [], goalStreak = 0, isHibernating = false,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -205,6 +206,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     }, 20 * 60 * 1000) // 20 minutes
     return () => clearInterval(interval)
   }, [running])
+
+  const treeType = selectedSeed || 'tangerine'
+  const treeInfo = TREE_TYPES[treeType]
+  const growthTarget = treeInfo?.growthMinutes || 25
+  const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+  const priorMinutes = existingPartial?.focusMinutes || 0
+  const sessionMinutes = total > 0 ? elapsed / 60 : 0
+  const cumulativeMinutes = priorMinutes + sessionMinutes
+  const cumulativeRatio = Math.min(1, cumulativeMinutes / growthTarget)
+  const priorRatio = priorMinutes / growthTarget
 
   const remainingTime = Math.max(0, total - elapsed)
   const minutes = Math.floor(remainingTime / 60)
@@ -552,15 +563,17 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {treeDead ? "tree withered" : running ? "in session" : done ? (
-                    <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12 }}>
-                      {isHibernating
-                        ? <span style={{ color: subtleColor }}>hibernating — no sap</span>
-                        : <span style={{ color: mainColor }}>+{sapPreview} sap</span>}
+                  {treeDead ? "tree withered" : done
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12, color: mainColor }}>complete</span>
+                  : running
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
+                      {Math.floor(cumulativeMinutes)}/{growthTarget} min
                     </span>
-                  ) : isHibernating
-                    ? <span className="inline-flex items-center gap-0.5 italic" style={{ color: subtleColor }}>hibernating</span>
-                    : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{sapPreview} sap</span>}
+                  : priorMinutes > 0
+                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
+                      {Math.floor(priorMinutes)}/{growthTarget} min
+                    </span>
+                  : <span className="inline-flex items-center gap-0.5 italic" style={{ color: subtleColor }}>grow your tree</span>}
                 </p>
                 {!treeDead && goalStreak > 0 && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
@@ -574,7 +587,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Tree view */}
               <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 32 }}>
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                      <TreeVisualization progress={progress} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} />
+                      <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
                     </div>
                   </div>
 
@@ -582,9 +595,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {(running || done) && !treeDead && (
                 <div className="relative mx-auto" style={{ width: '70%', height: 12, marginTop: 4 }}>
                   <div style={{ position: 'absolute', top: 5, left: 0, right: 0, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-                  <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, progress * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
+                  {priorRatio > 0 && (
+                    <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, priorRatio * 100)}%`, height: 2, borderRadius: 1, background: isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)' }} />
+                  )}
+                  <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, cumulativeRatio * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
                   {[0.1, 0.3, 0.6, 0.85].map(t => (
-                    <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: progress >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
+                    <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: cumulativeRatio >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
                   ))}
                 </div>
               )}
@@ -617,47 +633,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
 
 
-              {/* Sap recovery */}
-              {lostSap > 0 && !running && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full mt-5 relative overflow-hidden rounded-xl"
-                  style={{
-                    background: isDark
-                      ? 'linear-gradient(135deg, rgba(127,29,29,0.15) 0%, rgba(239,68,68,0.06) 100%)'
-                      : 'linear-gradient(135deg, rgba(254,226,226,0.6) 0%, rgba(254,242,242,0.4) 100%)',
-                    border: `1px solid ${isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.18)'}`,
-                  }}
-                >
-                  <div className="px-4 py-3.5 flex flex-col items-center gap-2.5">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-[13px] font-normal inline-flex items-center gap-1" style={{ color: isDark ? '#fca5a5' : '#dc2626', fontFamily: serifFont }}>
-                        −{lostSap} <PulpIcon size={13} />
-                      </span>
-                      <span className="text-[9px] uppercase tracking-[0.12em] font-normal" style={{ color: isDark ? 'rgba(252,165,165,0.5)' : 'rgba(220,38,38,0.4)', fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        sap lost (15%)
-                      </span>
-                    </div>
-                    <button
-                      onClick={onRecoverSap}
-                      className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
-                      style={{
-                        background: isDark
-                          ? 'linear-gradient(135deg, rgba(217,119,6,0.25) 0%, rgba(217,119,6,0.15) 100%)'
-                          : 'linear-gradient(135deg, rgba(217,119,6,0.18) 0%, rgba(217,119,6,0.10) 100%)',
-                        border: `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)'}`,
-                        color: isDark ? '#fbbf24' : '#92400e',
-                        fontFamily: 'Inter, system-ui, sans-serif',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Recover Sap
-                    </button>
-                  </div>
-                </motion.div>
-              )}
 
             </motion.div>
             )}
@@ -848,11 +823,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             <div className="px-5 py-4 space-y-3">
               {[
-                { icon: '✨', text: 'Complete a session to earn time and grow your tree.' },
+                { icon: '🌱', text: 'Focus to grow your tree. Rarer trees take multiple sessions.' },
                 { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
-                { icon: '💀', text: 'Leaving, giving up, or missing water kills your plant.' },
-                { icon: '⚠️', text: 'A dead plant costs you 25% of your sap.' },
-                { icon: <PulpIcon size={14} />, text: 'Giving up costs your planted seed.' },
+                { icon: '💀', text: 'Quit or miss water → tree gone for good.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>

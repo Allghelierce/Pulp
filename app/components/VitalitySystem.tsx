@@ -237,7 +237,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setDeathReason(null)
-    setLostSap(0)
     setTimerRunning(true)
     setWaterCount(0)
     if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
@@ -249,7 +248,6 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerTotal, activeTabId])
 
   const [waterCount, setWaterCount] = useState(0)
-  const [lostSap, setLostSap] = useState(0)
 
   const giveUp = useCallback(() => {
     setTimerRunning(false)
@@ -266,11 +264,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterDeadline(null)
   }, [])
 
-  const recoverSap = useCallback(() => {
-    if (lostSap <= 0) return
-    setSap(s => s + lostSap)
-    setLostSap(0)
-  }, [lostSap, setSap])
 
   const waterClicksRef = useRef<number[]>([])
   const waterTree = useCallback(() => {
@@ -339,47 +332,52 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
-    const minutes = timerTotal / 60
+    const sessionMinutes = timerTotal / 60
     const treeType = selectedSeed || 'tangerine'
+    const treeInfo = TREE_TYPES[treeType]
+    const growthTarget = treeInfo?.growthMinutes || 25
 
     if (!isHibernating) {
-      const totalSapYield = grove.reduce((sum, t) => {
-        const info = TREE_TYPES[t.type]
-        return sum + (info?.sapYield || 0)
-      }, 0)
-      const newTreeSap = TREE_TYPES[treeType]?.sapYield || 0
-      const sapEarned = totalSapYield + newTreeSap
-      setSap(s => s + sapEarned)
+      const totalSapYield = grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
+      const newTreeSap = treeInfo?.sapYield || 0
+      setSap(s => s + totalSapYield + newTreeSap)
     }
 
-    updateGoalStreak(minutes)
-
-    logFocusSession(minutes, 0)
+    updateGoalStreak(sessionMinutes)
+    logFocusSession(sessionMinutes, 0)
 
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
     checkAchievement('time_lord', a => ({ progress: Math.min(36000, (a.progress || 0) + timerTotal) }))
 
-    try {
-      const res = await apiFetch('/api/grove', {
-        method: 'POST',
-        body: JSON.stringify({ treeType, notebookId: selectedNotebookId, timerDuration: timerTotal }),
+    const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+
+    const computeStage = (ratio: number) => ratio >= 1 ? 4 : ratio >= 0.6 ? 3 : ratio >= 0.3 ? 2 : ratio >= 0.1 ? 1 : 0
+
+    if (existingPartial) {
+      const newFocus = Math.min(growthTarget, (existingPartial.focusMinutes || 0) + sessionMinutes)
+      const ratio = newFocus / growthTarget
+      setGrove(g => {
+        const next = g.map(t => t.id === existingPartial.id
+          ? { ...t, focusMinutes: newFocus, stage: computeStage(ratio), progress: ratio * 100 }
+          : t)
+        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+        return next
       })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.tree) {
-          setGrove(g => {
-            const next = [...g, data.tree]
-            checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-            checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
-            return next
-          })
-        }
-      } else {
-        setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
+    } else {
+      const ratio = Math.min(1, sessionMinutes / growthTarget)
+      const newTree = {
+        id: Date.now(), type: treeType,
+        stage: computeStage(ratio), progress: ratio * 100,
+        plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined,
+        focusMinutes: sessionMinutes, growthTarget,
       }
-    } catch {
-      setGrove(g => [...g, { id: Date.now(), type: treeType, stage: 4, progress: 100, plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined }])
+      setGrove(g => {
+        const next = [...g, newTree]
+        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+        checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
+        return next
+      })
     }
 
     setTimerElapsed(0)
@@ -466,13 +464,11 @@ export const VitalitySystem = memo(function VitalitySystem({
       onWater={waterTree}
       onClaim={claimReward}
       onDismissDead={dismissDeadTree}
-      lostSap={lostSap}
-      onRecoverSap={recoverSap}
       inventory={inventory}
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
       onOpenSatchel={onOpenSatchel}
-      sapPreview={grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0) + (TREE_TYPES[selectedSeed || 'tangerine']?.sapYield || 0)}
+      grove={grove}
       goalStreak={goalStreak}
       isHibernating={isHibernating}
     />

@@ -56,6 +56,8 @@ export interface Tree {
   progress: number
   plantedAt: number
   notebookId?: string
+  focusMinutes?: number
+  growthTarget?: number
   lastHarvest?: number
   ascension?: number
 }
