@@ -807,7 +807,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose 15% of your <PulpIcon size={11} /></span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
             </div>
           </div>
@@ -860,7 +860,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 { icon: '💧', text: 'Sessions 10min+ need watering every 8 min.' },
                 { icon: '💀', text: 'Leaving, giving up, or missing water kills your plant.' },
                 { icon: '⚠️', text: 'A dead plant costs you 25% of your sap.' },
-                { icon: <PulpIcon size={14} />, text: 'Recover lost sap after giving up.' },
+                { icon: <PulpIcon size={14} />, text: 'Giving up costs your planted seed.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>
