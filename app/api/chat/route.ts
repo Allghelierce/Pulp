@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
     }
 
-    const { prompt, text, personality } = await request.json()
+    const { prompt, text, personality, stream: wantStream } = await request.json()
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 })
     }
@@ -40,20 +40,61 @@ export async function POST(request: Request) {
       ? `${DEFAULT_SYSTEM}\n\nADDITIONAL PERSONALITY INSTRUCTIONS (from user):\n${personality}`
       : DEFAULT_SYSTEM
 
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: text ? `${prompt}\n\nContext:\n${text}` : prompt },
+    ]
+
+    if (wantStream) {
+      const groqRes = await fetch(GROQ_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 1024,
+          temperature: 0.5,
+          stream: true,
+          messages,
+        }),
+      })
+
+      if (!groqRes.ok || !groqRes.body) {
+        return NextResponse.json({ error: "AI stream error" }, { status: 502 })
+      }
+
+      const reader = groqRes.body.getReader()
+      const encoder = new TextEncoder()
+      const decoder = new TextDecoder()
+
+      const readable = new ReadableStream({
+        async pull(controller) {
+          const { done, value } = await reader.read()
+          if (done) { controller.close(); return }
+          const chunk = decoder.decode(value)
+          for (const line of chunk.split("\n")) {
+            if (!line.startsWith("data: ") || line === "data: [DONE]") continue
+            try {
+              const json = JSON.parse(line.slice(6))
+              const token = json.choices?.[0]?.delta?.content
+              if (token) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`))
+            } catch {}
+          }
+        },
+      })
+
+      return new Response(readable, {
+        headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+      })
+    }
+
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "llama-3.3-70b-versatile",
         max_tokens: 1024,
         temperature: 0.5,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: text ? `${prompt}\n\nContext:\n${text}` : prompt },
-        ],
+        messages,
       }),
     })
 

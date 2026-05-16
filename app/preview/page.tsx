@@ -575,14 +575,14 @@ export default function PreviewPage() {
                         width: 6, height: 6, borderRadius: "50%",
                         background: streaming || faceState === "thinking"
                           ? "#eab308"
-                          : messages.length > 0 && !streaming && faceState !== "thinking"
+                          : messages.length > 0 && !streaming
                             ? "#22c55e"
                             : input.trim()
                               ? accent
                               : (isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"),
                         boxShadow: streaming || faceState === "thinking"
                           ? "0 0 6px rgba(234,179,8,0.5)"
-                          : messages.length > 0 && !streaming && faceState !== "thinking"
+                          : messages.length > 0 && !streaming
                             ? "0 0 6px rgba(34,197,94,0.4)"
                             : "none",
                         cursor: input.trim() ? "pointer" : "default",

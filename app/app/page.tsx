@@ -18,6 +18,7 @@ import { AppDialog } from "@/app/components/AppDialog"
 import { Sidebar } from "@/app/components/Sidebar"
 import { DocumentToolbar } from "@/app/components/DocumentToolbar"
 import { HangingOrange } from "@/app/components/HangingOrange"
+import { OrangeAIHub } from "@/app/components/OrangeAIHub"
 const _preloadShelf = () => import("@/app/components/ShelfView")
 import { ImageUploadModal } from "@/app/components/ImageUploadModal"
 const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
@@ -1697,6 +1698,7 @@ export default function NoteApp() {
   const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [showNotebookChat, setShowNotebookChat] = useState(false)
+  const [aiHubOpen, setAiHubOpen] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
   const [isTextActive, setIsTextActive] = useState(false)
@@ -2462,7 +2464,9 @@ export default function NoteApp() {
       }
 
       if (e.key === 'Escape') {
-        if (showDrawToolbar) {
+        if (aiHubOpen) {
+          setAiHubOpen(false)
+        } else if (showDrawToolbar) {
           setShowDrawToolbar(false)
           setActiveTool('select')
         } else if (boxes.selectedBoxIdsRef.current.size > 0) {
@@ -2472,7 +2476,7 @@ export default function NoteApp() {
 
       if (keyStr === shortcuts.aiCommand) {
         e.preventDefault()
-        setShowAiCommandBar(true)
+        setAiHubOpen(v => !v)
       }
 
       if (keyStr === shortcuts.timer) {
@@ -3544,8 +3548,8 @@ export default function NoteApp() {
                   onQuickPrompt={handleQuickPrompt}
                   onAiAction={handleAiAction}
                   isTextActive={isTextActive}
-                  onOpenChat={() => setShowNotebookChat(v => !v)}
-                  chatOpen={showNotebookChat}
+                  onOpenChat={() => setAiHubOpen(v => !v)}
+                  chatOpen={aiHubOpen}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
                   lineWidth={lineWidth}
@@ -4260,8 +4264,20 @@ export default function NoteApp() {
           </Suspense>}
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
+
+          <OrangeAIHub
+            open={aiHubOpen}
+            theme={theme}
+            accent={accent}
+            noteText={activeNote ? htmlToPlain(activeNote.pages.join("\n")) : undefined}
+            noteName={activeNote?.subject}
+            userId={user?.id}
+            onClose={() => setAiHubOpen(false)}
+            onInsertText={text => editor.insertHTML(text.replace(/\n/g, "<br>"))}
+            onReplaceSelection={text => { document.execCommand("insertText", false, text) }}
+          />
 
           {slashMenu && (
             <SlashMenu
