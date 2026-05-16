@@ -157,6 +157,19 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
 
+  // Streak break detection — wipe sap if goal streak is broken
+  const streakCheckedRef = useRef(false)
+  useEffect(() => {
+    if (streakCheckedRef.current || !goalStreakLastDate) return
+    streakCheckedRef.current = true
+    const today = new Date().toISOString().split('T')[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    if (goalStreakLastDate !== today && goalStreakLastDate !== yesterday && goalStreak > 0) {
+      setSap(0)
+      setGoalStreak(0)
+    }
+  }, [goalStreakLastDate, goalStreak, setSap, setGoalStreak])
+
   // Request notification permission when a session starts
   useEffect(() => {
     if (timerRunning && typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -362,15 +375,12 @@ export const VitalitySystem = memo(function VitalitySystem({
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
   const dismissDeadTree = useCallback(() => {
-    const lost = Math.ceil(sap * 0.15)
-    setLostSap(lost)
-    setSap(j => j - lost)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setDeathReason(null)
     setWaterDeadline(null)
-  }, [sap, setSap])
+  }, [])
 
   const claimAchievement = useCallback((id: string) => {
     setAchievements(prev => {
