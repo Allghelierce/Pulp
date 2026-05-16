@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, memo } from "react"
-import type { NoteData } from "@/app/types"
+import type { NoteData, Bookmark } from "@/app/types"
 import { getPaperBg, type PaperStyle } from "@/app/lib/paperStyle"
 import { sanitizeHTML } from "@/lib/sanitize"
 
@@ -17,9 +17,11 @@ interface GridViewProps {
   setGridView: React.Dispatch<React.SetStateAction<boolean>>
   setCurrentPageIdx: (idx: number | ((prev: number) => number)) => void
   setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
+  bookmarks?: Bookmark[]
 }
 
-export const GridView = memo(function GridView({ activeNote, theme, accent, setGridView, setCurrentPageIdx, lineSpacing, paperStyle, editorFont, setNotes, activeTabId }: GridViewProps) {
+export const GridView = memo(function GridView({ activeNote, theme, accent, setGridView, setCurrentPageIdx, lineSpacing, paperStyle, editorFont, setNotes, activeTabId, bookmarks = [] }: GridViewProps) {
+  const bookmarkedPages = new Set(bookmarks.filter(b => b.noteId === activeTabId).map(b => b.pageIdx))
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setGridView(false)
@@ -48,7 +50,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
       </div>
 
       {/* Pages Grid - 4 columns, tight spacing */}
-      <div className="max-w-[1900px] mx-auto w-full px-16 pb-48 pt-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-6">
+      <div className="max-w-[1900px] mx-auto w-full px-16 pb-48 pt-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-8 gap-y-5">
         {activeNote.pages.map((pageHtml, idx) => {
           const { backgroundColor, backgroundImage, backgroundSize } = getPaperBg(lineSpacing, paperStyle, theme === "dark", true)
 
@@ -129,7 +131,12 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
                 {/* Subtle Hover selection hint (No popup) */}
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
 
-                <div className="absolute top-2.5 right-3 z-[50] pointer-events-none">
+                <div className="absolute top-2.5 right-3 z-[50] pointer-events-none flex items-center gap-1.5">
+                  {bookmarkedPages.has(idx) && (
+                    <svg width="10" height="12" viewBox="0 0 10 14" fill="#d97706" opacity="0.7">
+                      <path d="M1 0h8v14l-4-3-4 3V0z" />
+                    </svg>
+                  )}
                   <span className="text-[10px] font-normal text-black/30 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>
                     {idx + 1}
                   </span>

@@ -501,9 +501,8 @@ export const BoutiqueView = memo(function BoutiqueView({
       <div
         style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0e0c09' : '#ede6d8' }}
       >
-        {/* Header */}
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 8px', position: 'relative', zIndex: 10 }}>
-          <div style={{ width: 28 }} />
+        {/* Currency pill — top right floating */}
+        <div style={{ position: 'absolute', top: 12, right: 20, zIndex: 10 }}>
           <CurrencyPill amount={sap} />
         </div>
 
@@ -671,7 +670,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   ))}
                 </svg>
                 {/* Shopkeeper stall SVG */}
-                <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '80%' }}>
+                <svg viewBox="0 0 400 265" preserveAspectRatio="xMidYMax meet" style={{ position: 'absolute', bottom: -8, left: 0, width: '100%', height: '65%' }}>
                   <defs>
                     <radialGradient id="o-body" cx="38%" cy="35%">
                       <stop offset="0%" stopColor="#e8a030" />
@@ -1005,7 +1004,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
 
               {(() => { return (<>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: -8, position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
                 <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
                   <span style={{ fontSize: 11, fontWeight: 400, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
@@ -1029,7 +1028,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 56, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 44, position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 44, position: 'relative', zIndex: 2 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -1083,8 +1082,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const discount = shopDiscounts[type] || 0
                   const price = getPrice(type)
                   if (i >= 4) return null
-                  const cardW = 130
-                  const cardH = 220
+                  const cardW = 160
+                  const cardH = 270
                   const arcOffset = [18, 0, 0, 18][i] || 0
                   const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
 
@@ -1271,7 +1270,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               zIndex: 2,
                             }}>
                               <div className={rarityPlantClass(t.rarity)} style={{
-                                animation: isRevealed && revealEffect?.index === i ? 'sprout-emerge 0.3s ease-out' : undefined,
+                                animation: undefined,
                                 position: 'relative',
                               }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
@@ -1376,63 +1375,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         )
                       })()}
 
-                      {/* Leaf scatter effect on reveal (rare+) */}
-                      {revealEffect?.index === i && (revealEffect.rarity === 'rare' || revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 20 }}>
-                          {Array.from({ length: revealEffect.rarity === 'sacred' ? 12 : revealEffect.rarity === 'true rare' ? 8 : 5 }).map((_, li) => {
-                            const angle = (li / (revealEffect.rarity === 'sacred' ? 12 : revealEffect.rarity === 'true rare' ? 8 : 5)) * Math.PI * 2
-                            const dist1 = 20 + Math.random() * 15
-                            const dist2 = 50 + Math.random() * 40
-                            return (
-                              <div key={li} style={{
-                                position: 'absolute', width: 6, height: 4,
-                                backgroundColor: revealEffect.rarity === 'sacred' ? '#d97706' : revealEffect.rarity === 'true rare' ? '#8b6040' : '#6b8f5e',
-                                borderRadius: '50% 50% 50% 0',
-                                ['--lx1' as string]: `${Math.cos(angle) * dist1}px`,
-                                ['--ly1' as string]: `${Math.sin(angle) * dist1}px`,
-                                ['--lx2' as string]: `${Math.cos(angle) * dist2}px`,
-                                ['--ly2' as string]: `${Math.sin(angle) * dist2 + 20}px`,
-                                ['--lr' as string]: `${180 + Math.random() * 360}deg`,
-                                animation: `leaf-scatter ${revealEffect.rarity === 'sacred' ? '1.6s' : '1.2s'} ease-out ${li * 0.05}s forwards`,
-                              }} />
-                            )
-                          })}
-                        </div>
-                      )}
-                      {/* Pollen drift for true rare + sacred */}
-                      {revealEffect?.index === i && (revealEffect.rarity === 'true rare' || revealEffect.rarity === 'sacred') && (
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 19 }}>
-                          {Array.from({ length: revealEffect.rarity === 'sacred' ? 16 : 8 }).map((_, pi) => {
-                            const angle = Math.random() * Math.PI * 2
-                            const d1 = 10 + Math.random() * 20
-                            const d2 = 40 + Math.random() * 60
-                            return (
-                              <div key={pi} style={{
-                                position: 'absolute', width: 3, height: 3, borderRadius: '50%',
-                                backgroundColor: revealEffect.rarity === 'sacred' ? '#d4a040' : '#a08050',
-                                ['--px1' as string]: `${Math.cos(angle) * d1}px`,
-                                ['--py1' as string]: `${Math.sin(angle) * d1 - 10}px`,
-                                ['--px2' as string]: `${Math.cos(angle) * d2}px`,
-                                ['--py2' as string]: `${Math.sin(angle) * d2 - 30}px`,
-                                animation: `pollen-drift ${revealEffect.rarity === 'sacred' ? '2s' : '1.5s'} ease-out ${pi * 0.08}s forwards`,
-                              }} />
-                            )
-                          })}
-                        </div>
-                      )}
-                      {/* Golden bloom burst for sacred */}
-                      {revealEffect?.index === i && revealEffect.rarity === 'sacred' && (
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', zIndex: 18 }}>
-                          {[0, 0.1, 0.2].map((delay, ri) => (
-                            <div key={ri} style={{
-                              position: 'absolute', width: cardW * 0.6, height: cardH * 0.6,
-                              borderRadius: '50%', left: -(cardW * 0.3), top: -(cardH * 0.3),
-                              background: `radial-gradient(circle, ${rarityCol}30 0%, transparent 70%)`,
-                              animation: `golden-bloom 2s ease-out ${delay}s forwards`,
-                            }} />
-                          ))}
-                        </div>
-                      )}
+                      {/* Post-reveal particle effects removed — keep initial card spin only */}
                     </div>
                   )
                 })}

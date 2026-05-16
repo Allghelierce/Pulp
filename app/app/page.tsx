@@ -61,53 +61,18 @@ const CoverModal = lazy(() => _preloadCover().then(m => ({ default: m.CoverModal
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
 
-function PageNumberInput({ currentPageIdx, totalPages, onNavigate }: {
-  currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onNavigate: (idx: number) => void
+function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
+  currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onOpenGrid: () => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
   const color = "#3f3f46"
   const fontStyle: React.CSSProperties = { color, fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 12, letterSpacing: '0.01em' }
 
-  const commit = (val: string) => {
-    const n = parseInt(val, 10)
-    if (!isNaN(n) && n >= 1) onNavigate(Math.min(n, totalPages) - 1)
-    setEditing(false)
-  }
-
-  if (editing) return (
-    <div className="relative px-1 cursor-text" style={fontStyle}>
-      {/* Hidden real input captures keyboard */}
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={e => {
-          const raw = e.target.value.replace(/\D/g, "").slice(0, 3)
-          setDraft(raw)
-        }}
-        onBlur={() => commit(draft)}
-        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(draft) } if (e.key === "Escape") setEditing(false) }}
-        inputMode="numeric"
-        className="absolute inset-0 opacity-0 w-full"
-        style={{ caretColor: "transparent" }}
-      />
-      {/* Visual display */}
-      <span style={{ opacity: 0.9 }}>{draft || ""}</span>
-      <span
-        className="inline-block w-[1px] h-[1em] align-middle ml-[1px]"
-        style={{ backgroundColor: color, animation: "pulp-blink 1s step-end infinite" }}
-      />
-      <style>{`@keyframes pulp-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
-    </div>
-  )
-
   return (
     <div
-      className="px-1 cursor-text select-none"
-      title="Click to jump to page"
+      className="px-1 cursor-pointer select-none hover:bg-black/5 rounded transition-colors"
+      title="Open page grid"
       style={{ ...fontStyle }}
-      onClick={() => { setDraft(""); setEditing(true); setTimeout(() => inputRef.current?.focus(), 0) }}
+      onClick={onOpenGrid}
     >
       <AnimatedCounter value={currentPageIdx + 1} />
     </div>
@@ -3522,14 +3487,14 @@ export default function NoteApp() {
 
 
             {/* Mini rings — above zoom tray, bottom right */}
-            {notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
+            {user && notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
               <div className="fixed z-[80]" style={{ bottom: 56, right: 16, display: 'flex', justifyContent: 'center' }}>
                 <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} stretch />
               </div>
             )}
 
             {/* Floating zoom + undo/redo bar — bottom right */}
-            {notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
+            {user && notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
               <div
                 className="fixed z-[80] flex items-center gap-1 px-1.5 py-1 rounded-lg shadow-lg"
                 style={{
@@ -3639,7 +3604,7 @@ export default function NoteApp() {
                   </div>
                 </main>
               ) : gridView ? (
-                <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} />
+                <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
                 <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
                   <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 680, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
@@ -4030,34 +3995,37 @@ export default function NoteApp() {
                               onMouseDown={e => e.stopPropagation()}
                               onPointerDown={e => e.stopPropagation()}
                             >
-                              {/* Skip to first */}
+                              {!scrollMode && <>
+                              {/* Previous — hold 500ms to jump to first */}
                               <button
                                 disabled={currentPageIdx === 0}
-                                onClick={() => { editor.flushSync(); setCurrentPageIdx(0) }}
-                                className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                                style={{ color: "#3f3f46" }}
-                                title="First Page"
-                              >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 18-6-6 6-6" /><path d="m12 18-6-6 6-6" /></svg>
-                              </button>
-                              {/* Previous */}
-                              <button
-                                disabled={currentPageIdx === 0}
+                                onMouseDown={() => {
+                                  const timer = setTimeout(() => { editor.flushSync(); setCurrentPageIdx(0) }, 500);
+                                  const up = () => { clearTimeout(timer); window.removeEventListener('mouseup', up) };
+                                  window.addEventListener('mouseup', up)
+                                }}
                                 onClick={() => { editor.flushSync(); setCurrentPageIdx((p: number) => p - 1) }}
                                 className={`p-1.5 rounded-md transition-all ${currentPageIdx === 0 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
                                 style={{ color: "#3f3f46" }}
-                                title="Previous Page"
+                                title="Previous Page (hold for first)"
                               >
                                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                               </button>
+                              </>}
                               <PageNumberInput
                                 currentPageIdx={currentPageIdx}
                                 totalPages={activeNote.pages.length}
                                 theme={theme}
-                                onNavigate={(idx: number) => { editor.flushSync(); setCurrentPageIdx(idx) }}
+                                onOpenGrid={() => { setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
                               />
-                              {/* Next */}
+                              {!scrollMode && <>
+                              {/* Next — hold 500ms to jump to last */}
                               <button
+                                onMouseDown={() => {
+                                  const timer = setTimeout(() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }, 500);
+                                  const up = () => { clearTimeout(timer); window.removeEventListener('mouseup', up) };
+                                  window.addEventListener('mouseup', up)
+                                }}
                                 onClick={() => {
                                   editor.flushSync();
                                   if (currentPageIdx < activeNote.pages.length - 1) setCurrentPageIdx((p: number) => p + 1);
@@ -4070,20 +4038,11 @@ export default function NoteApp() {
                                 }}
                                 className="p-1.5 hover:bg-black/8 hover:scale-110 active:scale-95 rounded-md transition-all"
                                 style={{ color: "#3f3f46" }}
-                                title="Next Page / Add Page"
+                                title="Next Page / Add Page (hold for last)"
                               >
                                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                               </button>
-                              {/* Skip to last */}
-                              <button
-                                disabled={currentPageIdx === activeNote.pages.length - 1}
-                                onClick={() => { editor.flushSync(); setCurrentPageIdx(activeNote.pages.length - 1) }}
-                                className={`p-1.5 rounded-md transition-all ${currentPageIdx === activeNote.pages.length - 1 ? "opacity-40" : "hover:bg-black/8 hover:scale-110 active:scale-95"}`}
-                                style={{ color: "#3f3f46" }}
-                                title="Last Page"
-                              >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 18 6-6-6-6" /><path d="m12 18 6-6-6-6" /></svg>
-                              </button>
+                              </>}
                               {/* Scroll mode toggle */}
                               {activeNote.pages.length > 1 && (
                                 <>
@@ -4171,6 +4130,7 @@ export default function NoteApp() {
               onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
               onOpenShop={() => { setShopOpen(v => !v) }}
               onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
+              onOpenSettings={() => { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }}
             />
           </div></Suspense>}
 
@@ -4494,16 +4454,7 @@ export default function NoteApp() {
             />
           )}
 
-          {/* Sign In to Sync - Bottom Right */}
-          {!user && (
-            <button
-              onClick={() => window.location.href = "/login"}
-              className="fixed bottom-6 left-6 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-40"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-              <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>
-            </button>
-          )}
+          {/* Sign In to Sync button moved to global scope below */}
 
         </div>
 
@@ -4575,6 +4526,15 @@ export default function NoteApp() {
               <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
             </svg>
             <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
+          </button>
+        )}
+        {!user && (
+          <button
+            onClick={() => window.location.href = "/login"}
+            className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-[100]"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
+            <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>
           </button>
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}

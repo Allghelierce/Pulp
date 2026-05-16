@@ -8,7 +8,7 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
  */
 function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }) {
   const [b, setB] = useState(0)
-  useEffect(() => bow.on("change", setB), [bow])
+  useEffect(() => bow.on("change", (v: number) => setB(v)), [bow])
   
   // Start from -100 to ensure it's always attached to top
   const d1 = `M8 -100 Q${8 + b} 60 8 120`

@@ -31,6 +31,7 @@ interface OrchardViewProps {
   onOpenLeaderboard?: () => void
   onOpenShop?: () => void
   onOpenSatchel?: () => void
+  onOpenSettings?: () => void
 }
 
 type RGB = [number, number, number]
@@ -1741,7 +1742,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(10, 38) scale(0.065) skewY(-1)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
+            <g transform="translate(8, 35) scale(0.072) skewY(-1)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
+              <rect x="100" y="90" width="210" height="160" fill="transparent" />
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
                   <stop offset="0%" stopColor="#e8a030" />
@@ -1974,9 +1976,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-        {/* Left lamppost — mirrored, lamp points outward (left), over shop */}
+        {/* Left lamppost — symmetric to right, lamp points right toward shop */}
         {(() => {
-          const lx = 22, ly = 42, sc = 0.65
+          const lx = 30, ly = 46, sc = 0.65
           const iron = isDark ? '#3a3a3a' : '#4a4a4a'
           const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
           const isNight = isDark
@@ -1985,26 +1987,27 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <g>
               {isNight && <>
-              <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
-              <path d={`M${lx - 0.5},${ly - 7 * sc} L${lx + 4 * sc},${ly + 4 * sc} L${lx - 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
-              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
+              {/* Light washes pointing right toward the shop */}
+              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
               {/* Pole */}
               <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
               <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
-              {/* Arm — flipped to point left */}
-              <path d={`M${lx},${ly - 7.5 * sc} Q${lx - 0.8 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
-              {/* Lantern housing — flipped */}
-              <rect x={lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
-              <rect x={lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
-              <rect x={lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
-              {/* Top cap — flipped */}
-              <polygon points={`${lx - 0.6 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 9.2 * sc} ${lx - 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
+              {/* Arm — points right toward shop */}
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+              {/* Lantern housing — points right */}
+              <rect x={lx + 0.8 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx + 0.95 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx + 1.2 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+              {/* Top cap */}
+              <polygon points={`${lx + 0.6 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 9.2 * sc} ${lx + 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
             </g>
           )
         })()}
@@ -2546,7 +2549,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop, onOpenSatchel,
+  onOpenLeaderboard, onOpenShop, onOpenSatchel, onOpenSettings,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -3059,10 +3062,10 @@ export const OrchardView = memo(function OrchardView({
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
   const plotCount = currentPlotTrees.length
-  const baseSize = plotCount <= 6 ? 130 :
-    plotCount <= 15 ? 115 :
-    plotCount <= 24 ? 105 :
-    plotCount <= 36 ? 95 : 85
+  const baseSize = plotCount <= 6 ? 200 :
+    plotCount <= 15 ? 170 :
+    plotCount <= 24 ? 150 :
+    plotCount <= 36 ? 130 : 115
   prevPlotPageRef.current = plotPage
 
   return (
@@ -3116,6 +3119,11 @@ export const OrchardView = memo(function OrchardView({
               {onOpenLeaderboard && (
                 <button onClick={onOpenLeaderboard} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
+                </button>
+              )}
+              {onOpenSettings && (
+                <button onClick={onOpenSettings} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                 </button>
               )}
               <div className="flex flex-col items-center justify-center">
