@@ -1214,24 +1214,27 @@ export default function NoteApp() {
   const [isSidebarDragging, setIsSidebarDragging] = useState(false)
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
+  const fullscreenOpenRef = useRef(false)
   const startSidebarDrag = useCallback((startX: number) => {
     const startWidth = sidebarWidth
+    const fs = fullscreenOpenRef.current
     sidebarDragRef.current = { startX, startWidth }
     setIsSidebarDragging(true)
     const onMove = (ev: MouseEvent) => {
       if (!sidebarDragRef.current) return
       const dx = ev.clientX - sidebarDragRef.current.startX
       const raw = sidebarDragRef.current.startWidth + dx
-      setSidebarWidth(raw < 200 ? 0 : Math.min(400, Math.max(240, raw)))
+      const min = fs ? 240 : 0
+      setSidebarWidth(raw < 200 ? min : Math.min(400, Math.max(240, raw)))
     }
     const onUp = (ev: MouseEvent) => {
       sidebarDragRef.current = null
       setIsSidebarDragging(false)
       const dx = Math.abs(ev.clientX - startX)
       if (dx < 5) {
-        setSidebarWidth(prev => prev > 0 ? 0 : 240)
+        setSidebarWidth(prev => prev > 0 && !fs ? 0 : 240)
       } else {
-        setSidebarWidth(w => w < 200 ? 0 : Math.max(240, w))
+        setSidebarWidth(w => w < 200 ? (fs ? 240 : 0) : Math.max(240, w))
       }
       window.removeEventListener("mousemove", onMove)
       window.removeEventListener("mouseup", onUp)
@@ -1278,6 +1281,7 @@ export default function NoteApp() {
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
 
   useEffect(() => {

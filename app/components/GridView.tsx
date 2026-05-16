@@ -61,7 +61,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
               className="group relative cursor-pointer flex flex-col items-center"
             >
               <div
-                className="relative w-[380px] h-[538px] rounded-none overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/5 bg-white transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-[0_45px_100px_rgba(0,0,0,0.8)]"
+                className="relative w-[380px] h-[580px] rounded-none overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/5 bg-white transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-[0_45px_100px_rgba(0,0,0,0.8)]"
                 style={{ backgroundColor }}
               >
                 {/* 1:1 Scale Simulation (Scaled to ~0.46 to fit 380px width) */}
@@ -156,7 +156,7 @@ export const GridView = memo(function GridView({ activeNote, theme, accent, setG
           }}
           className="group relative cursor-pointer flex flex-col items-center"
         >
-          <div className="w-[380px] h-[538px] rounded-none border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20 transition-all duration-300 flex flex-col items-center justify-center gap-4 group-hover:scale-[1.02]">
+          <div className="w-[380px] h-[580px] rounded-none border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/20 transition-all duration-300 flex flex-col items-center justify-center gap-4 group-hover:scale-[1.02]">
             <div className="w-12 h-12 bg-white/10 flex items-center justify-center text-2xl text-white/30 group-hover:text-white transition-colors">
               +
             </div>

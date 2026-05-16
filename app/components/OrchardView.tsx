@@ -258,9 +258,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
     mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
     snowTop: '#2a2820', snowFade: '#10100c',
-    hillMidTop: '#0c180e', hillMidBot: '#0a140c',
-    hillNearTop: '#0e1e0c', hillNearBot: '#0c180a',
-    fieldTop: '#101e0c', fieldMid1: '#0e1a0a', fieldMid2: '#0c180a', fieldBot: '#0a1408',
+    hillMidTop: '#10180a', hillMidBot: '#0c1408',
+    hillNearTop: '#141e08', hillNearBot: '#101808',
+    fieldTop: '#141e0a', fieldMid1: '#121a08', fieldMid2: '#101808', fieldBot: '#0c1406',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
     moonGlow: 0.25, moonY: 4,
     starOpacity: 1,
@@ -273,9 +273,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#3a2818', oceanMid: '#2a1c10', oceanBot: '#3a2a18',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3020', snowFade: '#1a1610',
-    hillMidTop: '#142016', hillMidBot: '#101a12',
-    hillNearTop: '#1a2818', hillNearBot: '#162214',
-    fieldTop: '#1a2c16', fieldMid1: '#182814', fieldMid2: '#1a2814', fieldBot: '#162210',
+    hillMidTop: '#182012', hillMidBot: '#141a0e',
+    hillNearTop: '#1e2814', hillNearBot: '#1a2210',
+    fieldTop: '#1e2c12', fieldMid1: '#1c2810', fieldMid2: '#1e2810', fieldBot: '#1a220c',
     sunGlow: 0.5, sunColor: '#d97706', sunY: 18,
     moonGlow: 0.15, moonY: 30,
     starOpacity: 0.15,
@@ -288,9 +288,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
     mtnTop: '#5a6878', mtnMid: '#4a5868', mtnBot: '#3e4e5e',
     snowTop: '#b0b8c0', snowFade: '#6a7480',
-    hillMidTop: '#3e6e34', hillMidBot: '#34602c',
-    hillNearTop: '#486a3c', hillNearBot: '#3e5e34',
-    fieldTop: '#4a6e38', fieldMid1: '#446634', fieldMid2: '#3e5e30', fieldBot: '#38562c',
+    hillMidTop: '#4a6830', hillMidBot: '#3e5c28',
+    hillNearTop: '#546838', hillNearBot: '#4a5c30',
+    fieldTop: '#567034', fieldMid1: '#4e6830', fieldMid2: '#4a602c', fieldBot: '#445828',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
@@ -303,9 +303,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
     mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
     snowTop: '#a0a4a0', snowFade: '#6a7070',
-    hillMidTop: '#2e4828', hillMidBot: '#284222',
-    hillNearTop: '#365030', hillNearBot: '#304a2a',
-    fieldTop: '#344c2e', fieldMid1: '#30482a', fieldMid2: '#2e4428', fieldBot: '#2a4024',
+    hillMidTop: '#3a4e24', hillMidBot: '#34461e',
+    hillNearTop: '#42522c', hillNearBot: '#3c4c26',
+    fieldTop: '#40502a', fieldMid1: '#3c4c26', fieldMid2: '#3a4824', fieldBot: '#364420',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
@@ -318,9 +318,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
     mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
     snowTop: '#3a3428', snowFade: '#1a1610',
-    hillMidTop: '#142416', hillMidBot: '#101e12',
-    hillNearTop: '#1a2e18', hillNearBot: '#162614',
-    fieldTop: '#1e3218', fieldMid1: '#1a2c16', fieldMid2: '#1c2e16', fieldBot: '#182812',
+    hillMidTop: '#182412', hillMidBot: '#141e0e',
+    hillNearTop: '#1e2e14', hillNearBot: '#1a2610',
+    fieldTop: '#223214', fieldMid1: '#1e2c12', fieldMid2: '#202e12', fieldBot: '#1c280e',
     sunGlow: 1, sunColor: '#d97706', sunY: 20,
     moonGlow: 0.15, moonY: 28,
     starOpacity: 0.1,
@@ -1323,8 +1323,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b0b8c8" />
                 </radialGradient>
                 <mask id="moon-crescent-mask">
-                  <circle cx={mx} cy={my} r="1.8" fill="white" />
-                  <circle cx={mx + 1.4} cy={my - 0.15} r="1.7" fill="black" />
+                  <circle cx={mx} cy={my} r="1.2" fill="white" />
+                  <circle cx={mx + 0.9} cy={my - 0.1} r="1.1" fill="black" />
                 </mask>
                 <radialGradient id="moon-edge-glow" cx="20%" cy="45%" r="80%">
                   <stop offset="0%" stopColor="#f0f4ff" />
@@ -1332,21 +1332,18 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                   <stop offset="100%" stopColor="#b8c4d8" />
                 </radialGradient>
               </defs>
-              <ellipse cx={mx} cy={my} rx="6" ry="4" fill="url(#moon-glow-bg)" />
-              <circle cx={mx} cy={my} r="1.8" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx} cy={my} rx="4" ry="2.8" fill="url(#moon-glow-bg)" />
+              <circle cx={mx} cy={my} r="1.2" fill="url(#moon-edge-glow)" mask="url(#moon-crescent-mask)" />
               {/* Craters — subtle darkening baked into the surface */}
-              <circle cx={mx - 0.6} cy={my - 0.3} r="0.22" fill="rgba(160,170,190,0.35)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.62} cy={my - 0.32} r="0.18" fill="rgba(180,188,205,0.25)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.3} cy={my + 0.5} r="0.15" fill="rgba(155,165,185,0.3)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.28} cy={my + 0.48} r="0.11" fill="rgba(175,183,200,0.2)" mask="url(#moon-crescent-mask)" />
-              <ellipse cx={mx - 0.85} cy={my + 0.05} rx="0.1" ry="0.08" fill="rgba(150,162,182,0.28)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.45} cy={my - 0.75} r="0.09" fill="rgba(158,168,188,0.25)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.7} cy={my + 0.4} r="0.07" fill="rgba(162,172,190,0.22)" mask="url(#moon-crescent-mask)" />
-              <circle cx={mx - 0.15} cy={my - 0.1} r="0.12" fill="rgba(165,174,192,0.18)" mask="url(#moon-crescent-mask)" />
-              <path d={`M${mx-0.55} ${my-1.65} Q${mx-1.1} ${my} ${mx-0.55} ${my+1.65}`} fill="none" stroke="rgba(240,245,255,0.06)" strokeWidth="0.12" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.4} cy={my - 0.2} r="0.15" fill="rgba(160,170,190,0.35)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.2} cy={my + 0.33} r="0.1" fill="rgba(155,165,185,0.3)" mask="url(#moon-crescent-mask)" />
+              <ellipse cx={mx - 0.57} cy={my + 0.03} rx="0.07" ry="0.05" fill="rgba(150,162,182,0.28)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.3} cy={my - 0.5} r="0.06" fill="rgba(158,168,188,0.25)" mask="url(#moon-crescent-mask)" />
+              <circle cx={mx - 0.1} cy={my - 0.07} r="0.08" fill="rgba(165,174,192,0.18)" mask="url(#moon-crescent-mask)" />
+              <path d={`M${mx-0.37} ${my-1.1} Q${mx-0.73} ${my} ${mx-0.37} ${my+1.1}`} fill="none" stroke="rgba(240,245,255,0.06)" strokeWidth="0.08" mask="url(#moon-crescent-mask)" />
               {/* Wispy clouds around moon */}
-              <ellipse cx={mx - 2.5} cy={my + 0.6} rx="2.2" ry="0.5" fill="rgba(180,195,220,0.08)" />
-              <ellipse cx={mx - 1.4} cy={my + 0.4} rx="1.6" ry="0.35" fill="rgba(170,185,210,0.1)" />
+              <ellipse cx={mx - 1.7} cy={my + 0.4} rx="1.5" ry="0.35" fill="rgba(180,195,220,0.08)" />
+              <ellipse cx={mx - 0.9} cy={my + 0.27} rx="1.1" ry="0.25" fill="rgba(170,185,210,0.1)" />
               <ellipse cx={mx + 1.8} cy={my - 0.2} rx="2" ry="0.45" fill="rgba(175,190,215,0.07)" />
               <ellipse cx={mx + 1.1} cy={my + 0.9} rx="2.5" ry="0.6" fill="rgba(165,180,205,0.09)" />
               <ellipse cx={mx - 0.7} cy={my - 1.1} rx="1.5" ry="0.35" fill="rgba(180,192,218,0.06)" />
@@ -1588,9 +1585,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
         {/* Grass tufts and ground texture — baked */}
         {(() => {
-          const grassC = isDark ? '#3a5a2e' : '#6a9a50'
-          const grassL = isDark ? '#4a6a3a' : '#7aaa60'
-          const grassD = isDark ? '#2a4a20' : '#5a8a40'
+          const grassC = isDark ? '#4a5e2e' : '#7a9a50'
+          const grassL = isDark ? '#5a6e3a' : '#8aaa58'
+          const grassD = isDark ? '#3a4e20' : '#6a8a3a'
           const dirtC = isDark ? '#2a2418' : '#8a7a5a'
           const d1: string[] = []
           const d2: string[] = []
@@ -1675,65 +1672,73 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-                {/* Lamppost */}
+                {/* Lampposts — all face inward */}
         {(() => {
-          const lx = 170, ly = 46, sc = 0.65
           const iron = isDark ? '#3a3a3a' : '#4a4a4a'
           const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
           const isNight = isDark
           const glass = isNight ? '#fbbf24' : '#8a8a82'
           const glassL = isNight ? '#fcd34d' : '#9a9a92'
+          const d = (dir: number) => dir // +1 = right, -1 = left
+          const lamp = (lx: number, ly: number, sc: number, dir: number, id: string, glow: number) => {
+            const dx = d(dir)
+            const g = glow
+            return (
+              <g key={id}>
+                {isNight && <>
+                <ellipse cx={lx + 14 * dx * g} cy={ly} rx={42 * sc * g} ry={17 * sc * g} fill={`url(#lamp-wash-a-${id})`} />
+                <ellipse cx={lx + 22 * dx * g} cy={ly + 1} rx={30 * sc * g} ry={13 * sc * g} fill={`url(#lamp-wash-b-${id})`} />
+                <ellipse cx={lx + 8 * dx * g} cy={ly + 6} rx={20 * sc * g} ry={6 * sc * g} fill={`url(#lamp-ground-${id})`} />
+                <ellipse cx={lx + 20 * dx * g} cy={ly + 5} rx={16 * sc * g} ry={5 * sc * g} fill={`url(#lamp-ground-${id})`} opacity="0.7" />
+                <path d={`M${lx + 0.5 * dx},${ly - 7 * sc} L${lx - 4 * sc * dx * g},${ly + 4 * sc * g} L${lx + 6 * sc * dx * g},${ly + 4 * sc * g} Z`} fill={`url(#lamp-cone-${id})`} opacity="0.5" />
+                <circle cx={lx + 1.5 * sc * dx} cy={ly - 7.5 * sc} r={5 * sc * g} fill={`url(#lamp-glow-${id})`} />
+                <circle cx={lx + 1.5 * sc * dx} cy={ly - 7.5 * sc} r={2 * sc * g} fill={glassL} opacity="0.08" />
+                </>}
+                <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
+                <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
+                <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc * dx},${ly - 8.5 * sc} ${lx + 1.5 * sc * dx},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+                <rect x={dx > 0 ? lx + 0.8 * sc : lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+                <rect x={dx > 0 ? lx + 0.95 * sc : lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+                <rect x={dx > 0 ? lx + 1.2 * sc : lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+                <polygon points={`${lx + 0.6 * sc * dx},${ly - 8.5 * sc} ${lx + 1.5 * sc * dx},${ly - 9.2 * sc} ${lx + 2.4 * sc * dx},${ly - 8.5 * sc}`} fill={iron} />
+              </g>
+            )
+          }
+          const posts: { lx: number; ly: number; sc: number; dir: number; id: string; glow: number }[] = [
+            { lx: 30, ly: 46, sc: 0.65, dir: 1, id: 'l1', glow: 2.2 },
+            { lx: 170, ly: 46, sc: 0.65, dir: -1, id: 'r1', glow: 1 },
+            { lx: 12, ly: 75, sc: 0.95, dir: 1, id: 'l2', glow: 1 },
+            { lx: 188, ly: 75, sc: 0.95, dir: -1, id: 'r2', glow: 1 },
+          ]
           return (
             <g>
               <defs>
-                <radialGradient id="lamp-glow" cx="50%" cy="45%" r="50%">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.3" />
-                  <stop offset="50%" stopColor={glass} stopOpacity="0.1" />
-                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="lamp-wash-a" cx="30%" cy="45%" r="55%">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.09" />
-                  <stop offset="30%" stopColor={glass} stopOpacity="0.05" />
-                  <stop offset="65%" stopColor={glass} stopOpacity="0.02" />
-                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="lamp-wash-b" cx="55%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.07" />
-                  <stop offset="40%" stopColor={glass} stopOpacity="0.03" />
-                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                </radialGradient>
-                <radialGradient id="lamp-ground" cx="40%" cy="25%" r="55%">
-                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.07" />
-                  <stop offset="40%" stopColor="#92400e" stopOpacity="0.03" />
-                  <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
-                </radialGradient>
-                <linearGradient id="lamp-cone" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={glassL} stopOpacity="0.14" />
-                  <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
-                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                </linearGradient>
+                {posts.map(p => (
+                  <g key={p.id}>
+                    <radialGradient id={`lamp-glow-${p.id}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor={glassL} stopOpacity="0.15" />
+                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id={`lamp-wash-a-${p.id}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor={glassL} stopOpacity="0.04" />
+                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id={`lamp-wash-b-${p.id}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor={glassL} stopOpacity="0.03" />
+                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id={`lamp-ground-${p.id}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.035" />
+                      <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+                    </radialGradient>
+                    <radialGradient id={`lamp-cone-${p.id}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor={glassL} stopOpacity="0.05" />
+                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                    </radialGradient>
+                  </g>
+                ))}
               </defs>
-              {isNight && <>
-              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
-              <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
-              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
-              </>}
-              {/* Pole */}
-              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
-              {/* Base */}
-              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
-              {/* Arm */}
-              <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
-              {/* Lantern housing */}
-              <rect x={lx + 0.8 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
-              <rect x={lx + 0.95 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
-              <rect x={lx + 1.2 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
-              {/* Top cap */}
-              <polygon points={`${lx + 0.6 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 9.2 * sc} ${lx + 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
+              {posts.map(p => lamp(p.lx, p.ly, p.sc, p.dir, p.id, p.glow))}
             </g>
           )
         })()}
@@ -1742,7 +1747,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(8, 35) scale(0.072) skewY(-1)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
+            <g transform="translate(8, 39) scale(0.06) skewY(-1.5)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
               <rect x="100" y="90" width="210" height="160" fill="transparent" />
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
@@ -1976,41 +1981,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-        {/* Left lamppost — symmetric to right, lamp points right toward shop */}
-        {(() => {
-          const lx = 30, ly = 46, sc = 0.65
-          const iron = isDark ? '#3a3a3a' : '#4a4a4a'
-          const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
-          const isNight = isDark
-          const glass = isNight ? '#fbbf24' : '#8a8a82'
-          const glassL = isNight ? '#fcd34d' : '#9a9a92'
-          return (
-            <g>
-              {isNight && <>
-              {/* Light washes pointing right toward the shop */}
-              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
-              <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
-              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
-              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
-              </>}
-              {/* Pole */}
-              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
-              {/* Base */}
-              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
-              {/* Arm — points right toward shop */}
-              <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
-              {/* Lantern housing — points right */}
-              <rect x={lx + 0.8 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
-              <rect x={lx + 0.95 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
-              <rect x={lx + 1.2 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
-              {/* Top cap */}
-              <polygon points={`${lx + 0.6 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 9.2 * sc} ${lx + 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
-            </g>
-          )
-        })()}
 
         {/* Dirt ground and flowers around windmills */}
         {(() => {
