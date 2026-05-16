@@ -15,7 +15,7 @@ export interface WidgetProps {
   achievements: Achievement[]
   notes: NoteData[]
   goalStreak?: number
-  timeBalance?: number
+  sap?: number
   dailyGoalMinutes?: number
 }
 

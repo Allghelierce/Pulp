@@ -1,15 +1,11 @@
 "use client"
 import { memo, useState, useEffect, useCallback } from "react"
-import { GemIcon } from '@/app/components/CurrencyIcons'
-
 interface FocusViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
   blockedSites: string[]
-  gems: number
   onUpdateConfig: (updates: Record<string, any>) => void
-  onSpendGems: (amount: number) => void
   openConfirm: (title: string, message: string, onConfirm: (checked?: boolean) => void, confirmLabel?: string, danger?: boolean) => void
 }
 
@@ -61,7 +57,7 @@ function useExtensionDetected() {
 }
 
 export const FocusView = memo(function FocusView({
-  isOpen, onClose, theme, blockedSites, gems, onUpdateConfig, onSpendGems, openConfirm,
+  isOpen, onClose, theme, blockedSites, onUpdateConfig, openConfirm,
 }: FocusViewProps) {
   const isDark = theme === "dark"
   const extensionInstalled = useExtensionDetected()
@@ -84,18 +80,16 @@ export const FocusView = memo(function FocusView({
   }, [input, blockedSites, onUpdateConfig])
 
   const removeSite = useCallback((domain: string) => {
-    if (gems < 50) return
     openConfirm(
       "Remove Blocked Site",
-      `Unblocking ${domain} costs 50 gems. This will allow you to access this site during focus sessions.`,
+      `Remove ${domain} from your blocked sites? This will allow you to access this site during focus sessions.`,
       () => {
-        onSpendGems(50)
         onUpdateConfig({ blockedSites: blockedSites.filter(s => s !== domain) })
       },
-      "Pay 50 gems & Remove",
+      "Remove",
       true
     )
-  }, [gems, blockedSites, onUpdateConfig, onSpendGems, openConfirm])
+  }, [blockedSites, onUpdateConfig, openConfirm])
 
   if (!isOpen) return null
 
@@ -162,7 +156,7 @@ export const FocusView = memo(function FocusView({
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             <p className={`text-[11px] leading-relaxed m-0 ${isDark ? "text-amber-500/60" : "text-amber-700/70"}`} style={{ fontFamily: font }}>
-              Once you add a site, removing it costs <strong><GemIcon size={11} /> 50 gems</strong>. Choose carefully.
+              Sites you add here will be blocked during focus sessions. Choose carefully.
             </p>
           </div>
 
@@ -218,16 +212,14 @@ export const FocusView = memo(function FocusView({
                     className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-normal transition-all"
                     style={{
                       fontFamily: font,
-                      background: gems >= 50 ? "rgba(168,85,247,0.1)" : (isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)"),
-                      border: `1px solid ${gems >= 50 ? "rgba(168,85,247,0.2)" : (isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)")}`,
-                      color: gems >= 50 ? "#c084fc" : (isDark ? "#3f3f46" : "#a1a1aa"),
-                      cursor: gems >= 50 ? "pointer" : "not-allowed",
-                      opacity: gems >= 50 ? 1 : 0.5,
+                      background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                      border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                      color: isDark ? "#a1a09c" : "#71717a",
+                      cursor: "pointer",
                     }}
-                    disabled={gems < 50}
-                    title={gems >= 50 ? "Remove for 50 gems" : "Need 50 gems to remove"}
+                    title="Remove site"
                   >
-                    <GemIcon size={10} /> 50
+                    Remove
                   </button>
                 </div>
               ))}
@@ -243,11 +235,6 @@ export const FocusView = memo(function FocusView({
             </div>
           )}
 
-          {blockedSites.length > 0 && (
-            <p className={`text-[10px] mt-3 text-center ${isDark ? "text-zinc-700" : "text-zinc-400"}`} style={{ fontFamily: font }}>
-              Removing a site costs <GemIcon size={10} /> 50 gems · You have <GemIcon size={10} /> {gems}
-            </p>
-          )}
         </div>
       </div>
     </div>

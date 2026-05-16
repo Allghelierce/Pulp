@@ -99,7 +99,6 @@ interface SidebarProps {
   onOpenFocus?: () => void
   onOpenStats?: () => void
   sap?: number
-  gems?: number
   xp?: number
   totalNotes?: number
   totalChars?: number
@@ -124,7 +123,7 @@ export const Sidebar = memo(function Sidebar({
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
   onOpenShop, onOpenLeaderboard, onOpenFocus, onOpenStats,
-  sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
+  sap = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini, onCloseAllPanels,
 }: SidebarProps) {

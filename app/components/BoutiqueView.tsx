@@ -365,18 +365,22 @@ export const BoutiqueView = memo(function BoutiqueView({
     localStorage.removeItem('pulp_revealed_cards')
   }
 
-  const getPrice = (type: string) => {
-    const base = TREE_TYPES[type].cost
-    const disc = shopDiscounts[type]
-    return disc ? Math.floor(base * (1 - disc / 100)) : base
+  const getGrowthTime = (type: string) => {
+    return TREE_TYPES[type]?.growthMinutes || 25
+  }
+
+  const formatGrowthTime = (minutes: number) => {
+    if (minutes >= 60) {
+      const h = Math.floor(minutes / 60)
+      const m = minutes % 60
+      return m > 0 ? `${h}h ${m}m` : `${h}h`
+    }
+    return `${minutes}m`
   }
 
   const buySeed = (type: string) => {
     if ((shopStock[type] || 0) <= 0) return
     if (inventory.length >= MAX_SEEDS) { setSatchelFullPopup(true); return }
-    const price = getPrice(type)
-    if (sap < price) return
-    setSap((j: number) => j - price)
     const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
     setShopStock(nextStock)
     localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
@@ -1081,7 +1085,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const soldOut = (shopStock[type] || 0) <= 0
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
                   const discount = shopDiscounts[type] || 0
-                  const price = getPrice(type)
+                  const growthMins = TREE_TYPES[type]?.growthMinutes || 25
                   if (i >= 4) return null
                   const cardW = 130
                   const cardH = 220
@@ -1353,24 +1357,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                             background: isDark ? '#0e0d0b' : '#e0d8c8',
                             border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
                           }} />
-                          {discount > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                              <span style={{ fontSize: 7, fontWeight: 400, color: '#dc2626', fontFamily: font, letterSpacing: '0.02em' }}>-{discount}%</span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 0 }}>
-                                <PulpIcon size={8} />
-                                <span style={{ fontSize: 7, fontWeight: 400, color: isDark ? '#8a7a60' : '#9a8a6a', textDecoration: 'line-through', fontFamily: font }}>{t.cost}</span>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <PulpIcon size={8} />
-                                <span style={{ fontSize: 10, fontWeight: 400, color: '#dc2626', fontFamily: font }}>{price}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
-                              <PulpIcon size={8} />
-                              <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{price}</span>
-                            </div>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#d4c4a0' : '#4a3a20'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{formatGrowthTime(getGrowthTime(type))}</span>
+                          </div>
                         </div>
                       </div>
                         )
@@ -1479,9 +1469,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {activeTab === 'shop' && selectedPlant && previewInfo && (() => {
             const stock = shopStock[selectedPlant!] || 0
-            const discPrice = getPrice(selectedPlant!)
-            const cantAfford = sap < discPrice
-            const disc = shopDiscounts[selectedPlant!] || 0
+            const _growthTime = getGrowthTime(selectedPlant!)
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
             const cat = previewInfo.category || 'none'
             const desc = cat === 'fruit'
@@ -1489,7 +1477,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               : cat === 'flora'
               ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} ornamental plant. Yields ${previewInfo.sapYield || 2} sap at maturity.`
               : cat === 'gem'
-              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} crystalline tree that yields gems when sap is collected.`
+              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} crystalline tree. Yields ${previewInfo.sapYield || 2} sap per session.`
               : `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
 
             return (
@@ -1593,7 +1581,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   </div>
                 </div>
 
-                {/* Price + Buy */}
+                {/* Growth Time + Take */}
                 {stock <= 0 ? (
                   <div style={{
                     fontSize: 13, fontWeight: 400, fontFamily: font,
@@ -1606,25 +1594,18 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button
                       onClick={() => buySeed(selectedPlant!)}
-                      disabled={cantAfford}
                       className="transition-all hover:brightness-110"
                       style={{
-                        fontFamily: font, cursor: cantAfford ? 'default' : 'pointer', border: 'none',
+                        fontFamily: font, cursor: 'pointer', border: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         background: '#d97706', color: '#fff',
-                        opacity: cantAfford ? 0.35 : 1,
                         padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 400,
                       }}
                     >
-                      Buy Seed
+                      Take Seed
                       <span style={{ opacity: 0.5 }}>·</span>
-                      <PulpIcon size={11} />
-                      {disc > 0 ? (
-                        <>
-                          <span style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: 11 }}>{previewInfo.cost}</span>
-                          {discPrice.toLocaleString()}
-                        </>
-                      ) : previewInfo.cost.toLocaleString()}
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      {formatGrowthTime(getGrowthTime(selectedPlant!))}
                     </button>
                     <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>
                       ×{stock} left

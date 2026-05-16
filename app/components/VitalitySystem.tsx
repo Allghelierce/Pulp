@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, memo, useCallback } from "react"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, Tree } from "@/app/types"
+import { TREE_TYPES } from "@/app/constants"
 import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 import { apiFetch } from "@/lib/apiFetch"
 
@@ -12,11 +13,9 @@ interface VitalitySystemProps {
   timerOpen: boolean
   onSetTimerOpen: (open: boolean) => void
   sap: number
-  gems: number
   grove: Tree[]
   achievements: Achievement[]
   setSap: React.Dispatch<React.SetStateAction<number>>
-  setGems: React.Dispatch<React.SetStateAction<number>>
   setGrove: React.Dispatch<React.SetStateAction<Tree[]>>
   setAchievements: React.Dispatch<React.SetStateAction<Achievement[]>>
   lastCharCount: number
@@ -27,8 +26,6 @@ interface VitalitySystemProps {
   activeTabId: string | null
   initialNotes: any[]
   onOpenSatchel?: () => void
-  timeBalance: number
-  setTimeBalance: React.Dispatch<React.SetStateAction<number>>
   goalStreak: number
   setGoalStreak: React.Dispatch<React.SetStateAction<number>>
   goalStreakLastDate: string
@@ -38,11 +35,11 @@ interface VitalitySystemProps {
 
 export const VitalitySystem = memo(function VitalitySystem({
   theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
-  sap, gems, grove, achievements, setSap, setGems, setGrove, setAchievements,
+  sap, grove, achievements, setSap, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
   inventory, activeTabId, initialNotes, onOpenSatchel,
-  timeBalance, setTimeBalance, goalStreak, setGoalStreak,
+  goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
 }: VitalitySystemProps) {
 
@@ -115,11 +112,10 @@ export const VitalitySystem = memo(function VitalitySystem({
   })
   const [selectedSeed, setSelectedSeed] = useState<string | null>(() => _backupExpired ? null : (_saved.current?.selectedSeed ?? null))
 
-  // Tab-close grace period expired — penalize (unless was in cancel window)
+  // Tab-close grace period expired — tree dies (unless was in cancel window)
   useEffect(() => {
     if (_isBackup && _backupExpired) {
       if (!_wasInCancelWindow) {
-        setSap(j => Math.floor(j * 0.85))
         setDeathReason("You were away too long")
       }
       localStorage.removeItem('pulp-timer-backup')
@@ -269,12 +265,10 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [])
 
   const recoverSap = useCallback(() => {
-    const cost = 15
-    if (gems < cost || lostSap <= 0) return
-    setGems(g => g - cost)
+    if (lostSap <= 0) return
     setSap(s => s + lostSap)
     setLostSap(0)
-  }, [lostSap, gems, setGems, setSap])
+  }, [lostSap, setSap])
 
   const waterTree = useCallback(() => {
     if (!timerRunning || treeDead) return
@@ -333,9 +327,14 @@ export const VitalitySystem = memo(function VitalitySystem({
     const minutes = timerTotal / 60
     const treeType = selectedSeed || 'tangerine'
 
-    const multiplier = getMultiplier()
-    const timeEarned = Math.round(minutes * multiplier)
-    setTimeBalance(t => t + timeEarned)
+    const totalSapYield = grove.reduce((sum, t) => {
+      const info = TREE_TYPES[t.type]
+      return sum + (info?.sapYield || 0)
+    }, 0)
+    const newTreeSap = TREE_TYPES[treeType]?.sapYield || 0
+    const sapEarned = totalSapYield + newTreeSap
+    setSap(s => s + sapEarned)
+
     updateGoalStreak(minutes)
 
     logFocusSession(minutes, 0)
@@ -370,7 +369,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, getMultiplier, setTimeBalance, updateGoalStreak])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
@@ -386,11 +385,10 @@ export const VitalitySystem = memo(function VitalitySystem({
     setAchievements(prev => {
       const target = prev.find(x => x.id === id)
       if (!target || !target.completed || target.claimed) return prev
-      if (target.rewardType === 'time') setGems(g => g + target.reward)
-      else setSap(s => s + target.reward)
+      setSap(s => s + target.reward)
       return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
     })
-  }, [setGems, setSap, setAchievements])
+  }, [setSap, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement
@@ -427,7 +425,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       }
 
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setGems, setSap, setLastCharCount])
+  }, [totalChars, lastCharCount, checkAchievement, setGrove, setLastCharCount])
 
   return (
     <TimerSidebarPanel
@@ -457,8 +455,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
       onOpenSatchel={onOpenSatchel}
-      timeBalance={timeBalance}
-      multiplier={getMultiplier()}
+      sapPreview={grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0) + (TREE_TYPES[selectedSeed || 'tangerine']?.sapYield || 0)}
       goalStreak={goalStreak}
     />
   )

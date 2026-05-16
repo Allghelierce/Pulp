@@ -5,7 +5,7 @@ import { TREE_TYPES, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
-import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
+import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
@@ -16,12 +16,10 @@ interface OrchardViewProps {
   theme: "light" | "dark"
   accent: string
   sap: number
-  gems: number
   xp?: number
   grove: any[]
   inventory: string[]
   setSap: (v: number | ((p: number) => number)) => void
-  setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
@@ -2545,7 +2543,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
+  sap, xp, grove, inventory, notes, setSap, setGrove, userId, activeTabId, orchardTimeMode,
   onOpenLeaderboard, onOpenShop, onOpenSatchel,
 }: OrchardViewProps) {
 
@@ -2713,9 +2711,6 @@ export const OrchardView = memo(function OrchardView({
     const amount = getAvailableSap()
     if (amount <= 0) return
 
-    const gemAmount = getAvailableGems()
-    if (gemAmount > 0) setGems((g: number) => g + gemAmount)
-
     const counterEl = sapCounterRef.current
     const btnEl = collectBtnRef.current
     if (counterEl && btnEl) {
@@ -2764,7 +2759,7 @@ export const OrchardView = memo(function OrchardView({
     setTimeout(() => {
       setCollectAllAnim({ total: 0, current: 0, active: false })
     }, 200 + rampDuration + 600)
-  }, [getAvailableSap, getAvailableGems, setSap, setGems])
+  }, [getAvailableSap, setSap])
 
   const TREES_PER_PLOT = 40
   const MAX_PLOTS = 3
@@ -2789,9 +2784,6 @@ export const OrchardView = memo(function OrchardView({
   const unlockNextPlot = () => {
     const nextPlot = nbUnlocked + 1
     if (nextPlot > MAX_PLOTS) return
-    const cost = PLOT_COST[nextPlot - 1] || 0
-    if (gems < cost) return
-    setGems((g: number) => g - cost)
     const updated = { ...unlockedPlots, [selectedNotebook]: nextPlot }
     setUnlockedPlots(updated)
     localStorage.setItem('pulp-unlocked-plots', JSON.stringify(updated))
@@ -3140,11 +3132,6 @@ export const OrchardView = memo(function OrchardView({
                   }}>+{collectAllAnim.total}</span>
                 )}
               </div>
-              <div style={{ width: 1, height: 20, backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
-              <div className="flex items-center gap-2">
-                <GemIcon size={16} />
-                <span className="text-[15px] font-normal tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{gems}</span>
-              </div>
               {onOpenSatchel && (
                 <button onClick={onOpenSatchel} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)', position: 'relative' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
@@ -3254,12 +3241,11 @@ export const OrchardView = memo(function OrchardView({
                   ) : nbUnlocked < MAX_PLOTS ? (
                     <button
                       onClick={unlockNextPlot}
-                      disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all"
                       style={{ color: '#d97706' }}
-                      title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
+                      title={`Unlock plot ${nbUnlocked + 1}`}
                     >
-                      <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
+                      +
                     </button>
                   ) : (
                     <span className="p-0.5 opacity-30" style={{ color: '#fff' }}>

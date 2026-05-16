@@ -134,7 +134,7 @@ export interface PulpConfig {
   devMode: boolean; isDevUnlocked: boolean
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, gems, setGems, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -145,8 +145,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   onRestoreNote: (id: string) => void
   onPermanentlyDeleteNote: (id: string) => void
   unlockedCosmetics: string[]
-  gems: number
-  setGems: React.Dispatch<React.SetStateAction<number>>
   setUnlockedCosmetics: React.Dispatch<React.SetStateAction<string[]>>
   onOpenShopItem?: (itemId: string) => void
   openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void

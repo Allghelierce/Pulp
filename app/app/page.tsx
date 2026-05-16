@@ -1286,10 +1286,8 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [gems, setGems] = useState(3)
-  const [sap, setSap] = useState(50)
+  const [sap, setSap] = useState(0)
   const xp = 0
-  const [timeBalance, setTimeBalance] = useState(0)
   const [goalStreak, setGoalStreak] = useState(0)
   const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
@@ -1383,9 +1381,7 @@ export default function NoteApp() {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       let data: any; try { data = JSON.parse(saved) } catch { return }
-      setGems(data.gems ?? 3)
-      setSap(data.juice ?? data.sunshine ?? 50)
-      if (data.timeBalance != null) setTimeBalance(data.timeBalance)
+      setSap(data.juice ?? data.sunshine ?? 0)
       if (data.goalStreak != null) setGoalStreak(data.goalStreak)
       if (data.goalStreakLastDate) setGoalStreakLastDate(data.goalStreakLastDate)
       if (data.dailyGoalMinutes) setDailyGoalMinutes(data.dailyGoalMinutes)
@@ -1418,7 +1414,6 @@ export default function NoteApp() {
       ])
 
       if (profile) {
-        setGems(profile.gems)
         setSap(profile.juice)
         setLastCharCount(profile.last_char_count)
         if (profile.grove?.length) {
@@ -1436,8 +1431,8 @@ export default function NoteApp() {
         const groveLocal = saved ? JSON.parse(saved) : null
 
         await db.upsertPlayerProfile(user.id, {
-          gems: groveLocal?.gems ?? 3,
-          juice: groveLocal?.juice ?? groveLocal?.sunshine ?? 50,
+          gems: 0,
+          juice: groveLocal?.juice ?? groveLocal?.sunshine ?? 0,
           last_char_count: groveLocal?.lastCharCount ?? 0,
         })
         // Migrate legacy user_settings blob
@@ -2647,17 +2642,17 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes }
+      const groveData = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
         for (const item of inventory) invMap[item] = (invMap[item] || 0) + 1
-        db.upsertPlayerProfile(user.id, { gems, juice: sap, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
+        db.upsertPlayerProfile(user.id, { gems: 0, juice: sap, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
         db.upsertAchievements(user.id, achievements)
       }
     }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes, user])
+  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -3241,8 +3236,6 @@ export default function NoteApp() {
                 archivedNotes={archivedNotes}
                 onUnarchiveNote={unarchiveNote}
                 onSyncNow={handleSyncNow}
-                gems={gems}
-                setGems={setGems}
                 xp={xp}
               />
             </div>
@@ -3320,7 +3313,6 @@ export default function NoteApp() {
                 onOpenFocus={() => setFocusOpen(true)}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
                 sap={sap}
-                gems={gems}
                 xp={xp}
                 totalNotes={notes.filter(n => !n.archived).length}
                 totalChars={totalChars}
@@ -3495,7 +3487,6 @@ export default function NoteApp() {
                   sidebarWidth={sidebarWidth}
                   isSidebarDragging={isSidebarDragging}
                   sap={isAdmin ? 999999 : sap}
-                  gems={isAdmin ? 999999 : gems}
                   userAvatarUrl={user?.user_metadata?.avatar_url}
                   userEmail={user?.email}
                   onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
@@ -4178,12 +4169,10 @@ export default function NoteApp() {
               theme={theme}
               accent={accent}
               sap={sap}
-              gems={gems}
               xp={xp}
               grove={grove}
               inventory={inventory}
               setSap={setSap}
-              setGems={setGems}
               setInventory={setInventory}
               setGrove={setGrove}
               notes={notes}
@@ -4210,7 +4199,7 @@ export default function NoteApp() {
                 achievements={achievements}
                 notes={notes}
                 goalStreak={goalStreak}
-                timeBalance={timeBalance}
+                sap={sap}
                 dailyGoalMinutes={dailyGoalMinutes}
               />
             </div>
@@ -4537,9 +4526,7 @@ export default function NoteApp() {
           onClose={() => setFocusOpen(false)}
           theme={theme}
           blockedSites={blockedSites}
-          gems={gems}
           onUpdateConfig={updateSettings}
-          onSpendGems={(amount) => setGems(prev => Math.max(0, prev - amount))}
           openConfirm={openConfirm}
         /></Suspense>}
 
@@ -4550,11 +4537,9 @@ export default function NoteApp() {
           timerOpen={timerOpen}
           onSetTimerOpen={setTimerOpen}
           sap={sap}
-          gems={gems}
           grove={grove}
           achievements={achievements}
           setSap={setSap}
-          setGems={setGems}
           setGrove={setGrove}
           setAchievements={setAchievements}
           lastCharCount={lastCharCount}
@@ -4565,8 +4550,6 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
-          timeBalance={timeBalance}
-          setTimeBalance={setTimeBalance}
           goalStreak={goalStreak}
           setGoalStreak={setGoalStreak}
           goalStreakLastDate={goalStreakLastDate}
