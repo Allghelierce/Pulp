@@ -272,8 +272,21 @@ export const VitalitySystem = memo(function VitalitySystem({
     setLostSap(0)
   }, [lostSap, setSap])
 
+  const waterClicksRef = useRef<number[]>([])
   const waterTree = useCallback(() => {
     if (!timerRunning || treeDead) return
+
+    const now = Date.now()
+    waterClicksRef.current = waterClicksRef.current.filter(t => now - t < 5000)
+    waterClicksRef.current.push(now)
+    if (waterClicksRef.current.length >= 10) {
+      setTimerRunning(false)
+      setTreeDead(true)
+      setDeathReason("You overwatered your tree")
+      waterClicksRef.current = []
+      return
+    }
+
     const nextCount = waterCount + 1
     setWaterCount(nextCount)
     if (nextCount >= 2) {
@@ -461,6 +474,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       onOpenSatchel={onOpenSatchel}
       sapPreview={grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0) + (TREE_TYPES[selectedSeed || 'tangerine']?.sapYield || 0)}
       goalStreak={goalStreak}
+      isHibernating={isHibernating}
     />
   )
 })

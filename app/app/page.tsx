@@ -1429,6 +1429,7 @@ export default function NoteApp() {
 
   const isHibernating = !!hibernation
   const hibernationCooldownEnd = (() => {
+    if (typeof window === 'undefined') return null
     if (!hibernation) {
       const saved = localStorage.getItem('pulp-grove')
       if (saved) {

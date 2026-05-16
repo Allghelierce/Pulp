@@ -47,6 +47,7 @@ interface TimerSidebarPanelProps {
   onOpenSatchel?: () => void
   sapPreview?: number
   goalStreak?: number
+  isHibernating?: boolean
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -162,7 +163,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   lostSap, onRecoverSap,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  sapPreview = 0, goalStreak = 0,
+  sapPreview = 0, goalStreak = 0, isHibernating = false,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -553,9 +554,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : running ? "in session" : done ? (
                     <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12 }}>
-                      <span style={{ color: mainColor }}>+{sapPreview} sap</span>
+                      {isHibernating
+                        ? <span style={{ color: subtleColor }}>hibernating — no sap</span>
+                        : <span style={{ color: mainColor }}>+{sapPreview} sap</span>}
                     </span>
-                  ) : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{sapPreview} sap</span>}
+                  ) : isHibernating
+                    ? <span className="inline-flex items-center gap-0.5 italic" style={{ color: subtleColor }}>hibernating</span>
+                    : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{sapPreview} sap</span>}
                 </p>
                 {!treeDead && goalStreak > 0 && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
