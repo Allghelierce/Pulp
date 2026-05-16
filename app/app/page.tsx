@@ -1289,6 +1289,10 @@ export default function NoteApp() {
   const [gems, setGems] = useState(3)
   const [sap, setSap] = useState(50)
   const [xp, setXp] = useState(0)
+  const [timeBalance, setTimeBalance] = useState(0)
+  const [goalStreak, setGoalStreak] = useState(0)
+  const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [allCompacted, setAllCompacted] = useState(false)
@@ -1380,6 +1384,10 @@ export default function NoteApp() {
       let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
       setSap(data.juice ?? data.sunshine ?? 50)
+      if (data.timeBalance != null) setTimeBalance(data.timeBalance)
+      if (data.goalStreak != null) setGoalStreak(data.goalStreak)
+      if (data.goalStreakLastDate) setGoalStreakLastDate(data.goalStreakLastDate)
+      if (data.dailyGoalMinutes) setDailyGoalMinutes(data.dailyGoalMinutes)
       if (data.inventory) setInventory([...data.inventory])
       if (data.grove) {
         setGrove([...data.grove])
@@ -2638,7 +2646,7 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
+      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
@@ -2648,7 +2656,7 @@ export default function NoteApp() {
       }
     }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
+  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -4542,6 +4550,13 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
+          timeBalance={timeBalance}
+          setTimeBalance={setTimeBalance}
+          goalStreak={goalStreak}
+          setGoalStreak={setGoalStreak}
+          goalStreakLastDate={goalStreakLastDate}
+          setGoalStreakLastDate={setGoalStreakLastDate}
+          dailyGoalMinutes={dailyGoalMinutes}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

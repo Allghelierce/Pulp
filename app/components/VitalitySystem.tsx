@@ -29,6 +29,13 @@ interface VitalitySystemProps {
   activeTabId: string | null
   initialNotes: any[]
   onOpenSatchel?: () => void
+  timeBalance: number
+  setTimeBalance: React.Dispatch<React.SetStateAction<number>>
+  goalStreak: number
+  setGoalStreak: React.Dispatch<React.SetStateAction<number>>
+  goalStreakLastDate: string
+  setGoalStreakLastDate: React.Dispatch<React.SetStateAction<string>>
+  dailyGoalMinutes: number
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -37,6 +44,8 @@ export const VitalitySystem = memo(function VitalitySystem({
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
   inventory, activeTabId, initialNotes, onOpenSatchel,
+  timeBalance, setTimeBalance, goalStreak, setGoalStreak,
+  goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -286,10 +295,40 @@ export const VitalitySystem = memo(function VitalitySystem({
     }))
   }, [setAchievements])
 
+  const getMultiplier = useCallback(() => {
+    let mult = 1.0
+    const streakActive = goalStreak >= 7
+    if (streakActive) mult += 1.0
+    const hour = new Date().getHours()
+    if (streakActive && hour < 9) mult += 1.0
+    return Math.min(mult, 3.0)
+  }, [goalStreak])
+
+  const updateGoalStreak = useCallback((sessionMinutes: number) => {
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (goalStreakLastDate === todayStr) return
+
+    const stats = JSON.parse(localStorage.getItem('pulp-daily-stats') || '[]')
+    const todayStats = stats.find((e: any) => e.date === todayStr)
+    const totalToday = (todayStats?.focusMinutes || 0) + sessionMinutes
+
+    if (totalToday >= dailyGoalMinutes) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+      const isConsecutive = goalStreakLastDate === yesterday || goalStreakLastDate === ''
+      setGoalStreak(isConsecutive ? goalStreak + 1 : 1)
+      setGoalStreakLastDate(todayStr)
+    }
+  }, [goalStreak, goalStreakLastDate, dailyGoalMinutes, setGoalStreak, setGoalStreakLastDate])
+
   const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
     const minutes = timerTotal / 60
     const treeType = selectedSeed || 'tangerine'
+
+    const multiplier = getMultiplier()
+    const timeEarned = Math.round(minutes * multiplier)
+    setTimeBalance(t => t + timeEarned)
+    updateGoalStreak(minutes)
 
     logFocusSession(minutes, 0)
 
@@ -328,7 +367,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setXp, setGrove, checkAchievement, activeTabId])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setXp, setGrove, checkAchievement, activeTabId, getMultiplier, setTimeBalance, updateGoalStreak])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
@@ -421,6 +460,9 @@ export const VitalitySystem = memo(function VitalitySystem({
       selectedSeed={selectedSeed}
       onSelectSeed={setSelectedSeed}
       onOpenSatchel={onOpenSatchel}
+      timeBalance={timeBalance}
+      multiplier={getMultiplier()}
+      goalStreak={goalStreak}
     />
   )
 })

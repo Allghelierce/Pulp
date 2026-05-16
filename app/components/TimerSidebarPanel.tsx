@@ -45,6 +45,9 @@ interface TimerSidebarPanelProps {
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
   onOpenSatchel?: () => void
+  timeBalance?: number
+  multiplier?: number
+  goalStreak?: number
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -160,6 +163,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   lostSap, onRecoverSap,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
+  timeBalance, multiplier = 1, goalStreak = 0,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -550,6 +554,23 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.max(10, Math.round(Math.floor(total / 60) * 3 + Math.pow(Math.floor(total / 60) / 10, 1.5)))} XP</span>}
                 </p>
+                {!treeDead && (
+                  <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
+                    <span style={{ color: multiplier >= 2 ? '#d97706' : subtleColor, fontWeight: multiplier >= 2 ? 500 : 400 }}>
+                      {multiplier}x
+                    </span>
+                    <span style={{ opacity: 0.4 }}>·</span>
+                    <span>+{Math.round(Math.floor(total / 60) * multiplier)} time</span>
+                    {multiplier > 1 && (
+                      <>
+                        <span style={{ opacity: 0.4 }}>·</span>
+                        <span style={{ fontSize: 10, opacity: 0.6 }}>
+                          {goalStreak >= 7 && new Date().getHours() < 9 ? '🔥 streak + early bird' : goalStreak >= 7 ? '🔥 streak' : ''}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Tree view */}
