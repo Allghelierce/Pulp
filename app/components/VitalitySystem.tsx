@@ -32,6 +32,7 @@ interface VitalitySystemProps {
   setGoalStreakLastDate: React.Dispatch<React.SetStateAction<string>>
   dailyGoalMinutes: number
   isHibernating?: boolean
+  hidden?: boolean
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -42,7 +43,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   inventory, activeTabId, initialNotes, onOpenSatchel,
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
-  isHibernating = false,
+  isHibernating = false, hidden = false,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -467,6 +468,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       grove={grove}
       goalStreak={goalStreak}
       isHibernating={isHibernating}
+      hidden={hidden}
     />
   )
 })

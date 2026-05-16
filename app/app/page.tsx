@@ -4574,6 +4574,7 @@ export default function NoteApp() {
           setGoalStreakLastDate={setGoalStreakLastDate}
           dailyGoalMinutes={dailyGoalMinutes}
           isHibernating={isHibernating}
+          hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

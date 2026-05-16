@@ -47,6 +47,7 @@ interface TimerSidebarPanelProps {
   grove?: Tree[]
   goalStreak?: number
   isHibernating?: boolean
+  hidden?: boolean
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -164,7 +165,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  grove = [], goalStreak = 0, isHibernating = false,
+  grove = [], goalStreak = 0, isHibernating = false, hidden = false,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -273,11 +274,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed z-50 flex items-center gap-2 select-none shadow-lg"
+        className="fixed z-40 flex items-center gap-2 select-none shadow-lg"
         style={{
           left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
           bottom: 12,
           transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
+          display: hidden ? 'none' : undefined,
           backgroundColor: bgColor,
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
@@ -344,11 +346,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed z-50 flex flex-col select-none shadow-2xl"
+          className="fixed z-40 flex flex-col select-none shadow-2xl"
           style={{
             left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
             bottom: 12,
             transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
+            display: hidden ? 'none' : undefined,
             width: 250,
             height: "auto",
             minHeight: 560,
