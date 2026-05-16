@@ -181,7 +181,7 @@ interface StatsViewProps {
   isOpen: boolean
   onClose: () => void
   theme: "light" | "dark"
-  xp: number
+  xp?: number
   grove?: Tree[]
   activeNotebookId?: string
   activeNotebookName?: string
@@ -298,7 +298,7 @@ export const StatsView = memo(function StatsView({
     return () => window.removeEventListener("keydown", handler)
   }, [isOpen, onClose])
 
-  const lvl = getLevel(xp)
+  const lvl = getLevel(xp ?? 0)
   const xpProgress = Math.min(100, Math.floor(lvl.progress * 100))
 
   const monthGrid = useMemo(() => getMonthGrid(dailyStats, heatmapOffset), [dailyStats, heatmapOffset])

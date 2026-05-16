@@ -1253,7 +1253,12 @@ export default function NoteApp() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [gems, setGems] = useState(3)
   const [sap, setSap] = useState(50)
-  const [xp, setXp] = useState(0)
+  const xp = 0
+  const [timeBalance, setTimeBalance] = useState(0)
+  const [goalStreak, setGoalStreak] = useState(0)
+  const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
+  const [streakNudgeDismissed, setStreakNudgeDismissed] = useState(false)
   const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
   const [timerOpen, setTimerOpen] = useState(false)
   const [allCompacted, setAllCompacted] = useState(false)
@@ -1345,6 +1350,10 @@ export default function NoteApp() {
       let data: any; try { data = JSON.parse(saved) } catch { return }
       setGems(data.gems ?? 3)
       setSap(data.juice ?? data.sunshine ?? 50)
+      if (data.timeBalance != null) setTimeBalance(data.timeBalance)
+      if (data.goalStreak != null) setGoalStreak(data.goalStreak)
+      if (data.goalStreakLastDate) setGoalStreakLastDate(data.goalStreakLastDate)
+      if (data.dailyGoalMinutes) setDailyGoalMinutes(data.dailyGoalMinutes)
       if (data.inventory) setInventory([...data.inventory])
       if (data.grove) {
         setGrove([...data.grove])
@@ -2603,7 +2612,7 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
-      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics }
+      const groveData = { gems, juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
@@ -2613,7 +2622,7 @@ export default function NoteApp() {
       }
     }), 1000)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, user])
+  }, [gems, sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, timeBalance, goalStreak, goalStreakLastDate, dailyGoalMinutes, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -3165,6 +3174,19 @@ export default function NoteApp() {
 
         <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
+          {goalStreak >= 3 && goalStreakLastDate !== new Date().toISOString().split('T')[0] && !streakNudgeDismissed && !timerOpen && (
+            <div style={{
+              position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
+              display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px',
+              borderRadius: 6, fontSize: 11, fontFamily: 'Crimson Pro, serif',
+              background: theme === 'dark' ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)',
+              border: `1px solid ${theme === 'dark' ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.12)'}`,
+              color: theme === 'dark' ? '#d4a054' : '#92650a',
+            }}>
+              <span>{goalStreak}-day streak at risk</span>
+              <button onClick={() => setStreakNudgeDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.4, fontSize: 13, lineHeight: 1, padding: 0 }}>×</button>
+            </div>
+          )}
           {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
           {showSettings && <Suspense fallback={null}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
@@ -4147,6 +4169,9 @@ export default function NoteApp() {
                 activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
                 achievements={achievements}
                 notes={notes}
+                goalStreak={goalStreak}
+                timeBalance={timeBalance}
+                dailyGoalMinutes={dailyGoalMinutes}
               />
             </div>
           </Suspense>}
@@ -4477,8 +4502,6 @@ export default function NoteApp() {
           onSetTimerOpen={setTimerOpen}
           sap={sap}
           gems={gems}
-          xp={xp}
-          setXp={setXp}
           grove={grove}
           achievements={achievements}
           setSap={setSap}
@@ -4493,6 +4516,13 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
+          timeBalance={timeBalance}
+          setTimeBalance={setTimeBalance}
+          goalStreak={goalStreak}
+          setGoalStreak={setGoalStreak}
+          goalStreakLastDate={goalStreakLastDate}
+          setGoalStreakLastDate={setGoalStreakLastDate}
+          dailyGoalMinutes={dailyGoalMinutes}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}

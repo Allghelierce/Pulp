@@ -7,13 +7,16 @@ export interface WidgetProps {
   size: [number, number]
   dailyStats: DailyEntry[]
   grove: Tree[]
-  xp: number
+  xp?: number
   goals: { focus: number; writing: number; sessions: number }
   inventory: string[]
   activeNotebookId?: string
   activeNotebookName?: string
   achievements: Achievement[]
   notes: NoteData[]
+  goalStreak?: number
+  timeBalance?: number
+  dailyGoalMinutes?: number
 }
 
 export interface WidgetDefinition {

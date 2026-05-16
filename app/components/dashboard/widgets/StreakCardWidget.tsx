@@ -39,7 +39,7 @@ function FlameIcon({ color, size = 20 }: { color: string; size?: number }) {
   )
 }
 
-const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: WidgetProps) {
+const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, goalStreak = 0 }: WidgetProps) {
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
 
   const { current, best } = useMemo(() => {
@@ -70,6 +70,7 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: 
   }, [dailyStats])
 
   const streakColor = current >= 60 ? '#ffd700' : current >= 30 ? '#a855f7' : current >= 14 ? '#4d8cff' : current >= 7 ? '#60a5fa' : current >= 3 ? '#34d399' : '#a1a1aa'
+  const multiplier = goalStreak >= 7 ? (new Date().getHours() < 9 ? 3 : 2) : 1
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 12, gap: 2 }}>
@@ -87,7 +88,13 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats }: 
           <FlameIcon color={streakColor} size={22} />
         </motion.div>
       )}
-      <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>best: {best}d</span>
+      {multiplier > 1 ? (
+        <span style={{ fontSize: 9, color: '#d97706', marginTop: 2, fontFamily: font }}>{multiplier}x active</span>
+      ) : goalStreak > 0 ? (
+        <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>{goalStreak}/7 to 2x</span>
+      ) : (
+        <span style={{ fontSize: 8, color: textMuted, marginTop: 2 }}>best: {best}d</span>
+      )}
     </div>
   )
 })

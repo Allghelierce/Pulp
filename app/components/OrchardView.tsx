@@ -1,7 +1,7 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES, getLevel, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
+import { TREE_TYPES, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
@@ -17,7 +17,7 @@ interface OrchardViewProps {
   accent: string
   sap: number
   gems: number
-  xp: number
+  xp?: number
   grove: any[]
   inventory: string[]
   setSap: (v: number | ((p: number) => number)) => void
@@ -2567,7 +2567,7 @@ export const OrchardView = memo(function OrchardView({
   })
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
-  const [orchardMode, setOrchardMode] = useState<'xp' | 'seasonal'>('xp')
+  const [orchardMode, setOrchardMode] = useState<'seasonal' | 'default'>('default')
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
   const [ascensionMode, setAscensionMode] = useState(false)
   const [selectedSacrifices, setSelectedSacrifices] = useState<number[]>([])
@@ -2633,7 +2633,6 @@ export const OrchardView = memo(function OrchardView({
     return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
   }
 
-  const lvl = getLevel(xp)
   const isDark = theme === 'dark'
 
   useEffect(() => {
