@@ -449,99 +449,101 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
           {showDrawToolbar && (
             <div
-              className={`absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 rounded-[8px] shadow-md z-[100] p-1`}
+              className={`absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 rounded-[8px] shadow-md z-[100] p-1.5`}
               style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}
               onMouseDown={e => e.stopPropagation()}
             >
-              <div className="flex items-center gap-px px-0.5 mb-1">
-                {([
-                  ["pen", "Pen", "M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"],
-                  ["line", "Line", ""],
-                  ["arrow", "Arrow", ""],
-                  ["eraser", "Eraser", "m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21M22 21H7M5 11l9 9"],
-                ] as const).map(([tool, label, d]) => {
-                  const active = activeTool === tool
-                  const isEraser = tool === "eraser"
-                  return (
-                    <button
-                      key={tool}
-                      onMouseDown={e => { e.preventDefault(); setActiveTool(isEraser && active ? "pen" : tool) }}
-                      title={label}
-                      className={`h-6 w-6 flex items-center justify-center rounded-[5px] transition-colors cursor-pointer active:scale-[0.95] ${
-                        active
-                          ? isEraser
-                            ? "bg-red-500/10 text-red-500"
-                            : theme === "dark" ? "bg-zinc-700 text-zinc-100" : "bg-zinc-100 text-zinc-800"
-                          : theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"
-                      }`}
-                    >
-                      {tool === "line" ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="19" x2="19" y2="5" /></svg>
-                      ) : tool === "arrow" ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5" /><polyline points="9 5 19 5 19 15" /></svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
-                      )}
+              <div className="flex gap-1">
+                {/* Left column: tools + widths */}
+                <div className="flex flex-col items-center gap-0.5">
+                  {([
+                    ["pen", "Pen", "M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"],
+                    ["line", "Line", ""],
+                    ["arrow", "Arrow", ""],
+                    ["eraser", "Eraser", "m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21M22 21H7M5 11l9 9"],
+                  ] as const).map(([tool, label, d]) => {
+                    const active = activeTool === tool
+                    const isEraser = tool === "eraser"
+                    return (
+                      <button
+                        key={tool}
+                        onMouseDown={e => { e.preventDefault(); setActiveTool(isEraser && active ? "pen" : tool) }}
+                        title={label}
+                        className={`h-7 w-7 flex items-center justify-center rounded-[5px] transition-colors cursor-pointer active:scale-[0.95] ${
+                          active
+                            ? isEraser
+                              ? "bg-red-500/10 text-red-500"
+                              : theme === "dark" ? "bg-zinc-700 text-zinc-100" : "bg-zinc-100 text-zinc-800"
+                            : theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"
+                        }`}
+                      >
+                        {tool === "line" ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="19" x2="19" y2="5" /></svg>
+                        ) : tool === "arrow" ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5" /><polyline points="9 5 19 5 19 15" /></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+                        )}
+                      </button>
+                    )
+                  })}
+                  <div className={`h-px w-5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-200/60"}`} />
+                  {[0.5, 1, 2, 4].map(w => (
+                    <button key={w} onMouseDown={e => { e.preventDefault(); onLineWidthChange(w) }}
+                      className={`h-6 w-7 flex items-center justify-center rounded-[4px] cursor-pointer transition-colors ${lineWidth === w ? (theme === "dark" ? "bg-zinc-700" : "bg-zinc-100") : ""}`}
+                      title={`${w}px`}>
+                      <div className="rounded-full" style={{
+                        width: Math.max(2, w * 2), height: Math.max(2, w * 2),
+                        backgroundColor: lineWidth === w ? (theme === "dark" ? "#e4e4e7" : "#18181b") : (theme === "dark" ? "#52525b" : "#b4b4b4"),
+                      }} />
                     </button>
-                  )
-                })}
-                <div className={`w-px h-4 mx-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-200/60"}`} />
-                {[0.5, 1, 2, 4].map(w => (
-                  <button key={w} onMouseDown={e => { e.preventDefault(); onLineWidthChange(w) }}
-                    className={`h-6 w-5 flex items-center justify-center rounded-[4px] cursor-pointer transition-colors ${lineWidth === w ? (theme === "dark" ? "bg-zinc-700" : "bg-zinc-100") : ""}`}
-                    title={`${w}px`}>
-                    <div className="rounded-full" style={{
-                      width: Math.max(2, w * 2), height: Math.max(2, w * 2),
-                      backgroundColor: lineWidth === w ? (theme === "dark" ? "#e4e4e7" : "#18181b") : (theme === "dark" ? "#52525b" : "#b4b4b4"),
-                    }} />
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-0.5 px-0.5 mb-1">
-                <button key="bw" onMouseDown={e => { e.preventDefault(); onStrokeColorChange(darkPaper ? '#ffffff' : '#000000') }}
-                  className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform"
-                  style={{
-                    backgroundColor: darkPaper ? '#ffffff' : '#000000',
-                    boxShadow: strokeColor === (darkPaper ? '#ffffff' : '#000000') ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${darkPaper ? '#ffffff' : '#000000'}` : "none",
-                  }}
-                />
-                {ACCENT_COLORS.map(({ hex, cost, pro }) => {
-                  const cosmeticId = `accent_${hex}`
-                  const isOwned = !cost && !pro ? true : unlockedCosmetics.includes(cosmeticId)
-                  return (
-                  <button key={hex} onMouseDown={e => { e.preventDefault(); if (isOwned) onStrokeColorChange(hex) }}
-                    className="w-4 h-4 rounded-full transition-transform relative"
+                  ))}
+                </div>
+                <div className={`w-px self-stretch ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-200/60"}`} />
+                {/* Right column: colors + actions */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <button key="bw" onMouseDown={e => { e.preventDefault(); onStrokeColorChange(darkPaper ? '#ffffff' : '#000000') }}
+                    className="w-[14px] h-[14px] rounded-full cursor-pointer hover:scale-125 transition-transform"
                     style={{
-                      backgroundColor: hex,
-                      boxShadow: strokeColor === hex ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${hex}` : "none",
-                      cursor: isOwned ? 'pointer' : 'not-allowed',
-                      opacity: isOwned ? 1 : 0.4,
+                      backgroundColor: darkPaper ? '#ffffff' : '#000000',
+                      boxShadow: strokeColor === (darkPaper ? '#ffffff' : '#000000') ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${darkPaper ? '#ffffff' : '#000000'}` : "none",
                     }}
-                    title={isOwned ? undefined : `Locked — unlock in Settings`}
-                  >
-                    {!isOwned && <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="absolute inset-0 m-auto" style={{ color: theme === 'dark' ? '#fff' : '#000', opacity: 0.6 }}><path d="M12 2C9.24 2 7 4.24 7 7v3H5v12h14V10h-2V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>}
+                  />
+                  {ACCENT_COLORS.map(({ hex, cost, pro }) => {
+                    const cosmeticId = `accent_${hex}`
+                    const isOwned = !cost && !pro ? true : unlockedCosmetics.includes(cosmeticId)
+                    return (
+                    <button key={hex} onMouseDown={e => { e.preventDefault(); if (isOwned) onStrokeColorChange(hex) }}
+                      className="w-[14px] h-[14px] rounded-full transition-transform relative"
+                      style={{
+                        backgroundColor: hex,
+                        boxShadow: strokeColor === hex ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${hex}` : "none",
+                        cursor: isOwned ? 'pointer' : 'not-allowed',
+                        opacity: isOwned ? 1 : 0.4,
+                      }}
+                      title={isOwned ? undefined : `Locked — unlock in Settings`}
+                    >
+                      {!isOwned && <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" className="absolute inset-0 m-auto" style={{ color: theme === 'dark' ? '#fff' : '#000', opacity: 0.6 }}><path d="M12 2C9.24 2 7 4.24 7 7v3H5v12h14V10h-2V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>}
+                    </button>
+                    )
+                  })}
+                  <div className={`h-px w-5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
+                  <button onMouseDown={e => { e.preventDefault(); onUndo() }}
+                    className={`h-6 w-7 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"}`}
+                    style={{ opacity: canUndo ? 1 : 0.2 }} title="Undo">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
                   </button>
-                  )
-                })}
-              </div>
-              <div className={`h-px mx-0.5 mb-1 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
-              <div className="flex items-center gap-px px-0.5">
-                <button onMouseDown={e => { e.preventDefault(); onUndo() }}
-                  className={`h-5 w-5 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"}`}
-                  style={{ opacity: canUndo ? 1 : 0.2 }} title="Undo">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-                </button>
-                <button onMouseDown={e => { e.preventDefault(); onRedo() }}
-                  className={`h-5 w-5 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"}`}
-                  style={{ opacity: canRedo ? 1 : 0.2 }} title="Redo">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
-                </button>
-                <div className="flex-1" />
-                <button onMouseDown={e => { e.preventDefault(); onClearDrawing() }}
-                  className={`h-5 w-5 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-red-400/60 hover:bg-red-500/10" : "text-red-300 hover:bg-red-50"}`}
-                  title="Clear all">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
-                </button>
+                  <button onMouseDown={e => { e.preventDefault(); onRedo() }}
+                    className={`h-6 w-7 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"}`}
+                    style={{ opacity: canRedo ? 1 : 0.2 }} title="Redo">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+                  </button>
+                  <button onMouseDown={e => { e.preventDefault(); onClearDrawing() }}
+                    className={`h-6 w-7 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-red-400/60 hover:bg-red-500/10" : "text-red-300 hover:bg-red-50"}`}
+                    title="Clear all">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                  </button>
+                </div>
               </div>
             </div>
           )}

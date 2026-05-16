@@ -154,24 +154,48 @@ function RarityScene({ rarity, isDark }: { rarity: string; isDark: boolean }) {
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit' }}>
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
           <defs>
-            <radialGradient id="sac-glow" cx="50%" cy="60%">
-              <stop offset="0%" stopColor={isDark ? 'rgba(114,47,55,0.06)' : 'rgba(114,47,55,0.04)'}>
-                <animate attributeName="stopColor" values={isDark ? 'rgba(114,47,55,0.04);rgba(160,80,60,0.08);rgba(114,47,55,0.04)' : 'rgba(114,47,55,0.03);rgba(160,80,60,0.06);rgba(114,47,55,0.03)'} dur="8s" repeatCount="indefinite" />
+            <radialGradient id="sac-nebula-1" cx="30%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="rgba(140,80,220,0.08)" />
+              <stop offset="60%" stopColor="rgba(100,50,180,0.03)" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+            <radialGradient id="sac-nebula-2" cx="70%" cy="65%" r="45%">
+              <stop offset="0%" stopColor="rgba(100,140,255,0.06)" />
+              <stop offset="50%" stopColor="rgba(80,60,200,0.025)" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+            <radialGradient id="sac-core" cx="50%" cy="55%" r="40%">
+              <stop offset="0%" stopColor={isDark ? 'rgba(180,140,255,0.07)' : 'rgba(140,100,220,0.05)'}>
+                <animate attributeName="stopColor" values={isDark ? 'rgba(180,140,255,0.05);rgba(200,160,255,0.1);rgba(180,140,255,0.05)' : 'rgba(140,100,220,0.03);rgba(160,120,240,0.07);rgba(140,100,220,0.03)'} dur="6s" repeatCount="indefinite" />
               </stop>
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#sac-glow)" />
-          {Array.from({ length: 6 }).map((_, i) => (
-            <circle key={i}
-              cx={`${15 + (i * 23) % 70}%`}
-              cy={`${20 + (i * 17) % 60}%`}
-              r={0.4 + (i % 3) * 0.2}
-              fill={isDark ? '#d4a574' : '#8b6040'}
-            >
-              <animate attributeName="opacity" values="0;0.35;0" dur={`${6 + (i % 4) * 2}s`} begin={`${i * 1.2}s`} repeatCount="indefinite" />
-            </circle>
-          ))}
+          <rect width="100%" height="100%" fill="url(#sac-nebula-1)" />
+          <rect width="100%" height="100%" fill="url(#sac-nebula-2)" />
+          <rect width="100%" height="100%" fill="url(#sac-core)" />
+          {Array.from({ length: 18 }).map((_, i) => {
+            const cx = 8 + (i * 37 + i * i * 7) % 84
+            const cy = 8 + (i * 29 + i * i * 11) % 84
+            const r = i % 5 === 0 ? 0.8 : i % 3 === 0 ? 0.5 : 0.3
+            const dur = 3 + (i % 5) * 1.5
+            const delay = i * 0.7
+            return (
+              <g key={i}>
+                <circle cx={`${cx}%`} cy={`${cy}%`} r={r} fill={i % 4 === 0 ? '#c4b5fd' : i % 3 === 0 ? '#a5b4fc' : '#e0d0ff'}>
+                  <animate attributeName="opacity" values="0;0.7;0" dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+                </circle>
+                {i % 5 === 0 && <>
+                  <line x1={`${cx - 0.8}%`} y1={`${cy}%`} x2={`${cx + 0.8}%`} y2={`${cy}%`} stroke="#d4b8ff" strokeWidth="0.3">
+                    <animate attributeName="opacity" values="0;0.4;0" dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+                  </line>
+                  <line x1={`${cx}%`} y1={`${cy - 0.8}%`} x2={`${cx}%`} y2={`${cy + 0.8}%`} stroke="#d4b8ff" strokeWidth="0.3">
+                    <animate attributeName="opacity" values="0;0.4;0" dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+                  </line>
+                </>}
+              </g>
+            )
+          })}
         </svg>
       </div>
     )
@@ -1218,24 +1242,39 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* Rarity label */}
                             <div style={{
                               position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 7, fontWeight: 400, color: rarityCol,
-                              letterSpacing: '0.08em', textTransform: 'uppercase',
-                              background: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
-                              padding: '2px 6px', borderRadius: 3,
+                              fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
+                              letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
+                              background: t.rarity === 'sacred'
+                                ? (isDark ? 'rgba(80,40,140,0.4)' : 'rgba(140,100,200,0.2)')
+                                : (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)'),
+                              padding: t.rarity === 'sacred' ? '2px 10px' : '2px 6px', borderRadius: t.rarity === 'sacred' ? 6 : 3,
                               backdropFilter: 'blur(4px)', zIndex: 5,
                               whiteSpace: 'nowrap',
+                              ...(t.rarity === 'sacred' ? {
+                                textShadow: '0 0 6px rgba(180,140,255,0.8), 0 0 14px rgba(140,100,220,0.5), 0 0 28px rgba(100,60,200,0.3)',
+                                boxShadow: '0 0 8px rgba(160,120,255,0.3), 0 0 20px rgba(120,80,220,0.15), inset 0 0 8px rgba(180,140,255,0.15)',
+                                border: '1px solid rgba(180,140,255,0.25)',
+                              } : {}),
                             }}>
-                              {RARITY_LABEL[t.rarity]}
+                              {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
                             </div>
                             {/* Tree name */}
                             <div style={{
                               position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 11, fontWeight: 400, color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
-                              fontFamily: 'Crimson Pro, serif', letterSpacing: '0.04em',
-                              background: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)',
-                              padding: '2px 8px', borderRadius: 3,
+                              fontSize: 11, fontWeight: 400,
+                              color: t.rarity === 'sacred' ? '#e0d0ff' : (isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)'),
+                              fontFamily: 'Crimson Pro, serif', letterSpacing: t.rarity === 'sacred' ? '0.08em' : '0.04em',
+                              background: t.rarity === 'sacred'
+                                ? (isDark ? 'rgba(60,30,100,0.5)' : 'rgba(140,100,200,0.15)')
+                                : (isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)'),
+                              padding: '2px 8px', borderRadius: t.rarity === 'sacred' ? 6 : 3,
                               backdropFilter: 'blur(4px)', zIndex: 5,
                               whiteSpace: 'nowrap',
+                              ...(t.rarity === 'sacred' ? {
+                                textShadow: '0 0 8px rgba(180,140,255,0.6), 0 0 18px rgba(140,100,220,0.3)',
+                                boxShadow: '0 0 6px rgba(160,120,255,0.2), inset 0 0 6px rgba(180,140,255,0.1)',
+                                border: '1px solid rgba(180,140,255,0.15)',
+                              } : {}),
                             }}>
                               {t.name}
                             </div>
@@ -1666,7 +1705,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                     <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 10, backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', border: `1px solid ${complete ? `${rc}30` : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: rc, boxShadow: complete ? `0 0 8px ${rc}60` : 'none' }} />
+                          <div style={{
+                            width: 8, height: 8, borderRadius: '50%',
+                            backgroundColor: rc,
+                            boxShadow: rarity === 'sacred'
+                              ? `0 0 6px ${rc}, 0 0 14px ${rc}80, 0 0 24px ${rc}40`
+                              : (complete ? `0 0 8px ${rc}60` : 'none'),
+                            ...(rarity === 'sacred' ? { animation: 'sacred-dot-pulse 2.5s ease-in-out infinite' } : {}),
+                          }} />
                           <span style={{ fontSize: 11, fontWeight: 400, color: textSecondary, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{RARITY_LABEL[rarity]}</span>
                         </div>
                         <span style={{ fontSize: 11, fontWeight: 400, color: complete ? rc : textMuted, fontFamily: font }}>{owned}<span style={{ opacity: 0.5 }}>/{total}</span>{complete && <span style={{ marginLeft: 6, fontSize: 9, letterSpacing: '0.06em' }}>COMPLETE</span>}</span>
