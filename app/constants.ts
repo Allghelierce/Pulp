@@ -102,3 +102,26 @@ export const LEADERBOARD_BOTS = [
   { name: "penpal99", xp: 800, sap: 95 },
   { name: "newleaf", xp: 200, sap: 30 },
 ]
+
+export interface DemoCompetitor {
+  name: string
+  sapAtStart: number
+  currentSap: number
+  sapDelta: number
+  avatarColor: string
+  level: number
+  treesGrown: number
+}
+
+export const DEMO_COMPETITORS: DemoCompetitor[] = [
+  { name: "quillmaster",    sapAtStart: 4200, currentSap: 4980, sapDelta: 780, avatarColor: '#6366f1', level: 14, treesGrown: 9 },
+  { name: "midnightscribe", sapAtStart: 2800, currentSap: 3410, sapDelta: 610, avatarColor: '#ec4899', level: 11, treesGrown: 7 },
+  { name: "inkdragon",      sapAtStart: 1900, currentSap: 2390, sapDelta: 490, avatarColor: '#f97316', level: 9,  treesGrown: 6 },
+  { name: "papertiger",     sapAtStart: 1400, currentSap: 1780, sapDelta: 380, avatarColor: '#14b8a6', level: 8,  treesGrown: 5 },
+  { name: "notanova",       sapAtStart: 900,  currentSap: 1190, sapDelta: 290, avatarColor: '#a855f7', level: 6,  treesGrown: 4 },
+  { name: "draftpunk",      sapAtStart: 500,  currentSap: 710,  sapDelta: 210, avatarColor: '#ef4444', level: 5,  treesGrown: 3 },
+  { name: "blankpage_hero", sapAtStart: 300,  currentSap: 450,  sapDelta: 150, avatarColor: '#22c55e', level: 4,  treesGrown: 2 },
+  { name: "lofi_writer",    sapAtStart: 140,  currentSap: 240,  sapDelta: 100, avatarColor: '#3b82f6', level: 3,  treesGrown: 2 },
+  { name: "penpal99",       sapAtStart: 60,   currentSap: 120,  sapDelta: 60,  avatarColor: '#eab308', level: 2,  treesGrown: 1 },
+  { name: "newleaf",        sapAtStart: 10,   currentSap: 35,   sapDelta: 25,  avatarColor: '#78716c', level: 1,  treesGrown: 1 },
+]

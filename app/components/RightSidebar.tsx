@@ -1,7 +1,7 @@
 "use client"
 import { memo, useState, useMemo } from "react"
 
-import { TREE_TYPES, LEADERBOARD_BOTS } from "@/app/constants"
+import { TREE_TYPES, DEMO_COMPETITORS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 
@@ -27,9 +27,10 @@ export const RightSidebar = memo(function RightSidebar({
   const isDark = theme === "dark"
 
   const leaderboard = useMemo(() => {
-    const you = { name: userName || "you", xp: 0, sap, isYou: true }
-    const others = LEADERBOARD_BOTS.map(b => ({ ...b, isYou: false }))
-    return [...others, you].sort((a, b) => b.sap - a.sap)
+    const sapAtStart = Math.max(0, sap - Math.floor(180 + (sap % 47)))
+    const you = { name: userName || "you", sapDelta: sap - sapAtStart, avatarColor: '#d97706', isYou: true }
+    const others = DEMO_COMPETITORS.map(b => ({ name: b.name, sapDelta: b.sapDelta, avatarColor: b.avatarColor, isYou: false }))
+    return [...others, you].sort((a, b) => b.sapDelta - a.sapDelta)
   }, [sap, userName])
 
   const yourRank = leaderboard.findIndex(e => e.isYou) + 1
@@ -120,6 +121,9 @@ export const RightSidebar = memo(function RightSidebar({
                 <span className={`text-[11px] font-normal ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>
                   You are ranked <span className="text-amber-500 font-normal">#{yourRank}</span> of {leaderboard.length}
                 </span>
+                <div className="mt-1">
+                  <span className="text-[7px] font-normal uppercase tracking-widest text-amber-500/60 bg-amber-500/8 px-1.5 py-0.5 rounded">demo</span>
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -140,6 +144,11 @@ export const RightSidebar = memo(function RightSidebar({
                       }`}>
                         {medal || rank}
                       </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-normal" style={{ background: entry.avatarColor, color: '#fff' }}>
+                          {entry.name[0].toUpperCase()}
+                        </div>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[11px] font-normal truncate ${
@@ -151,12 +160,9 @@ export const RightSidebar = memo(function RightSidebar({
                             <span className="text-[7px] font-normal uppercase tracking-widest text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">you</span>
                           )}
                         </div>
-                        <span className={`text-[8px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                          {entry.sap.toLocaleString()} sap
-                        </span>
                       </div>
-                      <span className={`text-[10px] font-normal tabular-nums ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        <PulpIcon size={10} /> {entry.sap.toLocaleString()}
+                      <span className={`text-[10px] font-normal tabular-nums ${entry.isYou ? 'text-amber-500' : (isDark ? 'text-zinc-400' : 'text-zinc-500')}`}>
+                        +{entry.sapDelta} <PulpIcon size={9} />
                       </span>
                     </div>
                   )
