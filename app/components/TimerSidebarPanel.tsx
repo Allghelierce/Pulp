@@ -552,20 +552,26 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  {treeDead ? "tree withered" : running ? "in session" : done ? "complete" : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.max(10, Math.round(Math.floor(total / 60) * 3 + Math.pow(Math.floor(total / 60) / 10, 1.5)))} XP</span>}
+                  {treeDead ? "tree withered" : running ? "in session" : done ? (
+                    <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12 }}>
+                      <span style={{ opacity: 0.5 }}>{Math.floor(total / 60)} min</span>
+                      {multiplier > 1 && <span style={{ opacity: 0.5 }}> × {multiplier}</span>}
+                      <span style={{ color: mainColor }}> = +{Math.round(Math.floor(total / 60) * multiplier)} time</span>
+                    </span>
+                  ) : <span className="inline-flex items-center gap-0.5 italic" style={{ color: mainColor }}>+{Math.max(10, Math.round(Math.floor(total / 60) * 3 + Math.pow(Math.floor(total / 60) / 10, 1.5)))} XP</span>}
                 </p>
                 {!treeDead && (
                   <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
                     <span style={{ color: multiplier >= 2 ? '#d97706' : subtleColor, fontWeight: multiplier >= 2 ? 500 : 400 }}>
                       {multiplier}x
                     </span>
-                    <span style={{ opacity: 0.4 }}>·</span>
+                    <span style={{ opacity: 0.3 }}>·</span>
                     <span>+{Math.round(Math.floor(total / 60) * multiplier)} time</span>
-                    {multiplier > 1 && (
+                    {goalStreak > 0 && (
                       <>
-                        <span style={{ opacity: 0.4 }}>·</span>
-                        <span style={{ fontSize: 10, opacity: 0.6 }}>
-                          {goalStreak >= 7 && new Date().getHours() < 9 ? '🔥 streak + early bird' : goalStreak >= 7 ? '🔥 streak' : ''}
+                        <span style={{ opacity: 0.3 }}>·</span>
+                        <span style={{ fontSize: 10, opacity: goalStreak >= 7 ? 1 : 0.5, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
+                          {goalStreak >= 7 ? `${goalStreak}d` : `${goalStreak}/7`}
                         </span>
                       </>
                     )}

@@ -21,6 +21,9 @@ export interface DashboardViewProps {
   activeNotebookName?: string
   achievements: Achievement[]
   notes: NoteData[]
+  goalStreak?: number
+  timeBalance?: number
+  dailyGoalMinutes?: number
 }
 
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -37,6 +40,7 @@ function loadGoals() {
 export const DashboardView = memo(function DashboardView({
   isOpen, onClose, theme, xp, grove, inventory,
   activeNotebookId, activeNotebookName, achievements, notes,
+  goalStreak, timeBalance, dailyGoalMinutes,
 }: DashboardViewProps) {
   const isDark = theme === 'dark'
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
@@ -68,7 +72,10 @@ export const DashboardView = memo(function DashboardView({
     activeNotebookName,
     achievements,
     notes,
-  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes])
+    goalStreak,
+    timeBalance,
+    dailyGoalMinutes,
+  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes, goalStreak, timeBalance, dailyGoalMinutes])
 
   if (!isOpen) return null
 

@@ -14,6 +14,9 @@ export interface WidgetProps {
   activeNotebookName?: string
   achievements: Achievement[]
   notes: NoteData[]
+  goalStreak?: number
+  timeBalance?: number
+  dailyGoalMinutes?: number
 }
 
 export interface WidgetDefinition {
