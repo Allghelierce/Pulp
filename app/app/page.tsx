@@ -2620,11 +2620,99 @@ export default function NoteApp() {
     loadSettings()
   }, [user])
 
+  // ─── Flush-on-unload refs (mirror latest state for beforeunload) ───
+  const flushRefs = useRef({
+    settings: null as any,
+    grove: null as any,
+    note: null as any,
+    folders: null as unknown as FolderData[],
+    bookmarks: null as unknown as Bookmark[],
+    user: null as User | null,
+    dirty: { settings: false, grove: false, note: false, folders: false, bookmarks: false }
+  })
+  useEffect(() => { flushRefs.current.user = user }, [user])
+  useEffect(() => { flushRefs.current.folders = folders }, [folders])
+  useEffect(() => { flushRefs.current.bookmarks = bookmarks }, [bookmarks])
+  useEffect(() => {
+    flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
+  }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode])
+  useEffect(() => {
+    flushRefs.current.grove = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
+  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled])
+
+  useEffect(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    const flushAll = () => {
+      const { settings: s, grove: g, user: u, dirty, folders: f } = flushRefs.current
+      const dSettings = dirty.settings
+      const dGrove = dirty.grove
+      const dNote = dirty.note
+      const dFolders = dirty.folders
+
+      if (dSettings && s) localStorage.setItem("pulp-settings", JSON.stringify(s))
+      if (dGrove && g) localStorage.setItem("pulp-grove", JSON.stringify(g))
+      if (dNote) {
+        localStorage.setItem("pulp-notes", JSON.stringify(notesRef.current))
+        localStorage.setItem("pulp-folders", JSON.stringify(f))
+      }
+
+      dirty.settings = false; dirty.grove = false; dirty.note = false; dirty.folders = false; dirty.bookmarks = false
+
+      if (!u) return
+      const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }
+
+      if (dGrove && g) {
+        const invMap: Record<string, number> = {}
+        for (const item of g.inventory) invMap[item] = (invMap[item] || 0) + 1
+        fetch(`${supabaseUrl}/rest/v1/player_profiles?on_conflict=user_id`, {
+          method: 'POST', headers, keepalive: true,
+          body: JSON.stringify({ user_id: u.id, gems: 0, juice: g.juice, last_char_count: g.lastCharCount, grove: g.grove, inventory: invMap, unlocked_cosmetics: g.unlockedCosmetics })
+        }).catch(() => {})
+      }
+      if (dNote) {
+        const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
+        if (note) {
+          fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, {
+            method: 'POST', headers, keepalive: true,
+            body: JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
+          }).catch(() => {})
+        }
+      }
+      if (dSettings && s) {
+        fetch(`${supabaseUrl}/rest/v1/settings?on_conflict=user_id`, {
+          method: 'POST', headers, keepalive: true,
+          body: JSON.stringify({ user_id: u.id, accent: s.accent, theme: s.theme, auto_save: s.autoSave, spell_check: s.spellCheck, auto_correct: s.autoCorrect, auto_capitalize: s.autoCapitalize, editor_font: s.editorFont, heading_font: s.headingFont, line_spacing: s.lineSpacing, paper_style: s.paperStyle, show_binding: s.showBinding, reduce_motion: s.reduceMotion, reduce_visuals: s.reduceVisuals, sidebar_on_start: s.sidebarOnStart, bg_effect: s.bgEffect, smear_effect: s.smearEffect, handwritten_effect: s.handwrittenEffect, language: s.language, default_sort: s.defaultSort, word_count_visible: s.wordCountVisible, focus_mode: s.focusMode, base_font_size: s.baseFontSize, shortcuts: s.shortcuts, blocked_sites: s.blockedSites, blocked_apps: s.blockedApps, skip_delete_confirmation: s.skipDeleteConfirmation })
+        }).catch(() => {})
+      }
+      if (dFolders && f?.length) {
+        const rows = f.map((fo, i) => ({ id: fo.id, user_id: u.id, name: fo.name, sort_order: i }))
+        fetch(`${supabaseUrl}/rest/v1/folders?on_conflict=id`, {
+          method: 'POST', headers, keepalive: true,
+          body: JSON.stringify(rows)
+        }).catch(() => {})
+      }
+    }
+
+    const onBeforeUnload = () => flushAll()
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flushAll() }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
   // Save settings to localStorage + Supabase (debounced, split by concern)
   const settingsSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
+    flushRefs.current.dirty.settings = true
     clearTimeout(settingsSaveTimer.current)
-    settingsSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
+    settingsSaveTimer.current = setTimeout(() => {
+      flushRefs.current.dirty.settings = false
       const settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
       localStorage.setItem("pulp-settings", JSON.stringify(settings))
       if (user) {
@@ -2638,21 +2726,23 @@ export default function NoteApp() {
           sidebar_width: sidebarWidth, skip_delete_confirmation: skipDeleteConfirmation, dev_mode: false
         })
       }
-    }), 1000)
+    }, 500)
     return () => clearTimeout(settingsSaveTimer.current)
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode, user])
 
   const folderSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
+    flushRefs.current.dirty.folders = true
     clearTimeout(folderSaveTimer.current)
-    folderSaveTimer.current = setTimeout(() => { if (user) db.upsertFolders(user.id, folders) }, 1000)
+    folderSaveTimer.current = setTimeout(() => { flushRefs.current.dirty.folders = false; if (user) db.upsertFolders(user.id, folders) }, 500)
     return () => clearTimeout(folderSaveTimer.current)
   }, [folders, user])
 
   const bookmarkSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
+    flushRefs.current.dirty.bookmarks = true
     clearTimeout(bookmarkSaveTimer.current)
-    bookmarkSaveTimer.current = setTimeout(() => { if (user) db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId)) }, 1000)
+    bookmarkSaveTimer.current = setTimeout(() => { flushRefs.current.dirty.bookmarks = false; if (user) db.setBookmarks(user.id, bookmarks.map((b: any) => typeof b === 'string' ? b : b.noteId)) }, 500)
     return () => clearTimeout(bookmarkSaveTimer.current)
   }, [bookmarks, user])
 
@@ -2670,8 +2760,10 @@ export default function NoteApp() {
   // Save Grove & Inventory to localStorage + Supabase (debounced)
   const groveSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
+    flushRefs.current.dirty.grove = true
     clearTimeout(groveSaveTimer.current)
-    groveSaveTimer.current = setTimeout(() => requestIdleCallback(() => {
+    groveSaveTimer.current = setTimeout(() => {
+      flushRefs.current.dirty.grove = false
       const groveData = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
@@ -2680,7 +2772,7 @@ export default function NoteApp() {
         db.upsertPlayerProfile(user.id, { gems: 0, juice: sap, last_char_count: lastCharCount, grove, inventory: invMap, unlocked_cosmetics: unlockedCosmetics })
         db.upsertAchievements(user.id, achievements)
       }
-    }), 1000)
+    }, 500)
     return () => clearTimeout(groveSaveTimer.current)
   }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
 
@@ -2688,14 +2780,16 @@ export default function NoteApp() {
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     if (!autoSave || isLoading || !user || !activeTabId) return
+    flushRefs.current.dirty.note = true
     clearTimeout(cloudSaveTimer.current)
     cloudSaveTimer.current = setTimeout(async () => {
+      flushRefs.current.dirty.note = false
       const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
       if (!note) return
       const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
       if (error) console.error("Save failed:", error.message)
       else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }) }).catch(() => { })
-    }, 2000)
+    }, 800)
     return () => clearTimeout(cloudSaveTimer.current)
   }, [notes, user, autoSave, isLoading, activeTabId])
 
@@ -2801,13 +2895,13 @@ export default function NoteApp() {
   const notesSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     if (!hasMounted.current) { hasMounted.current = true; return }
+    flushRefs.current.dirty.note = true
     clearTimeout(notesSaveTimer.current)
     notesSaveTimer.current = setTimeout(() => {
-      requestIdleCallback(() => {
-        localStorage.setItem("pulp-notes", JSON.stringify(notes))
-        localStorage.setItem("pulp-folders", JSON.stringify(folders))
-      })
-    }, 1500)
+      flushRefs.current.dirty.note = false
+      localStorage.setItem("pulp-notes", JSON.stringify(notes))
+      localStorage.setItem("pulp-folders", JSON.stringify(folders))
+    }, 500)
     return () => clearTimeout(notesSaveTimer.current)
   }, [notes, folders])
 

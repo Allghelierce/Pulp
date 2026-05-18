@@ -64,7 +64,7 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
   // Called on every onInput — schedules a debounced state sync
   const syncContent = useCallback(() => {
     clearTimeout(syncTimer.current)
-    syncTimer.current = setTimeout(commitToState, 150)
+    syncTimer.current = setTimeout(commitToState, 80)
   }, [commitToState])
 
   // Call this before page/tab navigation to immediately commit pending edits
