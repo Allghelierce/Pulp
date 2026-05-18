@@ -3545,8 +3545,6 @@ export default function NoteApp() {
                     setShowImageModal(true)
                   }}
                   onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
-                  onQuickPrompt={handleQuickPrompt}
-                  onAiAction={handleAiAction}
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
@@ -4208,7 +4206,7 @@ export default function NoteApp() {
               activeTabId={activeTabId}
               orchardTimeMode={orchardTimeMode || "theme"}
               onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
-              onOpenShop={() => { setShopOpen(v => !v) }}
+              onOpenShop={() => { startTransition(() => { closeAllPanels(); setShopOpen(true) }) }}
               onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
               onOpenSettings={() => { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }}
             />
@@ -4419,96 +4417,6 @@ export default function NoteApp() {
             />
           )}
 
-          {quizState && (
-            <div
-              className="fixed inset-0 z-[9999] flex items-center justify-center"
-              style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
-              onMouseDown={(e) => { if (e.target === e.currentTarget) setQuizState(null) }}
-            >
-              <div
-                className="relative flex flex-col gap-5 rounded-2xl p-7 shadow-2xl"
-                style={{
-                  width: "90%", maxWidth: 520,
-                  background: "rgba(255,255,255,0.97)",
-                  border: "1px solid rgba(0,0,0,0.08)",
-                  animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)",
-                }}
-              >
-                {quizState.loading ? (
-                  <div className="flex items-center justify-center h-48">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 border-3 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
-                      <span className="text-xs text-gray-500">Generating quiz...</span>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setQuizState(null)} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                      </button>
-                      <span className="text-lg font-normal text-gray-900">Quiz</span>
-                      <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                        {quizState.current + 1} / {quizState.questions.length}
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl bg-gray-50 border border-gray-200 p-5">
-                      <p className="text-[15px] font-normal text-gray-800 leading-relaxed">
-                        {quizState.questions[quizState.current]?.q}
-                      </p>
-                    </div>
-
-                    {quizState.revealed ? (
-                      <div className="rounded-xl border border-green-200 bg-green-50 p-4" style={{ animation: "slide-up-fade 0.15s ease" }}>
-                        <div className="text-[10px] font-normal uppercase tracking-wider text-green-600 mb-1.5">Answer</div>
-                        <p className="text-sm text-green-900 leading-relaxed">{quizState.questions[quizState.current]?.a}</p>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setQuizState(prev => prev ? { ...prev, revealed: true } : null)}
-                        className="w-full rounded-xl py-3 text-sm font-normal transition-all"
-                        style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
-                      >
-                        Reveal Answer
-                      </button>
-                    )}
-
-                    {quizState.revealed && (
-                      <div className="flex gap-2">
-                        {quizState.current < quizState.questions.length - 1 ? (
-                          <button
-                            onClick={() => setQuizState(prev => prev ? { ...prev, current: prev.current + 1, revealed: false } : null)}
-                            className="flex-1 rounded-xl py-2.5 text-sm font-normal transition-all"
-                            style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
-                          >
-                            Next Question
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setQuizState(null)}
-                            className="flex-1 rounded-xl py-2.5 text-sm font-normal transition-all"
-                            style={{ background: "linear-gradient(135deg, #d97706, #b45309)", color: "white" }}
-                          >
-                            Done
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex justify-center gap-1.5">
-                      {quizState.questions.map((_, i) => (
-                        <div key={i} className="rounded-full transition-all" style={{
-                          width: i === quizState.current ? 16 : 6, height: 6,
-                          background: i === quizState.current ? "#d97706" : i < quizState.current ? "#c4956a" : "#e5e7eb",
-                        }} />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
 
           {showAiCommandBar && (
             <AiCommandBar

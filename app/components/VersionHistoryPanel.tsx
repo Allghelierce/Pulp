@@ -89,14 +89,14 @@ export const VersionHistoryPanel = memo(function VersionHistoryPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[500] flex"
+      className="fixed inset-0 z-[500] flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
-      <div className="flex-1" />
       <div
-        className={`w-[340px] h-full flex flex-col shadow-2xl border-l ${isDark ? "bg-[#09090b] border-zinc-800" : "bg-white border-zinc-200"}`}
+        className={`w-[480px] max-h-[70vh] flex flex-col shadow-2xl rounded-2xl ${isDark ? "bg-[#09090b] border border-zinc-800" : "bg-white border border-zinc-200"}`}
         onClick={e => e.stopPropagation()}
-        style={{ fontFamily: 'Crimson Pro, serif' }}
+        style={{ fontFamily: 'Crimson Pro, serif', animation: "slide-up-fade 0.18s cubic-bezier(0.16,1,0.3,1)" }}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>

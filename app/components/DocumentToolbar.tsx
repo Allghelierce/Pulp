@@ -47,8 +47,6 @@ interface DocumentToolbarProps {
   isSidebarDragging: boolean
   sap: number
   onOpenAiMenu: (x: number, y: number, selectedText?: string, initialPrompt?: string) => void
-  onQuickPrompt: (prompt: string, buttonRect: DOMRect) => void
-  onAiAction?: (action: string) => void
   isTextActive: boolean
   onOpenChat: () => void
   chatOpen: boolean
@@ -83,34 +81,6 @@ interface DocumentToolbarProps {
 
 const GOLD = "#D4AF37"
 
-const AiMascotIcon = ({ size = 16 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="14" fill="url(#orange-grad)" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
-    <defs>
-      <radialGradient id="orange-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.2 11.2) rotate(90) scale(22.4)">
-        <stop stopColor="#d97706" />
-        <stop offset="1" stopColor="#d97706" />
-      </radialGradient>
-    </defs>
-    {/* Eyes */}
-    <circle cx="11" cy="14" r="1.5" fill="rgba(0,0,0,0.7)" />
-    <circle cx="21" cy="14" r="1.5" fill="rgba(0,0,0,0.7)" />
-    {/* Mouth */}
-    <path d="M 12 21 Q 16 24 20 21" stroke="rgba(0,0,0,0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-    {/* Leaf */}
-    <path d="M 16 2 L 20 0 Q 22 2 20 4 L 16 2 Z" fill="#166534" />
-  </svg>
-)
-
-const COMMON_PROMPTS = [
-  { label: "summarize", prompt: "Summarize this as short bullet points. Use a bullet character (•) for each point. Output only the bullet points." },
-  { label: "make shorter", prompt: "Condense this into fewer words while keeping the meaning. Output only the shortened text." },
-  { label: "fix grammar", prompt: "Fix grammar and spelling errors. Output only the corrected text." },
-  { label: "expand", prompt: "Expand this with more detail and explanation. Output only the expanded text." },
-  { label: "explain simply", prompt: "Rewrite this in very simple, easy-to-understand language. Output only the simplified text." },
-  { label: "rewrite", prompt: "Rewrite this more professionally and clearly. Output only the rewritten text." },
-]
-
 export const DocumentToolbar = memo(function DocumentToolbar({
   zoom, gridView, drawLineMode, currentPageIdx, accent,
   setZoom, setCarouselIdx, setGridView, setDrawLineMode,
@@ -124,7 +94,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sap, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, onQuickPrompt, onAiAction, isTextActive, onOpenChat, chatOpen,
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
 }: DocumentToolbarProps) {
@@ -201,8 +171,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => document.removeEventListener("mousedown", handler)
   }, [alignOpen])
 
-  const [aiOpen, setAiOpen] = useState(false)
-  const aiRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!drawOpen) return
@@ -225,12 +193,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => document.removeEventListener("mousedown", handler)
   }, [tablePickerOpen])
 
-  useEffect(() => {
-    if (!aiOpen) return
-    const handler = (e: MouseEvent) => { if (!aiRef.current?.contains(e.target as Node)) setAiOpen(false) }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [aiOpen])
 
   useEffect(() => {
     if (!leftToolsRef.current) return
@@ -572,81 +534,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
 
 
-        {/* AI Button with Dropdown */}
-        {!ultraCompact && <div ref={aiRef} className="relative flex shrink-0">
-          <button
-            onMouseDown={e => { e.preventDefault(); if (isTextActive) setAiOpen(!aiOpen) }}
-            title={isTextActive ? "quick prompts" : "Click on a text box first"}
-            className={`${btn(aiOpen)} flex items-center gap-1.5`}
-            style={{
-              ...(aiOpen ? neonStyle : {}),
-              ...btnFont,
-              ...(!isTextActive ? { opacity: 0.4, cursor: "default" } : {}),
-            }}
-          >
-            <AiMascotIcon size={14} />
-            {!compact && <span>quick prompts</span>}
-            {!compact && <svg width="8" height="6" viewBox="0 0 10 6" fill="currentColor" style={{ opacity: 0.5, marginLeft: 2 }}><path d="M0 0l5 6 5-6z" /></svg>}
-          </button>
-
-          {aiOpen && (
-            <div className={`absolute top-[calc(100%+4px)] left-0 min-w-[160px] rounded-[6px] shadow-lg p-1 z-[100]`} style={{ background: theme === "dark" ? "rgba(31,31,35,0.96)" : "rgba(255,255,255,0.96)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: `1px solid ${theme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}` }}>
-              <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 tracking-tight mb-0.5">quick prompts</div>
-              {COMMON_PROMPTS.map((item, idx) => (
-                <button
-                  key={idx}
-                  onMouseDown={e => {
-                    e.preventDefault()
-                    const btnRect = e.currentTarget.getBoundingClientRect()
-                    onQuickPrompt(item.prompt, btnRect)
-                    setAiOpen(false)
-                  }}
-                  className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                  style={btnFont}
-                >
-                  {item.label}
-                </button>
-              ))}
-              {onAiAction && (
-                <>
-                  <div className="h-px bg-zinc-200/50 my-1 mx-1" />
-                  <div className="px-2.5 py-1 text-[9px] font-normal text-zinc-400 tracking-tight mb-0.5">study tools</div>
-                  {[
-                    { label: "quiz me", action: "quiz" },
-                  ].map((item, idx) => (
-                    <button
-                      key={idx}
-                      onMouseDown={e => {
-                        e.preventDefault()
-                        onAiAction(item.action)
-                        setAiOpen(false)
-                      }}
-                      className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors ${theme === "dark" ? "text-zinc-300 hover:bg-zinc-800" : "text-zinc-700 hover:bg-zinc-100"}`}
-                      style={btnFont}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </>
-              )}
-              <div className="h-px bg-zinc-200/50 my-1 mx-1" />
-              <button
-                onMouseDown={e => {
-                  e.preventDefault()
-                  const btnRect = e.currentTarget.getBoundingClientRect()
-                  onOpenAiMenu(btnRect.left, btnRect.bottom + 8)
-                  setAiOpen(false)
-                }}
-                className={`w-full text-left text-[11px] font-normal px-2.5 py-1.5 rounded-[4px] cursor-pointer block transition-colors text-orange-600 hover:bg-orange-50`}
-                style={btnFont}
-              >
-                custom prompt...
-              </button>
-            </div>
-          )}
-        </div>}
-
-        {/* Quiz / Chat button */}
+        {/* Chat button */}
         {!ultraCompact && <button
           onClick={onOpenChat}
           title="Chat with your notebook"
@@ -654,7 +542,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           style={{ ...activeStyle(chatOpen), ...btnFont }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-          {!compact && "quiz me"}
+          {!compact && "chat"}
         </button>}
 
         {!compact && <div className="w-px h-5 bg-zinc-200 shrink-0" />}
@@ -682,14 +570,11 @@ export const DocumentToolbar = memo(function DocumentToolbar({
               {userEmail[0]}
             </div>
           ) : null}
-          {onOpenLeaderboard && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenLeaderboard?.() }}
-              className="flex items-center gap-1 pl-1.5 border-l border-zinc-400/20 hover:text-orange-600 transition-colors group cursor-pointer"
-              title="Leaderboard"
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 mb-0.5"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
-            </button>
+          {sap != null && (
+            <span className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-400/20 text-[12px] font-normal tabular-nums">
+              <PulpIcon size={12} />
+              <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{Math.floor(sap)}</span>
+            </span>
           )}
         </div>
 
