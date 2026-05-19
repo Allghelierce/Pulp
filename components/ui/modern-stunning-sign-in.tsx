@@ -172,8 +172,8 @@ const SignIn1: React.FC<SignInProps> = ({
           {/* Skip — try without account */}
           <a
             href="/app"
-            className="text-center text-xs text-zinc-600 hover:text-zinc-400 transition-colors mt-3 block"
-            style={{ textDecoration: 'none' }}
+            className="text-center text-sm text-zinc-400 hover:text-zinc-200 transition-colors mt-3 block"
+            style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}
           >
             or just try it — no account needed →
           </a>

@@ -572,8 +572,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           ) : null}
           {sap != null && (
             <span className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-400/20 text-[12px] font-normal tabular-nums">
-              <PulpIcon size={12} />
-              <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)' }}>{Math.floor(sap)}</span>
+              <PulpIcon size={17} />
+              <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)', fontSize: 11 }}>{Math.floor(sap)}</span>
             </span>
           )}
         </div>
