@@ -967,6 +967,10 @@ export const SlashMenu = memo(function SlashMenu({
         if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.min((i ?? -1) + 1, filtered.length - 1)); return }
         if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setActiveIdx(i => Math.max((i ?? -1) - 1, 0)); return }
         if (e.key === "Enter") {
+          if (mode === "@" && !filter) {
+            onClose()
+            return
+          }
           e.preventDefault(); e.stopPropagation()
           if (activeIdx !== null && filtered[activeIdx]) {
             const item = filtered[activeIdx]
@@ -978,12 +982,16 @@ export const SlashMenu = memo(function SlashMenu({
           }
           return
         }
+        if (mode === "@" && e.key === " ") {
+          onClose()
+          return
+        }
       }
       if (e.key === "Escape" || e.key === "Tab") { e.stopPropagation(); onClose() }
     }
     document.addEventListener("keydown", handler, true)
     return () => document.removeEventListener("keydown", handler, true)
-  }, [activeIdx, filtered, onSelect, onClose, openSubmenuId])
+  }, [activeIdx, filtered, onSelect, onClose, openSubmenuId, mode, filter])
 
   const interactingRef = useRef(false)
   useEffect(() => {

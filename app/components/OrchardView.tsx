@@ -1,11 +1,11 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
+import { TREE_TYPES, getLevel, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
-import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
+import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
@@ -16,10 +16,12 @@ interface OrchardViewProps {
   theme: "light" | "dark"
   accent: string
   sap: number
-  xp?: number
+  gems: number
+  xp: number
   grove: any[]
   inventory: string[]
   setSap: (v: number | ((p: number) => number)) => void
+  setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
@@ -29,7 +31,6 @@ interface OrchardViewProps {
   onOpenLeaderboard?: () => void
   onOpenShop?: () => void
   onOpenSatchel?: () => void
-  onOpenSettings?: () => void
 }
 
 type RGB = [number, number, number]
@@ -286,9 +287,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
     mtnTop: '#5a6878', mtnMid: '#4a5868', mtnBot: '#3e4e5e',
     snowTop: '#b0b8c0', snowFade: '#6a7480',
-    hillMidTop: '#4a6830', hillMidBot: '#3e5c28',
-    hillNearTop: '#546838', hillNearBot: '#4a5c30',
-    fieldTop: '#567034', fieldMid1: '#4e6830', fieldMid2: '#4a602c', fieldBot: '#445828',
+    hillMidTop: '#3a6430', hillMidBot: '#305828',
+    hillNearTop: '#446238', hillNearBot: '#3a5630',
+    fieldTop: '#466834', fieldMid1: '#406030', fieldMid2: '#3a582c', fieldBot: '#345028',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
@@ -301,9 +302,9 @@ const PALETTES: Record<string, SkyPalette> = {
     oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
     mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
     snowTop: '#a0a4a0', snowFade: '#6a7070',
-    hillMidTop: '#3a4e24', hillMidBot: '#34461e',
-    hillNearTop: '#42522c', hillNearBot: '#3c4c26',
-    fieldTop: '#40502a', fieldMid1: '#3c4c26', fieldMid2: '#3a4824', fieldBot: '#364420',
+    hillMidTop: '#2a4224', hillMidBot: '#243c1e',
+    hillNearTop: '#324a2c', hillNearBot: '#2c4426',
+    fieldTop: '#30462a', fieldMid1: '#2c4226', fieldMid2: '#2a3e24', fieldBot: '#263a20',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
@@ -1583,9 +1584,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
         {/* Grass tufts and ground texture — baked */}
         {(() => {
-          const grassC = isDark ? '#4a5e2e' : '#7a9a50'
-          const grassL = isDark ? '#5a6e3a' : '#8aaa58'
-          const grassD = isDark ? '#3a4e20' : '#6a8a3a'
+          const grassC = isDark ? '#3a5a2e' : '#6a9a50'
+          const grassL = isDark ? '#4a6a3a' : '#7aaa60'
+          const grassD = isDark ? '#2a4a20' : '#5a8a40'
           const dirtC = isDark ? '#2a2418' : '#8a7a5a'
           const d1: string[] = []
           const d2: string[] = []
@@ -1670,73 +1671,65 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-                {/* Lampposts — all face inward */}
+                {/* Lamppost */}
         {(() => {
+          const lx = 170, ly = 46, sc = 0.65
           const iron = isDark ? '#3a3a3a' : '#4a4a4a'
           const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
           const isNight = isDark
           const glass = isNight ? '#fbbf24' : '#8a8a82'
           const glassL = isNight ? '#fcd34d' : '#9a9a92'
-          const d = (dir: number) => dir // +1 = right, -1 = left
-          const lamp = (lx: number, ly: number, sc: number, dir: number, id: string, glow: number) => {
-            const dx = d(dir)
-            const g = glow
-            return (
-              <g key={id}>
-                {isNight && <>
-                <ellipse cx={lx + 14 * dx * g} cy={ly} rx={42 * sc * g} ry={17 * sc * g} fill={`url(#lamp-wash-a-${id})`} />
-                <ellipse cx={lx + 22 * dx * g} cy={ly + 1} rx={30 * sc * g} ry={13 * sc * g} fill={`url(#lamp-wash-b-${id})`} />
-                <ellipse cx={lx + 8 * dx * g} cy={ly + 6} rx={20 * sc * g} ry={6 * sc * g} fill={`url(#lamp-ground-${id})`} />
-                <ellipse cx={lx + 20 * dx * g} cy={ly + 5} rx={16 * sc * g} ry={5 * sc * g} fill={`url(#lamp-ground-${id})`} opacity="0.7" />
-                <path d={`M${lx + 0.5 * dx},${ly - 7 * sc} L${lx - 4 * sc * dx * g},${ly + 4 * sc * g} L${lx + 6 * sc * dx * g},${ly + 4 * sc * g} Z`} fill={`url(#lamp-cone-${id})`} opacity="0.5" />
-                <circle cx={lx + 1.5 * sc * dx} cy={ly - 7.5 * sc} r={5 * sc * g} fill={`url(#lamp-glow-${id})`} />
-                <circle cx={lx + 1.5 * sc * dx} cy={ly - 7.5 * sc} r={2 * sc * g} fill={glassL} opacity="0.08" />
-                </>}
-                <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
-                <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
-                <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc * dx},${ly - 8.5 * sc} ${lx + 1.5 * sc * dx},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
-                <rect x={dx > 0 ? lx + 0.8 * sc : lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
-                <rect x={dx > 0 ? lx + 0.95 * sc : lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
-                <rect x={dx > 0 ? lx + 1.2 * sc : lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
-                <polygon points={`${lx + 0.6 * sc * dx},${ly - 8.5 * sc} ${lx + 1.5 * sc * dx},${ly - 9.2 * sc} ${lx + 2.4 * sc * dx},${ly - 8.5 * sc}`} fill={iron} />
-              </g>
-            )
-          }
-          const posts: { lx: number; ly: number; sc: number; dir: number; id: string; glow: number }[] = [
-            { lx: 30, ly: 46, sc: 0.65, dir: 1, id: 'l1', glow: 2.2 },
-            { lx: 170, ly: 46, sc: 0.65, dir: -1, id: 'r1', glow: 1 },
-            { lx: 12, ly: 75, sc: 0.95, dir: 1, id: 'l2', glow: 1 },
-            { lx: 188, ly: 75, sc: 0.95, dir: -1, id: 'r2', glow: 1 },
-          ]
           return (
             <g>
               <defs>
-                {posts.map(p => (
-                  <g key={p.id}>
-                    <radialGradient id={`lamp-glow-${p.id}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor={glassL} stopOpacity="0.15" />
-                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id={`lamp-wash-a-${p.id}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor={glassL} stopOpacity="0.04" />
-                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id={`lamp-wash-b-${p.id}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor={glassL} stopOpacity="0.03" />
-                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id={`lamp-ground-${p.id}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#d97706" stopOpacity="0.035" />
-                      <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient id={`lamp-cone-${p.id}`} cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor={glassL} stopOpacity="0.05" />
-                      <stop offset="100%" stopColor={glass} stopOpacity="0" />
-                    </radialGradient>
-                  </g>
-                ))}
+                <radialGradient id="lamp-glow" cx="50%" cy="45%" r="50%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.3" />
+                  <stop offset="50%" stopColor={glass} stopOpacity="0.1" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="lamp-wash-a" cx="30%" cy="45%" r="55%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.09" />
+                  <stop offset="30%" stopColor={glass} stopOpacity="0.05" />
+                  <stop offset="65%" stopColor={glass} stopOpacity="0.02" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="lamp-wash-b" cx="55%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.07" />
+                  <stop offset="40%" stopColor={glass} stopOpacity="0.03" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="lamp-ground" cx="40%" cy="25%" r="55%">
+                  <stop offset="0%" stopColor="#d97706" stopOpacity="0.07" />
+                  <stop offset="40%" stopColor="#92400e" stopOpacity="0.03" />
+                  <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="lamp-cone" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={glassL} stopOpacity="0.14" />
+                  <stop offset="35%" stopColor={glass} stopOpacity="0.04" />
+                  <stop offset="100%" stopColor={glass} stopOpacity="0" />
+                </linearGradient>
               </defs>
-              {posts.map(p => lamp(p.lx, p.ly, p.sc, p.dir, p.id, p.glow))}
+              {isNight && <>
+              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
+              <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
+              </>}
+              {/* Pole */}
+              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
+              {/* Base */}
+              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
+              {/* Arm */}
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx + 0.8 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+              {/* Lantern housing */}
+              <rect x={lx + 0.8 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx + 0.95 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx + 1.2 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+              {/* Top cap */}
+              <polygon points={`${lx + 0.6 * sc},${ly - 8.5 * sc} ${lx + 1.5 * sc},${ly - 9.2 * sc} ${lx + 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
             </g>
           )
         })()}
@@ -1745,8 +1738,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(8, 39) scale(0.06) skewY(-1.5)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
-              <rect x="100" y="90" width="210" height="160" fill="transparent" />
+            <g transform="translate(10, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={onOpenShop}>
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
                   <stop offset="0%" stopColor="#e8a030" />
@@ -1979,6 +1971,40 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
+        {/* Left lamppost — mirrored, lamp points outward (left), over shop */}
+        {(() => {
+          const lx = 22, ly = 42, sc = 0.65
+          const iron = isDark ? '#3a3a3a' : '#4a4a4a'
+          const ironD = isDark ? '#2a2a2a' : '#3a3a3a'
+          const isNight = isDark
+          const glass = isNight ? '#fbbf24' : '#8a8a82'
+          const glassL = isNight ? '#fcd34d' : '#9a9a92'
+          return (
+            <g>
+              {isNight && <>
+              <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+              <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <path d={`M${lx - 0.5},${ly - 7 * sc} L${lx + 4 * sc},${ly + 4 * sc} L${lx - 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
+              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
+              <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
+              </>}
+              {/* Pole */}
+              <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
+              {/* Base */}
+              <ellipse cx={lx} cy={ly + 1 * sc} rx={1.2 * sc} ry={0.4 * sc} fill={ironD} />
+              {/* Arm — flipped to point left */}
+              <path d={`M${lx},${ly - 7.5 * sc} Q${lx - 0.8 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 8 * sc}`} stroke={iron} strokeWidth={0.3 * sc} fill="none" />
+              {/* Lantern housing — flipped */}
+              <rect x={lx - 2.2 * sc} y={ly - 8.5 * sc} width={1.4 * sc} height={1.8 * sc} rx={0.15 * sc} fill={ironD} />
+              <rect x={lx - 2.05 * sc} y={ly - 8.3 * sc} width={1.1 * sc} height={1.4 * sc} rx={0.1 * sc} fill={glass} opacity="0.8" />
+              <rect x={lx - 1.5 * sc} y={ly - 8.3 * sc} width={0.3 * sc} height={1.4 * sc} fill={glassL} opacity="0.4" />
+              {/* Top cap — flipped */}
+              <polygon points={`${lx - 0.6 * sc},${ly - 8.5 * sc} ${lx - 1.5 * sc},${ly - 9.2 * sc} ${lx - 2.4 * sc},${ly - 8.5 * sc}`} fill={iron} />
+            </g>
+          )
+        })()}
 
         {/* Dirt ground and flowers around windmills */}
         {(() => {
@@ -2516,7 +2542,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
-  sap, xp, grove, inventory, notes, setSap, setGrove, userId, activeTabId, orchardTimeMode,
+  sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
   onOpenLeaderboard, onOpenShop, onOpenSatchel,
 }: OrchardViewProps) {
 
@@ -2535,7 +2561,7 @@ export const OrchardView = memo(function OrchardView({
   })
   const [activeTool, setActiveTool] = useState<'none' | 'bucket' | 'axe'>('none')
   const [editMode, setEditMode] = useState(false)
-  const [orchardMode, setOrchardMode] = useState<'seasonal' | 'default'>('default')
+  const [orchardMode, setOrchardMode] = useState<'xp' | 'seasonal'>('xp')
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
   const [ascensionMode, setAscensionMode] = useState(false)
   const [selectedSacrifices, setSelectedSacrifices] = useState<number[]>([])
@@ -2601,6 +2627,7 @@ export const OrchardView = memo(function OrchardView({
     return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
   }
 
+  const lvl = getLevel(xp)
   const isDark = theme === 'dark'
 
   useEffect(() => {
@@ -2684,6 +2711,9 @@ export const OrchardView = memo(function OrchardView({
     const amount = getAvailableSap()
     if (amount <= 0) return
 
+    const gemAmount = getAvailableGems()
+    if (gemAmount > 0) setGems((g: number) => g + gemAmount)
+
     const counterEl = sapCounterRef.current
     const btnEl = collectBtnRef.current
     if (counterEl && btnEl) {
@@ -2732,7 +2762,7 @@ export const OrchardView = memo(function OrchardView({
     setTimeout(() => {
       setCollectAllAnim({ total: 0, current: 0, active: false })
     }, 200 + rampDuration + 600)
-  }, [getAvailableSap, setSap])
+  }, [getAvailableSap, getAvailableGems, setSap, setGems])
 
   const TREES_PER_PLOT = 40
   const MAX_PLOTS = 3
@@ -2757,6 +2787,9 @@ export const OrchardView = memo(function OrchardView({
   const unlockNextPlot = () => {
     const nextPlot = nbUnlocked + 1
     if (nextPlot > MAX_PLOTS) return
+    const cost = PLOT_COST[nextPlot - 1] || 0
+    if (gems < cost) return
+    setGems((g: number) => g - cost)
     const updated = { ...unlockedPlots, [selectedNotebook]: nextPlot }
     setUnlockedPlots(updated)
     localStorage.setItem('pulp-unlocked-plots', JSON.stringify(updated))
@@ -3023,10 +3056,10 @@ export const OrchardView = memo(function OrchardView({
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
   const plotCount = currentPlotTrees.length
-  const baseSize = plotCount <= 6 ? 200 :
-    plotCount <= 15 ? 170 :
-    plotCount <= 24 ? 150 :
-    plotCount <= 36 ? 130 : 115
+  const baseSize = plotCount <= 6 ? 130 :
+    plotCount <= 15 ? 115 :
+    plotCount <= 24 ? 105 :
+    plotCount <= 36 ? 95 : 85
   prevPlotPageRef.current = plotPage
 
   return (
@@ -3067,113 +3100,47 @@ export const OrchardView = memo(function OrchardView({
         {/* Main orchard area */}
         <div ref={captureRef} className="flex-1 flex flex-col relative overflow-hidden">
           {/* Topbar with sap count */}
-          <div data-orchard-ui className="absolute top-0 left-0 right-0 h-12 z-[60] flex items-center justify-center" style={{
-            backgroundColor: isDark ? 'rgba(20,20,22,0.55)' : 'rgba(0,0,0,0.25)',
+          <div data-orchard-ui className="absolute top-0 left-0 right-0 h-10 z-[60] flex items-center justify-center" style={{
+            backgroundColor: isDark ? 'rgba(24,24,27,0.85)' : 'rgba(250,250,250,0.9)',
             backdropFilter: 'blur(20px) saturate(1.2)',
             WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'}`,
-            boxShadow: isDark
-              ? 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 16px rgba(0,0,0,0.15)'
-              : 'none',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
           }}>
             <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              {onOpenLeaderboard && (
-                <button onClick={onOpenLeaderboard} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="14" width="5" height="8" rx="1" /><rect x="9.5" y="8" width="5" height="14" rx="1" /><rect x="17" y="11" width="5" height="11" rx="1" /></svg>
-                </button>
-              )}
-              <div className="flex flex-col items-center justify-center">
-                <div ref={sapCounterRef} className="flex items-center gap-2">
-                  <PulpIcon size={18} />
-                  <span className="text-[15px] font-normal tabular-nums" style={{
-                    color: isDark ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)',
-                    transition: 'transform 0.3s ease, color 0.3s ease',
-                    transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
-                  }}>{sap}</span>
-                </div>
+              <button onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }} className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]" style={{ cursor: getAvailableSap() > 0 ? 'pointer' : 'default' }}>
+                <PulpIcon size={14} />
+                <span ref={sapCounterRef} className="text-[12px] font-normal tabular-nums" style={{
+                  color: isDark ? 'rgba(212,208,200,0.85)' : 'rgba(58,54,48,0.75)',
+                  transition: 'transform 0.3s ease, color 0.3s ease',
+                  transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
+                }}>{sap}</span>
                 {collectAllAnim.active && collectAllAnim.current < collectAllAnim.total && (
-                  <span className="text-[11px] font-normal tabular-nums" style={{
-                    color: '#d97706',
-                    transition: 'opacity 0.3s, transform 0.3s',
-                    opacity: 0.85,
-                  }}>+{collectAllAnim.current}</span>
+                  <span className="text-[10px] font-normal tabular-nums" style={{ color: '#d97706', opacity: 0.85 }}>+{collectAllAnim.current}</span>
                 )}
                 {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
-                  <span className="text-[11px] font-normal tabular-nums" style={{
-                    color: '#d97706',
-                    animation: 'sap-merge 0.5s ease-out forwards',
-                  }}>+{collectAllAnim.total}</span>
+                  <span className="text-[10px] font-normal tabular-nums" style={{ color: '#d97706', animation: 'sap-merge 0.5s ease-out forwards' }}>+{collectAllAnim.total}</span>
                 )}
+              </button>
+              <div style={{ width: 1, height: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }} />
+              <div className="flex items-center gap-1.5">
+                <GemIcon size={13} />
+                <span className="text-[12px] font-normal tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.85)' : 'rgba(58,54,48,0.75)' }}>{gems}</span>
               </div>
-              {onOpenSatchel && (
-                <button onClick={onOpenSatchel} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)', position: 'relative' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  {inventory.length > 0 && <span style={{ position: 'absolute', top: 0, right: -2, fontSize: 8, fontWeight: 400, color: '#d97706', fontFamily: 'Crimson Pro, serif' }}>{inventory.length}</span>}
-                </button>
-              )}
-              {onOpenShop && (
-                <button onClick={onOpenShop} className="flex items-center justify-center rounded-md p-1.5" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
-                </button>
-              )}
             </div>
           </div>
-          {/* Collect sap meter button — bottom center */}
-          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60]" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              <div style={{ position: 'relative' }}>
-                {(() => {
-                  const available = getAvailableSap()
-                  const maxSap = getGlobalMaxSap()
-                  const hasSap = available > 0
-                  return (
-                    <div className="glass-button-wrap rounded-full">
-                      <button
-                        ref={collectBtnRef}
-                        onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                        className="glass-button relative flex items-center justify-center gap-2.5 rounded-full overflow-hidden"
-                        style={{
-                          padding: '8px 22px',
-                          minWidth: 145,
-                          fontSize: 12,
-                          fontWeight: 400,
-                          letterSpacing: '0.03em',
-                          color: hasSap ? '#d97706' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'),
-                          cursor: hasSap ? 'pointer' : 'default',
-                          borderColor: hasSap ? 'rgba(217,119,6,0.3)' : undefined,
-                          boxShadow: hasSap
-                            ? `inset 0 1px 1px rgba(255,255,255,0.4), inset 0 -1px 1px rgba(0,0,0,0.06), 0 4px 20px rgba(217,119,6,0.18), 0 0 1px rgba(217,119,6,0.3)`
-                            : undefined,
-                        }}
-                      >
-                        {/* Sap fill progress */}
-                        <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{
-                          width: `${sapFillProgress * 100}%`,
-                          background: hasSap
-                            ? `linear-gradient(90deg, rgba(217,119,6,${isDark ? 0.18 : 0.12}) 0%, rgba(245,158,11,${isDark ? 0.28 : 0.2}) 100%)`
-                            : `linear-gradient(90deg, rgba(${isDark ? '255,255,255' : '0,0,0'},${isDark ? 0.04 : 0.03}) 0%, rgba(${isDark ? '255,255,255' : '0,0,0'},${isDark ? 0.07 : 0.05}) 100%)`,
-                          transition: 'width 1s linear',
-                          borderRadius: 'inherit',
-                        }} />
-                        <PulpIcon size={15} />
-                        <span className="relative z-10 tabular-nums">{hasSap ? `Collect +${available} sap` : maxSap > 0 ? 'Filling...' : 'No trees'}</span>
-                      </button>
-                      <div className="glass-button-shadow rounded-full" />
-                    </div>
-                  )
-                })()}
-                {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
-                  <div style={{
-                    position: 'absolute', left: '50%', top: -28,
-                    transform: 'translateX(-50%)',
-                    pointerEvents: 'none', zIndex: 999,
-                    fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 20,
-                    color: '#d97706', textShadow: '0 1px 6px rgba(0,0,0,0.4)',
-                    animation: 'sap-collect 1.2s ease-out forwards',
-                  }}>
-                    +{collectAllAnim.total}
-                  </div>
-                )}
-              </div>
+          {/* Sap drop animations */}
+          <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none" style={{ fontFamily: 'Crimson Pro, serif' }}>
+              {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
+                <div style={{
+                  pointerEvents: 'none', zIndex: 999,
+                  fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 20,
+                  color: '#d97706', textShadow: '0 1px 6px rgba(0,0,0,0.4)',
+                  animation: 'sap-collect 1.2s ease-out forwards',
+                  textAlign: 'center',
+                }}>
+                  +{collectAllAnim.total}
+                </div>
+              )}
               {sapDrops.map(drop => (
                 <div key={drop.id} className="fixed pointer-events-none" style={{
                   left: drop.x, top: drop.y, zIndex: 9998,
@@ -3214,11 +3181,12 @@ export const OrchardView = memo(function OrchardView({
                   ) : nbUnlocked < MAX_PLOTS ? (
                     <button
                       onClick={unlockNextPlot}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all"
+                      disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
                       style={{ color: '#d97706' }}
-                      title={`Unlock plot ${nbUnlocked + 1}`}
+                      title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
                     >
-                      +
+                      <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
                     </button>
                   ) : (
                     <span className="p-0.5 opacity-30" style={{ color: '#fff' }}>

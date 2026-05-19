@@ -386,10 +386,10 @@ const BoxItem = memo(function BoxItem({
       ["ne", { top: -4, right: -4, ...dot, cursor: "ne-resize" }],
       ["sw", { bottom: -4, left: -4, ...dot, cursor: "sw-resize" }],
       ["se", { bottom: -4, right: -4, ...dot, cursor: "se-resize" }],
-      ["n", { top: -2, left: 4, right: 4, height: 5, cursor: "n-resize", background: "transparent" }],
-      ["s", { bottom: -2, left: 4, right: 4, height: 5, cursor: "s-resize", background: "transparent" }],
-      ["e", { top: 4, bottom: 4, right: -2, width: 5, cursor: "e-resize", background: "transparent" }],
-      ["w", { top: 4, bottom: 4, left: -2, width: 5, cursor: "w-resize", background: "transparent" }],
+      ["n", { top: -4, left: 4, right: 4, height: 10, cursor: "n-resize", background: "transparent" }],
+      ["s", { bottom: -4, left: 4, right: 4, height: 10, cursor: "s-resize", background: "transparent" }],
+      ["e", { top: 4, bottom: 4, right: -4, width: 12, cursor: "e-resize", background: "transparent" }],
+      ["w", { top: 4, bottom: 4, left: -4, width: 12, cursor: "w-resize", background: "transparent" }],
     ]
   }, [isDark])
   useEffect(() => {
@@ -479,7 +479,7 @@ const BoxItem = memo(function BoxItem({
       }}
       style={{
         position: "absolute", left: box.x, top: box.y, width: box.w,
-        height: isSticky || box.sizeLocked ? box.h : "auto", minHeight: isSticky || box.sizeLocked ? undefined : 32,
+        height: isSticky || box.sizeLocked ? box.h : "auto", minHeight: isSticky || box.sizeLocked ? undefined : 36,
         transform: `rotate(${box.boxRotation || 0}deg)`,
         border: isEmpty || hideChrome ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.10)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
@@ -614,7 +614,28 @@ const BoxItem = memo(function BoxItem({
         }} />
       )}
 
-      <div style={{ padding: isSticky ? "40px 10px 10px" : box.sizeLocked ? "0" : "5px 7px 7px", height: isSticky || box.sizeLocked ? "100%" : undefined, boxSizing: isSticky || box.sizeLocked ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined }}>
+      <div
+        onMouseDown={e => {
+          if (isImage || isSticky) return
+          const target = e.target as HTMLElement
+          if (target.isContentEditable || target.closest('[contenteditable]')) return
+          e.stopPropagation()
+          const ce = (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[contenteditable]')
+          if (ce) {
+            ce.focus()
+            const sel = window.getSelection()
+            if (sel) {
+              const range = document.createRange()
+              range.selectNodeContents(ce)
+              range.collapse(false)
+              sel.removeAllRanges()
+              sel.addRange(range)
+            }
+            setSelectedBoxIds(new Set([box.id]))
+          }
+        }}
+        style={{ padding: isSticky ? "40px 10px 10px" : box.sizeLocked ? "0" : "8px 12px", height: isSticky || box.sizeLocked ? "100%" : undefined, boxSizing: isSticky || box.sizeLocked ? "border-box" : undefined, overflowY: isSticky ? "auto" : undefined, cursor: "text" }}
+      >
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage && !mediaEditing ? (
@@ -2010,6 +2031,12 @@ export default function NoteApp() {
           }
           dismissSlashMenu(false)
         }
+        return
+      } else if (e.key === " ") {
+        dismissSlashMenu(false)
+        return
+      } else if (e.key === "Enter") {
+        dismissSlashMenu(false)
         return
       } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault()
@@ -4060,7 +4087,7 @@ export default function NoteApp() {
                                content: "@ tools  ·  \\\\ AI";
                                color: ${theme === "dark" ? "rgba(161,161,170,0.6)" : "rgba(0,0,0,0.35)"};
                                font-style: italic;
-                               font-size: 13px;
+                               font-size: inherit;
                                font-weight: 400;
                                pointer-events: none;
                                user-select: none;
