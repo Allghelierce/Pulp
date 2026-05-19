@@ -4620,6 +4620,7 @@ export default function NoteApp() {
           checkAchievementRef={checkAchievementRef}
           claimAchievementRef={claimAchievementRef}
           inventory={inventory}
+          setInventory={setInventory}
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}

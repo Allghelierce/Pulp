@@ -23,6 +23,7 @@ interface VitalitySystemProps {
   checkAchievementRef: React.RefObject<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>
   claimAchievementRef: React.RefObject<((id: string) => void) | null>
   inventory: string[]
+  setInventory: React.Dispatch<React.SetStateAction<string[]>>
   activeTabId: string | null
   initialNotes: any[]
   onOpenSatchel?: () => void
@@ -40,7 +41,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sap, grove, achievements, setSap, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory, activeTabId, initialNotes, onOpenSatchel,
+  inventory, setInventory, activeTabId, initialNotes, onOpenSatchel,
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   isHibernating = false, hidden = false,
@@ -48,6 +49,12 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
   const sessionStartRef = useRef(Date.now())
+  const groveRef = useRef(grove)
+  groveRef.current = grove
+  const isHibernatingRef = useRef(isHibernating)
+  isHibernatingRef.current = isHibernating
+  const setSapRef = useRef(setSap)
+  setSapRef.current = setSap
 
   // ─── Timer State ───
   const GRACE_PERIOD_MS = 15 * 60 * 1000
@@ -225,6 +232,11 @@ export const VitalitySystem = memo(function VitalitySystem({
           if (next > 0 && next % 60 === 0) {
             const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
             checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
+            if (!isHibernatingRef.current) {
+              const groveSap = groveRef.current.reduce((sum, t) => t.dormant ? sum : sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
+              const perMinute = Math.max(1, Math.round(groveSap / 60))
+              setSapRef.current(s => s + perMinute)
+            }
           }
           return next
         })
@@ -234,6 +246,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerRunning, timerDone, timerTotal])
 
   const startSession = useCallback(() => {
+    if (selectedSeed && selectedSeed !== 'tangerine') {
+      const idx = inventory.indexOf(selectedSeed)
+      if (idx === -1) return
+      setInventory(inv => { const next = [...inv]; next.splice(next.indexOf(selectedSeed!), 1); return next })
+    }
     setSelectedNotebookId(activeTabId)
     setTimerElapsed(0)
     setTimerDone(false)
@@ -246,7 +263,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     } else {
       setWaterDeadline(null)
     }
-  }, [timerTotal, activeTabId])
+  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory])
 
   const [waterCount, setWaterCount] = useState(0)
 
@@ -350,15 +367,6 @@ export const VitalitySystem = memo(function VitalitySystem({
     const treeType = selectedSeed || 'tangerine'
     const treeInfo = TREE_TYPES[treeType]
     const growthTarget = treeInfo?.growthMinutes || 25
-
-    if (!isHibernating) {
-      const totalSapYield = grove.reduce((sum, t) => {
-        if (t.dormant) return sum
-        return sum + (TREE_TYPES[t.type]?.sapYield || 0)
-      }, 0)
-      const newTreeSap = treeInfo?.sapYield || 0
-      setSap(s => s + totalSapYield + newTreeSap)
-    }
 
     updateGoalStreak(sessionMinutes)
     logFocusSession(sessionMinutes, 0)
