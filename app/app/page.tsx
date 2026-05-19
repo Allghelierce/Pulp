@@ -379,19 +379,9 @@ const BoxItem = memo(function BoxItem({
   const [pristine, setPristine] = useState(box.content.trim() === '')
   const [mediaEditing, setMediaEditing] = useState(false)
   const isDark = isDarkPaper(paperStyle)
-  const resizeHandles = useMemo<[string, React.CSSProperties][]>(() => {
-    const dot = { width: 6, height: 6, borderRadius: "50%", background: isDark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)", border: `1px solid ${isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }
-    return [
-      ["nw", { top: -4, left: -4, ...dot, cursor: "nw-resize" }],
-      ["ne", { top: -4, right: -4, ...dot, cursor: "ne-resize" }],
-      ["sw", { bottom: -4, left: -4, ...dot, cursor: "sw-resize" }],
-      ["se", { bottom: -4, right: -4, ...dot, cursor: "se-resize" }],
-      ["n", { top: -4, left: 4, right: 4, height: 10, cursor: "n-resize", background: "transparent" }],
-      ["s", { bottom: -4, left: 4, right: 4, height: 10, cursor: "s-resize", background: "transparent" }],
-      ["e", { top: 4, bottom: 4, right: -4, width: 12, cursor: "e-resize", background: "transparent" }],
-      ["w", { top: 4, bottom: 4, left: -4, width: 12, cursor: "w-resize", background: "transparent" }],
-    ]
-  }, [isDark])
+  const resizeHandles = useMemo<[string, React.CSSProperties][]>(() => [
+    ["e", { top: 4, bottom: 4, right: -4, width: 12, cursor: "e-resize", background: "transparent" }],
+  ], [])
   useEffect(() => {
     if (pristine && !isSelected) setPristine(false)
     if (!isSelected && mediaEditing) setMediaEditing(false)
@@ -422,47 +412,29 @@ const BoxItem = memo(function BoxItem({
           window.addEventListener('mouseup', up)
           return
         }
-        const target = e.target as HTMLElement
-        const isEditing = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-        if (isEditing && isSelected) {
-          const sx = e.clientX, sy = e.clientY
+        if (isSticky) {
+          const target = e.target as HTMLElement
+          const isEditing = target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+          if (isEditing && isSelected) return
+          e.preventDefault()
           const el = e.currentTarget as HTMLElement
-          let didDrag = false
-          const onMove = (me: MouseEvent) => {
-            if (didDrag) return
-            if (Math.abs(me.clientX - sx) + Math.abs(me.clientY - sy) > 4) {
-              didDrag = true
-              if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-              window.getSelection()?.removeAllRanges()
-              el.style.transition = 'none'
-              el.style.willChange = 'left, top'
-              setLocalDragging(true); onDragStart(); startDrag(e, box)
-            }
+          el.style.transition = 'none'
+          el.style.willChange = 'left, top'
+          setLocalDragging(true); onDragStart(); startDrag(e, box)
+          const up = () => {
+            el.style.transition = ''
+            el.style.willChange = ''
+            setLocalDragging(false); onDragEnd(); window.removeEventListener('mouseup', up)
           }
-          const onUp = () => {
-            window.removeEventListener('mousemove', onMove)
-            window.removeEventListener('mouseup', onUp)
-            if (didDrag) {
-              el.style.transition = ''
-              el.style.willChange = ''
-              setLocalDragging(false); onDragEnd()
-            }
-          }
-          window.addEventListener('mousemove', onMove)
-          window.addEventListener('mouseup', onUp)
+          window.addEventListener('mouseup', up)
           return
         }
-        e.preventDefault()
-        const el = e.currentTarget as HTMLElement
-        el.style.transition = 'none'
-        el.style.willChange = 'left, top'
-        setLocalDragging(true); onDragStart(); startDrag(e, box);
-        const up = () => {
-          el.style.transition = ''
-          el.style.willChange = ''
-          setLocalDragging(false); onDragEnd(); window.removeEventListener('mouseup', up)
+        // Text boxes: no drag from body, only from bottom handle
+        if (!isSelected) {
+          setSelectedBoxIds(new Set([box.id]))
+          const ce = (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[contenteditable]')
+          if (ce) ce.focus()
         }
-        window.addEventListener('mouseup', up)
       }}
       onClick={e => {
         if (isSticky) {
@@ -484,7 +456,7 @@ const BoxItem = memo(function BoxItem({
         border: isEmpty || hideChrome ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.10)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
         borderRadius: 4, backgroundColor: isSticky ? (box.boxHighlightColor || "transparent") : "transparent",
-        zIndex: isSelected ? 100 : 50, overflow: isSticky || box.sizeLocked ? "hidden" : "visible", cursor: "grab",
+        zIndex: isSelected ? 100 : 50, overflow: isSticky || box.sizeLocked ? "hidden" : "visible", cursor: isImage || isSticky ? "grab" : "text",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
           : "none",
@@ -592,15 +564,24 @@ const BoxItem = memo(function BoxItem({
       {isSelected && !isSticky && !isEmpty && !hideChrome && (
         <div
           onMouseDown={e => {
+            e.preventDefault(); e.stopPropagation()
             const ce = (e.currentTarget.parentElement as HTMLElement)?.querySelector<HTMLElement>('[contenteditable]')
             if (ce) { ce.blur() }
             if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-            setSelectedBoxIds(new Set([box.id]))
-            startDrag(e, box)
+            const el = e.currentTarget.parentElement as HTMLElement
+            el.style.transition = 'none'
+            el.style.willChange = 'left, top'
+            setLocalDragging(true); onDragStart(); startDrag(e, box)
+            const up = () => {
+              el.style.transition = ''
+              el.style.willChange = ''
+              setLocalDragging(false); onDragEnd(); window.removeEventListener('mouseup', up)
+            }
+            window.addEventListener('mouseup', up)
           }}
-          style={{ position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)", width: "50%", maxWidth: 140, height: 8, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", borderRadius: "0 0 4px 4px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
+          style={{ position: "absolute", bottom: -10, left: 0, width: "100%", height: 10, background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", borderRadius: "0 0 4px 4px", cursor: "grab", zIndex: 100, display: "flex", justifyContent: "center", alignItems: "center" }}
         >
-          <div style={{ width: 24, height: 1.5, background: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)", borderRadius: 1 }} />
+          <div style={{ width: 28, height: 1.5, background: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)", borderRadius: 1 }} />
         </div>
       )}
 
