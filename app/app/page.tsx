@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/apiFetch"
 import { sanitizeHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
+import { TREE_TYPES } from "@/app/constants"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
@@ -1425,6 +1426,34 @@ export default function NoteApp() {
       }
       setHibernation(null)
     }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Weekly upkeep: charge sap for grove maintenance, dormant trees if can't pay
+  useEffect(() => {
+    if (!grove.length) return
+    const saved = localStorage.getItem('pulp-grove')
+    if (!saved) return
+    let data: any; try { data = JSON.parse(saved) } catch { return }
+    const lastUpkeep = data.lastUpkeepDate || ''
+    const today = new Date()
+    const daysSinceUpkeep = lastUpkeep ? Math.floor((today.getTime() - new Date(lastUpkeep).getTime()) / 86400000) : 999
+
+    if (daysSinceUpkeep < 7) return
+
+    const streakDiscount = Math.min(0.8, goalStreak * 0.02)
+    const totalUpkeep = Math.round(grove.reduce((sum, t) => {
+      if (t.dormant || t.type === 'spoiled') return sum
+      return sum + (TREE_TYPES[t.type]?.upkeep || 0)
+    }, 0) * (1 - streakDiscount))
+
+    setSap(prevSap => {
+      if (prevSap >= totalUpkeep) return prevSap - totalUpkeep
+      setGrove(g => g.map(t => t.type === 'spoiled' ? t : { ...t, dormant: true }))
+      return 0
+    })
+
+    data.lastUpkeepDate = today.toISOString().split('T')[0]
+    localStorage.setItem('pulp-grove', JSON.stringify(data))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isHibernating = !!hibernation

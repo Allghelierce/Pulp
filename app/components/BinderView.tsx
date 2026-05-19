@@ -1,7 +1,14 @@
 "use client"
 import { memo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES, ASCENSION_TIERS } from "@/app/constants"
+import { TREE_TYPES } from "@/app/constants"
+
+const ASCENSION_TIERS = [
+  { name: 'Budding', color: '#a3e635' },
+  { name: 'Verdant', color: '#22d3ee' },
+  { name: 'Ancient', color: '#a78bfa' },
+  { name: 'Mythic', color: '#f59e0b' },
+]
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 

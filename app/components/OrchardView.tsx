@@ -1,7 +1,19 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TREE_TYPES, ASCENSION_TIERS, ASCENSION_COSTS } from "@/app/constants"
+import { TREE_TYPES } from "@/app/constants"
+const ASCENSION_TIERS = [
+  { name: 'Budding', sapMultiplier: 1.5 },
+  { name: 'Flourishing', sapMultiplier: 2.0 },
+  { name: 'Mythic', sapMultiplier: 3.0 },
+] as const
+const ASCENSION_COSTS: Record<string, { sap: number[]; sacrifices: number[] }> = {
+  common: { sap: [50, 120, 300], sacrifices: [3, 5, 8] },
+  uncommon: { sap: [80, 200, 500], sacrifices: [3, 4, 6] },
+  rare: { sap: [150, 400, 900], sacrifices: [2, 3, 5] },
+  'true rare': { sap: [300, 700, 1500], sacrifices: [2, 3, 4] },
+  sacred: { sap: [500, 1200, 2500], sacrifices: [1, 2, 3] },
+}
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
