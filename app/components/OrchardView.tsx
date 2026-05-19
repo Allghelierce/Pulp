@@ -28,12 +28,12 @@ interface OrchardViewProps {
   theme: "light" | "dark"
   accent: string
   sap: number
-  gems: number
+  gems?: number
   xp: number
   grove: any[]
   inventory: string[]
   setSap: (v: number | ((p: number) => number)) => void
-  setGems: (v: number | ((p: number) => number)) => void
+  setGems?: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
   setGrove: (v: any[] | ((p: any[]) => any[])) => void
   notes: NoteData[]
@@ -43,6 +43,7 @@ interface OrchardViewProps {
   onOpenLeaderboard?: () => void
   onOpenShop?: () => void
   onOpenSatchel?: () => void
+  onOpenSettings?: () => void
 }
 
 type RGB = [number, number, number]
@@ -2724,7 +2725,7 @@ export const OrchardView = memo(function OrchardView({
     if (amount <= 0) return
 
     const gemAmount = getAvailableGems()
-    if (gemAmount > 0) setGems((g: number) => g + gemAmount)
+    if (gemAmount > 0) setGems?.((g: number) => g + gemAmount)
 
     const counterEl = sapCounterRef.current
     const btnEl = collectBtnRef.current
@@ -2800,8 +2801,8 @@ export const OrchardView = memo(function OrchardView({
     const nextPlot = nbUnlocked + 1
     if (nextPlot > MAX_PLOTS) return
     const cost = PLOT_COST[nextPlot - 1] || 0
-    if (gems < cost) return
-    setGems((g: number) => g - cost)
+    if ((gems ?? 0) < cost) return
+    setGems?.((g: number) => g - cost)
     const updated = { ...unlockedPlots, [selectedNotebook]: nextPlot }
     setUnlockedPlots(updated)
     localStorage.setItem('pulp-unlocked-plots', JSON.stringify(updated))
@@ -3193,7 +3194,7 @@ export const OrchardView = memo(function OrchardView({
                   ) : nbUnlocked < MAX_PLOTS ? (
                     <button
                       onClick={unlockNextPlot}
-                      disabled={gems < (PLOT_COST[nbUnlocked] || 0)}
+                      disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)}
                       className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
                       style={{ color: '#d97706' }}
                       title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
