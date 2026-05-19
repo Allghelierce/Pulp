@@ -90,6 +90,66 @@ function getDropChance(weight: number): string {
 
 const font = 'Crimson Pro, serif'
 
+function getGroundPath(type: string): { fill: string; edge: string } {
+  const shape = TREE_TYPES[type]?.shape || ''
+  if (['palm', 'papaya', 'pineapple', 'agave'].includes(shape)) {
+    return { fill: 'M0 22 Q30 14 60 18 Q90 12 120 16 Q150 13 180 20 L180 60 L0 60 Z', edge: 'M0 22 Q30 14 60 18 Q90 12 120 16 Q150 13 180 20' }
+  }
+  if (['cactus', 'sage', 'baobab'].includes(shape)) {
+    return { fill: 'M0 20 L30 16 Q60 12 90 15 L120 13 Q150 16 180 18 L180 60 L0 60 Z', edge: 'M0 20 L30 16 Q60 12 90 15 L120 13 Q150 16 180 18' }
+  }
+  if (shape === 'winterveil') {
+    return { fill: 'M0 16 Q20 10 50 14 Q80 6 110 12 Q140 8 160 14 Q170 12 180 16 L180 60 L0 60 Z', edge: 'M0 16 Q20 10 50 14 Q80 6 110 12 Q140 8 160 14 Q170 12 180 16' }
+  }
+  if (['coral', 'whirlpool', 'lotus', 'leviathan'].includes(shape)) {
+    return { fill: 'M0 24 Q40 20 90 22 Q140 19 180 24 L180 60 L0 60 Z', edge: 'M0 24 Q40 20 90 22 Q140 19 180 24' }
+  }
+  if (['mushroom', 'mangrove', 'cattail', 'ivy'].includes(shape)) {
+    return { fill: 'M0 20 Q15 14 35 17 Q55 10 80 15 Q105 9 130 14 Q155 11 180 18 L180 60 L0 60 Z', edge: 'M0 20 Q15 14 35 17 Q55 10 80 15 Q105 9 130 14 Q155 11 180 18' }
+  }
+  if (['void', 'starweaver', 'prismatic'].includes(shape)) {
+    return { fill: 'M0 22 Q45 16 90 20 Q135 14 180 22 L180 60 L0 60 Z', edge: 'M0 22 Q45 16 90 20 Q135 14 180 22' }
+  }
+  return { fill: 'M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14 L180 60 L0 60 Z', edge: 'M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14' }
+}
+
+function getTerrainColors(type: string, isDark: boolean): { top: string; mid: string; bottom: string; edge: string; blendBase: string } {
+  const shape = TREE_TYPES[type]?.shape || ''
+  if (['palm', 'papaya', 'pineapple', 'agave'].includes(shape)) {
+    return isDark
+      ? { top: '#4a3a20', mid: '#3a2c18', bottom: '#2a1e10', edge: '#5a4a30', blendBase: '#3a2c18' }
+      : { top: '#e0c890', mid: '#d0b870', bottom: '#b89850', edge: '#c8a858', blendBase: '#d0b870' }
+  }
+  if (['cactus', 'sage', 'baobab'].includes(shape)) {
+    return isDark
+      ? { top: '#3a3020', mid: '#302818', bottom: '#241e10', edge: '#4a3828', blendBase: '#302818' }
+      : { top: '#d8c4a0', mid: '#c8b088', bottom: '#a89068', edge: '#b8a078', blendBase: '#c8b088' }
+  }
+  if (shape === 'winterveil') {
+    return isDark
+      ? { top: '#3a4050', mid: '#2a3040', bottom: '#1e2430', edge: '#4a5060', blendBase: '#2a3040' }
+      : { top: '#dce4f0', mid: '#c8d4e4', bottom: '#a8b8cc', edge: '#b8c8dc', blendBase: '#c8d4e4' }
+  }
+  if (['coral', 'whirlpool', 'lotus', 'leviathan'].includes(shape)) {
+    return isDark
+      ? { top: '#1e2a30', mid: '#162228', bottom: '#0e181e', edge: '#2a3a42', blendBase: '#162228' }
+      : { top: '#b8d0d8', mid: '#a0c0cc', bottom: '#80a8b8', edge: '#90b4c0', blendBase: '#a0c0cc' }
+  }
+  if (['mushroom', 'mangrove', 'cattail', 'ivy'].includes(shape)) {
+    return isDark
+      ? { top: '#282418', mid: '#201c12', bottom: '#18140c', edge: '#342e20', blendBase: '#201c12' }
+      : { top: '#a89878', mid: '#988868', bottom: '#887858', edge: '#8a7a5a', blendBase: '#988868' }
+  }
+  if (['void', 'starweaver', 'prismatic'].includes(shape)) {
+    return isDark
+      ? { top: '#1a1420', mid: '#140e18', bottom: '#0e0a12', edge: '#2a1e30', blendBase: '#140e18' }
+      : { top: '#9888a0', mid: '#887898', bottom: '#706080', edge: '#7a6a88', blendBase: '#887898' }
+  }
+  return isDark
+    ? { top: '#3a3020', mid: '#2e2618', bottom: '#221c10', edge: '#4a3a28', blendBase: '#2e2618' }
+    : { top: '#c8b090', mid: '#b8a080', bottom: '#a08868', edge: '#a89070', blendBase: '#b8a080' }
+}
+
 function rarityPlantClass(rarity: string): string {
   switch (rarity) {
     case 'uncommon': return 'rarity-uncommon'
@@ -372,7 +432,7 @@ export const BoutiqueView = memo(function BoutiqueView({
       setRevealEffect({ index, rarity })
       const dur = rarity === 'sacred' ? 2500 : rarity === 'true rare' ? 1800 : rarity === 'rare' ? 1200 : rarity === 'uncommon' ? 800 : 500
       setTimeout(() => setRevealEffect(null), dur)
-    }, 600)
+    }, 1100)
   }
 
   const forceRefresh = () => {
@@ -422,8 +482,15 @@ export const BoutiqueView = memo(function BoutiqueView({
   const previewInfo = selectedPlant ? TREE_TYPES[selectedPlant] : null
 
   const CurrencyPill = ({ amount }: { amount: number }) => (
-    <span className={`inline-flex items-center gap-1.5 text-[12px] font-normal tabular-nums ${isDark ? "bg-zinc-900 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600"} border rounded-full px-2.5 py-1`}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      fontSize: 12, fontWeight: 400, fontFamily: font,
+      color: isDark ? '#d4c4a0' : '#4a3a20',
+      background: isDark ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)',
+      border: `1px solid ${isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.15)'}`,
+      borderRadius: 20, padding: '4px 12px',
+    }}>
+      <PulpIcon size={12} />
       {amount >= 999999 ? '∞' : amount.toLocaleString()}
     </span>
   )
@@ -444,33 +511,47 @@ export const BoutiqueView = memo(function BoutiqueView({
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style>{`
         @keyframes seed-wobble {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          15% { transform: scale(1.04) rotate(-2deg); }
-          30% { transform: scale(0.97) rotate(2deg); }
-          45% { transform: scale(1.02) rotate(-1deg); }
-          60% { transform: scale(0.99) rotate(1deg); }
-          75% { transform: scale(1.01) rotate(0deg); }
+          0% { transform: scale(1) rotate(0deg); }
+          8% { transform: scale(1.01) rotate(-0.5deg); }
+          18% { transform: scale(1.015) rotate(0.8deg); }
+          28% { transform: scale(1.025) rotate(-1.2deg); }
+          38% { transform: scale(1.04) rotate(1.8deg); }
+          48% { transform: scale(1.06) rotate(-2.5deg); }
+          55% { transform: scale(1.08) rotate(3deg); }
+          62% { transform: scale(1.04) rotate(-2deg); }
+          70% { transform: scale(0.97) rotate(1.5deg); }
+          78% { transform: scale(1.02) rotate(-0.8deg); }
+          86% { transform: scale(0.99) rotate(0.4deg); }
+          94% { transform: scale(1.005) rotate(-0.2deg); }
+          100% { transform: scale(1) rotate(0deg); }
         }
         @keyframes seed-crack {
           0% { clip-path: inset(0); opacity: 1; }
-          40% { clip-path: inset(0); opacity: 1; }
-          60% { clip-path: polygon(0 0, 48% 0, 45% 50%, 42% 100%, 0 100%); opacity: 0.8; }
-          80% { clip-path: polygon(0 0, 46% 0, 40% 50%, 38% 100%, 0 100%); opacity: 0.3; }
-          100% { clip-path: polygon(0 0, 44% 0, 36% 50%, 34% 100%, 0 100%); opacity: 0; }
+          55% { clip-path: inset(0); opacity: 1; }
+          65% { clip-path: polygon(0 0, 49% 0, 47% 50%, 45% 100%, 0 100%); opacity: 0.95; }
+          75% { clip-path: polygon(0 0, 48% 0, 44% 50%, 40% 100%, 0 100%); opacity: 0.7; }
+          85% { clip-path: polygon(0 0, 46% 0, 40% 50%, 36% 100%, 0 100%); opacity: 0.35; }
+          95% { clip-path: polygon(0 0, 44% 0, 36% 50%, 32% 100%, 0 100%); opacity: 0.1; }
+          100% { clip-path: polygon(0 0, 42% 0, 32% 50%, 28% 100%, 0 100%); opacity: 0; }
         }
         @keyframes seed-crack-right {
           0% { clip-path: inset(0); opacity: 1; }
-          40% { clip-path: inset(0); opacity: 1; }
-          60% { clip-path: polygon(52% 0, 100% 0, 100% 100%, 58% 100%, 55% 50%); opacity: 0.8; }
-          80% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 62% 100%, 60% 50%); opacity: 0.3; }
-          100% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 66% 100%, 64% 50%); opacity: 0; }
+          55% { clip-path: inset(0); opacity: 1; }
+          65% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 55% 100%, 53% 50%); opacity: 0.95; }
+          75% { clip-path: polygon(52% 0, 100% 0, 100% 100%, 60% 100%, 56% 50%); opacity: 0.7; }
+          85% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 64% 100%, 60% 50%); opacity: 0.35; }
+          95% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 68% 100%, 64% 50%); opacity: 0.1; }
+          100% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 72% 100%, 68% 50%); opacity: 0; }
         }
         @keyframes sprout-emerge {
-          0% { transform: scaleY(0) translateY(20px); transform-origin: center bottom; opacity: 0; }
-          40% { transform: scaleY(0.1) translateY(15px); transform-origin: center bottom; opacity: 0; }
-          60% { transform: scaleY(0.6) scaleX(0.8) translateY(5px); transform-origin: center bottom; opacity: 1; }
-          80% { transform: scaleY(1.08) scaleX(1.02) translateY(-3px); transform-origin: center bottom; opacity: 1; }
-          90% { transform: scaleY(0.97) scaleX(1) translateY(1px); transform-origin: center bottom; opacity: 1; }
+          0% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
+          20% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
+          35% { transform: scaleY(0.05) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0.3; }
+          50% { transform: scaleY(0.3) scaleX(0.75) translateY(10px); transform-origin: center bottom; opacity: 0.7; }
+          65% { transform: scaleY(0.7) scaleX(0.9) translateY(3px); transform-origin: center bottom; opacity: 0.9; }
+          78% { transform: scaleY(1.06) scaleX(1.02) translateY(-4px); transform-origin: center bottom; opacity: 1; }
+          88% { transform: scaleY(0.98) scaleX(0.995) translateY(1px); transform-origin: center bottom; opacity: 1; }
+          95% { transform: scaleY(1.01) scaleX(1.002) translateY(-0.5px); transform-origin: center bottom; opacity: 1; }
           100% { transform: scaleY(1) scaleX(1) translateY(0); transform-origin: center bottom; opacity: 1; }
         }
         @keyframes leaf-scatter {
@@ -495,9 +576,87 @@ export const BoutiqueView = memo(function BoutiqueView({
         }
         @keyframes seed-spin-reveal {
           0% { transform: rotateY(0) scale(1); }
-          30% { transform: rotateY(180deg) scale(0.9); }
-          60% { transform: rotateY(360deg) scale(1.05); }
+          10% { transform: rotateY(0) scale(1.03); }
+          20% { transform: rotateY(0) scale(1.06); }
+          35% { transform: rotateY(90deg) scale(0.92); }
+          50% { transform: rotateY(180deg) scale(0.88); }
+          65% { transform: rotateY(270deg) scale(0.92); }
+          80% { transform: rotateY(360deg) scale(1.04); }
+          90% { transform: rotateY(360deg) scale(0.98); }
           100% { transform: rotateY(360deg) scale(1); }
+        }
+        @keyframes pop-common {
+          0% { transform: scale(0.3); opacity: 0; }
+          40% { transform: scale(1.08); opacity: 1; }
+          60% { transform: scale(0.96); }
+          80% { transform: scale(1.02); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pop-uncommon {
+          0% { transform: scale(0.2); opacity: 0; }
+          25% { transform: scale(1.15); opacity: 1; }
+          45% { transform: scale(0.92); }
+          60% { transform: scale(1.06); }
+          75% { transform: scale(0.98); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pop-rare {
+          0% { transform: scale(0.1) rotate(-8deg); opacity: 0; }
+          20% { transform: scale(1.22) rotate(3deg); opacity: 1; }
+          35% { transform: scale(0.88) rotate(-2deg); }
+          50% { transform: scale(1.1) rotate(1deg); }
+          65% { transform: scale(0.95) rotate(0deg); }
+          80% { transform: scale(1.03); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes pop-true-rare {
+          0% { transform: scale(0) rotate(-12deg); opacity: 0; }
+          15% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+          30% { transform: scale(0.82) rotate(-4deg); }
+          42% { transform: scale(1.18) rotate(2deg); }
+          55% { transform: scale(0.9) rotate(-1deg); }
+          68% { transform: scale(1.08) rotate(0.5deg); }
+          80% { transform: scale(0.97); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes pop-sacred {
+          0% { transform: scale(0) rotate(-15deg); opacity: 0; filter: brightness(3); }
+          8% { transform: scale(1.5) rotate(6deg); opacity: 1; filter: brightness(2.5); }
+          18% { transform: scale(0.7) rotate(-5deg); filter: brightness(1.8); }
+          28% { transform: scale(1.35) rotate(3deg); filter: brightness(1.5); }
+          40% { transform: scale(0.85) rotate(-2deg); filter: brightness(1.2); }
+          52% { transform: scale(1.15) rotate(1deg); filter: brightness(1.1); }
+          65% { transform: scale(0.94) rotate(0deg); filter: brightness(1); }
+          80% { transform: scale(1.04); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+        }
+        @keyframes pop-ring {
+          0% { transform: scale(0); opacity: 0.8; }
+          50% { transform: scale(1); opacity: 0.3; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        @keyframes pop-particle {
+          0% { transform: translate(0, 0) scale(0); opacity: 0; }
+          15% { transform: translate(var(--pp-x1), var(--pp-y1)) scale(1.2); opacity: 1; }
+          100% { transform: translate(var(--pp-x2), var(--pp-y2)) scale(0); opacity: 0; }
+        }
+        @keyframes sacred-nova {
+          0% { transform: scale(0); opacity: 0; }
+          15% { transform: scale(0.5); opacity: 0.6; }
+          40% { transform: scale(1.2); opacity: 0.4; }
+          100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes sacred-star {
+          0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; transform: translate(var(--ss-x1), var(--ss-y1)) scale(1) rotate(90deg); }
+          60% { opacity: 0.7; transform: translate(var(--ss-x2), var(--ss-y2)) scale(0.6) rotate(200deg); }
+          100% { opacity: 0; transform: translate(var(--ss-x3), var(--ss-y3)) scale(0) rotate(360deg); }
+        }
+        @keyframes sacred-shimmer {
+          0% { opacity: 0; }
+          20% { opacity: 0.3; }
+          50% { opacity: 0.15; }
+          100% { opacity: 0; }
         }
         @keyframes rarity-pulse {
           0%, 100% { box-shadow: 0 0 8px var(--pulse-col), 0 4px 20px var(--pulse-col20); }
@@ -519,20 +678,21 @@ export const BoutiqueView = memo(function BoutiqueView({
           0%, 100% { box-shadow: 0 0 12px #d9770630, 0 0 24px #d9770610; }
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
-        @keyframes card-float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
-        @keyframes card-float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
-        @keyframes card-float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
-        @keyframes card-float-3 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
-        .seed-packet { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .seed-packet:hover { transform: translateY(-4px); }
-        .seed-cracking { animation: seed-spin-reveal 0.6s ease-in-out, seed-wobble 0.6s ease-in-out !important; }
+        @keyframes card-float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+        @keyframes card-float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes card-float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        @keyframes card-float-3 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
+        .seed-packet { transition: box-shadow 0.2s ease; }
+        .seed-card-wrap { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+        .seed-card-wrap:hover { transform: translateY(-6px); }
+        .seed-cracking { animation: seed-spin-reveal 1.1s cubic-bezier(0.22, 1, 0.36, 1), seed-wobble 1.1s cubic-bezier(0.22, 1, 0.36, 1) !important; }
         .seed-revealed { }
         .daily-deal { }
       `}</style>
       <div
         style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0e0c09' : '#ede6d8' }}
       >
-        {/* Currency pill — top right floating */}
+        {/* Sap — top right */}
         <div style={{ position: 'absolute', top: 12, right: 20, zIndex: 10 }}>
           <CurrencyPill amount={sap} />
         </div>
@@ -1037,18 +1197,47 @@ export const BoutiqueView = memo(function BoutiqueView({
               {(() => { return (<>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
                 <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 400, color: textMuted, fontFamily: font, letterSpacing: '0.04em' }}>Refreshes in</span>
-                  <span style={{ fontSize: 12, fontWeight: 400, color: isDark ? '#c8c0b4' : '#4a4640', fontFamily: 'monospace', letterSpacing: '0.03em' }}>{countdown}</span>
-                </div>
                 {/* Ornamental divider */}
-                <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.2 : 0.15 }}>
+                <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>
                   {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>
                     <line x1="0" y1="6" x2="95" y2="6" stroke={c} strokeWidth="0.5" />
-                    <polygon points="110,2 114,6 110,10 106,6" fill="#d97706" opacity="0.6" />
+                    <polygon points="110,2 114,6 110,10 106,6" fill={isDark ? '#e8e4dc' : '#4a4640'} opacity="0.6" />
                     <line x1="125" y1="6" x2="220" y2="6" stroke={c} strokeWidth="0.5" />
                   </>)})()}
                 </svg>
+                {/* Nav buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+                  <button
+                    onClick={() => { setActiveTab('satchel'); setSelectedPlant(null) }}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      padding: '4px 14px', borderRadius: 5,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
+                    Satchel
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{
+                      padding: '4px 14px', borderRadius: 5,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    Catalog
+                  </button>
+                </div>
               </div>
               {/* 5 Oval Seed Packets */}
               {(() => {
@@ -1059,7 +1248,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 44, position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 60, position: 'relative', zIndex: 2 }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {
@@ -1119,16 +1308,16 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
 
                   return (
-                    <div key={`${type}-${i}`} style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, animation: `card-float-${i} ${4 + i * 0.8}s ease-in-out infinite` }}>
+                    <div key={`${type}-${i}`} className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, animation: `card-float-${i} ${4 + i * 0.8}s ease-in-out infinite` }}>
                       {/* Daily deal label */}
                       {isDailyDeal && (
                         <div style={{
                           position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-                          fontSize: 7, fontWeight: 400, color: '#d97706', letterSpacing: '0.1em',
+                          fontSize: 7, fontWeight: 400, color: '#dc2626', letterSpacing: '0.1em',
                           textTransform: 'uppercase', whiteSpace: 'nowrap', zIndex: 20,
-                          background: isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.08)',
+                          background: isDark ? 'rgba(220,38,38,0.1)' : 'rgba(220,38,38,0.08)',
                           padding: '2px 8px', borderRadius: 4,
-                          border: `1px solid ${isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.15)'}`,
+                          border: `1px solid ${isDark ? 'rgba(220,38,38,0.25)' : 'rgba(220,38,38,0.2)'}`,
                         }}>Daily Deal</div>
                       )}
                       {/* Seed card */}
@@ -1140,8 +1329,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
 
-                          boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)',
-                          border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+                          boxShadow: isDailyDeal
+                            ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
+                            : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
+                          border: isDailyDeal
+                            ? `1.5px solid ${isDark ? 'rgba(220,38,38,0.4)' : 'rgba(220,38,38,0.35)'}`
+                            : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
                         }}
                       >
                         {!isRevealed ? (
@@ -1150,7 +1343,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             onClick={() => revealCard(i)}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                               position: 'relative',
                             }}
@@ -1213,7 +1406,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             }}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark ? (SHOP_BG_DARK[t.rarity] || SHOP_BG_DARK.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
                               position: 'relative', overflow: 'hidden',
                             }}
@@ -1309,38 +1502,45 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 zIndex: 5,
                               }}>-{discount}%</div>
                             )}
-                            {/* Plant — centered, base overlaps into grass */}
+                            {/* Plant — centered, base on ground */}
                             <div style={{
-                              position: 'absolute', bottom: '15%', left: 0, right: 0,
+                              position: 'absolute', bottom: (() => { const sh = TREE_TYPES[type]?.shape || ''; return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? '10%' : ['cactus', 'agave', 'sage'].includes(sh) ? '12%' : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? '14%' : '15%' })(), left: 0, right: 0,
                               display: 'flex', justifyContent: 'center',
                               zIndex: 2,
                             }}>
                               <div className={rarityPlantClass(t.rarity)} style={{
-                                animation: undefined,
+                                animation: revealEffect?.index === i
+                                  ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '1.6s' : t.rarity === 'true rare' ? '1.2s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
+                                  : undefined,
+                                animationDelay: revealEffect?.index === i ? '0.4s' : undefined,
                                 position: 'relative',
                               }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
                                 {/* Ground blend */}
+                                {(() => { const tc = getTerrainColors(type, isDark); return (
                                 <div style={{
                                   position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
                                   width: '60%', height: 10, zIndex: 5,
-                                  background: `linear-gradient(to top, ${isDark ? '#2a4a1e' : '#5a8a3a'} 0%, transparent 100%)`,
+                                  background: `linear-gradient(to top, ${tc.blendBase} 0%, transparent 100%)`,
                                   borderRadius: '50%',
                                 }} />
+                                )})()}
                               </div>
                             </div>
                             {/* Ground */}
+                            {(() => { const tc = getTerrainColors(type, isDark); const gp = getGroundPath(type); return (
                             <svg viewBox="0 0 180 60" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '22%', zIndex: 3 }}>
                               <defs>
                                 <linearGradient id={`ground-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={isDark ? '#3a5a2a' : '#6a9a4a'} />
-                                  <stop offset="40%" stopColor={isDark ? '#2a4a1e' : '#5a8a3a'} />
-                                  <stop offset="100%" stopColor={isDark ? '#1a3412' : '#3a6a22'} />
+                                  <stop offset="0%" stopColor={tc.top} />
+                                  <stop offset="40%" stopColor={tc.mid} />
+                                  <stop offset="100%" stopColor={tc.bottom} />
                                 </linearGradient>
                               </defs>
-                              <path d="M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14 L180 60 L0 60 Z" fill={`url(#ground-${i})`} />
-                              <path d="M0 18 Q20 10 45 13 Q70 8 90 11 Q120 7 145 12 Q165 10 180 14" fill="none" stroke={isDark ? '#4a6a38' : '#7aaa58'} strokeWidth="0.6" opacity="0.3" />
+                              <path d={gp.fill} fill={`url(#ground-${i})`} />
+                              <path d={gp.edge} fill="none" stroke={tc.edge} strokeWidth="0.6" opacity="0.3" />
                             </svg>
+                            )})()}
                           </div>
                         )}
                         {/* Crack overlay during reveal */}
@@ -1351,14 +1551,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: 'seed-crack 0.6s ease-in forwards',
+                              animation: 'seed-crack 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards',
                             }} />
                             <div style={{
                               position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: 'seed-crack-right 0.6s ease-in forwards',
+                              animation: 'seed-crack-right 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards',
                             }} />
                           </>
                         )}
@@ -1367,21 +1567,23 @@ export const BoutiqueView = memo(function BoutiqueView({
                       {(() => {
                         const tagRot = [(-3), 2, (-1.5), 3, (-2.5)][i % 5]
                         const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
-                        const stringH = [18, 22, 16, 24, 20][i % 5]
+                        const stringH = [26, 34, 18, 40, 22][i % 5]
                         return (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${tagRot}deg)`, transformOrigin: 'top center' }}>
-                        <svg width="2" height={stringH} style={{ overflow: 'visible' }}>
-                          <line x1="1" y1="0" x2={1 + tagRot * 0.3} y2={stringH} stroke={isDark ? 'rgba(180,160,130,0.4)' : 'rgba(120,100,70,0.35)'} strokeWidth="0.8" />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center' }}>
+                        <svg width="4" height={stringH} style={{ overflow: 'visible' }}>
+                          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? '#8b7355' : '#6b5335'} strokeWidth="0.8" strokeLinecap="round" />
+                          <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? 'rgba(160,130,90,0.25)' : 'rgba(120,90,50,0.2)'} strokeWidth="1.4" strokeLinecap="round" />
                         </svg>
                         <div style={{
                           position: 'relative',
+                          transform: `rotate(${tagRot}deg)`,
                           background: isDark
                             ? 'linear-gradient(145deg, #2a2418 0%, #1e1a14 50%, #252018 100%)'
                             : 'linear-gradient(145deg, #f2e8d4 0%, #e8dcc4 50%, #f0e4ce 100%)',
                           border: `1px solid ${isDark ? 'rgba(180,160,130,0.15)' : 'rgba(140,120,80,0.2)'}`,
-                          borderRadius: 2,
-                          padding: '3px 8px 4px',
-                          minWidth: 44,
+                          borderRadius: 3,
+                          padding: '5px 12px 6px',
+                          minWidth: 54,
                           textAlign: 'center' as const,
                           boxShadow: isDark
                             ? '0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)'
@@ -1398,15 +1600,111 @@ export const BoutiqueView = memo(function BoutiqueView({
                             background: isDark ? '#0e0d0b' : '#e0d8c8',
                             border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
                           }} />
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
-                            <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={9} /></span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, marginTop: 0 }}>
+                            {discount > 0 ? (<>
+                              <span style={{ fontSize: 9, fontWeight: 400, color: isDark ? '#8a7a60' : '#8a7a60', fontFamily: font, textDecoration: 'line-through', opacity: 0.7 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}</span>
+                              <span style={{ fontSize: 13, fontWeight: 400, color: '#dc2626', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{Math.round((TREE_TYPES[type]?.cost || 0) * (1 - discount / 100)).toLocaleString()}<PulpIcon size={11} /></span>
+                            </>) : (
+                              <span style={{ fontSize: 13, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={11} /></span>
+                            )}
                           </div>
                         </div>
                       </div>
                         )
                       })()}
 
-                      {/* Post-reveal particle effects removed — keep initial card spin only */}
+                      {/* Pop effects on reveal */}
+                      {revealEffect?.index === i && (() => {
+                        const r = t.rarity
+                        const particleCount = r === 'sacred' ? 16 : r === 'true rare' ? 12 : r === 'rare' ? 8 : r === 'uncommon' ? 5 : 3
+                        const dur = r === 'sacred' ? 2 : r === 'true rare' ? 1.5 : r === 'rare' ? 1.2 : r === 'uncommon' ? 0.9 : 0.7
+                        const col = r === 'sacred' ? '#c4b5fd' : r === 'true rare' ? '#a78bfa' : r === 'rare' ? '#60a5fa' : r === 'uncommon' ? '#4ade80' : '#d97706'
+                        return (
+                          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}>
+                            {/* Expanding ring */}
+                            <div style={{
+                              position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                              width: r === 'sacred' ? 200 : r === 'true rare' ? 160 : r === 'rare' ? 120 : 80,
+                              height: r === 'sacred' ? 200 : r === 'true rare' ? 160 : r === 'rare' ? 120 : 80,
+                              borderRadius: '50%',
+                              border: `2px solid ${col}`,
+                              opacity: 0,
+                              animation: `pop-ring ${dur * 0.8}s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards`,
+                            }} />
+                            {/* Particles */}
+                            {Array.from({ length: particleCount }).map((_, pi) => {
+                              const angle = (pi / particleCount) * Math.PI * 2 + (pi * 0.3)
+                              const dist1 = 20 + Math.sin(pi * 2.1) * 10
+                              const dist2 = 60 + Math.cos(pi * 1.7) * 30 + (r === 'sacred' ? 40 : r === 'true rare' ? 25 : 0)
+                              const x1 = Math.cos(angle) * dist1
+                              const y1 = Math.sin(angle) * dist1
+                              const x2 = Math.cos(angle) * dist2
+                              const y2 = Math.sin(angle) * dist2
+                              const size = r === 'sacred' ? 4 : r === 'true rare' ? 3.5 : r === 'rare' ? 3 : 2.5
+                              const delay = 0.15 + pi * 0.03
+                              return (
+                                <div key={pi} style={{
+                                  position: 'absolute', top: '45%', left: '50%',
+                                  width: size, height: size, borderRadius: '50%',
+                                  background: pi % 3 === 0 ? col : pi % 3 === 1 ? '#fff' : col,
+                                  boxShadow: `0 0 ${size * 2}px ${col}`,
+                                  opacity: 0,
+                                  ['--pp-x1' as string]: `${x1}px`, ['--pp-y1' as string]: `${y1}px`,
+                                  ['--pp-x2' as string]: `${x2}px`, ['--pp-y2' as string]: `${y2}px`,
+                                  animation: `pop-particle ${dur}s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
+                                }} />
+                              )
+                            })}
+                            {/* Sacred galaxy explosion */}
+                            {r === 'sacred' && (<>
+                              {/* Nova burst */}
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 300, height: 300, borderRadius: '50%',
+                                background: 'radial-gradient(circle, rgba(196,181,253,0.4) 0%, rgba(139,92,246,0.15) 40%, transparent 70%)',
+                                animation: `sacred-nova 2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards`,
+                                opacity: 0,
+                              }} />
+                              {/* Nebula shimmer */}
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 250, height: 250, borderRadius: '50%',
+                                background: `conic-gradient(from 0deg, rgba(196,181,253,0.15), rgba(139,92,246,0.1), rgba(99,102,241,0.15), rgba(196,181,253,0.1), rgba(167,139,250,0.15), rgba(196,181,253,0.1))`,
+                                animation: `sacred-shimmer 2.5s ease-out 0.1s forwards`,
+                                filter: 'blur(8px)',
+                                opacity: 0,
+                              }} />
+                              {/* Trailing stars */}
+                              {Array.from({ length: 10 }).map((_, si) => {
+                                const a = (si / 10) * Math.PI * 2
+                                const r1 = 15, r2 = 50 + si * 4, r3 = 80 + si * 6
+                                return (
+                                  <div key={`s${si}`} style={{
+                                    position: 'absolute', top: '45%', left: '50%',
+                                    width: 3, height: 3,
+                                    background: si % 2 === 0 ? '#e0d0ff' : '#c4b5fd',
+                                    borderRadius: '50%',
+                                    boxShadow: `0 0 6px rgba(196,181,253,0.8), 0 0 12px rgba(139,92,246,0.4)`,
+                                    opacity: 0,
+                                    ['--ss-x1' as string]: `${Math.cos(a) * r1}px`, ['--ss-y1' as string]: `${Math.sin(a) * r1}px`,
+                                    ['--ss-x2' as string]: `${Math.cos(a) * r2}px`, ['--ss-y2' as string]: `${Math.sin(a) * r2}px`,
+                                    ['--ss-x3' as string]: `${Math.cos(a) * r3}px`, ['--ss-y3' as string]: `${Math.sin(a) * r3}px`,
+                                    animation: `sacred-star ${1.8 + si * 0.1}s cubic-bezier(0.22, 1, 0.36, 1) ${0.05 + si * 0.06}s forwards`,
+                                  }} />
+                                )
+                              })}
+                              {/* Second ring — slower */}
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 240, height: 240, borderRadius: '50%',
+                                border: '1px solid rgba(196,181,253,0.3)',
+                                opacity: 0,
+                                animation: `pop-ring 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards`,
+                              }} />
+                            </>)}
+                          </div>
+                        )
+                      })()}
                     </div>
                   )
                 })}
@@ -1414,38 +1712,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                 )
               })()}
 
-              <div style={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                  onClick={() => { setActiveTab('satchel'); setSelectedPlant(null) }}
-                  className="transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    padding: '5px 14px', borderRadius: 6,
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                    color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                  Satchel
-                </button>
-                <button
-                  onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
-                  className="transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    padding: '5px 14px', borderRadius: 6,
-                    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                    color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                  Catalog
-                </button>
-              </div>
 
               </>)})()}
             </div>

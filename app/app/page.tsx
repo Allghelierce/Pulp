@@ -1258,7 +1258,8 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sap, setSap] = useState(0)
+  const [sap, setSap] = useState(50)
+  const [essence, setEssence] = useState(0)
   const xp = 0
   const [goalStreak, setGoalStreak] = useState(0)
   const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
@@ -1357,6 +1358,7 @@ export default function NoteApp() {
     if (saved) {
       let data: any; try { data = JSON.parse(saved) } catch { return }
       setSap(data.juice ?? data.sunshine ?? 0)
+      if (data.essence != null) setEssence(data.essence)
       if (data.goalStreak != null) setGoalStreak(data.goalStreak)
       if (data.goalStreakLastDate) setGoalStreakLastDate(data.goalStreakLastDate)
       if (data.dailyGoalMinutes) setDailyGoalMinutes(data.dailyGoalMinutes)
@@ -1398,34 +1400,6 @@ export default function NoteApp() {
       }
       setHibernation(null)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Weekly upkeep: charge sap for grove maintenance, dormant trees if can't pay
-  useEffect(() => {
-    if (!grove.length) return
-    const saved = localStorage.getItem('pulp-grove')
-    if (!saved) return
-    let data: any; try { data = JSON.parse(saved) } catch { return }
-    const lastUpkeep = data.lastUpkeepDate || ''
-    const today = new Date()
-    const daysSinceUpkeep = lastUpkeep ? Math.floor((today.getTime() - new Date(lastUpkeep).getTime()) / 86400000) : 999
-
-    if (daysSinceUpkeep < 7) return
-
-    const streakDiscount = Math.min(0.8, goalStreak * 0.02)
-    const totalUpkeep = Math.round(grove.reduce((sum, t) => {
-      if (t.dormant || t.type === 'spoiled') return sum
-      return sum + (TREE_TYPES[t.type]?.upkeep || 0)
-    }, 0) * (1 - streakDiscount))
-
-    setSap(prevSap => {
-      if (prevSap >= totalUpkeep) return prevSap - totalUpkeep
-      setGrove(g => g.map(t => t.type === 'spoiled' ? t : { ...t, dormant: true }))
-      return 0
-    })
-
-    data.lastUpkeepDate = today.toISOString().split('T')[0]
-    localStorage.setItem('pulp-grove', JSON.stringify(data))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isHibernating = !!hibernation
@@ -2674,8 +2648,8 @@ export default function NoteApp() {
     flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode])
   useEffect(() => {
-    flushRefs.current.grove = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
-  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled])
+    flushRefs.current.grove = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
+  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled])
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -2801,7 +2775,7 @@ export default function NoteApp() {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => {
       flushRefs.current.dirty.grove = false
-      const groveData = { juice: sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
+      const groveData = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
@@ -2811,23 +2785,28 @@ export default function NoteApp() {
       }
     }, 500)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [sap, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
+  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
 
   // Cloud autosave (debounced off notes array, not activeNote object ref)
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const cloudAbort = useRef<AbortController | undefined>(undefined)
   useEffect(() => {
     if (!autoSave || isLoading || !user || !activeTabId) return
     flushRefs.current.dirty.note = true
     clearTimeout(cloudSaveTimer.current)
+    cloudAbort.current?.abort()
     cloudSaveTimer.current = setTimeout(async () => {
       flushRefs.current.dirty.note = false
       const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
       if (!note) return
-      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+      const ac = new AbortController()
+      cloudAbort.current = ac
+      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id }, { signal: ac.signal } as any)
+      if (ac.signal.aborted) return
       if (error) console.error("Save failed:", error.message)
-      else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }) }).catch(() => { })
+      else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }), signal: ac.signal }).catch(() => { })
     }, 800)
-    return () => clearTimeout(cloudSaveTimer.current)
+    return () => { clearTimeout(cloudSaveTimer.current); cloudAbort.current?.abort() }
   }, [notes, user, autoSave, isLoading, activeTabId])
 
   // Sync editor DOM with active note/page
@@ -3692,6 +3671,8 @@ export default function NoteApp() {
                   darkPaper={isDarkPaper(paperStyle)}
                   selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
                   unlockedCosmetics={unlockedCosmetics}
+                  grove={grove}
+                  goalStreak={goalStreak}
                 />
               </div>
             )}
@@ -4340,6 +4321,7 @@ export default function NoteApp() {
               onOpenShop={() => { startTransition(() => { closeAllPanels(); setShopOpen(true) }) }}
               onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
               onOpenSettings={() => { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }}
+              goalStreak={goalStreak}
             />
           </div></Suspense>}
 
@@ -4365,14 +4347,15 @@ export default function NoteApp() {
             </div>
           </Suspense>}
 
-          {leaderboardOpen && <Suspense fallback={null}>
-            <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50 }}><LeaderboardView
-              isOpen={leaderboardOpen}
-              onClose={() => setLeaderboardOpen(false)}
-              theme={theme}
-              sap={sap}
-            /></motion.div>
-          </Suspense>}
+          {leaderboardOpen && (
+            <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme === 'dark' ? '#18181b' : '#fafaf9' }}>
+              <button onClick={() => setLeaderboardOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', cursor: 'pointer', color: theme === 'dark' ? '#a1a1aa' : '#71717a', fontSize: 28 }}>&times;</button>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 32, color: '#d97706', marginBottom: 8 }}>Leaderboard</p>
+                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 18, color: theme === 'dark' ? '#a1a1aa' : '#71717a' }}>Coming soon</p>
+              </div>
+            </motion.div>
+          )}
 
           {shopOpen && <Suspense fallback={null}>
             <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><BoutiqueView
