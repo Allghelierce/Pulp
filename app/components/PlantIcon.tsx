@@ -1622,7 +1622,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
         if (s === 2) return (
           <g>
             <defs>
-              <filter id={`vglow-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+              <filter id={`vglow-${uid}`} x="-120%" y="-120%" width="340%" height="340%">
                 <feGaussianBlur stdDeviation="3" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
@@ -1658,7 +1658,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
         return (
           <g>
             <defs>
-              <filter id={`vglow-${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+              <filter id={`vglow-${uid}`} x="-120%" y="-120%" width="340%" height="340%">
                 <feGaussianBlur stdDeviation="4" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
@@ -1674,60 +1674,60 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
             </defs>
-            <path d="M24 46 C22 42 26 38 23 34 C20 30 26 28 24 24" stroke="#2a2a3e" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-            <path d="M24 46 C26 42 22 38 25 34 C28 30 22 28 24 24" stroke="#1a1a2e" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
-            <path d="M24 32 C18 28 12 30 8 24" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M24 28 C30 24 36 26 40 20" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <path d="M24 26 C20 22 16 18 14 12" stroke="#2a2a3e" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            <path d="M24 46 C22.5 42 25.5 37 23.5 31 C21 25 25.5 21 24 16" stroke="#2a2a3e" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+            <path d="M24 46 C25.5 42 22.5 37 24.5 31 C27 25 22.5 21 24 16" stroke="#1a1a2e" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
+            <path d="M24 30 C18 26 12 28 8 22" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M24 26 C30 22 36 24 40 18" stroke="#2a2a3e" strokeWidth="2" fill="none" strokeLinecap="round" />
+            <path d="M24 23 C20 19 16 15 14 9" stroke="#2a2a3e" strokeWidth="1.5" fill="none" strokeLinecap="round" />
             <g filter={`url(#vglow-${uid})`}>
-              <circle cx="24" cy="18" r="16" fill={`url(#vgrad-${uid})`} />
-              <circle cx="24" cy="18" r="7" fill="#050510" />
-              <circle cx="24" cy="18" r="3" fill="#000" />
+              <circle cx="24" cy="14" r="16" fill={`url(#vgrad-${uid})`} />
+              <circle cx="24" cy="14" r="7" fill="#050510" />
+              <circle cx="24" cy="14" r="3" fill="#000" />
             </g>
-            <ellipse cx="24" cy="18" rx="10" ry="10" fill="none" stroke="#6366f1" strokeWidth="0.5" opacity="0.2">
+            <ellipse cx="24" cy="14" rx="10" ry="10" fill="none" stroke="#6366f1" strokeWidth="0.5" opacity="0.2">
               <animate attributeName="rx" values="10;12;10" dur="4s" repeatCount="indefinite" />
               <animate attributeName="ry" values="10;8;10" dur="4s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.2;0.05;0.2" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            <ellipse cx="24" cy="18" rx="14" ry="12" fill="none" stroke="#8b5cf6" strokeWidth="0.4" opacity="0.12">
+            <ellipse cx="24" cy="14" rx="14" ry="12" fill="none" stroke="#8b5cf6" strokeWidth="0.4" opacity="0.12">
               <animate attributeName="rx" values="14;16;14" dur="5s" repeatCount="indefinite" begin="1s" />
               <animate attributeName="ry" values="12;10;12" dur="5s" repeatCount="indefinite" begin="1s" />
               <animate attributeName="opacity" values="0.12;0.03;0.12" dur="5s" repeatCount="indefinite" begin="1s" />
             </ellipse>
-            <ellipse cx="24" cy="18" rx="18" ry="14" fill={`url(#vring-${uid})`} opacity="0.3">
+            <ellipse cx="24" cy="14" rx="18" ry="14" fill={`url(#vring-${uid})`} opacity="0.3">
               <animate attributeName="opacity" values="0.3;0.1;0.3" dur="6s" repeatCount="indefinite" />
             </ellipse>
-            <circle cx="8" cy="12" r="1" fill="#6366f1" opacity="0.6">
+            <circle cx="8" cy="8" r="1" fill="#6366f1" opacity="0.6">
               <animate attributeName="cx" values="8;22" dur="3s" repeatCount="indefinite" />
-              <animate attributeName="cy" values="12;18" dur="3s" repeatCount="indefinite" />
+              <animate attributeName="cy" values="8;14" dur="3s" repeatCount="indefinite" />
               <animate attributeName="r" values="1;0.2" dur="3s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.6;0" dur="3s" repeatCount="indefinite" />
             </circle>
-            <circle cx="40" cy="22" r="0.9" fill="#8b5cf6" opacity="0.5">
+            <circle cx="40" cy="18" r="0.9" fill="#8b5cf6" opacity="0.5">
               <animate attributeName="cx" values="40;26" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
-              <animate attributeName="cy" values="22;18" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
+              <animate attributeName="cy" values="18;14" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
               <animate attributeName="r" values="0.9;0.15" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
               <animate attributeName="opacity" values="0.5;0" dur="2.8s" repeatCount="indefinite" begin="0.4s" />
             </circle>
-            <circle cx="14" cy="32" r="0.8" fill="#a78bfa" opacity="0.4">
+            <circle cx="14" cy="28" r="0.8" fill="#a78bfa" opacity="0.4">
               <animate attributeName="cx" values="14;23" dur="3.5s" repeatCount="indefinite" begin="1s" />
-              <animate attributeName="cy" values="32;20" dur="3.5s" repeatCount="indefinite" begin="1s" />
+              <animate attributeName="cy" values="28;16" dur="3.5s" repeatCount="indefinite" begin="1s" />
               <animate attributeName="r" values="0.8;0.1" dur="3.5s" repeatCount="indefinite" begin="1s" />
               <animate attributeName="opacity" values="0.4;0" dur="3.5s" repeatCount="indefinite" begin="1s" />
             </circle>
-            <circle cx="36" cy="8" r="0.7" fill="#6366f1" opacity="0.45">
+            <circle cx="36" cy="4" r="0.7" fill="#6366f1" opacity="0.45">
               <animate attributeName="cx" values="36;25" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
-              <animate attributeName="cy" values="8;17" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
+              <animate attributeName="cy" values="4;13" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
               <animate attributeName="r" values="0.7;0.1" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
               <animate attributeName="opacity" values="0.45;0" dur="3.2s" repeatCount="indefinite" begin="1.8s" />
             </circle>
-            <circle cx="18" cy="6" r="0.6" fill="#c4b5fd" opacity="0.35">
+            <circle cx="18" cy="2" r="0.6" fill="#c4b5fd" opacity="0.35">
               <animate attributeName="cx" values="18;23" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
-              <animate attributeName="cy" values="6;17" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
+              <animate attributeName="cy" values="2;13" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
               <animate attributeName="r" values="0.6;0.1" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
               <animate attributeName="opacity" values="0.35;0" dur="2.5s" repeatCount="indefinite" begin="2.2s" />
             </circle>
-            <circle cx="24" cy="18" r="4" fill="#6366f1" opacity="0.08">
+            <circle cx="24" cy="14" r="4" fill="#6366f1" opacity="0.08">
               <animate attributeName="r" values="4;6;4" dur="3s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.08;0.02;0.08" dur="3s" repeatCount="indefinite" />
             </circle>
@@ -4679,6 +4679,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <line x1="12" y1="25" x2="9" y2="22" stroke={trunk} strokeWidth="0.8" />
             <line x1="16" y1="33" x2="12" y2="31" stroke={trunk} strokeWidth="1" />
             {/* Dense dark scale-foliage masses */}
+            <g transform="translate(24,22) scale(1.18) translate(-24,-22)">
             <path d="M18 13 Q15 9 14 12 Q15 7 18 10 Q19 8 18 13Z" fill={`url(#${uid}-jun)`} />
             <path d="M14 12 Q11 8 10 11 Q11 6 14 9 Q15 7 14 12Z" fill={color} />
             <path d="M22 10 Q25 6 24 9 Q25 4 22 7 Q21 5 22 10Z" fill={dark} />
@@ -4697,6 +4698,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M20 16 Q18 13 17 16 Q18 11 20 14" fill={color} />
             <path d="M24 14 Q22 11 21 14 Q22 9 24 12" fill={light} />
             <path d="M28 16 Q30 13 29 16 Q30 11 28 14" fill={dark} />
+            </g>
             {/* Small blue-toned berries on branches */}
             <circle cx="10" cy="14" r="1" fill="#546e7a" />
             <circle cx="33" cy="20" r="1" fill="#546e7a" />

@@ -67,7 +67,7 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
   currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onOpenGrid: () => void
 }) {
   const color = "#3f3f46"
-  const fontStyle: React.CSSProperties = { color, fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 12, letterSpacing: '0.01em' }
+  const fontStyle: React.CSSProperties = { color, fontFamily: 'Crimson Pro, serif', fontWeight: 400, fontSize: 15, letterSpacing: '0.01em' }
 
   return (
     <div
@@ -1264,6 +1264,8 @@ export default function NoteApp() {
   const [goalStreak, setGoalStreak] = useState(0)
   const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
+  const [quotaTier, setQuotaTier] = useState<'monthly' | 'weekly' | 'daily'>('monthly')
+  const [quotaLockedUntil, setQuotaLockedUntil] = useState('')
   const [streakNudgeDismissed, setStreakNudgeDismissed] = useState(false)
   const [hibernation, setHibernation] = useState<{ startDate: string; endDate: string; streakFrozen: number } | null>(null)
   const [hibernationScheduled, setHibernationScheduled] = useState<{ startDate: string; endDate: string } | null>(null)
@@ -1362,6 +1364,8 @@ export default function NoteApp() {
       if (data.goalStreak != null) setGoalStreak(data.goalStreak)
       if (data.goalStreakLastDate) setGoalStreakLastDate(data.goalStreakLastDate)
       if (data.dailyGoalMinutes) setDailyGoalMinutes(data.dailyGoalMinutes)
+      if (data.quotaTier) setQuotaTier(data.quotaTier)
+      if (data.quotaLockedUntil) setQuotaLockedUntil(data.quotaLockedUntil)
       if (data.inventory) setInventory([...data.inventory])
       if (data.grove) {
         setGrove([...data.grove])
@@ -2648,8 +2652,8 @@ export default function NoteApp() {
     flushRefs.current.settings = { accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, orchardTimeMode, scrollMode }
   }, [accent, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont, lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect, smearEffect, handwrittenEffect, bookmarks, language, defaultSort, wordCountVisible, focusMode, baseFontSize, shortcuts, blockedSites, blockedApps, trashNotes, skipDeleteConfirmation, scrollMode])
   useEffect(() => {
-    flushRefs.current.grove = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
-  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled])
+    flushRefs.current.grove = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled }
+  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled])
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -2775,7 +2779,7 @@ export default function NoteApp() {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => {
       flushRefs.current.dirty.grove = false
-      const groveData = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled }
+      const groveData = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled }
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}
@@ -3381,6 +3385,15 @@ export default function NoteApp() {
                 hibernationScheduled={hibernationScheduled}
                 onScheduleHibernation={scheduleHibernation}
                 hibernationCooldownEnd={hibernationCooldownEnd}
+                quotaTier={quotaTier}
+                quotaLockedUntil={quotaLockedUntil}
+                onChangeQuotaTier={(tier: 'monthly' | 'weekly' | 'daily') => {
+                  const lockDays = tier === 'monthly' ? 30 : 7
+                  const lockDate = new Date()
+                  lockDate.setDate(lockDate.getDate() + lockDays)
+                  setQuotaTier(tier)
+                  setQuotaLockedUntil(lockDate.toISOString().split('T')[0])
+                }}
               />
             </div>
           </Suspense>}
@@ -3671,8 +3684,8 @@ export default function NoteApp() {
                   darkPaper={isDarkPaper(paperStyle)}
                   selectedBoxCount={boxes.selectedBoxIdsRef.current.size}
                   unlockedCosmetics={unlockedCosmetics}
-                  grove={grove}
                   goalStreak={goalStreak}
+                  quotaTier={quotaTier}
                 />
               </div>
             )}
@@ -3681,7 +3694,7 @@ export default function NoteApp() {
             {/* Mini rings — above zoom tray, bottom right */}
             {user && notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
               <div className="fixed z-[80]" style={{ bottom: 56, right: 16, display: 'flex', justifyContent: 'center' }}>
-                <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} stretch />
+                <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} stretch quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
               </div>
             )}
 
@@ -4078,7 +4091,7 @@ export default function NoteApp() {
                                content: "@ tools  ·  \\\\ AI";
                                color: ${theme === "dark" ? "rgba(161,161,170,0.6)" : "rgba(0,0,0,0.35)"};
                                font-style: italic;
-                               font-size: inherit;
+                               font-size: 0.85em;
                                font-weight: 400;
                                pointer-events: none;
                                user-select: none;
@@ -4322,6 +4335,7 @@ export default function NoteApp() {
               onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
               onOpenSettings={() => { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }}
               goalStreak={goalStreak}
+              quotaTier={quotaTier}
             />
           </div></Suspense>}
 
@@ -4612,6 +4626,7 @@ export default function NoteApp() {
           goalStreakLastDate={goalStreakLastDate}
           setGoalStreakLastDate={setGoalStreakLastDate}
           dailyGoalMinutes={dailyGoalMinutes}
+          quotaTier={quotaTier}
           isHibernating={isHibernating}
           hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen}
         />

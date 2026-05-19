@@ -234,7 +234,7 @@ function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: 
   )
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -256,6 +256,9 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   hibernationScheduled?: { startDate: string; endDate: string } | null
   onScheduleHibernation?: (startDate: string, endDate: string) => void
   hibernationCooldownEnd?: string | null
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
+  quotaLockedUntil?: string
+  onChangeQuotaTier?: (tier: 'monthly' | 'weekly' | 'daily') => void
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -572,6 +575,60 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <ShortcutKey label="Toggle Draw Mode" id="drawMode" currentKey={shortcuts.drawMode || "ctrl+d"} defaultKey="ctrl+d" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Previous Page" id="prevPage" currentKey={shortcuts.prevPage || "alt+arrowleft"} defaultKey="alt+arrowleft" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                   <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
+                </div>
+              </SettingSection>
+
+              <SettingSection title="Study Quota" isDark={isDark}>
+                <div className="px-5 py-4 flex flex-col gap-3">
+                  <p className={`text-[11px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                    Choose your commitment level. Higher tiers earn bigger sap multipliers but penalize missed targets.
+                  </p>
+                  {(['monthly', 'weekly', 'daily'] as const).map(tier => {
+                    const isActive = quotaTier === tier
+                    const isLocked = !!quotaLockedUntil && new Date().toISOString().split('T')[0] < quotaLockedUntil && !isActive
+                    const labels = { monthly: { name: 'Monthly', bonus: 'No bonus', penalty: '10% sap', desc: 'Low bar, safety net' }, weekly: { name: 'Weekly', bonus: '+1x sap', penalty: '20% sap', desc: 'Medium commitment' }, daily: { name: 'Daily', bonus: '+2x sap', penalty: '25% sap', desc: 'High risk, high reward' } }
+                    const l = labels[tier]
+                    return (
+                      <button
+                        key={tier}
+                        disabled={isLocked}
+                        onClick={() => {
+                          if (isActive || isLocked) return
+                          if (openConfirm) {
+                            openConfirm(
+                              `Switch to ${l.name} Quota?`,
+                              `${l.desc}. Miss penalty: ${l.penalty}. You won't be able to change for ${tier === 'monthly' ? '30 days' : '7 days'}.`,
+                              () => onChangeQuotaTier?.(tier),
+                              'Confirm',
+                              tier === 'daily'
+                            )
+                          } else {
+                            onChangeQuotaTier?.(tier)
+                          }
+                        }}
+                        className="text-left rounded-lg p-3 transition-all"
+                        style={{
+                          background: isActive ? (isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.06)') : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
+                          border: `1px solid ${isActive ? 'rgba(217,119,6,0.3)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
+                          opacity: isLocked ? 0.4 : 1,
+                          cursor: isLocked ? 'not-allowed' : isActive ? 'default' : 'pointer',
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[12px] font-medium ${isActive ? 'text-orange-500' : isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{l.name}</span>
+                          <span className={`text-[10px] ${tier === 'daily' ? 'text-red-400' : tier === 'weekly' ? 'text-green-400' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{l.bonus}</span>
+                        </div>
+                        <div className={`text-[10px] mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                          {l.desc} · Miss: {l.penalty}
+                        </div>
+                        {isActive && quotaLockedUntil && (
+                          <div className={`text-[9px] mt-1 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                            Locked until {new Date(quotaLockedUntil).toLocaleDateString()}
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </SettingSection>
 

@@ -25,7 +25,10 @@ function getTodayEntry(): DailyEntry | null {
   return loadDailyStats().find(e => e.date === key) ?? null
 }
 
-export function MiniRings({ isDark, onClick, stretch }: { isDark: boolean; onClick?: () => void; stretch?: boolean }) {
+export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goalStreak = 0, dailyGoalMinutes = 30 }: {
+  isDark: boolean; onClick?: () => void; stretch?: boolean
+  quotaTier?: 'monthly' | 'weekly' | 'daily'; goalStreak?: number; dailyGoalMinutes?: number
+}) {
   const [today, setToday] = useState<DailyEntry | null>(getTodayEntry)
 
   useEffect(() => {
@@ -35,21 +38,31 @@ export function MiniRings({ isDark, onClick, stretch }: { isDark: boolean; onCli
     return () => { clearInterval(id); window.removeEventListener("storage", refresh) }
   }, [])
 
+  const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
+  const isEarlyBird = hour >= 6 && hour < 10
+  const earlyBirdProgress = isEarlyBird ? Math.min(1, (today?.focusMinutes ?? 0) / 10) : 0
+  const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+  const multiplier = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
+
+  const quotaGoal = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 : dailyGoalMinutes * 30
+  const quotaProgress = Math.min(1, (today?.focusMinutes ?? 0) / Math.max(1, quotaTier === 'daily' ? quotaGoal : quotaTier === 'weekly' ? quotaGoal / 7 : quotaGoal / 30))
+  const streakProgress = Math.min(1, goalStreak / 30)
+
   const size = 56
   const cx = size / 2, cy = size / 2
   const strokeW = 2.5
   const gap = 2
 
   const rings = [
-    { value: today?.focusMinutes ?? 0, goal: RING_GOALS.focus, color: '#ea580c', radius: (size - strokeW) / 2 },
-    { value: today?.charsWritten ?? 0, goal: RING_GOALS.writing, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: today?.sessionsCompleted ?? 0, goal: RING_GOALS.sessions, color: '#f59e0b', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, color: '#ea580c', radius: (size - strokeW) / 2 },
+    { value: streakProgress, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#fbbf24', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   return (
     <button
       onClick={onClick}
-      title="Today's progress"
+      title={`${quotaTier} quota · ${goalStreak}d streak · ${multiplier.toFixed(1)}x`}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'none', border: 'none', padding: 0,
@@ -62,7 +75,7 @@ export function MiniRings({ isDark, onClick, stretch }: { isDark: boolean; onCli
           const circ = 2 * Math.PI * ring.radius
           const gapLen = circ * 0.04
           const trackLen = circ - gapLen
-          const pct = Math.min(ring.value / ring.goal, 1)
+          const pct = Math.min(ring.value, 1)
           const fillLen = trackLen * pct
           const track = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
           return (
@@ -81,6 +94,11 @@ export function MiniRings({ isDark, onClick, stretch }: { isDark: boolean; onCli
             </g>
           )
         })}
+        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
+          {multiplier.toFixed(1)}x
+        </text>
       </svg>
     </button>
   )

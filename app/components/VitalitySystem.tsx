@@ -32,6 +32,7 @@ interface VitalitySystemProps {
   goalStreakLastDate: string
   setGoalStreakLastDate: React.Dispatch<React.SetStateAction<string>>
   dailyGoalMinutes: number
+  quotaTier: 'monthly' | 'weekly' | 'daily'
   isHibernating?: boolean
   hidden?: boolean
 }
@@ -44,6 +45,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   inventory, setInventory, activeTabId, initialNotes, onOpenSatchel,
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
+  quotaTier,
   isHibernating = false, hidden = false,
 }: VitalitySystemProps) {
 
@@ -164,7 +166,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
 
-  // Streak break detection — wipe sap if goal streak is broken
+  // Streak break detection — lose 25% sap if goal streak is broken
   const streakCheckedRef = useRef(false)
   useEffect(() => {
     if (streakCheckedRef.current || !goalStreakLastDate || isHibernating) return
@@ -172,7 +174,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     const today = new Date().toISOString().split('T')[0]
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
     if (goalStreakLastDate !== today && goalStreakLastDate !== yesterday && goalStreak > 0) {
-      setSap(0)
+      setSap(prev => Math.floor(prev * 0.75))
       setGoalStreak(0)
     }
   }, [goalStreakLastDate, goalStreak, setSap, setGoalStreak, isHibernating])
@@ -233,8 +235,12 @@ export const VitalitySystem = memo(function VitalitySystem({
             const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
             checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
             if (!isHibernatingRef.current) {
-              const groveSap = groveRef.current.reduce((sum, t) => t.dormant ? sum : sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
-              const perMinute = Math.max(1, Math.round(groveSap / 60))
+              const groveSap = groveRef.current.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
+              const hour = new Date().getHours()
+              const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+              const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+              const mult = Math.min(4, 1 + earlyBird + quotaBonus)
+              const perMinute = Math.max(1, Math.round((groveSap / 60) * mult))
               setSapRef.current(s => s + perMinute)
             }
           }
@@ -320,13 +326,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [setAchievements])
 
   const getMultiplier = useCallback(() => {
-    let mult = 1.0
-    const streakActive = goalStreak >= 7
-    if (streakActive) mult += 1.0
     const hour = new Date().getHours()
-    if (streakActive && hour < 9) mult += 1.0
-    return Math.min(mult, 3.0)
-  }, [goalStreak])
+    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+    return Math.min(4, 1 + earlyBird + quotaBonus)
+  }, [quotaTier])
 
   const updateGoalStreak = useCallback((sessionMinutes: number) => {
     const todayStr = new Date().toISOString().split('T')[0]
@@ -340,26 +344,14 @@ export const VitalitySystem = memo(function VitalitySystem({
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
       const isConsecutive = goalStreakLastDate === yesterday || goalStreakLastDate === ''
       if (!isConsecutive && goalStreak > 0) {
-        setSap(0)
-        setGrove(g => g.map(t => t.type === 'spoiled' ? t : { ...t, dormant: true }))
+        const penalty = quotaTier === 'daily' ? 0.75 : quotaTier === 'weekly' ? 0.80 : 0.90
+        setSap(prev => Math.floor(prev * penalty))
       }
       const newStreak = isConsecutive ? goalStreak + 1 : 1
       setGoalStreak(newStreak)
       setGoalStreakLastDate(todayStr)
-
-      if (newStreak > 0) {
-        const RARITY_RANK: Record<string, number> = { sacred: 5, 'true rare': 4, rare: 3, uncommon: 2, common: 1 }
-        setGrove(g => {
-          const dormantTrees = g.filter(t => t.dormant).sort((a, b) =>
-            (RARITY_RANK[TREE_TYPES[b.type]?.rarity] || 0) - (RARITY_RANK[TREE_TYPES[a.type]?.rarity] || 0)
-          )
-          if (!dormantTrees.length) return g
-          const wakeId = dormantTrees[0].id
-          return g.map(t => t.id === wakeId ? { ...t, dormant: false } : t)
-        })
-      }
     }
-  }, [goalStreak, goalStreakLastDate, dailyGoalMinutes, setGoalStreak, setGoalStreakLastDate, setSap, setGrove])
+  }, [goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, setGoalStreak, setGoalStreakLastDate, setSap, setGrove])
 
   const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
@@ -495,6 +487,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       onOpenSatchel={onOpenSatchel}
       grove={grove}
       goalStreak={goalStreak}
+      quotaTier={quotaTier}
       isHibernating={isHibernating}
       hidden={hidden}
     />

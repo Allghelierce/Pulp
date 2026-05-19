@@ -46,6 +46,7 @@ interface TimerSidebarPanelProps {
   onOpenSatchel?: () => void
   grove?: Tree[]
   goalStreak?: number
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
   isHibernating?: boolean
   hidden?: boolean
 }
@@ -165,7 +166,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  grove = [], goalStreak = 0, isHibernating = false, hidden = false,
+  grove = [], goalStreak = 0, quotaTier = 'monthly', isHibernating = false, hidden = false,
 }: TimerSidebarPanelProps) {
   const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -750,6 +751,49 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </div>
               )}
             </div>
+
+            {/* Multiplier badges */}
+            {!running && !done && !treeDead && (() => {
+              const hour = new Date().getHours()
+              const isEarlyBird = hour >= 6 && hour < 10
+              const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+              const earlyBirdMult = isEarlyBird ? 1 : 0
+              const cappedMult = Math.min(4, 1 + earlyBirdMult + quotaBonus)
+              return (
+                <div className="flex items-center justify-center gap-1.5 flex-wrap" style={{ marginBottom: 4 }}>
+                  {isEarlyBird && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif',
+                      padding: '2px 6px', borderRadius: 4,
+                      background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
+                      color: '#fbbf24', letterSpacing: '-0.01em',
+                    }}>
+                      early bird 2x
+                    </span>
+                  )}
+                  {quotaBonus > 0 && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif',
+                      padding: '2px 6px', borderRadius: 4,
+                      background: quotaTier === 'daily' ? 'rgba(248,113,113,0.12)' : 'rgba(74,222,128,0.12)',
+                      border: `1px solid ${quotaTier === 'daily' ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.25)'}`,
+                      color: quotaTier === 'daily' ? '#f87171' : '#4ade80', letterSpacing: '-0.01em',
+                    }}>
+                      {quotaTier} +{quotaBonus}x
+                    </span>
+                  )}
+                  {cappedMult > 1 && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif',
+                      color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24',
+                      letterSpacing: '-0.02em',
+                    }}>
+                      {cappedMult.toFixed(1)}x sap
+                    </span>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Main button */}
             <div className="pt-5">

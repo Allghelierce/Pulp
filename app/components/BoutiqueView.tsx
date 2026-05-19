@@ -423,6 +423,7 @@ export const BoutiqueView = memo(function BoutiqueView({
     const type = dailySeeds[index]
     const rarity = type ? TREE_TYPES[type]?.rarity || 'common' : 'common'
     setCrackingCard(index)
+    const crackDur = rarity === 'sacred' ? 3500 : rarity === 'true rare' ? 2800 : rarity === 'rare' ? 1400 : 1100
     setTimeout(() => {
       const next = new Set(revealedCards)
       next.add(index)
@@ -430,9 +431,9 @@ export const BoutiqueView = memo(function BoutiqueView({
       localStorage.setItem('pulp_revealed_cards', JSON.stringify([...next]))
       setCrackingCard(null)
       setRevealEffect({ index, rarity })
-      const dur = rarity === 'sacred' ? 2500 : rarity === 'true rare' ? 1800 : rarity === 'rare' ? 1200 : rarity === 'uncommon' ? 800 : 500
-      setTimeout(() => setRevealEffect(null), dur)
-    }, 1100)
+      const effectDur = rarity === 'sacred' ? 6000 : rarity === 'true rare' ? 4000 : rarity === 'rare' ? 1500 : rarity === 'uncommon' ? 1000 : 600
+      setTimeout(() => setRevealEffect(null), effectDur)
+    }, crackDur)
   }
 
   const forceRefresh = () => {
@@ -527,21 +528,21 @@ export const BoutiqueView = memo(function BoutiqueView({
         }
         @keyframes seed-crack {
           0% { clip-path: inset(0); opacity: 1; }
-          55% { clip-path: inset(0); opacity: 1; }
-          65% { clip-path: polygon(0 0, 49% 0, 47% 50%, 45% 100%, 0 100%); opacity: 0.95; }
-          75% { clip-path: polygon(0 0, 48% 0, 44% 50%, 40% 100%, 0 100%); opacity: 0.7; }
-          85% { clip-path: polygon(0 0, 46% 0, 40% 50%, 36% 100%, 0 100%); opacity: 0.35; }
-          95% { clip-path: polygon(0 0, 44% 0, 36% 50%, 32% 100%, 0 100%); opacity: 0.1; }
-          100% { clip-path: polygon(0 0, 42% 0, 32% 50%, 28% 100%, 0 100%); opacity: 0; }
+          8% { clip-path: polygon(0 0, 50% 0, 49% 50%, 48% 100%, 0 100%); opacity: 1; }
+          25% { clip-path: polygon(0 0, 49% 0, 47% 50%, 45% 100%, 0 100%); opacity: 0.95; }
+          50% { clip-path: polygon(0 0, 47% 0, 43% 50%, 39% 100%, 0 100%); opacity: 0.7; }
+          75% { clip-path: polygon(0 0, 44% 0, 38% 50%, 34% 100%, 0 100%); opacity: 0.35; }
+          90% { clip-path: polygon(0 0, 42% 0, 34% 50%, 30% 100%, 0 100%); opacity: 0.1; }
+          100% { clip-path: polygon(0 0, 40% 0, 30% 50%, 26% 100%, 0 100%); opacity: 0; }
         }
         @keyframes seed-crack-right {
           0% { clip-path: inset(0); opacity: 1; }
-          55% { clip-path: inset(0); opacity: 1; }
-          65% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 55% 100%, 53% 50%); opacity: 0.95; }
-          75% { clip-path: polygon(52% 0, 100% 0, 100% 100%, 60% 100%, 56% 50%); opacity: 0.7; }
-          85% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 64% 100%, 60% 50%); opacity: 0.35; }
-          95% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 68% 100%, 64% 50%); opacity: 0.1; }
-          100% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 72% 100%, 68% 50%); opacity: 0; }
+          8% { clip-path: polygon(50% 0, 100% 0, 100% 100%, 52% 100%, 51% 50%); opacity: 1; }
+          25% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 55% 100%, 53% 50%); opacity: 0.95; }
+          50% { clip-path: polygon(53% 0, 100% 0, 100% 100%, 61% 100%, 57% 50%); opacity: 0.7; }
+          75% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 66% 100%, 62% 50%); opacity: 0.35; }
+          90% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 70% 100%, 66% 50%); opacity: 0.1; }
+          100% { clip-path: polygon(60% 0, 100% 0, 100% 100%, 74% 100%, 70% 50%); opacity: 0; }
         }
         @keyframes sprout-emerge {
           0% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
@@ -658,6 +659,35 @@ export const BoutiqueView = memo(function BoutiqueView({
           50% { opacity: 0.15; }
           100% { opacity: 0; }
         }
+        @keyframes rarity-color-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes rarity-color-cinematic {
+          0% { opacity: 0; transform: scale(1.3); filter: brightness(1); }
+          20% { opacity: 0.4; transform: scale(1.15); filter: brightness(2.5); }
+          35% { opacity: 0.7; transform: scale(1.05); filter: brightness(1.8); }
+          50% { opacity: 0.9; transform: scale(0.98); filter: brightness(1.3); }
+          70% { opacity: 1; transform: scale(1.02); filter: brightness(1.1); }
+          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes sacred-bg-ignite {
+          0% { opacity: 0; transform: scale(2); filter: brightness(1) blur(20px); }
+          10% { opacity: 0.3; transform: scale(1.5); filter: brightness(4) blur(12px); }
+          20% { opacity: 0.6; transform: scale(1.2); filter: brightness(3) blur(6px); }
+          35% { opacity: 0.8; transform: scale(1.05); filter: brightness(2) blur(2px); }
+          50% { opacity: 1; transform: scale(0.97); filter: brightness(1.5) blur(0px); }
+          65% { opacity: 1; transform: scale(1.03); filter: brightness(1.2); }
+          80% { opacity: 1; transform: scale(0.99); filter: brightness(1.05); }
+          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes sacred-flash {
+          0% { opacity: 0; }
+          15% { opacity: 0.8; }
+          40% { opacity: 0.3; }
+          60% { opacity: 0.5; }
+          100% { opacity: 0; }
+        }
         @keyframes rarity-pulse {
           0%, 100% { box-shadow: 0 0 8px var(--pulse-col), 0 4px 20px var(--pulse-col20); }
           50% { box-shadow: 0 0 18px var(--pulse-col), 0 4px 30px var(--pulse-col40); }
@@ -685,7 +715,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         .seed-packet { transition: box-shadow 0.2s ease; }
         .seed-card-wrap { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
         .seed-card-wrap:hover { transform: translateY(-6px); }
-        .seed-cracking { animation: seed-spin-reveal 1.1s cubic-bezier(0.22, 1, 0.36, 1), seed-wobble 1.1s cubic-bezier(0.22, 1, 0.36, 1) !important; }
+        .seed-cracking { animation: seed-spin-reveal var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1), seed-wobble var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1) !important; }
         .seed-revealed { }
         .daily-deal { }
       `}</style>
@@ -1328,7 +1358,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           width: cardW, height: cardH, borderRadius: 12,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
-
+                          ['--crack-dur' as string]: t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s',
                           boxShadow: isDailyDeal
                             ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
                             : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
@@ -1338,12 +1368,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                         }}
                       >
                         {!isRevealed ? (
-                          /* Unrevealed — matches catalog bg */
+                          /* Unrevealed — neutral, no rarity hint */
                           <div
                             onClick={() => revealCard(i)}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              background: isDark
+                                ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
+                                : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                               position: 'relative',
                             }}
@@ -1366,9 +1398,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </svg>
                             {/* Sprouting seed */}
                             {(() => {
-                              const isRareUp = t.rarity === 'rare' || t.rarity === 'true rare' || t.rarity === 'sacred'
-                              const seedCol = isRareUp ? '#d97706' : (isDark ? '#8a7a6a' : '#6a5a4a')
-                              const sproutCol = isRareUp ? '#e8a020' : (isDark ? '#6a8a4a' : '#5a7a3a')
+                              const seedCol = isDark ? '#8a7a6a' : '#6a5a4a'
+                              const sproutCol = isDark ? '#6a8a4a' : '#5a7a3a'
                               return (
                                 <svg width="40" height="52" viewBox="0 0 40 52" style={{ opacity: isDark ? 0.35 : 0.4 }}>
                                   {/* Seed body */}
@@ -1406,11 +1437,44 @@ export const BoutiqueView = memo(function BoutiqueView({
                             }}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
-                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              background: isDark
+                                ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
+                                : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
                               position: 'relative', overflow: 'hidden',
                             }}
                           >
+                            {/* Rarity color fade-in */}
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: 'inherit',
+                              background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                              animation: revealEffect?.index === i
+                                ? t.rarity === 'sacred'
+                                  ? 'sacred-bg-ignite 2.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both'
+                                  : t.rarity === 'true rare'
+                                  ? 'rarity-color-cinematic 2s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both'
+                                  : `rarity-color-in ${t.rarity === 'rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'rare' ? '0.4s' : '0.2s'} both`
+                                : undefined,
+                              zIndex: 0,
+                            }} />
+                            {/* Sacred white flash */}
+                            {revealEffect?.index === i && t.rarity === 'sacred' && (
+                              <div style={{
+                                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.4) 40%, transparent 70%)',
+                                animation: 'sacred-flash 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both',
+                                zIndex: 1, pointerEvents: 'none',
+                              }} />
+                            )}
+                            {/* True rare flash */}
+                            {revealEffect?.index === i && t.rarity === 'true rare' && (
+                              <div style={{
+                                position: 'absolute', inset: 0, borderRadius: 'inherit',
+                                background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.6) 0%, rgba(167,139,250,0.2) 50%, transparent 70%)',
+                                animation: 'sacred-flash 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both',
+                                zIndex: 1, pointerEvents: 'none',
+                              }} />
+                            )}
                             <RarityScene rarity={t.rarity} isDark={isDark} />
                             <Sparkles rarity={t.rarity} count={3} />
                             {/* Botanical filigree border */}
@@ -1440,6 +1504,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                               position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
                               fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
                               letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
+                              animation: revealEffect?.index === i
+                                ? `rarity-color-in ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.4s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.4s' : '0.5s'} both`
+                                : undefined,
                               background: t.rarity === 'sacred'
                                 ? (isDark ? 'rgba(80,40,140,0.4)' : 'rgba(140,100,200,0.2)')
                                 : (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)'),
@@ -1460,6 +1527,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                               fontSize: 11, fontWeight: 400,
                               color: t.rarity === 'sacred' ? '#e0d0ff' : (isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)'),
                               fontFamily: 'Crimson Pro, serif', letterSpacing: t.rarity === 'sacred' ? '0.08em' : '0.04em',
+                              animation: revealEffect?.index === i
+                                ? `rarity-color-in ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.4s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.2s' : '0.4s'} both`
+                                : undefined,
                               background: t.rarity === 'sacred'
                                 ? (isDark ? 'rgba(60,30,100,0.5)' : 'rgba(140,100,200,0.15)')
                                 : (isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)'),
@@ -1510,9 +1580,9 @@ export const BoutiqueView = memo(function BoutiqueView({
                             }}>
                               <div className={rarityPlantClass(t.rarity)} style={{
                                 animation: revealEffect?.index === i
-                                  ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '1.6s' : t.rarity === 'true rare' ? '1.2s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
+                                  ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.6s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
                                   : undefined,
-                                animationDelay: revealEffect?.index === i ? '0.4s' : undefined,
+                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '0.8s' : '0.4s') : undefined,
                                 position: 'relative',
                               }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
@@ -1543,6 +1613,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                             )})()}
                           </div>
                         )}
+                        {/* Rarity color bleeding through crack */}
+                        {isCracking && (
+                          <div style={{
+                            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 5,
+                            background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
+                            animation: `rarity-color-in ${t.rarity === 'sacred' ? '3s' : t.rarity === 'true rare' ? '2.4s' : t.rarity === 'rare' ? '1.2s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.5s' : t.rarity === 'true rare' ? '0.4s' : '0.15s'} both`,
+                          }} />
+                        )}
                         {/* Crack overlay during reveal */}
                         {isCracking && (
                           <>
@@ -1551,14 +1629,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: 'seed-crack 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                              animation: `seed-crack ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
                             }} />
                             <div style={{
                               position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: 'seed-crack-right 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                              animation: `seed-crack-right ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
                             }} />
                           </>
                         )}
@@ -1616,90 +1694,136 @@ export const BoutiqueView = memo(function BoutiqueView({
                       {/* Pop effects on reveal */}
                       {revealEffect?.index === i && (() => {
                         const r = t.rarity
-                        const particleCount = r === 'sacred' ? 16 : r === 'true rare' ? 12 : r === 'rare' ? 8 : r === 'uncommon' ? 5 : 3
-                        const dur = r === 'sacred' ? 2 : r === 'true rare' ? 1.5 : r === 'rare' ? 1.2 : r === 'uncommon' ? 0.9 : 0.7
+                        const particleCount = r === 'sacred' ? 24 : r === 'true rare' ? 16 : r === 'rare' ? 8 : r === 'uncommon' ? 5 : 3
+                        const dur = r === 'sacred' ? 4 : r === 'true rare' ? 3 : r === 'rare' ? 1.2 : r === 'uncommon' ? 0.9 : 0.7
                         const col = r === 'sacred' ? '#c4b5fd' : r === 'true rare' ? '#a78bfa' : r === 'rare' ? '#60a5fa' : r === 'uncommon' ? '#4ade80' : '#d97706'
+                        const baseDelay = r === 'sacred' ? 0.8 : r === 'true rare' ? 0.5 : 0.2
                         return (
                           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}>
                             {/* Expanding ring */}
                             <div style={{
                               position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
-                              width: r === 'sacred' ? 200 : r === 'true rare' ? 160 : r === 'rare' ? 120 : 80,
-                              height: r === 'sacred' ? 200 : r === 'true rare' ? 160 : r === 'rare' ? 120 : 80,
+                              width: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
+                              height: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
                               borderRadius: '50%',
-                              border: `2px solid ${col}`,
+                              border: `${r === 'sacred' ? 2.5 : 2}px solid ${col}`,
                               opacity: 0,
-                              animation: `pop-ring ${dur * 0.8}s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards`,
+                              animation: `pop-ring ${dur * 0.6}s cubic-bezier(0.22, 1, 0.36, 1) ${baseDelay}s forwards`,
                             }} />
-                            {/* Particles */}
+                            {/* Particles — staggered in waves for sacred/true rare */}
                             {Array.from({ length: particleCount }).map((_, pi) => {
                               const angle = (pi / particleCount) * Math.PI * 2 + (pi * 0.3)
-                              const dist1 = 20 + Math.sin(pi * 2.1) * 10
-                              const dist2 = 60 + Math.cos(pi * 1.7) * 30 + (r === 'sacred' ? 40 : r === 'true rare' ? 25 : 0)
+                              const wave = r === 'sacred' ? Math.floor(pi / 8) : r === 'true rare' ? Math.floor(pi / 8) : 0
+                              const dist1 = 15 + Math.sin(pi * 2.1) * 10 + wave * 10
+                              const dist2 = 50 + Math.cos(pi * 1.7) * 30 + (r === 'sacred' ? 60 + wave * 20 : r === 'true rare' ? 40 + wave * 15 : 0)
                               const x1 = Math.cos(angle) * dist1
                               const y1 = Math.sin(angle) * dist1
                               const x2 = Math.cos(angle) * dist2
                               const y2 = Math.sin(angle) * dist2
-                              const size = r === 'sacred' ? 4 : r === 'true rare' ? 3.5 : r === 'rare' ? 3 : 2.5
-                              const delay = 0.15 + pi * 0.03
+                              const size = r === 'sacred' ? 3 + (pi % 3) : r === 'true rare' ? 2.5 + (pi % 3) * 0.8 : r === 'rare' ? 3 : 2.5
+                              const delay = baseDelay + wave * 0.6 + pi * 0.04
                               return (
                                 <div key={pi} style={{
                                   position: 'absolute', top: '45%', left: '50%',
                                   width: size, height: size, borderRadius: '50%',
-                                  background: pi % 3 === 0 ? col : pi % 3 === 1 ? '#fff' : col,
-                                  boxShadow: `0 0 ${size * 2}px ${col}`,
+                                  background: pi % 4 === 0 ? '#fff' : pi % 4 === 1 ? col : pi % 4 === 2 ? (r === 'sacred' ? '#e0d0ff' : col) : col,
+                                  boxShadow: `0 0 ${size * 3}px ${col}`,
                                   opacity: 0,
                                   ['--pp-x1' as string]: `${x1}px`, ['--pp-y1' as string]: `${y1}px`,
                                   ['--pp-x2' as string]: `${x2}px`, ['--pp-y2' as string]: `${y2}px`,
-                                  animation: `pop-particle ${dur}s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
+                                  animation: `pop-particle ${dur * 0.7}s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
                                 }} />
                               )
                             })}
+                            {/* True rare — aurora ring + second wave */}
+                            {r === 'true rare' && (<>
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 180, height: 180, borderRadius: '50%',
+                                background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)',
+                                animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
+                                opacity: 0,
+                              }} />
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 260, height: 260, borderRadius: '50%',
+                                border: '1px solid rgba(167,139,250,0.2)',
+                                opacity: 0,
+                                animation: `pop-ring 2.2s cubic-bezier(0.22, 1, 0.36, 1) 1s forwards`,
+                              }} />
+                            </>)}
                             {/* Sacred galaxy explosion */}
                             {r === 'sacred' && (<>
-                              {/* Nova burst */}
+                              {/* Initial shockwave */}
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 160, height: 160, borderRadius: '50%',
+                                border: '2px solid rgba(255,255,255,0.5)',
+                                opacity: 0,
+                                animation: `pop-ring 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards`,
+                              }} />
+                              {/* Nova burst — first wave */}
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 350, height: 350, borderRadius: '50%',
+                                background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(196,181,253,0.2) 30%, rgba(139,92,246,0.1) 50%, transparent 70%)',
+                                animation: `sacred-nova 3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
+                                opacity: 0,
+                              }} />
+                              {/* Nebula — rotating conic */}
                               <div style={{
                                 position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 300, height: 300, borderRadius: '50%',
-                                background: 'radial-gradient(circle, rgba(196,181,253,0.4) 0%, rgba(139,92,246,0.15) 40%, transparent 70%)',
-                                animation: `sacred-nova 2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards`,
+                                background: `conic-gradient(from 0deg, rgba(196,181,253,0.2), rgba(139,92,246,0.08), rgba(99,102,241,0.15), rgba(196,181,253,0.05), rgba(167,139,250,0.2), rgba(255,255,255,0.1), rgba(196,181,253,0.15))`,
+                                animation: `sacred-shimmer 4s ease-out 0.5s forwards`,
+                                filter: 'blur(10px)',
                                 opacity: 0,
                               }} />
-                              {/* Nebula shimmer */}
+                              {/* Second nova — delayed */}
                               <div style={{
                                 position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 250, height: 250, borderRadius: '50%',
-                                background: `conic-gradient(from 0deg, rgba(196,181,253,0.15), rgba(139,92,246,0.1), rgba(99,102,241,0.15), rgba(196,181,253,0.1), rgba(167,139,250,0.15), rgba(196,181,253,0.1))`,
-                                animation: `sacred-shimmer 2.5s ease-out 0.1s forwards`,
-                                filter: 'blur(8px)',
+                                background: 'radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(139,92,246,0.1) 40%, transparent 65%)',
+                                animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards`,
                                 opacity: 0,
                               }} />
-                              {/* Trailing stars */}
-                              {Array.from({ length: 10 }).map((_, si) => {
-                                const a = (si / 10) * Math.PI * 2
-                                const r1 = 15, r2 = 50 + si * 4, r3 = 80 + si * 6
+                              {/* Trailing stars — three waves */}
+                              {Array.from({ length: 18 }).map((_, si) => {
+                                const a = (si / 18) * Math.PI * 2
+                                const wave = Math.floor(si / 6)
+                                const r1 = 10 + wave * 8
+                                const r2 = 40 + si * 3 + wave * 15
+                                const r3 = 80 + si * 5 + wave * 20
+                                const starSize = 2 + (si % 3)
                                 return (
                                   <div key={`s${si}`} style={{
                                     position: 'absolute', top: '45%', left: '50%',
-                                    width: 3, height: 3,
-                                    background: si % 2 === 0 ? '#e0d0ff' : '#c4b5fd',
+                                    width: starSize, height: starSize,
+                                    background: si % 3 === 0 ? '#fff' : si % 3 === 1 ? '#e0d0ff' : '#c4b5fd',
                                     borderRadius: '50%',
-                                    boxShadow: `0 0 6px rgba(196,181,253,0.8), 0 0 12px rgba(139,92,246,0.4)`,
+                                    boxShadow: `0 0 ${starSize * 2}px rgba(196,181,253,0.8), 0 0 ${starSize * 4}px rgba(139,92,246,0.4)`,
                                     opacity: 0,
                                     ['--ss-x1' as string]: `${Math.cos(a) * r1}px`, ['--ss-y1' as string]: `${Math.sin(a) * r1}px`,
                                     ['--ss-x2' as string]: `${Math.cos(a) * r2}px`, ['--ss-y2' as string]: `${Math.sin(a) * r2}px`,
                                     ['--ss-x3' as string]: `${Math.cos(a) * r3}px`, ['--ss-y3' as string]: `${Math.sin(a) * r3}px`,
-                                    animation: `sacred-star ${1.8 + si * 0.1}s cubic-bezier(0.22, 1, 0.36, 1) ${0.05 + si * 0.06}s forwards`,
+                                    animation: `sacred-star ${2.5 + si * 0.08}s cubic-bezier(0.22, 1, 0.36, 1) ${0.2 + wave * 0.8 + (si % 6) * 0.08}s forwards`,
                                   }} />
                                 )
                               })}
-                              {/* Second ring — slower */}
+                              {/* Outer rings — staggered */}
                               <div style={{
                                 position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
-                                width: 240, height: 240, borderRadius: '50%',
-                                border: '1px solid rgba(196,181,253,0.3)',
+                                width: 280, height: 280, borderRadius: '50%',
+                                border: '1px solid rgba(196,181,253,0.25)',
                                 opacity: 0,
-                                animation: `pop-ring 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards`,
+                                animation: `pop-ring 2s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards`,
+                              }} />
+                              <div style={{
+                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                width: 340, height: 340, borderRadius: '50%',
+                                border: '0.5px solid rgba(196,181,253,0.15)',
+                                opacity: 0,
+                                animation: `pop-ring 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards`,
                               }} />
                             </>)}
                           </div>
@@ -1945,7 +2069,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           {/* CATALOG */}
           {activeTab === 'catalog' && (
             <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.5)' }} onMouseDown={() => setActiveTab('shop')}>
-              <div onMouseDown={e => e.stopPropagation()} style={{ width: '90%', maxWidth: 700, maxHeight: '80vh', overflowY: 'auto', borderRadius: 20, background: isDark ? '#141210' : '#f5f3ef', boxShadow: '0 32px 80px -12px rgba(0,0,0,0.5)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: 24 }}>
+              <div onMouseDown={e => e.stopPropagation()} style={{ width: '90%', maxWidth: 720, maxHeight: '80vh', overflowY: 'auto', borderRadius: 20, background: isDark ? '#141210' : '#f5f3ef', boxShadow: '0 32px 80px -12px rgba(0,0,0,0.5)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, padding: '28px 32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <span style={{ fontSize: 18, fontWeight: 700, fontFamily: font, color: textPrimary, letterSpacing: '0.06em' }}>Catalog</span>
                 <button
@@ -1994,7 +2118,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     </div>
                       )
                     })()}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px 16px' }}>
                       {plants.map(type => {
                         const t = TREE_TYPES[type]
                         const owned = inventory.includes(type) || type === 'tangerine'

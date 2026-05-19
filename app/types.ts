@@ -60,7 +60,6 @@ export interface Tree {
   growthTarget?: number
   lastHarvest?: number
   ascension?: number
-  dormant?: boolean
 }
 
 export interface SlashMenuState {

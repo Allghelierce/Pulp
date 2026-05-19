@@ -44,6 +44,8 @@ interface OrchardViewProps {
   onOpenShop?: () => void
   onOpenSatchel?: () => void
   onOpenSettings?: () => void
+  goalStreak?: number
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
 }
 
 type RGB = [number, number, number]
@@ -438,6 +440,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
     const isFg = sc >= 0.5
     return (
       <g key={`wm-${wi}`}>
+        {/* Cast shadow */}
+        <ellipse cx={wmX + h * 0.6} cy={wmY + h + 1.2 * sc} rx={h * 0.9} ry={1.5 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
+        <ellipse cx={wmX + h * 0.35} cy={wmY + h + 0.8 * sc} rx={h * 0.5} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
         <ellipse cx={wmX} cy={wmY + h + 0.5 * sc} rx={bw + 1 * sc} ry={0.8 * sc} fill={isDark ? '#2a2418' : '#5a4a38'} opacity="0.4" />
         <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#brick-pat)" />
         <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill={isDark ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)'} />
@@ -1731,6 +1736,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
               <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
+              {/* Cast shadow */}
+              <ellipse cx={lx + 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
+              <ellipse cx={lx + 2 * sc} cy={ly + 1 * sc} rx={3 * sc} ry={0.6 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
               {/* Pole */}
               <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
@@ -1978,8 +1986,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <path d="M260 248 Q259 252 258 255" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1" fill="none" strokeLinecap="round" />
               <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
               <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
-              {/* Cart base shadow — grounds it on the hill */}
-              <ellipse cx="200" cy="262" rx="110" ry="8" fill={isDark ? '#0a0806' : '#4a4030'} opacity="0.2" />
+              {/* Cast shadow */}
+              <ellipse cx="170" cy="270" rx="130" ry="14" fill={isDark ? 'rgba(0,0,0,0.22)' : 'rgba(20,15,5,0.15)'} />
+              <ellipse cx="190" cy="265" rx="115" ry="10" fill={isDark ? 'rgba(0,0,0,0.15)' : 'rgba(20,15,5,0.1)'} />
             </g>
           )
         })()}
@@ -2003,6 +2012,9 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
+              {/* Cast shadow */}
+              <ellipse cx={lx - 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
+              <ellipse cx={lx - 2 * sc} cy={ly + 1 * sc} rx={3 * sc} ry={0.6 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
               {/* Pole */}
               <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
@@ -2556,7 +2568,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop, onOpenSatchel,
+  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly',
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -2701,11 +2713,18 @@ export const OrchardView = memo(function OrchardView({
   const [sapDrops, setSapDrops] = useState<{ id: string; x: number; y: number; delay: number }[]>([])
   const [sapFunnelTarget, setSapFunnelTarget] = useState<{ x: number; y: number } | null>(null)
 
+  const sapMultiplier = useMemo(() => {
+    const hour = new Date().getHours()
+    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+    return Math.min(4, 1 + earlyBird + quotaBonus)
+  }, [quotaTier])
+
   const getAvailableSap = useCallback(() => {
     const allTrees = grove.filter(t => t && t.type !== 'spoiled')
     const maxSap = allTrees.reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
-    return Math.floor(maxSap * sapFillProgress)
-  }, [sapFillProgress, grove])
+    return Math.floor(maxSap * sapFillProgress * sapMultiplier)
+  }, [sapFillProgress, grove, sapMultiplier])
 
   const getGlobalMaxSap = useCallback(() => {
     return grove.filter(t => t && t.type !== 'spoiled').reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
@@ -3069,10 +3088,10 @@ export const OrchardView = memo(function OrchardView({
   const textMuted = isDark ? '#4a4840' : '#b8b4ae'
 
   const plotCount = currentPlotTrees.length
-  const baseSize = plotCount <= 6 ? 130 :
-    plotCount <= 15 ? 115 :
-    plotCount <= 24 ? 105 :
-    plotCount <= 36 ? 95 : 85
+  const baseSize = plotCount <= 6 ? 150 :
+    plotCount <= 15 ? 132 :
+    plotCount <= 24 ? 120 :
+    plotCount <= 36 ? 110 : 98
   prevPlotPageRef.current = plotPage
 
   return (
@@ -3119,26 +3138,76 @@ export const OrchardView = memo(function OrchardView({
             WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
             borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
           }}>
-            <div className="flex items-center justify-center w-full h-full gap-3" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              <button onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }} className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.04]" style={{ cursor: getAvailableSap() > 0 ? 'pointer' : 'default' }}>
-                <PulpIcon size={14} />
-                <span ref={sapCounterRef} className="text-[12px] font-normal tabular-nums" style={{
-                  color: isDark ? 'rgba(212,208,200,0.85)' : 'rgba(58,54,48,0.75)',
-                  transition: 'transform 0.3s ease, color 0.3s ease',
-                  transform: collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? 'scale(1.15)' : 'scale(1)',
-                }}>{sap}</span>
-                {collectAllAnim.active && collectAllAnim.current < collectAllAnim.total && (
-                  <span className="text-[10px] font-normal tabular-nums" style={{ color: '#d97706', opacity: 0.85 }}>+{collectAllAnim.current}</span>
-                )}
-                {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
-                  <span className="text-[10px] font-normal tabular-nums" style={{ color: '#d97706', animation: 'sap-merge 0.5s ease-out forwards' }}>+{collectAllAnim.total}</span>
-                )}
+            <div className="flex items-center justify-center w-full h-full gap-2.5" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              {/* Hidden collect target for sap animation */}
+              <span ref={collectBtnRef} className="absolute left-2 opacity-0 pointer-events-none">
+                <span ref={sapCounterRef}>{sap}</span>
+              </span>
+
+              <button
+                onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
+                className="flex items-center justify-center rounded-md transition-all hover:opacity-80"
+                style={{
+                  width: 30, height: 30,
+                  backgroundColor: 'transparent',
+                  color: isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)',
+                }}
+                title="Collect sap"
+              >
+                <PulpIcon size={16} />
               </button>
-              <div style={{ width: 1, height: 14, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }} />
-              <div className="flex items-center gap-1.5">
-                <GemIcon size={13} />
-                <span className="text-[12px] font-normal tabular-nums" style={{ color: isDark ? 'rgba(212,208,200,0.85)' : 'rgba(58,54,48,0.75)' }}>{gems}</span>
-              </div>
+              {collectAllAnim.active && collectAllAnim.total > 0 && (
+                <span className="text-[10px] font-normal tabular-nums absolute left-1/2 -translate-x-1/2 top-full" style={{ color: '#d97706', animation: 'sap-merge 0.5s ease-out forwards', pointerEvents: 'none' }}>
+                  +{collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? collectAllAnim.total : collectAllAnim.current}
+                </span>
+              )}
+
+              <div className="w-px h-4" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+
+              <button
+                onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
+                className="flex items-center justify-center rounded-md transition-all"
+                style={{
+                  width: 30, height: 30,
+                  backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : 'transparent',
+                  color: activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
+                }}
+                title="Chop"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
+              </button>
+              <button
+                onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
+                className="flex items-center justify-center rounded-md transition-all"
+                style={{
+                  width: 30, height: 30,
+                  backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : 'transparent',
+                  color: editMode ? '#d97706' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
+                }}
+                title="Edit layout"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button
+                onClick={captureOrchard}
+                className="flex items-center justify-center rounded-md transition-all"
+                style={{
+                  width: 30, height: 30,
+                  backgroundColor: 'transparent',
+                  color: screenshotBusy ? '#d97706' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
+                  opacity: screenshotBusy ? 0.5 : 1,
+                }}
+                title="Screenshot"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
+
+              {sapMultiplier > 1 && (
+                <>
+                  <div className="w-px h-4" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+                  <span className="text-[10px] tabular-nums" style={{ color: '#4ade80', fontWeight: 600 }}>{sapMultiplier.toFixed(1)}x</span>
+                </>
+              )}
             </div>
           </div>
           {/* Sap drop animations */}
@@ -3167,8 +3236,8 @@ export const OrchardView = memo(function OrchardView({
               ))}
           </div>
           <canvas data-orchard-ui id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
-          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 20px 0 30px -10px ${isDark ? 'rgba(9,9,11,0.4)' : 'rgba(60,50,40,0.15)'}` }} />
-          <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 60, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.55)' : 'rgba(50,45,38,0.18)'} 0%, transparent 100%)` }} />
+          <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 12px 0 20px -8px ${isDark ? 'rgba(9,9,11,0.25)' : 'rgba(60,50,40,0.1)'}` }} />
+          <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 80, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.3)' : 'rgba(50,45,38,0.12)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} onOpenShop={onOpenShop} />
 
 
@@ -3520,67 +3589,21 @@ export const OrchardView = memo(function OrchardView({
             </div>
           </div>
 
-          {/* Tool buttons — left center */}
-          <div data-orchard-ui className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-start gap-2" style={{ fontFamily: 'Crimson Pro, serif' }}>
-            <button
-              onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
-              style={{
-                width: 36, height: 36,
-                backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-                color: activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
-                border: `1px solid ${activeTool === 'axe' ? 'rgba(239,68,68,0.4)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')}`,
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-              }}
-              title="Chop"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
-            </button>
-            {activeTool === 'axe' && (
-              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
-                Tap tree
-              </span>
-            )}
-
-            <button
-              onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-              className="flex items-center justify-center rounded-md text-[11px] font-normal transition-all"
-              style={{
-                width: 36, height: 36,
-                backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-                color: editMode ? '#d97706' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
-                border: `1px solid ${editMode ? 'rgba(217,119,6,0.3)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')}`,
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-              }}
-              title="Edit layout"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            {editMode && (
-              <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
-                Drag to move
-              </span>
-            )}
-
-            <button
-              onClick={captureOrchard}
-              className="flex items-center justify-center rounded-md transition-all"
-              style={{
-                width: 36, height: 36,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                color: screenshotBusy ? '#d97706' : (isDark ? 'rgba(161,161,170,0.8)' : 'rgba(113,113,122,0.8)'),
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                opacity: screenshotBusy ? 0.5 : 1,
-              }}
-              title="Screenshot"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </button>
-          </div>
+          {/* Tool hint labels */}
+          {(activeTool === 'axe' || editMode) && (
+            <div data-orchard-ui className="absolute left-1/2 -translate-x-1/2 top-12 z-50">
+              {activeTool === 'axe' && (
+                <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
+                  Tap tree to chop
+                </span>
+              )}
+              {editMode && (
+                <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#d97706', backgroundColor: isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.1)' }}>
+                  Drag to move
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Chop confirmation popup */}
           <AnimatePresence>

@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShoppingBag } from "lucide-react"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
@@ -76,6 +76,8 @@ interface DocumentToolbarProps {
   darkPaper?: boolean
   selectedBoxCount: number
   unlockedCosmetics?: string[]
+  goalStreak?: number
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
 }
 
 
@@ -96,7 +98,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   sap, isVault, isUnlocked, onLock,
   sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, isTextActive, onOpenChat, chatOpen,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
-  userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = []
+  userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = [],
+  goalStreak = 0,
+  quotaTier = 'monthly'
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -146,7 +150,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const btnIconOnlyActive = "text-[12px] font-normal border border-zinc-200 rounded-[5px] p-1.5 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] whitespace-nowrap transition-colors cursor-pointer active:scale-[0.97]"
   const btnFont: React.CSSProperties = { fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }
 
-  const [currencyTooltip, setCurrencyTooltip] = useState<'sap' | 'gem' | null>(null)
+
+  const sapMultiplier = useMemo(() => {
+    const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
+    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+    return Math.min(4, 1 + earlyBird + quotaBonus)
+  }, [quotaTier])
 
   const NEON_ORANGE = "#d97706"
   const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 6px rgba(217,119,6,0.3), 0 0 2px rgba(217,119,6,0.15)` }
@@ -560,7 +570,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
         </button>}
       </div>
 
-      {/* Currency Display - Centered */}
+      {/* Currency + Avatar pill */}
       {!hideCurrencies && <div className="relative">
         <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           {userAvatarUrl ? (
@@ -573,67 +583,15 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           {sap != null && (
             <span className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-400/20 text-[12px] font-normal tabular-nums">
               <PulpIcon size={17} />
-              <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)', fontSize: 11 }}>{Math.floor(sap)}</span>
+              <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)', fontSize: 13 }}>{Math.floor(sap)}</span>
+            </span>
+          )}
+          {sapMultiplier > 1 && (
+            <span className="pl-1.5 border-l border-zinc-400/20 tabular-nums" style={{ fontSize: 9, fontWeight: 600, color: '#4ade80', fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+              {sapMultiplier.toFixed(1)}x
             </span>
           )}
         </div>
-
-        {currencyTooltip && (
-          <>
-            <div className="fixed inset-0 z-[90]" onClick={() => setCurrencyTooltip(null)} />
-            <div
-              className="absolute z-[100] overflow-hidden"
-              style={{
-                top: '100%', right: 0, marginTop: 8, width: 260,
-                borderRadius: 12,
-                background: '#18181b',
-                border: '1px solid rgba(255,255,255,0.07)',
-                boxShadow: '0 20px 60px -10px rgba(0,0,0,0.6)',
-              }}
-            >
-              <div className="px-4 pt-3.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div className="flex items-center gap-2">
-                  <PulpIcon size={14} />
-                  <span style={{ fontSize: 14, fontWeight: 400, color: '#e4e0d8', fontFamily: 'Crimson Pro, serif' }}>
-                    Sap
-                  </span>
-                </div>
-              </div>
-              <div className="px-4 py-3 space-y-2">
-                {[
-                  { icon: '🌳', text: 'Collected from trees in your grove.' },
-                  { icon: '🌱', text: 'Spend sap to buy seeds.' },
-                  { icon: '🏆', text: 'Grow trees by completing focus sessions.' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className="shrink-0" style={{ fontSize: 12 }}>{item.icon}</span>
-                    <p style={{ fontSize: 12, color: '#a1a09c', fontFamily: 'Crimson Pro, serif', lineHeight: 1.4, margin: 0 }}>
-                      {item.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="px-4 pb-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setCurrencyTooltip(null)
-                    if (currencyTooltip === 'sap') onOpenGrove?.()
-                  }}
-                  style={{
-                    width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 11, fontWeight: 400,
-                    fontFamily: 'Crimson Pro, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
-                  onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
-                >
-                  got it
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
       </div>}
 
       <div className="shrink-0 pr-[68px]" />
