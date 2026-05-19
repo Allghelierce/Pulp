@@ -39,10 +39,11 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   }, [])
 
   const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
-  const isEarlyBird = hour >= 6 && hour < 10
+  const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
   const earlyBirdProgress = isEarlyBird ? Math.min(1, (today?.focusMinutes ?? 0) / 10) : 0
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-  const multiplier = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
+  const streakBonus = Math.min(1, goalStreak / 30)
+  const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
 
   const quotaGoal = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 : dailyGoalMinutes * 30
   const quotaProgress = Math.min(1, (today?.focusMinutes ?? 0) / Math.max(1, quotaTier === 'daily' ? quotaGoal : quotaTier === 'weekly' ? quotaGoal / 7 : quotaGoal / 30))
@@ -56,7 +57,7 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   const rings = [
     { value: quotaProgress, color: '#ea580c', radius: (size - strokeW) / 2 },
     { value: streakProgress, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#fbbf24', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   return (
@@ -104,41 +105,38 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   )
 }
 
-function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }: {
-  focus: number; writing: number; sessions: number; isDark: boolean
-  goals: typeof DEFAULT_GOALS; onEditGoals: () => void
+function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, quotaTier = 'monthly' }: {
+  focus: number; isDark: boolean; goalStreak?: number; dailyGoalMinutes?: number; quotaTier?: 'monthly' | 'weekly' | 'daily'
 }) {
+  const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
+  const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
+  const earlyBirdProgress = isEarlyBird ? Math.min(1, focus / 10) : 0
+  const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+  const streakBonus = Math.min(1, goalStreak / 30)
+  const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
+  const quotaProgress = Math.min(1, focus / Math.max(1, dailyGoalMinutes))
+  const streakProgress = Math.min(1, goalStreak / 30)
+
   const size = 200
   const cx = size / 2, cy = size / 2
   const strokeW = 5.5
   const gap = 6
 
   const rings = [
-    { value: focus, goal: goals.focus, color: '#ea580c', label: 'Focus', unit: 'min', radius: (size - strokeW) / 2 },
-    { value: writing, goal: goals.writing, color: '#d97706', label: 'Write', unit: 'chars', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: sessions, goal: goals.sessions, color: '#f59e0b', label: 'Sessions', unit: '', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, color: '#ea580c', label: 'Quota', radius: (size - strokeW) / 2 },
+    { value: streakProgress, color: '#d97706', label: 'Streak', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#fbbf24', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
-        <button
-          onClick={onEditGoals}
-          title="Edit goals"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: isDark ? '#5a5650' : '#a8a4a0', display: 'flex' }}
-        >
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
-          </svg>
-        </button>
-      </div>
+      <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Multiplier</span>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
           const gapLen = circ * 0.04
           const trackLen = circ - gapLen
-          const pct = Math.min(ring.value / ring.goal, 1)
+          const pct = Math.min(ring.value, 1)
           const fillLen = trackLen * pct
           const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
           const complete = pct >= 1
@@ -180,16 +178,15 @@ function ActivityRings({ focus, writing, sessions, isDark, goals, onEditGoals }:
             </g>
           )
         })}
-        {rings.map((ring, i) => {
-          const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
-          const abbr = ['mins', 'char', 'sesh'][i]
-          const y = cy - 12 + i * 15
-          return (
-            <text key={`label-${i}`} x={cx} y={y} textAnchor="middle" dominantBaseline="central">
-              <tspan style={{ fontSize: 11, fontWeight: 400, fill: ring.color }}>{pct}% {abbr}</tspan>
-            </text>
-          )
-        })}
+        <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
+          {multiplier.toFixed(1)}x
+        </text>
+        <text x={cx} y={cy + 16} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 10, fontWeight: 400, fill: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {quotaTier} · {goalStreak}d streak
+        </text>
       </svg>
     </div>
   )
@@ -412,7 +409,7 @@ export const StatsView = memo(function StatsView({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <ActivityRings focus={todayFocus} writing={todayChars} sessions={todaySessions} isDark={isDark} goals={goals} onEditGoals={() => { setDraftGoals(goals); setEditingGoals(e => !e) }} />
+            <ActivityRings focus={todayFocus} isDark={isDark} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
               <div style={{ display: 'flex', gap: 24 }}>
                 {[

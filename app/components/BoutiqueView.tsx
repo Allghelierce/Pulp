@@ -837,38 +837,133 @@ export const BoutiqueView = memo(function BoutiqueView({
                     ))}
                   </>}
 
-                  {/* Distant hills — far layer */}
-                  <path d="M-10,130 L20,118 L50,105 L70,112 L100,98 L120,108 L150,95 L175,102 L200,92 L230,100 L260,96 L285,106 L310,100 L340,110 L370,104 L410,115 L410,160 L-10,160 Z" fill="url(#m-hill-far)" />
-                  {/* Cliff face shadows */}
-                  <polygon points="50,105 70,112 50,112" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="150,95 175,102 150,102" fill="rgba(0,0,0,0.07)" />
-                  <polygon points="200,92 230,100 200,100" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="310,100 340,110 310,110" fill="rgba(0,0,0,0.06)" />
-                  {/* Ridge highlights */}
-                  <path d="M50,105 L70,112" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
-                  <path d="M150,95 L175,102" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.4" />
-                  <path d="M200,92 L230,100" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+                  {/* ===== BACKGROUND HILL (green in sketch) — one big rolling curve ===== */}
+                  <path d="M-10,160 Q50,140 120,110 Q180,85 240,75 Q300,80 340,95 Q380,108 410,130 L410,200 L-10,200 Z" fill="url(#m-hill-far)" />
+                  {/* Hill shading — darker underside */}
+                  <path d="M-10,160 Q50,140 120,110 Q180,85 240,75 Q300,80 340,95 Q380,108 410,130 L410,200 L-10,200 Z" fill={isDark ? '#060a06' : '#6a7a60'} opacity="0.15" />
+                  {/* Hill highlight ridge */}
+                  <path d="M-10,160 Q50,140 120,110 Q180,85 240,75 Q300,80 340,95 Q380,108 410,130" fill="none" stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)'} strokeWidth="1" />
+                  {/* Subtle hill texture */}
+                  <path d="M60,140 Q80,135 100,125" stroke={isDark ? '#0a120a' : '#7a8a70'} strokeWidth="0.4" fill="none" opacity="0.3" />
+                  <path d="M180,90 Q220,82 260,82" stroke={isDark ? '#0a120a' : '#7a8a70'} strokeWidth="0.4" fill="none" opacity="0.3" />
+                  <path d="M320,98 Q350,106 380,118" stroke={isDark ? '#0a120a' : '#7a8a70'} strokeWidth="0.4" fill="none" opacity="0.3" />
 
-                  {/* Mid hills */}
-                  <path d="M-10,150 L30,138 L60,128 L90,136 L120,122 L145,132 L170,120 L200,128 L230,118 L260,130 L290,124 L320,134 L350,126 L380,138 L410,132 L410,180 L-10,180 Z" fill="url(#m-hill-mid)" />
-                  <polygon points="60,128 90,136 60,136" fill="rgba(0,0,0,0.1)" />
-                  <polygon points="170,120 200,128 170,128" fill="rgba(0,0,0,0.08)" />
-                  <polygon points="230,118 260,130 230,130" fill="rgba(0,0,0,0.1)" />
-                  <path d="M120,122 L145,132" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-                  <path d="M230,118 L260,130" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.4" />
+                  {/* ===== FOREGROUND GROUND PLANE (blue in sketch) — nearly flat ===== */}
+                  <path d="M-10,195 L100,193 L200,192 L300,193 L410,195 L410,300 L-10,300 Z" fill="url(#m-ground)" />
+                  {/* Ground plane horizon edge */}
+                  <path d="M-10,195 L100,193 L200,192 L300,193 L410,195" fill="none" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.06)'} strokeWidth="0.8" />
 
-                  {/* Near hills */}
-                  <path d="M-10,170 L20,158 L55,148 L85,156 L110,142 L140,152 L165,140 L195,150 L220,138 L255,148 L285,140 L310,152 L340,144 L375,155 L410,148 L410,200 L-10,200 Z" fill="url(#m-hill-near)" />
-                  <polygon points="55,148 85,156 55,156" fill="rgba(0,0,0,0.1)" />
-                  <polygon points="165,140 195,150 165,150" fill="rgba(0,0,0,0.09)" />
-                  <polygon points="285,140 310,152 285,152" fill="rgba(0,0,0,0.1)" />
+                  {/* ===== LAMPPOST (orange in sketch) — tall, centered behind stall ===== */}
+                  {(() => {
+                    const lpx = 200
+                    const ironColor = isDark ? '#1a1610' : '#3a3428'
+                    const ironLight = isDark ? '#2a2620' : '#5a5448'
+                    return (
+                      <g>
+                        {/* Main post — tall from ground up past hill */}
+                        <rect x={lpx - 2} y={80} width={4} height={115} fill={ironColor} />
+                        <rect x={lpx - 0.8} y={80} width={1.6} height={115} fill={ironLight} opacity="0.25" />
+                        {/* Post taper rings */}
+                        <rect x={lpx - 3} y={185} width={6} height={4} rx="1" fill={ironColor} />
+                        <rect x={lpx - 2.5} y={182} width={5} height={4} rx="0.8" fill={ironColor} />
+                        <rect x={lpx - 3.5} y={188} width={7} height={3} rx="1.2" fill={ironColor} />
+                        {/* Base plate */}
+                        <ellipse cx={lpx} cy={192} rx={6} ry={1.5} fill={ironColor} />
+                        {/* Cross arm at top */}
+                        <rect x={lpx - 18} y={82} width={36} height={2.5} rx="0.8" fill={ironColor} />
+                        <rect x={lpx - 18} y={82} width={36} height={1.2} rx="0.5" fill={ironLight} opacity="0.2" />
+                        {/* Left arm scroll */}
+                        <path d={`M${lpx - 18} ${82} Q${lpx - 22} ${86} ${lpx - 18} ${92}`} stroke={ironColor} strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path d={`M${lpx - 18} ${92} Q${lpx - 16} ${94} ${lpx - 17} ${96}`} stroke={ironColor} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                        {/* Right arm scroll */}
+                        <path d={`M${lpx + 18} ${82} Q${lpx + 22} ${86} ${lpx + 18} ${92}`} stroke={ironColor} strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path d={`M${lpx + 18} ${92} Q${lpx + 16} ${94} ${lpx + 17} ${96}`} stroke={ironColor} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                        {/* Left lantern housing */}
+                        <rect x={lpx - 22} y={92} width={8} height={12} rx="2" fill={isDark ? '#1a1410' : '#4a4030'} stroke={ironColor} strokeWidth="0.5" />
+                        <line x1={lpx - 22} y1={98} x2={lpx - 14} y2={98} stroke={ironColor} strokeWidth="0.4" />
+                        <line x1={lpx - 18} y1={92} x2={lpx - 18} y2={104} stroke={ironColor} strokeWidth="0.4" />
+                        <circle cx={lpx - 18} cy={98} r={3} fill="#d97706" opacity="0.9" />
+                        <circle cx={lpx - 18} cy={98} r={1.5} fill="#f0c050" />
+                        <circle cx={lpx - 18} cy={98} r={18} fill="#d97706" opacity={isDark ? '0.1' : '0.05'} />
+                        {/* Right lantern housing */}
+                        <rect x={lpx + 14} y={92} width={8} height={12} rx="2" fill={isDark ? '#1a1410' : '#4a4030'} stroke={ironColor} strokeWidth="0.5" />
+                        <line x1={lpx + 14} y1={98} x2={lpx + 22} y2={98} stroke={ironColor} strokeWidth="0.4" />
+                        <line x1={lpx + 18} y1={92} x2={lpx + 18} y2={104} stroke={ironColor} strokeWidth="0.4" />
+                        <circle cx={lpx + 18} cy={98} r={3} fill="#d97706" opacity="0.9" />
+                        <circle cx={lpx + 18} cy={98} r={1.5} fill="#f0c050" />
+                        <circle cx={lpx + 18} cy={98} r={18} fill="#d97706" opacity={isDark ? '0.1' : '0.05'} />
+                        {/* Top finial */}
+                        <circle cx={lpx} cy={78} r={3} fill={ironColor} />
+                        <circle cx={lpx} cy={78} r={1.5} fill={ironLight} opacity="0.3" />
+                        <path d={`M${lpx} ${75} L${lpx} ${72}`} stroke={ironColor} strokeWidth="1.5" strokeLinecap="round" />
+                        <circle cx={lpx} cy={71} r={1} fill={ironColor} />
+                        {/* Decorative post details */}
+                        <circle cx={lpx} cy={130} r={3.5} fill="none" stroke={ironColor} strokeWidth="0.8" />
+                        <circle cx={lpx} cy={155} r={3} fill="none" stroke={ironColor} strokeWidth="0.6" />
+                        <circle cx={lpx} cy={170} r={2.5} fill="none" stroke={ironColor} strokeWidth="0.5" />
+                      </g>
+                    )
+                  })()}
 
-                  {/* Ground field */}
-                  <path d="M-10,185 L30,178 L70,175 L120,180 L170,172 L220,176 L280,170 L340,175 L410,172 L410,300 L-10,300 Z" fill="url(#m-ground)" />
+                  {/* ===== FENCE (black in sketch) — strong perspective convergence ===== */}
+                  {(() => {
+                    const vanishX = 210, vanishY = 192
+                    const postColor = isDark ? '#2a2018' : '#6a5a40'
+                    const postLight = isDark ? '#3a3028' : '#8a7a58'
+                    const railColor = isDark ? '#342a1c' : '#7a6a48'
+                    const leftPosts = [
+                      { x: -5, h: 40, w: 6 },
+                      { x: 30, h: 36, w: 5.5 },
+                      { x: 60, h: 32, w: 5 },
+                      { x: 86, h: 28, w: 4.5 },
+                      { x: 108, h: 24, w: 4 },
+                      { x: 126, h: 20, w: 3.5 },
+                      { x: 142, h: 17, w: 3 },
+                      { x: 155, h: 14, w: 2.5 },
+                      { x: 166, h: 12, w: 2.2 },
+                    ]
+                    const rightPosts = [
+                      { x: 255, h: 12, w: 2.2 },
+                      { x: 268, h: 14, w: 2.5 },
+                      { x: 283, h: 17, w: 3 },
+                      { x: 302, h: 20, w: 3.5 },
+                      { x: 324, h: 24, w: 4 },
+                      { x: 350, h: 28, w: 4.5 },
+                      { x: 380, h: 32, w: 5 },
+                      { x: 415, h: 36, w: 5.5 },
+                    ]
+                    const allPosts = [...leftPosts, ...rightPosts]
+                    return (
+                      <g>
+                        {/* Top rail — converges to vanishing point */}
+                        <path d={`M${leftPosts[0].x},${vanishY - leftPosts[0].h} L${vanishX - 30},${vanishY - 10}`} stroke={railColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                        <path d={`M${vanishX + 30},${vanishY - 10} L${rightPosts[rightPosts.length-1].x},${vanishY - rightPosts[rightPosts.length-1].h}`} stroke={railColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                        {/* Bottom rail */}
+                        <path d={`M${leftPosts[0].x},${vanishY - leftPosts[0].h * 0.3} L${vanishX - 30},${vanishY - 4}`} stroke={railColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                        <path d={`M${vanishX + 30},${vanishY - 4} L${rightPosts[rightPosts.length-1].x},${vanishY - rightPosts[rightPosts.length-1].h * 0.3}`} stroke={railColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                        {/* Rail highlights */}
+                        <path d={`M${leftPosts[0].x},${vanishY - leftPosts[0].h - 1} L${vanishX - 30},${vanishY - 11}`} stroke={postLight} strokeWidth="0.5" fill="none" opacity="0.3" />
+                        <path d={`M${vanishX + 30},${vanishY - 11} L${rightPosts[rightPosts.length-1].x},${vanishY - rightPosts[rightPosts.length-1].h - 1}`} stroke={postLight} strokeWidth="0.5" fill="none" opacity="0.3" />
+                        {/* Posts with perspective scaling */}
+                        {allPosts.map((p, pi) => {
+                          const topY = vanishY - p.h
+                          return (
+                            <g key={`fp${pi}`}>
+                              <rect x={p.x - p.w / 2} y={topY} width={p.w} height={p.h + 2} rx={p.w * 0.15} fill={postColor} />
+                              <rect x={p.x - p.w * 0.2} y={topY} width={p.w * 0.4} height={p.h + 2} rx={p.w * 0.1} fill={postLight} opacity="0.25" />
+                              {/* Pointed top */}
+                              <path d={`M${p.x - p.w / 2} ${topY} L${p.x} ${topY - p.w * 0.7} L${p.x + p.w / 2} ${topY}`} fill={postColor} />
+                              <path d={`M${p.x - p.w * 0.15} ${topY} L${p.x} ${topY - p.w * 0.6} L${p.x + p.w * 0.15} ${topY}`} fill={postLight} opacity="0.2" />
+                            </g>
+                          )
+                        })}
+                      </g>
+                    )
+                  })()}
 
-                  {/* Grass tufts on near hills */}
-                  {[[30,176],[55,172],[80,170],[110,168],[140,174],[170,168],[200,172],[230,166],[260,170],[290,168],[320,174],[350,170],[375,174]].map(([gx,gy], i) => (
-                    <g key={`gr${i}`} opacity={isDark ? 0.3 : 0.2}>
+                  {/* Grass tufts on ground plane */}
+                  {[[20,196],[60,195],[100,194],[140,193],[170,193],[230,193],[270,194],[320,194],[360,195],[390,196],[45,197],[130,195],[280,195],[350,196]].map(([gx,gy], i) => (
+                    <g key={`gr${i}`} opacity={isDark ? 0.35 : 0.25}>
                       <path d={`M${gx},${gy} Q${gx-1},${gy-3} ${gx-2},${gy-5}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.6" fill="none" strokeLinecap="round" />
                       <path d={`M${gx},${gy} Q${gx+0.5},${gy-3.5} ${gx+1},${gy-4.5}`} stroke={isDark ? '#243418' : '#4a6a38'} strokeWidth="0.5" fill="none" strokeLinecap="round" />
                       <path d={`M${gx+1},${gy} Q${gx+2},${gy-2.5} ${gx+3},${gy-4}`} stroke={isDark ? '#2a3a20' : '#5a7a48'} strokeWidth="0.4" fill="none" strokeLinecap="round" />

@@ -19,6 +19,7 @@ export interface WidgetProps {
   hibernation?: { startDate: string; endDate: string; streakFrozen: number } | null
   hibernationScheduled?: { startDate: string; endDate: string } | null
   dailyGoalMinutes?: number
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
 }
 
 export interface WidgetDefinition {
@@ -47,9 +48,10 @@ export interface DashboardLayout {
 }
 
 export const GRID_COLS = 6
-export const ROW_HEIGHT = 120
+export const ROW_HEIGHT = 140
 export const GRID_GAP = 16
 export const GRID_PAD = 24
+export const MAX_ROWS = 5
 
 let _registry: WidgetDefinition[] = []
 

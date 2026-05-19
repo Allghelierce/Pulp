@@ -27,6 +27,7 @@ interface VitalitySystemProps {
   activeTabId: string | null
   initialNotes: any[]
   onOpenSatchel?: () => void
+  onOpenStats?: () => void
   goalStreak: number
   setGoalStreak: React.Dispatch<React.SetStateAction<number>>
   goalStreakLastDate: string
@@ -42,7 +43,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   sap, grove, achievements, setSap, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
-  inventory, setInventory, activeTabId, initialNotes, onOpenSatchel,
+  inventory, setInventory, activeTabId, initialNotes, onOpenSatchel, onOpenStats,
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   quotaTier,
@@ -237,9 +238,10 @@ export const VitalitySystem = memo(function VitalitySystem({
             if (!isHibernatingRef.current) {
               const groveSap = groveRef.current.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
               const hour = new Date().getHours()
-              const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+              const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
               const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-              const mult = Math.min(4, 1 + earlyBird + quotaBonus)
+              const streakBonus = Math.min(1, goalStreak / 30)
+              const mult = Math.min(5, 1 + earlyBird + quotaBonus + streakBonus)
               const perMinute = Math.max(1, Math.round((groveSap / 60) * mult))
               setSapRef.current(s => s + perMinute)
             }
@@ -327,10 +329,11 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   const getMultiplier = useCallback(() => {
     const hour = new Date().getHours()
-    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
     const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-    return Math.min(4, 1 + earlyBird + quotaBonus)
-  }, [quotaTier])
+    const streakBonus = Math.min(1, goalStreak / 30)
+    return Math.min(5, 1 + earlyBird + quotaBonus + streakBonus)
+  }, [quotaTier, goalStreak])
 
   const updateGoalStreak = useCallback((sessionMinutes: number) => {
     const todayStr = new Date().toISOString().split('T')[0]
@@ -488,6 +491,8 @@ export const VitalitySystem = memo(function VitalitySystem({
       grove={grove}
       goalStreak={goalStreak}
       quotaTier={quotaTier}
+      dailyGoalMinutes={dailyGoalMinutes}
+      onOpenStats={onOpenStats}
       isHibernating={isHibernating}
       hidden={hidden}
     />

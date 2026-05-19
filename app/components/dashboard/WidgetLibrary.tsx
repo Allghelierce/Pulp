@@ -18,13 +18,14 @@ interface WidgetLibraryProps {
   isOpen: boolean
   isDark: boolean
   widgets: WidgetInstance[]
+  gridFull?: boolean
   onClose: () => void
   onAdd: (widgetId: string, defaultSize: [number, number]) => void
   onRemove: (instanceId: string) => void
 }
 
 export const WidgetLibrary = memo(function WidgetLibrary({
-  isOpen, isDark, widgets, onClose, onAdd, onRemove,
+  isOpen, isDark, widgets, gridFull, onClose, onAdd, onRemove,
 }: WidgetLibraryProps) {
   const registry = getWidgetRegistry()
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
@@ -122,17 +123,19 @@ export const WidgetLibrary = memo(function WidgetLibrary({
                           </button>
                         ) : (
                           <button
-                            onClick={() => onAdd(def.id, def.defaultSize)}
+                            onClick={() => !gridFull && onAdd(def.id, def.defaultSize)}
+                            disabled={gridFull}
                             style={{
                               flexShrink: 0, marginLeft: 8,
                               fontSize: 9, fontWeight: 400, fontFamily: font,
-                              color: '#d97706',
-                              background: isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.1)',
-                              border: 'none', cursor: 'pointer',
+                              color: gridFull ? (isDark ? '#5a5650' : '#a8a4a0') : '#d97706',
+                              background: gridFull ? 'transparent' : (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.1)'),
+                              border: 'none', cursor: gridFull ? 'not-allowed' : 'pointer',
                               padding: '4px 10px', borderRadius: 6,
+                              opacity: gridFull ? 0.5 : 1,
                             }}
                           >
-                            + Add
+                            {gridFull ? 'Full' : '+ Add'}
                           </button>
                         )}
                       </div>

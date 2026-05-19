@@ -5,19 +5,7 @@ import { TREE_TYPES } from "@/app/constants"
 import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
-
-const QUOTES = [
-  "Every moment is a fresh beginning.",
-  "The only way out is through.",
-  "Progress, not perfection.",
-  "Your future self will thank you.",
-  "Focus on what you can control.",
-  "This too shall pass.",
-  "Keep going, you're doing great.",
-  "One step at a time.",
-  "Breathe. You've got this.",
-  "The best time to start was yesterday. The second best time is now."
-]
+import { MiniRings } from './StatsView'
 
 interface TimerSidebarPanelProps {
   isOpen: boolean
@@ -44,9 +32,11 @@ interface TimerSidebarPanelProps {
   selectedSeed: string | null
   onSelectSeed: (seed: string | null) => void
   onOpenSatchel?: () => void
+  onOpenStats?: () => void
   grove?: Tree[]
   goalStreak?: number
   quotaTier?: 'monthly' | 'weekly' | 'daily'
+  dailyGoalMinutes?: number
   isHibernating?: boolean
   hidden?: boolean
 }
@@ -166,9 +156,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  grove = [], goalStreak = 0, quotaTier = 'monthly', isHibernating = false, hidden = false,
+  grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats,
 }: TimerSidebarPanelProps) {
-  const [quoteIndex, setQuoteIndex] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const [giveUpStage, setGiveUpStage] = useState(0)
   const [seedTrayOpen, setSeedTrayOpen] = useState(false)
@@ -199,15 +188,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [running, waterDeadline])
-
-  // Rotate quotes every 20 minutes
-  useEffect(() => {
-    if (!running) return
-    const interval = setInterval(() => {
-      setQuoteIndex(prev => (prev + 1) % QUOTES.length)
-    }, 20 * 60 * 1000) // 20 minutes
-    return () => clearInterval(interval)
-  }, [running])
 
   const treeType = selectedSeed || 'tangerine'
   const treeInfo = TREE_TYPES[treeType]
@@ -253,7 +233,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     const rect = e.currentTarget.getBoundingClientRect()
     const updateTime = (clientX: number) => {
       const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      const mins = Math.round((percent * 175 + 5) / 5) * 5
+      const mins = Math.max(5, Math.min(180, Math.round((percent * 175 + 5) / 5) * 5))
       onSetTotal(mins * 60)
     }
     updateTime(e.clientX)
@@ -307,8 +287,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             style={{
               height: 24,
               padding: "0 6px",
-              backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.12)",
-              color: waterUrgent ? "#fca5a5" : "#93c5fd",
+              backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(217,119,6,0.08)",
+              color: waterUrgent ? "#fca5a5" : "#d4a574",
               animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
             }}
           >
@@ -382,7 +362,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
                       <circle
                         cx="12" cy="12" r="10" fill="none"
-                        stroke={waterUrgent ? "#ef4444" : "#60a5fa"}
+                        stroke={waterUrgent ? "#ef4444" : "#d4a574"}
                         strokeWidth="3" strokeLinecap="round"
                         pathLength="1"
                         strokeDasharray="1"
@@ -390,7 +370,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-normal tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#cbd5e1" }}>
+                  <span className="text-[9px] font-normal tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#d4a574" }}>
                     {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
                   </span>
                 </div>
@@ -579,17 +559,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                   : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>lock in</span>}
                 </p>
-                {!treeDead && goalStreak > 0 && (
-                  <div className="flex items-center justify-center gap-2 mt-2" style={{ fontFamily: serifFont, fontSize: 12, color: subtleColor }}>
-                    <span style={{ fontSize: 10, opacity: goalStreak >= 7 ? 1 : 0.5, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
-                      {goalStreak >= 7 ? `${goalStreak}d streak` : `${goalStreak}/7 to streak`}
-                    </span>
-                  </div>
-                )}
+                <div className="mt-3 flex justify-center">
+                  <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
+                </div>
               </div>
 
               {/* Tree view */}
-              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: 32 }}>
+              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: running ? 24 : 8 }}>
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
                     </div>
@@ -661,9 +637,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   title="Water the tree"
                   className="mb-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
                   style={{
-                    backgroundColor: waterUrgent ? "rgba(239,68,68,0.12)" : "rgba(96,165,250,0.1)",
-                    border: `1px solid ${waterUrgent ? "rgba(239,68,68,0.35)" : "rgba(96,165,250,0.3)"}`,
-                    color: waterUrgent ? "#fca5a5" : "#93c5fd",
+                    backgroundColor: waterUrgent ? "rgba(239,68,68,0.12)" : "rgba(217,119,6,0.08)",
+                    border: `1px solid ${waterUrgent ? "rgba(239,68,68,0.35)" : "rgba(217,119,6,0.2)"}`,
+                    color: waterUrgent ? "#fca5a5" : "#d4a574",
                     fontFamily: serifFont,
                     animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
                   }}
@@ -679,23 +655,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
-
-              {/* Quote when running */}
-              {running && (
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={quoteIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="text-[11px] italic text-center px-1 mb-3"
-                    style={{ color: dimColor, lineHeight: 1.4, fontFamily: serifFont }}
-                  >
-                    "{QUOTES[quoteIndex]}"
-                  </motion.p>
-                </AnimatePresence>
-              )}
 
               {/* Duration slider (hidden while running) */}
               {!running && (
@@ -752,45 +711,59 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
 
-            {/* Multiplier badges */}
+            {/* Streak + multiplier (hover for breakdown) */}
             {!running && !done && !treeDead && (() => {
               const hour = new Date().getHours()
-              const isEarlyBird = hour >= 6 && hour < 10
+              const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
               const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-              const earlyBirdMult = isEarlyBird ? 1 : 0
-              const cappedMult = Math.min(4, 1 + earlyBirdMult + quotaBonus)
+              const cappedMult = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
               return (
-                <div className="flex items-center justify-center gap-1.5 flex-wrap" style={{ marginBottom: 4 }}>
-                  {isEarlyBird && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif',
-                      padding: '2px 6px', borderRadius: 4,
-                      background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)',
-                      color: '#fbbf24', letterSpacing: '-0.01em',
+                <div className="relative flex items-center justify-center group" style={{ marginBottom: 4 }}>
+                  <div className="flex items-center gap-2 cursor-default" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                    {goalStreak > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 500, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
+                        {goalStreak}d streak
+                      </span>
+                    )}
+                    {cappedMult > 1 && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, letterSpacing: '-0.02em',
+                        color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24',
+                      }}>
+                        {cappedMult.toFixed(1)}x
+                      </span>
+                    )}
+                    {cappedMult <= 1 && goalStreak === 0 && (
+                      <span style={{ fontSize: 10, color: subtleColor }}>1.0x base</span>
+                    )}
+                  </div>
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50"
+                    style={{
+                      background: isDark ? '#1c1a17' : '#fff',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                      borderRadius: 6, padding: '6px 10px', minWidth: 120,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                     }}>
-                      early bird 2x
-                    </span>
-                  )}
-                  {quotaBonus > 0 && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif',
-                      padding: '2px 6px', borderRadius: 4,
-                      background: quotaTier === 'daily' ? 'rgba(248,113,113,0.12)' : 'rgba(74,222,128,0.12)',
-                      border: `1px solid ${quotaTier === 'daily' ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.25)'}`,
-                      color: quotaTier === 'daily' ? '#f87171' : '#4ade80', letterSpacing: '-0.01em',
-                    }}>
-                      {quotaTier} +{quotaBonus}x
-                    </span>
-                  )}
-                  {cappedMult > 1 && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif',
-                      color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24',
-                      letterSpacing: '-0.02em',
-                    }}>
-                      {cappedMult.toFixed(1)}x sap
-                    </span>
-                  )}
+                    <div style={{ fontSize: 9, fontWeight: 500, color: subtleColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Multiplier</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                        <span style={{ color: isDark ? '#a1a1aa' : '#71717a' }}>base</span>
+                        <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 500 }}>1.0x</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                        <span style={{ color: isEarlyBird ? '#fbbf24' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
+                        <span style={{ color: isEarlyBird ? '#fbbf24' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                        <span style={{ color: quotaBonus > 0 ? (quotaTier === 'daily' ? '#f87171' : '#4ade80') : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
+                        <span style={{ color: quotaBonus > 0 ? (quotaTier === 'daily' ? '#f87171' : '#4ade80') : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
+                      </div>
+                      <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginTop: 2, paddingTop: 3, display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                        <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 600 }}>total</span>
+                        <span style={{ color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24', fontWeight: 700 }}>{cappedMult.toFixed(1)}x</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )
             })()}

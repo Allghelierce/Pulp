@@ -153,7 +153,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 
   const sapMultiplier = useMemo(() => {
     const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
-    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
     const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
     return Math.min(4, 1 + earlyBird + quotaBonus)
   }, [quotaTier])
@@ -587,7 +587,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </span>
           )}
           {sapMultiplier > 1 && (
-            <span className="pl-1.5 border-l border-zinc-400/20 tabular-nums" style={{ fontSize: 9, fontWeight: 600, color: '#4ade80', fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+            <span className="pl-1.5 border-l border-zinc-400/20 tabular-nums" style={{ fontSize: 9, fontWeight: 600, color: sapMultiplier >= 3 ? '#f87171' : '#4ade80', fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.02em' }}>
               {sapMultiplier.toFixed(1)}x
             </span>
           )}

@@ -26,6 +26,7 @@ export interface DashboardViewProps {
   dailyGoalMinutes?: number
   hibernation?: { startDate: string; endDate: string; streakFrozen: number } | null
   hibernationScheduled?: { startDate: string; endDate: string } | null
+  quotaTier?: 'monthly' | 'weekly' | 'daily'
 }
 
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -42,7 +43,7 @@ function loadGoals() {
 export const DashboardView = memo(function DashboardView({
   isOpen, onClose, theme, xp, grove, inventory,
   activeNotebookId, activeNotebookName, achievements, notes,
-  goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled,
+  goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled, quotaTier,
 }: DashboardViewProps) {
   const isDark = theme === 'dark'
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
@@ -51,7 +52,7 @@ export const DashboardView = memo(function DashboardView({
 
   const {
     layout, editMode, setEditMode,
-    moveWidget, pinWidget, addWidget, removeWidget, resetLayout,
+    moveWidget, pinWidget, addWidget, removeWidget, resetLayout, gridFull,
   } = useWidgetLayout()
 
   useEffect(() => {
@@ -79,7 +80,8 @@ export const DashboardView = memo(function DashboardView({
     dailyGoalMinutes,
     hibernation,
     hibernationScheduled,
-  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes, goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled])
+    quotaTier,
+  }), [isDark, dailyStats, grove, xp, goals, inventory, activeNotebookId, activeNotebookName, achievements, notes, goalStreak, sap, dailyGoalMinutes, hibernation, hibernationScheduled, quotaTier])
 
   if (!isOpen) return null
 
@@ -114,6 +116,7 @@ export const DashboardView = memo(function DashboardView({
         isOpen={libraryOpen}
         isDark={isDark}
         widgets={layout.widgets}
+        gridFull={gridFull}
         onClose={() => setLibraryOpen(false)}
         onAdd={addWidget}
         onRemove={removeWidget}

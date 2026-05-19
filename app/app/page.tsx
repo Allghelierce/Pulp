@@ -26,7 +26,6 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { MiniRings } from "@/app/components/StatsView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
@@ -35,7 +34,6 @@ const _preloadStats = () => import("@/app/components/StatsView")
 const _preloadDashboard = () => import("@/app/components/DashboardView")
 const _preloadLeaderboard = () => import("@/app/components/LeaderboardView")
 
-const _preloadFocus = () => import("@/app/components/FocusView")
 const _preloadSettings = () => import("@/app/components/settings/SettingsView")
 const _preloadAiCmd = () => import("@/app/components/AiCommandBar")
 const _preloadChat = () => import("@/app/components/NotebookChat")
@@ -50,7 +48,6 @@ const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView }
 const DashboardView = lazy(() => _preloadDashboard().then(m => ({ default: m.DashboardView })))
 const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
 
-const FocusView = lazy(() => _preloadFocus().then(m => ({ default: m.FocusView })))
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
 const NotebookChat = lazy(() => _preloadChat().then(m => ({ default: m.NotebookChat })))
@@ -1286,16 +1283,15 @@ export default function NoteApp() {
   const [shopOpen, setShopOpen] = useState(false)
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
-  const [focusOpen, setFocusOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false); setFocusOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats()
     const id = requestIdleCallback(() => {
       _preloadOrchard(); _preloadBoutique(); _preloadLeaderboard()
-      _preloadFocus(); _preloadSettings()
+      _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
@@ -2575,7 +2571,11 @@ export default function NoteApp() {
     "paper_dotgrid", "paper_plain", "paper_steno", "paper_dark-lined", "paper_dark-grid", "paper_dark-plain", "paper_dark-steno",
   ]
   useEffect(() => {
-    if (isAdmin) setUnlockedCosmetics(ALL_COSMETICS)
+    if (isAdmin) {
+      setUnlockedCosmetics(ALL_COSMETICS)
+      const allSeeds = Object.keys(TREE_TYPES).filter(k => k !== 'spoiled' && k !== 'tangerine')
+      setInventory(allSeeds)
+    }
   }, [user])
 
   // Resize observer for binding layout
@@ -3185,6 +3185,17 @@ export default function NoteApp() {
 
   const archivedNotes = useMemo(() => notes.filter(n => n.archived), [notes])
 
+  const sortedNotes = useMemo(() => {
+    const active = notes.filter(n => !n.archived)
+    const archived = notes.filter(n => n.archived)
+    if (defaultSort === 'title') {
+      const sorted = [...active].sort((a, b) => (a.subject || '').localeCompare(b.subject || ''))
+      return [...sorted, ...archived]
+    }
+    if (defaultSort === 'created') return [...[...active].reverse(), ...archived]
+    return [...active, ...archived]
+  }, [notes, defaultSort])
+
   // Periodic cleanup of trash older than 30 days
   useEffect(() => {
     const cleanup = () => {
@@ -3387,6 +3398,8 @@ export default function NoteApp() {
                 hibernationCooldownEnd={hibernationCooldownEnd}
                 quotaTier={quotaTier}
                 quotaLockedUntil={quotaLockedUntil}
+                dailyGoalMinutes={dailyGoalMinutes}
+                onChangeDailyGoalMinutes={setDailyGoalMinutes}
                 onChangeQuotaTier={(tier: 'monthly' | 'weekly' | 'daily') => {
                   const lockDays = tier === 'monthly' ? 30 : 7
                   const lockDate = new Date()
@@ -3410,7 +3423,7 @@ export default function NoteApp() {
               style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%', zIndex: 250 }}
             >
               <Sidebar
-                notes={notes}
+                notes={sortedNotes}
                 folders={folders}
                 activeTabId={activeTabId}
                 accent={accent}
@@ -3467,7 +3480,6 @@ export default function NoteApp() {
                 onUnlockDev={handleUnlockDev}
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                 onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
-                onOpenFocus={() => setFocusOpen(true)}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
                 sap={sap}
                 xp={xp}
@@ -3690,13 +3702,6 @@ export default function NoteApp() {
               </div>
             )}
 
-
-            {/* Mini rings — above zoom tray, bottom right */}
-            {user && notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
-              <div className="fixed z-[80]" style={{ bottom: 56, right: 16, display: 'flex', justifyContent: 'center' }}>
-                <MiniRings isDark={theme === 'dark'} onClick={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }} stretch quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
-              </div>
-            )}
 
             {/* Floating zoom + undo/redo bar — bottom right */}
             {user && notes.filter(n => !n.archived).length > 0 && !orchardOpen && !statsOpen && !leaderboardOpen && !shopOpen && !showSettings && (
@@ -4357,6 +4362,7 @@ export default function NoteApp() {
                 dailyGoalMinutes={dailyGoalMinutes}
                 hibernation={hibernation}
                 hibernationScheduled={hibernationScheduled}
+                quotaTier={quotaTier}
               />
             </div>
           </Suspense>}
@@ -4591,15 +4597,6 @@ export default function NoteApp() {
 
         </div>
 
-        {focusOpen && <Suspense fallback={null}><FocusView
-          isOpen={focusOpen}
-          onClose={() => setFocusOpen(false)}
-          theme={theme}
-          blockedSites={blockedSites}
-          onUpdateConfig={updateSettings}
-          openConfirm={openConfirm}
-        /></Suspense>}
-
         <VitalitySystem
           theme={theme}
           totalChars={totalChars}
@@ -4621,6 +4618,7 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
+          onOpenStats={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
           goalStreak={goalStreak}
           setGoalStreak={setGoalStreak}
           goalStreakLastDate={goalStreakLastDate}

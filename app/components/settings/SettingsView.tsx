@@ -18,10 +18,9 @@ import type { Achievement, NoteData } from "@/app/types"
 
 const TAB_DESCRIPTIONS: Record<string, string> = {
   general: "Account, shortcuts, and application preferences",
+  grove: "Study quota, streak penalties, and hibernation",
   appearance: "Theme, fonts, paper style, and visual customization",
-  achievements: "Track your progress and claim rewards",
   editor: "Writing tools, layout, and focus mode",
-  focus: "Block distracting websites and apps",
   archive: "Archived notebooks and notes",
   data: "Storage, exports, and account management",
   subscription: "Manage your plan and billing",
@@ -30,9 +29,8 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
   general: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  grove: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="m8 8 4-4 4 4"/></svg>,
   appearance: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 20 4 4 0 0 0 0-8 4 4 0 0 1 0-8"/><circle cx="12" cy="9" r="1" fill="currentColor"/></svg>,
-  achievements: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 22V8a4 4 0 0 0-4-4H4v9a4 4 0 0 0 4 4h2"/><path d="M14 22V8a4 4 0 0 1 4-4h2v9a4 4 0 0 1-4 4h-2"/></svg>,
-  focus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   editor: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   archive: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>,
   data: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>,
@@ -43,10 +41,9 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
 export const SETTINGS_TABS = [
   { id: "subscription", label: "Pro", group: "Premium" },
   { id: "general", label: "General", group: "App" },
+  { id: "grove", label: "Grove", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
-  { id: "achievements", label: "Achievements", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
-  { id: "focus", label: "Focus Blocker", group: "Writing" },
   { id: "archive", label: "Archive", group: "Advanced" },
   { id: "data", label: "Data & Storage", group: "Advanced" },
   { id: "help", label: "Help", group: "Support" },
@@ -234,7 +231,7 @@ function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: 
   )
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier, dailyGoalMinutes = 30, onChangeDailyGoalMinutes }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -259,6 +256,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   quotaTier?: 'monthly' | 'weekly' | 'daily'
   quotaLockedUntil?: string
   onChangeQuotaTier?: (tier: 'monthly' | 'weekly' | 'daily') => void
+  dailyGoalMinutes?: number
+  onChangeDailyGoalMinutes?: (v: number) => void
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -578,6 +577,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 </div>
               </SettingSection>
 
+              <SettingSection title="About" isDark={isDark}>
+                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0 (2026.03)</span>} />
+              </SettingSection>
+            </>)}
+
+            {/* ── Grove ── */}
+            {activeTab === "grove" && (<>
               <SettingSection title="Study Quota" isDark={isDark}>
                 <div className="px-5 py-4 flex flex-col gap-3">
                   <p className={`text-[11px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -616,7 +622,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       >
                         <div className="flex items-center justify-between">
                           <span className={`text-[12px] font-medium ${isActive ? 'text-orange-500' : isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{l.name}</span>
-                          <span className={`text-[10px] ${tier === 'daily' ? 'text-red-400' : tier === 'weekly' ? 'text-green-400' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{l.bonus}</span>
+                          <span className={`text-[10px] ${tier === 'daily' ? 'text-green-400' : tier === 'weekly' ? 'text-green-400' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{l.bonus}</span>
                         </div>
                         <div className={`text-[10px] mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
                           {l.desc} · Miss: {l.penalty}
@@ -630,6 +636,27 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     )
                   })}
                 </div>
+              </SettingSection>
+
+              <SettingSection title="Daily Goal" isDark={isDark}>
+                <SettingRow
+                  title="Minutes per day"
+                  isDark={isDark}
+                  description="How many minutes of focus you aim for each day"
+                  control={
+                    <input
+                      type="number"
+                      min={5}
+                      max={480}
+                      value={dailyGoalMinutes ?? 30}
+                      onChange={e => {
+                        const v = parseInt(e.target.value)
+                        if (v >= 5 && v <= 480) onChangeDailyGoalMinutes?.(v)
+                      }}
+                      className={`text-[11px] w-16 text-center border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
+                    />
+                  }
+                />
               </SettingSection>
 
               <SettingSection title="Hibernation" isDark={isDark}>
@@ -656,10 +683,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 ) : (
                   <HibernationScheduler isDark={isDark} onSchedule={onScheduleHibernation} cooldownEnd={hibernationCooldownEnd} openConfirm={openConfirm} />
                 )}
-              </SettingSection>
-
-              <SettingSection title="About" isDark={isDark}>
-                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0 (2026.03)</span>} />
               </SettingSection>
             </>)}
 
@@ -976,91 +999,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             </>)}
 
 
-            {/* ── Achievements ── */}
-            {activeTab === "achievements" && (<>
-              <div className="px-5 py-4 grid gap-3">
-                {achievements.map((a: Achievement) => {
-                  const isClaimable = a.completed && !a.claimed
-                  const isClaimed = a.claimed
-                  const progress = a.goal ? Math.min(100, Math.floor(((a.progress || 0) / a.goal) * 100)) : (a.completed ? 100 : 0)
-                  
-                  return (
-                    <div 
-                      key={a.id} 
-                      className={`relative overflow-hidden rounded-xl border p-4 transition-all ${isDark ? (isClaimable ? "bg-orange-500/10 border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]" : "bg-zinc-900 border-zinc-800") : (isClaimable ? "bg-orange-50 border-orange-100 shadow-[0_4px_12px_rgba(249,115,22,0.1)]" : "bg-white border-zinc-200 shadow-sm")}`}
-                    >
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-colors ${
-                          isClaimable
-                            ? isDark ? "bg-orange-500/20" : "bg-orange-100/60"
-                            : isClaimed
-                            ? isDark ? "bg-green-500/20" : "bg-green-100/40"
-                            : isDark ? "bg-zinc-800" : "bg-zinc-100/80"
-                        }`}>
-                          {a.icon}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className={`text-[13px] font-normal ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{a.title}</h4>
-                            {isClaimed && <span className="text-[10px] text-green-500 font-normal uppercase tracking-widest text-[9px]">Claimed ✓</span>}
-                          </div>
-                          <p className={`text-[11px] mt-1 leading-relaxed ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{a.description}</p>
-                        </div>
-                        <div className="flex flex-col items-end shrink-0">
-                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-normal border transition-colors ${isClaimable ? (isDark ? "bg-orange-500/20 border-orange-500/40 text-orange-400" : "bg-orange-100 border-orange-200 text-orange-600") : (isDark ? "bg-zinc-800 border-zinc-700 text-zinc-500" : "bg-zinc-100 border-zinc-200 text-zinc-400")}`}>
-                            <PulpIcon size={10} /> {a.reward}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar for goals */}
-                      {a.goal && !a.completed && (
-                        <div className="mb-4 mt-1">
-                          <div className="flex justify-between text-[9px] font-mono mb-1.5 opacity-50">
-                            <span className="uppercase tracking-tighter">Progress</span>
-                            <span>{Math.floor(a.progress || 0)} / {a.goal}</span>
-                          </div>
-                          <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDark ? "bg-zinc-800" : "bg-zinc-100 shadow-inner"}`}>
-                            <div 
-                              className={`h-full transition-all duration-700 ease-out ${isDark ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" : "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.2)]"}`} 
-                              style={{ width: `${progress}%` }} 
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {isClaimed ? (
-                        <div className={`text-[10px] font-normal uppercase tracking-[0.2em] text-center py-2.5 rounded-lg ${isDark ? "bg-zinc-800/20 text-zinc-600" : "bg-zinc-50 text-zinc-300"}`}>
-                          Claimed
-                        </div>
-                      ) : isClaimable ? (
-                        <button 
-                          onClick={() => onClaimAchievement(a.id)}
-                          className="w-full py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-normal uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.01] active:scale-[0.98] ring-1 ring-white/20"
-                        >
-                          Claim Reward
-                        </button>
-                      ) : (
-                        <div className={`text-[10px] font-normal uppercase tracking-[0.2em] text-center py-2.5 rounded-lg border border-dashed transition-colors ${isDark ? "border-zinc-800/80 text-zinc-700" : "border-zinc-200/60 text-zinc-300"}`}>
-                          {a.goal ? "In Progress" : "Locked"}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </>)}
-
-            {/* ── Focus Blocker ── */}
-            {activeTab === "focus" && (<>
-              <FocusBlockerSection
-                isDark={isDark}
-                blockedSites={blockedSites}
-                onUpdateConfig={onUpdateConfig}
-                openConfirm={openConfirm}
-              />
-            </>)}
-
             {/* ── Data ── */}
             {activeTab === "archive" && (<>
                <SettingSection title="Archived Notes" isDark={isDark}>
@@ -1324,7 +1262,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, title: "Text Boxes", desc: "Text boxes are freeform — drag to move, pull corners to resize. Use the toolbar above a selected box to change fonts, sizes, styles, and colors. Type / for quick commands." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Focus Timer", desc: "Open the timer from the sidebar or press Cmd+Opt+T. Pick a duration, select a seed, and start a session. Stay focused to grow your plant — if you leave or give up, it dies." },
                     { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>, title: "Sap & XP", desc: "Sap is earned by writing and completing focus sessions — use it to buy seeds in the shop. XP unlocks cosmetics, accent colors, and other customizations as you level up." },
-                    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: "Focus Blocker", desc: "Block distracting websites while your timer is running. Add sites in the focus blocker panel. You can remove sites anytime. Install the Chrome extension for enforcement." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-zinc-800/80 text-zinc-400" : "bg-zinc-200/80 text-zinc-500"}`}>
@@ -1689,134 +1626,6 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
           {isRecording ? "Press keys..." : formatShortcutDisplay(currentKey)}
         </button>
       </div>
-    </div>
-  )
-}
-
-function cleanDomain(input: string): string {
-  return input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").replace(/:.*$/, "")
-}
-
-function FocusBlockerSection({ isDark, blockedSites, onUpdateConfig, openConfirm }: {
-  isDark: boolean; blockedSites: string[]
-  onUpdateConfig: (updates: Record<string, any>) => void
-  openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
-}) {
-  const [input, setInput] = useState("")
-
-  const addSite = () => {
-    const domain = cleanDomain(input)
-    if (domain && !blockedSites.includes(domain)) {
-      onUpdateConfig({ blockedSites: [...blockedSites, domain] })
-      setInput("")
-    }
-  }
-
-  const removeSite = (domain: string) => {
-    const doRemove = () => {
-      onUpdateConfig({ blockedSites: blockedSites.filter(s => s !== domain) })
-    }
-    if (openConfirm) {
-      openConfirm("Remove Blocked Site", `Are you sure you want to unblock ${domain}?`, doRemove, "Unblock", true)
-    } else {
-      if (confirm(`Unblock ${domain}?`)) doRemove()
-    }
-  }
-
-  return (
-    <>
-      <SettingSection title="Blocked Sites" isDark={isDark}>
-        <div className="p-5 flex flex-col gap-4">
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") addSite() }}
-              placeholder="Add a website to block..."
-              className={`flex-1 px-4 py-2.5 text-[12px] rounded-xl outline-none transition-colors ${isDark ? "bg-zinc-900/80 border-zinc-800 text-zinc-200 placeholder:text-zinc-700 focus:border-zinc-600" : "bg-white border-zinc-200 text-zinc-800 placeholder:text-zinc-400 focus:border-zinc-300"} border`}
-            />
-            <button onClick={addSite} className="px-5 py-2.5 rounded-xl text-[11px] font-normal text-white transition-all hover:brightness-110" style={{ background: "#e67e22" }}>
-              Block
-            </button>
-          </div>
-
-          {blockedSites.length > 0 ? (
-            <div className={`rounded-xl overflow-hidden border ${isDark ? "border-zinc-800" : "border-zinc-200"}`}>
-              {blockedSites.map((site, i) => (
-                <div key={site} className={`flex items-center gap-3 px-4 py-3 transition-colors ${i > 0 ? (isDark ? "border-t border-zinc-800/60" : "border-t border-zinc-100") : ""} ${isDark ? "hover:bg-zinc-900/50" : "hover:bg-zinc-50"}`}>
-                  <img src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(site)}&sz=32`} alt="" width={16} height={16} className="shrink-0 rounded" onError={e => { (e.target as HTMLImageElement).style.display = "none" }} />
-                  <span className={`flex-1 text-[12px] min-w-0 truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{site}</span>
-                  <button
-                    onClick={() => removeSite(site)}
-                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-normal transition-all cursor-pointer"
-                    style={{
-                      background: "rgba(239,68,68,0.1)",
-                      border: "1px solid rgba(239,68,68,0.2)",
-                      color: "#f87171",
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className={`text-[11px] text-center py-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>No blocked sites yet.</p>
-          )}
-        </div>
-      </SettingSection>
-    </>
-  )
-}
-
-function BlockList({ placeholder, items, onChange, isDark, description }: {
-  placeholder: string; items: string[]; onChange: (v: string[]) => void; isDark: boolean; description: string
-}) {
-  const [val, setVal] = useState("")
-  
-  const add = () => {
-    if (!val.trim()) return
-    if (items.includes(val.trim())) return
-    onChange([...items, val.trim()])
-    setVal("")
-  }
-
-  return (
-    <div className="p-5 flex flex-col gap-4">
-       <p className={`text-[11.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{description}</p>
-       <div className="flex flex-wrap gap-2">
-          {items.map((it, i) => (
-             <div key={i} className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border text-[11px] font-normal group ${
-                isDark ? "bg-zinc-900 border-zinc-800 text-zinc-300" : "bg-white border-zinc-200 text-zinc-700"
-             }`}>
-                {it}
-                <button 
-                  onClick={() => onChange(items.filter((_, idx) => idx !== i))}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500"
-                >
-                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-             </div>
-          ))}
-       </div>
-       <div className="flex gap-2">
-          <input 
-            value={val} onChange={e => setVal(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && add()}
-            placeholder={placeholder}
-            className={`flex-1 text-[12px] px-4 py-2.5 rounded-xl border outline-none ${
-               isDark ? "bg-zinc-900 border-zinc-800 focus:border-zinc-500" : "bg-white border-zinc-200 focus:border-zinc-400"
-            }`}
-          />
-          <button 
-            onClick={add}
-            className={`px-4 py-2 rounded-xl text-[11px] font-normal tracking-wide ${
-               isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 shadow-sm"
-            }`}
-          >
-             Add
-          </button>
-       </div>
     </div>
   )
 }

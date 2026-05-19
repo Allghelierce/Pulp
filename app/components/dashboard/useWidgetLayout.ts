@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react"
-import { DEFAULT_LAYOUT, genInstanceId, GRID_COLS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
+import { DEFAULT_LAYOUT, genInstanceId, GRID_COLS, MAX_ROWS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
 import { supabase } from "@/lib/supabase"
 import * as db from "@/lib/db"
 
@@ -23,7 +23,8 @@ function saveLocal(layout: DashboardLayout) {
 }
 
 function resolveCollisions(widgets: WidgetInstance[]): WidgetInstance[] {
-  const sorted = [...widgets].sort((a, b) => a.position[1] - b.position[1] || a.position[0] - b.position[0])
+  const sorted = widgets.map(w => ({ ...w, position: [...w.position] as [number, number], size: [...w.size] as [number, number] }))
+    .sort((a, b) => a.position[1] - b.position[1] || a.position[0] - b.position[0])
   for (let iter = 0; iter < 30; iter++) {
     let moved = false
     for (let i = 0; i < sorted.length; i++) {
@@ -135,9 +136,12 @@ export function useWidgetLayout() {
     })
   }, [])
 
+  const gridFull = layout.widgets.reduce((m, w) => Math.max(m, w.position[1] + w.size[1]), 0) >= MAX_ROWS
+
   const addWidget = useCallback((widgetId: string, defaultSize: [number, number]) => {
     setLayout(prev => {
       const maxRow = prev.widgets.reduce((m, w) => Math.max(m, w.position[1] + w.size[1]), 0)
+      if (maxRow + defaultSize[1] > MAX_ROWS) return prev
       const inst: WidgetInstance = {
         instanceId: genInstanceId(),
         widgetId,
@@ -155,7 +159,11 @@ export function useWidgetLayout() {
   }, [])
 
   const resetLayout = useCallback(() => {
-    const next = { ...DEFAULT_LAYOUT, lastModified: Date.now() }
+    const next = {
+      ...DEFAULT_LAYOUT,
+      lastModified: Date.now(),
+      widgets: DEFAULT_LAYOUT.widgets.map(w => ({ ...w, position: [...w.position] as [number, number], size: [...w.size] as [number, number] })),
+    }
     setLayout(next)
     saveLocal(next)
     if (supabaseTimer.current) clearTimeout(supabaseTimer.current)
@@ -186,5 +194,6 @@ export function useWidgetLayout() {
     removeWidget,
     resetLayout,
     commitLayout,
+    gridFull,
   }
 }

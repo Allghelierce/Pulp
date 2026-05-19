@@ -3,59 +3,86 @@ import { memo, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
 const font = 'Crimson Pro, serif'
-const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
 
-function loadGoals() {
-  if (typeof window === 'undefined') return DEFAULT_GOALS
-  try {
-    const saved = localStorage.getItem('pulp-ring-goals')
-    if (saved) return { ...DEFAULT_GOALS, ...JSON.parse(saved) }
-  } catch {}
-  return DEFAULT_GOALS
-}
-
-const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailyStats, goals }: WidgetProps) {
-  const [editingGoals, setEditingGoals] = useState(false)
-  const [draftGoals, setDraftGoals] = useState(loadGoals)
-
+const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailyStats, goalStreak = 0, dailyGoalMinutes = 30, quotaTier = 'monthly' }: WidgetProps) {
   const todayKey = new Date().toISOString().split("T")[0]
   const todayEntry = dailyStats.find(e => e.date === todayKey)
   const focus = todayEntry?.focusMinutes ?? 0
-  const writing = todayEntry?.charsWritten ?? 0
-  const sessions = todayEntry?.sessionsCompleted ?? 0
 
-  const size = 160
+  const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
+  const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
+  const earlyBirdProgress = isEarlyBird ? Math.min(1, focus / 10) : 0
+  const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+  const multiplier = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
+
+  const quotaTarget = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 / 7 : dailyGoalMinutes * 30 / 30
+  const quotaProgress = Math.min(1, focus / Math.max(1, quotaTarget))
+  const streakProgress = Math.min(1, goalStreak / 30)
+
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(String(dailyGoalMinutes))
+  const [draftTier, setDraftTier] = useState(quotaTier)
+
+  const size = 200
   const cx = size / 2, cy = size / 2
-  const strokeW = 5
-  const gap = 5.5
+  const strokeW = 6
+  const gap = 6
 
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
+  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
 
   const rings = [
-    { value: focus, goal: goals.focus, color: '#ea580c', radius: (size - strokeW) / 2 },
-    { value: writing, goal: goals.writing, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: sessions, goal: goals.sessions, color: '#f59e0b', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, label: 'quota', color: '#ea580c', radius: (size - strokeW) / 2 },
+    { value: streakProgress, label: 'streak', color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', color: '#fbbf24', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
+  const saveQuota = () => {
+    const val = parseInt(draft)
+    if (!val || val < 1) { setEditing(false); return }
+    try {
+      const raw = localStorage.getItem('pulp-grove')
+      if (raw) {
+        const data = JSON.parse(raw)
+        data.dailyGoalMinutes = val
+        if (draftTier !== quotaTier) {
+          const lockDays = draftTier === 'monthly' ? 30 : 7
+          const lockDate = new Date()
+          lockDate.setDate(lockDate.getDate() + lockDays)
+          data.quotaTier = draftTier
+          data.quotaLockedUntil = lockDate.toISOString().split('T')[0]
+        }
+        localStorage.setItem('pulp-grove', JSON.stringify(data))
+      }
+    } catch {}
+    setEditing(false)
+    window.location.reload()
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 12, gap: 4 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 9, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Daily Goals</span>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 8, gap: 2 }}>
+      {!editing && (
         <button
-          onClick={() => { setDraftGoals(goals); setEditingGoals(e => !e) }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: textMuted, display: 'flex' }}
+          onClick={() => { setDraft(String(dailyGoalMinutes)); setEditing(true) }}
+          title={`Edit Quota · ${dailyGoalMinutes}min`}
+          style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 2,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: textMuted, padding: 4, borderRadius: 4,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
         >
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
           </svg>
         </button>
-      </div>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      )}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
           const gapLen = circ * 0.04
           const trackLen = circ - gapLen
-          const pct = Math.min(ring.value / ring.goal, 1)
+          const pct = Math.min(ring.value, 1)
           const fillLen = trackLen * pct
           const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
           const complete = pct >= 1
@@ -83,16 +110,69 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
             </g>
           )
         })}
-        {rings.map((ring, i) => {
-          const pct = Math.min(Math.round((ring.value / ring.goal) * 100), 999)
-          const abbr = ['mins', 'char', 'sesh'][i]
-          return (
-            <text key={`l-${i}`} x={cx} y={cy - 10 + i * 13} textAnchor="middle" dominantBaseline="central">
-              <tspan style={{ fontSize: 10, fontWeight: 400, fill: ring.color }}>{pct}% {abbr}</tspan>
-            </text>
-          )
-        })}
+        <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
+          {multiplier.toFixed(1)}x
+        </text>
+        <text x={cx} y={cy + 14} textAnchor="middle" dominantBaseline="central"
+          style={{ fontSize: 10, fontWeight: 400, fill: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {quotaTier} · {goalStreak}d
+        </text>
       </svg>
+      <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
+        {rings.map((ring, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: ring.color }} />
+            <span style={{ fontSize: 8, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ring.label}</span>
+          </div>
+        ))}
+      </div>
+      {editing && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 4 }}>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['monthly', 'weekly', 'daily'] as const).map(t => {
+              const active = draftTier === t
+              const locked = !!(() => { try { const d = JSON.parse(localStorage.getItem('pulp-grove') || '{}'); return d.quotaLockedUntil && new Date().toISOString().split('T')[0] < d.quotaLockedUntil && t !== quotaTier } catch { return false } })()
+              const labels = { monthly: '0x', weekly: '+1x', daily: '+2x' }
+              return (
+                <button key={t} disabled={locked}
+                  onClick={() => setDraftTier(t)}
+                  style={{
+                    fontSize: 9, fontWeight: active ? 600 : 400, fontFamily: 'Inter, system-ui, sans-serif',
+                    padding: '3px 8px', borderRadius: 5, cursor: locked ? 'not-allowed' : 'pointer',
+                    opacity: locked ? 0.35 : 1,
+                    background: active ? 'rgba(217,119,6,0.15)' : 'transparent',
+                    border: `1px solid ${active ? 'rgba(217,119,6,0.3)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    color: active ? '#d97706' : textMuted,
+                  }}>
+                  {t} {labels[t]}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input
+              autoFocus type="number" min={5} max={480}
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveQuota(); if (e.key === 'Escape') setEditing(false) }}
+              style={{
+                width: 50, fontSize: 12, fontWeight: 400, fontFamily: font,
+                textAlign: 'center', borderRadius: 6, border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                color: textPrimary, padding: '3px 5px', outline: 'none',
+              }}
+            />
+            <span style={{ fontSize: 9, color: textMuted }}>min/day</span>
+            <button onClick={saveQuota} style={{
+              fontSize: 9, fontWeight: 500, fontFamily: font, color: '#fff',
+              background: '#d97706', border: 'none', borderRadius: 5,
+              padding: '3px 10px', cursor: 'pointer',
+            }}>Save</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 })

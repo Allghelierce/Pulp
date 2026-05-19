@@ -2715,7 +2715,7 @@ export const OrchardView = memo(function OrchardView({
 
   const sapMultiplier = useMemo(() => {
     const hour = new Date().getHours()
-    const earlyBird = (hour >= 6 && hour < 10) ? 1 : 0
+    const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
     const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
     return Math.min(4, 1 + earlyBird + quotaBonus)
   }, [quotaTier])
@@ -3143,26 +3143,6 @@ export const OrchardView = memo(function OrchardView({
               <span ref={collectBtnRef} className="absolute left-2 opacity-0 pointer-events-none">
                 <span ref={sapCounterRef}>{sap}</span>
               </span>
-
-              <button
-                onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }}
-                className="flex items-center justify-center rounded-md transition-all hover:opacity-80"
-                style={{
-                  width: 30, height: 30,
-                  backgroundColor: 'transparent',
-                  color: isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)',
-                }}
-                title="Collect sap"
-              >
-                <PulpIcon size={16} />
-              </button>
-              {collectAllAnim.active && collectAllAnim.total > 0 && (
-                <span className="text-[10px] font-normal tabular-nums absolute left-1/2 -translate-x-1/2 top-full" style={{ color: '#d97706', animation: 'sap-merge 0.5s ease-out forwards', pointerEvents: 'none' }}>
-                  +{collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total ? collectAllAnim.total : collectAllAnim.current}
-                </span>
-              )}
-
-              <div className="w-px h-4" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
 
               <button
                 onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
