@@ -322,10 +322,27 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (totalToday >= dailyGoalMinutes) {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
       const isConsecutive = goalStreakLastDate === yesterday || goalStreakLastDate === ''
-      setGoalStreak(isConsecutive ? goalStreak + 1 : 1)
+      if (!isConsecutive && goalStreak > 0) {
+        setSap(0)
+        setGrove(g => g.map(t => t.type === 'spoiled' ? t : { ...t, dormant: true }))
+      }
+      const newStreak = isConsecutive ? goalStreak + 1 : 1
+      setGoalStreak(newStreak)
       setGoalStreakLastDate(todayStr)
+
+      if (newStreak > 0) {
+        const RARITY_RANK: Record<string, number> = { sacred: 5, 'true rare': 4, rare: 3, uncommon: 2, common: 1 }
+        setGrove(g => {
+          const dormantTrees = g.filter(t => t.dormant).sort((a, b) =>
+            (RARITY_RANK[TREE_TYPES[b.type]?.rarity] || 0) - (RARITY_RANK[TREE_TYPES[a.type]?.rarity] || 0)
+          )
+          if (!dormantTrees.length) return g
+          const wakeId = dormantTrees[0].id
+          return g.map(t => t.id === wakeId ? { ...t, dormant: false } : t)
+        })
+      }
     }
-  }, [goalStreak, goalStreakLastDate, dailyGoalMinutes, setGoalStreak, setGoalStreakLastDate])
+  }, [goalStreak, goalStreakLastDate, dailyGoalMinutes, setGoalStreak, setGoalStreakLastDate, setSap, setGrove])
 
   const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
@@ -335,7 +352,10 @@ export const VitalitySystem = memo(function VitalitySystem({
     const growthTarget = treeInfo?.growthMinutes || 25
 
     if (!isHibernating) {
-      const totalSapYield = grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
+      const totalSapYield = grove.reduce((sum, t) => {
+        if (t.dormant) return sum
+        return sum + (TREE_TYPES[t.type]?.sapYield || 0)
+      }, 0)
       const newTreeSap = treeInfo?.sapYield || 0
       setSap(s => s + totalSapYield + newTreeSap)
     }

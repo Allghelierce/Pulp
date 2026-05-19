@@ -405,6 +405,9 @@ export const BoutiqueView = memo(function BoutiqueView({
   const buySeed = (type: string) => {
     if ((shopStock[type] || 0) <= 0) return
     if (inventory.length >= MAX_SEEDS) { setSatchelFullPopup(true); return }
+    const seedCost = TREE_TYPES[type]?.cost || 0
+    if (seedCost > sap) return
+    if (seedCost > 0) setSap((s: number) => s - seedCost)
     const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
     setShopStock(nextStock)
     localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
@@ -1396,8 +1399,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             border: `0.5px solid ${isDark ? 'rgba(180,160,130,0.2)' : 'rgba(140,120,80,0.15)'}`,
                           }} />
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 0 }}>
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#d4c4a0' : '#4a3a20'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font }}>{formatGrowthTime(getGrowthTime(type))}</span>
+                            <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={9} /></span>
                           </div>
                         </div>
                       </div>
@@ -1572,28 +1574,31 @@ export const BoutiqueView = memo(function BoutiqueView({
                   }}>
                     Sold Out
                   </div>
-                ) : (
+                ) : (() => {
+                  const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
+                  const canAfford = seedCost <= sap
+                  return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button
                       onClick={() => buySeed(selectedPlant!)}
+                      disabled={!canAfford}
                       className="transition-all hover:brightness-110"
                       style={{
-                        fontFamily: font, cursor: 'pointer', border: 'none',
+                        fontFamily: font, cursor: canAfford ? 'pointer' : 'not-allowed', border: 'none',
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: '#d97706', color: '#fff',
+                        background: canAfford ? '#d97706' : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? '#fff' : (isDark ? '#71717a' : '#a1a1aa'),
                         padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 400,
+                        opacity: canAfford ? 1 : 0.7,
                       }}
                     >
-                      Take Seed
-                      <span style={{ opacity: 0.5 }}>·</span>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      {formatGrowthTime(getGrowthTime(selectedPlant!))}
+                      {<>Buy · {seedCost.toLocaleString()} <PulpIcon size={12} /></>}
                     </button>
                     <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>
                       ×{stock} left
                     </span>
                   </div>
-                )}
+                  )
+                })()}
               </div>
             </div>
           )})()}
