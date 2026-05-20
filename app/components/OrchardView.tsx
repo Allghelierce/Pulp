@@ -268,13 +268,13 @@ interface SkyPalette {
 
 const PALETTES: Record<string, SkyPalette> = {
   night: {
-    skyTop: '#09090b', skyMid: '#09090b', skyLow: '#09090b', skyHorizon: '#09090b', skyField: '#09090b', skyBottom: '#09090b',
-    oceanTop: '#0a0a08', oceanMid: '#080806', oceanBot: '#0c0a08',
-    mtnTop: '#10100c', mtnMid: '#0c0c0a', mtnBot: '#0a0a08',
-    snowTop: '#2a2820', snowFade: '#10100c',
-    hillMidTop: '#10180a', hillMidBot: '#0c1408',
-    hillNearTop: '#141e08', hillNearBot: '#101808',
-    fieldTop: '#141e0a', fieldMid1: '#121a08', fieldMid2: '#101808', fieldBot: '#0c1406',
+    skyTop: '#0a0a0c', skyMid: '#0a0a0c', skyLow: '#0c0b0a', skyHorizon: '#0c0b0a', skyField: '#0c0b0a', skyBottom: '#0c0b0a',
+    oceanTop: '#0c0a08', oceanMid: '#0a0806', oceanBot: '#0e0c08',
+    mtnTop: '#12100c', mtnMid: '#0e0c0a', mtnBot: '#0c0a08',
+    snowTop: '#2a2820', snowFade: '#12100c',
+    hillMidTop: '#121808', hillMidBot: '#0e1406',
+    hillNearTop: '#161e08', hillNearBot: '#121806',
+    fieldTop: '#161e08', fieldMid1: '#141a06', fieldMid2: '#121806', fieldBot: '#0e1404',
     sunGlow: 0, sunColor: '#000000', sunY: 32,
     moonGlow: 0.25, moonY: 4,
     starOpacity: 1,
@@ -298,13 +298,13 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(40,20,8,0.15)', ambientOpacity: 0.15,
   },
   morning: {
-    skyTop: '#8a5828', skyMid: '#a06830', skyLow: '#b07838', skyHorizon: '#a08040', skyField: '#788a78', skyBottom: '#6a8080',
+    skyTop: '#8a5828', skyMid: '#a06830', skyLow: '#b07838', skyHorizon: '#a08040', skyField: '#7a8870', skyBottom: '#6a7868',
     oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
-    mtnTop: '#5a6878', mtnMid: '#4a5868', mtnBot: '#3e4e5e',
-    snowTop: '#b0b8c0', snowFade: '#6a7480',
-    hillMidTop: '#3a6430', hillMidBot: '#305828',
-    hillNearTop: '#446238', hillNearBot: '#3a5630',
-    fieldTop: '#466834', fieldMid1: '#406030', fieldMid2: '#3a582c', fieldBot: '#345028',
+    mtnTop: '#5a6068', mtnMid: '#4a5458', mtnBot: '#3e4a4e',
+    snowTop: '#b0b0a8', snowFade: '#6a6e70',
+    hillMidTop: '#3e6430', hillMidBot: '#345828',
+    hillNearTop: '#4a6438', hillNearBot: '#3e5830',
+    fieldTop: '#4a6834', fieldMid1: '#446030', fieldMid2: '#3e5a2c', fieldBot: '#385228',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
@@ -313,28 +313,28 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   day: {
-    skyTop: '#5a7a90', skyMid: '#6a8898', skyLow: '#7a96a0', skyHorizon: '#8aa498', skyField: '#7a8a74', skyBottom: '#728470',
-    oceanTop: '#4a6460', oceanMid: '#3e5854', oceanBot: '#5a7068',
-    mtnTop: '#5a6a6a', mtnMid: '#4e5e5c', mtnBot: '#445654',
-    snowTop: '#a0a4a0', snowFade: '#6a7070',
-    hillMidTop: '#2a4224', hillMidBot: '#243c1e',
-    hillNearTop: '#324a2c', hillNearBot: '#2c4426',
-    fieldTop: '#30462a', fieldMid1: '#2c4226', fieldMid2: '#2a3e24', fieldBot: '#263a20',
+    skyTop: '#6a7a82', skyMid: '#7a8888', skyLow: '#8a9690', skyHorizon: '#90a08a', skyField: '#7a8868', skyBottom: '#728060',
+    oceanTop: '#4a6258', oceanMid: '#3e584c', oceanBot: '#5a6e5e',
+    mtnTop: '#5a6460', mtnMid: '#4e5a54', mtnBot: '#44524c',
+    snowTop: '#a8a89e', snowFade: '#6a6c66',
+    hillMidTop: '#304828', hillMidBot: '#2a4222',
+    hillNearTop: '#385030', hillNearBot: '#324a2a',
+    fieldTop: '#364c2c', fieldMid1: '#324828', fieldMid2: '#304426', fieldBot: '#2c4022',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
-    mtnLightOpacity: 0.05, mtnLightColor: 'rgba(255,255,200,0.05)',
+    mtnLightOpacity: 0.05, mtnLightColor: 'rgba(255,240,180,0.05)',
     groveOpacity: 0.9,
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   dusk: {
-    skyTop: '#1e0c1a', skyMid: '#261216', skyLow: '#2e1a0e', skyHorizon: '#281608', skyField: '#14120c', skyBottom: '#100e08',
-    oceanTop: '#1a1408', oceanMid: '#161006', oceanBot: '#1e180a',
-    mtnTop: '#1a1610', mtnMid: '#14120c', mtnBot: '#100e0a',
-    snowTop: '#3a3428', snowFade: '#1a1610',
-    hillMidTop: '#182412', hillMidBot: '#141e0e',
-    hillNearTop: '#1e2e14', hillNearBot: '#1a2610',
-    fieldTop: '#223214', fieldMid1: '#1e2c12', fieldMid2: '#202e12', fieldBot: '#1c280e',
+    skyTop: '#1e1018', skyMid: '#281614', skyLow: '#321e0e', skyHorizon: '#2e1a08', skyField: '#18140c', skyBottom: '#141008',
+    oceanTop: '#1e1608', oceanMid: '#1a1206', oceanBot: '#221a0a',
+    mtnTop: '#1e1810', mtnMid: '#18140c', mtnBot: '#14100a',
+    snowTop: '#3e3628', snowFade: '#1e1810',
+    hillMidTop: '#1c2612', hillMidBot: '#18200e',
+    hillNearTop: '#223014', hillNearBot: '#1e2810',
+    fieldTop: '#263414', fieldMid1: '#222e12', fieldMid2: '#243012', fieldBot: '#202a0e',
     sunGlow: 1, sunColor: '#d97706', sunY: 20,
     moonGlow: 0.15, moonY: 28,
     starOpacity: 0.1,
@@ -427,6 +427,18 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
   const dirtLight = isDark ? '#322c1e' : '#9a8a6a'
 
+  const isNight = timeState.hour >= 18 || timeState.hour < 6
+  const lightX = (() => {
+    if (isNight) {
+      const nightHour = timeState.hour >= 18 ? timeState.hour - 18 : timeState.hour + 6
+      const t = Math.max(0, Math.min(1, nightHour / 12))
+      return (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
+    }
+    const t = Math.max(0, Math.min(1, (timeState.hour - 6) / 12))
+    return (1-t)*(1-t)*50 + 2*(1-t)*t*85 + t*t*120
+  })()
+  const shadowOp = isDark ? 0.1 : 0.07
+
   const renderWindmill = (wm: { x: number; y: number; s: number }, wi: number) => {
     const wmX = wm.x, wmY = wm.y, sc = wm.s
     const wmColor = isDark ? '#3a3028' : '#6a5a42'
@@ -441,9 +453,12 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
     return (
       <g key={`wm-${wi}`}>
         {/* Cast shadow */}
-        <ellipse cx={wmX + h * 0.6} cy={wmY + h + 1.2 * sc} rx={h * 0.9} ry={1.5 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
-        <ellipse cx={wmX + h * 0.35} cy={wmY + h + 0.8 * sc} rx={h * 0.5} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
-        <ellipse cx={wmX} cy={wmY + h + 0.5 * sc} rx={bw + 1 * sc} ry={0.8 * sc} fill={isDark ? '#2a2418' : '#5a4a38'} opacity="0.4" />
+        {(() => {
+          const dir = wmX < lightX ? -1 : 1
+          const stretch = Math.abs(wmX - lightX) / 100
+          const offX = dir * h * (0.3 + stretch * 0.4)
+          return <ellipse cx={wmX + offX} cy={wmY + h + 0.5 * sc} rx={h * (0.4 + stretch * 0.3)} ry={0.6 * sc} fill={`rgba(0,0,0,${shadowOp})`} />
+        })()}
         <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#brick-pat)" />
         <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill={isDark ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)'} />
         {[0.35, 0.55, 0.7, 0.85].map(t => {
@@ -1737,8 +1752,12 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
               {/* Cast shadow */}
-              <ellipse cx={lx + 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
-              <ellipse cx={lx + 2 * sc} cy={ly + 1 * sc} rx={3 * sc} ry={0.6 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
+              {(() => {
+                const dir = lx < lightX ? -1 : 1
+                const stretch = Math.abs(lx - lightX) / 100
+                const offX = dir * 8 * sc * (0.3 + stretch * 0.5)
+                return <ellipse cx={lx + offX} cy={ly + 1 * sc} rx={4 * sc * (0.5 + stretch * 0.4)} ry={0.4 * sc} fill={`rgba(0,0,0,${shadowOp})`} />
+              })()}
               {/* Pole */}
               <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
@@ -1759,7 +1778,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(10, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 4px 8px rgba(0,0,0,${isDark ? '0.5' : '0.25'}))` }} onClick={onOpenShop}>
+            <g transform="translate(10, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 2px 4px rgba(0,0,0,${isDark ? '0.2' : '0.1'}))` }} onClick={onOpenShop}>
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
                   <stop offset="0%" stopColor="#e8a030" />
@@ -1987,8 +2006,13 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <path d="M232 214 Q234 210 236 207" stroke={isDark ? '#4a3218' : '#7a6040'} strokeWidth="1.2" fill="none" strokeLinecap="round" />
               <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
               {/* Cast shadow */}
-              <ellipse cx="170" cy="270" rx="130" ry="14" fill={isDark ? 'rgba(0,0,0,0.22)' : 'rgba(20,15,5,0.15)'} />
-              <ellipse cx="190" cy="265" rx="115" ry="10" fill={isDark ? 'rgba(0,0,0,0.15)' : 'rgba(20,15,5,0.1)'} />
+              {(() => {
+                const stallWorldX = 10 + 175 * 0.065
+                const dir = stallWorldX < lightX ? -1 : 1
+                const stretch = Math.abs(stallWorldX - lightX) / 100
+                const offX = dir * 60 * (0.3 + stretch * 0.5)
+                return <ellipse cx={175 + offX} cy="268" rx={70 + stretch * 40} ry="6" fill={`rgba(0,0,0,${shadowOp})`} />
+              })()}
             </g>
           )
         })()}
@@ -2013,8 +2037,12 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
               </>}
               {/* Cast shadow */}
-              <ellipse cx={lx - 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
-              <ellipse cx={lx - 2 * sc} cy={ly + 1 * sc} rx={3 * sc} ry={0.6 * sc} fill={isDark ? 'rgba(0,0,0,0.12)' : 'rgba(20,15,5,0.08)'} />
+              {(() => {
+                const dir = lx < lightX ? -1 : 1
+                const stretch = Math.abs(lx - lightX) / 100
+                const offX = dir * 8 * sc * (0.3 + stretch * 0.5)
+                return <ellipse cx={lx + offX} cy={ly + 1 * sc} rx={4 * sc * (0.5 + stretch * 0.4)} ry={0.4 * sc} fill={`rgba(0,0,0,${shadowOp})`} />
+              })()}
               {/* Pole */}
               <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
               {/* Base */}
@@ -2147,7 +2175,12 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                       </>
                     )}
                     {/* Ground shadow */}
-                    <ellipse cx={b.cx} cy={b.bot + 0.2} rx={b.rx + 0.3} ry={0.25} fill="rgba(0,0,0,0.1)" opacity={(timeState.hour >= 18 || timeState.hour < 6) ? 0.4 : 1} />
+                    {(() => {
+                      const dir = b.cx < lightX ? -1 : 1
+                      const stretch = Math.abs(b.cx - lightX) / 100
+                      const offX = dir * (b.rx + 0.3) * (0.2 + stretch * 0.4)
+                      return <ellipse cx={b.cx + offX} cy={b.bot + 0.2} rx={b.rx + 0.3 + stretch * 0.3} ry={0.2} fill={`rgba(0,0,0,${shadowOp})`} />
+                    })()}
                   </g>
                 )
               })}
@@ -2178,7 +2211,12 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <ellipse cx={200.5} cy={52} rx={1.2} ry={0.9} fill={bC} />
               <ellipse cx={200.5} cy={51.3} rx={1.2} ry={0.35} fill={bL} />
               {/* Cart shadow */}
-              <ellipse cx={200.5} cy={57} rx={4} ry={0.6} fill={isDark ? '#1a1810' : '#4a4030'} opacity="0.2" />
+              {(() => {
+                const dir = 200 < lightX ? -1 : 1
+                const stretch = Math.abs(200 - lightX) / 100
+                const offX = dir * 3 * (0.3 + stretch * 0.5)
+                return <ellipse cx={200.5 + offX} cy={57} rx={3 + stretch * 2} ry={0.4} fill={`rgba(0,0,0,${shadowOp})`} />
+              })()}
             </g>
           )
         })()}
