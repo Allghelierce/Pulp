@@ -1049,7 +1049,7 @@ const BoxTextarea = memo(function BoxTextarea({
               const paper = document.getElementById('editor-paper')
               if (paper) {
                 let zoom = 1
-                const zoomWrapper = document.querySelector('.max-w-5xl.shrink-0') as HTMLElement | null
+                const zoomWrapper = document.querySelector('.shrink-0[style*="maxWidth"]') as HTMLElement | null
                 if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
 
                 let layer = document.getElementById('ghost-layer')
@@ -1513,7 +1513,7 @@ export default function NoteApp() {
     orchardTimeMode: "theme",
     devMode: false,
     isDevUnlocked: false,
-    scrollMode: false
+    scrollMode: true
   }
   const _savedSettingsRef = useRef<any>(undefined)
   if (_savedSettingsRef.current === undefined) {
@@ -3818,7 +3818,7 @@ export default function NoteApp() {
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
                 <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
-                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 680, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full max-w-5xl shrink-0">
+                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 880, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
@@ -4254,24 +4254,6 @@ export default function NoteApp() {
                                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                               </button>
                               </>}
-                              {/* Scroll mode toggle */}
-                              {activeNote.pages.length > 1 && (
-                                <>
-                                  <div style={{ width: 1, height: 16, background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)", margin: "0 4px" }} />
-                                  <button
-                                    onClick={() => updateSettings({ scrollMode: !scrollMode })}
-                                    className="p-1.5 rounded-md transition-all hover:bg-black/8 hover:scale-110 active:scale-95"
-                                    style={{ color: scrollMode ? accent : "#3f3f46" }}
-                                    title={scrollMode ? "Single page mode" : "Continuous scroll mode"}
-                                  >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <rect x="4" y="2" width="16" height="6" rx="1" />
-                                      <rect x="4" y="10" width="16" height="6" rx="1" />
-                                      <rect x="4" y="18" width="16" height="4" rx="1" />
-                                    </svg>
-                                  </button>
-                                </>
-                              )}
                             </div>{/* end inner flex */}
 
                           </div>{/* end deadzone */}

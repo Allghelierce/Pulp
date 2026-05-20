@@ -129,6 +129,7 @@ export interface PulpConfig {
   blockedSites: string[]; blockedApps: string[]
   orchardTimeMode: "theme" | "realtime"
   devMode: boolean; isDevUnlocked: boolean
+  scrollMode: boolean
 }
 
 function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: {
@@ -263,7 +264,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
     lineSpacing, paperStyle, showBinding, reduceMotion, reduceVisuals, sidebarOnStart, bgEffect,
     smearEffect, handwrittenEffect, language, defaultSort, wordCountVisible, focusMode, baseFontSize,
-    pageLayout, shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked
+    pageLayout, shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked, scrollMode
   } = config
   const isDark = theme === "dark"
   const isPremium = user?.email?.includes("pro") || false
@@ -938,6 +939,19 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   isDark={isDark}
                   description="Simulate organic pen-on-paper bleed and wobble using SVG filters"
                   control={<SettingToggle checked={handwrittenEffect} onChange={v => onUpdateConfig({ handwrittenEffect: v })} isDark={isDark} />}
+                />
+                <SettingRow
+                  title="Page navigation"
+                  isDark={isDark}
+                  description={scrollMode ? "Continuous scroll — all pages flow together" : "Arrow navigation — flip through pages one at a time"}
+                  control={
+                    <button
+                      onClick={() => onUpdateConfig({ scrollMode: !scrollMode } as any)}
+                      className={`px-3 py-1 rounded-md text-[11px] font-normal border transition-all ${isDark ? "bg-zinc-800/50 border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/50" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
+                    >
+                      {scrollMode ? "Scroll" : "Arrows"}
+                    </button>
+                  }
                 />
               </SettingSection>
             </>)}
