@@ -34,14 +34,7 @@
 - Dormant trees produce 0 sap
 - Trees don't die, grove is preserved
 - Punishment = lost sap (wallet), not lost assets (trees)
-- Sap is easy to re-earn once focusing again
-
-## Ascension (endgame sap sink)
-- Voluntary prestige system
-- Reset sap + put trees back to dormant
-- Gain permanent multiplier or cosmetic tier
-- Each ascension costs more than the last
-- Infinite sink for endgame players
+- Sap is easy to re-earn once focusing againhmm
 
 ## Competitions
 - League tiers (bronze-diamond) grouped by sap delta (production rate per 5min)

@@ -504,7 +504,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
   return (
     <>
-      <svg ref={terrainSvgRef} className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s' }}>
+      <svg ref={terrainSvgRef} className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s', pointerEvents: 'none' }}>
         <defs>
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.skyTop} />
@@ -707,6 +707,51 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.25" />
         <path d="M58,30 C64,28 68,25 72,23 C78,22 85,24 90,28" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="0.2" />
 
+        {/* Far left hill — scattered boulders */}
+        {(() => {
+          const rng = seededRng(7713)
+          const baseC = isDark ? '#282c2a' : '#808878'
+          const darkC = isDark ? '#1a1e1c' : '#686e64'
+          const lightC = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)'
+          const crackC = isDark ? '#1e2220' : '#585e54'
+          const rocks: string[] = []
+          const rockDark: string[] = []
+          const highlights: string[] = []
+          const cracks: string[] = []
+          const farPts: [number,number][] = [[-10,33],[5,26],[15,23],[22,21],[28,22],[35,26],[42,30],[50,32],[58,30],[68,25],[72,23],[85,24],[90,28],[100,33],[110,34]]
+          const getFarY = (x: number) => {
+            for (let j = 0; j < farPts.length - 1; j++) {
+              if (x >= farPts[j][0] && x <= farPts[j+1][0]) {
+                const t = (x - farPts[j][0]) / (farPts[j+1][0] - farPts[j][0])
+                return farPts[j][1] + t * (farPts[j+1][1] - farPts[j][1])
+              }
+            }
+            return 33
+          }
+          const sizes = [1.2, 0.4, 2, 0.6, 2.5, 0.5, 1.5, 0.7, 1.8, 0.35]
+          for (let i = 0; i < 10; i++) {
+            const rx = -5 + (i / 10) * 115 + (rng() - 0.5) * 8
+            const ry = getFarY(rx) + 0.5 + rng() * 5
+            const sizeMul = sizes[i]
+            const w = sizeMul * (0.4 + rng() * 0.5), h = sizeMul * (0.3 + rng() * 0.4)
+            const tilt = (rng() - 0.5) * 0.12
+            const jL = rng() * 0.3, jR = rng() * 0.3, jT = rng() * 0.2
+            rocks.push(`M${(rx - w).toFixed(2)},${ry.toFixed(2)}Q${(rx - w * (0.7 + jL)).toFixed(2)},${(ry - h * (0.5 + jL)).toFixed(2)} ${(rx - w * 0.3 + tilt).toFixed(2)},${(ry - h * (0.9 + jT)).toFixed(2)}Q${(rx + tilt).toFixed(2)},${(ry - h * (1.05 + jT)).toFixed(2)} ${(rx + w * 0.35 + tilt).toFixed(2)},${(ry - h * (0.8 + jR)).toFixed(2)}Q${(rx + w * (0.8 + jR)).toFixed(2)},${(ry - h * (0.4 + jR)).toFixed(2)} ${(rx + w).toFixed(2)},${ry.toFixed(2)}Z`)
+            rockDark.push(`M${(rx - w * 0.9).toFixed(2)},${(ry + 0.06).toFixed(2)}Q${rx.toFixed(2)},${(ry + h * 0.15 + 0.06).toFixed(2)} ${(rx + w * 0.9).toFixed(2)},${(ry + 0.06).toFixed(2)}`)
+            highlights.push(`M${(rx - w * 0.3 + tilt).toFixed(2)},${(ry - h * (0.9 + jT)).toFixed(2)}Q${(rx + tilt).toFixed(2)},${(ry - h * (1.05 + jT)).toFixed(2)} ${(rx + w * 0.35 + tilt).toFixed(2)},${(ry - h * (0.8 + jR)).toFixed(2)}`)
+            if (w > 0.3) {
+              const cx1 = rx + (rng() - 0.5) * w * 0.5, cy1 = ry - h * (0.3 + rng() * 0.4)
+              cracks.push(`M${cx1.toFixed(2)},${cy1.toFixed(2)}l${(rng() * 0.25 - 0.12).toFixed(2)},${(rng() * 0.15).toFixed(2)}`)
+            }
+          }
+          return <g>
+            <path d={rocks.join('')} fill={baseC} />
+            <path d={rockDark.join('')} stroke={darkC} strokeWidth="0.06" fill="none" opacity="0.6" />
+            <path d={highlights.join('')} stroke={lightC} strokeWidth="0.05" fill="none" />
+            <path d={cracks.join('')} stroke={crackC} strokeWidth="0.03" fill="none" opacity="0.5" />
+          </g>
+        })()}
+
         {/* Rolling hills — back hill broad dome on right, front hill steep hump on left */}
         {/* Back hill — broad dome peaking center-right */}
         <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29 L210,42 L-10,42 Z" fill="url(#hill-mid)" />
@@ -717,22 +762,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {/* Back hill — contour lines for rolling terrain detail */}
         <path d="M-10,35 C20,33 50,29 80,25 C100,22 120,20 145,20 C165,21 185,24 210,28" fill="none" stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)'} strokeWidth="0.2" />
         <path d="M-10,37 C20,35 50,31 80,28 C100,25 120,23 145,23 C165,24 185,27 210,30" fill="none" stroke={isDark ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.025)'} strokeWidth="0.15" />
-        {/* Back hill — scattered rocks */}
-        {(() => {
-          const rocks: string[] = []
-          for (let i = 0; i < 12; i++) {
-            const rng = seededRng(i * 89 + 713)
-            const rx = 5 + rng() * 195
-            const ry = (() => {
-              if (rx < 70) return 36 - (rx + 10) * 10 / 80
-              if (rx < 140) return 26 - (rx - 70) * 7 / 70
-              return 19 + (rx - 140) * 10 / 70
-            })() + 1 + rng() * 2
-            const w = 0.15 + rng() * 0.25, h = 0.1 + rng() * 0.15
-            rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * 0.3).toFixed(1)},${(ry - h).toFixed(1)} ${rx.toFixed(1)},${(ry - h * 0.8).toFixed(1)}Q${(rx + w * 0.4).toFixed(1)},${(ry - h).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
-          }
-          return <path d={rocks.join('')} fill={isDark ? '#1a1a1c' : '#8a8a80'} opacity="0.25" />
-        })()}
         {/* Back hill — wildflower patches */}
         {(() => {
           const dots: string[] = []
@@ -1560,7 +1589,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const centerCols = isDark
             ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
             : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
-          for (let i = 0; i < 60; i++) {
+          for (let i = 0; i < 120; i++) {
             const rng = seededRng(i * 67 + 1237)
             const inField = rng() < 0.75
             const fx = inField ? 12 + rng() * 76 : 2 + rng() * 196
@@ -2236,7 +2265,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const y = 1 + r() * 14
           const w = 50 + r() * 70
           const h = 12 + r() * 10
-          const dur = 200 + r() * 160
+          const dur = 400 + r() * 300
           const delay = -(r() * dur)
           return (
             <svg key={`cloud-hi-${i}`} className="absolute" style={{
@@ -2258,7 +2287,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const y = 4 + r() * 18
           const w = 80 + r() * 120
           const h = 16 + r() * 14
-          const dur = 160 + r() * 120
+          const dur = 320 + r() * 240
           const delay = -(r() * dur)
           return (
             <svg key={`cloud-mid-${i}`} className="absolute" style={{
@@ -2280,7 +2309,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const y = 12 + r() * 18
           const w = 120 + r() * 180
           const h = 28 + r() * 22
-          const dur = 100 + r() * 80
+          const dur = 220 + r() * 160
           const delay = -(r() * dur)
           return (
             <svg key={`cloud-lo-${i}`} className="absolute" style={{
@@ -2591,6 +2620,14 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           opacity: p.ambientOpacity,
           transition: 'opacity 10s, background-color 10s',
         }} />
+      )}
+      {/* Stall click zone */}
+      {onOpenShop && (
+        <div
+          className="absolute z-[70] cursor-pointer"
+          style={{ left: '0%', top: '30%', width: '14%', height: '35%' }}
+          onClick={onOpenShop}
+        />
       )}
     </>
   )

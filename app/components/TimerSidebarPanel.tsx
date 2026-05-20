@@ -521,7 +521,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </motion.div>
               )
             })() : (
-            <motion.div key="timer-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col items-center">
+            <motion.div key="timer-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col items-center flex-1">
               {/* Timer display */}
               <div className="text-center mb-3">
                 <div
@@ -559,9 +559,29 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                   : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>lock in</span>}
                 </p>
-                <div className="mt-3 flex justify-center">
-                  <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
-                </div>
+                {!running && !done && !treeDead && (
+                  <div className="mt-3 flex justify-center">
+                    <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
+                  </div>
+                )}
+                {!running && !done && !treeDead && (() => {
+                  const hour = new Date().getHours()
+                  const isEB = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
+                  const qBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+                  const sBonus = Math.min(1, goalStreak / 30)
+                  const mult = Math.min(5, 1 + (isEB ? 1 : 0) + qBonus + sBonus)
+                  const groveSap = grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
+                  const perMin = Math.max(1, Math.round((groveSap / 60) * mult))
+                  const sessionMin = Math.round(total / 60)
+                  const estSap = perMin * sessionMin
+                  return (
+                    <div className="mt-2 flex justify-center">
+                      <span style={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif', color: subtleColor, letterSpacing: '0.02em' }}>
+                        ~{estSap} sap ({perMin}/min × {sessionMin}min)
+                      </span>
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Tree view */}
@@ -711,65 +731,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
 
-            {/* Streak + multiplier (hover for breakdown) */}
-            {!running && !done && !treeDead && (() => {
-              const hour = new Date().getHours()
-              const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
-              const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-              const cappedMult = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
-              return (
-                <div className="relative flex items-center justify-center group" style={{ marginBottom: 4 }}>
-                  <div className="flex items-center gap-2 cursor-default" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    {goalStreak > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 500, color: goalStreak >= 7 ? '#d97706' : subtleColor }}>
-                        {goalStreak}d streak
-                      </span>
-                    )}
-                    {cappedMult > 1 && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 600, letterSpacing: '-0.02em',
-                        color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24',
-                      }}>
-                        {cappedMult.toFixed(1)}x
-                      </span>
-                    )}
-                    {cappedMult <= 1 && goalStreak === 0 && (
-                      <span style={{ fontSize: 10, color: subtleColor }}>1.0x base</span>
-                    )}
-                  </div>
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50"
-                    style={{
-                      background: isDark ? '#1c1a17' : '#fff',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                      borderRadius: 6, padding: '6px 10px', minWidth: 120,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    }}>
-                    <div style={{ fontSize: 9, fontWeight: 500, color: subtleColor, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Multiplier</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        <span style={{ color: isDark ? '#a1a1aa' : '#71717a' }}>base</span>
-                        <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 500 }}>1.0x</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        <span style={{ color: isEarlyBird ? '#fbbf24' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
-                        <span style={{ color: isEarlyBird ? '#fbbf24' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        <span style={{ color: quotaBonus > 0 ? (quotaTier === 'daily' ? '#f87171' : '#4ade80') : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
-                        <span style={{ color: quotaBonus > 0 ? (quotaTier === 'daily' ? '#f87171' : '#4ade80') : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
-                      </div>
-                      <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginTop: 2, paddingTop: 3, display: 'flex', justifyContent: 'space-between', fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 600 }}>total</span>
-                        <span style={{ color: cappedMult >= 3 ? '#f87171' : cappedMult >= 2 ? '#4ade80' : '#fbbf24', fontWeight: 700 }}>{cappedMult.toFixed(1)}x</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })()}
-
             {/* Main button */}
-            <div className="pt-5">
+            <div className="pt-5 mt-auto w-full">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {

@@ -3481,6 +3481,7 @@ export default function NoteApp() {
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                 onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
+                onGoHome={() => { closeAllPanels(); setCurrentView("editor") }}
                 sap={sap}
                 xp={xp}
                 totalNotes={notes.filter(n => !n.archived).length}

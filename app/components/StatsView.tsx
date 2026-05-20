@@ -25,9 +25,10 @@ function getTodayEntry(): DailyEntry | null {
   return loadDailyStats().find(e => e.date === key) ?? null
 }
 
-export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goalStreak = 0, dailyGoalMinutes = 30 }: {
+export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goalStreak = 0, dailyGoalMinutes = 30, hideCenter = false, ringSize }: {
   isDark: boolean; onClick?: () => void; stretch?: boolean
   quotaTier?: 'monthly' | 'weekly' | 'daily'; goalStreak?: number; dailyGoalMinutes?: number
+  hideCenter?: boolean; ringSize?: number
 }) {
   const [today, setToday] = useState<DailyEntry | null>(getTodayEntry)
 
@@ -40,7 +41,7 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
 
   const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
   const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
-  const earlyBirdProgress = isEarlyBird ? Math.min(1, (today?.focusMinutes ?? 0) / 10) : 0
+  const earlyBirdProgress = isEarlyBird ? 1 : 0
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
@@ -49,59 +50,110 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   const quotaProgress = Math.min(1, (today?.focusMinutes ?? 0) / Math.max(1, quotaTier === 'daily' ? quotaGoal : quotaTier === 'weekly' ? quotaGoal / 7 : quotaGoal / 30))
   const streakProgress = Math.min(1, goalStreak / 30)
 
-  const size = 56
+  const size = ringSize || 64
   const cx = size / 2, cy = size / 2
-  const strokeW = 2.5
+  const strokeW = 3
   const gap = 2
 
   const rings = [
-    { value: quotaProgress, color: '#ea580c', radius: (size - strokeW) / 2 },
-    { value: streakProgress, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, color: '#ea580c', label: 'quota', radius: (size - strokeW) / 2 },
+    { value: streakProgress, color: '#d97706', label: 'streak', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#60a5fa', label: 'early bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
+  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#ea580c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
+
   return (
-    <button
-      onClick={onClick}
-      title={`${quotaTier} quota · ${goalStreak}d streak · ${multiplier.toFixed(1)}x`}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'none', border: 'none', padding: 0,
-        cursor: onClick ? 'pointer' : 'default',
-        ...(stretch ? { width: '100%' } : {}),
-      }}
-    >
-      <svg width={stretch ? '100%' : size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {rings.map((ring, i) => {
-          const circ = 2 * Math.PI * ring.radius
-          const gapLen = circ * 0.04
-          const trackLen = circ - gapLen
-          const pct = Math.min(ring.value, 1)
-          const fillLen = trackLen * pct
-          const track = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
-          return (
-            <g key={i}>
-              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round"
-                strokeDasharray={`${trackLen} ${gapLen}`}
-                strokeDashoffset={-gapLen / 2}
-                transform={`rotate(-90 ${cx} ${cy})`}
-              />
-              <circle
-                cx={cx} cy={cy} r={ring.radius} fill="none"
-                stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
-                strokeDasharray={`${fillLen} ${circ - fillLen}`}
-                transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
-              />
-            </g>
-          )
-        })}
-        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
-          style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
-            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
-          {multiplier.toFixed(1)}x
-        </text>
-      </svg>
-    </button>
+    <div className="relative group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(stretch ? { width: '100%' } : {}) }}>
+      <button
+        onClick={onClick}
+        title={`${quotaTier} quota · ${goalStreak}d streak · ${multiplier.toFixed(1)}x`}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'none', border: 'none', padding: 0,
+          cursor: onClick ? 'pointer' : 'default',
+        }}
+      >
+        <svg width={stretch ? '100%' : size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {rings.map((ring, i) => {
+            const circ = 2 * Math.PI * ring.radius
+            const gapLen = circ * 0.04
+            const trackLen = circ - gapLen
+            const pct = Math.min(ring.value, 1)
+            const fillLen = trackLen * pct
+            const track = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+            return (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round"
+                  strokeDasharray={`${trackLen} ${gapLen}`}
+                  strokeDashoffset={-gapLen / 2}
+                  transform={`rotate(-90 ${cx} ${cy})`}
+                />
+                <circle
+                  cx={cx} cy={cy} r={ring.radius} fill="none"
+                  stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
+                  strokeDasharray={`${fillLen} ${circ - fillLen}`}
+                  transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
+                />
+              </g>
+            )
+          })}
+          {!hideCenter && (multColor === 'gradient' ? (
+            <>
+              <defs>
+                <linearGradient id="mult-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="50%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#fcd34d" />
+                </linearGradient>
+              </defs>
+              <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+                  fill: 'url(#mult-grad)' }}>
+                {multiplier.toFixed(1)}x
+              </text>
+            </>
+          ) : (
+            <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
+              style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+                fill: multColor }}>
+              {multiplier.toFixed(1)}x
+            </text>
+          ))}
+        </svg>
+      </button>
+      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50"
+        style={{
+          background: isDark ? '#1c1a17' : '#fff',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          borderRadius: 6, padding: '6px 10px', minWidth: 120,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        }}>
+        <div style={{ fontSize: 9, fontWeight: 500, color: isDark ? '#71717a' : '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Multiplier</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+            <span style={{ color: isDark ? '#a1a1aa' : '#71717a' }}>base</span>
+            <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 500 }}>1.0x</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+            <span style={{ color: isEarlyBird ? '#60a5fa' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
+            <span style={{ color: isEarlyBird ? '#60a5fa' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+            <span style={{ color: quotaBonus > 0 ? '#ea580c' : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
+            <span style={{ color: quotaBonus > 0 ? '#ea580c' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+            <span style={{ color: streakBonus > 0 ? '#d97706' : (isDark ? '#52524e' : '#c4c4c0') }}>streak ({goalStreak}d)</span>
+            <span style={{ color: streakBonus > 0 ? '#d97706' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{streakBonus > 0 ? `+${streakBonus.toFixed(1)}x` : '—'}</span>
+          </div>
+          <div style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginTop: 2, paddingTop: 3, display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+            <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 600 }}>total</span>
+            <span style={{ color: typeof multColor === 'string' && multColor !== '#94a3b8' ? multColor : '#94a3b8', fontWeight: 700 }}>{multiplier.toFixed(1)}x</span>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -110,7 +162,7 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
 }) {
   const hour = typeof window !== 'undefined' ? new Date().getHours() : 12
   const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
-  const earlyBirdProgress = isEarlyBird ? Math.min(1, focus / 10) : 0
+  const earlyBirdProgress = isEarlyBird ? 1 : 0
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
@@ -125,7 +177,7 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
   const rings = [
     { value: quotaProgress, color: '#ea580c', label: 'Quota', radius: (size - strokeW) / 2 },
     { value: streakProgress, color: '#d97706', label: 'Streak', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#fbbf24', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#60a5fa', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   return (
@@ -178,11 +230,28 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
             </g>
           )
         })}
-        <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
-          style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
-            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
-          {multiplier.toFixed(1)}x
-        </text>
+        {multiplier >= 4.5 ? (
+          <>
+            <defs>
+              <linearGradient id="mult-grad-lg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#fcd34d" />
+              </linearGradient>
+            </defs>
+            <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
+              style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+                fill: 'url(#mult-grad-lg)' }}>
+              {multiplier.toFixed(1)}x
+            </text>
+          </>
+        ) : (
+          <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
+            style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+              fill: multiplier >= 4 ? '#ea580c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : isDark ? '#94a3b8' : '#94a3b8' }}>
+            {multiplier.toFixed(1)}x
+          </text>
+        )}
         <text x={cx} y={cy + 16} textAnchor="middle" dominantBaseline="central"
           style={{ fontSize: 10, fontWeight: 400, fill: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {quotaTier} · {goalStreak}d streak

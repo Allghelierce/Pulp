@@ -634,7 +634,7 @@ export const Sidebar = memo(function Sidebar({
         <div className="relative px-3.5 py-4 border-b border-white/5 shrink-0 z-10" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 220 }}>
           <div
             onClick={() => {
-              if (mini && onGoHome) { onGoHome(); return }
+              onGoHome?.()
               const count = devClicks + 1
               if (count >= 7) {
                 onUnlockDev()
