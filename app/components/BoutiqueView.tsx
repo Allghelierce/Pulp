@@ -761,17 +761,11 @@ export const BoutiqueView = memo(function BoutiqueView({
       <style>{`
         @keyframes seed-wobble {
           0% { transform: scale(1) rotate(0deg); }
-          8% { transform: scale(1.01) rotate(-0.5deg); }
-          18% { transform: scale(1.015) rotate(0.8deg); }
-          28% { transform: scale(1.025) rotate(-1.2deg); }
-          38% { transform: scale(1.04) rotate(1.8deg); }
-          48% { transform: scale(1.06) rotate(-2.5deg); }
-          55% { transform: scale(1.08) rotate(3deg); }
-          62% { transform: scale(1.04) rotate(-2deg); }
-          70% { transform: scale(0.97) rotate(1.5deg); }
-          78% { transform: scale(1.02) rotate(-0.8deg); }
-          86% { transform: scale(0.99) rotate(0.4deg); }
-          94% { transform: scale(1.005) rotate(-0.2deg); }
+          20% { transform: scale(1.03) rotate(-1.5deg); }
+          40% { transform: scale(1.06) rotate(2deg); }
+          55% { transform: scale(1.08) rotate(-2.5deg); }
+          70% { transform: scale(1.03) rotate(1deg); }
+          85% { transform: scale(1.01) rotate(-0.3deg); }
           100% { transform: scale(1) rotate(0deg); }
         }
         @keyframes seed-crack {
@@ -793,14 +787,10 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { clip-path: polygon(60% 0, 100% 0, 100% 100%, 74% 100%, 70% 50%); opacity: 0; }
         }
         @keyframes sprout-emerge {
-          0% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
-          20% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
-          35% { transform: scaleY(0.05) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0.3; }
-          50% { transform: scaleY(0.3) scaleX(0.75) translateY(10px); transform-origin: center bottom; opacity: 0.7; }
-          65% { transform: scaleY(0.7) scaleX(0.9) translateY(3px); transform-origin: center bottom; opacity: 0.9; }
-          78% { transform: scaleY(1.06) scaleX(1.02) translateY(-4px); transform-origin: center bottom; opacity: 1; }
-          88% { transform: scaleY(0.98) scaleX(0.995) translateY(1px); transform-origin: center bottom; opacity: 1; }
-          95% { transform: scaleY(1.01) scaleX(1.002) translateY(-0.5px); transform-origin: center bottom; opacity: 1; }
+          0% { transform: scaleY(0) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0; }
+          20% { transform: scaleY(0) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0; }
+          55% { transform: scaleY(0.6) scaleX(0.85) translateY(4px); transform-origin: center bottom; opacity: 0.8; }
+          75% { transform: scaleY(1.04) scaleX(1.01) translateY(-2px); transform-origin: center bottom; opacity: 1; }
           100% { transform: scaleY(1) scaleX(1) translateY(0); transform-origin: center bottom; opacity: 1; }
         }
         @keyframes leaf-scatter {
@@ -825,58 +815,41 @@ export const BoutiqueView = memo(function BoutiqueView({
         }
         @keyframes seed-spin-reveal {
           0% { transform: rotateY(0) scale(1); }
-          10% { transform: rotateY(0) scale(1.03); }
-          20% { transform: rotateY(0) scale(1.06); }
-          35% { transform: rotateY(90deg) scale(0.92); }
-          50% { transform: rotateY(180deg) scale(0.88); }
-          65% { transform: rotateY(270deg) scale(0.92); }
-          80% { transform: rotateY(360deg) scale(1.04); }
-          90% { transform: rotateY(360deg) scale(0.98); }
+          15% { transform: rotateY(0) scale(1.04); }
+          40% { transform: rotateY(180deg) scale(0.92); }
+          70% { transform: rotateY(360deg) scale(1.03); }
+          85% { transform: rotateY(360deg) scale(0.99); }
           100% { transform: rotateY(360deg) scale(1); }
         }
         @keyframes pop-common {
-          0% { transform: scale(0.3); opacity: 0; }
-          40% { transform: scale(1.08); opacity: 1; }
-          60% { transform: scale(0.96); }
-          80% { transform: scale(1.02); }
+          0% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(1.06); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes pop-uncommon {
-          0% { transform: scale(0.2); opacity: 0; }
-          25% { transform: scale(1.15); opacity: 1; }
-          45% { transform: scale(0.92); }
-          60% { transform: scale(1.06); }
-          75% { transform: scale(0.98); }
+          0% { transform: scale(0); opacity: 0; }
+          45% { transform: scale(1.1); opacity: 1; }
+          75% { transform: scale(0.97); }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes pop-rare {
-          0% { transform: scale(0.1) rotate(-8deg); opacity: 0; }
-          20% { transform: scale(1.22) rotate(3deg); opacity: 1; }
-          35% { transform: scale(0.88) rotate(-2deg); }
-          50% { transform: scale(1.1) rotate(1deg); }
-          65% { transform: scale(0.95) rotate(0deg); }
-          80% { transform: scale(1.03); }
+          0% { transform: scale(0) rotate(-3deg); opacity: 0; }
+          40% { transform: scale(1.15) rotate(1deg); opacity: 1; }
+          70% { transform: scale(0.96) rotate(0deg); }
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes pop-true-rare {
-          0% { transform: scale(0) rotate(-12deg); opacity: 0; }
-          15% { transform: scale(1.3) rotate(5deg); opacity: 1; }
-          30% { transform: scale(0.82) rotate(-4deg); }
-          42% { transform: scale(1.18) rotate(2deg); }
-          55% { transform: scale(0.9) rotate(-1deg); }
-          68% { transform: scale(1.08) rotate(0.5deg); }
-          80% { transform: scale(0.97); }
+          0% { transform: scale(0) rotate(-5deg); opacity: 0; }
+          35% { transform: scale(1.2) rotate(2deg); opacity: 1; }
+          60% { transform: scale(0.94) rotate(-0.5deg); }
+          80% { transform: scale(1.03) rotate(0deg); }
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes pop-sacred {
-          0% { transform: scale(0) rotate(-15deg); opacity: 0; filter: brightness(3); }
-          8% { transform: scale(1.5) rotate(6deg); opacity: 1; filter: brightness(2.5); }
-          18% { transform: scale(0.7) rotate(-5deg); filter: brightness(1.8); }
-          28% { transform: scale(1.35) rotate(3deg); filter: brightness(1.5); }
-          40% { transform: scale(0.85) rotate(-2deg); filter: brightness(1.2); }
-          52% { transform: scale(1.15) rotate(1deg); filter: brightness(1.1); }
-          65% { transform: scale(0.94) rotate(0deg); filter: brightness(1); }
-          80% { transform: scale(1.04); }
+          0% { transform: scale(0) rotate(-6deg); opacity: 0; filter: brightness(2.5); }
+          30% { transform: scale(1.25) rotate(2deg); opacity: 1; filter: brightness(1.8); }
+          55% { transform: scale(0.92) rotate(-1deg); filter: brightness(1.2); }
+          75% { transform: scale(1.05) rotate(0deg); filter: brightness(1); }
           100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
         }
         @keyframes pop-ring {
@@ -891,8 +864,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         }
         @keyframes sacred-nova {
           0% { transform: scale(0); opacity: 0; }
-          15% { transform: scale(0.5); opacity: 0.6; }
-          40% { transform: scale(1.2); opacity: 0.4; }
+          20% { transform: scale(0.6); opacity: 0.5; }
           100% { transform: scale(2.5); opacity: 0; }
         }
         @keyframes sacred-star {
@@ -912,33 +884,24 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { opacity: 1; }
         }
         @keyframes rarity-color-cinematic {
-          0% { opacity: 0; transform: scale(1.3); filter: brightness(1); }
-          20% { opacity: 0.4; transform: scale(1.15); filter: brightness(2.5); }
-          35% { opacity: 0.7; transform: scale(1.05); filter: brightness(1.8); }
-          50% { opacity: 0.9; transform: scale(0.98); filter: brightness(1.3); }
-          70% { opacity: 1; transform: scale(1.02); filter: brightness(1.1); }
+          0% { opacity: 0; transform: scale(1.15); filter: brightness(2); }
+          40% { opacity: 0.8; transform: scale(1.02); filter: brightness(1.3); }
           100% { opacity: 1; transform: scale(1); filter: brightness(1); }
         }
         @keyframes sacred-bg-ignite {
-          0% { opacity: 0; transform: scale(2); filter: brightness(1) blur(20px); }
-          10% { opacity: 0.3; transform: scale(1.5); filter: brightness(4) blur(12px); }
-          20% { opacity: 0.6; transform: scale(1.2); filter: brightness(3) blur(6px); }
-          35% { opacity: 0.8; transform: scale(1.05); filter: brightness(2) blur(2px); }
-          50% { opacity: 1; transform: scale(0.97); filter: brightness(1.5) blur(0px); }
-          65% { opacity: 1; transform: scale(1.03); filter: brightness(1.2); }
-          80% { opacity: 1; transform: scale(0.99); filter: brightness(1.05); }
+          0% { opacity: 0; transform: scale(1.5); filter: brightness(1) blur(16px); }
+          25% { opacity: 0.6; transform: scale(1.1); filter: brightness(2.5) blur(4px); }
+          50% { opacity: 0.9; transform: scale(1); filter: brightness(1.5) blur(0px); }
           100% { opacity: 1; transform: scale(1); filter: brightness(1); }
         }
         @keyframes sacred-flash {
           0% { opacity: 0; }
-          15% { opacity: 0.8; }
-          40% { opacity: 0.3; }
-          60% { opacity: 0.5; }
+          15% { opacity: 0.7; }
           100% { opacity: 0; }
         }
         @keyframes rarity-pulse {
-          0%, 100% { box-shadow: 0 0 8px var(--pulse-col), 0 4px 20px var(--pulse-col20); }
-          50% { box-shadow: 0 0 18px var(--pulse-col), 0 4px 30px var(--pulse-col40); }
+          0%, 100% { box-shadow: 0 0 8px var(--pulse-col), 0 4px 16px var(--pulse-col20); }
+          50% { box-shadow: 0 0 14px var(--pulse-col), 0 4px 24px var(--pulse-col40); }
         }
         @keyframes shop-pollen {
           0% { transform: translate(0, 0) scale(0); opacity: 0; }
@@ -956,13 +919,10 @@ export const BoutiqueView = memo(function BoutiqueView({
           0%, 100% { box-shadow: 0 0 12px #d9770630, 0 0 24px #d9770610; }
           50% { box-shadow: 0 0 20px #d9770650, 0 0 40px #d9770625; }
         }
-        @keyframes card-float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
-        @keyframes card-float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-        @keyframes card-float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
-        @keyframes card-float-3 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-7px); } }
-        .seed-packet { transition: box-shadow 0.2s ease; }
-        .seed-card-wrap { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
-        .seed-card-wrap:hover { transform: translateY(-6px); }
+        @keyframes card-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(var(--float-y, -6px)); } }
+        .seed-packet { transition: box-shadow 0.3s ease; }
+        .seed-card-wrap { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
+        .seed-card-wrap:hover { transform: translateY(-8px) scale(1.02); filter: brightness(1.05); }
         .seed-cracking { animation: seed-spin-reveal var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1), seed-wobble var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1) !important; }
         .seed-revealed { }
         .daily-deal { }
@@ -1047,8 +1007,8 @@ export const BoutiqueView = memo(function BoutiqueView({
 
                   <style>{`
                     @keyframes m-twinkle { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-                    @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 15% { opacity: 0.8; } 50% { transform: translate(8px,-12px); opacity: 0.6; } 85% { opacity: 0.8; } 100% { transform: translate(-4px,6px); opacity: 0; } }
-                    @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 20% { opacity: 0.7; } 55% { transform: translate(-10px,-8px); opacity: 0.5; } 80% { opacity: 0.7; } 100% { transform: translate(5px,10px); opacity: 0; } }
+                    @keyframes m-firefly { 0% { transform: translate(0,0); opacity: 0; } 8% { opacity: 0.6; } 25% { transform: translate(4px,-6px); opacity: 0.7; } 50% { transform: translate(8px,-12px); opacity: 0.5; } 75% { transform: translate(2px,-3px); opacity: 0.7; } 92% { opacity: 0.6; } 100% { transform: translate(-4px,6px); opacity: 0; } }
+                    @keyframes m-firefly2 { 0% { transform: translate(0,0); opacity: 0; } 10% { opacity: 0.5; } 30% { transform: translate(-5px,-4px); opacity: 0.6; } 55% { transform: translate(-10px,-8px); opacity: 0.4; } 75% { transform: translate(-3px,-2px); opacity: 0.6; } 90% { opacity: 0.5; } 100% { transform: translate(5px,10px); opacity: 0; } }
                     @keyframes m-cloud-drift { 0% { transform: translateX(0); } 100% { transform: translateX(400px); } }
                   `}</style>
 
@@ -1252,10 +1212,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                           </linearGradient>
                         </defs>
                         {isNight && <>
-                          <ellipse cx={lx + 20 * sc / 0.65} cy={ly} rx={50 * sc} ry={20 * sc} fill="url(#bg-lamp-wash-a)" />
-                          <ellipse cx={lx + 12 * sc / 0.65} cy={ly + 6 * sc / 0.65} rx={25 * sc} ry={8 * sc} fill="url(#bg-lamp-ground)" />
-                          <path d={`M${lx - 1.5 * sc},${ly - 7 * sc} L${lx + 8 * sc},${ly + 6 * sc} L${lx - 4 * sc},${ly + 6 * sc} Z`} fill="url(#bg-lamp-cone)" opacity="0.5" />
-                          <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#bg-lamp-glow)" />
+                          <ellipse cx={lx + 15 * sc / 0.65} cy={ly + 2 * sc} rx={55 * sc} ry={18 * sc} fill="url(#bg-lamp-wash-a)" style={{ filter: 'blur(8px)' }} />
+                          <ellipse cx={lx + 5 * sc / 0.65} cy={ly + 4 * sc} rx={30 * sc} ry={10 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(12px)' }} />
+                          <ellipse cx={lx - 8 * sc} cy={ly + 3 * sc} rx={18 * sc} ry={7 * sc} fill="url(#bg-lamp-ground)" style={{ filter: 'blur(10px)' }} opacity="0.5" />
+                          <path d={`M${lx - 1.5 * sc},${ly - 7 * sc} Q${lx + 3 * sc},${ly - 1 * sc} ${lx + 10 * sc},${ly + 6 * sc} L${lx - 5 * sc},${ly + 6 * sc} Q${lx - 4 * sc},${ly - 1 * sc} ${lx - 1.5 * sc},${ly - 7 * sc}`} fill="url(#bg-lamp-cone)" opacity="0.4" style={{ filter: 'blur(3px)' }} />
+                          <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#bg-lamp-glow)" style={{ filter: 'blur(4px)' }} />
                         </>}
                         <ellipse cx={lx - 4 * sc} cy={ly + 1.5 * sc} rx={6 * sc} ry={1 * sc} fill={isDark ? 'rgba(0,0,0,0.18)' : 'rgba(20,15,5,0.12)'} />
                         <rect x={lx - 0.3 * sc} y={ly - 8 * sc} width={0.6 * sc} height={9 * sc} rx={0.15 * sc} fill={iron} />
@@ -1270,12 +1231,15 @@ export const BoutiqueView = memo(function BoutiqueView({
                   })()}
 
                   {/* Fireflies */}
-                  {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => (
+                  {isDark && [[50,140,6],[120,125,8],[180,135,7],[250,120,9],[320,130,6],[80,155,7],[200,150,8],[340,145,6],[150,160,7],[280,155,8],[60,170,6],[230,165,7]].map(([fx,fy,dur], i) => {
+                    const ffColor = i % 5 === 0 ? '#6abf5e' : '#d97706'
+                    return (
                     <g key={`ff${i}`}>
-                      <circle cx={fx} cy={fy} r={1.2} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite` }} />
-                      <circle cx={fx} cy={fy} r={3} fill="#d97706" opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${dur as number}s ease-in-out ${(i * 1.3) % 6}s infinite`, filter: 'blur(1px)' }} />
+                      <circle cx={fx} cy={fy} r={0.7} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite` }} />
+                      <circle cx={fx} cy={fy} r={1.8} fill={ffColor} opacity="0" style={{ animation: `${i % 2 === 0 ? 'm-firefly' : 'm-firefly2'} ${(dur as number) * 3}s ease-in-out ${(i * 2.5) % 12}s infinite`, filter: 'blur(1px)' }} />
                     </g>
-                  ))}
+                    )
+                  })}
                 </svg>
                   )
                 })()}
@@ -1367,7 +1331,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="140" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="140" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="140" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="140" cy="158" r="35" fill="url(#lantern-glow)" />
+                  <circle cx="140" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
+                  <ellipse cx="140" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
                   <rect x="136" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="140" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -1386,7 +1351,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <circle cx="260" cy="158" r="4.5" fill="#d97706" />
                   <circle cx="260" cy="158" r="2.5" fill="#e8a030" />
                   <circle cx="260" cy="157" r="1" fill="#f0c050" />
-                  <circle cx="260" cy="158" r="35" fill="url(#lantern-glow)" />
+                  <circle cx="260" cy="158" r="28" fill="url(#lantern-glow)" style={{ filter: 'blur(8px)' }} />
+                  <ellipse cx="260" cy="168" rx="22" ry="10" fill="url(#lantern-glow)" style={{ filter: 'blur(12px)' }} opacity="0.5" />
                   <rect x="256" y="168" width="8" height="2" rx="0.5" fill={isDark ? '#3a3020' : '#988868'} />
                   <circle cx="260" cy="171" r="1" fill={isDark ? '#3a3020' : '#988868'} />
 
@@ -1727,7 +1693,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const arcRotate = [-7, -2.5, 2.5, 7][i] || 0
 
                   return (
-                    <div key={`${type}-${i}`} className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, animation: `card-float-${i} ${4 + i * 0.8}s ease-in-out infinite` }}>
+                    <div key={`${type}-${i}`} className="seed-card-wrap" style={{ position: 'relative', width: cardW, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: arcOffset, rotate: `${arcRotate}deg`, ['--float-y' as string]: `${-5 - i * 1.2}px`, animation: `card-float ${5 + i * 0.6}s ease-in-out ${i * 0.4}s infinite` }}>
                       {/* Daily deal label */}
                       {isDailyDeal && (
                         <div style={{
@@ -1787,8 +1753,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </svg>
                             {/* Sprouting seed */}
                             {(() => {
-                              const seedCol = isDark ? '#8a7a6a' : '#6a5a4a'
-                              const sproutCol = isDark ? '#6a8a4a' : '#5a7a3a'
+                              const seedCol = t.rarity === 'sacred' ? (isDark ? '#9a80c0' : '#7a60a0')
+                                : t.rarity === 'true rare' ? (isDark ? '#8a7aaa' : '#6a5a8a')
+                                : isDark ? '#8a7a6a' : '#6a5a4a'
+                              const sproutCol = t.rarity === 'sacred' ? (isDark ? '#8a6ac0' : '#7050a0')
+                                : t.rarity === 'true rare' ? (isDark ? '#7a6aaa' : '#5a4a8a')
+                                : isDark ? '#6a8a4a' : '#5a7a3a'
                               return (
                                 <svg width="40" height="52" viewBox="0 0 40 52" style={{ opacity: isDark ? 0.35 : 0.4 }}>
                                   {/* Seed body */}
@@ -2091,7 +2061,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}>
                             {/* Expanding ring */}
                             <div style={{
-                              position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                              position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                               width: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
                               height: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
                               borderRadius: '50%',
@@ -2113,7 +2083,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               const delay = baseDelay + wave * 0.6 + pi * 0.04
                               return (
                                 <div key={pi} style={{
-                                  position: 'absolute', top: '45%', left: '50%',
+                                  position: 'absolute', top: '55%', left: '50%',
                                   width: size, height: size, borderRadius: '50%',
                                   background: pi % 4 === 0 ? '#fff' : pi % 4 === 1 ? col : pi % 4 === 2 ? (r === 'sacred' ? '#e0d0ff' : col) : col,
                                   boxShadow: `0 0 ${size * 3}px ${col}`,
@@ -2127,14 +2097,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* True rare — aurora ring + second wave */}
                             {r === 'true rare' && (<>
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 180, height: 180, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)',
                                 animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
                                 opacity: 0,
                               }} />
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 260, height: 260, borderRadius: '50%',
                                 border: '1px solid rgba(167,139,250,0.2)',
                                 opacity: 0,
@@ -2145,7 +2115,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {r === 'sacred' && (<>
                               {/* Initial shockwave */}
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 160, height: 160, borderRadius: '50%',
                                 border: '2px solid rgba(255,255,255,0.5)',
                                 opacity: 0,
@@ -2153,7 +2123,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Nova burst — first wave */}
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 350, height: 350, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(196,181,253,0.2) 30%, rgba(139,92,246,0.1) 50%, transparent 70%)',
                                 animation: `sacred-nova 3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
@@ -2161,7 +2131,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Nebula — rotating conic */}
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 300, height: 300, borderRadius: '50%',
                                 background: `conic-gradient(from 0deg, rgba(196,181,253,0.2), rgba(139,92,246,0.08), rgba(99,102,241,0.15), rgba(196,181,253,0.05), rgba(167,139,250,0.2), rgba(255,255,255,0.1), rgba(196,181,253,0.15))`,
                                 animation: `sacred-shimmer 4s ease-out 0.5s forwards`,
@@ -2170,7 +2140,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Second nova — delayed */}
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 250, height: 250, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(139,92,246,0.1) 40%, transparent 65%)',
                                 animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards`,
@@ -2186,7 +2156,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 const starSize = 2 + (si % 3)
                                 return (
                                   <div key={`s${si}`} style={{
-                                    position: 'absolute', top: '45%', left: '50%',
+                                    position: 'absolute', top: '55%', left: '50%',
                                     width: starSize, height: starSize,
                                     background: si % 3 === 0 ? '#fff' : si % 3 === 1 ? '#e0d0ff' : '#c4b5fd',
                                     borderRadius: '50%',
@@ -2201,14 +2171,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                               })}
                               {/* Outer rings — staggered */}
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 280, height: 280, borderRadius: '50%',
                                 border: '1px solid rgba(196,181,253,0.25)',
                                 opacity: 0,
                                 animation: `pop-ring 2s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards`,
                               }} />
                               <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 340, height: 340, borderRadius: '50%',
                                 border: '0.5px solid rgba(196,181,253,0.15)',
                                 opacity: 0,
