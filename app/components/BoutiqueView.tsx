@@ -1864,7 +1864,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
                               letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
                               animation: revealEffect?.index === i
-                                ? `rarity-color-in ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.4s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.4s' : '0.5s'} both`
+                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '1s' : t.rarity === 'true rare' ? '0.7s' : '0.3s'} both`
                                 : undefined,
                               background: t.rarity === 'sacred'
                                 ? (isDark ? 'rgba(80,40,140,0.4)' : 'rgba(140,100,200,0.2)')
@@ -1887,7 +1887,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               color: t.rarity === 'sacred' ? '#e0d0ff' : (isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)'),
                               fontFamily: 'Crimson Pro, serif', letterSpacing: t.rarity === 'sacred' ? '0.08em' : '0.04em',
                               animation: revealEffect?.index === i
-                                ? `rarity-color-in ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.4s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '2s' : t.rarity === 'true rare' ? '1.2s' : '0.4s'} both`
+                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.8s' : t.rarity === 'true rare' ? '0.6s' : '0.25s'} both`
                                 : undefined,
                               background: t.rarity === 'sacred'
                                 ? (isDark ? 'rgba(60,30,100,0.5)' : 'rgba(140,100,200,0.15)')
@@ -1941,7 +1941,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 animation: revealEffect?.index === i
                                   ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.6s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
                                   : undefined,
-                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '0.8s' : '0.4s') : undefined,
+                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.6s' : t.rarity === 'true rare' ? '0.4s' : '0.15s') : undefined,
                                 position: 'relative',
                               }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
