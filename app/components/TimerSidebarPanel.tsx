@@ -562,7 +562,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12, color: mainColor }}>complete</span>
                   : running
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
-                      lock in — {Math.floor(cumulativeMinutes)}/{growthTarget} min
+                      lock in
                     </span>
                   : null}
                 </p>
@@ -621,14 +621,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-2 text-center"
                 >
-                  <svg width="28" height="28" viewBox="0 0 28 28">
+                  <svg width="28" height="28" viewBox="0 0 28 28" style={{ display: 'block', margin: '0 auto' }}>
                     <circle cx="14" cy="14" r="13" fill="#ef4444" opacity={0.15} stroke="#ef4444" strokeWidth="1.5" />
-                    <line x1="7" y1="9" x2="11" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="11" y1="9" x2="7" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="17" y1="9" x2="21" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="21" y1="9" x2="17" y2="13" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M10 19 Q14 16 18 19" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="14" y1="19" x2="14" y2="23" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="7" y1="10" x2="11" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="11" y1="10" x2="7" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="17" y1="10" x2="21" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="21" y1="10" x2="17" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M10 20 Q14 17 18 20" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   <p className="text-[12px] mt-1" style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}>
                     {deathReason}

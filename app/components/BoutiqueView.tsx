@@ -760,45 +760,19 @@ export const BoutiqueView = memo(function BoutiqueView({
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <style>{`
         @keyframes seed-wobble {
-          0% { transform: scale(1) rotate(0deg); }
-          8% { transform: scale(1.01) rotate(-0.5deg); }
-          18% { transform: scale(1.03) rotate(1.2deg); }
-          28% { transform: scale(1.02) rotate(-1.8deg); }
-          38% { transform: scale(1.05) rotate(2.2deg); }
-          48% { transform: scale(1.03) rotate(-2.8deg); }
-          58% { transform: scale(1.07) rotate(3deg); }
-          68% { transform: scale(1.04) rotate(-3.5deg); }
-          78% { transform: scale(1.09) rotate(4deg); }
-          88% { transform: scale(1.06) rotate(-2deg); }
-          94% { transform: scale(1.12) rotate(1deg); }
-          100% { transform: scale(1.15) rotate(0deg); }
+          0% { transform: rotate(0deg) scale(1); }
+          12% { transform: rotate(-1deg) scale(1.008); }
+          25% { transform: rotate(1.2deg) scale(1.015); }
+          37% { transform: rotate(-1.5deg) scale(1.02); }
+          50% { transform: rotate(1.8deg) scale(1.025); }
+          65% { transform: rotate(-1.2deg) scale(1.018); }
+          80% { transform: rotate(0.6deg) scale(1.008); }
+          100% { transform: rotate(0deg) scale(1); }
         }
-        @keyframes seed-crack {
-          0% { clip-path: polygon(0 0, 52% 0, 48% 8%, 54% 18%, 46% 28%, 53% 38%, 47% 48%, 54% 58%, 46% 68%, 53% 78%, 47% 88%, 50% 100%, 0 100%); opacity: 1; transform: translateX(0) rotate(0deg); }
-          15% { clip-path: polygon(0 0, 51% 0, 47% 8%, 53% 18%, 45% 28%, 52% 38%, 46% 48%, 53% 58%, 45% 68%, 52% 78%, 46% 88%, 49% 100%, 0 100%); opacity: 1; transform: translateX(-1px) rotate(-0.3deg); }
-          40% { clip-path: polygon(0 0, 49% 0, 44% 8%, 50% 18%, 42% 28%, 49% 38%, 43% 48%, 50% 58%, 42% 68%, 49% 78%, 43% 88%, 46% 100%, 0 100%); opacity: 0.92; transform: translateX(-4px) rotate(-1deg); }
-          65% { clip-path: polygon(0 0, 46% 0, 40% 8%, 46% 18%, 38% 28%, 45% 38%, 39% 48%, 46% 58%, 38% 68%, 45% 78%, 39% 88%, 42% 100%, 0 100%); opacity: 0.6; transform: translateX(-10px) rotate(-2.5deg); }
-          85% { clip-path: polygon(0 0, 42% 0, 36% 8%, 42% 18%, 34% 28%, 41% 38%, 35% 48%, 42% 58%, 34% 68%, 41% 78%, 35% 88%, 38% 100%, 0 100%); opacity: 0.2; transform: translateX(-20px) rotate(-4deg); }
-          100% { clip-path: polygon(0 0, 38% 0, 32% 8%, 38% 18%, 30% 28%, 37% 38%, 31% 48%, 38% 58%, 30% 68%, 37% 78%, 31% 88%, 34% 100%, 0 100%); opacity: 0; transform: translateX(-30px) rotate(-5deg); }
-        }
-        @keyframes seed-crack-right {
-          0% { clip-path: polygon(48% 0, 100% 0, 100% 100%, 50% 100%, 53% 88%, 47% 78%, 54% 68%, 46% 58%, 53% 48%, 47% 38%, 54% 28%, 46% 18%, 52% 8%); opacity: 1; transform: translateX(0) rotate(0deg); }
-          15% { clip-path: polygon(49% 0, 100% 0, 100% 100%, 51% 100%, 54% 88%, 48% 78%, 55% 68%, 47% 58%, 54% 48%, 48% 38%, 55% 28%, 47% 18%, 53% 8%); opacity: 1; transform: translateX(1px) rotate(0.3deg); }
-          40% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 54% 100%, 57% 88%, 51% 78%, 58% 68%, 50% 58%, 57% 48%, 51% 38%, 58% 28%, 50% 18%, 56% 8%); opacity: 0.92; transform: translateX(4px) rotate(1deg); }
-          65% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 58% 100%, 61% 88%, 55% 78%, 62% 68%, 54% 58%, 61% 48%, 55% 38%, 62% 28%, 54% 18%, 60% 8%); opacity: 0.6; transform: translateX(10px) rotate(2.5deg); }
-          85% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 62% 100%, 65% 88%, 59% 78%, 66% 68%, 58% 58%, 65% 48%, 59% 38%, 66% 28%, 58% 18%, 64% 8%); opacity: 0.2; transform: translateX(20px) rotate(4deg); }
-          100% { clip-path: polygon(62% 0, 100% 0, 100% 100%, 66% 100%, 69% 88%, 63% 78%, 70% 68%, 62% 58%, 69% 48%, 63% 38%, 70% 28%, 62% 18%, 68% 8%); opacity: 0; transform: translateX(30px) rotate(5deg); }
-        }
-        @keyframes crack-glow {
-          0% { opacity: 0; filter: blur(2px); }
-          20% { opacity: 0.6; filter: blur(3px); }
-          60% { opacity: 1; filter: blur(5px); }
-          100% { opacity: 0; filter: blur(8px); }
-        }
-        @keyframes reveal-burst {
-          0% { transform: scale(0.3); opacity: 0; }
-          30% { transform: scale(1.2); opacity: 0.8; }
-          100% { transform: scale(2.5); opacity: 0; }
+        @keyframes seed-crack-fade {
+          0% { opacity: 1; transform: scale(1); }
+          65% { opacity: 0.95; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.01); }
         }
         @keyframes sprout-emerge {
           0% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
@@ -829,16 +803,8 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { transform: scale(3); opacity: 0; }
         }
         @keyframes seed-spin-reveal {
-          0% { transform: rotateY(0) scale(1); filter: brightness(1); }
-          20% { transform: rotateY(0) scale(1.02); filter: brightness(1); }
-          35% { transform: rotateY(0) scale(1.06); filter: brightness(1.1); }
-          50% { transform: rotateY(0) scale(1.1); filter: brightness(1.3); }
-          65% { transform: rotateY(0) scale(1.15); filter: brightness(1.8); }
-          72% { transform: rotateY(90deg) scale(1.08); filter: brightness(2.2); }
-          80% { transform: rotateY(180deg) scale(0.95); filter: brightness(1.4); }
-          88% { transform: rotateY(270deg) scale(1.02); filter: brightness(1.1); }
-          94% { transform: rotateY(350deg) scale(1.01); filter: brightness(1); }
-          100% { transform: rotateY(360deg) scale(1); filter: brightness(1); }
+          0% { transform: scale(1); }
+          100% { transform: scale(1); }
         }
         @keyframes pop-common {
           0% { transform: scale(0); opacity: 0; }
@@ -942,7 +908,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         .seed-packet { transition: box-shadow 0.3s ease; }
         .seed-card-wrap { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
         .seed-card-wrap:hover { transform: translateY(-8px) scale(1.02); filter: brightness(1.05); }
-        .seed-cracking { animation: seed-spin-reveal var(--crack-dur, 1.1s) cubic-bezier(0.16, 1, 0.3, 1), seed-wobble var(--crack-dur, 1.1s) cubic-bezier(0.33, 1, 0.68, 1) !important; }
+        .seed-cracking { animation: seed-wobble var(--crack-dur, 1.1s) ease-in-out !important; will-change: transform; }
         .seed-revealed { }
         .daily-deal { }
       `}</style>
@@ -1999,39 +1965,16 @@ export const BoutiqueView = memo(function BoutiqueView({
                             animation: `rarity-color-in ${t.rarity === 'sacred' ? '3s' : t.rarity === 'true rare' ? '2.4s' : t.rarity === 'rare' ? '1.2s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.5s' : t.rarity === 'true rare' ? '0.4s' : '0.15s'} both`,
                           }} />
                         )}
-                        {/* Crack overlay during reveal */}
+                        {/* Crack overlay — fades out to reveal */}
                         {isCracking && (
-                          <>
-                            {/* Glowing crack line */}
-                            <div style={{
-                              position: 'absolute', top: 0, left: '46%', width: '8%', height: '100%', zIndex: 9,
-                              background: `linear-gradient(180deg, transparent 0%, ${rarityCol}40 15%, ${rarityCol}80 50%, ${rarityCol}40 85%, transparent 100%)`,
-                              animation: `crack-glow ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
-                              pointerEvents: 'none',
-                            }} />
-                            <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
-                              background: isDark
-                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
-                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: `seed-crack ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.16, 1, 0.3, 1) forwards`,
-                            }} />
-                            <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
-                              background: isDark
-                                ? `radial-gradient(circle at 60% 65%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
-                                : `radial-gradient(circle at 60% 65%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: `seed-crack-right ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.16, 1, 0.3, 1) forwards`,
-                            }} />
-                            {/* Reveal burst */}
-                            <div style={{
-                              position: 'absolute', top: '50%', left: '50%', width: '120%', height: '120%', zIndex: 8,
-                              transform: 'translate(-50%, -50%)',
-                              background: `radial-gradient(circle, ${rarityCol}60 0%, ${rarityCol}20 40%, transparent 70%)`,
-                              animation: `reveal-burst ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
-                              pointerEvents: 'none',
-                            }} />
-                          </>
+                          <div style={{
+                            position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
+                            background: isDark
+                              ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
+                              : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
+                            animation: `seed-crack-fade ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+                            willChange: 'opacity, transform',
+                          }} />
                         )}
                       </div>
                       {/* Hanging parchment price tag */}
@@ -2095,7 +2038,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 20, overflow: 'visible' }}>
                             {/* Expanding ring */}
                             <div style={{
-                              position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                              position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                               width: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
                               height: r === 'sacred' ? 240 : r === 'true rare' ? 200 : r === 'rare' ? 120 : 80,
                               borderRadius: '50%',
@@ -2131,14 +2074,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {/* True rare — aurora ring + second wave */}
                             {r === 'true rare' && (<>
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 180, height: 180, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)',
                                 animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
                                 opacity: 0,
                               }} />
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 260, height: 260, borderRadius: '50%',
                                 border: '1px solid rgba(167,139,250,0.2)',
                                 opacity: 0,
@@ -2149,7 +2092,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {r === 'sacred' && (<>
                               {/* Initial shockwave */}
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 160, height: 160, borderRadius: '50%',
                                 border: '2px solid rgba(255,255,255,0.5)',
                                 opacity: 0,
@@ -2157,7 +2100,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Nova burst — first wave */}
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 350, height: 350, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(196,181,253,0.2) 30%, rgba(139,92,246,0.1) 50%, transparent 70%)',
                                 animation: `sacred-nova 3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards`,
@@ -2165,7 +2108,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Nebula — rotating conic */}
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 300, height: 300, borderRadius: '50%',
                                 background: `conic-gradient(from 0deg, rgba(196,181,253,0.2), rgba(139,92,246,0.08), rgba(99,102,241,0.15), rgba(196,181,253,0.05), rgba(167,139,250,0.2), rgba(255,255,255,0.1), rgba(196,181,253,0.15))`,
                                 animation: `sacred-shimmer 4s ease-out 0.5s forwards`,
@@ -2174,7 +2117,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               }} />
                               {/* Second nova — delayed */}
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 250, height: 250, borderRadius: '50%',
                                 background: 'radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(139,92,246,0.1) 40%, transparent 65%)',
                                 animation: `sacred-nova 2.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards`,
@@ -2205,14 +2148,14 @@ export const BoutiqueView = memo(function BoutiqueView({
                               })}
                               {/* Outer rings — staggered */}
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 280, height: 280, borderRadius: '50%',
                                 border: '1px solid rgba(196,181,253,0.25)',
                                 opacity: 0,
                                 animation: `pop-ring 2s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards`,
                               }} />
                               <div style={{
-                                position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '62%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: 340, height: 340, borderRadius: '50%',
                                 border: '0.5px solid rgba(196,181,253,0.15)',
                                 opacity: 0,

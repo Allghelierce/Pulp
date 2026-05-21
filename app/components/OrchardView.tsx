@@ -677,42 +677,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           )
         })()}
 
-        {/* Windmills — behind hills, on mountain slopes */}
-        {(() => {
-          const mills = [
-            { x: 30, baseY: 26, h: 8, bladeR: 3.2 },
-            { x: 160, baseY: 22, h: 8.5, bladeR: 3.3 },
-          ]
-          const towerC = isDark ? '#2a2a30' : '#b0a898'
-          const towerCd = isDark ? '#20202a' : '#988a78'
-          const bladeC = isDark ? '#3a3a42' : '#d8d0c8'
-          const bladeCd = isDark ? '#2e2e36' : '#c0b8a8'
-          return <g opacity={isDark ? 0.5 : 0.6}>
-            {mills.map((m, i) => {
-              const topY = m.baseY - m.h
-              const rng = seededRng(i * 127 + 331)
-              const phase = rng() * 360
-              return <g key={i}>
-                <path d={`M${m.x - 0.5},${m.baseY} L${m.x - 0.3},${topY + 1} L${m.x + 0.3},${topY + 1} L${m.x + 0.5},${m.baseY}Z`} fill={towerC} />
-                <path d={`M${m.x},${m.baseY} L${m.x + 0.15},${topY + 1}`} stroke={towerCd} strokeWidth="0.15" opacity="0.4" />
-                <circle cx={m.x} cy={topY + 1} r="0.45" fill={towerCd} />
-                <g style={{ transformOrigin: `${m.x}px ${topY + 1}px`, animation: `spin ${18 + i * 4}s linear infinite` }}>
-                  {[0, 1, 2, 3].map(b => {
-                    const ang = (phase + b * 90) * Math.PI / 180
-                    const ex = m.x + Math.cos(ang) * m.bladeR
-                    const ey = topY + 1 + Math.sin(ang) * m.bladeR
-                    const px = m.x + Math.cos(ang + 0.12) * m.bladeR * 0.35
-                    const py = topY + 1 + Math.sin(ang + 0.12) * m.bladeR * 0.35
-                    return <path key={b} d={`M${m.x},${topY + 1} L${px.toFixed(1)},${py.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}Z`} fill={b % 2 === 0 ? bladeC : bladeCd} />
-                  })}
-                </g>
-              </g>
-            })}
-          </g>
-        })()}
-
-        {/* Background windmills — behind hills, mostly occluded */}
-        {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
+        {/* Windmills rendered in live overlay to avoid cache doubling */}
 
         {/* Extra rolling hills — left side, between mountains and back hill */}
         <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26 C42,30 50,32 58,30 C64,28 68,25 72,23 C78,22 85,24 90,28 C95,31 100,33 110,34 L210,36 L210,42 L-10,42 Z" fill={p.hillMidBot} />
@@ -1163,17 +1128,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           </g>
         </g>
 
-        {/* Windmills on front hill — bottom clipped behind ridge */}
-        <defs>
-          <clipPath id="front-hill-clip">
-            <path d="M-10,0 L210,0 L210,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,0 Z" />
-          </clipPath>
-        </defs>
-        <g clipPath="url(#front-hill-clip)">
-          {[{ x: 18, y: 28, s: 0.35 }, { x: 52, y: 26.5, s: 0.28 }, { x: 88, y: 32, s: 0.32 }].map((wm, wi) => (
-            <g key={`fhwm-${wi}`} opacity={0.55}>{renderWindmill(wm, wi + 20)}</g>
-          ))}
-        </g>
+        {/* Front hill windmills rendered in live overlay */}
 
         {/* Front hill — steep hump on left, drops low on right to reveal back hill */}
         <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,42 L-10,42 Z" fill="url(#hill-near)" />
@@ -2145,8 +2100,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           </g>
         })()}
 
-                {/* Foreground windmills */}
-        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
+        {/* Foreground windmills rendered in live overlay */}
 
         {/* Sap barrels around foreground windmills */}
         {(() => {
@@ -2286,14 +2240,57 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       }}>
         {terrainContent}
       </svg>
-      {/* Windmill overlay — rendered outside cached terrain so animations stay live */}
-      {terrainCachedUrl && (
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ pointerEvents: 'none' }}>
-          {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
-          {[{ x: 76, y: 43, s: 0.22 }, { x: 128, y: 40, s: 0.18 }].map((wm, wi) => <g key={`fhwm-${wi}`} opacity={0.55}>{renderWindmill(wm, wi + 20)}</g>)}
-          {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
-        </svg>
-      )}
+      {/* Windmill overlay — always live, never cached */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ pointerEvents: 'none' }}>
+        {/* Mountain slope windmills */}
+        {(() => {
+          const mills = [
+            { x: 30, baseY: 26, h: 8, bladeR: 3.2 },
+            { x: 160, baseY: 22, h: 8.5, bladeR: 3.3 },
+          ]
+          const towerC = isDark ? '#2a2a30' : '#b0a898'
+          const towerCd = isDark ? '#20202a' : '#988a78'
+          const bladeC = isDark ? '#3a3a42' : '#d8d0c8'
+          const bladeCd = isDark ? '#2e2e36' : '#c0b8a8'
+          return <g opacity={isDark ? 0.5 : 0.6}>
+            {mills.map((m, i) => {
+              const topY = m.baseY - m.h
+              const rng = seededRng(i * 127 + 331)
+              const phase = rng() * 360
+              return <g key={i}>
+                <path d={`M${m.x - 0.5},${m.baseY} L${m.x - 0.3},${topY + 1} L${m.x + 0.3},${topY + 1} L${m.x + 0.5},${m.baseY}Z`} fill={towerC} />
+                <path d={`M${m.x},${m.baseY} L${m.x + 0.15},${topY + 1}`} stroke={towerCd} strokeWidth="0.15" opacity="0.4" />
+                <circle cx={m.x} cy={topY + 1} r="0.45" fill={towerCd} />
+                <g style={{ transformOrigin: `${m.x}px ${topY + 1}px`, animation: `spin ${18 + i * 4}s linear infinite` }}>
+                  {[0, 1, 2, 3].map(b => {
+                    const ang = (phase + b * 90) * Math.PI / 180
+                    const ex = m.x + Math.cos(ang) * m.bladeR
+                    const ey = topY + 1 + Math.sin(ang) * m.bladeR
+                    const px = m.x + Math.cos(ang + 0.12) * m.bladeR * 0.35
+                    const py = topY + 1 + Math.sin(ang + 0.12) * m.bladeR * 0.35
+                    return <path key={b} d={`M${m.x},${topY + 1} L${px.toFixed(1)},${py.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}Z`} fill={b % 2 === 0 ? bladeC : bladeCd} />
+                  })}
+                </g>
+              </g>
+            })}
+          </g>
+        })()}
+        {/* Background windmills */}
+        {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
+        {/* Front hill windmills */}
+        <defs>
+          <clipPath id="front-hill-clip">
+            <path d="M-10,0 L210,0 L210,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,0 Z" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#front-hill-clip)">
+          {[{ x: 18, y: 28, s: 0.35 }, { x: 52, y: 26.5, s: 0.28 }, { x: 88, y: 32, s: 0.32 }].map((wm, wi) => (
+            <g key={`fhwm-${wi}`} opacity={0.55}>{renderWindmill(wm, wi + 20)}</g>
+          ))}
+        </g>
+        {/* Foreground windmills */}
+        {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
+      </svg>
 
       {/* (sun and moon now rendered inside SVG before mountains) */}
 

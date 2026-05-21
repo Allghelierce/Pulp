@@ -122,7 +122,7 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
           ))}
         </svg>
       </button>
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50"
+      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50"
         style={{
           background: isDark ? '#1c1a17' : '#fff',
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,

@@ -96,15 +96,15 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
                                100% { opacity: 0; transform: scaleX(2.5) scaleY(0.15); filter: blur(4px); }
                              }
                              .erased {
-                               display: flex;
+                               display: block;
                                animation: erase-smudge 0.35s forwards cubic-bezier(0.2, 0, 0.4, 1);
                                pointer-events: none;
                                user-select: none;
                                white-space: pre;
                                margin: 0 !important;
                                padding: 0 !important;
-                               text-align: center;
-                               align-items: center;
+                               text-align: left;
+                               transform-origin: left center;
                                justify-content: center;
                              } [contenteditable] { outline: none !important; cursor: url('/pencil.png'), text; user-select: text; -webkit-user-select: text; } input, textarea { user-select: text; -webkit-user-select: text; } [data-box-style="margin"], [data-box-style="margin"] * { color: rgba(0,0,0,0.32) !important; }` }} />
     {theme === "dark" && <style dangerouslySetInnerHTML={{ __html: `.ls-toolbar { background-color: rgba(18,18,20,0.85) !important; border-color: rgba(255,255,255,0.08) !important; box-shadow: 0 4px 32px rgba(0,0,0,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; } .ls-toolbar .hover\\:bg-zinc-200, .ls-toolbar .hover\\:bg-zinc-100 { color: #A1A1AA !important; background-color: transparent !important; border-color: transparent !important; box-shadow: none !important; } .ls-toolbar .hover\\:bg-zinc-200:hover, .ls-toolbar .hover\\:bg-zinc-100:hover { background-color: rgba(255,255,255,0.08) !important; color: #FAFAFA !important; } .ls-toolbar select, .ls-toolbar input { background-color: rgba(255,255,255,0.05) !important; color: #FAFAFA !important; border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .text-zinc-600 { color: #A1A1AA !important; } .ls-toolbar .border-zinc-200, .ls-toolbar .border-zinc-200\\/80 { border-color: rgba(255,255,255,0.08) !important; } .ls-toolbar .bg-white, .ls-toolbar .bg-zinc-50 { background-color: transparent !important; }` }} />}
@@ -4100,11 +4100,15 @@ export default function NoteApp() {
                                content: "@ tools  ·  \\\\ AI";
                                color: ${theme === "dark" ? "rgba(161,161,170,0.6)" : "rgba(0,0,0,0.35)"};
                                font-style: italic;
-                               font-size: 0.85em;
+                               font-size: 13px;
                                font-weight: 400;
                                pointer-events: none;
                                user-select: none;
                                font-family: "${editorFont}", Crimson Pro, serif;
+                               line-height: inherit;
+                               letter-spacing: inherit;
+                               position: absolute;
+                               top: 0.35em;
                              }
                              #editor-paper ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
                              #editor-paper ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 0.25em 0 !important; }
