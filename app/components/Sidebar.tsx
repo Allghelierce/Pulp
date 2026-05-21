@@ -148,6 +148,8 @@ export const Sidebar = memo(function Sidebar({
   const [hideBookmarks, setHideBookmarks] = useState(false)
   const [hideBacklinks, setHideBacklinks] = useState(false)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [visibleTopLevel, setVisibleTopLevel] = useState(20)
+  const [visibleFolders, setVisibleFolders] = useState<Record<number, number>>({})
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -811,7 +813,16 @@ export const Sidebar = memo(function Sidebar({
               </div>
             </div>
 
-            {topLevelNotes.map(n => renderNote(n, 12))}
+            {topLevelNotes.slice(0, visibleTopLevel).map(n => renderNote(n, 12))}
+            {topLevelNotes.length > visibleTopLevel && (
+              <button
+                onClick={() => setVisibleTopLevel(v => v + 20)}
+                className="text-[10px] text-zinc-600 hover:text-zinc-400 px-6 py-1 transition-colors"
+                style={{ fontFamily: 'Crimson Pro, serif' }}
+              >
+                Show more ({topLevelNotes.length - visibleTopLevel} hidden)
+              </button>
+            )}
             {folders.map(f => (
               <div key={f.id} onDragOver={e => e.preventDefault()} onDrop={e => onDropNote(e, f.id)}>
                 <div className="flex items-center gap-1.5 px-6 py-1.5 cursor-pointer hover:bg-zinc-900/60 group" onClick={() => onToggleFolder(f.id)}>
@@ -828,7 +839,24 @@ export const Sidebar = memo(function Sidebar({
                 </div>
                 {f.open && (
                   <div className="pl-5 space-y-0.5">
-                    {notesInFolder(f.id).map(n => renderNote(n, 12))}
+                    {(() => {
+                      const folderNotes = notesInFolder(f.id)
+                      const limit = visibleFolders[f.id] ?? 20
+                      return (
+                        <>
+                          {folderNotes.slice(0, limit).map(n => renderNote(n, 12))}
+                          {folderNotes.length > limit && (
+                            <button
+                              onClick={() => setVisibleFolders(v => ({ ...v, [f.id]: (v[f.id] ?? 20) + 20 }))}
+                              className="text-[10px] text-zinc-600 hover:text-zinc-400 px-3 py-1 transition-colors"
+                              style={{ fontFamily: 'Crimson Pro, serif' }}
+                            >
+                              Show more ({folderNotes.length - limit} hidden)
+                            </button>
+                          )}
+                        </>
+                      )
+                    })()}
                     <div className="relative inline-block">
                       <button
                         onClick={(e) => { e.stopPropagation(); onAddNote(f.id) }}

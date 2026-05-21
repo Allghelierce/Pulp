@@ -8,6 +8,7 @@ import { sanitizeHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
+import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
@@ -1255,18 +1256,29 @@ export default function NoteApp() {
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sap, setSap] = useState(50)
-  const [essence, setEssence] = useState(0)
+  const sap = useGroveStore(s => s.sap)
+  const setSap = useGroveStore(s => s.setSap)
+  const essence = useGroveStore(s => s.essence)
+  const setEssence = useGroveStore(s => s.setEssence)
   const xp = 0
-  const [goalStreak, setGoalStreak] = useState(0)
-  const [goalStreakLastDate, setGoalStreakLastDate] = useState('')
-  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(30)
-  const [quotaTier, setQuotaTier] = useState<'monthly' | 'weekly' | 'daily'>('monthly')
-  const [quotaLockedUntil, setQuotaLockedUntil] = useState('')
-  const [streakNudgeDismissed, setStreakNudgeDismissed] = useState(false)
-  const [hibernation, setHibernation] = useState<{ startDate: string; endDate: string; streakFrozen: number } | null>(null)
-  const [hibernationScheduled, setHibernationScheduled] = useState<{ startDate: string; endDate: string } | null>(null)
-  const [unlockedCosmetics, setUnlockedCosmetics] = useState<string[]>([])
+  const goalStreak = useGroveStore(s => s.goalStreak)
+  const setGoalStreak = useGroveStore(s => s.setGoalStreak)
+  const goalStreakLastDate = useGroveStore(s => s.goalStreakLastDate)
+  const setGoalStreakLastDate = useGroveStore(s => s.setGoalStreakLastDate)
+  const dailyGoalMinutes = useGroveStore(s => s.dailyGoalMinutes)
+  const setDailyGoalMinutes = useGroveStore(s => s.setDailyGoalMinutes)
+  const quotaTier = useGroveStore(s => s.quotaTier)
+  const setQuotaTier = useGroveStore(s => s.setQuotaTier)
+  const quotaLockedUntil = useGroveStore(s => s.quotaLockedUntil)
+  const setQuotaLockedUntil = useGroveStore(s => s.setQuotaLockedUntil)
+  const streakNudgeDismissed = useGroveStore(s => s.streakNudgeDismissed)
+  const setStreakNudgeDismissed = useGroveStore(s => s.setStreakNudgeDismissed)
+  const hibernation = useGroveStore(s => s.hibernation)
+  const setHibernation = useGroveStore(s => s.setHibernation)
+  const hibernationScheduled = useGroveStore(s => s.hibernationScheduled)
+  const setHibernationScheduled = useGroveStore(s => s.setHibernationScheduled)
+  const unlockedCosmetics = useGroveStore(s => s.unlockedCosmetics)
+  const setUnlockedCosmetics = useGroveStore(s => s.setUnlockedCosmetics)
   const [timerOpen, setTimerOpen] = useState(false)
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -1275,9 +1287,10 @@ export default function NoteApp() {
   const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const unlockedVaults = useRef<Set<string>>(new Set())
-  const [grove, setGrove] = useState<Tree[]>([])
-
-  const [inventory, setInventory] = useState<string[]>([])
+  const grove = useGroveStore(s => s.grove)
+  const setGrove = useGroveStore(s => s.setGrove)
+  const inventory = useGroveStore(s => s.inventory)
+  const setInventory = useGroveStore(s => s.setInventory)
   const [orchardOpen, setOrchardOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
@@ -1306,20 +1319,10 @@ export default function NoteApp() {
     vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     return () => { vp.setAttribute('content', orig) }
   }, [orchardOpen])
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: 'first_note', title: 'First Leaf', icon: '🌱', description: 'Create your very first notebook in Pulp.', reward: 1, rewardType: 'time', completed: false, claimed: false },
-    { id: 'dedicated_writer', title: 'Inkblood', icon: '🩸', description: 'Type 50,000 characters by hand — pasting won\'t count.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 50000 },
-    { id: 'wordsmith', title: 'Wordsmith', icon: '✒️', description: 'Type 200,000 characters by hand — a small novel.', reward: 6, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 200000 },
-    { id: 'full_grove', title: 'Groundskeeper', icon: '🌳', description: 'Grow 25 trees in your orchard.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 25 },
-    { id: 'night_owl', title: 'Night Owl', icon: '🦉', description: 'Open Pulp between 3 and 4 AM.', reward: 1, rewardType: 'time', completed: false, claimed: false },
-    { id: 'focus_champion', title: 'Focus Champion', icon: '🏆', description: 'Complete a full 50-minute focus session without breaking.', reward: 2, rewardType: 'time', completed: false, claimed: false },
-    { id: 'iron_will', title: 'Iron Will', icon: '🔥', description: 'Complete 30 focus sessions of any length.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 30 },
-    { id: 'daily_return', title: 'Creature of Habit', icon: '📅', description: 'Open Pulp 30 days in a row — no breaks.', reward: 12, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 30 },
-    { id: 'time_lord', title: 'Time Lord', icon: '⏱️', description: 'Accumulate 10 hours of total focus time.', reward: 3, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 36000 },
-    { id: 'marathon', title: 'Marathon', icon: '🏃', description: 'Write continuously for 2 hours in a single session without closing Pulp.', reward: 2, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 7200 },
-    { id: 'tangerine_grove', title: 'Pulp Fiction', icon: '🍊', description: 'Grow 100 tangerine trees — the signature fruit of Pulp.', reward: 10, rewardType: 'time', completed: false, claimed: false, progress: 0, goal: 100 },
-  ])
-  const [lastCharCount, setLastCharCount] = useState(0)
+  const achievements = useGroveStore(s => s.achievements)
+  const setAchievements = useGroveStore(s => s.setAchievements)
+  const lastCharCount = useGroveStore(s => s.lastCharCount)
+  const setLastCharCount = useGroveStore(s => s.setLastCharCount)
 
   // Refs to allow Page to communicate achievement events to VitalitySystem
   const checkAchievementRef = useRef<((id: string, update?: (a: Achievement) => Partial<Achievement>) => void) | null>(null)
@@ -3817,8 +3820,8 @@ export default function NoteApp() {
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
-                <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "auto", minWidth: 600 }}>
-                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 880, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full shrink-0">
+                <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: 600 }}>
+                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
@@ -4324,6 +4327,7 @@ export default function NoteApp() {
               onOpenSettings={() => { startTransition(() => { closeAllPanels(); setShowSettings(true) }) }}
               goalStreak={goalStreak}
               quotaTier={quotaTier}
+              reduceMotion={reduceMotion}
             />
           </div></Suspense>}
 

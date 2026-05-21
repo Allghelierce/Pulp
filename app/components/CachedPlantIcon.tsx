@@ -9,10 +9,10 @@ import {
 
 export const CachedPlantIcon = memo(function CachedPlantIcon({
   type, size = 40, stage = 0, hideGround = false,
-  dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt = 0,
+  dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt = 0, disableSway = false,
 }: {
   type: string; size?: number; stage?: number; hideGround?: boolean
-  dirtSeed?: number; dirtDark?: boolean; dirtDepth?: number; dirtTilt?: number
+  dirtSeed?: number; dirtDark?: boolean; dirtDepth?: number; dirtTilt?: number; disableSway?: boolean
 }) {
   const shape = (TREE_TYPES[type] || TREE_TYPES.tangerine).shape || "oak"
   const isAnimated = ANIMATED_SHAPES.has(shape)
@@ -77,7 +77,7 @@ export const CachedPlantIcon = memo(function CachedPlantIcon({
         justifyContent: "center",
         transformOrigin: "center bottom",
         "--sway-deg": `${swayDeg}deg`,
-        animation: `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
+        animation: disableSway ? undefined : `plantSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`,
       } as React.CSSProperties}>
         <img
           src={cached.dataUrl}

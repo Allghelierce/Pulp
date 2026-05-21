@@ -17,6 +17,7 @@ const ASCENSION_COSTS: Record<string, { sap: number[]; sacrifices: number[] }> =
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
+import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
 import * as db from "@/lib/db"
@@ -46,6 +47,7 @@ interface OrchardViewProps {
   onOpenSettings?: () => void
   goalStreak?: number
   quotaTier?: 'monthly' | 'weekly' | 'daily'
+  reduceMotion?: boolean
 }
 
 type RGB = [number, number, number]
@@ -409,19 +411,31 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
   const p = useMemo(() => interpolatePalette(timeState.phase, timeState.t), [timeState.phase, timeState.t])
 
+  const paletteKey = `${timeState.phase}:${Math.round(timeState.t * 5)}:${isDark ? 1 : 0}`
+  const { svgRef: terrainCacheSvgRef, cachedUrl: terrainCachedUrl } = useTerrainCache(paletteKey)
+
   const terrainSvgRef = useRef<SVGSVGElement>(null)
+  const combinedTerrainRef = useCallback((el: SVGSVGElement | null) => {
+    (terrainSvgRef as React.MutableRefObject<SVGSVGElement | null>).current = el;
+    (terrainCacheSvgRef as React.MutableRefObject<SVGSVGElement | null>).current = el
+  }, [terrainCacheSvgRef])
+
   const [svgAspect, setSvgAspect] = useState(2)
   useEffect(() => {
     const el = terrainSvgRef.current
     if (!el) return
+    let debounce: ReturnType<typeof setTimeout>
     const measure = () => {
-      const r = el.getBoundingClientRect()
-      if (r.width > 0 && r.height > 0) setSvgAspect(r.width / r.height)
+      clearTimeout(debounce)
+      debounce = setTimeout(() => {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 && r.height > 0) setSvgAspect(r.width / r.height)
+      }, 150)
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { ro.disconnect(); clearTimeout(debounce) }
   }, [])
 
   const dirtColor = isDark ? '#2a2418' : '#8a7a5a'
@@ -502,9 +516,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
   const tillCols = cols
 
 
-  return (
-    <>
-      <svg ref={terrainSvgRef} className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ willChange: 'transform', contain: 'strict', transition: 'filter 2s', pointerEvents: 'none' }}>
+  const terrainContent = useMemo(() => (<>
         <defs>
           <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={p.skyTop} />
@@ -2253,7 +2265,35 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
         {/* Dirt path */}
         <path d="M-5,96 Q50,93 100,95 Q150,93 205,96 L205,100 L-5,100 Z" fill={dirtColor} opacity="0.2" />
+      </>), [p, isDark, svgAspect, lightX, shadowOp, dirtColor, dirtLight, timeState.phase, timeState.t, timeState.hour])
+
+  return (
+    <>
+      {terrainCachedUrl && (
+        <img
+          src={terrainCachedUrl}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 w-full h-full"
+          style={{ pointerEvents: 'none', objectFit: 'fill' }}
+        />
+      )}
+      <svg ref={combinedTerrainRef} className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{
+        willChange: terrainCachedUrl ? undefined : 'transform',
+        contain: 'strict',
+        pointerEvents: 'none',
+        ...(terrainCachedUrl ? { opacity: 0, zIndex: -9999 } : { transition: 'filter 2s' }),
+      }}>
+        {terrainContent}
       </svg>
+      {/* Windmill overlay — rendered outside cached terrain so animations stay live */}
+      {terrainCachedUrl && (
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 -4 200 100" preserveAspectRatio="none" style={{ pointerEvents: 'none' }}>
+          {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
+          {[{ x: 76, y: 43, s: 0.22 }, { x: 128, y: 40, s: 0.18 }].map((wm, wi) => <g key={`fhwm-${wi}`} opacity={0.55}>{renderWindmill(wm, wi + 20)}</g>)}
+          {[{ x: 178, y: 44, s: 0.95 }, { x: 194, y: 42, s: 0.75 }].map((wm, wi) => renderWindmill(wm, wi))}
+        </svg>
+      )}
 
       {/* (sun and moon now rendered inside SVG before mountains) */}
 
@@ -2271,7 +2311,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <svg key={`cloud-hi-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
               opacity: 0.25 + r() * 0.25,
             }} viewBox="0 0 100 30" preserveAspectRatio="none">
               <ellipse cx="50" cy="18" rx="48" ry="10" fill={isDark ? '#3a4458' : '#b8b4aa'} />
@@ -2293,7 +2333,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <svg key={`cloud-mid-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
               opacity: 0.3 + r() * 0.25,
             }} viewBox="0 0 120 35" preserveAspectRatio="none">
               <ellipse cx="60" cy="20" rx="55" ry="12" fill={isDark ? '#323e54' : '#c0bcb2'} />
@@ -2315,7 +2355,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <svg key={`cloud-lo-${i}`} className="absolute" style={{
               top: `${y}%`, width: `${w}px`, height: `${h}px`,
-              animation: `cloud-drift ${dur}s linear ${delay}s infinite`, willChange: 'transform',
+              animation: `cloud-drift ${dur}s linear ${delay}s infinite`,
               opacity: 0.4 + r() * 0.3,
             }} viewBox="0 0 140 40" preserveAspectRatio="none">
               <ellipse cx="70" cy="24" rx="65" ry="14" fill={isDark ? '#2a3448' : '#b4b0a6'} />
@@ -2591,7 +2631,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       </>}
 
       <style>{`
-        @keyframes cloud-drift { 0% { left: -25%; } 100% { left: 110%; } }
+        @keyframes cloud-drift { 0% { transform: translateX(-25vw); } 100% { transform: translateX(110vw); } }
         @keyframes firefly-glow {
           0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
           15% { opacity: 0.06; }
@@ -2645,7 +2685,7 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly',
+  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false,
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
@@ -3533,16 +3573,12 @@ export const OrchardView = memo(function OrchardView({
                         >
                           <div style={{
                             position: 'relative',
-                            transform: `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
+                            transform: reduceMotion ? undefined : `perspective(200px) rotateY(${((x - 50) / 50 * -2).toFixed(1)}deg)`,
                             transformOrigin: 'center bottom',
-                          }}>
-                          <div style={{
-                            animation: `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
-                            transformOrigin: 'center bottom',
+                            animation: reduceMotion ? undefined : `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
                           }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-                              filter: `brightness(${100 - dimAmount}%)`,
-                              transition: 'filter 0.3s',
+                              filter: dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : undefined,
                               position: 'relative',
                             }}>
                               {(tree.ascension || 0) > 0 && (
@@ -3550,14 +3586,14 @@ export const OrchardView = memo(function OrchardView({
                                   position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
                                 }} />
                               )}
-                              <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} />
+                              <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} disableSway={reduceMotion || placed.length > 30} />
                             </div>
                             {/* Dirt mound */}
                             <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
                               <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
                               <ellipse cx="20" cy="7.5" rx="14" ry="3" fill={isDark ? '#2a2418' : '#8a7a5a'} opacity={(0.25 + depthT * 0.1) * (isDark ? 0.35 : 1)} />
                             </svg>
-                            {/* Ground shadow */}
+                            {/* Ground shadow — simple ellipse instead of blur */}
                             <div style={{
                               position: 'absolute',
                               left: '50%',
@@ -3568,27 +3604,10 @@ export const OrchardView = memo(function OrchardView({
                               borderRadius: '50%',
                               zIndex: -1,
                               background: isDark
-                                ? 'rgba(0,0,0,0.12)'
-                                : 'rgba(30,25,15,0.18)',
-                              filter: 'blur(3px)',
+                                ? 'radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%)'
+                                : 'radial-gradient(ellipse, rgba(30,25,15,0.2) 0%, transparent 70%)',
                               pointerEvents: 'none',
                             }} />
-                            {/* Trunk base darkening */}
-                            <div style={{
-                              position: 'absolute',
-                              left: '50%',
-                              bottom: 0,
-                              transform: 'translateX(-50%)',
-                              width: treeSize * 0.3,
-                              height: treeSize * 0.15,
-                              zIndex: 1,
-                              background: isDark
-                                ? 'linear-gradient(to top, rgba(10,8,4,0.4) 0%, transparent 100%)'
-                                : 'linear-gradient(to top, rgba(40,30,15,0.2) 0%, transparent 100%)',
-                              pointerEvents: 'none',
-                              borderRadius: '50%',
-                            }} />
-                          </div>
                           </div>
 
                           {(() => {
