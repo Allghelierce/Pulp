@@ -256,8 +256,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   const startSession = useCallback(() => {
     if (selectedSeed && selectedSeed !== 'tangerine') {
       const idx = inventory.indexOf(selectedSeed)
-      if (idx === -1) return
-      setInventory(inv => { const next = [...inv]; next.splice(next.indexOf(selectedSeed!), 1); return next })
+      if (idx === -1) {
+        setSelectedSeed(null)
+      } else {
+        setInventory(inv => { const next = [...inv]; next.splice(next.indexOf(selectedSeed!), 1); return next })
+      }
     }
     setSelectedNotebookId(activeTabId)
     setTimerElapsed(0)

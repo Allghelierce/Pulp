@@ -496,7 +496,18 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                             {isSelected && (
                               <div className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
                             )}
-                            <div className="absolute top-1 right-1 w-[6px] h-[6px] rounded-full" style={{ backgroundColor: rarityColor }} />
+                            {(() => {
+                              const partial = grove.find(t => t.type === type && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+                              if (!partial) return null
+                              const ratio = Math.min(1, (partial.focusMinutes || 0) / (partial.growthTarget || 1))
+                              const r = 5, cx = 7, cy = 7, circ = 2 * Math.PI * r
+                              return (
+                                <svg className="absolute top-0 right-0" width="14" height="14" viewBox="0 0 14 14" style={{ transform: 'rotate(-90deg)' }}>
+                                  <circle cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'} strokeWidth="1.5" />
+                                  <circle cx={cx} cy={cy} r={r} fill="none" stroke={info.color} strokeWidth="1.5" strokeDasharray={`${circ * ratio} ${circ * (1 - ratio)}`} strokeLinecap="round" />
+                                </svg>
+                              )
+                            })()}
                           </motion.button>
                         )
                       })}
@@ -551,45 +562,43 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 12, color: mainColor }}>complete</span>
                   : running
                   ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
-                      {Math.floor(cumulativeMinutes)}/{growthTarget} min
+                      lock in — {Math.floor(cumulativeMinutes)}/{growthTarget} min
                     </span>
-                  : priorMinutes > 0
-                  ? <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>
-                      {Math.floor(priorMinutes)}/{growthTarget} min
-                    </span>
-                  : <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', textTransform: 'none', fontSize: 11, color: subtleColor }}>lock in</span>}
+                  : null}
                 </p>
                 {!running && !done && !treeDead && (
                   <div className="mt-3 flex justify-center">
                     <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
                   </div>
                 )}
-                {!running && !done && !treeDead && (() => {
-                  const hour = new Date().getHours()
-                  const isEB = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
-                  const qBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-                  const sBonus = Math.min(1, goalStreak / 30)
-                  const mult = Math.min(5, 1 + (isEB ? 1 : 0) + qBonus + sBonus)
-                  const groveSap = grove.reduce((sum, t) => sum + (TREE_TYPES[t.type]?.sapYield || 0), 0)
-                  const perMin = Math.max(1, Math.round((groveSap / 60) * mult))
-                  const sessionMin = Math.round(total / 60)
-                  const estSap = perMin * sessionMin
-                  return (
-                    <div className="mt-2 flex justify-center">
-                      <span style={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif', color: subtleColor, letterSpacing: '0.02em' }}>
-                        ~{estSap} sap ({perMin}/min × {sessionMin}min)
-                      </span>
-                    </div>
-                  )
-                })()}
               </div>
 
-              {/* Tree view */}
-              <div className="relative w-full mx-auto" style={{ height: 160, marginTop: running ? 24 : 8 }}>
+              {/* Tree view — click to change plant */}
+              <div
+                className="relative w-full mx-auto"
+                style={{ height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined }}
+                onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
+              >
                     <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
                       <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
                     </div>
                   </div>
+
+              {/* Growth status — below tree, replaces change plant */}
+              {!running && !done && !treeDead && (() => {
+                const remaining = Math.ceil(growthTarget - priorMinutes)
+                const sessionMin = Math.round(total / 60)
+                const willFinish = sessionMin + priorMinutes >= growthTarget
+                return (
+                  <div className="text-center" style={{ marginTop: 4 }}>
+                    <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', fontSize: 11, color: willFinish ? mainColor : subtleColor }}>
+                      {willFinish
+                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow` : `${growthTarget} min — will fully grow`
+                        : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set` : `${growthTarget} min to grow · ${sessionMin}min set`}
+                    </span>
+                  </div>
+                )
+              })()}
 
               {/* Growth timeline */}
               {(running || done) && !treeDead && (
@@ -602,21 +611,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   {[0.1, 0.3, 0.6, 0.85].map(t => (
                     <div key={t} style={{ position: 'absolute', left: `${t * 100}%`, top: 4, width: 4, height: 4, borderRadius: '50%', transform: 'translateX(-2px)', background: cumulativeRatio >= t ? mainColor : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'), transition: 'background 0.3s', boxShadow: `0 0 0 1.5px ${isDark ? '#18181b' : '#fdfcf9'}` }} />
                   ))}
-                </div>
-              )}
-
-              {/* Satchel (change plant) */}
-              {!running && !done && !treeDead && inventory.length > 0 && (
-                <div className="flex justify-center mt-3 relative z-20">
-                  <button
-                    onClick={() => { setSeedPage(0); setSeedTrayOpen(true) }}
-                    className="transition-all hover:opacity-90 active:scale-95"
-                    style={{ color: mainColor, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'Crimson Pro, serif', fontSize: 12, fontWeight: 400, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                    title={`Satchel (${inventory.length} seeds)`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                    Change Plant
-                  </button>
                 </div>
               )}
 
