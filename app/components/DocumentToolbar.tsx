@@ -405,7 +405,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           )}
         </div>}
 
-        <div className="w-px h-5 bg-zinc-200/60 mx-0.5" />
 
         {/* Draw */}
         <div ref={drawRef} className="relative flex shrink-0">
@@ -555,7 +554,6 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           {!compact && "chat"}
         </button>}
 
-        {!compact && <div className="w-px h-5 bg-zinc-200 shrink-0" />}
 
         {!ultraCompact && <button
           onClick={onOpenVersionHistory}
@@ -581,13 +579,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           ) : null}
           {sap != null && (
-            <span className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-400/20 text-[12px] font-normal tabular-nums">
+            <span className="flex items-center gap-1.5 pl-1.5 text-[12px] font-normal tabular-nums">
               <PulpIcon size={17} />
               <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)', fontSize: 13 }}>{Math.floor(sap)}</span>
             </span>
           )}
           {sapMultiplier > 1 && (
-            <span className="pl-1.5 border-l border-zinc-400/20 tabular-nums" style={{ fontSize: 9, fontWeight: 600, color: sapMultiplier >= 3 ? '#f87171' : '#4ade80', fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.02em' }}>
+            <span className="pl-1.5 tabular-nums" style={{ fontSize: 9, fontWeight: 600, color: sapMultiplier >= 3 ? '#f87171' : '#4ade80', fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.02em' }}>
               {sapMultiplier.toFixed(1)}x
             </span>
           )}

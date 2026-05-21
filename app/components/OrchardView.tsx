@@ -777,7 +777,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {/* Back hill — wildflower patches */}
         {(() => {
           const dots: string[] = []
-          for (let i = 0; i < 40; i++) {
+          for (let i = 0; i < 15; i++) {
             const rng = seededRng(i * 53 + 877)
             const fx = 5 + rng() * 195
             const fy = (() => {
@@ -807,7 +807,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const ruts: string[] = []
           const pts = [[-5,36.5],[10,34.5],[25,32],[35,30],[45,29],[55,28],[65,27.5],[80,25.5],[95,23.5],[110,21.5],[125,20.5],[140,20],[155,20],[165,20.5],[175,22.5],[185,24.5],[200,27.5]]
           const wornPatches: string[] = []
-          for (let i = 0; i < 80; i++) {
+          for (let i = 0; i < 25; i++) {
             const t = rng()
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -819,7 +819,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.03 + rng() * 0.06
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
-          for (let i = 0; i < 50; i++) {
+          for (let i = 0; i < 15; i++) {
             const t = rng()
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -836,7 +836,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               grassEdge.push(`M${(gx + 0.1).toFixed(2)},${gy.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-gh * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-gh * 0.6).toFixed(2)}`)
             }
           }
-          for (let i = 0; i < 15; i++) {
+          for (let i = 0; i < 8; i++) {
             const t = 0.05 + rng() * 0.9
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -847,7 +847,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const dy = (pts[nxt][1] - pts[idx][1]) * 0.12
             ruts.push(`M${(px - dx).toFixed(1)},${(py - dy + 0.1).toFixed(1)}L${(px + dx).toFixed(1)},${(py + dy + 0.1).toFixed(1)}`)
           }
-          for (let i = 0; i < 12; i++) {
+          for (let i = 0; i < 6; i++) {
             const t = rng()
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -930,7 +930,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const waterPath = `M${cx - 8.5},${cy + 0.3} Q${cx - 7},${cy - 2} ${cx - 2.5},${cy - 2.3} Q${cx + 2},${cy - 2.5} ${cx + 5},${cy - 1.5} Q${cx + 7.5},${cy - 0.5} ${cx + 8.5},${cy + 0.6} Q${cx + 7},${cy + 2} ${cx + 3.5},${cy + 2.5} Q${cx - 1},${cy + 3} ${cx - 4.5},${cy + 2.3} Q${cx - 7.5},${cy + 1.5} ${cx - 8.5},${cy + 0.3}Z`
           const deepPath = `M${cx - 5},${cy} Q${cx - 3},${cy - 1.2} ${cx},${cy - 1} Q${cx + 3},${cy - 0.8} ${cx + 5},${cy + 0.2} Q${cx + 3},${cy + 1.2} ${cx},${cy + 1.5} Q${cx - 3},${cy + 1.2} ${cx - 5},${cy}Z`
           const reeds: string[] = []
-          for (let i = 0; i < 22; i++) {
+          for (let i = 0; i < 10; i++) {
             const a = rng() * Math.PI * 2
             const d = 8 + rng() * 3
             const rx = cx + Math.cos(a) * d
@@ -947,7 +947,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             ripples.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${rx.toFixed(1)},${(ry - 0.12).toFixed(2)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}`)
           }
           const mudPts: string[] = []
-          for (let i = 0; i < 12; i++) {
+          for (let i = 0; i < 6; i++) {
             const a = rng() * Math.PI * 2
             const d = 9 + rng() * 2
             const mx = cx + Math.cos(a) * d
@@ -974,7 +974,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             if (x < 140) return 26 - (x - 70) * 7 / 70
             return 19 + (x - 140) * 10 / 70
           }
-          for (let i = 0; i < 60; i++) {
+          for (let i = 0; i < 20; i++) {
             const rng = seededRng(i * 37 + 449)
             const x = -5 + rng() * 215
             const ridgeY = getBackY(x)
@@ -982,7 +982,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const h = 0.25 + rng() * 0.5
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.15).toFixed(2)},${(-h).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.08).toFixed(2)},${(-h * 0.9).toFixed(2)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
           }
-          for (let i = 0; i < 35; i++) {
+          for (let i = 0; i < 12; i++) {
             const rng = seededRng(i * 67 + 3311)
             const x = 5 + rng() * 200
             const ridgeY = getBackY(x)
@@ -991,7 +991,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const bh = 0.15 + rng() * 0.3
             bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
           }
-          for (let i = 0; i < 40; i++) {
+          for (let i = 0; i < 15; i++) {
             const rng = seededRng(i * 51 + 7723)
             const x = 5 + rng() * 200
             const ridgeY = getBackY(x)
@@ -1039,7 +1039,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const highlights: string[] = []
           const fruits: string[] = []
           const trunkColor = isDark ? '#2a1a0e' : '#5a3a1a'
-          for (let i = 0; i < 280; i++) {
+          for (let i = 0; i < 80; i++) {
             const rng = seededRng(i * 71 + 303)
             const x = -5 + rng() * 210
             const baseY = getHillY(x) + rng() * 3 + 1.5
@@ -1199,7 +1199,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const w = 0.4 + rng() * 0.6, h = 0.25 + rng() * 0.35
             rocks.push(`M${(rx - w).toFixed(1)},${ry.toFixed(1)}Q${(rx - w * 0.2).toFixed(1)},${(ry - h).toFixed(1)} ${rx.toFixed(1)},${(ry - h * 0.9).toFixed(1)}Q${(rx + w * 0.3).toFixed(1)},${(ry - h).toFixed(1)} ${(rx + w).toFixed(1)},${ry.toFixed(1)}Z`)
           }
-          for (let i = 0; i < 30; i++) {
+          for (let i = 0; i < 12; i++) {
             const rng = seededRng(i * 61 + 1013)
             const fx = rng() * 120
             const fy = (() => {
@@ -1273,7 +1273,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             if (x < 75) return 27 + (x - 35) * 3 / 40
             return 30 + (x - 75) * 8 / 65
           }
-          for (let i = 0; i < 50; i++) {
+          for (let i = 0; i < 18; i++) {
             const rng = seededRng(i * 41 + 557)
             const x = -5 + rng() * 150
             const ridgeY = getFrontY(x)
@@ -1281,7 +1281,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const h = 0.4 + rng() * 0.7
             tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.25).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.2).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.35).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
           }
-          for (let i = 0; i < 30; i++) {
+          for (let i = 0; i < 12; i++) {
             const rng = seededRng(i * 73 + 4411)
             const x = 0 + rng() * 140
             const ridgeY = getFrontY(x)
@@ -1290,7 +1290,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const bh = 0.2 + rng() * 0.4
             bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
           }
-          for (let i = 0; i < 35; i++) {
+          for (let i = 0; i < 12; i++) {
             const rng = seededRng(i * 47 + 8833)
             const x = 0 + rng() * 140
             const ridgeY = getFrontY(x)
@@ -1320,7 +1320,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const grassEdge: string[] = []
           const ruts: string[] = []
           const pts = [[-5,35],[5,33],[12,30],[22,28.5],[30,27.5],[38,27],[45,27.5],[55,28],[62,29],[72,31],[82,33.5],[90,36],[100,37.5]]
-          for (let i = 0; i < 35; i++) {
+          for (let i = 0; i < 12; i++) {
             const t = rng()
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -1332,7 +1332,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const pr = 0.05 + rng() * 0.08
             pebbles.push(`M${(px + ox + pr).toFixed(2)},${(py + oy).toFixed(2)}a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 -${(pr * 2).toFixed(2)},0a${pr.toFixed(2)},${(pr * 0.7).toFixed(2)} 0 1 1 ${(pr * 2).toFixed(2)},0Z`)
           }
-          for (let i = 0; i < 25; i++) {
+          for (let i = 0; i < 10; i++) {
             const t = rng()
             const idx = Math.floor(t * (pts.length - 1))
             const frac = t * (pts.length - 1) - idx
@@ -1506,7 +1506,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             ? ['#1a3420', '#1c3622', '#16301c', '#203a26', '#142c18', '#1e3824']
             : ['#2e5a2a', '#326030', '#2a5424', '#386834', '#264e20', '#3c6c38']
           const canopyFillIdx: number[] = []
-          for (let i = 0; i < 140; i++) {
+          for (let i = 0; i < 50; i++) {
             const rng = seededRng(i * 89 + 707)
             const x = -5 + rng() * 210
             const baseY = getNearY(x) + rng() * 2.5 + 0.8
@@ -1601,7 +1601,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const centerCols = isDark
             ? ['#e8a840', '#d09020', '#e0a038', '#c88018']
             : ['#f5b840', '#f0a828', '#ffc038', '#e89820']
-          for (let i = 0; i < 120; i++) {
+          for (let i = 0; i < 40; i++) {
             const rng = seededRng(i * 67 + 1237)
             const inField = rng() < 0.75
             const fx = inField ? 12 + rng() * 76 : 2 + rng() * 196
@@ -1667,7 +1667,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           const d3: string[] = []
           const patches: string[] = []
           const dirtSpots: string[] = []
-          for (let i = 0; i < 120; i++) {
+          for (let i = 0; i < 40; i++) {
             const rng = seededRng(i * 53 + 101)
             const x = 6 + rng() * 188
             const y = 40 + rng() * 56
@@ -1679,7 +1679,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               d3.push(`M${(x - 0.1).toFixed(2)},${y.toFixed(1)}q${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.3).toFixed(2)} ${((rng() - 0.5) * 0.1).toFixed(2)},${(-h * 0.6).toFixed(2)}`)
             }
           }
-          for (let i = 0; i < 25; i++) {
+          for (let i = 0; i < 10; i++) {
             const rng = seededRng(i * 71 + 3311)
             const px = 10 + rng() * 180
             const py = 42 + rng() * 52
@@ -1687,7 +1687,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             const ph = 0.5 + rng() * 1.5
             patches.push(`M${(px - pw).toFixed(1)},${py.toFixed(1)}Q${(px - pw * 0.3).toFixed(1)},${(py - ph).toFixed(1)} ${px.toFixed(1)},${(py - ph * 0.8).toFixed(1)}Q${(px + pw * 0.4).toFixed(1)},${(py - ph).toFixed(1)} ${(px + pw).toFixed(1)},${py.toFixed(1)}Z`)
           }
-          for (let i = 0; i < 15; i++) {
+          for (let i = 0; i < 8; i++) {
             const rng = seededRng(i * 93 + 5511)
             const dx = 10 + rng() * 180
             const dy = 42 + rng() * 52
@@ -2298,6 +2298,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       {/* (sun and moon now rendered inside SVG before mountains) */}
 
       {/* ── Ambient animations ── */}
+      {<>
       {/* Clouds — high distant layer */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: timeState.phase === 'night' ? 0.35 : 0.45 }}>
         {[0,1,2,3,4].map(i => {
@@ -2627,6 +2628,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           })}
         </div>
       )}
+      </>}
 
       <style>{`
         @keyframes cloud-drift { 0% { transform: translateX(-25vw); } 100% { transform: translateX(110vw); } }
@@ -3415,7 +3417,7 @@ export const OrchardView = memo(function OrchardView({
                         const blades: string[] = []
                         const clover: string[] = []
                         const bushes: string[] = []
-                        for (let i = 0; i < 1500; i++) {
+                        for (let i = 0; i < 400; i++) {
                           const rng = seededRng(i * 43 + 997)
                           const ty = yT - pad + rng() * (yB - yT + pad * 2)
                           const lE = getL(ty) - pad
@@ -3430,7 +3432,7 @@ export const OrchardView = memo(function OrchardView({
                           tufts.push(`M${(tx + 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.4).toFixed(2)},${(-h * 0.4).toFixed(2)} ${((rng() - 0.5) * 0.2).toFixed(2)},${(-h * 0.85).toFixed(2)}`)
                           tufts.push(`M${(tx - 0.1).toFixed(2)},${ty.toFixed(1)}q${((rng() - 0.5) * 0.35).toFixed(2)},${(-h * 0.35).toFixed(2)} ${((rng() - 0.5) * 0.15).toFixed(2)},${(-h * 0.7).toFixed(2)}`)
                         }
-                        for (let i = 0; i < 500; i++) {
+                        for (let i = 0; i < 150; i++) {
                           const rng = seededRng(i * 59 + 1231)
                           const by = yT - pad + 1 + rng() * (yB - yT + pad * 2 - 2)
                           const lE = getL(by) - pad + 1
@@ -3443,7 +3445,7 @@ export const OrchardView = memo(function OrchardView({
                           const curve = (rng() - 0.5) * 0.7
                           blades.push(`M${bx.toFixed(1)},${by.toFixed(1)}C${(bx + curve * 0.2).toFixed(1)},${(by - bh * 0.3).toFixed(1)} ${(bx + curve * 0.7).toFixed(1)},${(by - bh * 0.6).toFixed(1)} ${(bx + curve * 0.5).toFixed(1)},${(by - bh).toFixed(1)}`)
                         }
-                        for (let i = 0; i < 60; i++) {
+                        for (let i = 0; i < 20; i++) {
                           const rng = seededRng(i * 37 + 2099)
                           const cy = yT - pad + 3 + rng() * (yB - yT + pad * 2 - 6)
                           const lE = getL(cy) - pad + 3
@@ -3455,7 +3457,7 @@ export const OrchardView = memo(function OrchardView({
                             clover.push(`M${cx.toFixed(2)},${cy.toFixed(2)}Q${(cx + Math.cos(la) * cs * 1.3).toFixed(2)},${(cy + Math.sin(la) * cs * 1.3).toFixed(2)} ${(cx + Math.cos(la + 0.35) * cs * 0.7).toFixed(2)},${(cy + Math.sin(la + 0.35) * cs * 0.7).toFixed(2)}`)
                           }
                         }
-                        for (let i = 0; i < 100; i++) {
+                        for (let i = 0; i < 30; i++) {
                           const rng = seededRng(i * 83 + 6601)
                           const by = yT - pad + 2 + rng() * (yB - yT + pad * 2 - 4)
                           const lE = getL(by) - pad + 2
@@ -3524,7 +3526,7 @@ export const OrchardView = memo(function OrchardView({
                       const shapeScale = ({ oak: 1.14, conifer: 1.19, birch: 1.1, cypress: 1.19, sakura: 1.14, bamboo: 1.05, void: 1.0 } as Record<string, number>)[shape] || 0.91
                       const depthT = Math.max(0, Math.min(1, (y - 40) / 55))
                       const depthScale = 0.55 + depthT * 0.55
-                      const treeSize = Math.round(baseSize * depthScale * shapeScale)
+                      const treeSize = Math.round((baseSize * depthScale * shapeScale) / 16) * 16 || 16
                       const scaleY = 0.75 + depthT * 0.25
                       const dimAmount = Math.round((1 - depthT) * 25)
                       const skewX = ((x - 50) / 50) * (1 - depthT) * -2
