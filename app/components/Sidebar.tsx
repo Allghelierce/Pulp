@@ -977,7 +977,7 @@ export const Sidebar = memo(function Sidebar({
         )}
 
 
-        <div style={{ height: 2, flexShrink: 0 }} />
+        <div style={{ height: 12, flexShrink: 0 }} />
 
         </>)}
 
