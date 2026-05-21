@@ -438,38 +438,17 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M41.5 24 Q43 22 42 20 Q41 22 41.5 24" fill="#4a8c3a" />
             <path d="M15 34 Q13 34.5 14 33 Q15.5 33.5 15 34" fill="#4a8c3a" />
             <path d="M33 34 Q35 34.5 34 33 Q32.5 33.5 33 34" fill="#4a8c3a" />
-            <line x1="11" y1="26.5" x2="11" y2="27" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="11" cy="28" r="1.1" fill={color} />
-            <line x1="14" y1="28.5" x2="14" y2="29" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="14" cy="30" r="1.0" fill={color} />
-            <line x1="24" y1="30.5" x2="24" y2="31" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="24" cy="32" r="0.9" fill={color} opacity="0.85" />
-            <line x1="35" y1="26.5" x2="35" y2="27" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="35" cy="28" r="1.1" fill={color} />
-            <line x1="32" y1="28.5" x2="32" y2="29" stroke="#3a7a2a" strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="32" cy="30" r="1.0" fill={color} />
-            <line x1="22" y1="24.5" x2="22" y2="25" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
-            <circle cx="22" cy="26" r="0.9" fill={color} opacity="0.75" />
-            <line x1="30" y1="23.5" x2="30" y2="24" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
-            <circle cx="30" cy="25" r="0.85" fill={color} opacity="0.7" />
-            <line x1="18" y1="25.5" x2="18" y2="26" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
             <circle cx="18" cy="27" r="0.8" fill={color} opacity="0.65" />
-            <line x1="26" y1="26.5" x2="26" y2="27" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
             <circle cx="26" cy="28" r="0.85" fill={color} opacity="0.7" />
-            <line x1="37" y1="23.5" x2="37" y2="24" stroke="#3a7a2a" strokeWidth="0.25" strokeLinecap="round" />
-            <circle cx="37" cy="25" r="0.8" fill={color} opacity="0.7" />
-            <circle cx="12" cy="21" r="0.7" fill={color} opacity="0.4" />
-            <circle cx="33" cy="20" r="0.7" fill={color} opacity="0.4" />
             <circle cx="14" cy="12" r="0.65" fill={light} opacity="0.3" />
             <circle cx="20" cy="10" r="0.6" fill={light} opacity="0.3" />
-            <circle cx="28" cy="8" r="0.55" fill={light} opacity="0.25" />
             <circle cx="34" cy="14" r="0.6" fill={light} opacity="0.25" />
-            <circle cx="10" cy="20" r="0.55" fill={light} opacity="0.25" />
-            <circle cx="38" cy="18" r="0.55" fill={light} opacity="0.2" />
-            <circle cx="16" cy="26" r="0.5" fill={light} opacity="0.2" />
-            <circle cx="30" cy="24" r="0.55" fill={light} opacity="0.2" />
             <circle cx="24" cy="16" r="0.6" fill={light} opacity="0.25" />
-            <circle cx="22" cy="22" r="0.5" fill={light} opacity="0.2" />
             <path d="M21 46 C19 45 17 45 15 46" stroke={trunk} strokeWidth="0.9" fill="none" opacity="0.3" />
             <path d="M25 46 C27 45 29 45 31 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
           </g>

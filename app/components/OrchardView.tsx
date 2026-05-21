@@ -474,35 +474,17 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return <ellipse cx={wmX + offX} cy={wmY + h + 0.5 * sc} rx={h * (0.4 + stretch * 0.3)} ry={0.6 * sc} fill={`rgba(0,0,0,${shadowOp})`} />
         })()}
         <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#brick-pat)" />
-        <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill={isDark ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)'} />
-        {[0.35, 0.55, 0.7, 0.85].map(t => {
-          const bandY = wmY + sc * 2 + (h - sc * 2) * t
-          const bw2 = tw + (bw - tw) * t
-          return <line key={t} x1={wmX - bw2 + 0.3} y1={bandY} x2={wmX + bw2 - 0.3} y2={bandY} stroke={isDark ? 'rgba(60,50,35,0.3)' : 'rgba(100,80,50,0.15)'} strokeWidth={0.2 * sc} />
-        })}
         {isFg && <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill={isDark ? '#1a1410' : '#4a3a28'} />}
-        {isFg && <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill="none" stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.3 * sc} />}
-        {isFg && <line x1={wmX - 0.8 * sc} y1={wmY + h * 0.4} x2={wmX + 0.8 * sc} y2={wmY + h * 0.4} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />}
-        {isFg && <line x1={wmX} y1={wmY + h * 0.4 - 0.8 * sc} x2={wmX} y2={wmY + h * 0.4 + 0.8 * sc} stroke={isDark ? '#4a3e28' : '#6a5a3a'} strokeWidth={0.2 * sc} />}
-        {isFg && <circle cx={wmX} cy={wmY + h * 0.4} r={0.6 * sc} fill={isDark ? 'rgba(255,200,100,0.15)' : 'rgba(255,220,140,0.2)'} />}
         {isFg && <path d={`M${wmX - 1 * sc},${wmY + h} L${wmX - 1 * sc},${wmY + h - 2.2 * sc} A${1 * sc},${1 * sc} 0 0 1 ${wmX + 1 * sc},${wmY + h - 2.2 * sc} L${wmX + 1 * sc},${wmY + h} Z`} fill={isDark ? '#1a1410' : '#3a2a1a'} />}
-        {isFg && <line x1={wmX} y1={wmY + h - 2.8 * sc} x2={wmX} y2={wmY + h} stroke={isDark ? '#2a2018' : '#4a3a28'} strokeWidth={0.15 * sc} />}
         <polygon points={`${wmX - tw - 0.8 * sc},${wmY + sc * 2} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX},${wmY - 1 * sc}`} fill={roofColor} />
         <polygon points={`${wmX},${wmY - 1 * sc} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX + 0.3 * sc},${wmY + sc * 2}`} fill={roofLight} opacity="0.3" />
         <circle cx={wmX} cy={hubY} r={1.4 * sc} fill={wmLight} />
-        <circle cx={wmX} cy={hubY} r={0.9 * sc} fill={roofColor} />
-        <circle cx={wmX} cy={hubY} r={0.4 * sc} fill={wmLight} />
+        <circle cx={wmX} cy={hubY} r={0.5 * sc} fill={roofColor} />
         <g>
           <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi % 2 === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={`${isFg ? (wi === 0 ? 25 : 32) : 35 + wi * 5}s`} repeatCount="indefinite" />
           {[0, 90, 180, 270].map(angle => (
             <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
               <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill={bladeColor} opacity="0.8" />
-              {[0.25, 0.5, 0.75].map(t => {
-                const ly = hubY - bladeLen * t
-                const lw = (0.4 + (1 - 0.4) * t * 0.6) * sc
-                return <line key={t} x1={wmX - 0.1 * sc} y1={ly} x2={wmX + lw} y2={ly} stroke={bladeLight} strokeWidth={0.15 * sc} opacity="0.5" />
-              })}
-              <line x1={wmX + 0.2 * sc} y1={hubY} x2={wmX + 0.4 * sc} y2={hubY - bladeLen} stroke={bladeLight} strokeWidth={0.2 * sc} opacity="0.35" />
             </g>
           ))}
         </g>
@@ -2269,8 +2251,6 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
             })}
           </g>
         })()}
-        {/* Background windmills */}
-        {[{ x: 45, y: 27, s: 0.12 }, { x: 110, y: 19, s: 0.06 }, { x: 155, y: 20, s: 0.07 }].map((wm, wi) => <g key={`bgwm-${wi}`} opacity={0.35}>{renderWindmill(wm, wi + 10)}</g>)}
         {/* Front hill windmills */}
         <defs>
           <clipPath id="front-hill-clip">
@@ -3290,12 +3270,6 @@ export const OrchardView = memo(function OrchardView({
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               </button>
 
-              {sapMultiplier > 1 && (
-                <>
-                  <div className="w-px h-4" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
-                  <span className="text-[10px] tabular-nums" style={{ color: '#4ade80', fontWeight: 600 }}>{sapMultiplier.toFixed(1)}x</span>
-                </>
-              )}
             </div>
           </div>
           {/* Sap drop animations */}

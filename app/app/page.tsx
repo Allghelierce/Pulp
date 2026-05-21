@@ -1293,6 +1293,7 @@ export default function NoteApp() {
   const inventory = useGroveStore(s => s.inventory)
   const setInventory = useGroveStore(s => s.setInventory)
   const [orchardOpen, setOrchardOpen] = useState(false)
+  const [orchardMounted, setOrchardMounted] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
@@ -1302,15 +1303,21 @@ export default function NoteApp() {
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false) }, [])
 
   useEffect(() => {
-    _preloadDashboard(); _preloadStats()
+    _preloadDashboard(); _preloadStats(); _preloadOrchard()
     const id = requestIdleCallback(() => {
-      _preloadOrchard(); _preloadBoutique(); _preloadLeaderboard()
+      _preloadBoutique(); _preloadLeaderboard()
       _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
     }, { timeout: 3000 })
     return () => cancelIdleCallback(id)
   }, [])
+
+  useEffect(() => {
+    if (!orchardOpen) { setOrchardMounted(false); return }
+    const t = setTimeout(() => setOrchardMounted(true), 110)
+    return () => clearTimeout(t)
+  }, [orchardOpen])
 
   useEffect(() => {
     if (!orchardOpen) return
@@ -2769,8 +2776,8 @@ export default function NoteApp() {
   useEffect(() => {
     clearTimeout(sidebarWidthTimer.current)
     sidebarWidthTimer.current = setTimeout(() => localStorage.setItem("pulp-sidebar-width", String(sidebarWidth)), 300)
-    return () => clearTimeout(sidebarWidthTimer.current)
-  }, [sidebarWidth])
+    return () => { clearTimeout(sidebarWidthTimer.current) }
+  }, [sidebarWidth, isSidebarDragging])
 
   useEffect(() => {
     window.postMessage({ type: "pulp-focus-config", blockedSites, focusMode }, "*")
@@ -4310,7 +4317,7 @@ export default function NoteApp() {
 
           </div>
 
-          {orchardOpen && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
