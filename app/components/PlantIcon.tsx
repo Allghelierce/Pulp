@@ -30,7 +30,7 @@ function lighten(hex: string, amount: number) {
 
 export const ANIMATED_SHAPES = new Set([
   'sakura', 'mangrove', 'winterveil', 'starweaver', 'leviathan',
-  'prismatic', 'whirlpool', 'bloom', 'coral', 'void', 'snowbell', 'wisteria',
+  'prismatic', 'whirlpool', 'bloom',
 ])
 
 export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt, disableSway = false }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number, disableSway?: boolean }) {
