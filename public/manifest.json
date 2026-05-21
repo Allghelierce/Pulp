@@ -1,0 +1,17 @@
+{
+  "name": "Pulp",
+  "short_name": "Pulp",
+  "description": "A digital notebook with gamification",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/pulp_logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

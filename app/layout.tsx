@@ -13,7 +13,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" as="style" />
         <link id="katex-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="all" />
         <link rel="icon" href="/pulp_logo.svg" type="image/svg+xml" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#d97706" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <script dangerouslySetInnerHTML={{ __html: `try{var s=JSON.parse(localStorage.getItem('pulp-settings'));if(s){var d=document.documentElement;var t=s.theme||'dark';var bg=t==='dark'?'#09090b':'#F0ECEA';var fg=t==='dark'?'#FAFAFA':'#1A1A1A';d.style.backgroundColor=bg;d.style.color=fg}}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}` }} />
       </head>
       <body className="antialiased">
         {children}
