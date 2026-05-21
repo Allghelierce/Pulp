@@ -14,7 +14,7 @@ export function useTerrainCache(paletteKey: string) {
     rasterizing.current = true
 
     const rect = svg.getBoundingClientRect()
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const dpr = Math.min(window.devicePixelRatio || 1, 3)
     const w = Math.round(rect.width * dpr)
     const h = Math.round(rect.height * dpr)
 
@@ -57,7 +57,7 @@ export function useTerrainCache(paletteKey: string) {
       if (ctx) {
         ctx.drawImage(img, 0, 0, w, h)
         try {
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.85)
+          const dataUrl = canvas.toDataURL("image/png")
           console.log('[TerrainCache] rasterized', w, 'x', h, 'bytes:', dataUrl.length)
           setCachedUrl(dataUrl)
         } catch (e) {

@@ -106,23 +106,23 @@ function MarketHillGrass({ isDark }: { isDark: boolean }) {
   const tufts: string[] = []
   const bushPaths: string[] = []
   const bladesPaths: string[] = []
-  for (let i = 0; i < 120; i++) {
-    const x = 5 + (i / 120) * 400 + (rng() - 0.5) * 12
+  for (let i = 0; i < 40; i++) {
+    const x = 5 + (i / 40) * 400 + (rng() - 0.5) * 12
     const ridgeY = getMarketHillY(x)
     const baseY = ridgeY + 0.5 + rng() * 8
     const h = 1.0 + rng() * 2.0
     tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.6).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.5).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.8).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
   }
-  for (let i = 0; i < 80; i++) {
-    const x = 5 + (i / 80) * 400 + (rng() - 0.5) * 15
+  for (let i = 0; i < 25; i++) {
+    const x = 5 + (i / 25) * 400 + (rng() - 0.5) * 15
     const ridgeY = getMarketHillY(x)
     const by = ridgeY + 1 + rng() * 8
     const bw = 1.0 + rng() * 2.0
     const bh = 0.5 + rng() * 1.2
     bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
   }
-  for (let i = 0; i < 100; i++) {
-    const x = 5 + (i / 100) * 400 + (rng() - 0.5) * 12
+  for (let i = 0; i < 35; i++) {
+    const x = 5 + (i / 35) * 400 + (rng() - 0.5) * 12
     const ridgeY = getMarketHillY(x)
     const by = ridgeY + 1 + rng() * 9
     const bh = 1.0 + rng() * 2.0
@@ -149,7 +149,7 @@ function MarketHillPaths({ isDark }: { isDark: boolean }) {
   const grassEdgeD: string[] = []
   const ruts: string[] = []
   const wornPatches: string[] = []
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 30; i++) {
     const t = rng()
     const idx = Math.floor(t * (pts.length - 1))
     const frac = t * (pts.length - 1) - idx
@@ -161,7 +161,7 @@ function MarketHillPaths({ isDark }: { isDark: boolean }) {
     const pr = 0.1 + rng() * 0.2
     pebbles.push(`M${(px+ox+pr).toFixed(2)},${(py+oy).toFixed(2)}a${pr.toFixed(2)},${(pr*0.7).toFixed(2)} 0 1 1 -${(pr*2).toFixed(2)},0a${pr.toFixed(2)},${(pr*0.7).toFixed(2)} 0 1 1 ${(pr*2).toFixed(2)},0Z`)
   }
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 18; i++) {
     const t = rng()
     const idx = Math.floor(t * (pts.length - 1))
     const frac = t * (pts.length - 1) - idx
@@ -288,21 +288,21 @@ function MarketGroundGrass({ isDark, groundY }: { isDark: boolean; groundY: numb
   const flowerStems: string[] = []
   const flowerPetals: string[] = []
   const flowerCenters: string[] = []
-  for (let i = 0; i < 160; i++) {
-    const x = 5 + (i / 160) * 400 + (rng() - 0.5) * 10
+  for (let i = 0; i < 50; i++) {
+    const x = 5 + (i / 50) * 400 + (rng() - 0.5) * 10
     const baseY = groundY - 2 + rng() * spread
     const h = 1.8 + rng() * 3.0
     tufts.push(`M${x.toFixed(1)},${baseY.toFixed(1)}l${(-0.8).toFixed(2)},${(-h).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(0.7).toFixed(1)},${(-h * 0.85).toFixed(1)}M${x.toFixed(1)},${baseY.toFixed(1)}l${(1.1).toFixed(2)},${(-h * 0.65).toFixed(1)}`)
   }
-  for (let i = 0; i < 100; i++) {
-    const x = 5 + (i / 100) * 400 + (rng() - 0.5) * 12
+  for (let i = 0; i < 30; i++) {
+    const x = 5 + (i / 30) * 400 + (rng() - 0.5) * 12
     const by = groundY - 2 + rng() * spread
     const bw = 1.8 + rng() * 3.0
     const bh = 0.8 + rng() * 1.6
     bushPaths.push(`M${(x - bw).toFixed(1)},${by.toFixed(1)}Q${(x - bw * 0.3).toFixed(1)},${(by - bh * 1.5).toFixed(1)} ${x.toFixed(1)},${(by - bh).toFixed(1)}Q${(x + bw * 0.4).toFixed(1)},${(by - bh * 1.4).toFixed(1)} ${(x + bw).toFixed(1)},${by.toFixed(1)}Z`)
   }
-  for (let i = 0; i < 120; i++) {
-    const x = 5 + (i / 120) * 400 + (rng() - 0.5) * 10
+  for (let i = 0; i < 40; i++) {
+    const x = 5 + (i / 40) * 400 + (rng() - 0.5) * 10
     const by = groundY - 2 + rng() * spread
     const bh = 1.8 + rng() * 3.0
     const curve = (rng() - 0.5) * 1.5
@@ -310,8 +310,8 @@ function MarketGroundGrass({ isDark, groundY }: { isDark: boolean; groundY: numb
   }
   const petalC = isDark ? '#8a5510' : '#d97706'
   const centerC = isDark ? '#b07820' : '#f0a828'
-  for (let i = 0; i < 20; i++) {
-    const fx = 5 + (i / 20) * 400 + (rng() - 0.5) * 20
+  for (let i = 0; i < 8; i++) {
+    const fx = 5 + (i / 8) * 400 + (rng() - 0.5) * 20
     const fy = groundY - 1 + rng() * spread
     const sh = 3.0 + rng() * 3.5
     const tx = fx + (rng() - 0.5) * 0.5
@@ -761,36 +761,51 @@ export const BoutiqueView = memo(function BoutiqueView({
       <style>{`
         @keyframes seed-wobble {
           0% { transform: scale(1) rotate(0deg); }
-          20% { transform: scale(1.03) rotate(-1.5deg); }
-          40% { transform: scale(1.06) rotate(2deg); }
-          55% { transform: scale(1.08) rotate(-2.5deg); }
-          70% { transform: scale(1.03) rotate(1deg); }
-          85% { transform: scale(1.01) rotate(-0.3deg); }
-          100% { transform: scale(1) rotate(0deg); }
+          8% { transform: scale(1.01) rotate(-0.5deg); }
+          18% { transform: scale(1.03) rotate(1.2deg); }
+          28% { transform: scale(1.02) rotate(-1.8deg); }
+          38% { transform: scale(1.05) rotate(2.2deg); }
+          48% { transform: scale(1.03) rotate(-2.8deg); }
+          58% { transform: scale(1.07) rotate(3deg); }
+          68% { transform: scale(1.04) rotate(-3.5deg); }
+          78% { transform: scale(1.09) rotate(4deg); }
+          88% { transform: scale(1.06) rotate(-2deg); }
+          94% { transform: scale(1.12) rotate(1deg); }
+          100% { transform: scale(1.15) rotate(0deg); }
         }
         @keyframes seed-crack {
-          0% { clip-path: inset(0); opacity: 1; }
-          8% { clip-path: polygon(0 0, 50% 0, 49% 50%, 48% 100%, 0 100%); opacity: 1; }
-          25% { clip-path: polygon(0 0, 49% 0, 47% 50%, 45% 100%, 0 100%); opacity: 0.95; }
-          50% { clip-path: polygon(0 0, 47% 0, 43% 50%, 39% 100%, 0 100%); opacity: 0.7; }
-          75% { clip-path: polygon(0 0, 44% 0, 38% 50%, 34% 100%, 0 100%); opacity: 0.35; }
-          90% { clip-path: polygon(0 0, 42% 0, 34% 50%, 30% 100%, 0 100%); opacity: 0.1; }
-          100% { clip-path: polygon(0 0, 40% 0, 30% 50%, 26% 100%, 0 100%); opacity: 0; }
+          0% { clip-path: polygon(0 0, 52% 0, 48% 8%, 54% 18%, 46% 28%, 53% 38%, 47% 48%, 54% 58%, 46% 68%, 53% 78%, 47% 88%, 50% 100%, 0 100%); opacity: 1; transform: translateX(0) rotate(0deg); }
+          15% { clip-path: polygon(0 0, 51% 0, 47% 8%, 53% 18%, 45% 28%, 52% 38%, 46% 48%, 53% 58%, 45% 68%, 52% 78%, 46% 88%, 49% 100%, 0 100%); opacity: 1; transform: translateX(-1px) rotate(-0.3deg); }
+          40% { clip-path: polygon(0 0, 49% 0, 44% 8%, 50% 18%, 42% 28%, 49% 38%, 43% 48%, 50% 58%, 42% 68%, 49% 78%, 43% 88%, 46% 100%, 0 100%); opacity: 0.92; transform: translateX(-4px) rotate(-1deg); }
+          65% { clip-path: polygon(0 0, 46% 0, 40% 8%, 46% 18%, 38% 28%, 45% 38%, 39% 48%, 46% 58%, 38% 68%, 45% 78%, 39% 88%, 42% 100%, 0 100%); opacity: 0.6; transform: translateX(-10px) rotate(-2.5deg); }
+          85% { clip-path: polygon(0 0, 42% 0, 36% 8%, 42% 18%, 34% 28%, 41% 38%, 35% 48%, 42% 58%, 34% 68%, 41% 78%, 35% 88%, 38% 100%, 0 100%); opacity: 0.2; transform: translateX(-20px) rotate(-4deg); }
+          100% { clip-path: polygon(0 0, 38% 0, 32% 8%, 38% 18%, 30% 28%, 37% 38%, 31% 48%, 38% 58%, 30% 68%, 37% 78%, 31% 88%, 34% 100%, 0 100%); opacity: 0; transform: translateX(-30px) rotate(-5deg); }
         }
         @keyframes seed-crack-right {
-          0% { clip-path: inset(0); opacity: 1; }
-          8% { clip-path: polygon(50% 0, 100% 0, 100% 100%, 52% 100%, 51% 50%); opacity: 1; }
-          25% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 55% 100%, 53% 50%); opacity: 0.95; }
-          50% { clip-path: polygon(53% 0, 100% 0, 100% 100%, 61% 100%, 57% 50%); opacity: 0.7; }
-          75% { clip-path: polygon(56% 0, 100% 0, 100% 100%, 66% 100%, 62% 50%); opacity: 0.35; }
-          90% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 70% 100%, 66% 50%); opacity: 0.1; }
-          100% { clip-path: polygon(60% 0, 100% 0, 100% 100%, 74% 100%, 70% 50%); opacity: 0; }
+          0% { clip-path: polygon(48% 0, 100% 0, 100% 100%, 50% 100%, 53% 88%, 47% 78%, 54% 68%, 46% 58%, 53% 48%, 47% 38%, 54% 28%, 46% 18%, 52% 8%); opacity: 1; transform: translateX(0) rotate(0deg); }
+          15% { clip-path: polygon(49% 0, 100% 0, 100% 100%, 51% 100%, 54% 88%, 48% 78%, 55% 68%, 47% 58%, 54% 48%, 48% 38%, 55% 28%, 47% 18%, 53% 8%); opacity: 1; transform: translateX(1px) rotate(0.3deg); }
+          40% { clip-path: polygon(51% 0, 100% 0, 100% 100%, 54% 100%, 57% 88%, 51% 78%, 58% 68%, 50% 58%, 57% 48%, 51% 38%, 58% 28%, 50% 18%, 56% 8%); opacity: 0.92; transform: translateX(4px) rotate(1deg); }
+          65% { clip-path: polygon(54% 0, 100% 0, 100% 100%, 58% 100%, 61% 88%, 55% 78%, 62% 68%, 54% 58%, 61% 48%, 55% 38%, 62% 28%, 54% 18%, 60% 8%); opacity: 0.6; transform: translateX(10px) rotate(2.5deg); }
+          85% { clip-path: polygon(58% 0, 100% 0, 100% 100%, 62% 100%, 65% 88%, 59% 78%, 66% 68%, 58% 58%, 65% 48%, 59% 38%, 66% 28%, 58% 18%, 64% 8%); opacity: 0.2; transform: translateX(20px) rotate(4deg); }
+          100% { clip-path: polygon(62% 0, 100% 0, 100% 100%, 66% 100%, 69% 88%, 63% 78%, 70% 68%, 62% 58%, 69% 48%, 63% 38%, 70% 28%, 62% 18%, 68% 8%); opacity: 0; transform: translateX(30px) rotate(5deg); }
+        }
+        @keyframes crack-glow {
+          0% { opacity: 0; filter: blur(2px); }
+          20% { opacity: 0.6; filter: blur(3px); }
+          60% { opacity: 1; filter: blur(5px); }
+          100% { opacity: 0; filter: blur(8px); }
+        }
+        @keyframes reveal-burst {
+          0% { transform: scale(0.3); opacity: 0; }
+          30% { transform: scale(1.2); opacity: 0.8; }
+          100% { transform: scale(2.5); opacity: 0; }
         }
         @keyframes sprout-emerge {
-          0% { transform: scaleY(0) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0; }
-          20% { transform: scaleY(0) scaleX(0.6) translateY(20px); transform-origin: center bottom; opacity: 0; }
-          55% { transform: scaleY(0.6) scaleX(0.85) translateY(4px); transform-origin: center bottom; opacity: 0.8; }
-          75% { transform: scaleY(1.04) scaleX(1.01) translateY(-2px); transform-origin: center bottom; opacity: 1; }
+          0% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
+          25% { transform: scaleY(0) scaleX(0.5) translateY(30px); transform-origin: center bottom; opacity: 0; }
+          50% { transform: scaleY(0.4) scaleX(0.7) translateY(8px); transform-origin: center bottom; opacity: 0.6; }
+          72% { transform: scaleY(1.08) scaleX(1.02) translateY(-3px); transform-origin: center bottom; opacity: 1; }
+          86% { transform: scaleY(0.97) scaleX(0.99) translateY(1px); transform-origin: center bottom; opacity: 1; }
           100% { transform: scaleY(1) scaleX(1) translateY(0); transform-origin: center bottom; opacity: 1; }
         }
         @keyframes leaf-scatter {
@@ -814,12 +829,16 @@ export const BoutiqueView = memo(function BoutiqueView({
           100% { transform: scale(3); opacity: 0; }
         }
         @keyframes seed-spin-reveal {
-          0% { transform: rotateY(0) scale(1); }
-          15% { transform: rotateY(0) scale(1.04); }
-          40% { transform: rotateY(180deg) scale(0.92); }
-          70% { transform: rotateY(360deg) scale(1.03); }
-          85% { transform: rotateY(360deg) scale(0.99); }
-          100% { transform: rotateY(360deg) scale(1); }
+          0% { transform: rotateY(0) scale(1); filter: brightness(1); }
+          20% { transform: rotateY(0) scale(1.02); filter: brightness(1); }
+          35% { transform: rotateY(0) scale(1.06); filter: brightness(1.1); }
+          50% { transform: rotateY(0) scale(1.1); filter: brightness(1.3); }
+          65% { transform: rotateY(0) scale(1.15); filter: brightness(1.8); }
+          72% { transform: rotateY(90deg) scale(1.08); filter: brightness(2.2); }
+          80% { transform: rotateY(180deg) scale(0.95); filter: brightness(1.4); }
+          88% { transform: rotateY(270deg) scale(1.02); filter: brightness(1.1); }
+          94% { transform: rotateY(350deg) scale(1.01); filter: brightness(1); }
+          100% { transform: rotateY(360deg) scale(1); filter: brightness(1); }
         }
         @keyframes pop-common {
           0% { transform: scale(0); opacity: 0; }
@@ -923,7 +942,7 @@ export const BoutiqueView = memo(function BoutiqueView({
         .seed-packet { transition: box-shadow 0.3s ease; }
         .seed-card-wrap { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease; }
         .seed-card-wrap:hover { transform: translateY(-8px) scale(1.02); filter: brightness(1.05); }
-        .seed-cracking { animation: seed-spin-reveal var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1), seed-wobble var(--crack-dur, 1.1s) cubic-bezier(0.22, 1, 0.36, 1) !important; }
+        .seed-cracking { animation: seed-spin-reveal var(--crack-dur, 1.1s) cubic-bezier(0.16, 1, 0.3, 1), seed-wobble var(--crack-dur, 1.1s) cubic-bezier(0.33, 1, 0.68, 1) !important; }
         .seed-revealed { }
         .daily-deal { }
       `}</style>
@@ -1983,19 +2002,34 @@ export const BoutiqueView = memo(function BoutiqueView({
                         {/* Crack overlay during reveal */}
                         {isCracking && (
                           <>
+                            {/* Glowing crack line */}
                             <div style={{
-                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
-                              background: isDark
-                                ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
-                                : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: `seed-crack ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
+                              position: 'absolute', top: 0, left: '46%', width: '8%', height: '100%', zIndex: 9,
+                              background: `linear-gradient(180deg, transparent 0%, ${rarityCol}40 15%, ${rarityCol}80 50%, ${rarityCol}40 85%, transparent 100%)`,
+                              animation: `crack-glow ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
+                              pointerEvents: 'none',
                             }} />
                             <div style={{
                               position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
                               background: isDark
                                 ? `radial-gradient(circle at 40% 35%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
                                 : `radial-gradient(circle at 40% 35%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
-                              animation: `seed-crack-right ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
+                              animation: `seed-crack ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                            }} />
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 10,
+                              background: isDark
+                                ? `radial-gradient(circle at 60% 65%, #2a2520 0%, #1e1a15 60%, #141210 100%)`
+                                : `radial-gradient(circle at 60% 65%, #f0e8d8 0%, #e0d4c0 60%, #d0c4a8 100%)`,
+                              animation: `seed-crack-right ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                            }} />
+                            {/* Reveal burst */}
+                            <div style={{
+                              position: 'absolute', top: '50%', left: '50%', width: '120%', height: '120%', zIndex: 8,
+                              transform: 'translate(-50%, -50%)',
+                              background: `radial-gradient(circle, ${rarityCol}60 0%, ${rarityCol}20 40%, transparent 70%)`,
+                              animation: `reveal-burst ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.22, 1, 0.36, 1) forwards`,
+                              pointerEvents: 'none',
                             }} />
                           </>
                         )}
