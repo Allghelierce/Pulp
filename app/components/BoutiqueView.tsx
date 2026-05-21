@@ -512,6 +512,49 @@ function RarityScene({ rarity, isDark }: { rarity: string; isDark: boolean }) {
   return null
 }
 
+const PLANT_DESCRIPTIONS: Record<string, string> = {
+  tangerine: 'The classic starter. Humble, reliable, and surprisingly sweet — every grove starts here.',
+  lemon: 'Bright and tart. Thrives on neglect and rewards patience with a citrus kick.',
+  plum: 'Deep purple and brooding. Quietly productive, with a richness that sneaks up on you.',
+  pineapple: 'Spiky on the outside, golden on the inside. Takes its sweet time but worth the wait.',
+  passionfruit: 'Exotic and elusive. The vine twists in ways no one can predict.',
+  pomegranate: 'Ancient and jewel-studded. Crack one open and find a hundred tiny rewards.',
+  coconut: 'Tall, breezy, and impossible to rush. Island vibes in tree form.',
+  sunflower: 'Always facing the light. A cheerful giant that towers over the rest.',
+  grape: 'Grows in clusters, aged to perfection. The longer you wait, the finer it gets.',
+  pear: 'Elegant and understated. The kind of tree that looks good in any orchard.',
+  melon: 'Round, heavy, and satisfying. Grows low to the ground like it owns the place.',
+  mushroom: 'Not technically a tree and doesn\'t care. Thrives in the dark, produces in silence.',
+  cactus: 'Stores everything it needs inside. Goes weeks without attention and still delivers.',
+  sage: 'Aromatic and wise. The old soul of the grove — ask it anything.',
+  lychee: 'Delicate shell, explosive flavor. A rare find that makes every harvest feel special.',
+  papaya: 'Tropical royalty. Grows fast, fruits heavy, and looks incredible doing it.',
+  coral: 'Shouldn\'t exist on land, yet here it is. Pulses with an otherworldly glow.',
+  whirlpool: 'Bends light and water around its trunk. Stare too long and you\'ll forget the time.',
+  bloom: 'Flowers that never wilt. Each petal holds a little piece of forever.',
+  lotus: 'Rises clean from murky waters. Proof that beauty comes from unlikely places.',
+  birch: 'White bark, gold leaves. Elegant in every season, impossible to ignore.',
+  pine: 'Evergreen and steadfast. Stands tall through every storm without complaint.',
+  ivy: 'Climbs everything. Give it a wall and it\'ll turn it into a garden.',
+  oak: 'The backbone of any forest. Slow, massive, and absolutely unshakeable.',
+  sakura: 'Blooms once and makes the whole world stop to watch.',
+  cattail: 'Grows where water meets land. Quiet, fuzzy, and strangely calming.',
+  cypress: 'Tall and narrow like a green flame. Guards the orchard with silent dignity.',
+  bamboo: 'Grows an inch while you blink. Hollow inside but stronger than steel.',
+  mangrove: 'Roots in chaos, thrives in salt. The survivor of the plant kingdom.',
+  bonsai: 'A whole forest compressed into a single pot. Patience made visible.',
+  juniper: 'Twisted, ancient, and aromatic. Looks like it knows secrets about the wind.',
+  cedarwood: 'Smells like a cabin in the mountains. Sturdy wood, deep roots, lasting impression.',
+  baobab: 'Upside-down tree that stores water in its belly. A living water tower.',
+  winterveil: 'Frosted branches that shimmer in moonlight. Winter\'s most beautiful secret.',
+  agave: 'Waits a lifetime to bloom once. When it does, the whole desert watches.',
+  abyss: 'Grows downward into nothing. The gems it produces shouldn\'t exist.',
+  starweaver: 'Threads starlight into its branches. Each leaf is a tiny constellation.',
+  leviathan: 'Something ancient sleeps in its roots. The gems it surfaces glow with deep-sea pressure.',
+  prismatic: 'Refracts all light that touches it. No two people see the same tree.',
+  spoiled: 'Withered and forgotten. A reminder that not every seed makes it.',
+}
+
 const NIGHT_MARKET_SLOTS = 5
 const TWELVE_HOURS = 12 * 60 * 60 * 1000
 
@@ -2151,13 +2194,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             const stock = shopStock[selectedPlant!] || 0
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
             const cat = previewInfo.category || 'none'
-            const desc = cat === 'fruit'
-              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} fruit tree that produces ${previewInfo.sapYield || 2} sap when harvested.`
-              : cat === 'flora'
-              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} ornamental plant. Yields ${previewInfo.sapYield || 2} sap at maturity.`
-              : cat === 'gem'
-              ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} crystalline tree. Yields ${previewInfo.sapYield || 2} sap per session.`
-              : `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
+            const desc = PLANT_DESCRIPTIONS[selectedPlant!] || `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
             const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
             const canAfford = seedCost <= sap
 

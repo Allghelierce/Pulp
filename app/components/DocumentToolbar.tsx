@@ -260,7 +260,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                   {[['#fef08a'], ['#fce7f3'], ['#fed7aa'], ['#bfdbfe']].map(([color]) => (
                     <span
                       key={color}
-                      onClick={e => { e.stopPropagation(); setStickyColor(color); setActiveTool('sticky'); setInsertOpen(false) }}
+                      onMouseDown={e => { e.stopPropagation(); e.preventDefault(); setStickyColor(color); setActiveTool('sticky'); setInsertOpen(false) }}
                       className={`w-3 h-3 rounded-full border border-black/10 cursor-pointer hover:scale-125 transition-transform ${stickyColor === color && activeTool === 'sticky' ? 'ring-1.5 ring-zinc-400 ring-offset-1' : ''}`}
                       style={{ backgroundColor: color }}
                     />

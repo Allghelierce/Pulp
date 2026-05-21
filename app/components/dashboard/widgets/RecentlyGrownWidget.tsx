@@ -11,7 +11,7 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
 
   const styled = useMemo(() => {
     if (grove.length === 0) return []
-    const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 12)
+    const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 5)
     return recent.map((tree, i) => {
       const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
       return { tree, yOff: Math.round(seed * 6 - 1), tilt: ((seed * 6) - 3) * 0.5, size: 34 + Math.round(seed * 4) }
@@ -86,8 +86,8 @@ registerWidget({
   name: 'Recently Grown',
   description: 'Scrolling parade of your latest trees',
   category: 'grove',
-  defaultSize: [6, 1],
-  minSize: [3, 1],
-  maxSize: [6, 1],
+  defaultSize: [3, 1],
+  minSize: [2, 1],
+  maxSize: [4, 1],
   component: RecentlyGrownWidget,
 })

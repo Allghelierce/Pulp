@@ -20,6 +20,7 @@ export interface WidgetProps {
   hibernationScheduled?: { startDate: string; endDate: string } | null
   dailyGoalMinutes?: number
   quotaTier?: 'monthly' | 'weekly' | 'daily'
+  ready?: boolean
 }
 
 export interface WidgetDefinition {
@@ -83,7 +84,7 @@ export const DEFAULT_LAYOUT: DashboardLayout = {
     { instanceId: 'default_streak', widgetId: 'streak-card', position: [3, 1], size: [1, 1], pinned: false },
     { instanceId: 'default_notebook', widgetId: 'notebook-stats', position: [4, 1], size: [2, 1], pinned: false },
     { instanceId: 'default_heatmap', widgetId: 'consistency-heatmap', position: [0, 2], size: [3, 2], pinned: false },
-    { instanceId: 'default_species', widgetId: 'species-collection', position: [3, 2], size: [3, 2], pinned: false },
-    { instanceId: 'default_trees', widgetId: 'recently-grown', position: [0, 4], size: [6, 1], pinned: false },
+    { instanceId: 'default_league', widgetId: 'league-standing', position: [3, 2], size: [3, 2], pinned: false },
+    { instanceId: 'default_trees', widgetId: 'recently-grown', position: [0, 4], size: [3, 1], pinned: false },
   ],
 }

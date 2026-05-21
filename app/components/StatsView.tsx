@@ -171,8 +171,10 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
 
   const size = 200
   const cx = size / 2, cy = size / 2
-  const strokeW = 5.5
-  const gap = 6
+  const strokeW = 5
+  const gap = 4
+
+  const track = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
 
   const rings = [
     { value: quotaProgress, color: '#ea580c', label: 'Quota', radius: (size - strokeW) / 2 },
@@ -180,9 +182,10 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
     { value: isEarlyBird ? earlyBirdProgress : 0, color: '#60a5fa', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
+  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#ea580c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
-      <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Multiplier</span>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
@@ -190,47 +193,23 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
           const trackLen = circ - gapLen
           const pct = Math.min(ring.value, 1)
           const fillLen = trackLen * pct
-          const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
-          const complete = pct >= 1
-          const checkR = ring.radius
-          const checkX = cx + Math.cos(-Math.PI / 2) * checkR
-          const checkY = cy + Math.sin(-Math.PI / 2) * checkR
           return (
             <g key={i}>
-              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={trackColor} strokeWidth={strokeW} strokeLinecap="round"
+              <circle cx={cx} cy={cy} r={ring.radius} fill="none" stroke={track} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${trackLen} ${gapLen}`}
                 strokeDashoffset={-gapLen / 2}
                 transform={`rotate(-90 ${cx} ${cy})`}
               />
-              <motion.circle
+              <circle
                 cx={cx} cy={cy} r={ring.radius} fill="none"
                 stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${fillLen} ${circ - fillLen}`}
-                initial={{ strokeDashoffset: 0, opacity: 0 }}
-                animate={{ strokeDashoffset: 0, opacity: 1 }}
-                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
                 transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
-                style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
               />
-              {complete && (
-                <motion.g
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 1.2 + i * 0.1 }}
-                  style={{ transformOrigin: `${checkX}px ${checkY}px` }}
-                >
-                  <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" stroke={ring.color} strokeWidth={0.5} opacity={0.35} />
-                  <circle cx={checkX} cy={checkY} r={strokeW + 1} fill={ring.color} />
-                  <path
-                    d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`}
-                    fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                  />
-                </motion.g>
-              )}
             </g>
           )
         })}
-        {multiplier >= 4.5 ? (
+        {multColor === 'gradient' ? (
           <>
             <defs>
               <linearGradient id="mult-grad-lg" x1="0" y1="0" x2="1" y2="1">
@@ -239,21 +218,21 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
                 <stop offset="100%" stopColor="#fcd34d" />
               </linearGradient>
             </defs>
-            <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
-              style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+            <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="central"
+              style={{ fontSize: 26, fontWeight: 400, fontFamily: 'Crimson Pro, serif', letterSpacing: '0.02em',
                 fill: 'url(#mult-grad-lg)' }}>
               {multiplier.toFixed(1)}x
             </text>
           </>
         ) : (
-          <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
-            style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
-              fill: multiplier >= 4 ? '#ea580c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : isDark ? '#94a3b8' : '#94a3b8' }}>
+          <text x={cx} y={cy - 4} textAnchor="middle" dominantBaseline="central"
+            style={{ fontSize: 26, fontWeight: 400, fontFamily: 'Crimson Pro, serif', letterSpacing: '0.02em',
+              fill: multColor }}>
             {multiplier.toFixed(1)}x
           </text>
         )}
         <text x={cx} y={cy + 16} textAnchor="middle" dominantBaseline="central"
-          style={{ fontSize: 10, fontWeight: 400, fill: isDark ? '#5a5650' : '#a8a4a0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          style={{ fontSize: 9, fontWeight: 400, fill: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.04em', fontFamily: 'Crimson Pro, serif' }}>
           {quotaTier} · {goalStreak}d streak
         </text>
       </svg>
