@@ -920,42 +920,12 @@ export const BoutiqueView = memo(function BoutiqueView({
           <CurrencyPill amount={sap} />
         </div>
 
-        {/* Plant Preview (when selected) */}
-        {selectedPlant && previewInfo && (
-          <div style={{ flexShrink: 0, borderBottom: `1px solid ${dividerColor}` }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 20px',
-              borderBottom: `1px solid ${dividerColor}`,
-              backgroundColor: isDark ? 'rgba(24,24,27,0.5)' : 'rgba(255,255,255,0.6)',
-            }}>
-              <button
-                onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: textSecondary, fontFamily: font, fontSize: 13, fontWeight: 400,
-                  display: 'flex', alignItems: 'center', gap: 4,
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                Back
-              </button>
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{previewInfo.name}</span>
-                <span style={{ fontSize: 10, fontWeight: 400, color: RARITY_COLOR[previewInfo.rarity], marginLeft: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                  {RARITY_LABEL[previewInfo.rarity]}
-                </span>
-              </div>
-              <div style={{ width: 50 }} />
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
           {/* SHOP */}
-          {activeTab === 'shop' && !selectedPlant && (
+          {activeTab === 'shop' && (
             <div style={{ padding: '0 40px 20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
               {/* Terraced landscape background */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
@@ -1552,10 +1522,10 @@ export const BoutiqueView = memo(function BoutiqueView({
 
                   {/* SEEDS sign */}
                   <line x1="200" y1="220" x2="200" y2="228" stroke={isDark ? '#4a3a28' : '#8a7a60'} strokeWidth="1" />
-                  <rect x="178" y="228" width="44" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
-                  <path d="M182 232 Q200 231 218 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <path d="M182 238 Q200 237 218 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
-                  <text x="200" y="242" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="12" fontFamily="'Brush Script MT', 'Segoe Script', 'Comic Sans MS', cursive" fontWeight="normal" fontStyle="italic" opacity="0.9" letterSpacing="1">Trade</text>
+                  <rect x="170" y="228" width="60" height="18" rx="2.5" fill={isDark ? '#3a3020' : '#988868'} stroke={isDark ? '#2a2418' : '#8a8070'} strokeWidth="0.4" />
+                  <path d="M174 232 Q200 231 226 232" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+                  <path d="M174 238 Q200 237 226 238" stroke={isDark ? '#342a1c' : '#8a7a60'} strokeWidth="0.3" fill="none" />
+                  <text x="200" y="241" textAnchor="middle" fill={isDark ? '#1a1410' : '#2a2218'} fontSize="6.5" fontFamily="'Inter', system-ui, sans-serif" fontWeight="600" opacity="0.85" letterSpacing="0.3">{countdown || 'Trade'}</text>
                   <circle cx="200" cy="229" r="0.8" fill={isDark ? '#4a3a28' : '#8a7a60'} />
 
                   {/* Cart base shadow */}
@@ -1983,7 +1953,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
                         const stringH = [26, 34, 18, 40, 22][i % 5]
                         return (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center' }}>
+                      <div onClick={(e) => { e.stopPropagation(); if (isRevealed) { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(0) } }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center', cursor: isRevealed ? 'pointer' : 'default' }}>
                         <svg width="4" height={stringH} style={{ overflow: 'visible' }}>
                           <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? '#8b7355' : '#6b5335'} strokeWidth="0.8" strokeLinecap="round" />
                           <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? 'rgba(160,130,90,0.25)' : 'rgba(120,90,50,0.2)'} strokeWidth="1.4" strokeLinecap="round" />
@@ -2179,7 +2149,6 @@ export const BoutiqueView = memo(function BoutiqueView({
 
           {activeTab === 'shop' && selectedPlant && previewInfo && (() => {
             const stock = shopStock[selectedPlant!] || 0
-            const _growthTime = getGrowthTime(selectedPlant!)
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
             const cat = previewInfo.category || 'none'
             const desc = cat === 'fruit'
@@ -2189,142 +2158,124 @@ export const BoutiqueView = memo(function BoutiqueView({
               : cat === 'gem'
               ? `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} crystalline tree. Yields ${previewInfo.sapYield || 2} sap per session.`
               : `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
+            const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
+            const canAfford = seedCost <= sap
 
             return (
-            <div style={{ padding: '32px 40px', flex: 1, display: 'flex', alignItems: 'center', gap: 40, minHeight: 0 }}>
-              {/* Left — plant preview */}
-              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <div style={{
-                  width: 220, height: 260, borderRadius: 16, overflow: 'hidden', position: 'relative',
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                  background: isDark
-                    ? (SHOP_BG_DARK[previewInfo.rarity] || SHOP_BG_DARK.common)
-                    : (SHOP_BG[previewInfo.rarity] || SHOP_BG.common),
-                }}>
-                  <RarityScene rarity={previewInfo.rarity} isDark={isDark} />
-                  <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 30px ${isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 16, pointerEvents: 'none', zIndex: 1 }} />
-                  <Sparkles rarity={previewInfo.rarity} count={6} />
-                  <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 16, zIndex: 2 }}>
-                    {previewStage === 0
-                      ? <PlantIcon type={selectedPlant!} size={130} isSeed />
-                      : <PlantIcon type={selectedPlant!} size={130} stage={previewStage - 1} />
-                    }
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40,
+              background: isDark ? 'rgba(9,9,11,0.97)' : 'rgba(245,243,239,0.97)',
+              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+              borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+              borderRadius: '16px 16px 0 0',
+              boxShadow: isDark ? '0 -8px 32px rgba(0,0,0,0.5)' : '0 -8px 32px rgba(0,0,0,0.1)',
+              animation: 'slide-up-panel 0.25s cubic-bezier(0.16, 1, 0.3, 1) both',
+            }}>
+              <style>{`@keyframes slide-up-panel { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+              {/* Drag handle */}
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
+                <div style={{ width: 32, height: 3, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'stretch', padding: '8px 24px 20px', gap: 24 }}>
+                {/* Left — compact plant preview */}
+                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    width: 140, height: 170, borderRadius: 12, overflow: 'hidden', position: 'relative',
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                    background: isDark
+                      ? (SHOP_BG_DARK[previewInfo.rarity] || SHOP_BG_DARK.common)
+                      : (SHOP_BG[previewInfo.rarity] || SHOP_BG.common),
+                  }}>
+                    <RarityScene rarity={previewInfo.rarity} isDark={isDark} />
+                    <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.08)'}`, borderRadius: 12, pointerEvents: 'none', zIndex: 1 }} />
+                    <Sparkles rarity={previewInfo.rarity} count={4} />
+                    <div className={previewStage >= 4 ? rarityPlantClass(previewInfo.rarity) : ''} style={{ position: 'relative', marginBottom: 10, zIndex: 2 }}>
+                      {previewStage === 0
+                        ? <PlantIcon type={selectedPlant!} size={90} isSeed />
+                        : <PlantIcon type={selectedPlant!} size={90} stage={previewStage - 1} />
+                      }
+                    </div>
                   </div>
-                </div>
-                {/* Stage slider */}
-                <div style={{ width: 220 }}>
-                  <input
-                    type="range"
-                    min={0}
-                    max={STAGE_NAMES.length - 1}
-                    value={previewStage}
-                    onChange={e => setPreviewStage(Number(e.target.value))}
-                    className="boutique-slider"
-                    style={{
-                      width: '100%', height: 3, appearance: 'none', WebkitAppearance: 'none',
-                      background: `linear-gradient(90deg, ${isDark ? '#52525b' : '#a1a1aa'} 0%, ${isDark ? '#52525b' : '#a1a1aa'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} ${(previewStage / (STAGE_NAMES.length - 1)) * 100}%, ${isDark ? 'rgba(39,39,42,0.6)' : 'rgba(228,228,231,0.8)'} 100%)`,
-                      borderRadius: 4, outline: 'none', cursor: 'pointer',
-                    }}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                  {/* Stage dots */}
+                  <div style={{ display: 'flex', gap: 4 }}>
                     {STAGE_NAMES.map((name, si) => (
                       <button
                         key={si}
                         onClick={() => setPreviewStage(si)}
+                        title={name}
                         style={{
-                          background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
-                          fontSize: 8, fontWeight: 400, letterSpacing: '0.04em', textTransform: 'uppercase',
-                          color: previewStage === si ? textPrimary : textMuted,
-                          fontFamily: font, transition: 'color 0.15s',
+                          width: 6, height: 6, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
+                          background: previewStage === si ? mainColor : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
+                          transition: 'background 0.15s',
                         }}
-                      >
-                        {name}
-                      </button>
+                      />
                     ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Right — info + buy */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
-                {/* Rarity badge */}
-                <span style={{
-                  fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em',
-                  textTransform: 'uppercase', fontFamily: font, marginBottom: 6,
-                }}>
-                  {RARITY_LABEL[previewInfo.rarity]}
-                </span>
-
-                {/* Name */}
-                <div style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 4 }}>
-                  {previewInfo.name}
-                </div>
-
-                {/* Category */}
-                {cat !== 'none' && (
-                  <span style={{ fontSize: 10, fontWeight: 400, color: CATEGORY_COLOR[cat], fontFamily: font, marginBottom: 12 }}>
-                    {CATEGORY_LABEL[cat]}
+                {/* Right — info + buy */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
+                  <span style={{ fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font, marginBottom: 4 }}>
+                    {RARITY_LABEL[previewInfo.rarity]}
+                    {cat !== 'none' && <span style={{ color: CATEGORY_COLOR[cat], marginLeft: 8 }}>{CATEGORY_LABEL[cat]}</span>}
                   </span>
-                )}
-
-                {/* Description */}
-                <p style={{ fontSize: 13, color: textSecondary, fontFamily: font, lineHeight: 1.6, marginBottom: 20, maxWidth: 360 }}>
-                  {desc}
-                </p>
-
-                {/* Stats row */}
-                <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Sap Yield</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <PulpIcon size={12} />
-                      {previewInfo.sapYield || 2}
+                  <div style={{ fontSize: 20, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 6 }}>
+                    {previewInfo.name}
+                  </div>
+                  <p style={{ fontSize: 11, color: textSecondary, fontFamily: font, lineHeight: 1.5, marginBottom: 14, maxWidth: 320 }}>
+                    {desc}
+                  </p>
+                  {/* Stats row */}
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 8, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 1 }}>Sap</div>
+                      <div style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <PulpIcon size={10} />{previewInfo.sapYield || 2}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 8, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 1 }}>Drop</div>
+                      <div style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 8, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 1 }}>Shape</div>
+                      <div style={{ fontSize: 13, fontWeight: 400, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Drop Rate</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{getDropChance(previewInfo.weight)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 400, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', fontFamily: font, marginBottom: 2 }}>Shape</div>
-                    <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font, textTransform: 'capitalize' }}>{previewInfo.shape}</div>
-                  </div>
+                  {/* Buy / Sold out */}
+                  {stock <= 0 ? (
+                    <div style={{ fontSize: 12, fontWeight: 400, fontFamily: font, color: isDark ? '#71717a' : '#a1a1aa' }}>Sold Out</div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <button
+                        onClick={() => buySeed(selectedPlant!)}
+                        disabled={!canAfford}
+                        className="transition-all hover:brightness-110"
+                        style={{
+                          fontFamily: font, cursor: canAfford ? 'pointer' : 'not-allowed', border: 'none',
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          background: canAfford ? '#d97706' : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? '#fff' : (isDark ? '#71717a' : '#a1a1aa'),
+                          padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 400,
+                          opacity: canAfford ? 1 : 0.7,
+                        }}
+                      >
+                        Buy · {seedCost.toLocaleString()} <PulpIcon size={11} />
+                      </button>
+                      <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>×{stock} left</span>
+                    </div>
+                  )}
                 </div>
-
-                {/* Growth Time + Take */}
-                {stock <= 0 ? (
-                  <div style={{
-                    fontSize: 13, fontWeight: 400, fontFamily: font,
-                    color: isDark ? '#71717a' : '#a1a1aa',
-                    padding: '10px 0',
-                  }}>
-                    Sold Out
-                  </div>
-                ) : (() => {
-                  const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
-                  const canAfford = seedCost <= sap
-                  return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <button
-                      onClick={() => buySeed(selectedPlant!)}
-                      disabled={!canAfford}
-                      className="transition-all hover:brightness-110"
-                      style={{
-                        fontFamily: font, cursor: canAfford ? 'pointer' : 'not-allowed', border: 'none',
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: canAfford ? '#d97706' : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? '#fff' : (isDark ? '#71717a' : '#a1a1aa'),
-                        padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 400,
-                        opacity: canAfford ? 1 : 0.7,
-                      }}
-                    >
-                      {<>Buy · {seedCost.toLocaleString()} <PulpIcon size={12} /></>}
-                    </button>
-                    <span style={{ fontSize: 10, fontWeight: 400, color: textMuted, fontFamily: font }}>
-                      ×{stock} left
-                    </span>
-                  </div>
-                  )
-                })()}
+                {/* Close button */}
+                <button
+                  onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
+                  style={{
+                    position: 'absolute', top: 12, right: 16,
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: textMuted, padding: 4,
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
               </div>
             </div>
           )})()}

@@ -238,8 +238,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
   const sliderMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
+    const snapPoints = [30, 60, 90, 120]
+    const snapThreshold = 0.025
     const updateTime = (clientX: number) => {
-      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      let percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      for (const sp of snapPoints) {
+        const spPct = (sp - 5) / 175
+        if (Math.abs(percent - spPct) < snapThreshold) { percent = spPct; break }
+      }
       const mins = Math.max(5, Math.min(180, Math.round((percent * 175 + 5) / 5) * 5))
       onSetTotal(mins * 60)
     }
@@ -712,6 +718,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         width: `${((total / 60 - 5) / 175) * 100}%`,
                       }}
                     />
+                    {[30, 60, 90, 120].map(sp => (
+                      <div key={sp} className="absolute top-1/2 -translate-y-1/2 rounded-full" style={{
+                        width: 3, height: 3,
+                        left: `${((sp - 5) / 175) * 100}%`, marginLeft: -1.5,
+                        backgroundColor: Math.floor(total / 60) === sp ? mainColor : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
+                      }} />
+                    ))}
                     <div
                       className="absolute top-1/2 -translate-y-1/2 rounded-full"
                       style={{
