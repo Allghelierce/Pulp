@@ -192,6 +192,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const treeType = selectedSeed || 'tangerine'
   const treeInfo = TREE_TYPES[treeType]
   const growthTarget = treeInfo?.growthMinutes || 25
+  const baseSap = treeInfo?.sapYield || 2
+  const hour = new Date().getHours()
+  const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
+  const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+  const streakBonus = Math.min(1, goalStreak / 30)
+  const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
+  const effectiveSap = Math.round(baseSap * multiplier)
   const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMinutes = total > 0 ? elapsed / 60 : 0
@@ -206,7 +213,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
   const mainColor = "#d97706"
   const isDark = theme === "dark"
-  const bgColor = isDark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.75)"
+  const bgColor = isDark ? "rgba(4,4,5,0.85)" : "rgba(255,255,255,0.75)"
   const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)"
   const textColor = isDark ? "#e4e4e7" : "#27272a"
   const dimColor = isDark ? "#a1a1aa" : "#71717a"
@@ -573,6 +580,18 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 )}
               </div>
 
+              {treeDead && (
+                <div className="flex justify-center mt-3">
+                  <svg width="22" height="18" viewBox="0 0 22 18">
+                    <line x1="2" y1="2" x2="6" y2="6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="6" y1="2" x2="2" y2="6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="16" y1="2" x2="20" y2="6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="20" y1="2" x2="16" y2="6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M7 14 Q11 11 15 14" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              )}
+
               {/* Tree view — click to change plant */}
               <div
                 className="relative w-full mx-auto"
@@ -593,8 +612,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <div className="text-center" style={{ marginTop: 4 }}>
                     <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', fontSize: 11, color: willFinish ? mainColor : subtleColor }}>
                       {willFinish
-                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow` : `${growthTarget} min — will fully grow`
-                        : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set` : `${growthTarget} min to grow · ${sessionMin}min set`}
+                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow · +${effectiveSap} sap` : `${growthTarget} min — will fully grow · +${effectiveSap} sap`
+                        : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set · +${effectiveSap} sap` : `${growthTarget} min to grow · ${sessionMin}min set · +${effectiveSap} sap`}
                     </span>
                   </div>
                 )
@@ -621,15 +640,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-2 text-center"
                 >
-                  <svg width="28" height="28" viewBox="0 0 28 28" style={{ display: 'block', margin: '0 auto' }}>
-                    <circle cx="14" cy="14" r="13" fill="#ef4444" opacity={0.15} stroke="#ef4444" strokeWidth="1.5" />
-                    <line x1="7" y1="10" x2="11" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="11" y1="10" x2="7" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="17" y1="10" x2="21" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="21" y1="10" x2="17" y2="14" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M10 20 Q14 17 18 20" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <p className="text-[12px] mt-1" style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}>
+                  <p className="text-[12px]" style={{ color: subtleColor, fontFamily: 'Crimson Pro, serif' }}>
                     {deathReason}
                   </p>
                 </motion.div>

@@ -108,14 +108,14 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
                 </linearGradient>
               </defs>
               <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
-                style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+                style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
                   fill: 'url(#mult-grad)' }}>
                 {multiplier.toFixed(1)}x
               </text>
             </>
           ) : (
             <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central"
-              style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+              style={{ fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
                 fill: multColor }}>
               {multiplier.toFixed(1)}x
             </text>

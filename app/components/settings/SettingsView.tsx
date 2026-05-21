@@ -232,7 +232,7 @@ function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: 
   )
 }
 
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier, dailyGoalMinutes = 30, onChangeDailyGoalMinutes }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier, dailyGoalMinutes = 30, onChangeDailyGoalMinutes, initialTab }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -259,6 +259,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   onChangeQuotaTier?: (tier: 'monthly' | 'weekly' | 'daily') => void
   dailyGoalMinutes?: number
   onChangeDailyGoalMinutes?: (v: number) => void
+  initialTab?: SettingsTabId
 }) {
   const { 
     accentColor, theme, autoSave, spellCheck, autoCorrect, autoCapitalize, editorFont, headingFont,
@@ -268,7 +269,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   } = config
   const isDark = theme === "dark"
   const isPremium = user?.email?.includes("pro") || false
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("general")
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(initialTab || "general")
 
   const isUnlocked = (id: string, cost?: number, pro?: boolean) => {
     if (!cost && !pro) return true
@@ -1111,7 +1112,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
                <div className="mb-7">
                 <p className={`text-[10px] font-normal tracking-wide mb-2.5 px-0.5 ${isDark ? "text-red-500/70" : "text-red-500/60"}`}>
-                  Danger Zone
+                  Caution
                 </p>
                 <div className={`rounded-xl border overflow-hidden divide-y ${
                   isDark

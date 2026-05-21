@@ -1253,6 +1253,7 @@ export default function NoteApp() {
   const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined)
   const [showDrawToolbar, setShowDrawToolbar] = useState(false)
   const [showCoverModal, setShowCoverModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -3323,7 +3324,7 @@ export default function NoteApp() {
 
   const settingsConfig = useMemo(() => ({ ...settings, accentColor: accent }), [settings, accent])
   const handleSettingsUpdate = useCallback((updates: any) => updateSettings({ ...updates, accent: updates.accentColor || accent }), [updateSettings, accent])
-  const handleCloseSettings = useCallback(() => setShowSettings(false), [])
+  const handleCloseSettings = useCallback(() => { setShowSettings(false); setSettingsInitialTab(undefined) }, [])
   const handleOpenShopItem = useCallback((itemId: string) => {
     setShowSettings(false)
     setShopInitialTab('shop')
@@ -3403,6 +3404,7 @@ export default function NoteApp() {
                 quotaLockedUntil={quotaLockedUntil}
                 dailyGoalMinutes={dailyGoalMinutes}
                 onChangeDailyGoalMinutes={setDailyGoalMinutes}
+                initialTab={settingsInitialTab as any}
                 onChangeQuotaTier={(tier: 'monthly' | 'weekly' | 'daily') => {
                   const lockDays = tier === 'monthly' ? 30 : 7
                   const lockDate = new Date()
@@ -3868,7 +3870,7 @@ export default function NoteApp() {
                         <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
-                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1100px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
+                        <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1250px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}
                           onMouseDown={e => {
                             if (activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'image') {
                               return
@@ -3876,19 +3878,19 @@ export default function NoteApp() {
                             if (activeTool !== 'select' && activeTool !== 'text' && activeTool !== 'textbox') return
                             const target = e.target as HTMLElement
                             const boxEl = target.closest('[id^="box-"]') as HTMLElement | null
-                            if (boxEl) {
-                              const boxId = boxEl.id.replace('box-', '')
-                              const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === boxId)
-                              if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
-                            }
-                            // Remove empty non-sticky, non-title boxes before creating new ones
+                            const clickedBoxId = boxEl ? boxEl.id.replace('box-', '') : null
+                            // Remove empty non-sticky, non-title boxes (except the one being clicked)
                             const emptyIds = (activeNote.boxes[currentPageIdx] || [])
-                              .filter(b => b.content.trim() === '' && !b.boxHighlightColor && !b.isTitle)
+                              .filter(b => b.content.trim() === '' && !b.boxHighlightColor && !b.isTitle && b.id !== clickedBoxId)
                               .map(b => b.id)
                             if (emptyIds.length > 0) {
                               setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
                                 ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).filter(b => !emptyIds.includes(b.id)) }
                               }))
+                            }
+                            if (boxEl) {
+                              const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === clickedBoxId)
+                              if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
                             }
                             boxes.onPaperMouseDown(e)
                           }}
@@ -4609,7 +4611,7 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
-          onOpenStats={() => { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) }}
+          onOpenStats={() => { startTransition(() => { closeAllPanels(); setSettingsInitialTab('grove'); setShowSettings(true) }) }}
           goalStreak={goalStreak}
           setGoalStreak={setGoalStreak}
           goalStreakLastDate={goalStreakLastDate}

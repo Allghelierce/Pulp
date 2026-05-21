@@ -368,12 +368,12 @@ function interpolatePalette(phase: string, t: number): SkyPalette {
   return result as SkyPalette
 }
 
-const STAR_POSITIONS = Array.from({ length: 50 }, (_, i) => {
+const STAR_POSITIONS = Array.from({ length: 20 }, (_, i) => {
   const rng = seededRng(i * 47 + 199)
   const brightness = rng()
   return { x: rng() * 200, y: rng() * 6, r: 0.12 + rng() * 0.28, twinkle: rng(), brightness, warm: rng() > 0.7 }
 })
-const SPECK_STARS = Array.from({ length: 70 }, (_, i) => {
+const SPECK_STARS = Array.from({ length: 35 }, (_, i) => {
   const rng = seededRng(i * 31 + 503)
   return { x: rng() * 200, y: rng() * 6, r: 0.04 + rng() * 0.08, op: 0.15 + rng() * 0.35 }
 })
@@ -591,21 +591,15 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
           <g>
             <defs>
-              {STAR_POSITIONS.map((s, i) => {
-                const col = s.warm ? '#ffeedd' : '#e8f0ff'
-                const bright = s.brightness > 0.6
-                return (
-                <radialGradient key={`sg${i}`} id={`sg${i}`} cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor={col} stopOpacity={bright ? 1 : 0.9} />
-                  <stop offset={bright ? '30%' : '45%'} stopColor={col} stopOpacity={bright ? 0.45 : 0.25} />
-                  <stop offset="100%" stopColor={col} stopOpacity="0" />
-                </radialGradient>
-                )
-              })}
-              <radialGradient id="csg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#e8f0ff" stopOpacity="1" />
-                <stop offset="25%" stopColor="#e8f0ff" stopOpacity="0.6" />
+              <radialGradient id="sg-cool" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#e8f0ff" stopOpacity="0.9" />
+                <stop offset="45%" stopColor="#e8f0ff" stopOpacity="0.25" />
                 <stop offset="100%" stopColor="#e8f0ff" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="sg-warm" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ffeedd" stopOpacity="1" />
+                <stop offset="30%" stopColor="#ffeedd" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#ffeedd" stopOpacity="0" />
               </radialGradient>
               <clipPath id="sky-clip">
                 <path d="M-10,-5 L210,-5 L210,28 L195,18 L185,22 L175,15 L165,20 L155,10 L145,16 L135,22 L125,13 L115,18 L105,9 L95,22 L85,14 L78,20 L68,11 L58,16 L50,8 L42,18 L35,10 L25,22 L15,12 L5,24 L-10,28 Z" />
@@ -617,7 +611,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               const sz = bright ? s.r * 2.5 : s.r * 1.5
               const op = Math.min(1, (bright ? 0.75 : 0.5) + mb * 0.4)
               return (
-                <circle key={i} cx={s.x} cy={s.y} r={sz} fill={`url(#sg${i})`} opacity={op} />
+                <circle key={i} cx={s.x} cy={s.y} r={sz} fill={s.warm ? 'url(#sg-warm)' : 'url(#sg-cool)'} opacity={op} />
               )
             })}
             {SPECK_STARS.map((s, i) => (
@@ -634,7 +628,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               {CONSTELLATION_STARS.map((s, i) => {
                 const co = Math.min(1, 0.8 + moonBoost * 0.3)
                 return (
-                <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#csg)" opacity={co} />
+                <circle key={`cs${i}`} cx={s.x} cy={s.y} r={0.8} fill="url(#sg-cool)" opacity={co} />
                 )
               })}
             </g>
