@@ -45,13 +45,16 @@ function render(data) {
   // Header
   html += `
     <div class="header">
-      <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="14" r="13" fill="#B8661A"/>
-        <circle cx="14" cy="14" r="11" fill="#F5A030"/>
-        <line x1="14" y1="3" x2="14" y2="25" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-        <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-        <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#B8661A" stroke-width="1.1" stroke-opacity="0.55"/>
-        <circle cx="14" cy="14" r="1.8" fill="#B8661A" fill-opacity="0.75"/>
+      <svg class="logo-icon" viewBox="0 0 120 120" fill="none">
+        <path d="M34 18 Q46 6 62 14 Q48 10 34 18Z" fill="#3d7a2a" opacity="0.9"/>
+        <path d="M34 17 Q40 12 46 14" fill="none" stroke="#2d6420" stroke-width="0.8" opacity="0.4"/>
+        <circle cx="60" cy="60" r="42" fill="#d97706" stroke="#92400e" stroke-width="6"/>
+        <line x1="60" y1="18" x2="60" y2="102" stroke="#92400e" stroke-width="2.5" opacity="0.5"/>
+        <line x1="40" y1="22" x2="80" y2="98" stroke="#92400e" stroke-width="2.5" opacity="0.5"/>
+        <line x1="80" y1="22" x2="40" y2="98" stroke="#92400e" stroke-width="2.5" opacity="0.5"/>
+        <circle cx="60" cy="60" r="5" fill="#92400e"/>
+        <line x1="29" y1="52" x2="37" y2="52" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="83" y1="52" x2="91" y2="52" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
       <span class="logo-text">Pulp<span class="logo-sub">Focus</span></span>
     </div>`

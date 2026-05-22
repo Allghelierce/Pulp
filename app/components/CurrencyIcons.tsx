@@ -1,26 +1,10 @@
 "use client"
 
 export function SapIcon({ size = 14 }: { size?: number }) {
-  const id = `pulp-${size}`
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-      <defs>
-        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.65" r="0.7" fx="0.48" fy="0.6">
-          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3"/>
-          <stop offset="50%" stopColor="#d97706" stopOpacity="0.1"/>
-          <stop offset="100%" stopColor="#d97706" stopOpacity="0"/>
-        </radialGradient>
-        <radialGradient id={`${id}-fill`} cx="0.45" cy="0.4" r="0.5">
-          <stop offset="0%" stopColor="#fef3c7"/>
-          <stop offset="25%" stopColor="#fbbf24"/>
-          <stop offset="60%" stopColor="#d97706"/>
-          <stop offset="100%" stopColor="#78350f"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="12" cy="16" rx="7" ry="8" fill={`url(#${id}-glow)`}/>
-      <path d="M12 1 C12 1 6.5 12 6.5 16 C6.5 19.5 9 22 12 22 C15 22 17.5 19.5 17.5 16 C17.5 12 12 1 12 1Z" fill="none" stroke="#b45309" strokeWidth="0.8" opacity="0.7"/>
-      <path d="M12 10 C12 10 8.5 15 8.5 17 C8.5 19.5 10 21 12 21 C14 21 15.5 19.5 15.5 17 C15.5 15 12 10 12 10Z" fill={`url(#${id}-fill)`}/>
-      <circle cx="10.5" cy="15" r="0.6" fill="white" opacity="0.2"/>
+      <path d="M12 2 C12 2 5 12 5 16 C5 20 8 23 12 23 C16 23 19 20 19 16 C19 12 12 2 12 2Z" fill="#d97706" stroke="#92400e" strokeWidth="1.5"/>
+      <circle cx="12" cy="16" r="2" fill="#92400e"/>
     </svg>
   )
 }

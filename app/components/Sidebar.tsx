@@ -647,14 +647,16 @@ export const Sidebar = memo(function Sidebar({
             }}
             className="relative flex items-center gap-2.5 mb-5 cursor-pointer select-none"
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="14" cy="14" r="13" fill="#92400e" />
-              <circle cx="14" cy="14" r="11" fill="#d97706" />
-              <line x1="14" y1="3" x2="14" y2="25" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-              <line x1="8.5" y1="23.5" x2="19.5" y2="4.5" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-              <line x1="19.5" y1="23.5" x2="8.5" y2="4.5" stroke="#92400e" strokeWidth="1.1" strokeOpacity="0.55" />
-              <circle cx="14" cy="14" r="1.8" fill="#92400e" fillOpacity="0.75" />
-              <path d="M8.5 8 Q10.5 6 13.5 7" stroke="white" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.35" fill="none" />
+            <svg width="32" height="32" viewBox="0 0 120 120" fill="none">
+              <path d="M34 18 Q46 6 62 14 Q48 10 34 18Z" fill="#3d7a2a" opacity="0.9"/>
+              <path d="M34 17 Q40 12 46 14" fill="none" stroke="#2d6420" strokeWidth="0.8" opacity="0.4"/>
+              <circle cx="60" cy="60" r="42" fill="#d97706" stroke="#92400e" strokeWidth="6"/>
+              <line x1="60" y1="18" x2="60" y2="102" stroke="#92400e" strokeWidth="2.5" opacity="0.5"/>
+              <line x1="40" y1="22" x2="80" y2="98" stroke="#92400e" strokeWidth="2.5" opacity="0.5"/>
+              <line x1="80" y1="22" x2="40" y2="98" stroke="#92400e" strokeWidth="2.5" opacity="0.5"/>
+              <circle cx="60" cy="60" r="5" fill="#92400e"/>
+              <line x1="29" y1="52" x2="37" y2="52" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round"/>
+              <line x1="83" y1="52" x2="91" y2="52" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
             <h1 style={{ fontFamily: '"EB Garamond", serif', fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp <span style={{ fontSize: 10, fontWeight: 400, color: '#71717a', letterSpacing: '0.05em', verticalAlign: 'super' }}>beta</span></h1>
           </div>
