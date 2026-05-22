@@ -33,6 +33,444 @@ export const ANIMATED_SHAPES = new Set([
   'prismatic', 'whirlpool', 'bloom',
 ])
 
+function renderSeedShape(uid: string, shape: string, color: string, dark: string, light: string) {
+  const g = `url(#${uid}-sg)`
+  switch (shape) {
+    case 'citrus':
+      return (<>
+        <ellipse cx="24" cy="28" rx="7" ry="6.5" fill={g} />
+        <ellipse cx="24" cy="28" rx="7" ry="6.5" fill={dark} opacity="0.1" />
+        <circle cx="21" cy="26" r="0.6" fill={dark} opacity="0.15" />
+        <circle cx="26" cy="27" r="0.5" fill={dark} opacity="0.12" />
+        <circle cx="23" cy="30" r="0.5" fill={dark} opacity="0.12" />
+        <circle cx="27" cy="25" r="0.4" fill={dark} opacity="0.1" />
+        <ellipse cx="24" cy="22.5" rx="1.5" ry="1" fill={dark} opacity="0.2" />
+        <path d="M24 22 L24 19" stroke="#6b5b3e" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M24 19 Q26 17 27 18 Q26 19 24 19" fill="#6ab04c" opacity="0.7" />
+        <ellipse cx="22" cy="26" rx="2" ry="1.5" fill="white" opacity="0.15" />
+      </>)
+    case 'lemon':
+      return (<>
+        <ellipse cx="24" cy="28" rx="5" ry="7.5" fill={g} transform="rotate(-8 24 28)" />
+        <ellipse cx="24" cy="28" rx="5" ry="7.5" fill={dark} opacity="0.08" transform="rotate(-8 24 28)" />
+        <path d="M24 20.5 Q23.5 28 24 35.5" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <ellipse cx="24" cy="21" rx="1.2" ry="0.6" fill={dark} opacity="0.15" />
+        <path d="M24 21 L24 18" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 18 Q26 16 27 17 Q26 18 24 18" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="22.5" cy="26" rx="1.5" ry="2.5" fill="white" opacity="0.12" />
+      </>)
+    case 'plum':
+      return (<>
+        <ellipse cx="24" cy="28" rx="6.5" ry="7" fill={g} />
+        <ellipse cx="24" cy="28" rx="6.5" ry="7" fill={dark} opacity="0.12" />
+        <path d="M24 21 Q23.2 28 24 35" stroke={light} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <path d="M24 21 L24 18" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 18 Q22 16 21 17 Q22 18 24 18" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="22" cy="26" rx="2" ry="2" fill="white" opacity="0.18" />
+      </>)
+    case 'pineapple':
+      return (<>
+        <ellipse cx="24" cy="29" rx="5.5" ry="7" fill={g} />
+        <path d="M20 25 L24 23.5 L28 25" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.25" />
+        <path d="M19.5 27.5 L24 26 L28.5 27.5" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.25" />
+        <path d="M20 30 L24 28.5 L28 30" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.25" />
+        <path d="M20.5 32.5 L24 31 L27.5 32.5" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M24 22 L22 17 M24 22 L24 16 M24 22 L26 17" stroke="#4d7c0f" strokeWidth="0.7" strokeLinecap="round" opacity="0.6" />
+        <ellipse cx="22.5" cy="27" rx="1.5" ry="2" fill="white" opacity="0.1" />
+      </>)
+    case 'passionfruit':
+      return (<>
+        <circle cx="24" cy="28" r="6.5" fill={g} />
+        <circle cx="24" cy="28" r="6.5" fill={dark} opacity="0.1" />
+        <path d="M20 26 Q24 24 28 26" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M20 30 Q24 28 28 30" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <circle cx="22" cy="27" r="0.8" fill={light} opacity="0.2" />
+        <circle cx="26" cy="29" r="0.6" fill={light} opacity="0.15" />
+        <path d="M24 21.5 L24 18" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 18 Q22 15 20 16" stroke="#6ab04c" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <path d="M24 18 Q26 15 28 16" stroke="#6ab04c" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <ellipse cx="22" cy="26" rx="2" ry="1.5" fill="white" opacity="0.15" />
+      </>)
+    case 'pomegranate':
+      return (<>
+        <ellipse cx="24" cy="28" rx="7" ry="6.5" fill={g} />
+        <ellipse cx="24" cy="28" rx="7" ry="6.5" fill={dark} opacity="0.1" />
+        <path d="M22 22 L24 21.5 L26 22" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M22 22 L21.5 20 M24 21.5 L24 19.5 M26 22 L26.5 20" stroke={dark} strokeWidth="0.5" strokeLinecap="round" fill="none" opacity="0.25" />
+        <ellipse cx="22" cy="26" rx="2" ry="1.8" fill="white" opacity="0.12" />
+      </>)
+    case 'palm':
+      return (<>
+        <ellipse cx="24" cy="28" rx="7.5" ry="7" fill={g} />
+        <path d="M18 26 Q20 25 22 26" stroke="#5a3c20" strokeWidth="0.3" fill="none" opacity="0.2" />
+        <path d="M26 27 Q28 26 30 27" stroke="#5a3c20" strokeWidth="0.3" fill="none" opacity="0.2" />
+        <path d="M20 30 Q22 29 24 30" stroke="#5a3c20" strokeWidth="0.3" fill="none" opacity="0.15" />
+        <circle cx="22" cy="26" r="1.2" fill="#5a3c20" opacity="0.4" />
+        <circle cx="26" cy="26" r="1.2" fill="#5a3c20" opacity="0.4" />
+        <circle cx="24" cy="29" r="1" fill="#5a3c20" opacity="0.35" />
+        <path d="M24 21 L24 18" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 18 Q21 15 20 16" stroke="#27ae60" strokeWidth="0.6" fill="none" opacity="0.6" />
+        <path d="M24 18 Q27 15 28 16" stroke="#27ae60" strokeWidth="0.6" fill="none" opacity="0.6" />
+        <ellipse cx="21" cy="25" rx="2" ry="1.5" fill="white" opacity="0.1" />
+      </>)
+    case 'sunflower':
+      return (<>
+        <circle cx="24" cy="28" r="5.5" fill={dark} />
+        <circle cx="24" cy="28" r="5.5" fill={g} opacity="0.6" />
+        <circle cx="22.5" cy="27" r="0.5" fill={dark} opacity="0.3" />
+        <circle cx="25.5" cy="27" r="0.5" fill={dark} opacity="0.3" />
+        <circle cx="24" cy="29.5" r="0.5" fill={dark} opacity="0.3" />
+        <circle cx="22" cy="29" r="0.4" fill={dark} opacity="0.25" />
+        <circle cx="26" cy="29" r="0.4" fill={dark} opacity="0.25" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map(a => (
+          <ellipse key={a} cx="24" cy="21" rx="1.2" ry="2.5" fill={color} opacity="0.5"
+            transform={`rotate(${a} 24 28)`} />
+        ))}
+        <ellipse cx="22" cy="26" rx="1.5" ry="1.5" fill="white" opacity="0.1" />
+      </>)
+    case 'grape':
+      return (<>
+        <circle cx="22.5" cy="26" r="3" fill={g} />
+        <circle cx="25.5" cy="26" r="3" fill={g} />
+        <circle cx="24" cy="29" r="3" fill={g} />
+        <circle cx="22.5" cy="26" r="3" fill={dark} opacity="0.08" />
+        <circle cx="25.5" cy="26" r="3" fill={dark} opacity="0.05" />
+        <circle cx="24" cy="29" r="3" fill={dark} opacity="0.12" />
+        <path d="M24 23 L24 19" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 19 Q26 17 27 18 Q26 19 24 19" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="21.5" cy="25" rx="1" ry="1" fill="white" opacity="0.15" />
+      </>)
+    case 'pear':
+      return (<>
+        <path d="M24 22 Q18 28 20 33 Q22 37 24 37 Q26 37 28 33 Q30 28 24 22Z" fill={g} />
+        <path d="M24 22 Q18 28 20 33 Q22 37 24 37 Q26 37 28 33 Q30 28 24 22Z" fill={dark} opacity="0.08" />
+        <path d="M24 22 L24 19" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 19 Q26 17 27 18 Q26 19 24 19" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="22" cy="28" rx="1.8" ry="2.5" fill="white" opacity="0.12" />
+      </>)
+    case 'melon':
+      return (<>
+        <ellipse cx="24" cy="29" rx="7.5" ry="6" fill={g} />
+        <ellipse cx="24" cy="29" rx="7.5" ry="6" fill={dark} opacity="0.08" />
+        <path d="M18 26 Q24 24 30 26" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M17 29 Q24 27 31 29" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M18 32 Q24 30 30 32" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M24 23 L24 20" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 23 Q22 21 24 20 Q26 21 24 23" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="21" cy="27" rx="2.5" ry="1.8" fill="white" opacity="0.1" />
+      </>)
+    case 'mushroom':
+      return (<>
+        <circle cx="24" cy="29" r="6" fill={g} />
+        <circle cx="24" cy="29" r="6" fill="#bf360c" opacity="0.06" />
+        <circle cx="22" cy="27" r="1" fill="#d84315" opacity="0.25" />
+        <circle cx="26" cy="28" r="0.8" fill="#d84315" opacity="0.2" />
+        <circle cx="24" cy="31" r="0.7" fill="#d84315" opacity="0.15" />
+        <circle cx="21" cy="30" r="0.5" fill="#d84315" opacity="0.18" />
+        <circle cx="27" cy="26" r="0.6" fill="#d84315" opacity="0.12" />
+        <path d="M22 35 Q20 37 18 38" stroke="#d4c8a8" strokeWidth="0.4" fill="none" opacity="0.3" />
+        <path d="M26 35 Q28 37 30 38" stroke="#d4c8a8" strokeWidth="0.4" fill="none" opacity="0.3" />
+        <path d="M24 35 Q24 37 24 38" stroke="#d4c8a8" strokeWidth="0.3" fill="none" opacity="0.25" />
+        <ellipse cx="22" cy="27" rx="2" ry="1.5" fill="white" opacity="0.15" />
+      </>)
+    case 'cactus':
+      return (<>
+        <ellipse cx="24" cy="29" rx="5" ry="7" fill={g} />
+        <ellipse cx="24" cy="29" rx="5" ry="7" fill={dark} opacity="0.1" />
+        <path d="M24 22 L24 36" stroke={light} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M21 24 L21 34" stroke={light} strokeWidth="0.3" fill="none" opacity="0.1" />
+        <path d="M27 24 L27 34" stroke={light} strokeWidth="0.3" fill="none" opacity="0.1" />
+        <circle cx="22" cy="26" r="0.3" fill={dark} opacity="0.3" />
+        <circle cx="26" cy="28" r="0.3" fill={dark} opacity="0.3" />
+        <circle cx="23" cy="31" r="0.3" fill={dark} opacity="0.25" />
+        <circle cx="25" cy="25" r="0.3" fill={dark} opacity="0.25" />
+        <ellipse cx="22.5" cy="27" rx="1.5" ry="2" fill="white" opacity="0.1" />
+      </>)
+    case 'sage':
+      return (<>
+        <ellipse cx="24" cy="29" rx="4" ry="5.5" fill={g} />
+        <ellipse cx="24" cy="29" rx="4" ry="5.5" fill={dark} opacity="0.1" />
+        <path d="M24 23.5 L24 20" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 20 Q22 18 21 19" stroke={color} strokeWidth="0.5" fill="none" opacity="0.5" />
+        <path d="M24 20 Q26 18 27 19" stroke={color} strokeWidth="0.5" fill="none" opacity="0.5" />
+        <ellipse cx="23" cy="27" rx="1.2" ry="1.8" fill="white" opacity="0.1" />
+      </>)
+    case 'lychee':
+      return (<>
+        <circle cx="24" cy="28" r="6.5" fill={g} />
+        <circle cx="24" cy="28" r="6.5" fill={dark} opacity="0.1" />
+        {[[21,25],[23,26],[25,24],[27,26],[22,28],[26,28],[20,27],[24,30],[21,31],[25,31],[23,32],[27,30]].map(([x,y],i) => (
+          <circle key={i} cx={x} cy={y} r="0.6" fill={dark} opacity="0.2" />
+        ))}
+        <path d="M24 21.5 L24 19" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 19 Q26 17 27 18 Q26 19 24 19" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="22" cy="26" rx="1.8" ry="1.5" fill="white" opacity="0.15" />
+      </>)
+    case 'papaya':
+      return (<>
+        <ellipse cx="24" cy="28" rx="6" ry="8" fill={g} />
+        <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.08" />
+        <path d="M24 20 Q23.5 28 24 36" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.15" />
+        <path d="M24 20 L24 17" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 17 Q22 14 20 15" stroke="#6ab04c" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <path d="M24 17 Q26 14 28 15" stroke="#6ab04c" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <path d="M24 17 Q24 13 24 15" stroke="#6ab04c" strokeWidth="0.5" fill="none" opacity="0.4" />
+        <ellipse cx="22" cy="26" rx="2" ry="2.5" fill="white" opacity="0.12" />
+      </>)
+    case 'coral':
+      return (<>
+        <ellipse cx="24" cy="28" rx="6" ry="6.5" fill={g} />
+        <ellipse cx="24" cy="28" rx="6" ry="6.5" fill={dark} opacity="0.08" />
+        <path d="M21 26 Q22 24 24 25 Q26 24 27 26" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M20 29 Q22 27 24 28 Q26 27 28 29" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <circle cx="22" cy="28" r="0.5" fill={light} opacity="0.2" />
+        <circle cx="26" cy="26" r="0.4" fill={light} opacity="0.15" />
+        <ellipse cx="22" cy="26" rx="1.8" ry="1.5" fill="white" opacity="0.15" />
+      </>)
+    case 'whirlpool':
+      return (<>
+        <circle cx="24" cy="28" r="6.5" fill={g} />
+        <circle cx="24" cy="28" r="6.5" fill={dark} opacity="0.1" />
+        <path d="M24 22 Q28 24 28 28 Q28 32 24 34 Q20 32 20 28 Q20 25 23 24" stroke={light} strokeWidth="0.5" fill="none" opacity="0.25" />
+        <path d="M24 24 Q27 25 27 28 Q27 31 24 32 Q21 31 22 28" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <circle cx="24" cy="28" r="1" fill={light} opacity="0.3" />
+        <ellipse cx="22" cy="26" rx="1.5" ry="1.2" fill="white" opacity="0.12" />
+      </>)
+    case 'bloom':
+      return (<>
+        <circle cx="24" cy="28" r="6" fill={g} />
+        <circle cx="24" cy="28" r="6" fill={dark} opacity="0.1" />
+        <circle cx="24" cy="28" r="3" fill={light} opacity="0.15" />
+        <circle cx="24" cy="28" r="1" fill={light} opacity="0.25" />
+        {[0, 60, 120, 180, 240, 300].map(a => (
+          <ellipse key={a} cx="24" cy="23" rx="1" ry="2" fill={light} opacity="0.15"
+            transform={`rotate(${a} 24 28)`} />
+        ))}
+        <ellipse cx="22" cy="26" rx="1.5" ry="1.2" fill="white" opacity="0.12" />
+      </>)
+    case 'lotus':
+      return (<>
+        <ellipse cx="24" cy="29" rx="7" ry="5" fill={g} />
+        <ellipse cx="24" cy="29" rx="7" ry="5" fill={dark} opacity="0.08" />
+        <path d="M24 24 Q21 22 20 24 Q21 23 24 24" fill={light} opacity="0.3" />
+        <path d="M24 24 Q27 22 28 24 Q27 23 24 24" fill={light} opacity="0.3" />
+        <path d="M24 24 Q24 20 24 22" stroke={light} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <ellipse cx="22" cy="28" rx="2" ry="1.2" fill="white" opacity="0.1" />
+      </>)
+    case 'conifer':
+      return (<>
+        <ellipse cx="24" cy="28" rx="5" ry="8" fill={g} />
+        <path d="M19.5 25 L24 23 L28.5 25" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M19 27 L24 25 L29 27" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M19.5 29 L24 27 L28.5 29" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M20 31 L24 29 L28 31" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M21 33 L24 31 L27 33" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M24 20 L22 16 M24 20 L24 15 M24 20 L26 16" stroke="#2d6a4f" strokeWidth="0.6" strokeLinecap="round" opacity="0.6" />
+        <ellipse cx="22.5" cy="26" rx="1.2" ry="2.5" fill="white" opacity="0.1" />
+      </>)
+    case 'birch':
+      return (<>
+        <ellipse cx="24" cy="28" rx="4.5" ry="7" fill={g} />
+        <ellipse cx="24" cy="28" rx="4.5" ry="7" fill={dark} opacity="0.06" />
+        <path d="M21 25 L27 25" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+        <path d="M20.5 28 L27.5 28" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+        <path d="M21 31 L27 31" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.12" />
+        <path d="M24 21 L24 18" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 18 Q26 16 27 17 Q26 18 24 18" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="22.5" cy="26" rx="1.2" ry="2" fill="white" opacity="0.12" />
+      </>)
+    case 'ivy':
+      return (<>
+        <ellipse cx="24" cy="28" rx="4" ry="5" fill={g} />
+        <ellipse cx="24" cy="28" rx="4" ry="5" fill={dark} opacity="0.1" />
+        <path d="M24 23 L24 19" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 19 Q21 17 20 18 Q22 18 24 19" fill="#6ab04c" opacity="0.5" />
+        <path d="M24 19 Q27 17 28 18 Q26 18 24 19" fill="#6ab04c" opacity="0.5" />
+        <path d="M23 20 Q20 19 19 20" stroke="#6ab04c" strokeWidth="0.4" fill="none" opacity="0.3" />
+        <ellipse cx="23" cy="27" rx="1.2" ry="1.5" fill="white" opacity="0.1" />
+      </>)
+    case 'oak':
+      return (<>
+        <ellipse cx="24" cy="28" rx="5.5" ry="7" fill={g} />
+        <ellipse cx="24" cy="28" rx="5.5" ry="7" fill={dark} opacity="0.1" />
+        <path d="M24 21 Q23.5 28 24 35" stroke={dark} strokeWidth="0.6" fill="none" opacity="0.2" />
+        <ellipse cx="24" cy="35" rx="3" ry="1.5" fill={dark} opacity="0.15" />
+        <path d="M24 21 L24 18" stroke="#6b5b3e" strokeWidth="0.7" strokeLinecap="round" />
+        <path d="M24 18 Q26 16 27 17 Q26 18 24 18" fill="#6ab04c" opacity="0.6" />
+        <ellipse cx="22" cy="26" rx="1.8" ry="2" fill="white" opacity="0.12" />
+      </>)
+    case 'sakura':
+      return (<>
+        <ellipse cx="24" cy="28" rx="6" ry="7" fill={g} />
+        <ellipse cx="24" cy="28" rx="6" ry="7" fill={dark} opacity="0.08" />
+        <path d="M24 21 Q23.5 28 24 35" stroke={dark} strokeWidth="0.6" fill="none" opacity="0.25" />
+        <circle cx="24" cy="21" r="2" fill={color} opacity="0.6" />
+        <path d="M24 21 Q22.5 19 24 17.5 Q25.5 19 24 21" fill={light} opacity="0.8" />
+        <path d="M24 21 Q21.5 20 22 18 Q23 19.5 24 21" fill={color} opacity="0.5" />
+        <path d="M24 21 Q26.5 20 26 18 Q25 19.5 24 21" fill={color} opacity="0.5" />
+        <ellipse cx="22" cy="26" rx="1.8" ry="2" fill="white" opacity="0.18" />
+      </>)
+    case 'cattail':
+      return (<>
+        <ellipse cx="24" cy="28" rx="3.5" ry="7.5" fill={g} />
+        <ellipse cx="24" cy="28" rx="3.5" ry="7.5" fill={dark} opacity="0.1" />
+        <path d="M24 20.5 L24 18" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 18 L23 15 M24 18 L25 15" stroke={color} strokeWidth="0.5" strokeLinecap="round" opacity="0.4" />
+        <ellipse cx="23" cy="26" rx="1" ry="2" fill="white" opacity="0.1" />
+      </>)
+    case 'cypress':
+      return (<>
+        <ellipse cx="24" cy="28" rx="4" ry="8" fill={g} />
+        <ellipse cx="24" cy="28" rx="4" ry="8" fill={dark} opacity="0.1" />
+        <path d="M22 24 L26 24 M21.5 27 L26.5 27 M22 30 L26 30 M22.5 33 L25.5 33" stroke={dark} strokeWidth="0.3" fill="none" opacity="0.15" />
+        <path d="M24 20 L24 17" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 17 Q26 15 27 16 Q26 17 24 17" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="23" cy="26" rx="1" ry="2.5" fill="white" opacity="0.1" />
+      </>)
+    case 'bamboo':
+      return (<>
+        <ellipse cx="24" cy="29" rx="3" ry="7" fill={g} />
+        <ellipse cx="24" cy="29" rx="3" ry="7" fill={dark} opacity="0.1" />
+        <path d="M21 25 L27 25" stroke={light} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <path d="M21 29 L27 29" stroke={light} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <path d="M21 33 L27 33" stroke={light} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <path d="M24 22 L24 18" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 18 Q22 16 21 17" stroke="#4d7c0f" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <path d="M24 18 Q26 16 27 17" stroke="#4d7c0f" strokeWidth="0.5" fill="none" opacity="0.5" />
+        <ellipse cx="23" cy="27" rx="0.8" ry="2" fill="white" opacity="0.1" />
+      </>)
+    case 'mangrove':
+      return (<>
+        <ellipse cx="24" cy="27" rx="5.5" ry="6.5" fill={g} />
+        <ellipse cx="24" cy="27" rx="5.5" ry="6.5" fill={dark} opacity="0.1" />
+        <path d="M20 33 Q19 36 18 38" stroke={color} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M24 33 Q24 36 24 38" stroke={color} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M28 33 Q29 36 30 38" stroke={color} strokeWidth="0.5" fill="none" opacity="0.3" />
+        <path d="M24 20.5 L24 18" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 18 Q22 16 21 17 Q22 18 24 18" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="22" cy="25" rx="1.8" ry="1.5" fill="white" opacity="0.1" />
+      </>)
+    case 'bonsai':
+      return (<>
+        <ellipse cx="24" cy="28" rx="5" ry="6" fill={g} />
+        <ellipse cx="24" cy="28" rx="5" ry="6" fill={dark} opacity="0.1" />
+        <path d="M24 22 Q23 28 24 34" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.2" />
+        <path d="M22 24 Q20 23 19 24" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M26 25 Q28 24 29 25" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <ellipse cx="22.5" cy="26" rx="1.5" ry="1.5" fill="white" opacity="0.12" />
+      </>)
+    case 'juniper':
+      return (<>
+        <ellipse cx="24" cy="28" rx="4.5" ry="7.5" fill={g} />
+        <ellipse cx="24" cy="28" rx="4.5" ry="7.5" fill={dark} opacity="0.12" />
+        <circle cx="22.5" cy="27" r="0.8" fill={light} opacity="0.2" />
+        <circle cx="25" cy="30" r="0.7" fill={light} opacity="0.15" />
+        <circle cx="23.5" cy="32" r="0.6" fill={light} opacity="0.12" />
+        <path d="M24 20.5 L24 18" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 18 Q26 16 27 17 Q26 18 24 18" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="22.5" cy="26" rx="1.2" ry="2" fill="white" opacity="0.1" />
+      </>)
+    case 'cedarwood':
+      return (<>
+        <ellipse cx="24" cy="28" rx="5" ry="8" fill={g} />
+        <ellipse cx="24" cy="28" rx="5" ry="8" fill={dark} opacity="0.1" />
+        <path d="M20 24 L24 22 L28 24" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M19.5 27 L24 25 L28.5 27" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M20 30 L24 28 L28 30" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M20.5 33 L24 31 L27.5 33" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.2" />
+        <path d="M24 20 L24 17" stroke="#6b5b3e" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M24 17 Q26 15 27 16 Q26 17 24 17" fill="#6ab04c" opacity="0.5" />
+        <ellipse cx="22.5" cy="26" rx="1.2" ry="2.5" fill="white" opacity="0.1" />
+      </>)
+    case 'baobab':
+      return (<>
+        <ellipse cx="24" cy="28" rx="7.5" ry="6" fill={g} />
+        <ellipse cx="24" cy="28" rx="7.5" ry="6" fill={dark} opacity="0.1" />
+        <path d="M19 26 Q24 24 29 26" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <path d="M19 30 Q24 28 29 30" stroke={dark} strokeWidth="0.4" fill="none" opacity="0.15" />
+        <ellipse cx="22" cy="27" rx="2" ry="1.5" fill="white" opacity="0.1" />
+      </>)
+    case 'winterveil':
+      return (<>
+        <ellipse cx="24" cy="28" rx="6" ry="7" fill={g} />
+        <ellipse cx="24" cy="28" rx="6" ry="7" fill={dark} opacity="0.08" />
+        <circle cx="22" cy="26" r="0.8" fill="white" opacity="0.25" />
+        <circle cx="26" cy="27" r="0.6" fill="white" opacity="0.2" />
+        <circle cx="24" cy="30" r="0.5" fill="white" opacity="0.15" />
+        <circle cx="21" cy="29" r="0.4" fill="white" opacity="0.12" />
+        <circle cx="27" cy="25" r="0.5" fill="white" opacity="0.18" />
+        <ellipse cx="22" cy="26" rx="2" ry="2" fill="white" opacity="0.12" />
+      </>)
+    case 'agave':
+      return (<>
+        <ellipse cx="24" cy="29" rx="6" ry="5.5" fill={g} />
+        <ellipse cx="24" cy="29" rx="6" ry="5.5" fill={dark} opacity="0.1" />
+        <path d="M24 23.5 Q20 21 18 22" stroke={color} strokeWidth="0.6" fill="none" opacity="0.4" />
+        <path d="M24 23.5 Q28 21 30 22" stroke={color} strokeWidth="0.6" fill="none" opacity="0.4" />
+        <path d="M24 23.5 L24 20" stroke={color} strokeWidth="0.5" strokeLinecap="round" opacity="0.4" />
+        <ellipse cx="22" cy="28" rx="1.8" ry="1.2" fill="white" opacity="0.1" />
+      </>)
+    case 'void':
+      return (<>
+        <circle cx="24" cy="28" r="8" fill={`url(#${uid}-sglow)`} />
+        <circle cx="24" cy="28" r="6.5" fill={g} />
+        <path d="M21 25 L22.5 28 L20 31" stroke="#7c3aed" strokeWidth="0.4" fill="none" opacity="0.5" />
+        <path d="M27 24 L25.5 27 L28 30" stroke="#7c3aed" strokeWidth="0.4" fill="none" opacity="0.4" />
+        <path d="M23 22 L24 25" stroke="#9333ea" strokeWidth="0.3" fill="none" opacity="0.35" />
+        <ellipse cx="24" cy="28" rx="1.5" ry="2" fill="#7c3aed" opacity="0.3" />
+        <ellipse cx="24" cy="28" rx="0.6" ry="1.2" fill="#a855f7" opacity="0.5" />
+        <circle cx="20" cy="24" r="0.4" fill="#a855f7" opacity="0.4" />
+        <circle cx="28" cy="26" r="0.3" fill="#7c3aed" opacity="0.3" />
+        <circle cx="22" cy="32" r="0.35" fill="#9333ea" opacity="0.35" />
+      </>)
+    case 'starweaver':
+      return (<>
+        <circle cx="24" cy="28" r="8" fill={`url(#${uid}-sglow)`} />
+        <circle cx="24" cy="28" r="6.5" fill={g} />
+        <circle cx="22" cy="26" r="0.5" fill="#fcd34d" opacity="0.6" />
+        <circle cx="26" cy="25" r="0.4" fill="#fcd34d" opacity="0.5" />
+        <circle cx="25" cy="30" r="0.35" fill="#fcd34d" opacity="0.4" />
+        <circle cx="21" cy="29" r="0.3" fill="#93c5fd" opacity="0.5" />
+        <circle cx="27" cy="28" r="0.3" fill="#93c5fd" opacity="0.4" />
+        <path d="M22 26 L26 30" stroke="#60a5fa" strokeWidth="0.3" fill="none" opacity="0.2" />
+        <path d="M26 25 L22 29" stroke="#60a5fa" strokeWidth="0.3" fill="none" opacity="0.2" />
+        <ellipse cx="24" cy="28" rx="1" ry="1" fill="#93c5fd" opacity="0.25" />
+      </>)
+    case 'leviathan':
+      return (<>
+        <circle cx="24" cy="28" r="8" fill={`url(#${uid}-sglow)`} />
+        <circle cx="24" cy="28" r="7" fill={g} />
+        <path d="M19 27 Q21 25 24 26 Q27 25 29 27" stroke="#2dd4bf" strokeWidth="0.4" fill="none" opacity="0.3" />
+        <path d="M18 30 Q21 28 24 29 Q27 28 30 30" stroke="#2dd4bf" strokeWidth="0.4" fill="none" opacity="0.25" />
+        <ellipse cx="24" cy="27" rx="2" ry="1" fill="#2dd4bf" opacity="0.2" />
+        <circle cx="23" cy="27" r="0.5" fill="#5eead4" opacity="0.4" />
+        <circle cx="25" cy="27" r="0.5" fill="#5eead4" opacity="0.4" />
+      </>)
+    case 'prismatic':
+      return (<>
+        <circle cx="24" cy="28" r="8" fill={`url(#${uid}-sglow)`} />
+        <polygon points="24,21 30,28 27,35 21,35 18,28" fill={g} />
+        <polygon points="24,21 30,28 27,35 21,35 18,28" fill={dark} opacity="0.05" />
+        <path d="M24 21 L24 35 M18 28 L30 28 M21 35 L30 28 M27 35 L18 28" stroke="white" strokeWidth="0.3" fill="none" opacity="0.15" />
+        <ellipse cx="23" cy="27" rx="2" ry="2" fill="white" opacity="0.15" />
+      </>)
+    case 'dead':
+      return (<>
+        <ellipse cx="24" cy="29" rx="5" ry="6" fill={g} />
+        <ellipse cx="24" cy="29" rx="5" ry="6" fill={dark} opacity="0.15" />
+        <path d="M22 27 L26 31 M26 27 L22 31" stroke={dark} strokeWidth="0.5" fill="none" opacity="0.2" />
+      </>)
+    default:
+      return (<>
+        <ellipse cx="24" cy="28" rx="6" ry="8" fill={g} />
+        <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
+        <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
+        <path d="M24 21 Q22 17 24 14 Q26 17 24 21" fill="#6ab04c" opacity="0.6" />
+        <path d="M24 14 L24 21" stroke="#4a8c3f" strokeWidth="0.6" opacity="0.4" />
+      </>)
+  }
+}
+
 export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, isSeed = false, hideGround = false, dirtSeed = 0, dirtDark = false, dirtDepth = 0.5, dirtTilt, disableSway = false, staticMode = false }: { type: string, size?: number, stage?: number, isSeed?: boolean, hideGround?: boolean, dirtSeed?: number, dirtDark?: boolean, dirtDepth?: number, dirtTilt?: number, disableSway?: boolean, staticMode?: boolean }) {
   const typeInfo = TREE_TYPES[type] || TREE_TYPES.tangerine
   const color = typeInfo.color
@@ -90,14 +528,63 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <stop offset="0%" stopColor={light} />
             <stop offset="100%" stopColor={color} />
           </radialGradient>
+          {shape === 'mushroom' && (
+            <radialGradient id={`${uid}-sg`} cx="40%" cy="40%">
+              <stop offset="0%" stopColor="#eee8d6" />
+              <stop offset="100%" stopColor="#d4c8a8" />
+            </radialGradient>
+          )}
+          {shape === 'palm' && (
+            <radialGradient id={`${uid}-sg`} cx="35%" cy="35%">
+              <stop offset="0%" stopColor="#a0815a" />
+              <stop offset="100%" stopColor="#6b4c2e" />
+            </radialGradient>
+          )}
+          {shape === 'void' && (<>
+            <radialGradient id={`${uid}-sg`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#2d1b4e" />
+              <stop offset="60%" stopColor="#0f0a1a" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+            <radialGradient id={`${uid}-sglow`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
+          </>)}
+          {shape === 'starweaver' && (<>
+            <radialGradient id={`${uid}-sg`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="100%" stopColor="#0c1445" />
+            </radialGradient>
+            <radialGradient id={`${uid}-sglow`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+            </radialGradient>
+          </>)}
+          {shape === 'leviathan' && (<>
+            <radialGradient id={`${uid}-sg`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#134e4a" />
+              <stop offset="100%" stopColor="#042f2e" />
+            </radialGradient>
+            <radialGradient id={`${uid}-sglow`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#2dd4bf" stopOpacity="0" />
+            </radialGradient>
+          </>)}
+          {shape === 'prismatic' && (<>
+            <radialGradient id={`${uid}-sg`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </radialGradient>
+            <radialGradient id={`${uid}-sglow`} cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+          </>)}
         </defs>
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
         <g style={seedSwayStyle}>
-          <ellipse cx="24" cy="28" rx="6" ry="8" fill={`url(#${uid}-sg)`} />
-          <ellipse cx="24" cy="28" rx="6" ry="8" fill={dark} opacity="0.15" />
-          <path d="M24 20 Q24 28 24 36" stroke={dark} strokeWidth="0.8" fill="none" opacity="0.3" />
-          <path d="M24 21 Q22 17 24 14 Q26 17 24 21" fill="#6ab04c" opacity="0.6" />
-          <path d="M24 14 L24 21" stroke="#4a8c3f" strokeWidth="0.6" opacity="0.4" />
+          {renderSeedShape(uid, shape, color, dark, light)}
         </g>
       </svg>
     )
@@ -4444,7 +4931,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
   const edgeFilter = `url(#${uid}-edge)`
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} {...(staticMode ? {'data-static-uid': uid} : undefined)}>
       <svg width="100%" height="100%" viewBox={hasGlow ? "-4 -10 56 58" : "0 6 48 42"} preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id={`${uid}-edge`} x="-5%" y="-5%" width="110%" height="110%">
@@ -4477,6 +4964,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           </g>
         </g>
       </svg>
+      {staticMode && <style>{`[data-static-uid="${uid}"] * { animation: none !important; } [data-static-uid="${uid}"] g[filter] { filter: none; }`}</style>}
     </div>
   )
 }, (prev, next) =>
@@ -4489,5 +4977,6 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
   prev.dirtDark === next.dirtDark &&
   prev.dirtDepth === next.dirtDepth &&
   prev.dirtTilt === next.dirtTilt &&
-  prev.disableSway === next.disableSway
+  prev.disableSway === next.disableSway &&
+  prev.staticMode === next.staticMode
 )

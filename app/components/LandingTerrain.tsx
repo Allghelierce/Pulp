@@ -1,5 +1,5 @@
 "use client"
-import { memo } from "react"
+import { memo, useEffect, useRef } from "react"
 import { PlantIcon } from "./PlantIcon"
 
 function seededRng(seed: number) {
@@ -22,12 +22,12 @@ const FIREFLIES = Array.from({ length: 15 }, (_, i) => {
 const GRID_COLS = 5
 const GRID_SLOTS_PER_COL = 2
 const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
-const GRID_ROWS: number = 4
+const GRID_ROWS: number = 3
 const GRID_COL_START = 17
 const GRID_COL_END = 83
 const GRID_ROW_START = 47
 const GRID_ROW_END = 85
-const GRID_TILL_OFFSET = 2.5
+const GRID_TILL_OFFSET = 1.5
 
 function gridSlotPos(slotIndex: number) {
   const slot = slotIndex % GRID_TOTAL_SLOTS
@@ -43,41 +43,56 @@ function gridSlotPos(slotIndex: number) {
   const tillX = trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
   const midCol = (GRID_COLS - 1) / 2
   const inwardShift = col === midCol ? 0 : (col < midCol ? 0.5 : -0.5)
-  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET) + inwardShift
+  const leftPush = col < 2 ? -4 : col > 2 ? 4 : 0
+  const pairSpread = (side === 0 ? -1 : 1) * (row <= 1 ? 2 : 1)
+  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET) + inwardShift + leftPush + pairSpread
   return { x: Math.max(4, Math.min(96, x)), y: Math.max(42, Math.min(94, y)), row }
 }
 
 const TREE_TYPES_LIST = [
-  'tangerine', 'lemon', 'plum', 'pineapple', 'passionfruit',
-  'pomegranate', 'coconut', 'sunflower', 'grape', 'pear',
-  'melon', 'mushroom', 'cactus', 'sage', 'lychee',
-  'papaya', 'coral', 'whirlpool', 'bloom', 'lotus',
-  'birch', 'pine', 'ivy', 'oak', 'sakura',
-  'cattail', 'cypress', 'bamboo', 'mangrove', 'bonsai',
-  'juniper', 'cedarwood', 'baobab', 'winterveil', 'agave',
-  'abyss', 'starweaver', 'leviathan', 'prismatic', 'tangerine',
+  'tangerine', 'plum', 'passionfruit', 'coconut', 'grape',
+  'mushroom', 'sage', 'coral', 'bloom', 'lotus',
+  'pine', 'oak', 'sakura', 'bamboo', 'bonsai',
+  'cedarwood', 'mangrove', 'sunflower', 'lychee', 'pear',
+  'baobab', 'winterveil', 'abyss', 'starweaver', 'prismatic',
+  'birch', 'whirlpool', 'cactus', 'cypress', 'agave',
 ]
 
 const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
   const pos = gridSlotPos(i)
+  const rng = seededRng(i * 53 + 137)
+  const jitterY = (rng() - 0.5) * 1.5
   const depthT = Math.max(0, Math.min(1, (pos.y - 40) / 55))
   const depthScale = 0.55 + depthT * 0.55
-  const size = Math.round(98 * depthScale / 16) * 16 || 16
-  return { type, x: pos.x, y: pos.y, row: pos.row, size, depthT }
+  const size = Math.round(112 * depthScale / 16) * 16 || 16
+  const rowStart = 0.15 + pos.row * 0.12
+  const scaleY = 0.7 + depthT * 0.3
+  const y = Math.max(42, Math.min(94, pos.y + jitterY))
+  return { type, x: pos.x, y, row: pos.row, size, depthT, rowStart, scaleY }
 }).sort((a, b) => a.y - b.y)
 
 export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { progress?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    ref.current?.style.setProperty('--p', String(progress))
+  }, [progress])
+
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', ['--p' as string]: '0' }}>
       <style>{`
         @keyframes cloudDrift { 0% { transform: translateX(-10%) } 100% { transform: translateX(110%) } }
         @keyframes firefly-glow { 0% { opacity: 0; } 15% { opacity: 0.3; } 30% { opacity: 0.06; } 45% { opacity: 0.6; } 50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(217,119,6,0.5); } 55% { opacity: 0.6; } 70% { opacity: 0.2; } 85% { opacity: 0.06; } 100% { opacity: 0; } }
         @keyframes firefly-drift { 0% { transform: translate(0,0) } 25% { transform: translate(var(--drift-x),var(--drift-y)) } 50% { transform: translate(calc(var(--drift-x)*-0.5),calc(var(--drift-y)*0.5)) } 75% { transform: translate(calc(var(--drift-x)*0.7),calc(var(--drift-y)*-0.3)) } 100% { transform: translate(0,0) } }
         @keyframes wm-spin-cw { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         @keyframes wm-spin-ccw { from { transform: rotate(0deg) } to { transform: rotate(-360deg) } }
+        .lt-pop {
+          transform: translate(-50%, -76%) scaleY(var(--sy)) scale(clamp(0, calc((var(--p) - var(--rs)) * 10), 1));
+          opacity: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
+          transform-origin: center bottom;
+        }
       `}</style>
 
-      {/* Static terrain PNG (no trees) */}
       <img
         src="/landing-terrain.png"
         alt=""
@@ -89,36 +104,31 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         }}
       />
 
-      {/* Live PlantIcon trees — row by row on scroll */}
-      {LANDING_TREES.map((tree, i) => {
-        const rowStart = 0.15 + tree.row * 0.12
-        const rowProgress = Math.max(0, Math.min(1, (progress - rowStart) / 0.10))
-        return (
-          <div key={i} style={{
+      {LANDING_TREES.map((tree, i) => (
+        <div
+          key={i}
+          className="lt-pop"
+          style={{
             position: 'absolute',
             left: `${tree.x}%`,
             top: `${tree.y}%`,
-            transform: `translate(-50%, -76%) scaleY(${0.7 + tree.depthT * 0.3}) scale(${rowProgress})`,
-            transformOrigin: 'center bottom',
             zIndex: Math.round(tree.y),
-            opacity: rowProgress,
             pointerEvents: 'none',
-            transition: 'opacity 0.15s, transform 0.15s',
-          }}>
-            <PlantIcon type={tree.type} size={tree.size} stage={3} hideGround />
-            <div style={{
-              position: 'absolute', left: '50%', bottom: -2,
-              width: tree.size * 0.6, height: tree.size * 0.08,
-              transform: 'translateX(-50%)',
-              borderRadius: '50%',
-              background: 'rgba(0,0,0,0.12)',
-              filter: 'blur(2px)',
-            }} />
-          </div>
-        )
-      })}
+            ['--rs' as string]: String(tree.rowStart),
+            ['--sy' as string]: String(tree.scaleY),
+          }}
+        >
+          <PlantIcon type={tree.type} size={tree.size} stage={3} hideGround />
+          <div style={{
+            position: 'absolute', left: '50%', bottom: -2,
+            width: tree.size * 0.6, height: tree.size * 0.08,
+            transform: 'translateX(-50%)',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(0,0,0,0.13) 0%, transparent 70%)',
+          }} />
+        </div>
+      ))}
 
-      {/* Clouds */}
       {[
         { y: '4%', s: 1, d: 50 },
         { y: '10%', s: 0.7, d: 65 },
@@ -138,7 +148,6 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         </div>
       ))}
 
-      {/* Fireflies */}
       {FIREFLIES.map((f, i) => (
         <div key={i} style={{
           position: 'absolute', left: `${f.x}%`, top: `${f.y}%`,
@@ -152,10 +161,9 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         }} />
       ))}
 
-      {/* Windmill spinning blades overlay */}
       {[
-        { left: 89, top: 47.5, size: 28, dur: 25, dir: 'cw' },
-        { left: 97, top: 45.3, size: 22, dur: 32, dir: 'ccw' },
+        { left: 89, top: 47.5, size: '3.5%', dur: 25, dir: 'cw' },
+        { left: 97, top: 45.3, size: '2.8%', dur: 32, dir: 'ccw' },
       ].map((wm, i) => (
         <svg key={`wm-${i}`} style={{
           position: 'absolute',
@@ -177,7 +185,6 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         </svg>
       ))}
 
-      {/* Vignette */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
         boxShadow: 'inset 25px 0 35px -10px rgba(8,10,8,0.3), inset 0 0 100px rgba(0,0,0,0.15)',

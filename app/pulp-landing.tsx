@@ -79,7 +79,7 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
       const t = setTimeout(() => { setShowCursor(false); onComplete?.() }, 800)
       return () => clearTimeout(t)
     }
-    const delay = text[charIdx] === ',' ? 500 : 55
+    const delay = charIdx > 0 && text[charIdx - 1] === ',' && text[charIdx] === ' ' ? 800 : 55
     const t = setTimeout(() => setCharIdx(i => i + 1), delay)
     return () => clearTimeout(t)
   }, [charIdx, text.length])
@@ -544,18 +544,28 @@ function DemoOrchard({ fullscreen = false }: { fullscreen?: boolean }) {
 function DemoTimer({ serif }: { serif: string }) {
   const [started, setStarted] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [sapReward, setSapReward] = useState<number | null>(null)
   const total = 20 * 60
   const treeChangeInterval = 3
 
   useEffect(() => {
-    const t = setTimeout(() => setStarted(true), 2500)
+    const t = setTimeout(() => setStarted(true), 1200)
     return () => clearTimeout(t)
   }, [])
 
   useEffect(() => {
     if (!started) return
     const iv = setInterval(() => {
-      setElapsed(e => e >= total ? 0 : e + 1)
+      setElapsed(e => {
+        if (e >= total) {
+          setSapReward(Math.floor(Math.random() * 40) + 10)
+          setTimeout(() => {
+            setSapReward(null)
+          }, 1800)
+          return 0
+        }
+        return e + 1
+      })
     }, 30)
     return () => clearInterval(iv)
   }, [started, total])
@@ -607,7 +617,7 @@ function DemoTimer({ serif }: { serif: string }) {
               fontFamily: serif, fontWeight: 500, fontSize: 44, lineHeight: 1,
               fontVariantNumeric: 'tabular-nums',
             }}>
-              <span style={{ color: started ? mainColor : '#e4e4e7' }}>{String(mins).padStart(2, '0')}</span>
+              <span style={{ color: started ? mainColor : '#bdb9b2' }}>{String(mins).padStart(2, '0')}</span>
               <span style={{ color: '#a1a1aa' }}>:{String(secs).padStart(2, '0')}</span>
             </div>
             <p style={{
@@ -670,8 +680,18 @@ function DemoTimer({ serif }: { serif: string }) {
             animation: done ? 'none' : 'shimmer 2s ease-in-out infinite',
           }}>
             {done ? 'complete' : 'in progress'}
-            <style>{`@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }`}</style>
+            <style>{`@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
+              @keyframes sapPop { 0% { opacity: 0; transform: translateY(6px) scale(0.8) } 20% { opacity: 1; transform: translateY(0) scale(1) } 80% { opacity: 1 } 100% { opacity: 0; transform: translateY(-8px) } }`}</style>
           </span>
+          {sapReward !== null && (
+            <span style={{
+              fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, fontWeight: 600,
+              color: '#d97706', marginTop: 8,
+              animation: 'sapPop 1.8s ease forwards',
+            }}>
+              +{sapReward} sap
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -847,7 +867,7 @@ export default function PulpLanding() {
   const heroTextOpacity = Math.max(0, 1 - orchardProgress * 3)
 
   return (
-    <div style={{ background: '#fff', color: '#0f0f10' }}>
+    <div style={{ background: '#E0D7C1', color: '#0f0f10' }}>
       {/* Nav — fixed */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
@@ -928,14 +948,33 @@ export default function PulpLanding() {
         backgroundImage: 'url(/paper-texture.png)',
         backgroundSize: '512px 512px',
         backgroundRepeat: 'repeat',
-        mixBlendMode: 'multiply',
-        opacity: Math.max(0, (1 - orchardProgress * 2) * 0.4),
+        opacity: Math.max(0, (1 - orchardProgress * 2) * 0.5),
       }} />
 
       {/* ===== Hero ===== */}
       <section style={{ height: '100vh', display: 'flex', alignItems: 'center', padding: '0 80px', maxWidth: 1320, margin: '0 auto', position: 'relative' }}>
+        {/* Squiggly background doodles */}
+        {/* Citrus logo doodle — top right */}
+        <svg width="160" height="170" viewBox="0 0 90 86" style={{ position: 'absolute', top: '15%', right: '14%', opacity: 0.1, pointerEvents: 'none', transform: 'rotate(8deg)' }}>
+          {/* Left half */}
+          <path d="M38,12 Q22,12 12,20 Q4,30 4,46 Q4,60 12,70 Q22,82 38,82 L38,12 Z" fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" />
+          <path d="M16,28 Q28,38 38,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
+          <path d="M16,66 Q28,56 38,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
+          <circle cx="34" cy="46" r="3" fill="#d97706" opacity="0.5" />
+          {/* Right half — offset */}
+          <g transform="translate(8, 4)">
+            <path d="M42,12 Q58,10 68,22 Q78,34 76,48 Q74,64 64,72 Q52,82 42,82 L42,12 Z" fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" />
+            <path d="M64,28 Q52,38 42,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
+            <path d="M64,66 Q52,56 42,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
+            <circle cx="46" cy="46" r="3" fill="#d97706" opacity="0.5" />
+          </g>
+          {/* Leaves */}
+          <path d="M38,12 Q36,6 38,2 Q42,0 46,2 Q44,6 40,10" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M38,12 Q34,6 30,4 Q28,2 26,4 Q28,8 32,10 Q35,12 38,12" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 100, width: '100%' }}>
-          <div style={{ flex: 1, opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`, transition: 'opacity 0.05s, transform 0.05s' }}>
+          <div style={{ flex: 1, opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`, transition: 'opacity 0.05s, transform 0.05s', position: 'relative' }}>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -948,11 +987,18 @@ export default function PulpLanding() {
               <TypewriterHeadline serif={serif} onComplete={() => setHeroDone(true)} />
 
               <div style={{
-                marginTop: 36,
+                marginTop: 36, position: 'relative',
                 opacity: heroDone ? 1 : 0,
                 transform: heroDone ? 'translateY(0)' : 'translateY(24px)',
                 transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1), transform 0.8s cubic-bezier(0.2,0.8,0.2,1)',
               }}>
+                <div style={{
+                  position: 'absolute', left: -20, top: -10, bottom: 0, width: 70, pointerEvents: 'none',
+                }}>
+                  <svg width="70" height="100%" preserveAspectRatio="none" viewBox="0 0 70 100" style={{ width: '100%', height: '100%' }}>
+                    <path d="M5,0 Q12,8 8,16 Q4,24 10,32 Q16,40 12,48 Q8,56 14,64 Q20,72 16,80 Q12,88 18,96 L50,100" fill="none" stroke="#d97706" strokeWidth="2.5" opacity="0.18" strokeLinecap="round" />
+                  </svg>
+                </div>
                 <p style={{
                   fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.7,
                   color: '#6b6864', maxWidth: 460, textTransform: 'lowercase', margin: '0 0 16px 0',
@@ -971,7 +1017,7 @@ export default function PulpLanding() {
                   <li>40+ species to collect</li>
                 </ul>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 56 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 56, paddingLeft: 48 }}>
                   <a href="/login" style={{
                     fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
                     padding: '10px 28px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
@@ -1059,7 +1105,7 @@ export default function PulpLanding() {
       </div>
 
       {/* ===== Content sections — normal flow ===== */}
-      <div style={{ background: '#fff', position: 'relative', zIndex: 2 }}>
+      <div style={{ background: '#E0D7C1', position: 'relative', zIndex: 2 }}>
 
         {/* Animated stats banner */}
         <section style={{ padding: '80px 80px 48px' }}>
