@@ -25,10 +25,10 @@ function getTodayEntry(): DailyEntry | null {
   return loadDailyStats().find(e => e.date === key) ?? null
 }
 
-export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goalStreak = 0, dailyGoalMinutes = 30, hideCenter = false, ringSize }: {
+export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goalStreak = 0, dailyGoalMinutes = 30, hideCenter = false, ringSize, sapDisplay }: {
   isDark: boolean; onClick?: () => void; stretch?: boolean
   quotaTier?: 'monthly' | 'weekly' | 'daily'; goalStreak?: number; dailyGoalMinutes?: number
-  hideCenter?: boolean; ringSize?: number
+  hideCenter?: boolean; ringSize?: number; sapDisplay?: number
 }) {
   const [today, setToday] = useState<DailyEntry | null>(getTodayEntry)
 
@@ -98,7 +98,18 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
               </g>
             )
           })}
-          {!hideCenter && (multColor === 'gradient' ? (
+          {!hideCenter && (sapDisplay != null ? (
+            <g>
+              <text x={cx - 3} y={cy + 1} textAnchor="middle" dominantBaseline="central"
+                style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
+                  fill: '#d97706' }}>
+                +{sapDisplay}
+              </text>
+              <g transform={`translate(${cx + (sapDisplay >= 10 ? 8 : 5)}, ${cy - 4}) scale(0.35)`}>
+                <path d="M12 2 C12 2 5 12 5 16 C5 20 8 23 12 23 C16 23 19 20 19 16 C19 12 12 2 12 2Z" fill="#d97706" stroke="#92400e" strokeWidth="1.5"/>
+              </g>
+            </g>
+          ) : multColor === 'gradient' ? (
             <>
               <defs>
                 <linearGradient id="mult-grad" x1="0" y1="0" x2="1" y2="1">

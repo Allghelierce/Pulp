@@ -198,9 +198,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
-  const effectiveSap = Math.round(baseSap * multiplier)
   const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
+  const sessionMin = total > 0 ? Math.round(total / 60) : 0
+  const sessionContribution = growthTarget > 0 ? Math.min(1, (priorMinutes + sessionMin) / growthTarget) : 0
+  const effectiveSap = Math.round(baseSap * multiplier * sessionContribution)
   const sessionMinutes = total > 0 ? elapsed / 60 : 0
   const cumulativeMinutes = priorMinutes + sessionMinutes
   const cumulativeRatio = Math.min(1, cumulativeMinutes / growthTarget)
@@ -547,7 +549,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             })() : (
             <motion.div key="timer-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col items-center flex-1">
               {/* Timer display */}
-              <div className="text-center mb-3">
+              <div className="text-center mb-5">
                 <div
                   className="tabular-nums"
                   style={{
@@ -581,7 +583,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </p>
                 {!running && !done && !treeDead && (
                   <div className="mt-3 flex justify-center">
-                    <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} />
+                    <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} sapDisplay={effectiveSap} />
                   </div>
                 )}
               </div>
@@ -612,14 +614,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {/* Growth status — below tree, replaces change plant */}
               {!running && !done && !treeDead && (() => {
                 const remaining = Math.ceil(growthTarget - priorMinutes)
-                const sessionMin = Math.round(total / 60)
                 const willFinish = sessionMin + priorMinutes >= growthTarget
                 return (
                   <div className="text-center" style={{ marginTop: 4 }}>
                     <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', fontSize: 11, color: willFinish ? mainColor : subtleColor }}>
                       {willFinish
-                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow · +${effectiveSap} sap` : `${growthTarget} min — will fully grow · +${effectiveSap} sap`
-                        : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set · +${effectiveSap} sap` : `${growthTarget} min to grow · ${sessionMin}min set · +${effectiveSap} sap`}
+                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow` : `${growthTarget} min — will fully grow`
+                        : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set — grows ${Math.round(sessionMin / remaining * 100)}%` : `${growthTarget} min to grow · ${sessionMin}min set — grows ${Math.round(sessionMin / growthTarget * 100)}%`}
                     </span>
                   </div>
                 )

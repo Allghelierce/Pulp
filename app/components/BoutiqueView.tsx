@@ -35,16 +35,16 @@ const RARITY_COLOR: Record<string, string> = {
   common: '#a1a1aa',
   uncommon: '#34d399',
   rare: '#60a5fa',
-  'true rare': '#4d8cff',
+  'true rare': '#c084fc',
   sacred: '#c4b5fd',
 }
 
 const SHOP_RARITY_COLOR: Record<string, string> = {
-  common: '#8a7a6a',
-  uncommon: '#6b8f5e',
-  rare: '#b8860b',
-  'true rare': '#8b4513',
-  sacred: '#722f37',
+  common: '#a1a1aa',
+  uncommon: '#34d399',
+  rare: '#60a5fa',
+  'true rare': '#c084fc',
+  sacred: '#c4b5fd',
 }
 
 const RARITY_BG: Record<string, string> = {
@@ -2242,7 +2242,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         title={name}
                         style={{
                           width: 6, height: 6, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
-                          background: previewStage === si ? mainColor : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
+                          background: previewStage === si ? '#d97706' : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
                           transition: 'background 0.15s',
                         }}
                       />

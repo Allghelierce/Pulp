@@ -13,7 +13,8 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
   const earlyBirdProgress = isEarlyBird ? Math.min(1, focus / 10) : 0
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-  const multiplier = Math.min(4, 1 + (isEarlyBird ? 1 : 0) + quotaBonus)
+  const streakBonus = Math.min(1, goalStreak / 30)
+  const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
 
   const quotaTarget = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 / 7 : dailyGoalMinutes * 30 / 30
   const quotaProgress = Math.min(1, focus / Math.max(1, quotaTarget))
@@ -34,7 +35,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const rings = [
     { value: quotaProgress, label: 'quota', color: '#ea580c', radius: (size - strokeW) / 2 },
     { value: streakProgress, label: 'streak', color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', color: '#fbbf24', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   const saveQuota = () => {
@@ -112,7 +113,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
         })}
         <text x={cx} y={cy - 8} textAnchor="middle" dominantBaseline="central"
           style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em',
-            fill: multiplier >= 3 ? '#f87171' : multiplier >= 2 ? '#4ade80' : isDark ? '#a1a1aa' : '#71717a' }}>
+            fill: multiplier >= 4.5 ? '#ea580c' : multiplier >= 4 ? '#ea580c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8' }}>
           {multiplier.toFixed(1)}x
         </text>
         <text x={cx} y={cy + 14} textAnchor="middle" dominantBaseline="central"

@@ -1752,11 +1752,12 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M24 46 Q23 41 23 36 Q22.5 33 23 29" stroke="#6a7a8a" strokeWidth="1.4" strokeLinecap="round" fill="none" />
             <path d="M23 36 Q18 32 14 29" stroke="#6a7a8a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <path d="M23 33 Q28 28 32 26" stroke="#6a7a8a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
-            <path d="M12 27 C9 24 10 20 14 20 C17 20 18 24 15 27Z" fill="#7a9ab8" />
-            <path d="M14 22 C13 21 14 20 15 21Z" fill="#a8cce0" opacity="0.4" />
-            <path d="M30 24 C27 21 29 17 33 18 C36 19 35 24 32 25Z" fill="#8aacca" />
-            <path d="M33 20 Q32 19 33 18 Q34 19.5 33 20Z" fill="#c0daea" opacity="0.35" />
-            <path d="M20 29 C18 27 19 25 22 25.5 C24 26 23 28 20 29Z" fill="#7a9ab8" opacity="0.8" />
+            <path d="M23 29 Q20 27 18 26" stroke="#6a7a8a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M14 29 C11 26 12 22 16 22 C19 22 20 26 17 29Z" fill="#7a9ab8" />
+            <path d="M16 24 C15 23 16 22 17 23Z" fill="#a8cce0" opacity="0.4" />
+            <path d="M32 26 C29 23 31 19 35 20 C38 21 37 26 34 27Z" fill="#8aacca" />
+            <path d="M35 22 Q34 21 35 20 Q36 21.5 35 22Z" fill="#c0daea" opacity="0.35" />
+            <path d="M18 26 C16 24 17 22 20 22.5 C22 23 21 25 18 26Z" fill="#7a9ab8" opacity="0.8" />
             {/* Snow on branches */}
             <path d="M14 29 Q12.5 28 14 27.5" stroke="#e8f0f8" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.5" />
             <path d="M32 26 Q31 25 32.5 24.5" stroke="#e8f0f8" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.45" />
@@ -1790,45 +1791,45 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <path d="M22.5 30 Q29 23 36 20" stroke="#6a7a8a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
             <path d="M22 28 Q18 21 16 16" stroke="#6a7a8a" strokeWidth="0.75" strokeLinecap="round" fill="none" />
             <path d="M22.5 26 Q26 22 30 18" stroke="#6a7a8a" strokeWidth="0.65" strokeLinecap="round" fill="none" />
-            {/* Foliage — icy blue-silver masses */}
-            <path d="M5 22 C2 18 3 13 7 12 C11 11 14 16 13 20 C12 23 8 25 5 22Z" fill={`url(#${uid}-ice)`} />
-            <path d="M7 14 C6 13 7 11.5 9 12.5Z" fill="#c0daea" opacity="0.35" />
-            <path d="M11 18 C8 14 10 10 14 11 C18 12 17 17 13 19Z" fill="#7a9ab8" />
-            <path d="M14 13 Q13 12 14 11 Q15 12.5 14 13Z" fill="#c0daea" opacity="0.3" />
-            <path d="M34 18 C31 14 33 10 37 11 C41 12 41 17 37 19Z" fill={`url(#${uid}-ice)`} />
-            <path d="M37 13 C36 12 37 10.5 39 11.5Z" fill="#c0daea" opacity="0.3" />
-            <path d="M28 16 C25 12 27 8 31 9 C35 10 34 15 30 17Z" fill="#7a9ab8" opacity="0.85" />
-            <path d="M18 22 C15 18 17 15 21 15.5 C24 16 23 21 19 23Z" fill="#8aacca" opacity="0.8" />
-            <path d="M14 14 C12 11 14 8 17 9 C20 10 19 14 16 15Z" fill="#6a8aa4" opacity="0.75" />
+            {/* Foliage — icy blue-silver masses, connected to branches */}
+            <path d="M8 24 C5 20 6 15 10 14 C14 13 15 18 14 22 C13 24 10 26 8 24Z" fill={`url(#${uid}-ice)`} />
+            <path d="M10 16 C9 15 10 13.5 12 14.5Z" fill="#c0daea" opacity="0.35" />
+            <path d="M8 24 C6 20 8 16 12 17 C16 18 14 23 10 24Z" fill="#7a9ab8" />
+            <path d="M12 19 Q11 18 12 17 Q13 18.5 12 19Z" fill="#c0daea" opacity="0.3" />
+            <path d="M36 20 C33 16 35 12 39 13 C43 14 43 19 39 21Z" fill={`url(#${uid}-ice)`} />
+            <path d="M39 15 C38 14 39 12.5 41 13.5Z" fill="#c0daea" opacity="0.3" />
+            <path d="M30 18 C27 14 29 10 33 11 C37 12 36 17 32 19Z" fill="#7a9ab8" opacity="0.85" />
+            <path d="M16 16 C14 13 16 10 19 11 C22 12 21 16 18 17Z" fill="#8aacca" opacity="0.8" />
+            <path d="M22 28 C19 25 20 22 23 22 C26 22 26 26 23 28Z" fill="#6a8aa4" opacity="0.75" />
             {/* Snow caps on foliage */}
-            <path d="M3 13 Q5 11.5 7 12 Q9 11.5 11 12.5" stroke="none" fill="#e8f0f8" opacity="0.5" />
-            <path d="M3 13 Q5 12 7 12 Q9 12 11 12.5 Q9 10.5 7 11 Q5 10.5 3 13Z" fill="#f0f6fc" opacity="0.55" />
-            <path d="M33 10 Q35 9 37 10 Q39 9 41 10.5" stroke="none" fill="#e8f0f8" opacity="0.45" />
-            <path d="M33 10 Q35 9.5 37 10 Q39 9.5 41 10.5 Q39 8.5 37 9 Q35 8.5 33 10Z" fill="#f0f6fc" opacity="0.5" />
-            <path d="M12 10 Q14 8.5 16 9.5" fill="#e8f0f8" opacity="0.4" />
+            <path d="M6 15 Q8 13.5 10 14 Q12 13.5 14 14.5" stroke="none" fill="#e8f0f8" opacity="0.5" />
+            <path d="M6 15 Q8 14 10 14 Q12 14 14 14.5 Q12 12.5 10 13 Q8 12.5 6 15Z" fill="#f0f6fc" opacity="0.55" />
+            <path d="M35 12 Q37 11 39 12 Q41 11 43 12.5" stroke="none" fill="#e8f0f8" opacity="0.45" />
+            <path d="M35 12 Q37 11.5 39 12 Q41 11.5 43 12.5 Q41 10.5 39 11 Q37 10.5 35 12Z" fill="#f0f6fc" opacity="0.5" />
+            <path d="M14 10 Q16 8.5 18 9.5" fill="#e8f0f8" opacity="0.4" />
             {/* Snow on branches */}
             <path d="M8 24 Q7 23 8 22.5" stroke="#e8f0f8" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
             <path d="M36 20 Q35 19 36 18.5" stroke="#e8f0f8" strokeWidth="1.3" strokeLinecap="round" fill="none" opacity="0.45" />
             <path d="M16 16 Q15 15 16 14.5" stroke="#e8f0f8" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.4" />
             {/* Icicles hanging from branches */}
-            <path d="M7 24 L6.5 26.5" stroke="#c0daea" strokeWidth="0.5" strokeLinecap="round" fill="none" opacity="0.4" />
-            <path d="M8.5 24 L8 26" stroke="#c0daea" strokeWidth="0.4" strokeLinecap="round" fill="none" opacity="0.35" />
-            <path d="M36.5 20 L36 22.5" stroke="#c0daea" strokeWidth="0.5" strokeLinecap="round" fill="none" opacity="0.38" />
-            <path d="M38 20 L37.5 22" stroke="#c0daea" strokeWidth="0.35" strokeLinecap="round" fill="none" opacity="0.3" />
+            <path d="M8 24 L7.5 26.5" stroke="#c0daea" strokeWidth="0.5" strokeLinecap="round" fill="none" opacity="0.4" />
+            <path d="M9.5 24 L9 26" stroke="#c0daea" strokeWidth="0.4" strokeLinecap="round" fill="none" opacity="0.35" />
+            <path d="M36 20 L35.5 22.5" stroke="#c0daea" strokeWidth="0.5" strokeLinecap="round" fill="none" opacity="0.38" />
+            <path d="M37.5 20 L37 22" stroke="#c0daea" strokeWidth="0.35" strokeLinecap="round" fill="none" opacity="0.3" />
             {/* Frost sparkles */}
-            <circle cx="8" cy="18" r="0.45" fill="#fff" opacity="0.4">
+            <circle cx="10" cy="20" r="0.45" fill="#fff" opacity="0.4">
               <animate attributeName="opacity" values="0.4;0.08;0.4" dur="3s" repeatCount="indefinite" />
             </circle>
-            <circle cx="35" cy="16" r="0.4" fill="#fff" opacity="0.35">
+            <circle cx="37" cy="18" r="0.4" fill="#fff" opacity="0.35">
               <animate attributeName="opacity" values="0.35;0.05;0.35" dur="4s" repeatCount="indefinite" begin="1.2s" />
             </circle>
-            <circle cx="20" cy="14" r="0.35" fill="#fff" opacity="0.3">
+            <circle cx="18" cy="14" r="0.35" fill="#fff" opacity="0.3">
               <animate attributeName="opacity" values="0.3;0.05;0.3" dur="3.5s" repeatCount="indefinite" begin="0.6s" />
             </circle>
             {/* Falling snow particles */}
-            <circle cx="12" cy="10" r="0.5" fill="#fff" opacity="0.35" style={{animation: `wvSnow-${uid} 4s linear infinite`} as React.CSSProperties} />
-            <circle cx="28" cy="8" r="0.4" fill="#e8f0f8" opacity="0.3" style={{animation: `wvSnow-${uid} 5s linear 1.5s infinite`} as React.CSSProperties} />
-            <circle cx="38" cy="12" r="0.35" fill="#fff" opacity="0.25" style={{animation: `wvSnow-${uid} 4.5s linear 3s infinite`} as React.CSSProperties} />
+            <circle cx="12" cy="12" r="0.5" fill="#fff" opacity="0.35" style={{animation: `wvSnow-${uid} 4s linear infinite`} as React.CSSProperties} />
+            <circle cx="30" cy="10" r="0.4" fill="#e8f0f8" opacity="0.3" style={{animation: `wvSnow-${uid} 5s linear 1.5s infinite`} as React.CSSProperties} />
+            <circle cx="40" cy="14" r="0.35" fill="#fff" opacity="0.25" style={{animation: `wvSnow-${uid} 4.5s linear 3s infinite`} as React.CSSProperties} />
           </g>
         )
         return (

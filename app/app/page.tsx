@@ -352,13 +352,13 @@ const ScrollModePage = memo(function ScrollModePage({
 })
 
 const BoxItem = memo(function BoxItem({
-  box, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
+  box, boxIndex = 0, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
   onKeyDown, onInput, onRewrite, onImageGen,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd, spellCheck: spellCheckProp
 }: {
-  box: TextBoxType; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
+  box: TextBoxType; boxIndex?: number; isSelected: boolean; selectedCount: number; loadingBoxId: string | null; accentSolid: string; theme: "light" | "dark"
   paperStyle: PaperStyle; spellCheck?: boolean
   startDrag: (e: React.MouseEvent, box: TextBoxType) => void
   startResize: (e: React.MouseEvent, box: TextBoxType, handle: string) => void
@@ -455,7 +455,7 @@ const BoxItem = memo(function BoxItem({
         border: isEmpty || hideChrome ? "1px solid transparent" : isSelected ? ((box.boxOutlineWidth || 0) > 0 ? `${box.boxOutlineWidth}px solid currentColor` : `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.10)"}`) : "1px solid transparent",
         color: (box.boxHeadingStyle as string) === "margin" ? (isDarkPaper(paperStyle) ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.32)") : getInkColor(paperStyle, theme === "dark"),
         borderRadius: 4, backgroundColor: isSticky ? (box.boxHighlightColor || "transparent") : "transparent",
-        zIndex: isSelected ? 100 : 50, overflow: isSticky || box.sizeLocked ? "hidden" : "visible", cursor: isImage || isSticky ? "grab" : "text",
+        zIndex: isSelected ? 100 : 10 + boxIndex, overflow: isSticky || box.sizeLocked ? "hidden" : "visible", cursor: isImage || isSticky ? "grab" : "text",
         boxShadow: isSticky
           ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
           : "none",
@@ -1069,10 +1069,10 @@ const BoxTextarea = memo(function BoxTextarea({
                 ghost.className = 'erased'
                 ghost.textContent = ghostText
                 ghost.style.position = 'absolute'
-                ghost.style.left = ((ghostRect.left - paperRect.left) / zoom) + 'px'
-                ghost.style.top = ((ghostRect.top - paperRect.top) / zoom) + 'px'
-                ghost.style.width = (ghostRect.width / zoom) + 'px'
-                ghost.style.height = (ghostRect.height / zoom) + 'px'
+                ghost.style.left = (ghostRect.left - paperRect.left) + 'px'
+                ghost.style.top = (ghostRect.top - paperRect.top) + 'px'
+                ghost.style.width = ghostRect.width + 'px'
+                ghost.style.height = ghostRect.height + 'px'
                 ghost.style.overflow = 'hidden'
 
                 const comp = window.getComputedStyle(ref.current)
@@ -1321,13 +1321,13 @@ export default function NoteApp() {
 
 
   useEffect(() => {
-    if (!orchardOpen) return
+    if (!orchardOpen && !shopOpen) return
     const vp = document.querySelector('meta[name="viewport"]')
     if (!vp) return
     const orig = vp.getAttribute('content') || 'width=device-width, initial-scale=1'
     vp.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     return () => { vp.setAttribute('content', orig) }
-  }, [orchardOpen])
+  }, [orchardOpen, shopOpen])
   const achievements = useGroveStore(s => s.achievements)
   const setAchievements = useGroveStore(s => s.setAchievements)
   const lastCharCount = useGroveStore(s => s.lastCharCount)
@@ -4177,10 +4177,11 @@ export default function NoteApp() {
                                 onPointerCancel={drawing.onPointerUp}
                               />
 
-                              {(activeNote.boxes[currentPageIdx] || []).map(box => (
+                              {(activeNote.boxes[currentPageIdx] || []).map((box, boxIdx) => (
                                 <BoxItem
                                   key={box.id}
                                   box={box}
+                                  boxIndex={boxIdx}
                                   isSelected={boxes.selectedBoxIdsRef.current.has(box.id)}
                                   selectedCount={boxes.selectedBoxIdsRef.current.size}
                                   loadingBoxId={boxes.loadingBoxId}
@@ -4379,7 +4380,7 @@ export default function NoteApp() {
           )}
 
           {shopOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}><BoutiqueView
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}><BoutiqueView
               isOpen={shopOpen}
               onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
               theme={theme}

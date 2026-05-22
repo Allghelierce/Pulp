@@ -519,7 +519,7 @@ export function useBoxDrawing({
           const id = uid()
           const paperW = paperRef.current?.clientWidth || 800
           const bw = paperW - x - 40
-          const newBox: TextBox = { id, x, y: y - 8, w: Math.max(bw, 120), h: 32, content: '' }
+          const newBox: TextBox = { id, x, y: y - 18, w: Math.max(bw, 120), h: 32, content: '' }
           const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
           const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
           flushSync(() => {
