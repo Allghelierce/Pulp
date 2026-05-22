@@ -70,7 +70,7 @@ const RARITY_COLOR: Record<string, string> = {
 }
 
 function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?: () => void }) {
-  const text = "grow while you write."
+  const text = "notes, without the pain."
   const [charIdx, setCharIdx] = useState(0)
   const [showCursor, setShowCursor] = useState(true)
 
@@ -79,7 +79,8 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
       const t = setTimeout(() => { setShowCursor(false); onComplete?.() }, 800)
       return () => clearTimeout(t)
     }
-    const t = setTimeout(() => setCharIdx(i => i + 1), 55)
+    const delay = text[charIdx] === ',' ? 500 : 55
+    const t = setTimeout(() => setCharIdx(i => i + 1), delay)
     return () => clearTimeout(t)
   }, [charIdx, text.length])
 
@@ -966,7 +967,7 @@ export default function PulpLanding() {
                 }}>
                   <li>keyboard-first notes — no toolbar clutter</li>
                   <li>focus timer that grows trees as you write</li>
-                  <li>quit a session and your tree dies</li>
+                  <li>miss a day and you'll see consequences</li>
                   <li>40+ species to collect</li>
                 </ul>
 
@@ -1026,7 +1027,7 @@ export default function PulpLanding() {
           <div style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            pointerEvents: 'none', zIndex: 10,
+            pointerEvents: 'none', zIndex: 100,
             opacity: orchardProgress > 0.65 ? Math.min(1, (orchardProgress - 0.65) * 5) : 0,
           }}>
             <div style={{

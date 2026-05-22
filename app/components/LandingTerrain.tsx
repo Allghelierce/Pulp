@@ -1,5 +1,5 @@
 "use client"
-import { memo, useEffect, useRef } from "react"
+import { memo } from "react"
 import { PlantIcon } from "./PlantIcon"
 
 function seededRng(seed: number) {
@@ -51,11 +51,11 @@ const TREE_TYPES_LIST = [
   'tangerine', 'lemon', 'plum', 'pineapple', 'passionfruit',
   'pomegranate', 'coconut', 'sunflower', 'grape', 'pear',
   'melon', 'mushroom', 'cactus', 'sage', 'lychee',
-  'papaya', 'birch', 'pine', 'ivy', 'oak',
+  'papaya', 'coral', 'whirlpool', 'bloom', 'lotus',
+  'birch', 'pine', 'ivy', 'oak', 'sakura',
   'cattail', 'cypress', 'bamboo', 'mangrove', 'bonsai',
-  'juniper', 'cedarwood', 'baobab', 'agave', 'tangerine',
-  'sakura', 'whirlpool', 'coral', 'bloom', 'lotus',
-  'winterveil', 'starweaver', 'leviathan', 'prismatic', 'abyss',
+  'juniper', 'cedarwood', 'baobab', 'winterveil', 'agave',
+  'abyss', 'starweaver', 'leviathan', 'prismatic', 'tangerine',
 ]
 
 const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
@@ -63,35 +63,21 @@ const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
   const depthT = Math.max(0, Math.min(1, (pos.y - 40) / 55))
   const depthScale = 0.55 + depthT * 0.55
   const size = Math.round(98 * depthScale / 16) * 16 || 16
-  const rowStart = 0.15 + pos.row * 0.12
-  return { type, x: pos.x, y: pos.y, row: pos.row, size, depthT, rowStart }
+  return { type, x: pos.x, y: pos.y, row: pos.row, size, depthT }
 }).sort((a, b) => a.y - b.y)
 
 export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { progress?: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (ref.current) ref.current.style.setProperty('--p', String(progress))
-  }, [progress])
-
   return (
-    <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', ['--p' as string]: '0' }}>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
       <style>{`
         @keyframes cloudDrift { 0% { transform: translateX(-10%) } 100% { transform: translateX(110%) } }
         @keyframes firefly-glow { 0% { opacity: 0; } 15% { opacity: 0.3; } 30% { opacity: 0.06; } 45% { opacity: 0.6; } 50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(217,119,6,0.5); } 55% { opacity: 0.6; } 70% { opacity: 0.2; } 85% { opacity: 0.06; } 100% { opacity: 0; } }
         @keyframes firefly-drift { 0% { transform: translate(0,0) } 25% { transform: translate(var(--drift-x),var(--drift-y)) } 50% { transform: translate(calc(var(--drift-x)*-0.5),calc(var(--drift-y)*0.5)) } 75% { transform: translate(calc(var(--drift-x)*0.7),calc(var(--drift-y)*-0.3)) } 100% { transform: translate(0,0) } }
         @keyframes wm-spin-cw { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         @keyframes wm-spin-ccw { from { transform: rotate(0deg) } to { transform: rotate(-360deg) } }
-        .lt-tree {
-          position: absolute;
-          transform-origin: center bottom;
-          pointer-events: none;
-          opacity: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
-          scale: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
-        }
       `}</style>
 
-      {/* Base terrain */}
+      {/* Static terrain PNG (no trees) */}
       <img
         src="/landing-terrain.png"
         alt=""
@@ -103,22 +89,34 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         }}
       />
 
-      {/* All trees — CSS-driven pop-in, no React re-render per tree */}
-      {LANDING_TREES.map((tree, i) => (
-        <div
-          key={i}
-          className="lt-tree"
-          style={{
+      {/* Live PlantIcon trees — row by row on scroll */}
+      {LANDING_TREES.map((tree, i) => {
+        const rowStart = 0.15 + tree.row * 0.12
+        const rowProgress = Math.max(0, Math.min(1, (progress - rowStart) / 0.10))
+        return (
+          <div key={i} style={{
+            position: 'absolute',
             left: `${tree.x}%`,
             top: `${tree.y}%`,
-            transform: `translate(-50%, -76%) scaleY(${0.7 + tree.depthT * 0.3})`,
+            transform: `translate(-50%, -76%) scaleY(${0.7 + tree.depthT * 0.3}) scale(${rowProgress})`,
+            transformOrigin: 'center bottom',
             zIndex: Math.round(tree.y),
-            ['--rs' as string]: String(tree.rowStart),
-          }}
-        >
-          <PlantIcon type={tree.type} size={tree.size} stage={3} />
-        </div>
-      ))}
+            opacity: rowProgress,
+            pointerEvents: 'none',
+            transition: 'opacity 0.15s, transform 0.15s',
+          }}>
+            <PlantIcon type={tree.type} size={tree.size} stage={3} hideGround />
+            <div style={{
+              position: 'absolute', left: '50%', bottom: -2,
+              width: tree.size * 0.6, height: tree.size * 0.08,
+              transform: 'translateX(-50%)',
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.12)',
+              filter: 'blur(2px)',
+            }} />
+          </div>
+        )
+      })}
 
       {/* Clouds */}
       {[
@@ -154,10 +152,10 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
         }} />
       ))}
 
-      {/* Windmill spinning blades */}
+      {/* Windmill spinning blades overlay */}
       {[
-        { left: 89, top: 47.5, size: '3.5%', dur: 25, dir: 'cw' },
-        { left: 97, top: 45.3, size: '2.8%', dur: 32, dir: 'ccw' },
+        { left: 89, top: 47.5, size: 28, dur: 25, dir: 'cw' },
+        { left: 97, top: 45.3, size: 22, dur: 32, dir: 'ccw' },
       ].map((wm, i) => (
         <svg key={`wm-${i}`} style={{
           position: 'absolute',
