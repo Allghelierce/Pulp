@@ -1,5 +1,6 @@
 "use client"
-import { memo } from "react"
+import { memo, useEffect, useRef } from "react"
+import { PlantIcon } from "./PlantIcon"
 
 function seededRng(seed: number) {
   let s = Math.abs(seed) || 1
@@ -18,16 +19,79 @@ const FIREFLIES = Array.from({ length: 15 }, (_, i) => {
   return { x, y, dx, dy, glowDur, driftDur, delay }
 })
 
-export const LandingTerrain = memo(function LandingTerrain() {
+const GRID_COLS = 5
+const GRID_SLOTS_PER_COL = 2
+const GRID_TOTAL_SLOTS = GRID_COLS * GRID_SLOTS_PER_COL
+const GRID_ROWS: number = 4
+const GRID_COL_START = 17
+const GRID_COL_END = 83
+const GRID_ROW_START = 47
+const GRID_ROW_END = 85
+const GRID_TILL_OFFSET = 2.5
+
+function gridSlotPos(slotIndex: number) {
+  const slot = slotIndex % GRID_TOTAL_SLOTS
+  const row = Math.floor(slotIndex / GRID_TOTAL_SLOTS)
+  const col = Math.floor(slot / GRID_SLOTS_PER_COL)
+  const side = slot % GRID_SLOTS_PER_COL
+  const rowSpacing = GRID_ROWS > 1 ? (GRID_ROW_END - GRID_ROW_START) / (GRID_ROWS - 1) : 0
+  const y = GRID_ROWS === 1 ? 65 : GRID_ROW_START + row * rowSpacing
+  const depthT = (y - GRID_ROW_START) / Math.max(1, GRID_ROW_END - GRID_ROW_START)
+  const pinch = (1 - depthT) * 10 - depthT * 2
+  const trapLeft = GRID_COL_START + pinch
+  const trapRight = GRID_COL_END - pinch
+  const tillX = trapLeft + col * ((trapRight - trapLeft) / (GRID_COLS - 1))
+  const midCol = (GRID_COLS - 1) / 2
+  const inwardShift = col === midCol ? 0 : (col < midCol ? 0.5 : -0.5)
+  const x = tillX + (side === 0 ? -GRID_TILL_OFFSET : GRID_TILL_OFFSET) + inwardShift
+  return { x: Math.max(4, Math.min(96, x)), y: Math.max(42, Math.min(94, y)), row }
+}
+
+const TREE_TYPES_LIST = [
+  'tangerine', 'lemon', 'plum', 'pineapple', 'passionfruit',
+  'pomegranate', 'coconut', 'sunflower', 'grape', 'pear',
+  'melon', 'mushroom', 'cactus', 'sage', 'lychee',
+  'papaya', 'birch', 'pine', 'ivy', 'oak',
+  'cattail', 'cypress', 'bamboo', 'mangrove', 'bonsai',
+  'juniper', 'cedarwood', 'baobab', 'agave', 'tangerine',
+  'sakura', 'whirlpool', 'coral', 'bloom', 'lotus',
+  'winterveil', 'starweaver', 'leviathan', 'prismatic', 'abyss',
+]
+
+const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
+  const pos = gridSlotPos(i)
+  const depthT = Math.max(0, Math.min(1, (pos.y - 40) / 55))
+  const depthScale = 0.55 + depthT * 0.55
+  const size = Math.round(98 * depthScale / 16) * 16 || 16
+  const rowStart = 0.15 + pos.row * 0.12
+  return { type, x: pos.x, y: pos.y, row: pos.row, size, depthT, rowStart }
+}).sort((a, b) => a.y - b.y)
+
+export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { progress?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (ref.current) ref.current.style.setProperty('--p', String(progress))
+  }, [progress])
+
   return (
-    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+    <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', ['--p' as string]: '0' }}>
       <style>{`
         @keyframes cloudDrift { 0% { transform: translateX(-10%) } 100% { transform: translateX(110%) } }
         @keyframes firefly-glow { 0% { opacity: 0; } 15% { opacity: 0.3; } 30% { opacity: 0.06; } 45% { opacity: 0.6; } 50% { opacity: 0.85; box-shadow: 0 0 8px 3px rgba(217,119,6,0.5); } 55% { opacity: 0.6; } 70% { opacity: 0.2; } 85% { opacity: 0.06; } 100% { opacity: 0; } }
         @keyframes firefly-drift { 0% { transform: translate(0,0) } 25% { transform: translate(var(--drift-x),var(--drift-y)) } 50% { transform: translate(calc(var(--drift-x)*-0.5),calc(var(--drift-y)*0.5)) } 75% { transform: translate(calc(var(--drift-x)*0.7),calc(var(--drift-y)*-0.3)) } 100% { transform: translate(0,0) } }
+        @keyframes wm-spin-cw { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+        @keyframes wm-spin-ccw { from { transform: rotate(0deg) } to { transform: rotate(-360deg) } }
+        .lt-tree {
+          position: absolute;
+          transform-origin: center bottom;
+          pointer-events: none;
+          opacity: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
+          scale: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
+        }
       `}</style>
 
-      {/* Static terrain PNG */}
+      {/* Base terrain */}
       <img
         src="/landing-terrain.png"
         alt=""
@@ -38,6 +102,23 @@ export const LandingTerrain = memo(function LandingTerrain() {
           pointerEvents: 'none',
         }}
       />
+
+      {/* All trees — CSS-driven pop-in, no React re-render per tree */}
+      {LANDING_TREES.map((tree, i) => (
+        <div
+          key={i}
+          className="lt-tree"
+          style={{
+            left: `${tree.x}%`,
+            top: `${tree.y}%`,
+            transform: `translate(-50%, -76%) scaleY(${0.7 + tree.depthT * 0.3})`,
+            zIndex: Math.round(tree.y),
+            ['--rs' as string]: String(tree.rowStart),
+          }}
+        >
+          <PlantIcon type={tree.type} size={tree.size} stage={3} />
+        </div>
+      ))}
 
       {/* Clouds */}
       {[
@@ -71,6 +152,31 @@ export const LandingTerrain = memo(function LandingTerrain() {
           ['--drift-y' as string]: `${f.dy}px`,
           pointerEvents: 'none',
         }} />
+      ))}
+
+      {/* Windmill spinning blades */}
+      {[
+        { left: 89, top: 47.5, size: '3.5%', dur: 25, dir: 'cw' },
+        { left: 97, top: 45.3, size: '2.8%', dur: 32, dir: 'ccw' },
+      ].map((wm, i) => (
+        <svg key={`wm-${i}`} style={{
+          position: 'absolute',
+          left: `${wm.left}%`, top: `${wm.top}%`,
+          width: wm.size, height: wm.size,
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          overflow: 'visible',
+        }} viewBox="0 0 20 20">
+          <g style={{ transformOrigin: '10px 10px', animation: `wm-spin-${wm.dir} ${wm.dur}s linear infinite` }}>
+            {[0, 90, 180, 270].map(angle => (
+              <polygon key={angle}
+                points="9.6,10 10.4,10 10.8,3 9.85,3"
+                fill="#4a4236" opacity="0.85"
+                transform={`rotate(${angle} 10 10)`}
+              />
+            ))}
+          </g>
+        </svg>
       ))}
 
       {/* Vignette */}

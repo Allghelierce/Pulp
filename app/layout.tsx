@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#d97706" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <script dangerouslySetInnerHTML={{ __html: `try{var s=JSON.parse(localStorage.getItem('pulp-settings'));if(s){var d=document.documentElement;var t=s.theme||'dark';var bg=t==='dark'?'#09090b':'#F0ECEA';var fg=t==='dark'?'#FAFAFA':'#1A1A1A';d.style.backgroundColor=bg;d.style.color=fg}}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{var s=JSON.parse(localStorage.getItem('pulp-settings'));var t=(s&&s.theme)||'dark';document.documentElement.setAttribute('data-theme',t)}catch(e){}` }} />
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}` }} />
       </head>
       <body className="antialiased">

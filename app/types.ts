@@ -59,7 +59,6 @@ export interface Tree {
   focusMinutes?: number
   growthTarget?: number
   lastHarvest?: number
-  ascension?: number
 }
 
 export interface SlashMenuState {

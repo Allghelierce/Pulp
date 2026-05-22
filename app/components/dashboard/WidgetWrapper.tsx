@@ -52,20 +52,6 @@ export const WidgetWrapper = memo(function WidgetWrapper({
           display: 'flex', gap: 4,
         }}>
           <button
-            onClick={(e) => { e.stopPropagation(); onPin() }}
-            title={pinned ? 'Unpin' : 'Pin'}
-            style={{
-              width: 22, height: 22, borderRadius: 6,
-              background: pinned ? (isDark ? 'rgba(217,119,6,0.25)' : 'rgba(217,119,6,0.15)') : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
-              border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: pinned ? '#d97706' : (isDark ? '#8a8680' : '#a8a4a0'),
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M12 17v5M9 2h6l-1 7h4l-6 8h-4l1-7H5l4-8z" />
-            </svg>
-          </button>
-          <button
             onClick={(e) => { e.stopPropagation(); onRemove() }}
             title="Remove"
             style={{

@@ -2,18 +2,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
-const ASCENSION_TIERS = [
-  { name: 'Budding', sapMultiplier: 1.5 },
-  { name: 'Flourishing', sapMultiplier: 2.0 },
-  { name: 'Mythic', sapMultiplier: 3.0 },
-] as const
-const ASCENSION_COSTS: Record<string, { sap: number[]; sacrifices: number[] }> = {
-  common: { sap: [50, 120, 300], sacrifices: [3, 5, 8] },
-  uncommon: { sap: [80, 200, 500], sacrifices: [3, 4, 6] },
-  rare: { sap: [150, 400, 900], sacrifices: [2, 3, 5] },
-  'true rare': { sap: [300, 700, 1500], sacrifices: [2, 3, 4] },
-  sacred: { sap: [500, 1200, 2500], sacrifices: [1, 2, 3] },
-}
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
@@ -217,8 +205,7 @@ function getSapYield(tree: any): number {
   if (!info) return 1
   const base = info.sapYield || Math.max(1, Math.floor(info.cost * 0.3))
   const stageBonus = tree.stage >= 4 ? 1.5 : tree.stage >= 3 ? 1.2 : tree.stage >= 2 ? 1 : 0.5
-  const ascensionMultiplier = tree.ascension ? ASCENSION_TIERS[tree.ascension - 1]?.sapMultiplier || 1 : 1
-  return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
+  return Math.max(1, Math.round(base * stageBonus))
 }
 
 // Time-of-day phases: night(0-5), dawn(5-7), morning(7-10), day(10-16), dusk(16-19), night(19-24)
@@ -480,8 +467,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         <polygon points={`${wmX},${wmY - 1 * sc} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX + 0.3 * sc},${wmY + sc * 2}`} fill={roofLight} opacity="0.3" />
         <circle cx={wmX} cy={hubY} r={1.4 * sc} fill={wmLight} />
         <circle cx={wmX} cy={hubY} r={0.5 * sc} fill={roofColor} />
-        <g>
-          <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`${wi % 2 === 0 ? 360 : -360} ${wmX} ${hubY}`} dur={`${isFg ? (wi === 0 ? 25 : 32) : 35 + wi * 5}s`} repeatCount="indefinite" />
+        <g style={{ transformOrigin: `${wmX}px ${hubY}px`, animation: `wm-spin-${wi % 2 === 0 ? 'cw' : 'ccw'} ${isFg ? (wi === 0 ? 25 : 32) : 35 + wi * 5}s linear infinite` }}>
           {[0, 90, 180, 270].map(angle => (
             <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
               <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill={bladeColor} opacity="0.8" />
@@ -2237,8 +2223,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 <path d={`M${m.x - 0.5},${m.baseY} L${m.x - 0.3},${topY + 1} L${m.x + 0.3},${topY + 1} L${m.x + 0.5},${m.baseY}Z`} fill={towerC} />
                 <path d={`M${m.x},${m.baseY} L${m.x + 0.15},${topY + 1}`} stroke={towerCd} strokeWidth="0.15" opacity="0.4" />
                 <circle cx={m.x} cy={topY + 1} r="0.45" fill={towerCd} />
-                <g>
-                  <animateTransform attributeName="transform" type="rotate" from={`0 ${m.x} ${topY + 1}`} to={`360 ${m.x} ${topY + 1}`} dur={`${18 + i * 4}s`} repeatCount="indefinite" />
+                <g style={{ transformOrigin: `${m.x}px ${topY + 1}px`, animation: `wm-spin-cw ${18 + i * 4}s linear infinite` }}>
                   {[0, 1, 2, 3].map(b => {
                     const ang = (phase + b * 90) * Math.PI / 180
                     const ex = m.x + Math.cos(ang) * m.bladeR
@@ -2603,6 +2588,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       </>}
 
       <style>{`
+        @keyframes wm-spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes wm-spin-ccw { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
         @keyframes cloud-drift { 0% { transform: translateX(-25vw); } 100% { transform: translateX(110vw); } }
         @keyframes firefly-glow {
           0% { opacity: 0; box-shadow: 0 0 2px 0px rgba(217,119,6,0); }
@@ -2677,8 +2664,6 @@ export const OrchardView = memo(function OrchardView({
   const [editMode, setEditMode] = useState(false)
   const [orchardMode, setOrchardMode] = useState<'xp' | 'seasonal'>('xp')
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
-  const [ascensionMode, setAscensionMode] = useState(false)
-  const [selectedSacrifices, setSelectedSacrifices] = useState<number[]>([])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
@@ -2737,8 +2722,7 @@ export const OrchardView = memo(function OrchardView({
     if (!info) return 1
     const base = info.sapYield || Math.max(1, Math.floor((info.cost || 5) * 0.3))
     const stageBonus = tree.stage >= 4 ? 1.5 : tree.stage >= 3 ? 1.2 : tree.stage >= 2 ? 1.0 : 0.5
-    const ascensionMultiplier = tree.ascension ? ASCENSION_TIERS[tree.ascension - 1]?.sapMultiplier || 1 : 1
-    return Math.max(1, Math.round(base * stageBonus * ascensionMultiplier))
+    return Math.max(1, Math.round(base * stageBonus))
   }
 
   const lvl = getLevel(xp)
@@ -3208,11 +3192,6 @@ export const OrchardView = memo(function OrchardView({
           100% { transform: translateY(var(--drip-dist)) scale(0); opacity: 0; }
         }
         @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
-        @keyframes ascension-pulse { 0%,100% { opacity: 0.4; transform: scale(1) } 50% { opacity: 0.7; transform: scale(1.08) } }
-        .ascension-aura { animation: ascension-pulse 3s ease-in-out infinite; }
-        .ascension-tier-1 { background: radial-gradient(circle, rgba(168,216,168,0.25) 0%, transparent 70%); }
-        .ascension-tier-2 { background: radial-gradient(circle, rgba(110,184,224,0.3) 0%, transparent 70%); }
-        .ascension-tier-3 { background: radial-gradient(circle, rgba(232,196,74,0.4) 0%, rgba(232,196,74,0.1) 40%, transparent 70%); box-shadow: 0 0 12px rgba(232,196,74,0.15); }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
@@ -3547,11 +3526,6 @@ export const OrchardView = memo(function OrchardView({
                               filter: dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : undefined,
                               position: 'relative',
                             }}>
-                              {(tree.ascension || 0) > 0 && (
-                                <div className={`ascension-aura ascension-tier-${tree.ascension}`} style={{
-                                  position: 'absolute', inset: -6, borderRadius: '50%', pointerEvents: 'none', zIndex: -1,
-                                }} />
-                              )}
                               <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} disableSway={reduceMotion || placed.length > 30} />
                             </div>
                             {/* Dirt mound */}
@@ -3725,37 +3699,6 @@ export const OrchardView = memo(function OrchardView({
               const stageNames = ['Seed', 'Sprout', 'Sapling', 'Young', 'Mature']
               const sapPerTick = getTreeSapMax(ft)
               const notebook = ft.notebookId ? notes.find(n => n.id === ft.notebookId) : null
-              const currentAscension = ft.ascension || 0
-              const canAscend = ft.stage === 4 && currentAscension < 3 && ft.type !== 'spoiled'
-              const nextTier = currentAscension < 3 ? ASCENSION_TIERS[currentAscension] : null
-              const costs = ASCENSION_COSTS[rarity] || ASCENSION_COSTS.common
-              const sapCost = canAscend ? costs.sap[currentAscension] : 0
-              const sacrificeCount = canAscend ? costs.sacrifices[currentAscension] : 0
-              const RARITY_RANK: Record<string, number> = { common: 0, uncommon: 1, rare: 2, 'true rare': 3, sacred: 4 }
-              const targetRarityRank = RARITY_RANK[rarity] ?? 0
-              const eligibleSacrifices = grove.filter(t =>
-                t.id !== ft.id &&
-                t.stage === 4 &&
-                t.type !== 'spoiled' &&
-                (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank &&
-                !selectedSacrifices.includes(t.id)
-              )
-              const canAfford = sap >= sapCost && (selectedSacrifices.length >= sacrificeCount)
-
-              const doAscend = () => {
-                if (!canAfford || !canAscend) return
-                setSap((s: number) => s - sapCost)
-                const sacrificeIds = new Set(selectedSacrifices.slice(0, sacrificeCount))
-                setGrove((g: any[]) => g.filter(t => !sacrificeIds.has(t.id)).map(t =>
-                  t.id === ft.id ? { ...t, ascension: currentAscension + 1 } : t
-                ))
-                setFocusedTree(prev => prev ? { ...prev, tree: { ...prev.tree, ascension: currentAscension + 1 } } : null)
-                setAscensionMode(false)
-                setSelectedSacrifices([])
-              }
-
-              const tierColors = ['#a8d8a8', '#6eb8e0', '#e8c44a']
-              const tierGlow = currentAscension > 0 ? tierColors[currentAscension - 1] : undefined
 
               return (
                 <motion.div
@@ -3766,7 +3709,7 @@ export const OrchardView = memo(function OrchardView({
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 z-50 flex items-center justify-center"
                   style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-                  onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
+                  onClick={() => { setFocusedTree(null) }}
                 >
                   <motion.div
                     initial={{ scale: 0.85, opacity: 0, y: 20 }}
@@ -3777,46 +3720,22 @@ export const OrchardView = memo(function OrchardView({
                     style={{
                       padding: '28px 32px 24px',
                       backgroundColor: isDark ? '#141316' : '#fdfcfa',
-                      border: `1.5px solid ${tierGlow || meta.border}`,
-                      boxShadow: tierGlow
-                        ? `0 20px 60px rgba(0,0,0,0.4), 0 0 ${currentAscension * 12}px ${tierGlow}40, 0 0 0 1px ${tierGlow}60`
-                        : `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
-                      minWidth: ascensionMode ? 360 : 240, maxWidth: ascensionMode ? 400 : 300,
+                      border: `1.5px solid ${meta.border}`,
+                      boxShadow: `0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px ${meta.border}`,
+                      minWidth: 240, maxWidth: 300,
                       fontFamily: 'Crimson Pro, serif',
                       transition: 'min-width 0.2s, max-width 0.2s',
                     }}
                     onClick={e => e.stopPropagation()}
                   >
-                    <div style={{ position: 'relative' }}>
-                      {currentAscension > 0 && (
-                        <div style={{
-                          position: 'absolute', inset: -12, borderRadius: '50%',
-                          background: `radial-gradient(circle, ${tierGlow}20 0%, transparent 70%)`,
-                          animation: 'ascension-pulse 2s ease-in-out infinite',
-                          pointerEvents: 'none',
-                        }} />
-                      )}
-                      <PlantIcon type={ft.type} size={100} stage={ft.stage} hideGround />
-                    </div>
+                    <PlantIcon type={ft.type} size={100} stage={ft.stage} hideGround />
                     <div className="flex items-center gap-2">
-                      <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: tierGlow || meta.color }} />
+                      <div className="rounded-full" style={{ width: 7, height: 7, backgroundColor: meta.color }} />
                       <span className="text-[16px] font-normal tracking-wide" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>
                         {typeInfo?.name || ft.type}
                       </span>
-                      {currentAscension > 0 && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 400, letterSpacing: '0.08em',
-                          padding: '1px 6px', borderRadius: 4,
-                          backgroundColor: `${tierGlow}20`, color: tierGlow,
-                          textTransform: 'uppercase',
-                        }}>
-                          {ASCENSION_TIERS[currentAscension - 1].name}
-                        </span>
-                      )}
                     </div>
 
-                    {!ascensionMode ? (
-                      <>
                         <div className="w-full flex flex-col gap-2 mt-1" style={{ color: isDark ? '#8a8680' : '#7a7670', fontSize: 11 }}>
                           <div className="flex justify-between">
                             <span>Stage</span>
@@ -3841,12 +3760,6 @@ export const OrchardView = memo(function OrchardView({
                             <span>Sap rate</span>
                             <span style={{ color: '#d97706', fontWeight: 400 }}>{sapPerTick}/cycle</span>
                           </div>
-                          {currentAscension > 0 && (
-                            <div className="flex justify-between">
-                              <span>Ascension</span>
-                              <span style={{ color: tierGlow, fontWeight: 400 }}>{ASCENSION_TIERS[currentAscension - 1].name}</span>
-                            </div>
-                          )}
                           {notebook && (
                             <div className="flex justify-between">
                               <span>Notebook</span>
@@ -3855,21 +3768,8 @@ export const OrchardView = memo(function OrchardView({
                           )}
                         </div>
                         <div className="w-full flex flex-col gap-2 mt-1">
-                          {canAscend && (
-                            <button
-                              onClick={() => { setAscensionMode(true); setSelectedSacrifices([]) }}
-                              className="w-full py-2 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
-                              style={{
-                                background: `linear-gradient(135deg, ${tierColors[currentAscension]}30, ${tierColors[currentAscension]}15)`,
-                                border: `1px solid ${tierColors[currentAscension]}40`,
-                                color: tierColors[currentAscension],
-                              }}
-                            >
-                              Ascend to {nextTier?.name}
-                            </button>
-                          )}
                           <button
-                            onClick={() => { setFocusedTree(null); setAscensionMode(false); setSelectedSacrifices([]) }}
+                            onClick={() => { setFocusedTree(null) }}
                             className="w-full py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
                             style={{
                               backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
@@ -3879,116 +3779,6 @@ export const OrchardView = memo(function OrchardView({
                             Close
                           </button>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-full" style={{ fontSize: 11, color: isDark ? '#8a8680' : '#7a7670' }}>
-                          <div style={{
-                            padding: '8px 10px', borderRadius: 8, marginBottom: 8,
-                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                          }}>
-                            <div className="flex justify-between mb-1">
-                              <span>Sap cost</span>
-                              <span style={{ color: sap >= sapCost ? '#d97706' : '#ef4444', fontWeight: 400 }}>{sapCost} <span style={{ opacity: 0.5 }}>({sap} owned)</span></span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Sacrifices needed</span>
-                              <span style={{ color: selectedSacrifices.length >= sacrificeCount ? '#6b9a6b' : '#ef4444', fontWeight: 400 }}>
-                                {selectedSacrifices.length}/{sacrificeCount} <span style={{ opacity: 0.5 }}>({rarity}+ mature)</span>
-                              </span>
-                            </div>
-                            {nextTier && (
-                              <div className="flex justify-between mt-1" style={{ opacity: 0.6 }}>
-                                <span>Sap rate after</span>
-                                <span style={{ color: '#d97706' }}>{Math.round(sapPerTick * nextTier.sapMultiplier / (currentAscension > 0 ? ASCENSION_TIERS[currentAscension - 1].sapMultiplier : 1))}/cycle</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div style={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {grove.filter(t =>
-                              t.id !== ft.id &&
-                              t.stage === 4 &&
-                              t.type !== 'spoiled' &&
-                              (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank
-                            ).length === 0 ? (
-                              <div style={{ textAlign: 'center', padding: '16px 0', opacity: 0.4, fontStyle: 'italic' }}>
-                                No eligible mature trees to sacrifice
-                              </div>
-                            ) : (
-                              grove.filter(t =>
-                                t.id !== ft.id &&
-                                t.stage === 4 &&
-                                t.type !== 'spoiled' &&
-                                (RARITY_RANK[TREE_TYPES[t.type]?.rarity] ?? 0) >= targetRarityRank
-                              ).map(t => {
-                                const ti = TREE_TYPES[t.type]
-                                const selected = selectedSacrifices.includes(t.id)
-                                return (
-                                  <button
-                                    key={t.id}
-                                    onClick={() => {
-                                      if (selected) setSelectedSacrifices(s => s.filter(id => id !== t.id))
-                                      else if (selectedSacrifices.length < sacrificeCount) setSelectedSacrifices(s => [...s, t.id])
-                                    }}
-                                    className="flex items-center gap-3 w-full rounded-lg transition-all"
-                                    style={{
-                                      padding: '6px 8px',
-                                      backgroundColor: selected
-                                        ? (isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)')
-                                        : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-                                      border: `1px solid ${selected ? 'rgba(239,68,68,0.3)' : 'transparent'}`,
-                                      opacity: !selected && selectedSacrifices.length >= sacrificeCount ? 0.3 : 1,
-                                    }}
-                                  >
-                                    <PlantIcon type={t.type} size={28} stage={4} hideGround />
-                                    <div className="flex-1 text-left">
-                                      <div style={{ fontWeight: 400, color: isDark ? '#d0ccc4' : '#3a3630', fontSize: 11 }}>{ti?.name}</div>
-                                      <div style={{ fontSize: 9, opacity: 0.5 }}>{ti?.rarity}{t.ascension ? ` · ${ASCENSION_TIERS[t.ascension - 1]?.name}` : ''}</div>
-                                    </div>
-                                    <div style={{
-                                      width: 16, height: 16, borderRadius: 4,
-                                      border: `1.5px solid ${selected ? '#ef4444' : isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
-                                      backgroundColor: selected ? '#ef4444' : 'transparent',
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    }}>
-                                      {selected && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
-                                    </div>
-                                  </button>
-                                )
-                              })
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="w-full flex gap-2 mt-1">
-                          <button
-                            onClick={() => { setAscensionMode(false); setSelectedSacrifices([]) }}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
-                            style={{
-                              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                              color: isDark ? '#6a6860' : '#9a9690',
-                            }}
-                          >
-                            Back
-                          </button>
-                          <button
-                            onClick={doAscend}
-                            disabled={!canAfford}
-                            className="flex-1 py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider transition-all"
-                            style={{
-                              background: canAfford
-                                ? `linear-gradient(135deg, ${tierColors[currentAscension]}, ${tierColors[currentAscension]}cc)`
-                                : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
-                              color: canAfford ? '#000' : (isDark ? '#4a4840' : '#b0aca4'),
-                              cursor: canAfford ? 'pointer' : 'not-allowed',
-                            }}
-                          >
-                            Ascend
-                          </button>
-                        </div>
-                      </>
-                    )}
                   </motion.div>
                 </motion.div>
               )

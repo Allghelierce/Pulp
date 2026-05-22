@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f6f3;
-  --foreground: #171717;
+  --background: #09090b;
+  --foreground: #FAFAFA;
+}
+
+:root[data-theme="light"] {
+  --background: #F0ECEA;
+  --foreground: #1A1A1A;
 }
 
 @theme inline {
@@ -14,20 +19,11 @@
 }
 
 :root {
+  --border: rgba(255, 255, 255, 0.15);
+}
+
+:root[data-theme="light"] {
   --border: rgba(0, 0, 0, 0.15);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --border: rgba(255, 255, 255, 0.15);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -67,18 +63,16 @@ body {
   background: transparent;
 }
 
-@media (prefers-color-scheme: light) {
-  * {
-    scrollbar-color: rgba(0,0,0,0.1) transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.1);
-    background-clip: padding-box;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,0.2);
-    background-clip: padding-box;
-  }
+:root[data-theme="light"] * {
+  scrollbar-color: rgba(0,0,0,0.1) transparent;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  background-clip: padding-box;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+  background-clip: padding-box;
 }
 
 

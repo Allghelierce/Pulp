@@ -3,12 +3,6 @@ import { memo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
 
-const ASCENSION_TIERS = [
-  { name: 'Budding', color: '#a3e635' },
-  { name: 'Verdant', color: '#22d3ee' },
-  { name: 'Ancient', color: '#a78bfa' },
-  { name: 'Mythic', color: '#f59e0b' },
-]
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
@@ -70,22 +64,6 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
           <span className="text-[6px] font-normal italic opacity-40 -mt-0.5 tracking-tighter">Sacred</span>
         )}
       </div>
-
-      {/* Ascension Badge */}
-      {(card.ascension || 0) > 0 && (() => {
-        const tierColors = ['#a8d8a8', '#6eb8e0', '#e8c44a']
-        const tier = card.ascension - 1
-        return (
-          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{
-            backgroundColor: `${tierColors[tier]}20`,
-            border: `1px solid ${tierColors[tier]}40`,
-          }}>
-            <span style={{ fontSize: 7, fontWeight: 400, color: tierColors[tier], letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              {ASCENSION_TIERS[tier]?.name}
-            </span>
-          </div>
-        )
-      })()}
 
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 w-full pt-2">
         <div className="plant-icon-wrapper relative">

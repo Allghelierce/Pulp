@@ -8,6 +8,7 @@ import { sanitizeHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
+import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -1367,6 +1368,13 @@ export default function NoteApp() {
     const saved = localStorage.getItem('pulp-grove')
     if (saved) {
       let data: any; try { data = JSON.parse(saved) } catch { return }
+      if (!verifyGrove(data)) {
+        console.warn('[Pulp] Grove integrity check failed — resetting grove')
+        data.grove = []
+        data.inventory = []
+        data.juice = 0
+        localStorage.setItem('pulp-grove', JSON.stringify(signGrove(data)))
+      }
       setSap(data.juice ?? data.sunshine ?? 0)
       if (data.essence != null) setEssence(data.essence)
       if (data.goalStreak != null) setGoalStreak(data.goalStreak)
@@ -1548,6 +1556,7 @@ export default function NoteApp() {
     shortcuts, blockedSites, blockedApps, orchardTimeMode, devMode, isDevUnlocked, scrollMode
   } = settings
 
+  useEffect(() => { document.documentElement.setAttribute('data-theme', theme) }, [theme])
   const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
   const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettingsRef.current?.trashNotes) ? _savedSettingsRef.current.trashNotes : [])
@@ -2679,7 +2688,7 @@ export default function NoteApp() {
       const dFolders = dirty.folders
 
       if (dSettings && s) localStorage.setItem("pulp-settings", JSON.stringify(s))
-      if (dGrove && g) localStorage.setItem("pulp-grove", JSON.stringify(g))
+      if (dGrove && g) localStorage.setItem("pulp-grove", JSON.stringify(signGrove(g)))
       if (dNote) {
         localStorage.setItem("pulp-notes", JSON.stringify(notesRef.current))
         localStorage.setItem("pulp-folders", JSON.stringify(f))
@@ -2791,7 +2800,7 @@ export default function NoteApp() {
     clearTimeout(groveSaveTimer.current)
     groveSaveTimer.current = setTimeout(() => {
       flushRefs.current.dirty.grove = false
-      const groveData = { juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled }
+      const groveData = signGrove({ juice: sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled })
       localStorage.setItem("pulp-grove", JSON.stringify(groveData))
       if (user) {
         const invMap: Record<string, number> = {}

@@ -100,6 +100,14 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
   )
 }
 
+const DEMO_TREES = [
+  'tangerine', 'lemon', 'plum', 'pineapple', 'passionfruit', 'pomegranate', 'coconut',
+  'sunflower', 'grape', 'pear', 'melon', 'mushroom', 'cactus', 'sage', 'lychee', 'papaya',
+  'coral', 'bloom', 'lotus', 'birch', 'pine', 'ivy', 'oak', 'sakura', 'cattail', 'cypress',
+  'bamboo', 'mangrove', 'bonsai', 'juniper', 'cedarwood', 'baobab', 'winterveil', 'agave',
+  'abyss', 'starweaver', 'leviathan', 'prismatic',
+] as const
+
 const ORCHARD_TREES = [
   { type: 'tangerine', x: 12, y: 0, delay: 0.3 },
   { type: 'sakura', x: 28, y: 4, delay: 1.0 },
@@ -110,6 +118,8 @@ const ORCHARD_TREES = [
 ] as const
 
 function DemoOrchard({ fullscreen = false }: { fullscreen?: boolean }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const [growStages, setGrowStages] = useState<number[]>(ORCHARD_TREES.map(() => -1))
 
   useEffect(() => {
@@ -123,6 +133,8 @@ function DemoOrchard({ fullscreen = false }: { fullscreen?: boolean }) {
     })
     return () => timers.forEach(clearTimeout)
   }, [])
+
+  if (!mounted) return <div style={{ width: fullscreen ? '100%' : 480, height: fullscreen ? '100%' : 320 }} />
 
   return (
     <div style={{
@@ -528,6 +540,143 @@ function DemoOrchard({ fullscreen = false }: { fullscreen?: boolean }) {
   )
 }
 
+function DemoTimer({ serif }: { serif: string }) {
+  const [started, setStarted] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const total = 20 * 60
+  const treeChangeInterval = 3
+
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), 2500)
+    return () => clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (!started) return
+    const iv = setInterval(() => {
+      setElapsed(e => e >= total ? 0 : e + 1)
+    }, 30)
+    return () => clearInterval(iv)
+  }, [started, total])
+
+  const progress = elapsed / total
+  const remaining = total - elapsed
+  const mins = Math.floor(remaining / 60)
+  const secs = remaining % 60
+
+  const treeIdx = Math.floor(elapsed / treeChangeInterval) % DEMO_TREES.length
+  const shuffleType = DEMO_TREES[treeIdx]
+  const stage = !started ? -1 : progress < 0.08 ? 0 : progress < 0.25 ? 1 : progress < 0.5 ? 2 : progress < 0.8 ? 3 : 4
+  const plantSize = !started ? 100 : stage === 0 ? 50 : 70 + stage * 12
+  const done = elapsed >= total
+
+  const mainColor = "#d97706"
+  const subtleColor = "#71717a"
+
+  const boxW = 250
+  const boxH = 480
+  const perim = 2 * (boxW + boxH)
+  const dashOffset = perim - perim * progress
+
+  return (
+    <div style={{
+      width: boxW, position: 'relative',
+      fontFamily: serif,
+      userSelect: 'none',
+    }}>
+      <svg
+        style={{ position: 'absolute', inset: -1, width: boxW + 2, height: boxH + 2, pointerEvents: 'none', zIndex: 1 }}
+        viewBox={`-1 -1 ${boxW + 2} ${boxH + 2}`}
+      >
+        <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
+          fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
+        <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
+          fill="none" stroke={mainColor} strokeWidth="2"
+          strokeDasharray={perim} strokeDashoffset={dashOffset}
+          style={{ transition: 'stroke-dashoffset 0.3s linear' }} />
+      </svg>
+
+      <div style={{
+        background: 'rgba(0,0,0,0.02)', borderRadius: 4, overflow: 'hidden',
+        height: boxH,
+      }}>
+        <div style={{ padding: '36px 16px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{
+              fontFamily: serif, fontWeight: 500, fontSize: 44, lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              <span style={{ color: started ? mainColor : '#e4e4e7' }}>{String(mins).padStart(2, '0')}</span>
+              <span style={{ color: '#a1a1aa' }}>:{String(secs).padStart(2, '0')}</span>
+            </div>
+            <p style={{
+              fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.18em', marginTop: 8,
+              color: done ? '#22c55e' : subtleColor,
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}>
+              {done ? 'complete' : started ? 'in session' : 'ready'}
+            </p>
+          </div>
+
+          <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+            <div style={{ position: 'absolute', bottom: 4, left: 0, width: '100%', zIndex: 0 }}>
+              <svg width="100%" viewBox="0 0 200 40" preserveAspectRatio="none" style={{ height: 40 }}>
+                <defs>
+                  <linearGradient id="dh-hill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#2a3a22" />
+                    <stop offset="100%" stopColor="#1a2416" />
+                  </linearGradient>
+                  <linearGradient id="dh-moss" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3a4a30" />
+                    <stop offset="100%" stopColor="#2a3620" />
+                  </linearGradient>
+                </defs>
+                <ellipse cx="100" cy="22" rx="95" ry="18" fill="url(#dh-hill)" />
+                <ellipse cx="80" cy="20" rx="50" ry="10" fill="url(#dh-moss)" opacity="0.6" />
+                <ellipse cx="130" cy="21" rx="35" ry="8" fill="url(#dh-moss)" opacity="0.4" />
+                {[25, 55, 80, 110, 140, 165].map((x, i) => (
+                  <g key={i} opacity={0.3}>
+                    <path d={`M${x},${14 + (i % 2) * 3} q${-1.5},${-3} ${-0.5},${-4.5} M${x},${14 + (i % 2) * 3} q${1},${-2.5} ${2},${-4}`} stroke="#5a7a48" strokeWidth="0.8" fill="none" />
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            <div style={{
+              position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+              bottom: stage === 0 ? 18 : 30, zIndex: 10,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+            }}>
+              {!started ? (
+                <PlantIcon type={shuffleType} size={plantSize} stage={4} />
+              ) : stage === 0 ? (
+                <PlantIcon type={shuffleType} size={plantSize} isSeed />
+              ) : (
+                <PlantIcon type={shuffleType} size={plantSize} stage={Math.min(stage - 1, 3)} />
+              )}
+            </div>
+          </div>
+
+          <span style={{
+            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 9, fontWeight: 500,
+            textTransform: 'uppercase', letterSpacing: '0.15em',
+            marginTop: 16, cursor: 'default',
+            color: done ? '#22c55e' : 'transparent',
+            backgroundImage: done ? 'none' : 'linear-gradient(90deg, #bdb9b2 0%, #bdb9b2 40%, #fff 50%, #bdb9b2 60%, #bdb9b2 100%)',
+            backgroundSize: '200% 100%',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            animation: done ? 'none' : 'shimmer 2s ease-in-out infinite',
+          }}>
+            {done ? 'complete' : 'in progress'}
+            <style>{`@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }`}</style>
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const MODAL_CONFIG: Record<string, { subtitle: string, hasSubject: boolean, subjectPlaceholder: string, bodyPlaceholder: string, bodyLabel: string }> = {
   'report a bug': { subtitle: 'help me squash it.', hasSubject: true, subjectPlaceholder: "what's broken?", bodyPlaceholder: 'steps to reproduce, what you expected, etc.', bodyLabel: 'details (optional)' },
   'request a feature': { subtitle: "i want to hear it. i'll let you know if i add it.", hasSubject: true, subjectPlaceholder: "what's the feature?", bodyPlaceholder: 'why would this be useful? any details help.', bodyLabel: 'description (optional)' },
@@ -772,22 +921,19 @@ export default function PulpLanding() {
         </div>
       </nav>
 
-      {/* Subtle grid texture — fixed behind hero */}
+      {/* Subtle dot texture — fixed behind hero */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: `
-          linear-gradient(rgba(15,15,16,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(15,15,16,0.03) 1px, transparent 1px)
-        `,
-        backgroundSize: '38px 38px',
-        maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%)',
-        WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%)',
-        opacity: Math.max(0, 1 - orchardProgress * 2),
+        backgroundImage: 'url(/paper-texture.png)',
+        backgroundSize: '512px 512px',
+        backgroundRepeat: 'repeat',
+        mixBlendMode: 'multiply',
+        opacity: Math.max(0, (1 - orchardProgress * 2) * 0.4),
       }} />
 
       {/* ===== Hero ===== */}
-      <section style={{ height: '80vh', display: 'flex', alignItems: 'center', padding: '0 80px', maxWidth: 1320, margin: '0 auto', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 100, width: '100%', marginTop: '-6vh' }}>
+      <section style={{ height: '100vh', display: 'flex', alignItems: 'center', padding: '0 80px', maxWidth: 1320, margin: '0 auto', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 100, width: '100%' }}>
           <div style={{ flex: 1, opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`, transition: 'opacity 0.05s, transform 0.05s' }}>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -811,17 +957,17 @@ export default function PulpLanding() {
                   color: '#6b6864', maxWidth: 460, textTransform: 'lowercase', margin: '0 0 16px 0',
                   paddingLeft: 24,
                 }}>
-                  pulp is a gamified notes webapp that keeps up with you in class — because note-taking should be fast, fun, and distraction-free.
+                  a cozy notes app that makes studying feel like a game. fast, shortcut-driven notebooks with a focus timer that grows your own little orchard.
                 </p>
                 <ul style={{
                   fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.9,
                   color: '#6b6864', textTransform: 'lowercase', margin: '0 0 0 0',
                   paddingLeft: 42, listStyleType: "'·  '",
                 }}>
-                  <li>focus timer + site blocker</li>
-                  <li>real stakes. quit a session = lose all your progress</li>
-                  <li>hyperproductive shortcut setup</li>
-                  <li>an orchard that grows as you write</li>
+                  <li>keyboard-first notes — no toolbar clutter</li>
+                  <li>focus timer that grows trees as you write</li>
+                  <li>quit a session and your tree dies</li>
+                  <li>40+ species to collect</li>
                 </ul>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 56 }}>
@@ -856,14 +1002,14 @@ export default function PulpLanding() {
             transform: heroDone ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
             transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s, transform 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
           }}>
-            {heroDone && <DemoOrchard />}
+            {heroDone && <DemoTimer serif={serif} />}
           </div>
         </div>
 
       </section>
 
       {/* ===== Orchard expansion zone — tall scroll spacer with pinned orchard ===== */}
-      <div ref={orchardSectionRef} style={{ height: '200vh', position: 'relative' }}>
+      <div ref={orchardSectionRef} style={{ height: '500vh', position: 'relative' }}>
         <div style={{
           position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
         }}>
@@ -873,33 +1019,40 @@ export default function PulpLanding() {
             opacity: Math.min(1, orchardProgress * 4),
             transition: 'opacity 0.05s',
           }}>
-            <LandingTerrain />
+            <LandingTerrain progress={orchardProgress} />
           </div>
 
-          {/* Overlay text that fades in as orchard fills screen */}
+          {/* Overlay text — appears after all tree rows have scrolled in */}
           <div style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none', zIndex: 10,
-            opacity: orchardProgress > 0.15 ? Math.min(1, (orchardProgress - 0.15) * 3) : 0,
+            opacity: orchardProgress > 0.65 ? Math.min(1, (orchardProgress - 0.65) * 5) : 0,
           }}>
-            <h2 style={{
-              fontFamily: serif, fontSize: 'clamp(2rem, 5vw, 3.6rem)', fontWeight: 400,
-              color: '#fff', textTransform: 'lowercase', letterSpacing: '-0.03em',
-              textShadow: '0 2px 20px rgba(0,0,0,0.3)',
-              margin: '0 0 12px 0',
-              transform: `translateY(${(1 - Math.min(1, (orchardProgress - 0.15) * 3)) * 30}px)`,
+            <div style={{
+              background: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: 12,
+              padding: '32px 48px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              textAlign: 'center',
+              transform: `translateY(${(1 - Math.min(1, orchardProgress > 0.65 ? (orchardProgress - 0.65) * 5 : 0)) * 30}px)`,
             }}>
-              your orchard awaits.
-            </h2>
-            <p style={{
-              fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.15em',
-              color: 'rgba(255,255,255,0.7)', textTransform: 'lowercase',
-              textShadow: '0 1px 8px rgba(0,0,0,0.3)',
-              transform: `translateY(${(1 - Math.min(1, (orchardProgress - 0.15) * 3)) * 20}px)`,
-            }}>
-              every tree grown through focus
-            </p>
+              <h2 style={{
+                fontFamily: serif, fontSize: 'clamp(2rem, 5vw, 3.6rem)', fontWeight: 400,
+                color: '#fff', textTransform: 'lowercase', letterSpacing: '-0.03em',
+                margin: '0 0 12px 0',
+              }}>
+                your orchard awaits.
+              </h2>
+              <p style={{
+                fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.15em',
+                color: 'rgba(255,255,255,0.7)', textTransform: 'lowercase',
+                margin: 0,
+              }}>
+                every tree grown through focus
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -1,9 +1,7 @@
-import PulpLanding from "@/app/pulp-landing"
+"use client"
+import dynamic from "next/dynamic"
 
-export const metadata = {
-  title: "Pulp - A Playful Note-Taking App",
-  description: "A minimalist note-taking app where your thoughts feel like handwritten pages in a vintage journal",
-}
+const PulpLanding = dynamic(() => import("@/app/pulp-landing"), { ssr: false })
 
 export default function PulpPage() {
   return <PulpLanding />

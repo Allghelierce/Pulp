@@ -22,6 +22,21 @@ function saveLocal(layout: DashboardLayout) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
 }
 
+function overlaps(a: WidgetInstance, b: WidgetInstance): boolean {
+  return a.position[0] < b.position[0] + b.size[0] && a.position[0] + a.size[0] > b.position[0]
+    && a.position[1] < b.position[1] + b.size[1] && a.position[1] + a.size[1] > b.position[1]
+}
+
+function findEmptySlot(widget: WidgetInstance, others: WidgetInstance[]): [number, number] {
+  for (let row = 0; row <= MAX_ROWS - widget.size[1]; row++) {
+    for (let col = 0; col <= GRID_COLS - widget.size[0]; col++) {
+      const test = { ...widget, position: [col, row] as [number, number] }
+      if (!others.some(o => overlaps(test, o))) return [col, row]
+    }
+  }
+  return widget.position
+}
+
 function resolveCollisions(widgets: WidgetInstance[]): WidgetInstance[] {
   const sorted = widgets.map(w => ({ ...w, position: [...w.position] as [number, number], size: [...w.size] as [number, number] }))
     .sort((a, b) => a.position[1] - b.position[1] || a.position[0] - b.position[0])
@@ -30,10 +45,14 @@ function resolveCollisions(widgets: WidgetInstance[]): WidgetInstance[] {
     for (let i = 0; i < sorted.length; i++) {
       for (let j = i + 1; j < sorted.length; j++) {
         const a = sorted[i], b = sorted[j]
-        const overlapX = a.position[0] < b.position[0] + b.size[0] && a.position[0] + a.size[0] > b.position[0]
-        const overlapY = a.position[1] < b.position[1] + b.size[1] && a.position[1] + a.size[1] > b.position[1]
-        if (overlapX && overlapY) {
-          b.position = [b.position[0], a.position[1] + a.size[1]]
+        if (overlaps(a, b)) {
+          const pushRow = a.position[1] + a.size[1]
+          if (pushRow + b.size[1] <= MAX_ROWS) {
+            b.position = [b.position[0], pushRow]
+          } else {
+            const others = sorted.filter((_, k) => k !== j)
+            b.position = findEmptySlot(b, others)
+          }
           moved = true
         }
       }
@@ -94,12 +113,26 @@ export function useWidgetLayout() {
 
   const moveWidget = useCallback((instanceId: string, newPos: [number, number]) => {
     setLayout(prev => {
-      const widgets = prev.widgets.map(w => {
-        if (w.instanceId !== instanceId) return w
-        const col = Math.max(0, Math.min(newPos[0], GRID_COLS - w.size[0]))
-        const row = Math.max(0, newPos[1])
-        return { ...w, position: [col, row] as [number, number] }
+      const moving = prev.widgets.find(w => w.instanceId === instanceId)
+      if (!moving) return prev
+      const col = Math.max(0, Math.min(newPos[0], GRID_COLS - moving.size[0]))
+      const row = Math.max(0, Math.min(newPos[1], MAX_ROWS - moving.size[1]))
+      const oldPos = moving.position
+      const movedWidget = { ...moving, position: [col, row] as [number, number] }
+
+      const hitWidgets = prev.widgets.filter(w => {
+        if (w.instanceId === instanceId) return false
+        return overlaps(movedWidget, { ...w })
       })
+
+      const widgets = prev.widgets.map(w => {
+        if (w.instanceId === instanceId) return movedWidget
+        if (hitWidgets.some(h => h.instanceId === w.instanceId)) {
+          return { ...w, position: [...oldPos] as [number, number] }
+        }
+        return w
+      })
+
       const resolved = resolveCollisions(widgets)
       const next = { ...prev, widgets: resolved, lastModified: Date.now() }
       saveLocal(next)

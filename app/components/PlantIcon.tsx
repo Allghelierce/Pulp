@@ -47,9 +47,10 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
   const swayDelay = -(swayHash * 0.7)
   const swayDeg = stage >= 4 ? 0.6 : stage >= 3 ? 1.0 : stage >= 2 ? 1.5 : 2.0
 
+  const hasGlow = ANIMATED_SHAPES.has(shape)
   const containerStyle = useMemo(() => ({
-    width: size, height: Math.round(size * 1.3), display: 'flex' as const, alignItems: 'flex-end' as const, justifyContent: 'center' as const,
-  }), [size])
+    width: size, height: Math.round(size * (hasGlow ? 1.8 : 1.3)), display: 'flex' as const, alignItems: 'flex-end' as const, justifyContent: 'center' as const,
+  }), [size, hasGlow])
 
   const swayStyle = useMemo(() => disableSway ? {
     transformOrigin: '24px 46px',
@@ -4444,7 +4445,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
 
   return (
     <div style={containerStyle}>
-      <svg width="100%" height="100%" viewBox="0 6 48 42" preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="100%" height="100%" viewBox={hasGlow ? "-4 -10 56 58" : "0 6 48 42"} preserveAspectRatio="xMidYMax meet" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id={`${uid}-edge`} x="-5%" y="-5%" width="110%" height="110%">
             <feMorphology operator="dilate" radius="0.1" in="SourceAlpha" result="expanded"/>

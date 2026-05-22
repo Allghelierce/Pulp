@@ -1,6 +1,6 @@
 "use client"
 import { memo, useCallback, useEffect, useRef, useState } from "react"
-import { GRID_COLS, ROW_HEIGHT, GRID_GAP, GRID_PAD, getWidgetDef, type WidgetInstance, type WidgetProps } from "./widgetRegistry"
+import { GRID_COLS, ROW_HEIGHT, GRID_GAP, GRID_PAD, MAX_ROWS, getWidgetDef, type WidgetInstance, type WidgetProps } from "./widgetRegistry"
 import { WidgetWrapper } from "./WidgetWrapper"
 
 interface DashboardGridProps {
@@ -51,7 +51,7 @@ export const DashboardGrid = memo(function DashboardGrid({
   const clampGrid = useCallback((col: number, row: number, size: [number, number]): [number, number] => {
     return [
       Math.max(0, Math.min(col, GRID_COLS - size[0])),
-      Math.max(0, row),
+      Math.max(0, Math.min(row, MAX_ROWS - size[1])),
     ]
   }, [])
 
