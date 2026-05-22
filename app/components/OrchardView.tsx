@@ -300,33 +300,33 @@ const PALETTES: Record<string, SkyPalette> = {
     ambientOverlay: 'rgba(40,20,8,0.15)', ambientOpacity: 0.15,
   },
   morning: {
-    skyTop: '#8a5828', skyMid: '#a06830', skyLow: '#b07838', skyHorizon: '#a08040', skyField: '#7a8870', skyBottom: '#6a7868',
-    oceanTop: '#8a7850', oceanMid: '#7a6a42', oceanBot: '#907a58',
-    mtnTop: '#5a6068', mtnMid: '#4a5458', mtnBot: '#3e4a4e',
-    snowTop: '#b0b0a8', snowFade: '#6a6e70',
-    hillMidTop: '#3e6430', hillMidBot: '#345828',
-    hillNearTop: '#4a6438', hillNearBot: '#3e5830',
-    fieldTop: '#4a6834', fieldMid1: '#446030', fieldMid2: '#3e5a2c', fieldBot: '#385228',
+    skyTop: '#8a6838', skyMid: '#a07840', skyLow: '#b89050', skyHorizon: '#b8a868', skyField: '#9aaa80', skyBottom: '#8a9a78',
+    oceanTop: '#8a8860', oceanMid: '#7a7a50', oceanBot: '#9a9068',
+    mtnTop: '#5a6260', mtnMid: '#4e5854', mtnBot: '#44504a',
+    snowTop: '#c8c8c0', snowFade: '#8a8e88',
+    hillMidTop: '#446a34', hillMidBot: '#3a5e2c',
+    hillNearTop: '#4e7040', hillNearBot: '#426434',
+    fieldTop: '#4e6e38', fieldMid1: '#486834', fieldMid2: '#446430', fieldBot: '#3e5e2c',
     sunGlow: 0.6, sunColor: '#d97706', sunY: 6,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
     mtnLightOpacity: 0.12, mtnLightColor: 'rgba(255,200,100,0.12)',
-    groveOpacity: 0.9,
+    groveOpacity: 0.92,
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   day: {
-    skyTop: '#6a7a82', skyMid: '#7a8888', skyLow: '#8a9690', skyHorizon: '#90a08a', skyField: '#7a8868', skyBottom: '#728060',
-    oceanTop: '#4a6258', oceanMid: '#3e584c', oceanBot: '#5a6e5e',
-    mtnTop: '#5a6460', mtnMid: '#4e5a54', mtnBot: '#44524c',
-    snowTop: '#a8a89e', snowFade: '#6a6c66',
-    hillMidTop: '#304828', hillMidBot: '#2a4222',
-    hillNearTop: '#385030', hillNearBot: '#324a2a',
-    fieldTop: '#364c2c', fieldMid1: '#324828', fieldMid2: '#304426', fieldBot: '#2c4022',
+    skyTop: '#87aacc', skyMid: '#9dbdcc', skyLow: '#b8ccbb', skyHorizon: '#c8d8b8', skyField: '#d4debb', skyBottom: '#dae4c0',
+    oceanTop: '#6a9aaa', oceanMid: '#5a8a9a', oceanBot: '#7aaab0',
+    mtnTop: '#5a6858', mtnMid: '#4a5848', mtnBot: '#3a4838',
+    snowTop: '#e8e8e0', snowFade: '#a0a898',
+    hillMidTop: '#4a6a3a', hillMidBot: '#3e5e30',
+    hillNearTop: '#507840', hillNearBot: '#446a34',
+    fieldTop: '#5a7a48', fieldMid1: '#527242', fieldMid2: '#4e6e3e', fieldBot: '#4a6838',
     sunGlow: 0.2, sunColor: '#b09048', sunY: 3,
     moonGlow: 0, moonY: 32,
     starOpacity: 0,
     mtnLightOpacity: 0.05, mtnLightColor: 'rgba(255,240,180,0.05)',
-    groveOpacity: 0.9,
+    groveOpacity: 0.95,
     ambientOverlay: 'rgba(0,0,0,0)', ambientOpacity: 0,
   },
   dusk: {
@@ -420,7 +420,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
     (terrainCacheSvgRef as React.MutableRefObject<SVGSVGElement | null>).current = el
   }, [terrainCacheSvgRef])
 
-  const [svgAspect, setSvgAspect] = useState(2)
+  const [svgAspect, setSvgAspect] = useState(200 / 104)
   useEffect(() => {
     const el = terrainSvgRef.current
     if (!el) return
@@ -430,7 +430,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
       debounce = setTimeout(() => {
         const r = el.getBoundingClientRect()
         if (r.width > 0 && r.height > 0) setSvgAspect(r.width / r.height)
-      }, 150)
+      }, 16)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -2237,7 +2237,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 <path d={`M${m.x - 0.5},${m.baseY} L${m.x - 0.3},${topY + 1} L${m.x + 0.3},${topY + 1} L${m.x + 0.5},${m.baseY}Z`} fill={towerC} />
                 <path d={`M${m.x},${m.baseY} L${m.x + 0.15},${topY + 1}`} stroke={towerCd} strokeWidth="0.15" opacity="0.4" />
                 <circle cx={m.x} cy={topY + 1} r="0.45" fill={towerCd} />
-                <g style={{ transformOrigin: `${m.x}px ${topY + 1}px`, animation: `spin ${18 + i * 4}s linear infinite` }}>
+                <g>
+                  <animateTransform attributeName="transform" type="rotate" from={`0 ${m.x} ${topY + 1}`} to={`360 ${m.x} ${topY + 1}`} dur={`${18 + i * 4}s`} repeatCount="indefinite" />
                   {[0, 1, 2, 3].map(b => {
                     const ang = (phase + b * 90) * Math.PI / 180
                     const ex = m.x + Math.cos(ang) * m.bladeR

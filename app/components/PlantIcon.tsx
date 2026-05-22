@@ -3305,9 +3305,9 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
               const t = i / leafCount;
               const ly = baseY - 3 - t * (h - 4);
               const side = i % 2 === 0 ? -1 : 1;
-              const lx = cx + side * (2 + Math.random() * 2);
-              const size = s >= 2 ? 2.2 + Math.random() * 0.8 : 1.5;
-              const rot = side * (15 + Math.random() * 20);
+              const lx = cx + side * (2 + ((i * 7 + 3) % 11) / 11 * 2);
+              const size = s >= 2 ? 2.2 + ((i * 13 + 5) % 17) / 17 * 0.8 : 1.5;
+              const rot = side * (15 + ((i * 11 + 7) % 13) / 13 * 20);
               const leafFill = i % 3 === 0 ? light : (i % 3 === 1 ? color : dark);
               return (
                 <g key={`ivy-${i}`}>
