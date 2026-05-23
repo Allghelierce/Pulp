@@ -64,7 +64,8 @@ const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
   const jitterY = (rng() - 0.5) * 1.5
   const depthT = Math.max(0, Math.min(1, (pos.y - 40) / 55))
   const depthScale = 0.55 + depthT * 0.55
-  const size = Math.round(112 * depthScale / 16) * 16 || 16
+  const shrink = (type === 'birch' || type === 'baobab') ? 0.75 : 1
+  const size = Math.round(112 * depthScale * shrink / 16) * 16 || 16
   const rowStart = 0.15 + pos.row * 0.12
   const scaleY = 0.7 + depthT * 0.3
   const y = Math.max(42, Math.min(94, pos.y + jitterY))
@@ -90,6 +91,7 @@ export const LandingTerrain = memo(function LandingTerrain({ progress = 0 }: { p
           transform: translate(-50%, -76%) scaleY(var(--sy)) scale(clamp(0, calc((var(--p) - var(--rs)) * 10), 1));
           opacity: clamp(0, calc((var(--p) - var(--rs)) * 10), 1);
           transform-origin: center bottom;
+          filter: brightness(0.82) saturate(0.85);
         }
       `}</style>
 

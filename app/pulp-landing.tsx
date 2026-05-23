@@ -545,8 +545,11 @@ function DemoTimer({ serif }: { serif: string }) {
   const [started, setStarted] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [sapReward, setSapReward] = useState<number | null>(null)
-  const total = 20 * 60
+  const [paused, setPaused] = useState(false)
+  const [showCta, setShowCta] = useState(false)
+  const total = 10 * 60
   const treeChangeInterval = 3
+  const mono = '"JetBrains Mono", ui-monospace, monospace'
 
   useEffect(() => {
     const t = setTimeout(() => setStarted(true), 1200)
@@ -554,21 +557,26 @@ function DemoTimer({ serif }: { serif: string }) {
   }, [])
 
   useEffect(() => {
-    if (!started) return
+    if (!started || paused) return
     const iv = setInterval(() => {
       setElapsed(e => {
         if (e >= total) {
           setSapReward(Math.floor(Math.random() * 40) + 10)
+          setPaused(true)
+          setTimeout(() => setShowCta(true), 1500)
           setTimeout(() => {
             setSapReward(null)
-          }, 1800)
+            setShowCta(false)
+            setPaused(false)
+            return
+          }, 5000)
           return 0
         }
         return e + 1
       })
     }, 30)
     return () => clearInterval(iv)
-  }, [started, total])
+  }, [started, paused, total])
 
   const progress = elapsed / total
   const remaining = total - elapsed
@@ -691,6 +699,17 @@ function DemoTimer({ serif }: { serif: string }) {
             }}>
               +{sapReward} sap
             </span>
+          )}
+          {showCta && (
+            <a href="/login" style={{
+              fontFamily: mono, fontSize: '0.68rem', letterSpacing: '0.06em',
+              padding: '8px 18px', borderRadius: 6, textDecoration: 'none', textTransform: 'lowercase',
+              background: '#d97706', color: '#fff', marginTop: 10,
+              animation: 'sapPop 0.6s ease forwards',
+              boxShadow: '0 3px 12px -3px rgba(234,88,12,0.3)',
+            }}>
+              start growing — free
+            </a>
           )}
         </div>
       </div>
@@ -873,10 +892,11 @@ export default function PulpLanding() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center',
         padding: '12px 80px',
-        background: scrolled ? 'rgba(255,255,255,0.4)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        background: scrolled ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         borderBottom: scrolled ? '1px solid rgba(15,15,16,0.06)' : '1px solid transparent',
-        transition: 'background 0.4s, backdrop-filter 0.4s, border-bottom 0.4s',
+        transition: 'background 0.4s, border-bottom 0.4s',
       }}>
         <a
           href="#"
@@ -891,7 +911,9 @@ export default function PulpLanding() {
             <a
               onClick={(e) => { e.stopPropagation(); setReachOutOpen(o => !o) }}
               style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer', userSelect: 'none' }}
-            >reach out</a>
+            >
+              <span style={{ textShadow: '0 0 8px rgba(255,255,255,0.6)' }}>reach out</span>
+            </a>
             <div style={{
               position: 'absolute', top: '100%', left: '50%',
               marginTop: 10, minWidth: 160, borderRadius: 8,
@@ -930,7 +952,7 @@ export default function PulpLanding() {
               ))}
             </div>
           </div>
-          <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase' }}>log in</a>
+          <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase', textShadow: '0 0 8px rgba(255,255,255,0.6)' }}>log in</a>
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <a href="/login" style={{
@@ -953,26 +975,6 @@ export default function PulpLanding() {
 
       {/* ===== Hero ===== */}
       <section style={{ height: '100vh', display: 'flex', alignItems: 'center', padding: '0 80px', maxWidth: 1320, margin: '0 auto', position: 'relative' }}>
-        {/* Squiggly background doodles */}
-        {/* Citrus logo doodle — top right */}
-        <svg width="160" height="170" viewBox="0 0 90 86" style={{ position: 'absolute', top: '15%', right: '14%', opacity: 0.1, pointerEvents: 'none', transform: 'rotate(8deg)' }}>
-          {/* Left half */}
-          <path d="M38,12 Q22,12 12,20 Q4,30 4,46 Q4,60 12,70 Q22,82 38,82 L38,12 Z" fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" />
-          <path d="M16,28 Q28,38 38,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
-          <path d="M16,66 Q28,56 38,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
-          <circle cx="34" cy="46" r="3" fill="#d97706" opacity="0.5" />
-          {/* Right half — offset */}
-          <g transform="translate(8, 4)">
-            <path d="M42,12 Q58,10 68,22 Q78,34 76,48 Q74,64 64,72 Q52,82 42,82 L42,12 Z" fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" />
-            <path d="M64,28 Q52,38 42,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
-            <path d="M64,66 Q52,56 42,46" fill="none" stroke="#d97706" strokeWidth="1.8" strokeLinecap="round" opacity="0.6" />
-            <circle cx="46" cy="46" r="3" fill="#d97706" opacity="0.5" />
-          </g>
-          {/* Leaves */}
-          <path d="M38,12 Q36,6 38,2 Q42,0 46,2 Q44,6 40,10" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M38,12 Q34,6 30,4 Q28,2 26,4 Q28,8 32,10 Q35,12 38,12" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 100, width: '100%' }}>
           <div style={{ flex: 1, opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`, transition: 'opacity 0.05s, transform 0.05s', position: 'relative' }}>
             <motion.div
@@ -1045,13 +1047,67 @@ export default function PulpLanding() {
 
           <div style={{
             flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'relative',
             opacity: heroDone ? 1 : 0,
             transform: heroDone ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
             transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s, transform 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
           }}>
+            {/* Citrus half-slices scattered around the timer */}
+            <svg width="400" height="630" viewBox="0 0 400 630" style={{
+              position: 'absolute', top: '50%', left: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none', opacity: 0.09,
+            }}>
+              {[
+                { x: 45, y: 60, r: 30, rot: -25 },
+                { x: 340, y: 100, r: 26, rot: 18 },
+                { x: 20, y: 260, r: 34, rot: 10 },
+                { x: 365, y: 320, r: 28, rot: -15 },
+                { x: 35, y: 470, r: 32, rot: -8 },
+                { x: 350, y: 530, r: 24, rot: 22 },
+              ].map((s, i) => {
+                const w = s.r * 0.12
+                return (
+                  <g key={i} transform={`translate(${s.x}, ${s.y}) rotate(${s.rot})`}>
+                    <path d={`M${-w},${-s.r} Q${s.r + w},${-s.r * 0.6} ${s.r + w},0 Q${s.r - w},${s.r * 0.6} ${w},${s.r} L${w},${-s.r + 2} Z`} fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={`M${w * 0.5},${1} Q${s.r * 0.4},${2} ${s.r * 0.82},${1}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
+                    <path d={`M${w},${-s.r * 0.42} Q${s.r * 0.35},${-s.r * 0.3} ${s.r * 0.72},${-s.r * 0.18}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
+                    <path d={`M${w},${s.r * 0.42} Q${s.r * 0.35},${s.r * 0.3} ${s.r * 0.72},${s.r * 0.18}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
+                    <circle cx={w} cy="0" r="3" fill="#d97706" opacity="0.45" />
+                    <circle cx={s.r * 0.4} cy={-s.r * 0.1} r="1.8" fill="#d97706" opacity="0.4" />
+                    <circle cx={s.r * 0.32} cy={s.r * 0.22} r="1.6" fill="#d97706" opacity="0.4" />
+                    <circle cx={s.r * 0.55} cy={s.r * 0.06} r="1.4" fill="#d97706" opacity="0.4" />
+                  </g>
+                )
+              })}
+            </svg>
             {heroDone && <DemoTimer serif={serif} />}
           </div>
         </div>
+
+        {/* Scroll down indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: heroDone ? 1 : 0 }}
+          transition={{ duration: 1, delay: 0.6 }}
+          style={{
+            position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+            opacity: heroTextOpacity,
+            pointerEvents: 'none',
+          }}
+        >
+          <span style={{ fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#bdb9b2', textTransform: 'lowercase' }}>
+            scroll down
+          </span>
+          <motion.svg
+            width="16" height="16" viewBox="0 0 16 16" fill="none"
+            animate={{ y: [0, 4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <path d="M4 6L8 10L12 6" stroke="#bdb9b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </motion.svg>
+        </motion.div>
 
       </section>
 
@@ -1227,80 +1283,6 @@ export default function PulpLanding() {
           </div>
         </section>
 
-        {/* Tree collection */}
-        <section id="collection" style={{ borderTop: '1px solid rgba(15,15,16,0.08)', borderBottom: '1px solid rgba(15,15,16,0.08)', padding: '80px 80px', background: 'rgba(0,0,0,0.015)' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 48 }}>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-              >
-                <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 12 }}>
-                  -- collection
-                </span>
-                <h2 style={{ fontFamily: serif, fontSize: '1.8rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
-                  40+ species to collect
-                </h2>
-                <p style={{ fontFamily: serif, fontSize: '0.92rem', color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
-                  each hand-drawn and earned through focus.
-                </p>
-              </motion.div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {['common', 'uncommon', 'rare', 'sacred'].map((r, i) => (
-                  <motion.span
-                    key={r}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.3 + i * 0.08, ease: [0.34, 1.56, 0.64, 1] }}
-                    style={{
-                      fontFamily: mono, fontSize: '0.55rem', letterSpacing: '0.1em',
-                      padding: '4px 10px', borderRadius: 20,
-                      background: RARITY_COLOR[r] + '15',
-                      color: RARITY_COLOR[r],
-                      textTransform: 'lowercase',
-                      border: `1px solid ${RARITY_COLOR[r]}30`,
-                      display: 'inline-block',
-                    }}
-                  >{r}</motion.span>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ overflow: 'hidden', width: '100%', maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
-              <div style={{
-                display: 'flex', alignItems: 'flex-end', gap: 40, width: 'max-content',
-                animation: 'conveyorScroll 50s linear infinite',
-                willChange: 'transform',
-              }}>
-                {[...SHOWCASE_TREES, ...SHOWCASE_TREES, ...SHOWCASE_TREES].map((t, i) => (
-                  <div
-                    key={`${t.type}-${i}`}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0,
-                      padding: '16px 12px', borderRadius: 10,
-                      background: 'rgba(255,255,255,0.6)',
-                      border: '1px solid rgba(15,15,16,0.04)',
-                    }}
-                  >
-                    <PlantIcon type={t.type} size={72} stage={3} hideGround />
-                    <span style={{ fontFamily: serif, fontSize: '0.82rem', color: '#0f0f10', textTransform: 'lowercase' }}>{t.name}</span>
-                    <span style={{
-                      fontFamily: mono, fontSize: '0.55rem', letterSpacing: '0.1em',
-                      color: RARITY_COLOR[t.rarity] || '#a1a1aa', textTransform: 'lowercase',
-                      padding: '2px 8px', borderRadius: 10,
-                      background: (RARITY_COLOR[t.rarity] || '#a1a1aa') + '12',
-                    }}>{t.rarity}</span>
-                  </div>
-                ))}
-              </div>
-              <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-33.33%) } }`}</style>
-            </div>
-          </div>
-        </section>
-
         {/* CTA */}
         <section style={{ padding: '120px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           <div style={{
@@ -1345,14 +1327,37 @@ export default function PulpLanding() {
         {/* Footer */}
         <footer style={{
           borderTop: '1px solid rgba(15,15,16,0.08)',
-          padding: '24px 80px',
+          padding: '80px 80px 40px',
+          textAlign: 'center',
         }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: serif, fontSize: 14, fontWeight: 400, color: accent }}>pulp</span>
-            <div style={{ display: 'flex', gap: 24 }}>
-              <a href="/privacy" style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', textDecoration: 'none', textTransform: 'lowercase', letterSpacing: '0.06em' }}>privacy</a>
-              <a href="/terms" style={{ fontFamily: mono, fontSize: '0.65rem', color: '#bdb9b2', textDecoration: 'none', textTransform: 'lowercase', letterSpacing: '0.06em' }}>terms</a>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <h2 style={{
+              fontFamily: serif, fontSize: 'clamp(4rem, 10vw, 8rem)', fontWeight: 400,
+              textTransform: 'lowercase', letterSpacing: '-0.04em', margin: '0 0 32px 0', lineHeight: 1.1,
+              padding: '0 8px',
+              background: 'linear-gradient(135deg, #f5c876 0%, #d97706 40%, #92400e 100%)',
+              WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+              overflow: 'visible',
+            }}>
+              pulp
+            </h2>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 24 }}>
+              {[
+                { label: 'contact', href: 'https://www.cesarvillegas.me' },
+                { label: 'privacy', href: '/privacy' },
+                { label: 'terms', href: '/terms' },
+              ].map(link => (
+                <a key={link.label} href={link.href} style={{
+                  fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
+                  color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase',
+                }}>{link.label}</a>
+              ))}
             </div>
+            <p style={{
+              fontFamily: serif, fontSize: '0.8rem', color: '#bdb9b2', textTransform: 'lowercase', margin: 0,
+            }}>
+              © 2026 pulp.
+            </p>
           </div>
         </footer>
       </div>
