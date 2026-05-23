@@ -66,7 +66,7 @@ const LANDING_TREES = TREE_TYPES_LIST.map((type, i) => {
   const depthScale = 0.55 + depthT * 0.55
   const shrink = (type === 'birch' || type === 'baobab') ? 0.75 : 1
   const size = Math.round(112 * depthScale * shrink / 16) * 16 || 16
-  const rowStart = 0.15 + pos.row * 0.12
+  const rowStart = 0.15 + pos.row * 0.22
   const scaleY = 0.7 + depthT * 0.3
   const y = Math.max(42, Math.min(94, pos.y + jitterY))
   return { type, x: pos.x, y, row: pos.row, size, depthT, rowStart, scaleY }

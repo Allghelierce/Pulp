@@ -883,6 +883,7 @@ export default function PulpLanding() {
   const serif = '"Georgia", Georgia, serif'
   const accent = '#d97706'
 
+  const inOrchard = orchardProgress > 0.05
   const heroTextOpacity = Math.max(0, 1 - orchardProgress * 3)
 
   return (
@@ -892,16 +893,19 @@ export default function PulpLanding() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center',
         padding: '12px 80px',
-        background: scrolled ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: scrolled ? '1px solid rgba(15,15,16,0.06)' : '1px solid transparent',
-        transition: 'background 0.4s, border-bottom 0.4s',
+        opacity: scrolled ? 1 : 0,
+        transform: scrolled ? 'translateY(0)' : 'translateY(-8px)',
+        pointerEvents: scrolled ? 'auto' : 'none',
+        transition: 'opacity 0.4s, transform 0.4s, background 0.4s, border-bottom 0.4s, backdrop-filter 0.4s',
+        background: inOrchard ? 'transparent' : scrolled ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)',
+        backdropFilter: inOrchard ? 'none' : 'blur(16px)',
+        WebkitBackdropFilter: inOrchard ? 'none' : 'blur(16px)',
+        borderBottom: inOrchard ? '1px solid transparent' : scrolled ? '1px solid rgba(15,15,16,0.06)' : '1px solid transparent',
       }}>
         <a
           href="#"
           onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-          style={{ fontFamily: serif, fontSize: 18, fontWeight: 400, color: accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+          style={{ fontFamily: serif, fontSize: 18, fontWeight: 400, color: inOrchard ? 'rgba(255,255,255,0.9)' : accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', transition: 'color 0.4s' }}
         >
           <img src="/pulp_logo.svg" alt="pulp" style={{ width: 22, height: 22 }} />
           <span style={{ transform: 'translateY(-2px)' }}>pulp</span>
@@ -910,10 +914,8 @@ export default function PulpLanding() {
           <div style={{ position: 'relative' }}>
             <a
               onClick={(e) => { e.stopPropagation(); setReachOutOpen(o => !o) }}
-              style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer', userSelect: 'none' }}
-            >
-              <span style={{ textShadow: '0 0 8px rgba(255,255,255,0.6)' }}>reach out</span>
-            </a>
+              style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer', userSelect: 'none', transition: 'color 0.4s' }}
+            >reach out</a>
             <div style={{
               position: 'absolute', top: '100%', left: '50%',
               marginTop: 10, minWidth: 160, borderRadius: 8,
@@ -952,7 +954,7 @@ export default function PulpLanding() {
               ))}
             </div>
           </div>
-          <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: '#6b6864', textDecoration: 'none', textTransform: 'lowercase', textShadow: '0 0 8px rgba(255,255,255,0.6)' }}>log in</a>
+          <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', textTransform: 'lowercase', transition: 'color 0.4s' }}>log in</a>
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <a href="/login" style={{
@@ -1112,14 +1114,14 @@ export default function PulpLanding() {
       </section>
 
       {/* ===== Orchard expansion zone — tall scroll spacer with pinned orchard ===== */}
-      <div ref={orchardSectionRef} style={{ height: '500vh', position: 'relative' }}>
+      <div ref={orchardSectionRef} style={{ height: '300vh', position: 'relative' }}>
         <div style={{
           position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
         }}>
           {/* Fullscreen orchard terrain — fades in as user scrolls */}
           <div style={{
             position: 'absolute', inset: 0,
-            opacity: Math.min(1, orchardProgress * 4),
+            opacity: Math.min(1, orchardProgress * 8 + 0.15),
             transition: 'opacity 0.05s',
           }}>
             <LandingTerrain progress={orchardProgress} />
@@ -1130,7 +1132,7 @@ export default function PulpLanding() {
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'none', zIndex: 100,
-            opacity: orchardProgress > 0.65 ? Math.min(1, (orchardProgress - 0.65) * 5) : 0,
+            opacity: orchardProgress > 0.05 ? Math.min(1, (orchardProgress - 0.05) * 4) : 0,
           }}>
             <div style={{
               background: 'rgba(0,0,0,0.45)',
@@ -1139,7 +1141,7 @@ export default function PulpLanding() {
               padding: '32px 48px',
               border: '1px solid rgba(255,255,255,0.08)',
               textAlign: 'center',
-              transform: `translateY(${(1 - Math.min(1, orchardProgress > 0.65 ? (orchardProgress - 0.65) * 5 : 0)) * 30}px)`,
+              transform: `translateY(${(1 - Math.min(1, orchardProgress > 0.05 ? (orchardProgress - 0.05) * 4 : 0)) * 30}px)`,
             }}>
               <h2 style={{
                 fontFamily: serif, fontSize: 'clamp(2rem, 5vw, 3.6rem)', fontWeight: 400,
