@@ -1,0 +1,72 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-26-stripe-pro-subscription.md",
+  "tasks": [
+    {
+      "id": 10,
+      "subject": "Task 1: Install Stripe SDK and Create Client",
+      "status": "pending",
+      "description": "**Goal:** Add stripe npm package and create server-side Stripe client singleton.\n\n**Files:**\n- Modify: `package.json`\n- Create: `lib/stripe.ts`\n\n**Acceptance Criteria:**\n- [ ] stripe package in dependencies\n- [ ] lib/stripe.ts exports Stripe instance and PRICE_IDS\n- [ ] Build succeeds\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"package.json\", \"lib/stripe.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"stripe package in dependencies\", \"lib/stripe.ts exports Stripe instance and PRICE_IDS\", \"build succeeds\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 2: Database Migration and Profile Helpers",
+      "status": "pending",
+      "blockedBy": [10],
+      "description": "**Goal:** Add stripe_customer_id and stripe_subscription_id columns and create helper functions.\n\n**Files:**\n- Create: `supabase/migrations/20260526_stripe_columns.sql`\n- Modify: `lib/db.ts`\n\n**Acceptance Criteria:**\n- [ ] Migration adds two nullable text columns\n- [ ] PlayerProfile interface updated\n- [ ] Helper functions exist\n- [ ] Build succeeds\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"supabase/migrations/20260526_stripe_columns.sql\", \"lib/db.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"migration adds stripe columns\", \"PlayerProfile interface updated\", \"helper functions exist\", \"build succeeds\"]}\n```"
+    },
+    {
+      "id": 12,
+      "subject": "Task 3: Checkout API Route",
+      "status": "pending",
+      "blockedBy": [10, 11],
+      "description": "**Goal:** Create POST /api/stripe/checkout for Stripe Checkout Sessions.\n\n**Files:**\n- Create: `app/api/stripe/checkout/route.ts`\n\n**Acceptance Criteria:**\n- [ ] Authenticates via getAuthUser()\n- [ ] Validates plan param\n- [ ] Creates/retrieves Stripe Customer\n- [ ] Creates Checkout Session\n- [ ] Returns { url }\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/api/stripe/checkout/route.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"authenticates user\", \"validates plan\", \"creates stripe customer\", \"creates checkout session\", \"returns url\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 4: Webhook API Route",
+      "status": "pending",
+      "blockedBy": [10, 11],
+      "description": "**Goal:** Create POST /api/stripe/webhook for Stripe event processing.\n\n**Files:**\n- Create: `app/api/stripe/webhook/route.ts`\n\n**Acceptance Criteria:**\n- [ ] Verifies webhook signature\n- [ ] Handles checkout.session.completed\n- [ ] Handles customer.subscription.updated\n- [ ] Handles customer.subscription.deleted\n- [ ] Returns 200\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/api/stripe/webhook/route.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"verifies signature\", \"handles checkout completed\", \"handles subscription updated\", \"handles subscription deleted\", \"returns 200\"]}\n```"
+    },
+    {
+      "id": 14,
+      "subject": "Task 5: Customer Portal API Route",
+      "status": "pending",
+      "blockedBy": [10, 11],
+      "description": "**Goal:** Create POST /api/stripe/portal for Billing Portal sessions.\n\n**Files:**\n- Create: `app/api/stripe/portal/route.ts`\n\n**Acceptance Criteria:**\n- [ ] Authenticates via getAuthUser()\n- [ ] Looks up stripe_customer_id\n- [ ] Creates portal session\n- [ ] Returns { url }\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/api/stripe/portal/route.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"authenticates user\", \"looks up stripe customer\", \"creates portal session\", \"returns url\"]}\n```"
+    },
+    {
+      "id": 15,
+      "subject": "Task 6: Checkout Success and Cancel Pages",
+      "status": "pending",
+      "description": "**Goal:** Create success page with gold rind animation and cancel page.\n\n**Files:**\n- Create: `app/checkout/success/page.tsx`\n- Create: `app/checkout/cancel/page.tsx`\n\n**Acceptance Criteria:**\n- [ ] Success page gold rind animation\n- [ ] Welcome text fades up\n- [ ] Auto-redirect after 3s\n- [ ] Cancel page renders\n- [ ] Build succeeds\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/checkout/success/page.tsx\", \"app/checkout/cancel/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"success page gold rind animation\", \"welcome text fades up\", \"auto-redirect\", \"cancel page renders\", \"build succeeds\"]}\n```"
+    },
+    {
+      "id": 16,
+      "subject": "Task 7: Update SettingsView — Single Pro Tier with Stripe",
+      "status": "pending",
+      "blockedBy": [12, 14],
+      "description": "**Goal:** Single Pro tier, real Stripe Checkout, manage subscription, fix isPremium, delete MinimalPaymentModal.\n\n**Files:**\n- Modify: `app/components/settings/SettingsView.tsx`\n- Modify: `components/blocks/pricing-section.tsx`\n- Delete: `components/ui/minimal-payment-modal.tsx`\n\n**Acceptance Criteria:**\n- [ ] Single Pro tier at $5/mo $48/yr\n- [ ] Checkout redirect works\n- [ ] Manage subscription button for pro users\n- [ ] isPremium from proAccess prop\n- [ ] Payment modal deleted\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/components/settings/SettingsView.tsx\", \"components/blocks/pricing-section.tsx\", \"components/ui/minimal-payment-modal.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"single Pro tier\", \"checkout redirect\", \"manage subscription button\", \"isPremium from proAccess\", \"payment modal deleted\"]}\n```"
+    },
+    {
+      "id": 17,
+      "subject": "Task 8: Gold Logo Rind for Pro Users",
+      "status": "pending",
+      "description": "**Goal:** Gold rind on logo SVG for Pro users with shimmer hover.\n\n**Files:**\n- Modify: files rendering the SVG logo\n\n**Acceptance Criteria:**\n- [ ] Gold rind for pro users\n- [ ] Shimmer on hover\n- [ ] Normal rind for non-pro\n- [ ] No layout shift\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"gold rind for pro users\", \"shimmer on hover\", \"normal rind for non-pro\", \"no layout shift\"]}\n```"
+    },
+    {
+      "id": 18,
+      "subject": "Task 9: Wire Pro Status Through the App",
+      "status": "pending",
+      "blockedBy": [16],
+      "description": "**Goal:** Pass pro_access from player profile through component tree.\n\n**Files:**\n- Modify: `app/app/page.tsx`\n- Modify: `app/components/settings/SettingsView.tsx`\n\n**Acceptance Criteria:**\n- [ ] proAccess prop flows to SettingsView\n- [ ] Pro cosmetics respect pro_access\n- [ ] Build succeeds\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"app/app/page.tsx\", \"app/components/settings/SettingsView.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"proAccess prop flows\", \"pro cosmetics respect pro_access\", \"build succeeds\"]}\n```"
+    },
+    {
+      "id": 19,
+      "subject": "Task 10: Environment Variables Setup",
+      "status": "pending",
+      "description": "**Goal:** Document required Stripe env vars.\n\n**Files:**\n- Create: `.env.local.example`\n\n**Acceptance Criteria:**\n- [ ] All 5 Stripe env vars documented\n- [ ] Comments explain each value\n\n**Verify:** `test -f .env.local.example && grep -c STRIPE .env.local.example`\n\n```json:metadata\n{\"files\": [\".env.local.example\"], \"verifyCommand\": \"test -f .env.local.example && grep -c STRIPE .env.local.example\", \"acceptanceCriteria\": [\"all 5 stripe env vars present\", \"comments explain each value\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-26T00:00:00Z"
+}
