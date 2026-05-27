@@ -664,7 +664,7 @@ export default function PulpLanding() {
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <a href="/login" className="cta-btn" style={{
+                <a href="/pulp" className="cta-btn" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
                   padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
                   background: accent, color: '#fff',
@@ -672,13 +672,13 @@ export default function PulpLanding() {
                   display: 'inline-flex', alignItems: 'center', gap: 0,
                   position: 'relative', overflow: 'hidden',
                 }}>
-                  <span className="cta-label" style={{ marginRight: 32, transition: 'opacity 0.5s' }}>try it — it's free</span>
+                  <span className="cta-label" style={{ marginRight: 36, marginLeft: -8, transition: 'opacity 0.5s' }}>try it — it's free</span>
                   <span className="cta-chevron" style={{
                     position: 'absolute', right: 4, top: 4, bottom: 4,
                     borderRadius: 999, display: 'grid', placeItems: 'center',
                     background: 'rgba(255,255,255,0.15)',
                   }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                   </span>
                 </a>
                 <a href="/login" style={{
@@ -889,7 +889,7 @@ export default function PulpLanding() {
         </div>
 
         <style>{`@keyframes fadeIn { to { opacity: 1 } }
-.cta-chevron { width: 28%; transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1) }
+.cta-chevron { width: 32px; aspect-ratio: 1; transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1) }
 .cta-btn:hover .cta-label { opacity: 0 }
 .cta-btn:hover .cta-chevron { width: calc(100% - 8px) }
 .cta-btn:active .cta-chevron { transform: scale(0.95) }`}</style>
