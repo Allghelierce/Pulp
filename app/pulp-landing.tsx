@@ -52,7 +52,7 @@ function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, s
 
 
 function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onComplete?: () => void, settled: boolean }) {
-  const line1 = "notes don't need"
+  const line1 = "Notes don't need"
   const line2 = "to be boring."
   const text = line1 + '\n' + line2
   const [charIdx, setCharIdx] = useState(0)
@@ -67,7 +67,7 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
     const ch = text[charIdx]
     const prev = charIdx > 0 ? text[charIdx - 1] : ''
     let delay = 40 + Math.random() * 30
-    if (ch === '\n') delay = 350
+    if (ch === '\n') delay = 60
     else if (ch === ' ') delay = 70 + Math.random() * 40
     else if (prev === ' ' || prev === '\n' || charIdx === 0) delay = 80 + Math.random() * 30
     else if ("'.,".includes(ch)) delay = 90 + Math.random() * 30
@@ -85,8 +85,8 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
   const settledScale = 0.7
   return (
     <h1 style={{
-      fontFamily: serif, fontWeight: 400,
-      lineHeight: 1.1, letterSpacing: '-0.03em', textTransform: 'lowercase' as const,
+      fontFamily: 'var(--font-fraunces), serif', fontWeight: 400,
+      lineHeight: 1.1, letterSpacing: '-0.03em',
       color: '#0f0f10', margin: '0 0 0 0',
       fontSize: 'clamp(3rem, 7vw, 5.5rem)',
       textAlign: 'left',
@@ -99,7 +99,29 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
       {parts.map((p, i) => (
         <span key={i}>
           {i > 0 && <br />}
-          {p}
+          {i === 1 && p.endsWith('boring.') ? (
+            <>
+              {p.slice(0, -7)}
+              <span style={{ position: 'relative', display: 'inline-block' }}>
+                boring.
+                <svg
+                  width="100%" height="8" viewBox="0 0 120 8" preserveAspectRatio="none"
+                  style={{
+                    position: 'absolute', left: 0, bottom: '-10px', width: '100%',
+                    overflow: 'visible', pointerEvents: 'none',
+                  }}
+                >
+                  <path
+                    d="M2,5 Q12,2 22,5 Q32,8 42,5 Q52,2 62,5 Q72,8 82,5 Q92,2 102,5 Q112,8 118,5"
+                    fill="none" stroke="#d97706" strokeWidth="3" strokeLinecap="round"
+                    strokeDasharray="140"
+                    strokeDashoffset={settled ? '0' : '140'}
+                    style={{ transition: settled ? 'stroke-dashoffset 0.6s ease 1.5s' : 'none' }}
+                  />
+                </svg>
+              </span>
+            </>
+          ) : p}
         </span>
       ))}
       {cursorEl}
@@ -283,7 +305,7 @@ function DemoTimer({ serif }: { serif: string }) {
               animation: 'sapPop 0.6s ease forwards',
               boxShadow: '0 3px 12px -3px rgba(234,88,12,0.3)',
             }}>
-              start growing — free
+              try it — it's free
             </a>
           )}
         </div>
@@ -482,9 +504,9 @@ export default function PulpLanding() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center',
         padding: '12px 80px',
-        opacity: 1,
-        transform: 'translateY(0)',
-        pointerEvents: 'auto',
+        opacity: inOrchard ? 0 : 1,
+        transform: inOrchard ? 'translateY(-8px)' : 'translateY(0)',
+        pointerEvents: inOrchard ? 'none' : 'auto',
         transition: 'opacity 0.4s, transform 0.4s, background 0.4s, border-bottom 0.4s, backdrop-filter 0.4s',
         background: inOrchard ? 'transparent' : scrolled ? 'rgba(255,255,255,0.35)' : 'transparent',
         backdropFilter: inOrchard || !scrolled ? 'none' : 'blur(16px)',
@@ -494,7 +516,7 @@ export default function PulpLanding() {
         <a
           href="#"
           onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-          style={{ fontFamily: serif, fontSize: 18, fontWeight: 400, color: inOrchard ? 'rgba(255,255,255,0.9)' : accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', transition: 'color 0.4s' }}
+          style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, fontWeight: 400, color: inOrchard ? 'rgba(255,255,255,0.9)' : accent, letterSpacing: '-0.02em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', transition: 'color 0.4s' }}
         >
           <img src="/pulp_logo.svg" alt="pulp" style={{ width: 22, height: 22 }} />
           <span style={{ transform: 'translateY(-2px)' }}>pulp</span>
@@ -503,7 +525,7 @@ export default function PulpLanding() {
           <div style={{ position: 'relative' }}>
             <a
               onClick={(e) => { e.stopPropagation(); setReachOutOpen(o => !o) }}
-              style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', textTransform: 'lowercase', cursor: 'pointer', userSelect: 'none', transition: 'color 0.4s' }}
+              style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', cursor: 'pointer', userSelect: 'none', transition: 'color 0.4s' }}
             >reach out</a>
             <div style={{
               position: 'absolute', top: '100%', left: '50%',
@@ -543,15 +565,8 @@ export default function PulpLanding() {
               ))}
             </div>
           </div>
-          <a href="/login" style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', textTransform: 'lowercase', transition: 'color 0.4s' }}>log in</a>
-        </div>
-        <div style={{ marginLeft: 'auto' }}>
-          <a href="/login" style={{
-            fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.08em',
-            padding: '6px 16px', borderRadius: 6,
-            background: accent, color: '#fff', textDecoration: 'none', textTransform: 'lowercase',
-            display: 'inline-block',
-          }}>get started</a>
+          <a href="#features" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>features</a>
+          <a href="#pricing" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>pricing</a>
         </div>
       </nav>
 
@@ -566,7 +581,7 @@ export default function PulpLanding() {
 
 
       {/* ===== Hero ===== */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative' }}>
         {/* Dot grid background */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -575,12 +590,12 @@ export default function PulpLanding() {
         }} />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to bottom, #E8E0D0, rgba(232,224,208,0.8), #E8E0D0)',
+          background: 'radial-gradient(125% 125% at 50% 10%, #E8E0D0 45%, rgba(217,119,6,0.25) 100%)',
         }} />
 
         <div
           style={{
-            position: 'relative', width: '100%', maxWidth: 1200, margin: '0 auto',
+            position: 'relative', width: '100%', maxWidth: 1240, margin: '0 auto',
             padding: isMobile ? '80px 24px' : '0 80px',
             minHeight: '100vh',
             display: 'flex', alignItems: 'center',
@@ -591,7 +606,7 @@ export default function PulpLanding() {
           {/* Left: Text Content with hand-drawn line */}
           <div
             style={{
-              width: heroSettled ? (isMobile ? '100%' : '46%') : '100%',
+              width: heroSettled ? (isMobile ? '100%' : '44%') : '100%',
               position: 'relative',
               paddingLeft: heroSettled && !isMobile ? 36 : 0,
               textAlign: 'left' as const,
@@ -604,7 +619,7 @@ export default function PulpLanding() {
             {/* Hand-drawn orange vertical line */}
             {!isMobile && (
               <div style={{
-                position: 'absolute', left: -4, top: -40, bottom: -40, width: 24, pointerEvents: 'none',
+                position: 'absolute', left: -10, top: -40, bottom: -40, width: 24, pointerEvents: 'none',
                 opacity: heroSettled ? 0.35 : 0,
                 transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.3s',
               }}>
@@ -636,16 +651,22 @@ export default function PulpLanding() {
               transform: heroSettled ? 'translateY(0)' : 'translateY(20px)',
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
-              <a href="/login" style={{
-                fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
-                padding: '12px 32px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
-                background: accent, color: '#fff',
-                boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-              }}>
-                start growing — free
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </a>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <a href="/login" style={{
+                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
+                  padding: '12px 32px', borderRadius: 8, textDecoration: 'none',
+                  background: accent, color: '#fff',
+                  boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                }}>
+                  try it — it's free
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </a>
+                <a href="/login" style={{
+                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
+                  color: '#9a958e', textDecoration: 'underline', textUnderlineOffset: 3,
+                }}>log in</a>
+              </div>
             </div>
           </div>
 
@@ -697,7 +718,7 @@ export default function PulpLanding() {
             return (
               <div style={{
                 position: 'absolute', right: 0, top: 0, bottom: 0,
-                width: cardW * 2 + 28,
+                width: cardW * 2 + 60,
                 overflow: 'hidden',
                 opacity: heroSettled ? 1 : 0,
                 transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
@@ -712,19 +733,21 @@ export default function PulpLanding() {
                 {/* Left belt — scrolls DOWN */}
                 <div style={{
                   position: 'absolute', left: 0, top: 0, width: cardW,
-                  animation: `beltDown ${leftCards.length * 6}s linear infinite`,
+                  animation: `beltDown ${leftCards.length * 8}s linear infinite`,
                 }}>
                   {leftCards.map((c, i) => renderCard(c, i))}
                   {leftCards.map((c, i) => renderCard(c, i + leftCards.length))}
+                  {leftCards.map((c, i) => renderCard(c, i + leftCards.length * 2))}
                 </div>
 
                 {/* Right belt — scrolls UP */}
                 <div style={{
                   position: 'absolute', right: 0, top: 0, width: cardW,
-                  animation: `beltUp ${rightCards.length * 6}s linear infinite`,
+                  animation: `beltUp ${rightCards.length * 8}s linear infinite`,
                 }}>
                   {rightCards.map((c, i) => renderCard(c, i))}
                   {rightCards.map((c, i) => renderCard(c, i + rightCards.length))}
+                  {rightCards.map((c, i) => renderCard(c, i + rightCards.length * 2))}
                 </div>
               </div>
             )
@@ -733,7 +756,7 @@ export default function PulpLanding() {
 
         {/* Cart of oranges — bottom left */}
         <div style={{
-          position: 'absolute', bottom: -140, left: -130, pointerEvents: 'none',
+          position: 'absolute', bottom: -142, left: -110, pointerEvents: 'none',
           opacity: 0.85,
         }}>
           <svg width="520" height="420" viewBox="0 0 160 130" fill="none">
@@ -754,33 +777,33 @@ export default function PulpLanding() {
             <path d="M112 58 L105 58" stroke="#6b5a42" strokeWidth="1.5" />
 
             {/* === 3. Oranges — behind cart walls === */}
-            <circle cx="42" cy="34" r="8" fill="#e8940a" /><circle cx="42" cy="34" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="56" cy="30" r="7" fill="#d97706" /><circle cx="56" cy="30" r="7" stroke="#b56a06" strokeWidth="0.8" fill="none" />
-            <circle cx="69" cy="28" r="8" fill="#e8940a" /><circle cx="69" cy="28" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="82" cy="27" r="7.5" fill="#d97706" /><circle cx="82" cy="27" r="7.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
-            <circle cx="95" cy="28" r="8" fill="#e8940a" /><circle cx="95" cy="28" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="106" cy="30" r="7" fill="#d97706" /><circle cx="106" cy="30" r="7" stroke="#b56a06" strokeWidth="0.8" fill="none" />
-            <circle cx="48" cy="40" r="7.5" fill="#f0a020" /><circle cx="48" cy="40" r="7.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="62" cy="37" r="8" fill="#e8940a" /><circle cx="62" cy="37" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="76" cy="35" r="7" fill="#f0a020" /><circle cx="76" cy="35" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="90" cy="36" r="7.5" fill="#e8940a" /><circle cx="90" cy="36" r="7.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="102" cy="38" r="7" fill="#f0a020" /><circle cx="102" cy="38" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="55" cy="44" r="6.5" fill="#d97706" /><circle cx="55" cy="44" r="6.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
-            <circle cx="68" cy="42" r="7" fill="#e8940a" /><circle cx="68" cy="42" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
-            <circle cx="83" cy="42" r="6.5" fill="#d97706" /><circle cx="83" cy="42" r="6.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
-            <circle cx="96" cy="43" r="7" fill="#e8940a" /><circle cx="96" cy="43" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="42" cy="34" r="7.5" fill="#e8940a" /><circle cx="42" cy="34" r="7.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="56" cy="30" r="8.2" fill="#d97706" /><circle cx="56" cy="30" r="8.2" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="69" cy="28" r="7" fill="#e8940a" /><circle cx="69" cy="28" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="82" cy="27" r="8.5" fill="#d97706" /><circle cx="82" cy="27" r="8.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="95" cy="28" r="7.2" fill="#e8940a" /><circle cx="95" cy="28" r="7.2" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="106" cy="30" r="6.8" fill="#d97706" /><circle cx="106" cy="30" r="6.8" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="48" cy="40" r="8" fill="#f0a020" /><circle cx="48" cy="40" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="62" cy="37" r="7.3" fill="#e8940a" /><circle cx="62" cy="37" r="7.3" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="76" cy="35" r="8.4" fill="#f0a020" /><circle cx="76" cy="35" r="8.4" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="90" cy="36" r="6.8" fill="#e8940a" /><circle cx="90" cy="36" r="6.8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="102" cy="38" r="7.6" fill="#f0a020" /><circle cx="102" cy="38" r="7.6" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="55" cy="44" r="7.2" fill="#d97706" /><circle cx="55" cy="44" r="7.2" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="68" cy="42" r="6.5" fill="#e8940a" /><circle cx="68" cy="42" r="6.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="83" cy="42" r="7.8" fill="#d97706" /><circle cx="83" cy="42" r="7.8" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="96" cy="43" r="6.6" fill="#e8940a" /><circle cx="96" cy="43" r="6.6" stroke="#c67e08" strokeWidth="0.8" fill="none" />
             {/* Stems — varied but subtle */}
-            <path d="M42 26 L43 23" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
-            <path d="M43 23 Q46 22 45 25" fill="#6b7a3a" />
-            <path d="M69 20 L68 18" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
-            <path d="M68 18 Q65 17 66 20" fill="#6b7a3a" />
-            <path d="M95 20 L96.5 17" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
-            <path d="M96.5 17 Q99 16.5 98 19" fill="#7a8a44" />
-            <path d="M56 23 L55 21.5" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
-            <path d="M82 19.5 L83.5 17" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
-            <path d="M83.5 17 Q86 16 85 18.5" fill="#6b7a3a" />
-            <path d="M106 23 L107 21" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
-            <path d="M107 21 Q109 20.5 108.5 22.5" fill="#7a8a44" />
+            <path d="M42 26 L42.5 24.5" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
+            <path d="M42.5 24.5 Q45 24 44.5 26" fill="#6b7a3a" />
+            <path d="M69 20 L68.5 19" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M68.5 19 Q66.5 18.5 67 20" fill="#6b7a3a" />
+            <path d="M95 20 L95.5 18.5" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
+            <path d="M95.5 18.5 Q97.5 18 97 19.5" fill="#7a8a44" />
+            <path d="M56 23 L55.5 22" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M82 19.5 L82.5 18.5" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M82.5 18.5 Q84.5 18 84 19.5" fill="#6b7a3a" />
+            <path d="M106 23 L106.5 22" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M106.5 22 Q108 21.5 107.5 23" fill="#7a8a44" />
             {/* Half orange */}
             <circle cx="38" cy="42" r="7" fill="#f5c560" /><circle cx="38" cy="42" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
             <circle cx="38" cy="42" r="4.5" stroke="#e8b030" strokeWidth="0.5" fill="none" />
@@ -807,6 +830,42 @@ export default function PulpLanding() {
             <path d="M108 34 L120 38 L124 62 L112 58 Z" stroke="#7a6445" strokeWidth="1.5" fill="none" strokeLinejoin="round" />
             <path d="M110 44 L122 48" stroke="#7a6445" strokeWidth="0.6" opacity="0.4" />
             <path d="M111 50 L123 54" stroke="#7a6445" strokeWidth="0.5" opacity="0.3" />
+
+            {/* Sleepy orange eyes easter egg — rightmost orange */}
+            <style>{`
+              @keyframes orangeEyes {
+                0%, 70% { opacity: 0 }
+                72% { opacity: 1 }
+                74% { opacity: 1 }
+                76% { opacity: 0.3 }
+                78% { opacity: 1 }
+                88% { opacity: 1 }
+                90% { opacity: 0 }
+                100% { opacity: 0 }
+              }
+              @keyframes orangeLookLeft {
+                0%, 70% { transform: translateX(0) }
+                80% { transform: translateX(-0.8px) }
+                84% { transform: translateX(0.6px) }
+                87% { transform: translateX(0) }
+                100% { transform: translateX(0) }
+              }
+              @keyframes orangeLidTop {
+                0%, 70% { transform: scaleY(0) }
+                72% { transform: scaleY(0.3) }
+                74% { transform: scaleY(1) }
+                76% { transform: scaleY(0.5) }
+                78% { transform: scaleY(1) }
+                88% { transform: scaleY(1) }
+                89% { transform: scaleY(0.4) }
+                90% { transform: scaleY(0) }
+                100% { transform: scaleY(0) }
+              }
+            `}</style>
+            <g style={{ opacity: 0, animation: 'orangeEyes 12s ease 7s infinite, orangeLookLeft 12s ease 7s infinite', animationFillMode: 'backwards' }}>
+              <ellipse cx="103.5" cy="29" rx="1" ry="1.3" fill="#3d2b1a" style={{ animation: 'orangeLidTop 12s ease 7s infinite', animationFillMode: 'backwards', transformOrigin: '103.5px 29px' }} />
+              <ellipse cx="108.5" cy="29" rx="1" ry="1.3" fill="#3d2b1a" style={{ animation: 'orangeLidTop 12s ease 7s infinite', animationFillMode: 'backwards', transformOrigin: '108.5px 29px' }} />
+            </g>
           </svg>
         </div>
 
@@ -1039,7 +1098,7 @@ export default function PulpLanding() {
                   background: accent, color: '#fff',
                   boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
                 }}>
-                  start growing — free
+                  try it — it's free
                 </a>
                 <a href="/app" style={{
                   fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',

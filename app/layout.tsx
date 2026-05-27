@@ -1,12 +1,13 @@
 import "./globals.css";
-import { EB_Garamond, Crimson_Pro } from "next/font/google";
+import { EB_Garamond, Crimson_Pro, Fraunces } from "next/font/google";
 
 const ebGaramond = EB_Garamond({ subsets: ["latin"], display: "swap", variable: "--font-eb-garamond", weight: ["400", "500", "700"] });
 const crimsonPro = Crimson_Pro({ subsets: ["latin"], display: "swap", variable: "--font-crimson-pro", weight: ["400", "500", "600", "700", "800"] });
+const fraunces = Fraunces({ subsets: ["latin"], display: "swap", variable: "--font-fraunces" });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${ebGaramond.variable} ${crimsonPro.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${ebGaramond.variable} ${crimsonPro.variable} ${fraunces.variable}`} suppressHydrationWarning>
       <head>
         {process.env.NEXT_PUBLIC_SUPABASE_URL && <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
