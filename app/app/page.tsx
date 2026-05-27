@@ -194,98 +194,6 @@ const MarginEngravings = memo(function MarginEngravings({ theme }: { theme: "lig
   </>)
 })
 
-// ─── Memoized spiral binding — NEVER re-renders during box operations ──────────
-const SpiralBinding = memo(function SpiralBinding({ theme, showBinding, bindingCompact, paperBg }: {
-  theme: "light" | "dark"; showBinding: boolean; bindingCompact: boolean; paperBg: string
-}) {
-  if (!showBinding) return null
-  const isDark = theme === "dark"
-  const wire = isDark ? '#888' : '#D4AF37'
-  const wireHi = isDark ? '#aaa' : '#FFF3A3'
-  const wireShadow = isDark ? '#555' : '#8B6914'
-
-  if (!bindingCompact) return (
-    <div className="absolute left-[-20px] top-0 bottom-0 w-[44px] z-30 pointer-events-none" style={{ overflow: 'visible' }}>
-      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'visible' }} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="wire-back" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={wireShadow} />
-            <stop offset="50%" stopColor={wire} />
-            <stop offset="100%" stopColor={wireShadow} />
-          </linearGradient>
-          <linearGradient id="wire-front" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={wire} />
-            <stop offset="30%" stopColor={wireHi} />
-            <stop offset="60%" stopColor={wire} />
-            <stop offset="100%" stopColor={wireShadow} />
-          </linearGradient>
-        </defs>
-        {Array.from({ length: 36 }).map((_, i) => {
-          const cy = 28 + i * 30
-          const holeX = 30
-          const holeW = 12
-          const holeH = 10
-          const ringX = 20
-          const ringRx = 18
-          const ringRy = 7
-          return (
-            <g key={i}>
-              {/* Back half — loops left behind paper */}
-              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,0 ${ringX},${cy + ringRy}`} fill="none" stroke="url(#wire-back)" strokeWidth="3" />
-              <path d={`M ${ringX + 1},${cy - ringRy + 1} A ${ringRx - 1},${ringRy - 1} 0 0,0 ${ringX + 1},${cy + ringRy + 1}`} fill="none" stroke="black" strokeWidth="2" opacity="0.06" />
-              {/* Hole shadow */}
-              <rect x={holeX - holeW / 2 + 1} y={cy - holeH / 2 + 1} width={holeW} height={holeH} rx="2" fill="rgba(0,0,0,0.25)" />
-              {/* Hole */}
-              <rect x={holeX - holeW / 2} y={cy - holeH / 2} width={holeW} height={holeH} rx="2" fill={isDark ? '#0a0a0a' : '#111'} />
-              <rect x={holeX - holeW / 2} y={cy - holeH / 2} width={holeW} height={holeH} rx="2" fill="none" stroke={isDark ? '#222' : '#444'} strokeWidth="0.5" />
-              {/* Front half — loops right over paper */}
-              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,1 ${ringX},${cy + ringRy}`} fill="none" stroke="url(#wire-front)" strokeWidth="3.5" />
-              <path d={`M ${ringX},${cy - ringRy} A ${ringRx},${ringRy} 0 0,1 ${ringX},${cy + ringRy}`} fill="none" stroke={wireHi} strokeWidth="0.8" opacity="0.35" />
-              <path d={`M ${ringX + 1},${cy - ringRy + 1} A ${ringRx},${ringRy} 0 0,1 ${ringX + 1},${cy + ringRy + 1}`} fill="none" stroke="black" strokeWidth="2" opacity="0.04" />
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
-  return (
-    <div className="absolute top-[-20px] left-0 right-0 h-[44px] z-30 pointer-events-none" style={{ overflow: 'visible' }}>
-      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'visible' }} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="wire-h-back" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0%" stopColor={wireShadow} />
-            <stop offset="50%" stopColor={wire} />
-            <stop offset="100%" stopColor={wireShadow} />
-          </linearGradient>
-          <linearGradient id="wire-h-front" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0%" stopColor={wire} />
-            <stop offset="30%" stopColor={wireHi} />
-            <stop offset="60%" stopColor={wire} />
-            <stop offset="100%" stopColor={wireShadow} />
-          </linearGradient>
-        </defs>
-        {Array.from({ length: 30 }).map((_, i) => {
-          const cx = 40 + i * 30
-          const holeY = 24
-          const holeW = 6
-          const holeH = 10
-          const ringRx = 7
-          const ringRy = 18
-          return (
-            <g key={i}>
-              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,0 ${cx + ringRx},${holeY}`} fill="none" stroke="url(#wire-h-back)" strokeWidth="3" />
-              <rect x={cx - holeW / 2 + 1} y={holeY - holeH / 2 + 1} width={holeW} height={holeH} rx="1.5" fill="rgba(0,0,0,0.2)" />
-              <rect x={cx - holeW / 2} y={holeY - holeH / 2} width={holeW} height={holeH} rx="1.5" fill={isDark ? '#0a0a0a' : '#1a1a1a'} />
-              <rect x={cx - holeW / 2} y={holeY - holeH / 2} width={holeW} height={holeH} rx="1.5" fill="none" stroke={isDark ? '#222' : '#555'} strokeWidth="0.5" />
-              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,1 ${cx + ringRx},${holeY}`} fill="none" stroke="url(#wire-h-front)" strokeWidth="3.5" />
-              <path d={`M ${cx - ringRx},${holeY} A ${ringRx},${ringRy} 0 0,1 ${cx + ringRx},${holeY}`} fill="none" stroke={wireHi} strokeWidth="0.8" opacity="0.35" />
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
-})
 
 const ScrollModePage = memo(function ScrollModePage({
   pageIdx, html, boxes, isActive, onClick, paperBg, paperImg, paperSize, theme, editorFont, baseFontSize, paperStyle, inkColor
@@ -3840,7 +3748,7 @@ export default function NoteApp() {
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
                 <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: 600 }}>
-                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: showBinding && !bindingCompact ? 16 : 0 }} className="w-full shrink-0">
+                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
@@ -3884,7 +3792,6 @@ export default function NoteApp() {
                         {!scrollMode && <div style={{ position: "absolute", top: 0, left: 8, right: -8, bottom: -4, backgroundColor: paperBg, borderRadius: 2, zIndex: 0, boxShadow: "2px 4px 12px rgba(0,0,0,0.06)", filter: "brightness(0.94)" }} />}
                         {!scrollMode && <div style={{ position: "absolute", top: 0, left: 12, right: -12, bottom: -6, backgroundColor: paperBg, borderRadius: 2, zIndex: -1, filter: "brightness(0.91)" }} />}
 
-                        <SpiralBinding theme={theme} showBinding={showBinding} bindingCompact={bindingCompact} paperBg={paperBg} />
 
 
                         <div ref={paperRef} id="editor-paper" className="relative" style={{ minHeight: "1250px", overflow: "hidden", cursor: activeTool === 'pan' ? 'grab' : activeTool === 'sticky' || activeTool === 'hr' || activeTool === 'vr' || activeTool === 'textbox' || activeTool === 'image' ? 'crosshair' : activeTool === 'text' || activeTool === 'select' ? 'default' : 'crosshair', backgroundColor: paperBg, backgroundImage: paperImg, backgroundSize: paperSize, zIndex: 2, boxShadow: theme === "dark" ? "0 25px 50px -12px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.6)" : "1px 1px 1px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.05), 0 16px 32px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.05)" }}

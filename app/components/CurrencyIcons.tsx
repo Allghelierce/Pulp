@@ -3,8 +3,8 @@
 export function SapIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-      <path d="M12 2 C12 2 5 12 5 16 C5 20 8 23 12 23 C16 23 19 20 19 16 C19 12 12 2 12 2Z" fill="#d97706" stroke="#92400e" strokeWidth="1.5"/>
-      <circle cx="12" cy="16" r="2" fill="#92400e"/>
+      <path d="M12 2 C12 2 7 11 7 15.5 C7 19.5 9.2 22 12 22 C14.8 22 17 19.5 17 15.5 C17 11 12 2 12 2Z" fill="#d97706" stroke="#92400e" strokeWidth="1.2"/>
+      <ellipse cx="12" cy="15.5" rx="1.5" ry="1.8" fill="#92400e" opacity="0.6"/>
     </svg>
   )
 }

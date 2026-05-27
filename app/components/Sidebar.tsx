@@ -658,7 +658,7 @@ export const Sidebar = memo(function Sidebar({
               <line x1="29" y1="52" x2="37" y2="52" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round"/>
               <line x1="83" y1="52" x2="91" y2="52" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
-            <h1 style={{ fontFamily: '"EB Garamond", serif', fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp <span style={{ fontSize: 10, fontWeight: 400, color: '#71717a', letterSpacing: '0.05em', verticalAlign: 'super' }}>beta</span></h1>
+            <h1 style={{ fontFamily: '"EB Garamond", serif', fontSize: 22, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706', transform: 'translateY(-2px)' }}>pulp <span style={{ fontSize: 10, fontWeight: 400, color: '#a8a8b0', letterSpacing: '0.05em', verticalAlign: 'super' }}>beta</span></h1>
           </div>
           <div ref={searchRef} className="relative">
             <div className="relative">

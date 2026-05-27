@@ -5,17 +5,6 @@ import { motion } from "framer-motion"
 import { PlantIcon } from "./components/PlantIcon"
 import { LandingTerrain } from "./components/LandingTerrain"
 
-const SHOWCASE_TREES = [
-  { type: 'tangerine', name: 'tangerine', rarity: 'default' },
-  { type: 'lemon', name: 'lemon', rarity: 'common' },
-  { type: 'apple', name: 'apple', rarity: 'uncommon' },
-  { type: 'peach', name: 'peach', rarity: 'rare' },
-  { type: 'pineapple', name: 'pineapple', rarity: 'rare' },
-  { type: 'passionfruit', name: 'passionfruit', rarity: 'rare' },
-
-  { type: 'sakura', name: 'sakura', rarity: 'sacred' },
-  { type: 'abyss', name: 'abyss maw', rarity: 'sacred' },
-]
 
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: '⏱' },
@@ -61,25 +50,27 @@ function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, s
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
 }
 
-const RARITY_COLOR: Record<string, string> = {
-  default: '#d97706',
-  common: '#a1a1aa',
-  uncommon: '#34d399',
-  rare: '#60a5fa',
-  sacred: '#c4a6ff',
-}
 
-function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?: () => void }) {
-  const text = "notes, without the pain."
+function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onComplete?: () => void, settled: boolean }) {
+  const line1 = "notes don't need"
+  const line2 = "to be boring."
+  const text = line1 + '\n' + line2
   const [charIdx, setCharIdx] = useState(0)
   const [showCursor, setShowCursor] = useState(true)
+  const [typingDone, setTypingDone] = useState(false)
 
   useEffect(() => {
     if (charIdx >= text.length) {
-      const t = setTimeout(() => { setShowCursor(false); onComplete?.() }, 800)
+      const t = setTimeout(() => { setShowCursor(false); setTypingDone(true); onComplete?.() }, 800)
       return () => clearTimeout(t)
     }
-    const delay = charIdx > 0 && text[charIdx - 1] === ',' && text[charIdx] === ' ' ? 800 : 55
+    const ch = text[charIdx]
+    const prev = charIdx > 0 ? text[charIdx - 1] : ''
+    let delay = 40 + Math.random() * 30
+    if (ch === '\n') delay = 350
+    else if (ch === ' ') delay = 70 + Math.random() * 40
+    else if (prev === ' ' || prev === '\n' || charIdx === 0) delay = 80 + Math.random() * 30
+    else if ("'.,".includes(ch)) delay = 90 + Math.random() * 30
     const t = setTimeout(() => setCharIdx(i => i + 1), delay)
     return () => clearTimeout(t)
   }, [charIdx, text.length])
@@ -88,13 +79,29 @@ function TypewriterHeadline({ serif, onComplete }: { serif: string, onComplete?:
     <span style={{ display: 'inline-block', width: 3, height: '0.75em', background: '#d97706', marginLeft: 2, verticalAlign: 'baseline', animation: 'cursorBlink 0.5s step-end infinite' }} />
   ) : null
 
+  const displayed = text.slice(0, charIdx)
+  const parts = displayed.split('\n')
+
+  const settledScale = 0.7
   return (
     <h1 style={{
-      fontFamily: serif, fontSize: 'clamp(2.4rem, 6vw, 5rem)', fontWeight: 400,
-      lineHeight: 1, letterSpacing: '-0.03em', textTransform: 'lowercase' as const,
-      color: '#0f0f10', margin: '0 0 0 0', whiteSpace: 'nowrap',
+      fontFamily: serif, fontWeight: 400,
+      lineHeight: 1.1, letterSpacing: '-0.03em', textTransform: 'lowercase' as const,
+      color: '#0f0f10', margin: '0 0 0 0',
+      fontSize: 'clamp(3rem, 7vw, 5.5rem)',
+      textAlign: 'left',
+      whiteSpace: 'nowrap',
+      transform: settled ? `scale(${settledScale})` : 'scale(1)',
+      transformOrigin: settled ? 'top left' : 'center center',
+      transition: typingDone ? 'transform 0.9s cubic-bezier(0.2,0.8,0.2,1), transform-origin 0.9s cubic-bezier(0.2,0.8,0.2,1)' : 'none',
+      willChange: 'transform',
     }}>
-      {text.slice(0, charIdx)}
+      {parts.map((p, i) => (
+        <span key={i}>
+          {i > 0 && <br />}
+          {p}
+        </span>
+      ))}
       {cursorEl}
       <style>{`@keyframes cursorBlink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }`}</style>
     </h1>
@@ -108,438 +115,6 @@ const DEMO_TREES = [
   'bamboo', 'mangrove', 'bonsai', 'juniper', 'cedarwood', 'baobab', 'winterveil', 'agave',
   'abyss', 'starweaver', 'leviathan', 'prismatic',
 ] as const
-
-const ORCHARD_TREES = [
-  { type: 'tangerine', x: 12, y: 0, delay: 0.3 },
-  { type: 'sakura', x: 28, y: 4, delay: 1.0 },
-  { type: 'birch', x: 44, y: -2, delay: 0.6 },
-  { type: 'apple', x: 62, y: 3, delay: 1.4 },
-  { type: 'abyss', x: 78, y: -1, delay: 1.8 },
-  { type: 'peach', x: 92, y: 5, delay: 2.2 },
-] as const
-
-function DemoOrchard({ fullscreen = false }: { fullscreen?: boolean }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  const [growStages, setGrowStages] = useState<number[]>(ORCHARD_TREES.map(() => -1))
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    ORCHARD_TREES.forEach((tree, i) => {
-      for (let s = 0; s <= 4; s++) {
-        timers.push(setTimeout(() => {
-          setGrowStages(prev => { const next = [...prev]; next[i] = s; return next })
-        }, (tree.delay + s * 0.7) * 1000))
-      }
-    })
-    return () => timers.forEach(clearTimeout)
-  }, [])
-
-  if (!mounted) return <div style={{ width: fullscreen ? '100%' : 480, height: fullscreen ? '100%' : 320 }} />
-
-  return (
-    <div style={{
-      width: fullscreen ? '100%' : 480,
-      height: fullscreen ? '100%' : 320,
-      position: fullscreen ? 'absolute' : 'relative',
-      inset: fullscreen ? 0 : undefined,
-      userSelect: 'none', overflow: 'hidden',
-      borderRadius: fullscreen ? 0 : 16,
-    }}>
-      <style>{`
-        @keyframes cloudDrift { 0% { transform: translateX(-10%) } 100% { transform: translateX(110%) } }
-        @keyframes treeGrow { 0% { transform: scale(0) translateY(8px); opacity: 0 } 100% { transform: scale(1) translateY(0); opacity: 1 } }
-        @keyframes sapFloat { 0% { opacity: 0; transform: translateY(0) } 20% { opacity: 1 } 100% { opacity: 0; transform: translateY(-24px) } }
-      `}</style>
-
-      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} viewBox="0 -4 200 104" preserveAspectRatio={fullscreen ? 'xMidYMid slice' : 'xMidYMid slice'}>
-        <defs>
-          <linearGradient id="orc-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#87aacc" />
-            <stop offset="20%" stopColor="#9dbdcc" />
-            <stop offset="40%" stopColor="#b8ccbb" />
-            <stop offset="60%" stopColor="#c8d8b8" />
-            <stop offset="80%" stopColor="#d4debb" />
-            <stop offset="100%" stopColor="#dae4c0" />
-          </linearGradient>
-          <linearGradient id="orc-hill-far" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#5a6858" />
-            <stop offset="60%" stopColor="#4a5848" />
-            <stop offset="100%" stopColor="#3a4838" />
-          </linearGradient>
-          <linearGradient id="orc-mtn-snow" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#e8e8e0" />
-            <stop offset="100%" stopColor="#a0a898" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="orc-hill-mid" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4a6a3a" />
-            <stop offset="100%" stopColor="#3e5e30" />
-          </linearGradient>
-          <linearGradient id="orc-hill-near" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#507840" />
-            <stop offset="100%" stopColor="#446a34" />
-          </linearGradient>
-          <linearGradient id="orc-field" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#5a7a48" />
-            <stop offset="30%" stopColor="#527242" />
-            <stop offset="70%" stopColor="#4e6e3e" />
-            <stop offset="100%" stopColor="#4a6838" />
-          </linearGradient>
-          <radialGradient id="orc-haze-1" cx="25%" cy="35%" r="50%">
-            <stop offset="0%" stopColor="#b8c8e8" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#b8c8e8" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="orc-haze-2" cx="72%" cy="28%" r="40%">
-            <stop offset="0%" stopColor="#c8b8d8" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="#c8b8d8" stopOpacity="0" />
-          </radialGradient>
-          <linearGradient id="orc-horizon" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#c8d8b8" stopOpacity="0" />
-            <stop offset="60%" stopColor="#c8d8b8" stopOpacity="0" />
-            <stop offset="85%" stopColor="#c8d8b8" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#c8d8b8" stopOpacity="0.15" />
-          </linearGradient>
-          <radialGradient id="orc-sun-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ffd080" stopOpacity="1" />
-            <stop offset="20%" stopColor="#ffd080" stopOpacity="0.5" />
-            <stop offset="50%" stopColor="#ffd080" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#ffd080" stopOpacity="0" />
-          </radialGradient>
-          <pattern id="orc-brick" width="2.4" height="1.2" patternUnits="userSpaceOnUse">
-            <rect width="2.4" height="1.2" fill="#8a6a48" />
-            <rect x="0" y="0" width="1.1" height="0.5" rx="0.05" fill="#9a7a55" />
-            <rect x="1.3" y="0" width="1.1" height="0.5" rx="0.05" fill="#927252" />
-            <rect x="0.6" y="0.6" width="1.1" height="0.5" rx="0.05" fill="#967656" />
-          </pattern>
-        </defs>
-
-        {/* Sky */}
-        <rect x="-10" y="-4" width="220" height="108" fill="url(#orc-sky)" />
-        <rect x="-10" y="-4" width="220" height="44" fill="url(#orc-haze-1)" />
-        <rect x="-10" y="-4" width="220" height="44" fill="url(#orc-haze-2)" />
-        <rect x="-10" y="-4" width="220" height="44" fill="url(#orc-horizon)" />
-
-        {/* Sun */}
-        <ellipse cx="85" cy="-2" rx="8" ry="8" fill="url(#orc-sun-glow)" />
-        <ellipse cx="85" cy="-2" rx="3" ry="3" fill="#ffd080" />
-        <ellipse cx="85" cy="-2" rx="1.8" ry="1.8" fill="#fff4d0" />
-
-        {/* Distant cliff hills */}
-        <path d="M-10,24 L-5,22 L2,6 L6,5 L10,8 L14,4 L18,6 L22,18 L28,16 L32,8 L36,6 L38,9 L42,22 L48,20 L52,14 L56,6 L60,4 L62,7 L66,18 L72,22 L80,20 L86,16 L90,12 L94,14 L100,20 L106,18 L110,8 L114,5 L116,3 L120,6 L124,16 L130,22 L138,18 L144,10 L148,6 L152,8 L156,14 L160,20 L168,22 L176,16 L180,10 L184,12 L190,20 L196,18 L200,14 L204,16 L210,22 L210,34 L-10,34 Z" fill="#8898a8" opacity="0.25" />
-
-        {/* Mountain range — 3 layers */}
-        <path d="M-10,28 L5,18 L15,22 L25,10 L35,16 L42,8 L52,14 L60,6 L72,12 L82,4 L92,10 L100,2 L110,8 L118,12 L126,5 L136,10 L145,16 L152,9 L162,14 L170,20 L180,14 L190,18 L195,12 L205,20 L210,28 L210,34 L-10,34 Z" fill="url(#orc-hill-far)" opacity="0.5" />
-        <path d="M-10,30 L8,22 L20,26 L32,15 L45,20 L55,12 L68,18 L78,8 L88,16 L98,6 L108,14 L118,18 L128,10 L140,16 L150,22 L160,14 L172,20 L182,24 L192,18 L202,24 L210,30 L210,34 L-10,34 Z" fill="#3a4838" opacity="0.6" />
-
-        {/* Snow caps */}
-        <path d="M25,10 L22,16 L28,16 Z" fill="url(#orc-mtn-snow)" />
-        <path d="M42,8 L39,14 L45,14 Z" fill="url(#orc-mtn-snow)" />
-        <path d="M60,6 L56,13 L64,13 Z" fill="url(#orc-mtn-snow)" />
-        <path d="M82,4 L78,12 L86,12 Z" fill="url(#orc-mtn-snow)" />
-        <path d="M100,2 L96,10 L104,10 Z" fill="url(#orc-mtn-snow)" />
-        <path d="M126,5 L122,13 L130,13 Z" fill="url(#orc-mtn-snow)" />
-
-        {/* Extra rolling hills */}
-        <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26 C42,30 50,32 58,30 C64,28 68,25 72,23 C78,22 85,24 90,28 C95,31 100,33 110,34 L210,36 L210,42 L-10,42 Z" fill="#3e5e30" />
-
-        {/* Back hill — broad dome */}
-        <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26 C205,27 208,28 210,29 L210,42 L-10,42 Z" fill="url(#orc-hill-mid)" />
-        <path d="M-10,36 C10,34 40,30 70,26 C90,22 115,19 140,19 C160,20 180,23 200,26" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.3" />
-        <path d="M-10,39 C10,38 40,36 70,33 C90,30 115,28 140,28 C160,29 180,31 200,33 L210,35 L210,42 L-10,42 Z" fill="rgba(0,0,0,0.06)" />
-
-        {/* Winding path on hills */}
-        {(() => {
-          const mainD = "M-5,36.5 Q10,34.5 25,32 Q35,30 45,29 Q55,28 65,27.5 Q80,25.5 95,23.5 Q110,21.5 125,20.5 Q140,20 155,20 Q165,20.5 175,22.5 Q185,24.5 200,27.5"
-          const branchD = "M65,32 Q70,34 75,36 Q80,37 90,38 Q100,38.5 115,39"
-          return <g>
-            <path d={mainD} fill="none" stroke="#6a5030" strokeWidth="0.6" strokeLinecap="round" opacity="0.08" />
-            <path d={mainD} fill="none" stroke="#8a7050" strokeWidth="0.35" strokeLinecap="round" opacity="0.14" />
-            <path d={branchD} fill="none" stroke="#6a5030" strokeWidth="0.5" strokeLinecap="round" opacity="0.06" />
-            <path d={branchD} fill="none" stroke="#8a7050" strokeWidth="0.25" strokeLinecap="round" opacity="0.12" />
-          </g>
-        })()}
-
-        {/* Lake on back hill */}
-        {(() => {
-          const cx = 30, cy = 33
-          const shorePath = `M${cx - 10},${cy + 0.5} Q${cx - 8},${cy - 2.5} ${cx - 3},${cy - 2.8} Q${cx + 2},${cy - 3} ${cx + 6},${cy - 2} Q${cx + 9},${cy - 1} ${cx + 10},${cy + 0.8} Q${cx + 8},${cy + 2.5} ${cx + 4},${cy + 3} Q${cx - 1},${cy + 3.5} ${cx - 5},${cy + 2.8} Q${cx - 9},${cy + 2} ${cx - 10},${cy + 0.5}Z`
-          const waterPath = `M${cx - 8.5},${cy + 0.3} Q${cx - 7},${cy - 2} ${cx - 2.5},${cy - 2.3} Q${cx + 2},${cy - 2.5} ${cx + 5},${cy - 1.5} Q${cx + 7.5},${cy - 0.5} ${cx + 8.5},${cy + 0.6} Q${cx + 7},${cy + 2} ${cx + 3.5},${cy + 2.5} Q${cx - 1},${cy + 3} ${cx - 4.5},${cy + 2.3} Q${cx - 7.5},${cy + 1.5} ${cx - 8.5},${cy + 0.3}Z`
-          return <g>
-            <path d={shorePath} fill="#6a8a5a" opacity="0.25" />
-            <path d={waterPath} fill="#5a8ab0" opacity="0.45" />
-            <path d={`M${cx - 5},${cy} Q${cx},${cy - 0.5} ${cx + 5},${cy}`} stroke="rgba(255,255,255,0.25)" strokeWidth="0.12" fill="none" />
-            <path d={`M${cx - 3},${cy + 1} Q${cx},${cy + 0.5} ${cx + 3},${cy + 1}`} stroke="rgba(255,255,255,0.15)" strokeWidth="0.1" fill="none" />
-          </g>
-        })()}
-
-        {/* Distant orange grove on mid-hill */}
-        {(() => {
-          const trunks: string[] = [], canopies: string[] = [], fruits: string[] = []
-          const getHillY = (x: number) => {
-            if (x < 70) return 36 - (x + 10) * 10 / 80
-            if (x < 140) return 26 - (x - 70) * 7 / 70
-            return 19 + (x - 140) * 10 / 70
-          }
-          for (let i = 0; i < 60; i++) {
-            const seed = ((i * 71 + 303) * 16807 + 12345) % 2147483647
-            const r = () => { let s = seed + i * 1000; s = ((s * 16807) % 2147483647); return (s & 0x7fffffff) / 2147483647 }
-            const x = -5 + (i / 60) * 215
-            const baseY = getHillY(x) + (r() * 3 + 1.5)
-            const sz = 0.4 + r() * 0.5
-            const cy = baseY - sz * 1.3
-            const lean = (r() - 0.5) * 0.2
-            const tx = x + lean
-            trunks.push(`M${x.toFixed(1)},${baseY.toFixed(1)}L${tx.toFixed(1)},${(cy + sz * 0.3).toFixed(1)}`)
-            const r1 = sz * 0.9, r2 = sz * 0.7
-            canopies.push(`M${(tx - r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx + r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx - r1).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 4; f++) {
-              const a = f * Math.PI / 2 + i * 0.7
-              const fx = tx + Math.cos(a) * r1 * 0.5, fy = cy + Math.sin(a) * r2 * 0.5
-              fruits.push(`M${(fx + 0.06).toFixed(2)},${fy.toFixed(2)}a0.06,0.06 0 1 1 -0.12,0a0.06,0.06 0 1 1 0.12,0Z`)
-            }
-          }
-          return <g opacity="0.45">
-            <path d={trunks.join('')} stroke="#5a3a1a" strokeWidth="0.3" fill="none" />
-            <path d={canopies.join('')} fill="#2e5a2c" />
-            <path d={fruits.join('')} fill="#d97706" opacity="0.7" />
-          </g>
-        })()}
-
-        {/* House 1 — cottage */}
-        <g transform="translate(90,28) scale(0.4) translate(-90,-28)">
-          <path d="M87.8,28.1 L88,26.2 L91.5,26.2 L91.7,28.1 Z" fill="#b0987a" />
-          <path d="M91.5,26.2 L92.8,26.6 L92.9,28.1 L91.7,28.1 Z" fill="#968060" />
-          <rect x="88.6" y="26.7" width="0.7" height="0.7" rx="0.08" fill="#d4b870" opacity="0.6" />
-          <rect x="90.8" y="26.8" width="0.6" height="1.3" rx="0.08" fill="#5a4028" />
-          <polygon points="87.3,26.4 93.2,26.4 89.8,24.2" fill="#7a5838" />
-          <polygon points="89.8,24.2 93.2,26.4 89.8,26.4" fill="#6a4a30" />
-          <rect x="88.3" y="24.4" width="0.6" height="1.8" fill="#8a8a90" />
-          <g opacity="0.25">
-            <ellipse cx="88.6" cy="23" rx="0.45" ry="0.25" fill="#b5b5b8" />
-            <ellipse cx="88.5" cy="21.5" rx="0.6" ry="0.2" fill="#b5b5b8" opacity="0.15" />
-          </g>
-        </g>
-
-        {/* House 2 — tower */}
-        <g transform="translate(131,24) scale(0.4) translate(-131,-24)">
-          <path d="M129.8,24.4 L129.9,22 L132,22 L132.1,24.4 Z" fill="#a89070" />
-          <path d="M132,22 L132.8,22.3 L132.9,24.4 L132.1,24.4 Z" fill="#8a7458" />
-          <rect x="130.4" y="22.5" width="0.5" height="0.5" rx="0.06" fill="#c8b068" opacity="0.5" />
-          <path d="M130.8,24.4 L130.8,23.5 A0.4,0.4 0 0 1 131.6,23.5 L131.6,24.4 Z" fill="#4a3220" />
-          <polygon points="129.3,22 132.2,22 130.95,20" fill="#6a4e30" />
-        </g>
-
-        {/* House 3 — barn */}
-        <g transform="translate(173,26) scale(0.4) translate(-173,-26)">
-          <path d="M170.5,26.3 L170.6,25.1 L175.2,25.1 L175.3,26.3 Z" fill="#988060" />
-          <rect x="172" y="25.4" width="1.2" height="0.9" fill="#4a3018" />
-          <polygon points="170,25.3 175.8,25.3 172.9,23.8" fill="#6a4a2e" />
-          <rect x="174.2" y="22.8" width="0.7" height="2.3" fill="#8a8a90" />
-          <g opacity="0.35">
-            <ellipse cx="174.5" cy="21.5" rx="0.5" ry="0.3" fill="#b5b5b8" />
-          </g>
-        </g>
-
-        {/* Front hill */}
-        <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38 C165,38 190,38 210,38 L210,100 L-10,100 Z" fill="url(#orc-hill-near)" />
-        <path d="M-10,34 C0,32 15,29 35,27 C50,26 60,27 75,30 C90,33 110,36 140,38" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="0.3" />
-        <path d="M-10,37 C0,36 15,34 35,33 C50,32 60,33 75,35 C90,37 110,39 140,40 L210,40 L210,100 L-10,100 Z" fill="rgba(0,0,0,0.05)" />
-
-        {/* Front hill trees */}
-        {(() => {
-          const trunks: string[] = [], canopies: string[] = [], fruits: string[] = []
-          const getFrontY = (x: number) => {
-            if (x < 35) return 34 - (x + 10) * 7 / 45
-            if (x < 75) return 27 + (x - 35) * 3 / 40
-            return 30 + (x - 75) * 8 / 65
-          }
-          const seeds = [1,8,15,22,28,35,42,48,55,62,68,75,82,88,95]
-          seeds.forEach((bx, i) => {
-            const sz = 0.9 + (i % 3) * 0.4
-            const by = getFrontY(bx) + 0.3
-            const th = sz * 1.3
-            const cy = by - th
-            const lean = ((i * 17) % 7 - 3) * 0.08
-            const tx = bx + lean
-            trunks.push(`M${bx.toFixed(1)},${by.toFixed(1)}L${tx.toFixed(1)},${(cy + sz * 0.25).toFixed(1)}`)
-            const r1 = sz * 0.95, r2 = sz * 0.7
-            canopies.push(`M${(tx - r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx + r1).toFixed(1)},${cy.toFixed(1)}A${r1.toFixed(1)},${r2.toFixed(1)} 0 1 1 ${(tx - r1).toFixed(1)},${cy.toFixed(1)}Z`)
-            for (let f = 0; f < 5; f++) {
-              const a = f * Math.PI * 0.4 + i * 1.1
-              const fx = tx + Math.cos(a) * r1 * 0.5, fy = cy + Math.sin(a) * r2 * 0.5
-              fruits.push(`M${(fx + 0.12).toFixed(2)},${fy.toFixed(2)}a0.12,0.12 0 1 1 -0.24,0a0.12,0.12 0 1 1 0.24,0Z`)
-            }
-          })
-          return <g opacity="0.5">
-            <path d={trunks.join('')} stroke="#5a3a1a" strokeWidth="0.35" fill="none" />
-            <path d={canopies.join('')} fill="#3e7236" />
-            <path d={fruits.join('')} fill="#d97706" opacity="0.65" />
-          </g>
-        })()}
-
-        {/* Front dirt path */}
-        <path d="M -5,35 C 5,33 12,30 22,28.5 C 30,27.5 38,27 45,27.5 C 55,28 62,29 72,31 C 82,33.5 90,36 100,37.5" fill="none" stroke="#6a5030" strokeWidth="0.5" strokeLinecap="round" opacity="0.08" />
-        <path d="M -5,35 C 5,33 12,30 22,28.5 C 30,27.5 38,27 45,27.5 C 55,28 62,29 72,31 C 82,33.5 90,36 100,37.5" fill="none" stroke="#8a7050" strokeWidth="0.3" strokeLinecap="round" opacity="0.14" />
-
-        {/* Main field */}
-        <path d="M-10,38 Q50,36 100,37 Q150,38 210,38 L210,100 L-10,100 Z" fill="url(#orc-field)" />
-
-        {/* Main road */}
-        <path d="M60,100 Q65,80 58,65 Q50,52 55,42" stroke="#8a7a5a" strokeWidth="2.5" fill="none" opacity="0.15" strokeLinecap="round" />
-        <path d="M60,100 Q65,80 58,65 Q50,52 55,42" stroke="#a09070" strokeWidth="0.4" fill="none" opacity="0.12" strokeDasharray="1 2" />
-        <path d="M58,65 Q70,60 85,62" stroke="#8a7a5a" strokeWidth="1.5" fill="none" opacity="0.1" strokeLinecap="round" />
-
-        {/* Lower lake */}
-        <ellipse cx="160" cy="65" rx="18" ry="7" fill="#5a8ab0" opacity="0.35" />
-        <ellipse cx="160" cy="64" rx="14" ry="5" fill="#6a9aaa" opacity="0.2" />
-        <path d="M150,65 Q160,63 170,65" stroke="rgba(255,255,255,0.2)" strokeWidth="0.15" fill="none" />
-        <path d="M145,62 Q144,59 145,56" stroke="#5a7a48" strokeWidth="0.3" fill="none" opacity="0.4" />
-        <path d="M176,63 Q177,60 175,57" stroke="#5a7a48" strokeWidth="0.25" fill="none" opacity="0.35" />
-
-        {/* Grass tufts on field */}
-        {[15,35,55,80,105,125,145,175,190].map((gx, i) => (
-          <g key={i} opacity={0.3}>
-            <path d={`M${gx},${48 + (i % 3) * 8} q-0.5,-1.5 0,-2.5 M${gx},${48 + (i % 3) * 8} q0.5,-1.2 0.8,-2.2`} stroke="#6a8a50" strokeWidth="0.2" fill="none" />
-          </g>
-        ))}
-
-        {/* Wildflowers */}
-        {[20,40,70,90,120,140,170,185].map((fx, i) => (
-          <circle key={i} cx={fx} cy={45 + (i % 4) * 6} r={0.15} fill="#e08010" opacity="0.3" />
-        ))}
-
-        {/* Windmills on mountain slopes */}
-        {[
-          { x: 30, baseY: 26, h: 8, bladeR: 3.2 },
-          { x: 160, baseY: 22, h: 8.5, bladeR: 3.3 },
-        ].map((m, i) => {
-          const topY = m.baseY - m.h
-          const phase = (i * 127 + 331) % 360
-          return <g key={i} opacity={0.6}>
-            <path d={`M${m.x - 0.5},${m.baseY} L${m.x - 0.3},${topY + 1} L${m.x + 0.3},${topY + 1} L${m.x + 0.5},${m.baseY}Z`} fill="#b0a898" />
-            <circle cx={m.x} cy={topY + 1} r="0.45" fill="#988a78" />
-            <g>
-              <animateTransform attributeName="transform" type="rotate" from={`0 ${m.x} ${topY + 1}`} to={`360 ${m.x} ${topY + 1}`} dur={`${18 + i * 4}s`} repeatCount="indefinite" />
-              {[0, 1, 2, 3].map(b => {
-                const ang = (phase + b * 90) * Math.PI / 180
-                const ex = m.x + Math.cos(ang) * m.bladeR
-                const ey = topY + 1 + Math.sin(ang) * m.bladeR
-                const px = m.x + Math.cos(ang + 0.12) * m.bladeR * 0.35
-                const py = topY + 1 + Math.sin(ang + 0.12) * m.bladeR * 0.35
-                return <path key={b} d={`M${m.x},${topY + 1} L${px.toFixed(1)},${py.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}Z`} fill={b % 2 === 0 ? '#d8d0c8' : '#c0b8a8'} />
-              })}
-            </g>
-          </g>
-        })}
-
-        {/* Foreground windmill */}
-        {(() => {
-          const wmX = 178, wmY = 44, sc = 0.95
-          const bw = 3.5 * sc, tw = 1.5 * sc, h = 14 * sc
-          const hubY = wmY + 1.5 * sc, bladeLen = 7 * sc
-          return <g>
-            <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#orc-brick)" />
-            <circle cx={wmX} cy={wmY + h * 0.4} r={1 * sc} fill="#4a3a28" />
-            <path d={`M${wmX - 1 * sc},${wmY + h} L${wmX - 1 * sc},${wmY + h - 2.2 * sc} A${1 * sc},${1 * sc} 0 0 1 ${wmX + 1 * sc},${wmY + h - 2.2 * sc} L${wmX + 1 * sc},${wmY + h} Z`} fill="#3a2a1a" />
-            <polygon points={`${wmX - tw - 0.8 * sc},${wmY + sc * 2} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX},${wmY - 1 * sc}`} fill="#5a4a32" />
-            <circle cx={wmX} cy={hubY} r={1.4 * sc} fill="#7a6a52" />
-            <circle cx={wmX} cy={hubY} r={0.5 * sc} fill="#5a4a32" />
-            <g>
-              <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`360 ${wmX} ${hubY}`} dur="25s" repeatCount="indefinite" />
-              {[0, 90, 180, 270].map(angle => (
-                <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
-                  <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill="#8a7a66" opacity="0.8" />
-                </g>
-              ))}
-            </g>
-          </g>
-        })()}
-
-        {/* Second foreground windmill */}
-        {(() => {
-          const wmX = 194, wmY = 42, sc = 0.75
-          const bw = 3.5 * sc, tw = 1.5 * sc, h = 14 * sc
-          const hubY = wmY + 1.5 * sc, bladeLen = 7 * sc
-          return <g>
-            <path d={`M${wmX - bw},${wmY + h} C${wmX - bw},${wmY + h * 0.6} ${wmX - tw},${wmY + h * 0.2} ${wmX - tw},${wmY + sc * 2} L${wmX + tw},${wmY + sc * 2} C${wmX + tw},${wmY + h * 0.2} ${wmX + bw},${wmY + h * 0.6} ${wmX + bw},${wmY + h} Z`} fill="url(#orc-brick)" />
-            <polygon points={`${wmX - tw - 0.8 * sc},${wmY + sc * 2} ${wmX + tw + 0.8 * sc},${wmY + sc * 2} ${wmX},${wmY - 1 * sc}`} fill="#5a4a32" />
-            <circle cx={wmX} cy={hubY} r={1.4 * sc} fill="#7a6a52" />
-            <circle cx={wmX} cy={hubY} r={0.5 * sc} fill="#5a4a32" />
-            <g>
-              <animateTransform attributeName="transform" type="rotate" from={`0 ${wmX} ${hubY}`} to={`-360 ${wmX} ${hubY}`} dur="32s" repeatCount="indefinite" />
-              {[0, 90, 180, 270].map(angle => (
-                <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
-                  <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill="#8a7a66" opacity="0.8" />
-                </g>
-              ))}
-            </g>
-          </g>
-        })()}
-      </svg>
-
-      {/* Clouds */}
-      {[
-        { y: '6%', s: 1, d: 45 },
-        { y: '12%', s: 0.7, d: 55 },
-        { y: '3%', s: 0.55, d: 38 },
-        { y: '18%', s: 0.85, d: 60 },
-        { y: '8%', s: 0.4, d: 50 },
-      ].map((c, i) => (
-        <div key={i} style={{
-          position: 'absolute', top: c.y, left: 0, width: '100%',
-          opacity: 0.3, animation: `cloudDrift ${c.d}s linear infinite`,
-          animationDelay: `${-i * 11}s`, pointerEvents: 'none',
-        }}>
-          <svg width={fullscreen ? '8%' : 65 * c.s} height={fullscreen ? '4%' : 22 * c.s} viewBox="0 0 65 22" style={{ marginLeft: `${i * 15}%` }}>
-            <ellipse cx="32" cy="13" rx="30" ry="8" fill="white" />
-            <ellipse cx="22" cy="11" rx="17" ry="9" fill="white" />
-            <ellipse cx="44" cy="11" rx="19" ry="7" fill="white" />
-          </svg>
-        </div>
-      ))}
-
-      {/* Trees growing on field — hero widget only */}
-      {!fullscreen && ORCHARD_TREES.map((tree, i) => {
-        const stage = growStages[i]
-        if (stage < 0) return null
-        const size = stage === 0 ? 24 : 32 + stage * 9
-        return (
-          <div key={i} style={{
-            position: 'absolute',
-            left: `${tree.x}%`,
-            bottom: 58 + tree.y,
-            transform: 'translateX(-50%)',
-            animation: 'treeGrow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-            zIndex: 10 + i,
-          }}>
-            {stage === 0 ? (
-              <PlantIcon type={tree.type} size={size} isSeed hideGround />
-            ) : (
-              <PlantIcon type={tree.type} size={size} stage={Math.min(stage - 1, 3)} hideGround />
-            )}
-            {stage >= 4 && (
-              <div style={{
-                position: 'absolute', top: -6, left: '50%', marginLeft: -5,
-                animation: 'sapFloat 2.5s ease-out infinite',
-                animationDelay: `${i * 0.5}s`,
-              }}>
-                <svg width="10" height="10" viewBox="0 0 24 24">
-                  <path d="M12 2 C12 2 5 12 5 16 C5 20 8 23 12 23 C16 23 19 20 19 16 C19 12 12 2 12 2Z" fill="#d97706" opacity="0.8" />
-                </svg>
-              </div>
-            )}
-          </div>
-        )
-      })}
-
-      {/* Vignette */}
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: fullscreen ? 0 : 16, pointerEvents: 'none',
-        boxShadow: fullscreen ? 'inset 0 0 100px rgba(0,0,0,0.08)' : 'inset 0 0 60px rgba(0,0,0,0.12)',
-      }} />
-    </div>
-  )
-}
 
 function DemoTimer({ serif }: { serif: string }) {
   const [started, setStarted] = useState(false)
@@ -574,7 +149,7 @@ function DemoTimer({ serif }: { serif: string }) {
         }
         return e + 1
       })
-    }, 30)
+    }, 100)
     return () => clearInterval(iv)
   }, [started, paused, total])
 
@@ -592,8 +167,8 @@ function DemoTimer({ serif }: { serif: string }) {
   const mainColor = "#d97706"
   const subtleColor = "#71717a"
 
-  const boxW = 250
-  const boxH = 480
+  const boxW = 220
+  const boxH = 420
   const perim = 2 * (boxW + boxH)
   const dashOffset = perim - perim * progress
 
@@ -687,7 +262,7 @@ function DemoTimer({ serif }: { serif: string }) {
             WebkitBackgroundClip: 'text',
             animation: done ? 'none' : 'shimmer 2s ease-in-out infinite',
           }}>
-            {done ? 'complete' : 'in progress'}
+            {done ? 'complete' : ' '}
             <style>{`@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
               @keyframes sapPop { 0% { opacity: 0; transform: translateY(6px) scale(0.8) } 20% { opacity: 1; transform: translateY(0) scale(1) } 80% { opacity: 1 } 100% { opacity: 0; transform: translateY(-8px) } }`}</style>
           </span>
@@ -849,6 +424,7 @@ function ReachOutModal({ type, onClose }: { type: string, onClose: () => void })
 
 export default function PulpLanding() {
   const [heroDone, setHeroDone] = useState(false)
+  const [heroSettled, setHeroSettled] = useState(false)
   const [reachOutOpen, setReachOutOpen] = useState(false)
   const [modalType, setModalType] = useState<string | null>(null)
   const [orchardProgress, setOrchardProgress] = useState(0)
@@ -856,20 +432,33 @@ export default function PulpLanding() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [scrolled, setScrolled] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    let raf = 0
     const onScroll = () => {
-      setScrolled(window.scrollY > 60)
-      const el = orchardSectionRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const scrollable = el.offsetHeight - window.innerHeight
-      if (scrollable <= 0) return
-      const raw = -rect.top / (el.offsetHeight - window.innerHeight)
-      setOrchardProgress(Math.max(0, Math.min(1, raw)))
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        setScrolled(window.scrollY > 60)
+        const el = orchardSectionRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const scrollable = el.offsetHeight - window.innerHeight
+        if (scrollable <= 0) return
+        const raw = -rect.top / (el.offsetHeight - window.innerHeight)
+        setOrchardProgress(Math.max(0, Math.min(1, raw)))
+      })
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf) }
   }, [])
 
   useEffect(() => {
@@ -887,19 +476,19 @@ export default function PulpLanding() {
   const heroTextOpacity = Math.max(0, 1 - orchardProgress * 3)
 
   return (
-    <div style={{ background: '#E0D7C1', color: '#0f0f10' }}>
+    <div style={{ background: '#E8E0D0', color: '#0f0f10' }}>
       {/* Nav — fixed */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
         display: 'flex', alignItems: 'center',
         padding: '12px 80px',
-        opacity: scrolled ? 1 : 0,
-        transform: scrolled ? 'translateY(0)' : 'translateY(-8px)',
-        pointerEvents: scrolled ? 'auto' : 'none',
+        opacity: 1,
+        transform: 'translateY(0)',
+        pointerEvents: 'auto',
         transition: 'opacity 0.4s, transform 0.4s, background 0.4s, border-bottom 0.4s, backdrop-filter 0.4s',
-        background: inOrchard ? 'transparent' : scrolled ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)',
-        backdropFilter: inOrchard ? 'none' : 'blur(16px)',
-        WebkitBackdropFilter: inOrchard ? 'none' : 'blur(16px)',
+        background: inOrchard ? 'transparent' : scrolled ? 'rgba(255,255,255,0.35)' : 'transparent',
+        backdropFilter: inOrchard || !scrolled ? 'none' : 'blur(16px)',
+        WebkitBackdropFilter: inOrchard || !scrolled ? 'none' : 'blur(16px)',
         borderBottom: inOrchard ? '1px solid transparent' : scrolled ? '1px solid rgba(15,15,16,0.06)' : '1px solid transparent',
       }}>
         <a
@@ -975,116 +564,250 @@ export default function PulpLanding() {
         opacity: Math.max(0, (1 - orchardProgress * 2) * 0.5),
       }} />
 
+
       {/* ===== Hero ===== */}
-      <section style={{ height: '100vh', display: 'flex', alignItems: 'center', padding: '0 80px', maxWidth: 1320, margin: '0 auto', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 100, width: '100%' }}>
-          <div style={{ flex: 1, opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`, transition: 'opacity 0.05s, transform 0.05s', position: 'relative' }}>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1], delay: 0.1 }}
-            >
-              <span style={{ fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.28em', color: accent, textTransform: 'lowercase', display: 'block', marginBottom: 32 }}>
-                -- made for students, by a student
-              </span>
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Dot grid background */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)',
+          backgroundSize: '2rem 2rem',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, #E8E0D0, rgba(232,224,208,0.8), #E8E0D0)',
+        }} />
 
-              <TypewriterHeadline serif={serif} onComplete={() => setHeroDone(true)} />
-
+        <div
+          style={{
+            position: 'relative', width: '100%', maxWidth: 1200, margin: '0 auto',
+            padding: isMobile ? '80px 24px' : '0 80px',
+            minHeight: '100vh',
+            display: 'flex', alignItems: 'center',
+            opacity: heroTextOpacity, transform: `translateY(${orchardProgress * -40}px)`,
+            transition: 'opacity 0.05s, transform 0.05s',
+          }}
+        >
+          {/* Left: Text Content with hand-drawn line */}
+          <div
+            style={{
+              width: heroSettled ? (isMobile ? '100%' : '46%') : '100%',
+              position: 'relative',
+              paddingLeft: heroSettled && !isMobile ? 36 : 0,
+              textAlign: 'left' as const,
+              display: 'flex', flexDirection: 'column',
+              alignItems: heroSettled ? (isMobile ? 'center' : 'flex-start') : 'center',
+              justifyContent: 'center',
+              transition: 'width 0.9s cubic-bezier(0.2,0.8,0.2,1), padding-left 0.9s cubic-bezier(0.2,0.8,0.2,1)',
+            }}
+          >
+            {/* Hand-drawn orange vertical line */}
+            {!isMobile && (
               <div style={{
-                marginTop: 36, position: 'relative',
-                opacity: heroDone ? 1 : 0,
-                transform: heroDone ? 'translateY(0)' : 'translateY(24px)',
-                transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1), transform 0.8s cubic-bezier(0.2,0.8,0.2,1)',
+                position: 'absolute', left: -4, top: -40, bottom: -40, width: 24, pointerEvents: 'none',
+                opacity: heroSettled ? 0.35 : 0,
+                transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.3s',
               }}>
-                <div style={{
-                  position: 'absolute', left: -20, top: -10, bottom: 0, width: 70, pointerEvents: 'none',
-                }}>
-                  <svg width="70" height="100%" preserveAspectRatio="none" viewBox="0 0 70 100" style={{ width: '100%', height: '100%' }}>
-                    <path d="M5,0 Q12,8 8,16 Q4,24 10,32 Q16,40 12,48 Q8,56 14,64 Q20,72 16,80 Q12,88 18,96 L50,100" fill="none" stroke="#d97706" strokeWidth="2.5" opacity="0.18" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <p style={{
-                  fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.7,
-                  color: '#6b6864', maxWidth: 460, textTransform: 'lowercase', margin: '0 0 16px 0',
-                  paddingLeft: 24,
-                }}>
-                  a cozy notes app that makes studying feel like a game. fast, shortcut-driven notebooks with a focus timer that grows your own little orchard.
-                </p>
-                <ul style={{
-                  fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.9,
-                  color: '#6b6864', textTransform: 'lowercase', margin: '0 0 0 0',
-                  paddingLeft: 42, listStyleType: "'·  '",
-                }}>
-                  <li>keyboard-first notes — no toolbar clutter</li>
-                  <li>focus timer that grows trees as you write</li>
-                  <li>miss a day and you'll see consequences</li>
-                  <li>40+ species to collect</li>
-                </ul>
+                <svg width="24" height="100%" preserveAspectRatio="none" viewBox="0 0 24 100" style={{ width: '100%', height: '100%' }}>
+                  <path d="M12,0 Q16,8 13,16 Q10,24 14,32 Q18,40 14,48 Q10,56 15,64 Q20,72 15,80 Q10,88 14,96 Q18,100 14,100" fill="none" stroke="#d97706" strokeWidth="3.5" strokeLinecap="round" />
+                </svg>
+              </div>
+            )}
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 56, paddingLeft: 48 }}>
-                  <a href="/login" style={{
-                    fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
-                    padding: '10px 28px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
-                    background: accent, color: '#fff',
-                    boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
-                  }}>
-                    start writing — free
-                  </a>
-                  <a href="/app" style={{
-                    fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.06em',
-                    padding: '9px 22px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
-                    background: 'transparent', color: '#6b6864',
-                    border: '1px solid rgba(15,15,16,0.12)',
-                    transition: 'border-color 0.2s, color 0.2s',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(15,15,16,0.3)'; e.currentTarget.style.color = '#0f0f10' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(15,15,16,0.12)'; e.currentTarget.style.color = '#6b6864' }}
-                  >
-                    try without account
-                  </a>
+            <TypewriterHeadline serif={serif} settled={heroSettled} onComplete={() => {
+              setHeroDone(true)
+              setTimeout(() => setHeroSettled(true), 600)
+            }} />
+
+            <p style={{
+              fontFamily: serif, fontSize: '1.05rem', lineHeight: 1.7,
+              color: '#6b6864', textTransform: 'lowercase', maxWidth: 420,
+              marginTop: 24,
+              opacity: heroSettled ? 1 : 0,
+              transform: heroSettled ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s',
+            }}>
+              a cozy notes app that makes studying feel like a game. focus timer, growing orchards, 40+ species to collect.
+            </p>
+
+            <div style={{
+              marginTop: 32,
+              opacity: heroSettled ? 1 : 0,
+              transform: heroSettled ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
+            }}>
+              <a href="/login" style={{
+                fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
+                padding: '12px 32px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
+                background: accent, color: '#fff',
+                boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+              }}>
+                start growing — free
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Right: Conveyor belt cards */}
+          {!isMobile && (() => {
+            const cardW = 240
+            const cardH = 220
+            const timerH = 440
+            const gap = 20
+            const tallH = 320
+            const leftCards = [
+              { label: 'notebook', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>, bg: '#d4cbb8', h: tallH, rot: -1.2, br: '18px 14px 20px 12px' },
+              { label: 'orchard', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/></svg>, bg: '#cfc5b0', h: cardH, rot: 0.8, br: '14px 18px 12px 20px' },
+              { label: 'seed shop', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>, bg: '#d9d0be', h: cardH, rot: -0.7, br: '20px 12px 16px 18px' },
+            ]
+            const rightCards = [
+              { label: 'editor', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, bg: '#cfc5b0', h: cardH, rot: 1, br: '20px 16px 14px 18px' },
+              { label: 'focus timer', timer: true, bg: '#ccc3af', h: timerH, rot: -0.6, br: '16px 20px 18px 12px' },
+              { label: 'stats', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, bg: '#d9d0be', h: tallH, rot: 1.3, br: '14px 18px 20px 16px' },
+            ]
+
+            const leftTotal = leftCards.reduce((s, c) => s + c.h + gap, 0)
+            const rightTotal = rightCards.reduce((s, c) => s + c.h + gap, 0)
+
+            const renderCard = (card: typeof leftCards[0] & { timer?: boolean }, idx: number) => (
+              <div key={idx}
+                onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1.04)`; e.currentTarget.style.boxShadow = '0 20px 44px -10px rgba(0,0,0,0.16)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1)`; e.currentTarget.style.boxShadow = '0 16px 36px -10px rgba(0,0,0,0.1)' }}
+                style={{
+                width: cardW, height: card.h, flexShrink: 0,
+                background: card.bg, borderRadius: card.br, overflow: 'hidden',
+                boxShadow: '0 16px 36px -10px rgba(0,0,0,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8,
+                transform: `rotate(${card.rot}deg) scale(1)`,
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                marginBottom: gap,
+              }}>
+                {card.timer ? (
+                  <DemoTimer serif={serif} />
+                ) : (
+                  <>
+                    {card.icon}
+                    <span style={{ fontFamily: mono, fontSize: '0.6rem', color: '#a09888', letterSpacing: '0.1em', textTransform: 'lowercase' }}>{card.label}</span>
+                  </>
+                )}
+              </div>
+            )
+
+            return (
+              <div style={{
+                position: 'absolute', right: 0, top: 0, bottom: 0,
+                width: cardW * 2 + 28,
+                overflow: 'hidden',
+                opacity: heroSettled ? 1 : 0,
+                transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
+                maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
+              }}>
+                <style>{`
+                  @keyframes beltDown { 0% { transform: translateY(0) } 100% { transform: translateY(-${leftTotal}px) } }
+                  @keyframes beltUp { 0% { transform: translateY(-${rightTotal}px) } 100% { transform: translateY(0) } }
+                `}</style>
+
+                {/* Left belt — scrolls DOWN */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, width: cardW,
+                  animation: `beltDown ${leftCards.length * 6}s linear infinite`,
+                }}>
+                  {leftCards.map((c, i) => renderCard(c, i))}
+                  {leftCards.map((c, i) => renderCard(c, i + leftCards.length))}
+                </div>
+
+                {/* Right belt — scrolls UP */}
+                <div style={{
+                  position: 'absolute', right: 0, top: 0, width: cardW,
+                  animation: `beltUp ${rightCards.length * 6}s linear infinite`,
+                }}>
+                  {rightCards.map((c, i) => renderCard(c, i))}
+                  {rightCards.map((c, i) => renderCard(c, i + rightCards.length))}
                 </div>
               </div>
-            </motion.div>
-          </div>
+            )
+          })()}
+        </div>
 
-          <div style={{
-            flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            position: 'relative',
-            opacity: heroDone ? 1 : 0,
-            transform: heroDone ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
-            transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s, transform 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
-          }}>
-            {/* Citrus half-slices scattered around the timer */}
-            <svg width="400" height="630" viewBox="0 0 400 630" style={{
-              position: 'absolute', top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none', opacity: 0.09,
-            }}>
-              {[
-                { x: 45, y: 60, r: 30, rot: -25 },
-                { x: 340, y: 100, r: 26, rot: 18 },
-                { x: 20, y: 260, r: 34, rot: 10 },
-                { x: 365, y: 320, r: 28, rot: -15 },
-                { x: 35, y: 470, r: 32, rot: -8 },
-                { x: 350, y: 530, r: 24, rot: 22 },
-              ].map((s, i) => {
-                const w = s.r * 0.12
-                return (
-                  <g key={i} transform={`translate(${s.x}, ${s.y}) rotate(${s.rot})`}>
-                    <path d={`M${-w},${-s.r} Q${s.r + w},${-s.r * 0.6} ${s.r + w},0 Q${s.r - w},${s.r * 0.6} ${w},${s.r} L${w},${-s.r + 2} Z`} fill="none" stroke="#d97706" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d={`M${w * 0.5},${1} Q${s.r * 0.4},${2} ${s.r * 0.82},${1}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
-                    <path d={`M${w},${-s.r * 0.42} Q${s.r * 0.35},${-s.r * 0.3} ${s.r * 0.72},${-s.r * 0.18}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
-                    <path d={`M${w},${s.r * 0.42} Q${s.r * 0.35},${s.r * 0.3} ${s.r * 0.72},${s.r * 0.18}`} fill="none" stroke="#d97706" strokeWidth="1.6" opacity="0.55" strokeLinecap="round" />
-                    <circle cx={w} cy="0" r="3" fill="#d97706" opacity="0.45" />
-                    <circle cx={s.r * 0.4} cy={-s.r * 0.1} r="1.8" fill="#d97706" opacity="0.4" />
-                    <circle cx={s.r * 0.32} cy={s.r * 0.22} r="1.6" fill="#d97706" opacity="0.4" />
-                    <circle cx={s.r * 0.55} cy={s.r * 0.06} r="1.4" fill="#d97706" opacity="0.4" />
-                  </g>
-                )
-              })}
-            </svg>
-            {heroDone && <DemoTimer serif={serif} />}
-          </div>
+        {/* Cart of oranges — bottom left */}
+        <div style={{
+          position: 'absolute', bottom: -140, left: -130, pointerEvents: 'none',
+          opacity: 0.85,
+        }}>
+          <svg width="520" height="420" viewBox="0 0 160 130" fill="none">
+            {/* === 1. Left support post — behind everything === */}
+            <path d="M36 55 L30 130" stroke="#8b7355" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M37 55 L31 130" stroke="#7a6445" strokeWidth="0.6" opacity="0.3" />
+
+            {/* === 2. Wheel — behind cart, angled right to match cart perspective === */}
+            <ellipse cx="105" cy="72" rx="18" ry="17" stroke="#6b5a42" strokeWidth="2.5" fill="#c4a878" />
+            <ellipse cx="105" cy="72" rx="14.5" ry="13.5" stroke="#6b5a42" strokeWidth="0.8" fill="none" opacity="0.4" />
+            <circle cx="105" cy="72" r="3" fill="#6b5a42" />
+            <line x1="105" y1="55" x2="105" y2="89" stroke="#6b5a42" strokeWidth="1.2" />
+            <line x1="87" y1="72" x2="123" y2="72" stroke="#6b5a42" strokeWidth="1.2" />
+            <line x1="92.3" y1="60" x2="117.7" y2="84" stroke="#6b5a42" strokeWidth="1.2" />
+            <line x1="117.7" y1="60" x2="92.3" y2="84" stroke="#6b5a42" strokeWidth="1.2" />
+            {/* Wheel bracket connecting to cart bottom */}
+            <path d="M105 58 L110 56" stroke="#6b5a42" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M112 58 L105 58" stroke="#6b5a42" strokeWidth="1.5" />
+
+            {/* === 3. Oranges — behind cart walls === */}
+            <circle cx="42" cy="34" r="8" fill="#e8940a" /><circle cx="42" cy="34" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="56" cy="30" r="7" fill="#d97706" /><circle cx="56" cy="30" r="7" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="69" cy="28" r="8" fill="#e8940a" /><circle cx="69" cy="28" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="82" cy="27" r="7.5" fill="#d97706" /><circle cx="82" cy="27" r="7.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="95" cy="28" r="8" fill="#e8940a" /><circle cx="95" cy="28" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="106" cy="30" r="7" fill="#d97706" /><circle cx="106" cy="30" r="7" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="48" cy="40" r="7.5" fill="#f0a020" /><circle cx="48" cy="40" r="7.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="62" cy="37" r="8" fill="#e8940a" /><circle cx="62" cy="37" r="8" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="76" cy="35" r="7" fill="#f0a020" /><circle cx="76" cy="35" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="90" cy="36" r="7.5" fill="#e8940a" /><circle cx="90" cy="36" r="7.5" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="102" cy="38" r="7" fill="#f0a020" /><circle cx="102" cy="38" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="55" cy="44" r="6.5" fill="#d97706" /><circle cx="55" cy="44" r="6.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="68" cy="42" r="7" fill="#e8940a" /><circle cx="68" cy="42" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="83" cy="42" r="6.5" fill="#d97706" /><circle cx="83" cy="42" r="6.5" stroke="#b56a06" strokeWidth="0.8" fill="none" />
+            <circle cx="96" cy="43" r="7" fill="#e8940a" /><circle cx="96" cy="43" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            {/* Stems — varied but subtle */}
+            <path d="M42 26 L43 23" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
+            <path d="M43 23 Q46 22 45 25" fill="#6b7a3a" />
+            <path d="M69 20 L68 18" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M68 18 Q65 17 66 20" fill="#6b7a3a" />
+            <path d="M95 20 L96.5 17" stroke="#5a6b30" strokeWidth="0.7" strokeLinecap="round" />
+            <path d="M96.5 17 Q99 16.5 98 19" fill="#7a8a44" />
+            <path d="M56 23 L55 21.5" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M82 19.5 L83.5 17" stroke="#5a6b30" strokeWidth="0.6" strokeLinecap="round" />
+            <path d="M83.5 17 Q86 16 85 18.5" fill="#6b7a3a" />
+            <path d="M106 23 L107 21" stroke="#5a6b30" strokeWidth="0.5" strokeLinecap="round" />
+            <path d="M107 21 Q109 20.5 108.5 22.5" fill="#7a8a44" />
+            {/* Half orange */}
+            <circle cx="38" cy="42" r="7" fill="#f5c560" /><circle cx="38" cy="42" r="7" stroke="#c67e08" strokeWidth="0.8" fill="none" />
+            <circle cx="38" cy="42" r="4.5" stroke="#e8b030" strokeWidth="0.5" fill="none" />
+            <line x1="38" y1="42" x2="38" y2="35.5" stroke="#e8b030" strokeWidth="0.4" />
+            <line x1="38" y1="42" x2="32" y2="38" stroke="#e8b030" strokeWidth="0.4" />
+            <line x1="38" y1="42" x2="44" y2="38" stroke="#e8b030" strokeWidth="0.4" />
+            <line x1="38" y1="42" x2="33" y2="46" stroke="#e8b030" strokeWidth="0.4" />
+            <line x1="38" y1="42" x2="43" y2="46" stroke="#e8b030" strokeWidth="0.4" />
+            <circle cx="38" cy="42" r="1.2" fill="#e8b030" />
+
+            {/* === 4. Cart body — on top === */}
+            <path d="M8 58 Q12 56 30 62" stroke="#8b7355" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M6 66 Q10 64 28 68" stroke="#8b7355" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M4 56 Q2 62 4 68" stroke="#6b5a42" strokeWidth="2" strokeLinecap="round" />
+            <path d="M28 54 L32 38 L108 34 L112 58 Z" fill="#b09870" />
+            <path d="M28 54 L32 38" stroke="#7a6445" strokeWidth="2" strokeLinecap="round" />
+            <path d="M32 38 L108 34" stroke="#7a6445" strokeWidth="2" strokeLinecap="round" />
+            <path d="M108 34 L112 58" stroke="#7a6445" strokeWidth="2" strokeLinecap="round" />
+            <path d="M112 58 L28 54" stroke="#7a6445" strokeWidth="2" strokeLinecap="round" />
+            <path d="M29 48 L110 44" stroke="#7a6445" strokeWidth="0.8" opacity="0.6" />
+            <path d="M30 51 L111 48" stroke="#7a6445" strokeWidth="0.6" opacity="0.4" />
+            <path d="M31 45 L109 41" stroke="#7a6445" strokeWidth="0.5" opacity="0.3" />
+            <path d="M108 34 L120 38 L124 62 L112 58 Z" fill="#9a8565" />
+            <path d="M108 34 L120 38 L124 62 L112 58 Z" stroke="#7a6445" strokeWidth="1.5" fill="none" strokeLinejoin="round" />
+            <path d="M110 44 L122 48" stroke="#7a6445" strokeWidth="0.6" opacity="0.4" />
+            <path d="M111 50 L123 54" stroke="#7a6445" strokeWidth="0.5" opacity="0.3" />
+          </svg>
         </div>
 
         {/* Scroll down indicator */}
@@ -1110,22 +833,26 @@ export default function PulpLanding() {
             <path d="M4 6L8 10L12 6" stroke="#bdb9b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </motion.svg>
         </motion.div>
-
+        <style>{`@keyframes fadeIn { to { opacity: 1 } }`}</style>
       </section>
+
+      {/* Spacer before orchard */}
+      <div style={{ height: '4vh' }} />
 
       {/* ===== Orchard expansion zone — tall scroll spacer with pinned orchard ===== */}
       <div ref={orchardSectionRef} style={{ height: '300vh', position: 'relative' }}>
         <div style={{
           position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
+          padding: '24px 40px',
         }}>
           {/* Fullscreen orchard terrain — fades in as user scrolls */}
           <div style={{
-            position: 'absolute', inset: 0,
-            opacity: Math.min(1, orchardProgress * 8 + 0.15),
+            position: 'relative', width: '100%', height: '100%',
+            borderRadius: 20, overflow: 'hidden',
+            opacity: Math.min(1, orchardProgress * 20 + 0.3),
             transition: 'opacity 0.05s',
           }}>
             <LandingTerrain progress={orchardProgress} />
-          </div>
 
           {/* Overlay text — appears after all tree rows have scrolled in */}
           <div style={{
@@ -1159,11 +886,12 @@ export default function PulpLanding() {
               </p>
             </div>
           </div>
+          </div>
         </div>
       </div>
 
       {/* ===== Content sections — normal flow ===== */}
-      <div style={{ background: '#E0D7C1', position: 'relative', zIndex: 2 }}>
+      <div style={{ background: '#E8E0D0', position: 'relative', zIndex: 2 }}>
 
         {/* Animated stats banner */}
         <section style={{ padding: '80px 80px 48px' }}>

@@ -956,7 +956,8 @@ export const BoutiqueView = memo(function BoutiqueView({
         .daily-deal { }
       `}</style>
       <div
-        style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0e0c09' : '#ede6d8' }}
+        onWheel={e => { if (e.ctrlKey || e.metaKey) e.preventDefault() }}
+        style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: isDark ? '#0e0c09' : '#ede6d8', touchAction: 'pan-x pan-y' }}
       >
         {/* Sap — top right */}
         <div style={{ position: 'absolute', top: 12, right: 20, zIndex: 10 }}>

@@ -24,7 +24,7 @@ export function getPaperBg(lineSpacing: LineSpacing, paperStyle: PaperStyle, isD
   }
 
   const backgroundColor =
-    paperStyle === "steno" ? "#F5EDB8" :
+    paperStyle === "steno" ? "#F5F0C8" :
             preview ? "#ffffff" : "#FDFCF9"
 
   const lineColor = preview ? "#e4e4e7" : "#C2D3E8"

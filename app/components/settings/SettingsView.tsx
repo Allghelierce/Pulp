@@ -924,12 +924,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   </div>
                 </div>
                 <SettingRow
-                  title="Show spiral binding"
-                  isDark={isDark}
-                  description="Display the decorative binding on the left edge"
-                  control={<SettingToggle checked={showBinding} onChange={v => onUpdateConfig({ showBinding: v })} isDark={isDark} />}
-                />
-                <SettingRow
                   title="Smear effect"
                   isDark={isDark}
                   description="Show a subtle ink smear shadow along the left margin"
