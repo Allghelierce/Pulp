@@ -8,7 +8,7 @@ import { LandingTerrain } from "./components/LandingTerrain"
 
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/></svg> },
+  { label: 'living orchard', desc: 'every notebook grows its own orchard. see where your time goes — and what you have to show for it.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 20V14"/><path d="M14 14c0-2 1.5-3.5 3-4.5 1.5 1 3 2.5 3 4.5a3 3 0 0 1-6 0z"/><path d="M7 20V10"/><path d="M4 10c0-2.5 1.5-4.5 3-5.5 1.5 1 3 3 3 5.5a3 3 0 0 1-6 0z"/><path d="M2 22h20"/></svg> },
   { label: 'inline ai', desc: 'ai that understands your entire notebook. edit, rewrite, and expand — right where you write.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/><path d="M8.24 2.69A4 4 0 0 0 8 6c0 1.95 1.4 3.58 3.25 3.93"/><path d="M12 10v12"/><path d="M8 16h8"/><path d="M6 20h12"/></svg> },
   { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
   { label: 'leaderboards', desc: 'compete with other players. climb the ranks, win exclusive trees, and prove your focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> },
@@ -92,7 +92,7 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
       textAlign: 'left',
       whiteSpace: 'nowrap',
       transform: settled ? `scale(${settledScale})` : 'scale(1)',
-      transformOrigin: settled ? 'top left' : 'center center',
+      transformOrigin: 'top left',
       transition: typingDone ? 'transform 0.9s cubic-bezier(0.2,0.8,0.2,1), transform-origin 0.9s cubic-bezier(0.2,0.8,0.2,1)' : 'none',
       willChange: 'transform',
     }}>
@@ -317,7 +317,7 @@ function DemoTimer({ serif }: { serif: string }) {
 const MODAL_CONFIG: Record<string, { subtitle: string, hasSubject: boolean, subjectPlaceholder: string, bodyPlaceholder: string, bodyLabel: string }> = {
   'report a bug': { subtitle: 'help me squash it.', hasSubject: true, subjectPlaceholder: "what's broken?", bodyPlaceholder: 'steps to reproduce, what you expected, etc.', bodyLabel: 'details (optional)' },
   'request a feature': { subtitle: "i want to hear it. i'll let you know if i add it.", hasSubject: true, subjectPlaceholder: "what's the feature?", bodyPlaceholder: 'why would this be useful? any details help.', bodyLabel: 'description (optional)' },
-  'feedback': { subtitle: 'i read everything.', hasSubject: false, subjectPlaceholder: '', bodyPlaceholder: "whats up?", bodyLabel: '' },
+  'feedback': { subtitle: 'i read everything.', hasSubject: false, subjectPlaceholder: '', bodyPlaceholder: "whats up? drop your email if you want a reply.", bodyLabel: '' },
 }
 
 function ReachOutModal({ type, onClose }: { type: string, onClose: () => void }) {
@@ -454,7 +454,8 @@ export default function PulpLanding() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [scrolled, setScrolled] = useState(false)
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual' | 'lifetime'>('annual')
+  const [pastHero, setPastHero] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('annual')
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -471,6 +472,7 @@ export default function PulpLanding() {
       raf = requestAnimationFrame(() => {
         raf = 0
         setScrolled(window.scrollY > 60)
+        setPastHero(window.scrollY > window.innerHeight * 0.7)
         const el = orchardSectionRef.current
         if (!el) return
         const rect = el.getBoundingClientRect()
@@ -570,11 +572,22 @@ export default function PulpLanding() {
           <a href="#features" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>features</a>
           <a href="#pricing" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>pricing</a>
         </div>
+        <a href="/pulp" style={{
+          marginLeft: 'auto',
+          fontFamily: 'var(--font-fraunces), serif', fontSize: '0.8rem',
+          padding: '7px 18px', borderRadius: 999, textDecoration: 'none',
+          background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
+          boxShadow: '0 2px 0 rgba(0,0,0,0.2)',
+          opacity: pastHero && !inOrchard ? 1 : 0,
+          transform: pastHero && !inOrchard ? 'translateY(0)' : 'translateY(-4px)',
+          transition: 'opacity 0.3s, transform 0.3s',
+          pointerEvents: pastHero && !inOrchard ? 'auto' : 'none',
+        }}>get started</a>
       </nav>
 
       {/* Subtle dot texture — fixed behind hero */}
       <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 40,
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1,
         backgroundImage: 'url(/paper-texture.png)',
         backgroundSize: '512px 512px',
         backgroundRepeat: 'repeat',
@@ -623,7 +636,7 @@ export default function PulpLanding() {
               paddingLeft: heroSettled && !isMobile ? 36 : 0,
               textAlign: 'left' as const,
               display: 'flex', flexDirection: 'column',
-              alignItems: heroSettled ? (isMobile ? 'center' : 'flex-start') : 'center',
+              alignItems: isMobile ? 'center' : 'flex-start',
               justifyContent: 'center',
               transition: 'width 0.9s cubic-bezier(0.2,0.8,0.2,1), padding-left 0.9s cubic-bezier(0.2,0.8,0.2,1)',
             }}
@@ -667,8 +680,8 @@ export default function PulpLanding() {
                 <a href="/pulp" className="cta-btn" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
                   padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
-                  background: accent, color: '#fff',
-                  boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
+                  background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.2), 0 4px 12px -2px rgba(234,88,12,0.35)',
                   display: 'inline-flex', alignItems: 'center', gap: 0,
                   position: 'relative', overflow: 'hidden',
                 }}>
@@ -892,7 +905,10 @@ export default function PulpLanding() {
 .cta-chevron { width: 32px; aspect-ratio: 1; transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1) }
 .cta-btn:hover .cta-label { opacity: 0 }
 .cta-btn:hover .cta-chevron { width: calc(100% - 8px) }
-.cta-btn:active .cta-chevron { transform: scale(0.95) }`}</style>
+.cta-btn:active .cta-chevron { transform: scale(0.95) }
+.btn-pop { transition: transform 0.2s ease, box-shadow 0.2s ease }
+.btn-pop:hover { transform: translateY(-1px); box-shadow: 0 3px 0 rgba(0,0,0,0.15), 0 6px 16px -2px rgba(234,88,12,0.3) }
+.btn-pop:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.15) }`}</style>
       </section>
 
       {/* ===== Orchard expansion zone — overlaps hero bottom for seamless transition ===== */}
@@ -920,22 +936,22 @@ export default function PulpLanding() {
               background: 'rgba(0,0,0,0.45)',
               backdropFilter: 'blur(8px)',
               borderRadius: 12,
-              padding: '32px 48px',
+              padding: '36px 56px',
               border: '1px solid rgba(255,255,255,0.08)',
-              textAlign: 'center',
+              textAlign: 'center', maxWidth: 560,
               transform: `translateY(${(1 - Math.min(1, orchardProgress > 0.05 ? (orchardProgress - 0.05) * 4 : 0)) * 30}px)`,
             }}>
               <h2 style={{
                 fontFamily: serif, fontSize: 'clamp(2rem, 5vw, 3.6rem)', fontWeight: 400,
                 color: '#fff', textTransform: 'lowercase', letterSpacing: '-0.03em',
-                margin: '0 0 12px 0',
+                margin: '0 0 24px 0',
               }}>
                 worth a thousand words.
               </h2>
               <p style={{
-                fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.15em',
+                fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.12em',
                 color: 'rgba(255,255,255,0.7)', textTransform: 'lowercase',
-                margin: 0,
+                margin: 0, lineHeight: 1.9,
               }}>
                 every focus session plants a tree. give up and they die. also, each notebook has its own orchard — so you can see exactly where your time went.
               </p>
@@ -968,7 +984,7 @@ export default function PulpLanding() {
                 <div style={{ fontFamily: serif, fontSize: '2.4rem', fontWeight: 400, color: '#0f0f10', lineHeight: 1, letterSpacing: '-0.03em' }}>
                   <AnimatedCounter target={stat.value} suffix={stat.suffix} delay={i * 200} />
                 </div>
-                <span style={{ fontFamily: mono, fontSize: '0.62rem', letterSpacing: '0.15em', color: '#bdb9b2', textTransform: 'lowercase', marginTop: 6, display: 'block' }}>
+                <span style={{ fontFamily: mono, fontSize: '0.75rem', letterSpacing: '0.12em', color: '#8a857e', textTransform: 'lowercase', marginTop: 8, display: 'block' }}>
                   {stat.label}
                 </span>
               </motion.div>
@@ -1003,9 +1019,9 @@ export default function PulpLanding() {
               </div>
               {[
                 ['no focus tools', 'focus timer + growing orchards'],
-                ['no consequences', 'real stakes — quit = lose progress'],
+                ['no consequences', 'real stakes — stay consistent or lose progress'],
                 ['basic autocomplete', 'ai that knows your whole notebook'],
-                ['just a doc', 'leaderboards, rare trees, competitions'],
+                ['stare at a boring page', 'leaderboards, rare trees, competitions'],
               ].map(([l, r], i) => (
                 <motion.div
                   key={i}
@@ -1028,7 +1044,7 @@ export default function PulpLanding() {
         </section>
 
         {/* Features */}
-        <section id="features" ref={featuresRef} style={{ padding: '48px 80px 100px' }}>
+        <section id="features" ref={featuresRef} style={{ padding: '48px 80px 100px', scrollMarginTop: 80 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <motion.span
               initial={{ opacity: 0, x: -30 }}
@@ -1069,7 +1085,7 @@ export default function PulpLanding() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" style={{ padding: '48px 80px 64px' }}>
+        <section id="pricing" style={{ padding: '48px 80px 64px', scrollMarginTop: 80 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
@@ -1090,7 +1106,7 @@ export default function PulpLanding() {
                 display: 'flex', background: 'rgba(255,255,255,0.5)', borderRadius: 999,
                 padding: 3, border: '1px solid rgba(0,0,0,0.06)',
               }}>
-                {(['monthly', 'annual', 'lifetime'] as const).map(period => (
+                {(['monthly', 'annual'] as const).map(period => (
                   <button
                     key={period}
                     onClick={() => setBillingPeriod(period)}
@@ -1104,8 +1120,7 @@ export default function PulpLanding() {
                     }}
                   >
                     {period}
-                    {period === 'annual' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'annual' ? 'rgba(255,255,255,0.8)' : accent, marginLeft: 4 }}>save 20%</span>}
-                    {period === 'lifetime' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'lifetime' ? 'rgba(255,255,255,0.8)' : accent, marginLeft: 4 }}>launch deal</span>}
+                    {period === 'annual' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'annual' ? '#a3e635' : '#16a34a', marginLeft: 4, fontWeight: 600 }}>save 30%</span>}
                   </button>
                 ))}
               </div>
@@ -1121,6 +1136,7 @@ export default function PulpLanding() {
                 style={{
                   width: 320, padding: '36px 32px', borderRadius: 16,
                   background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(0,0,0,0.06)',
+                  display: 'flex', flexDirection: 'column',
                 }}
               >
                 <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#0f0f10', margin: '0 0 4px 0' }}>free</h3>
@@ -1128,7 +1144,7 @@ export default function PulpLanding() {
                   $0
                 </div>
                 <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#9a958e', margin: '0 0 24px 0' }}>forever</p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {['unlimited notebooks', 'focus timer + tree growing', '10 seed species', 'basic achievements', 'local storage'].map(item => (
                     <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: '#6b6864', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1148,6 +1164,7 @@ export default function PulpLanding() {
                   width: 320, padding: '36px 32px', borderRadius: 16,
                   background: accent, border: `1px solid ${accent}`,
                   position: 'relative', overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
                 }}
               >
                 <div style={{
@@ -1155,19 +1172,17 @@ export default function PulpLanding() {
                   fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
                   padding: '3px 10px', borderRadius: 999,
                   background: 'rgba(255,255,255,0.2)', color: '#fff',
-                }}>{billingPeriod === 'lifetime' ? 'best value' : 'popular'}</div>
+}}>popular</div>
                 <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>plus</h3>
                 <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
-                  {billingPeriod === 'monthly' && <>$4<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
-                  {billingPeriod === 'annual' && <>$38<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
-                  {billingPeriod === 'lifetime' && <>$99<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span></>}
+                  {billingPeriod === 'monthly' && <>$5<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
+                  {billingPeriod === 'annual' && <><span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.45)', fontSize: '1.4rem', marginRight: 8 }}>$60</span>$42<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
                 </div>
-                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0' }}>
+                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 8px 0' }}>
                   {billingPeriod === 'monthly' && 'billed monthly'}
-                  {billingPeriod === 'annual' && <>$3.17/mo · <span style={{ textDecoration: 'line-through', opacity: 0.5 }}>$48</span></>}
-                  {billingPeriod === 'lifetime' && 'pay once, yours forever'}
+                  {billingPeriod === 'annual' && <>~$3.50/mo</>}
                 </p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {['everything in free', 'cloud sync across devices', '40+ seed species', 'all achievements + gems', 'encrypted vaults', 'leaderboards'].map(item => (
                     <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1178,10 +1193,79 @@ export default function PulpLanding() {
                 <a href="/login" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
-                  background: '#fff', color: accent,
+                  background: 'linear-gradient(to bottom, #fff, #f0f0f0)', color: accent,
                   display: 'block', textAlign: 'center',
-                }}>upgrade to plus</a>
+                  marginTop: 'auto',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.15), 0 4px 8px -2px rgba(0,0,0,0.1)',
+                }} className="btn-pop">upgrade now</a>
               </motion.div>
+
+              {/* Lifetime tier — annual tab only */}
+              {billingPeriod === 'annual' && <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.075 }}
+                style={{
+                  width: 320, padding: '36px 32px', borderRadius: 16,
+                  background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)',
+                  position: 'relative', overflow: 'hidden',
+                  display: 'flex', flexDirection: 'column',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 12, right: 12,
+                  fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
+                  padding: '3px 10px', borderRadius: 999,
+                  background: 'rgba(251,191,36,0.2)', color: '#fbbf24',
+                }}>launch deal</div>
+                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>lifetime</h3>
+                <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
+                  $99<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span>
+                </div>
+                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: '0 0 24px 0' }}>
+                  pay once, yours forever
+                </p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['everything in plus', 'all future updates included', 'early access to new features', 'limited availability'].map(item => (
+                    <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                {/* Hill + tangerine tree scene */}
+                <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, height: 120, pointerEvents: 'none' }}>
+                  <svg width="100%" height="120" viewBox="0 0 320 120" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="lt-hill" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#2d4a1e" />
+                        <stop offset="100%" stopColor="#1a2e12" />
+                      </linearGradient>
+                    </defs>
+                    <ellipse cx="160" cy="105" rx="200" ry="45" fill="url(#lt-hill)" />
+                    <ellipse cx="120" cy="100" rx="80" ry="20" fill="#243d18" opacity="0.5" />
+                  </svg>
+                  <svg width="60" height="80" viewBox="0 0 60 80" style={{ position: 'absolute', bottom: 42, left: '50%', transform: 'translateX(-50%)' }}>
+                    <line x1="30" y1="80" x2="30" y2="35" stroke="#5a3a1a" strokeWidth="3" />
+                    <circle cx="30" cy="28" r="18" fill="#2d6b1e" />
+                    <circle cx="22" cy="22" r="10" fill="#3a8a28" opacity="0.7" />
+                    <circle cx="38" cy="25" r="8" fill="#3a8a28" opacity="0.5" />
+                    <circle cx="22" cy="38" r="4" fill="#d97706" />
+                    <circle cx="36" cy="32" r="3.5" fill="#e8a020" />
+                    <circle cx="28" cy="18" r="3" fill="#d97706" opacity="0.8" />
+                    <circle cx="38" cy="20" r="2.5" fill="#e8a020" opacity="0.7" />
+                  </svg>
+                </div>
+                <a href="/login" style={{
+                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
+                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
+                  background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
+                  display: 'block', textAlign: 'center', fontWeight: 500,
+                  marginTop: 'auto', position: 'relative', zIndex: 2,
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.2), 0 4px 8px -2px rgba(0,0,0,0.15)',
+                }} className="btn-pop">upgrade ∞</a>
+              </motion.div>}
             </div>
           </div>
         </section>
@@ -1209,9 +1293,9 @@ export default function PulpLanding() {
                 <a href="/login" style={{
                   fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
                   padding: '12px 32px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
-                  background: accent, color: '#fff',
-                  boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
-                }}>
+                  background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
+                  boxShadow: '0 2px 0 rgba(0,0,0,0.2), 0 4px 12px -2px rgba(234,88,12,0.35)',
+                }} className="btn-pop">
                   try it — it's free
                 </a>
                 <a href="/app" style={{
@@ -1230,9 +1314,10 @@ export default function PulpLanding() {
         {/* Footer */}
         <footer style={{
           borderTop: '1px solid rgba(15,15,16,0.08)',
-          padding: '80px 80px 40px',
+          padding: '80px 80px 140px',
           textAlign: 'center',
           background: 'rgba(0,0,0,0.03)',
+          position: 'relative', overflow: 'hidden',
         }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <h2 style={{
@@ -1258,11 +1343,31 @@ export default function PulpLanding() {
               ))}
             </div>
             <p style={{
-              fontFamily: serif, fontSize: '0.8rem', color: '#bdb9b2', textTransform: 'lowercase', margin: 0,
+              fontFamily: serif, fontSize: '0.8rem', color: '#bdb9b2', textTransform: 'lowercase', margin: '0 0 40px 0',
             }}>
               © 2026 pulp.
             </p>
           </div>
+          {/* Rolling hills */}
+          <svg width="100%" height="120" viewBox="0 0 1200 120" preserveAspectRatio="none" style={{ display: 'block', position: 'absolute', bottom: 20, left: 0, right: 0 }}>
+            <defs>
+              <linearGradient id="fh1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3a5a28" />
+                <stop offset="100%" stopColor="#2a4018" />
+              </linearGradient>
+              <linearGradient id="fh2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#4a6a35" />
+                <stop offset="100%" stopColor="#3a5525" />
+              </linearGradient>
+              <linearGradient id="fh3" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#2d4a1e" />
+                <stop offset="100%" stopColor="#1e3512" />
+              </linearGradient>
+            </defs>
+            <path d="M0 90 Q150 40 300 70 Q450 95 600 55 Q750 25 900 65 Q1050 90 1200 50 L1200 120 L0 120Z" fill="url(#fh3)" opacity="0.4" />
+            <path d="M0 80 Q200 50 400 75 Q550 90 700 60 Q850 35 1000 70 Q1100 85 1200 65 L1200 120 L0 120Z" fill="url(#fh1)" opacity="0.6" />
+            <path d="M0 95 Q100 70 250 85 Q400 100 550 75 Q700 55 850 80 Q1000 95 1200 70 L1200 120 L0 120Z" fill="url(#fh2)" />
+          </svg>
         </footer>
       </div>
 
