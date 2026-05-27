@@ -9,9 +9,9 @@ import { LandingTerrain } from "./components/LandingTerrain"
 const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/></svg> },
-  { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> },
+  { label: 'inline ai', desc: 'ai that understands your entire notebook. edit, rewrite, and expand — right where you write.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/><path d="M8.24 2.69A4 4 0 0 0 8 6c0 1.95 1.4 3.58 3.25 3.93"/><path d="M12 10v12"/><path d="M8 16h8"/><path d="M6 20h12"/></svg> },
   { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
-  { label: 'achievements', desc: 'unlock milestones as you write. earn sap, gems, and xp to level up.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  { label: 'leaderboards', desc: 'compete with other players. climb the ranks, win exclusive trees, and prove your focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> },
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
 
@@ -183,7 +183,7 @@ function DemoTimer({ serif }: { serif: string }) {
   const treeIdx = Math.floor(elapsed / treeChangeInterval) % DEMO_TREES.length
   const shuffleType = DEMO_TREES[treeIdx]
   const stage = !started ? -1 : progress < 0.08 ? 0 : progress < 0.25 ? 1 : progress < 0.5 ? 2 : progress < 0.8 ? 3 : 4
-  const plantSize = !started ? 100 : stage === 0 ? 50 : 70 + stage * 12
+  const plantSize = !started ? 130 : stage === 0 ? 65 : 90 + stage * 15
   const done = elapsed >= total
 
   const mainColor = "#d97706"
@@ -235,7 +235,7 @@ function DemoTimer({ serif }: { serif: string }) {
           </div>
 
           <div style={{ position: 'relative', width: '100%', flex: 1 }}>
-            <div style={{ position: 'absolute', bottom: 4, left: 0, width: '100%', zIndex: 0 }}>
+            <div style={{ position: 'absolute', bottom: -12, left: 0, width: '100%', zIndex: 0 }}>
               <svg width="100%" viewBox="0 0 200 40" preserveAspectRatio="none" style={{ height: 40 }}>
                 <defs>
                   <linearGradient id="dh-hill" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -260,7 +260,7 @@ function DemoTimer({ serif }: { serif: string }) {
 
             <div style={{
               position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-              bottom: stage === 0 ? 18 : 30, zIndex: 10,
+              bottom: stage === 0 ? 2 : 14, zIndex: 10,
               display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
               {!started ? (
@@ -477,7 +477,8 @@ export default function PulpLanding() {
         const scrollable = el.offsetHeight - window.innerHeight
         if (scrollable <= 0) return
         const raw = -(rect.top - window.innerHeight * 0.3) / (el.offsetHeight - window.innerHeight)
-        setOrchardProgress(Math.max(0, Math.min(1, raw)))
+        const pastOrchard = rect.bottom < 0
+        setOrchardProgress(pastOrchard ? 0 : Math.max(0, Math.min(1, raw)))
       })
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -573,11 +574,12 @@ export default function PulpLanding() {
 
       {/* Subtle dot texture — fixed behind hero */}
       <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 40,
         backgroundImage: 'url(/paper-texture.png)',
         backgroundSize: '512px 512px',
         backgroundRepeat: 'repeat',
-        opacity: Math.max(0, (1 - orchardProgress * 2) * 0.5),
+        opacity: inOrchard ? 0 : 0.4,
+        transition: 'opacity 0.5s',
       }} />
 
 
@@ -674,8 +676,7 @@ export default function PulpLanding() {
                   <span className="cta-chevron" style={{
                     position: 'absolute', right: 4, top: 4, bottom: 4,
                     borderRadius: 999, display: 'grid', placeItems: 'center',
-                    width: '28%', background: 'rgba(255,255,255,0.15)',
-                    transition: 'width 0.5s cubic-bezier(0.2,0.8,0.2,1)',
+                    background: 'rgba(255,255,255,0.15)',
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                   </span>
@@ -888,6 +889,7 @@ export default function PulpLanding() {
         </div>
 
         <style>{`@keyframes fadeIn { to { opacity: 1 } }
+.cta-chevron { width: 28%; transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1) }
 .cta-btn:hover .cta-label { opacity: 0 }
 .cta-btn:hover .cta-chevron { width: calc(100% - 8px) }
 .cta-btn:active .cta-chevron { transform: scale(0.95) }`}</style>
@@ -896,7 +898,7 @@ export default function PulpLanding() {
       {/* ===== Orchard expansion zone — overlaps hero bottom for seamless transition ===== */}
       <div ref={orchardSectionRef} style={{ height: '300vh', position: 'relative', marginTop: '-40vh' }}>
         <div style={{
-          position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
+          position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', userSelect: 'none',
         }}>
           {/* Fullscreen orchard terrain — fades in as user scrolls */}
           <div style={{
@@ -910,7 +912,7 @@ export default function PulpLanding() {
           {/* Overlay text — appears after all tree rows have scrolled in */}
           <div style={{
             position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: '30vh',
             pointerEvents: 'none', zIndex: 100,
             opacity: orchardProgress > 0.05 ? Math.min(1, (orchardProgress - 0.05) * 4) : 0,
           }}>
@@ -928,14 +930,14 @@ export default function PulpLanding() {
                 color: '#fff', textTransform: 'lowercase', letterSpacing: '-0.03em',
                 margin: '0 0 12px 0',
               }}>
-                your orchard awaits.
+                worth a thousand words.
               </h2>
               <p style={{
                 fontFamily: mono, fontSize: '0.72rem', letterSpacing: '0.15em',
                 color: 'rgba(255,255,255,0.7)', textTransform: 'lowercase',
                 margin: 0,
               }}>
-                every tree grown through focus
+                every focus session plants a tree. give up and they die. also, each notebook has its own orchard — so you can see exactly where your time went.
               </p>
             </div>
           </div>
@@ -1000,10 +1002,10 @@ export default function PulpLanding() {
                 <span style={{ fontFamily: mono, fontSize: '0.62rem', letterSpacing: '0.15em', color: accent, textTransform: 'lowercase' }}>pulp</span>
               </div>
               {[
-                ['no focus tools', 'focus timer + site blocker'],
+                ['no focus tools', 'focus timer + growing orchards'],
                 ['no consequences', 'real stakes — quit = lose progress'],
-                ['clunky ui', 'shortcut-driven workflow'],
-                ['just a doc', 'an orchard that grows as you write'],
+                ['basic autocomplete', 'ai that knows your whole notebook'],
+                ['just a doc', 'leaderboards, rare trees, competitions'],
               ].map(([l, r], i) => (
                 <motion.div
                   key={i}
@@ -1067,7 +1069,7 @@ export default function PulpLanding() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" style={{ padding: '80px 80px 120px' }}>
+        <section id="pricing" style={{ padding: '48px 80px 64px' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <motion.h2
               initial={{ opacity: 0, y: 30 }}
@@ -1154,11 +1156,11 @@ export default function PulpLanding() {
                   padding: '3px 10px', borderRadius: 999,
                   background: 'rgba(255,255,255,0.2)', color: '#fff',
                 }}>{billingPeriod === 'lifetime' ? 'best value' : 'popular'}</div>
-                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>pro</h3>
+                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>plus</h3>
                 <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
                   {billingPeriod === 'monthly' && <>$4<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
                   {billingPeriod === 'annual' && <>$38<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
-                  {billingPeriod === 'lifetime' && <>$89<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span></>}
+                  {billingPeriod === 'lifetime' && <>$99<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span></>}
                 </div>
                 <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0' }}>
                   {billingPeriod === 'monthly' && 'billed monthly'}
@@ -1178,7 +1180,7 @@ export default function PulpLanding() {
                   padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
                   background: '#fff', color: accent,
                   display: 'block', textAlign: 'center',
-                }}>upgrade to pro</a>
+                }}>upgrade to plus</a>
               </motion.div>
             </div>
           </div>
@@ -1230,6 +1232,7 @@ export default function PulpLanding() {
           borderTop: '1px solid rgba(15,15,16,0.08)',
           padding: '80px 80px 40px',
           textAlign: 'center',
+          background: 'rgba(0,0,0,0.03)',
         }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <h2 style={{
