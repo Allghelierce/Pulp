@@ -709,7 +709,7 @@ export default function PulpLanding() {
             const leftTotal = leftCards.reduce((s, c) => s + c.h + gap, 0)
             const rightTotal = rightCards.reduce((s, c) => s + c.h + gap, 0)
 
-            const renderCard = (card: typeof leftCards[0] & { timer?: boolean }, idx: number) => (
+            const renderCard = (card: { label: string; icon?: React.ReactNode; bg: string; h: number; rot: number; br: string; timer?: boolean }, idx: number) => (
               <div key={idx}
                 onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1.04)`; e.currentTarget.style.boxShadow = '0 20px 44px -10px rgba(0,0,0,0.16)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1)`; e.currentTarget.style.boxShadow = '0 16px 36px -10px rgba(0,0,0,0.1)' }}
