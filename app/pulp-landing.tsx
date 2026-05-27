@@ -47,7 +47,7 @@ function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, s
     return () => clearTimeout(t)
   }, [started, target, delay])
 
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+  return <span ref={ref}>{target < 0 ? '' : count.toLocaleString()}{suffix}</span>
 }
 
 
@@ -454,6 +454,7 @@ export default function PulpLanding() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [scrolled, setScrolled] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual' | 'lifetime'>('annual')
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -475,7 +476,7 @@ export default function PulpLanding() {
         const rect = el.getBoundingClientRect()
         const scrollable = el.offsetHeight - window.innerHeight
         if (scrollable <= 0) return
-        const raw = -rect.top / (el.offsetHeight - window.innerHeight)
+        const raw = -(rect.top - window.innerHeight * 0.3) / (el.offsetHeight - window.innerHeight)
         setOrchardProgress(Math.max(0, Math.min(1, raw)))
       })
     }
@@ -581,7 +582,7 @@ export default function PulpLanding() {
 
 
       {/* ===== Hero ===== */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden', zIndex: 2 }}>
         {/* Gradient background */}
         <div style={{
           position: 'absolute', inset: 0,
@@ -661,15 +662,23 @@ export default function PulpLanding() {
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <a href="/login" style={{
+                <a href="/login" className="cta-btn" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
-                  padding: '14px 36px', borderRadius: 999, textDecoration: 'none',
+                  padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
                   background: accent, color: '#fff',
                   boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  display: 'inline-flex', alignItems: 'center', gap: 0,
+                  position: 'relative', overflow: 'hidden',
                 }}>
-                  try it — it's free
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <span className="cta-label" style={{ marginRight: 32, transition: 'opacity 0.5s' }}>try it — it's free</span>
+                  <span className="cta-chevron" style={{
+                    position: 'absolute', right: 4, top: 4, bottom: 4,
+                    borderRadius: 999, display: 'grid', placeItems: 'center',
+                    width: '28%', background: 'rgba(255,255,255,0.15)',
+                    transition: 'width 0.5s cubic-bezier(0.2,0.8,0.2,1)',
+                  }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  </span>
                 </a>
                 <a href="/login" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
@@ -878,23 +887,22 @@ export default function PulpLanding() {
           </svg>
         </div>
 
-        <style>{`@keyframes fadeIn { to { opacity: 1 } }`}</style>
+        <style>{`@keyframes fadeIn { to { opacity: 1 } }
+.cta-btn:hover .cta-label { opacity: 0 }
+.cta-btn:hover .cta-chevron { width: calc(100% - 8px) }
+.cta-btn:active .cta-chevron { transform: scale(0.95) }`}</style>
       </section>
 
-      {/* Spacer before orchard */}
-      <div style={{ height: '4vh' }} />
-
-      {/* ===== Orchard expansion zone — tall scroll spacer with pinned orchard ===== */}
-      <div ref={orchardSectionRef} style={{ height: '300vh', position: 'relative' }}>
+      {/* ===== Orchard expansion zone — overlaps hero bottom for seamless transition ===== */}
+      <div ref={orchardSectionRef} style={{ height: '300vh', position: 'relative', marginTop: '-40vh' }}>
         <div style={{
           position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
-          padding: '24px 40px',
         }}>
           {/* Fullscreen orchard terrain — fades in as user scrolls */}
           <div style={{
             position: 'relative', width: '100%', height: '100%',
-            borderRadius: 20, overflow: 'hidden',
-            opacity: Math.min(1, orchardProgress * 20 + 0.3),
+            overflow: 'hidden',
+            opacity: Math.min(1, Math.max(0, orchardProgress * 3)),
             transition: 'opacity 0.05s',
           }}>
             <LandingTerrain progress={orchardProgress} />
@@ -942,10 +950,10 @@ export default function PulpLanding() {
         <section style={{ padding: '80px 80px 48px' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 80 }}>
             {[
-              { value: 40, suffix: '+', label: 'tree species' },
-              { value: 30, suffix: '+', label: 'achievements' },
-              { value: 5, suffix: '', label: 'notebook types' },
-              { value: 100, suffix: '%', label: 'free to use' },
+              { value: 40, suffix: '+', label: 'species to grow' },
+              { value: 0, suffix: '', label: 'ads, ever' },
+              { value: -1, suffix: '∞', label: 'pages per notebook' },
+              { value: 7, suffix: '', label: 'rarity tiers' },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -1070,9 +1078,37 @@ export default function PulpLanding() {
             >
               simple pricing
             </motion.h2>
-            <p style={{ fontFamily: serif, fontSize: '1rem', color: '#6b6864', textAlign: 'center', margin: '0 0 48px 0' }}>
+            <p style={{ fontFamily: serif, fontSize: '1rem', color: '#6b6864', textAlign: 'center', margin: '0 0 32px 0' }}>
               everything you need to grow. upgrade when you're ready.
             </p>
+
+            {/* Billing toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 40px 0' }}>
+              <div style={{
+                display: 'flex', background: 'rgba(255,255,255,0.5)', borderRadius: 999,
+                padding: 3, border: '1px solid rgba(0,0,0,0.06)',
+              }}>
+                {(['monthly', 'annual', 'lifetime'] as const).map(period => (
+                  <button
+                    key={period}
+                    onClick={() => setBillingPeriod(period)}
+                    style={{
+                      fontFamily: serif, fontSize: '0.85rem', padding: '7px 20px',
+                      borderRadius: 999, border: 'none', cursor: 'pointer',
+                      background: billingPeriod === period ? accent : 'transparent',
+                      color: billingPeriod === period ? '#fff' : '#6b6864',
+                      transition: 'all 0.25s ease',
+                      position: 'relative',
+                    }}
+                  >
+                    {period}
+                    {period === 'annual' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'annual' ? 'rgba(255,255,255,0.8)' : accent, marginLeft: 4 }}>save 20%</span>}
+                    {period === 'lifetime' && <span style={{ fontSize: '0.65rem', color: billingPeriod === 'lifetime' ? 'rgba(255,255,255,0.8)' : accent, marginLeft: 4 }}>launch deal</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
               {/* Free tier */}
               <motion.div
@@ -1098,12 +1134,6 @@ export default function PulpLanding() {
                     </li>
                   ))}
                 </ul>
-                <a href="/login" style={{
-                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
-                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
-                  border: `1.5px solid ${accent}`, color: accent,
-                  display: 'block', textAlign: 'center',
-                }}>get started</a>
               </motion.div>
 
               {/* Pro tier */}
@@ -1123,12 +1153,18 @@ export default function PulpLanding() {
                   fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
                   padding: '3px 10px', borderRadius: 999,
                   background: 'rgba(255,255,255,0.2)', color: '#fff',
-                }}>popular</div>
+                }}>{billingPeriod === 'lifetime' ? 'best value' : 'popular'}</div>
                 <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>pro</h3>
                 <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
-                  $4<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span>
+                  {billingPeriod === 'monthly' && <>$4<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span></>}
+                  {billingPeriod === 'annual' && <>$38<span style={{ fontSize: '1rem', opacity: 0.7 }}>/yr</span></>}
+                  {billingPeriod === 'lifetime' && <>$89<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span></>}
                 </div>
-                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0' }}>billed monthly</p>
+                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0' }}>
+                  {billingPeriod === 'monthly' && 'billed monthly'}
+                  {billingPeriod === 'annual' && <>$3.17/mo · <span style={{ textDecoration: 'line-through', opacity: 0.5 }}>$48</span></>}
+                  {billingPeriod === 'lifetime' && 'pay once, yours forever'}
+                </p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {['everything in free', 'cloud sync across devices', '40+ seed species', 'all achievements + gems', 'encrypted vaults', 'leaderboards'].map(item => (
                     <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
