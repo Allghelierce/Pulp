@@ -7,12 +7,12 @@ import { LandingTerrain } from "./components/LandingTerrain"
 
 
 const FEATURES = [
-  { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: '⏱' },
-  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.', icon: '🌳' },
-  { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.', icon: '🚫' },
-  { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.', icon: '📓' },
-  { label: 'achievements', desc: 'unlock milestones as you write. earn sap, gems, and xp to level up.', icon: '🏆' },
-  { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: '🌱' },
+  { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+  { label: 'living orchard', desc: 'every notebook grows its own orchard — harvest sap and cut trees for paper.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/></svg> },
+  { label: 'site blocker', desc: 'when the timer is running, distracting sites are blocked. no willpower required — just focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> },
+  { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
+  { label: 'achievements', desc: 'unlock milestones as you write. earn sap, gems, and xp to level up.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
 
 function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, suffix?: string, delay?: number }) {
@@ -581,16 +581,30 @@ export default function PulpLanding() {
 
 
       {/* ===== Hero ===== */}
-      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative' }}>
-        {/* Dot grid background */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px)',
-          backgroundSize: '2rem 2rem',
-        }} />
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Gradient background */}
         <div style={{
           position: 'absolute', inset: 0,
           background: 'radial-gradient(125% 125% at 50% 10%, #E8E0D0 45%, rgba(217,119,6,0.25) 100%)',
+        }} />
+        {/* Paper speckle texture */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'url(/paper-texture.png)',
+          backgroundSize: '512px 512px',
+          backgroundRepeat: 'repeat',
+          opacity: 0.4,
+        }} />
+        {/* Bottom fade + shadow for layered depth */}
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: -2, height: 80,
+          background: 'linear-gradient(to bottom, transparent, #E8E0D0)',
+          zIndex: 2,
+        }} />
+        <div style={{
+          position: 'absolute', left: 20, right: 20, bottom: -6, height: 1,
+          boxShadow: '0 8px 30px -4px rgba(0,0,0,0.1), 0 2px 8px -2px rgba(0,0,0,0.06)',
+          zIndex: 1,
         }} />
 
         <div
@@ -624,7 +638,7 @@ export default function PulpLanding() {
                 transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.3s',
               }}>
                 <svg width="24" height="100%" preserveAspectRatio="none" viewBox="0 0 24 100" style={{ width: '100%', height: '100%' }}>
-                  <path d="M12,0 Q16,8 13,16 Q10,24 14,32 Q18,40 14,48 Q10,56 15,64 Q20,72 15,80 Q10,88 14,96 Q18,100 14,100" fill="none" stroke="#d97706" strokeWidth="3.5" strokeLinecap="round" />
+                  <path d="M12,0 Q14,10 12.5,20 Q11,30 13,40 Q14.5,50 12.5,60 Q11,70 13,80 Q14.5,90 12.5,100" fill="none" stroke="#d97706" strokeWidth="3.5" strokeLinecap="round" />
                 </svg>
               </div>
             )}
@@ -642,7 +656,7 @@ export default function PulpLanding() {
               transform: heroSettled ? 'translateY(0)' : 'translateY(20px)',
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s',
             }}>
-              a cozy notes app that makes studying feel like a game. focus timer, growing orchards, 40+ species to collect.
+              <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.8rem', float: 'left', lineHeight: 0.8, marginRight: 6, marginTop: 4, color: '#d97706', fontWeight: 400 }}>P</span>ulp is a cozy notes app that makes writing stuff down feel like a game. focus timer, growing orchards, 40+ species to collect.
             </p>
 
             <div style={{
@@ -756,7 +770,7 @@ export default function PulpLanding() {
 
         {/* Cart of oranges — bottom left */}
         <div style={{
-          position: 'absolute', bottom: -142, left: -110, pointerEvents: 'none',
+          position: 'absolute', bottom: -144, left: -110, pointerEvents: 'none',
           opacity: 0.85,
         }}>
           <svg width="520" height="420" viewBox="0 0 160 130" fill="none">
@@ -869,29 +883,6 @@ export default function PulpLanding() {
           </svg>
         </div>
 
-        {/* Scroll down indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: heroDone ? 1 : 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          style={{
-            position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-            opacity: heroTextOpacity,
-            pointerEvents: 'none',
-          }}
-        >
-          <span style={{ fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#bdb9b2', textTransform: 'lowercase' }}>
-            scroll down
-          </span>
-          <motion.svg
-            width="16" height="16" viewBox="0 0 16 16" fill="none"
-            animate={{ y: [0, 4, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <path d="M4 6L8 10L12 6" stroke="#bdb9b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </motion.svg>
-        </motion.div>
         <style>{`@keyframes fadeIn { to { opacity: 1 } }`}</style>
       </section>
 
@@ -1059,7 +1050,7 @@ export default function PulpLanding() {
                     transformOrigin: 'center bottom',
                   }}
                 >
-                  <span style={{ fontSize: '1.6rem', display: 'block', marginBottom: 12 }}>{f.icon}</span>
+                  <div style={{ marginBottom: 12 }}>{f.icon}</div>
                   <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
                     {f.label}
                   </h3>
