@@ -595,16 +595,11 @@ export default function PulpLanding() {
           backgroundRepeat: 'repeat',
           opacity: 0.4,
         }} />
-        {/* Bottom fade + shadow for layered depth */}
+        {/* Bottom fade for smooth transition */}
         <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: -2, height: 80,
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: 160,
           background: 'linear-gradient(to bottom, transparent, #E8E0D0)',
-          zIndex: 2,
-        }} />
-        <div style={{
-          position: 'absolute', left: 20, right: 20, bottom: -6, height: 1,
-          boxShadow: '0 8px 30px -4px rgba(0,0,0,0.1), 0 2px 8px -2px rgba(0,0,0,0.06)',
-          zIndex: 1,
+          zIndex: 2, pointerEvents: 'none',
         }} />
 
         <div
@@ -668,7 +663,7 @@ export default function PulpLanding() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                 <a href="/login" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
-                  padding: '12px 32px', borderRadius: 8, textDecoration: 'none',
+                  padding: '14px 36px', borderRadius: 999, textDecoration: 'none',
                   background: accent, color: '#fff',
                   boxShadow: '0 4px 20px -4px rgba(234,88,12,0.3)',
                   display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -1059,6 +1054,96 @@ export default function PulpLanding() {
                   </p>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section id="pricing" style={{ padding: '80px 80px 120px' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 400, color: '#0f0f10', textAlign: 'center', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}
+            >
+              simple pricing
+            </motion.h2>
+            <p style={{ fontFamily: serif, fontSize: '1rem', color: '#6b6864', textAlign: 'center', margin: '0 0 48px 0' }}>
+              everything you need to grow. upgrade when you're ready.
+            </p>
+            <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {/* Free tier */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                style={{
+                  width: 320, padding: '36px 32px', borderRadius: 16,
+                  background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(0,0,0,0.06)',
+                }}
+              >
+                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#0f0f10', margin: '0 0 4px 0' }}>free</h3>
+                <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#0f0f10', margin: '8px 0 4px 0' }}>
+                  $0
+                </div>
+                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: '#9a958e', margin: '0 0 24px 0' }}>forever</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['unlimited notebooks', 'focus timer + tree growing', '10 seed species', 'basic achievements', 'local storage'].map(item => (
+                    <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: '#6b6864', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a href="/login" style={{
+                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
+                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
+                  border: `1.5px solid ${accent}`, color: accent,
+                  display: 'block', textAlign: 'center',
+                }}>get started</a>
+              </motion.div>
+
+              {/* Pro tier */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.25 }}
+                style={{
+                  width: 320, padding: '36px 32px', borderRadius: 16,
+                  background: accent, border: `1px solid ${accent}`,
+                  position: 'relative', overflow: 'hidden',
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 12, right: 12,
+                  fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
+                  padding: '3px 10px', borderRadius: 999,
+                  background: 'rgba(255,255,255,0.2)', color: '#fff',
+                }}>popular</div>
+                <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>pro</h3>
+                <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
+                  $4<span style={{ fontSize: '1rem', opacity: 0.7 }}>/mo</span>
+                </div>
+                <p style={{ fontFamily: serif, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 24px 0' }}>billed monthly</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['everything in free', 'cloud sync across devices', '40+ seed species', 'all achievements + gems', 'encrypted vaults', 'leaderboards'].map(item => (
+                    <li key={item} style={{ fontFamily: serif, fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a href="/login" style={{
+                  fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
+                  padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
+                  background: '#fff', color: accent,
+                  display: 'block', textAlign: 'center',
+                }}>upgrade to pro</a>
+              </motion.div>
             </div>
           </div>
         </section>
