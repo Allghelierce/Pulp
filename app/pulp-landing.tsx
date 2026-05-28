@@ -318,6 +318,7 @@ const MODAL_CONFIG: Record<string, { subtitle: string, hasSubject: boolean, subj
   'report a bug': { subtitle: 'help me squash it.', hasSubject: true, subjectPlaceholder: "what's broken?", bodyPlaceholder: 'steps to reproduce, what you expected, etc.', bodyLabel: 'details (optional)' },
   'request a feature': { subtitle: "i want to hear it. i'll let you know if i add it.", hasSubject: true, subjectPlaceholder: "what's the feature?", bodyPlaceholder: 'why would this be useful? any details help.', bodyLabel: 'description (optional)' },
   'feedback': { subtitle: 'i read everything.', hasSubject: false, subjectPlaceholder: '', bodyPlaceholder: "whats up? drop your email if you want a reply.", bodyLabel: '' },
+  'contact me!': { subtitle: "i'll get back to you.", hasSubject: true, subjectPlaceholder: 'subject', bodyPlaceholder: "what's on your mind? drop your email and i'll reply.", bodyLabel: 'message' },
 }
 
 function ReachOutModal({ type, onClose }: { type: string, onClose: () => void }) {
@@ -552,11 +553,7 @@ export default function PulpLanding() {
                   key={item.label}
                   onClick={() => {
                     setReachOutOpen(false)
-                    if (item.action === 'contact') {
-                      window.open('https://www.cesarvillegas.me', '_blank')
-                    } else {
-                      setModalType(item.label)
-                    }
+                    setModalType(item.label)
                   }}
                   style={{
                     display: 'block', padding: '8px 16px',
@@ -710,20 +707,20 @@ export default function PulpLanding() {
             const gap = 20
             const tallH = 320
             const leftCards = [
-              { label: 'notebook', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>, bg: '#d4cbb8', h: tallH, rot: -1.2, br: '18px 14px 20px 12px' },
-              { label: 'orchard', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="M8 5.2C9 4 10.5 3 12 3s3 1 4 2.2"/></svg>, bg: '#cfc5b0', h: cardH, rot: 0.8, br: '14px 18px 12px 20px' },
-              { label: 'seed shop', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>, bg: '#d9d0be', h: cardH, rot: -0.7, br: '20px 12px 16px 18px' },
+              { label: 'notebook', img: '/screenshot-editor.png', imgPos: 'left top', bg: '#d4cbb8', h: tallH, rot: -1.2, br: '18px 14px 20px 12px' },
+              { label: 'orchard', img: '/screenshot-shop-2.png', imgPos: 'center center', bg: '#1a1a1a', h: cardH, rot: 0.8, br: '14px 18px 12px 20px' },
+              { label: 'seed shop', img: '/screenshot-shop.png', imgPos: 'center top', bg: '#d9d0be', h: cardH, rot: -0.7, br: '20px 12px 16px 18px' },
             ]
             const rightCards = [
-              { label: 'editor', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, bg: '#cfc5b0', h: cardH, rot: 1, br: '20px 16px 14px 18px' },
+              { label: 'editor', img: '/screenshot-editor.png', imgPos: 'center top', bg: '#cfc5b0', h: cardH, rot: 1, br: '20px 16px 14px 18px' },
               { label: 'focus timer', timer: true, bg: '#ccc3af', h: timerH, rot: -0.6, br: '16px 20px 18px 12px' },
-              { label: 'stats', icon: <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#a09888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>, bg: '#d9d0be', h: tallH, rot: 1.3, br: '14px 18px 20px 16px' },
+              { label: 'stats', img: '/screenshot-shop-2.png', imgPos: 'center bottom', bg: '#1a1a1a', h: tallH, rot: 1.3, br: '14px 18px 20px 16px' },
             ]
 
             const leftTotal = leftCards.reduce((s, c) => s + c.h + gap, 0)
             const rightTotal = rightCards.reduce((s, c) => s + c.h + gap, 0)
 
-            const renderCard = (card: { label: string; icon?: React.ReactNode; bg: string; h: number; rot: number; br: string; timer?: boolean }, idx: number) => (
+            const renderCard = (card: { label: string; img?: string; imgPos?: string; bg: string; h: number; rot: number; br: string; timer?: boolean }, idx: number) => (
               <div key={idx}
                 onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1.04)`; e.currentTarget.style.boxShadow = '0 20px 44px -10px rgba(0,0,0,0.16)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1)`; e.currentTarget.style.boxShadow = '0 16px 36px -10px rgba(0,0,0,0.1)' }}
@@ -731,19 +728,17 @@ export default function PulpLanding() {
                 width: cardW, height: card.h, flexShrink: 0,
                 background: card.bg, borderRadius: card.br, overflow: 'hidden',
                 boxShadow: '0 16px 36px -10px rgba(0,0,0,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
                 transform: `rotate(${card.rot}deg) scale(1)`,
                 transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                 marginBottom: gap,
+                position: 'relative',
               }}>
                 {card.timer ? (
                   <DemoTimer serif={serif} />
-                ) : (
-                  <>
-                    {card.icon}
-                    <span style={{ fontFamily: mono, fontSize: '0.6rem', color: '#a09888', letterSpacing: '0.1em', textTransform: 'lowercase' }}>{card.label}</span>
-                  </>
-                )}
+                ) : card.img ? (
+                  <img src={card.img} alt={card.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: card.imgPos || 'center center' }} />
+                ) : null}
               </div>
             )
 
@@ -1218,7 +1213,7 @@ export default function PulpLanding() {
                   fontFamily: mono, fontSize: '0.6rem', letterSpacing: '0.1em',
                   padding: '3px 10px', borderRadius: 999,
                   background: 'rgba(251,191,36,0.2)', color: '#fbbf24',
-                }}>launch deal</div>
+                }}>limited launch deal</div>
                 <h3 style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '1.4rem', fontWeight: 400, color: '#fff', margin: '0 0 4px 0' }}>lifetime</h3>
                 <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '2.4rem', color: '#fff', margin: '8px 0 4px 0' }}>
                   $99<span style={{ fontSize: '1rem', opacity: 0.7 }}> once</span>
