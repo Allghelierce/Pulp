@@ -171,7 +171,7 @@ function DemoTimer({ serif }: { serif: string }) {
         }
         return e + 1
       })
-    }, 50)
+    }, 70)
     return () => clearInterval(iv)
   }, [started, paused, total])
 
@@ -552,7 +552,7 @@ export default function PulpLanding() {
           <a href="#features" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>features</a>
           <a href="#pricing" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>pricing</a>
         </div>
-        <a href="/login" style={{
+        <a href="/app" style={{
           marginLeft: 'auto',
           fontFamily: 'var(--font-fraunces), serif', fontSize: '0.8rem',
           padding: '7px 18px', borderRadius: 999, textDecoration: 'none',
@@ -657,7 +657,7 @@ export default function PulpLanding() {
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <a href="/login" className="cta-btn" style={{
+                <a href="/app" className="cta-btn" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
                   padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
@@ -674,7 +674,7 @@ export default function PulpLanding() {
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                   </span>
                 </a>
-                <a href="/login" style={{
+                <a href="/app" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   color: '#9a958e', textDecoration: 'underline', textUnderlineOffset: 3,
                 }}>log in</a>
@@ -1269,29 +1269,70 @@ export default function PulpLanding() {
           </div>
 
           {/* Image gallery */}
-          <div style={{ maxWidth: 1100, margin: '0 auto', paddingTop: 48 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-              {[
-                { src: '/screenshot-editor.png', label: 'editor' },
-                { src: '/screenshot-shop.png', label: 'seed shop' },
-                { src: '/screenshot-shop-2.png', label: 'orchard' },
-              ].map((img, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.6, delay: i * 0.1, ease: [0.2, 0.8, 0.2, 1] }}
-                  style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(15,15,16,0.08)', background: '#1a1a1a', position: 'relative' }}
+          {(() => {
+            const galleryImages = [
+              { src: '/screenshot-shop.png', label: 'seed shop' },
+              { src: '/screenshot-editor.png', label: 'editor' },
+              { src: '/screenshot-shop-2.png', label: 'orchard' },
+              { src: '', label: 'coming soon' },
+            ]
+            const [galIdx, setGalIdx] = useState(1)
+            return (
+              <div style={{ maxWidth: 1100, margin: '0 auto', paddingTop: 48 }}>
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 420 }}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'ArrowLeft') setGalIdx((galIdx - 1 + galleryImages.length) % galleryImages.length); if (e.key === 'ArrowRight') setGalIdx((galIdx + 1) % galleryImages.length) }}
                 >
-                  <img src={img.src} alt={img.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 10px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-                    <span style={{ fontFamily: mono, fontSize: '0.5rem', letterSpacing: '0.12em', color: 'rgba(255,255,255,0.7)', textTransform: 'lowercase' }}>{img.label}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+                  {galleryImages.map((img, i) => {
+                    const offset = i - galIdx
+                    const isActive = i === galIdx
+                    const visible = Math.abs(offset) <= 1
+                    return (
+                      <div key={i} onClick={() => !isActive && setGalIdx(i)} style={{
+                        position: 'absolute',
+                        width: isActive ? '70%' : '60%',
+                        transition: 'all 0.4s cubic-bezier(0.2,0.8,0.2,1)',
+                        transform: `translateX(${offset * 55}%) scale(${isActive ? 1 : 0.88})`,
+                        zIndex: isActive ? 3 : 2 - Math.abs(offset),
+                        opacity: visible ? (isActive ? 1 : 0.6) : 0,
+                        pointerEvents: visible ? 'auto' : 'none',
+                        cursor: isActive ? 'default' : 'pointer',
+                        filter: isActive ? 'none' : 'brightness(0.7)',
+                      }}>
+                        <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: isActive ? '0 12px 40px -8px rgba(0,0,0,0.2)' : '0 4px 16px -4px rgba(0,0,0,0.1)' }}>
+                          {img.src ? (
+                            <img src={img.src} alt={img.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                          ) : (
+                            <div style={{ width: '100%', aspectRatio: '16/9', background: '#d4cbb8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: '#a09888', letterSpacing: '0.1em', textTransform: 'lowercase' }}>coming soon</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <button onClick={() => setGalIdx((galIdx - 1 + galleryImages.length) % galleryImages.length)}
+                    style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 8, opacity: 0.4, zIndex: 5 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b6560" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button onClick={() => setGalIdx((galIdx + 1) % galleryImages.length)}
+                    style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 8, opacity: 0.4, zIndex: 5 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b6560" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+                  {galleryImages.map((_, i) => (
+                    <button key={i} onClick={() => setGalIdx(i)} style={{
+                      width: i === galIdx ? 20 : 6, height: 6, borderRadius: 3,
+                      background: i === galIdx ? '#d97706' : 'rgba(0,0,0,0.12)',
+                      border: 'none', cursor: 'pointer', padding: 0,
+                      transition: 'width 0.2s, background 0.2s',
+                    }} />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </section>
 
         {/* Pricing */}
@@ -1400,7 +1441,7 @@ export default function PulpLanding() {
                     </li>
                   ))}
                 </ul>
-                <a href="/login" style={{
+                <a href="/app" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #fff, #f0f0f0)', color: accent,
@@ -1467,7 +1508,7 @@ export default function PulpLanding() {
                     <circle cx="38" cy="20" r="2.5" fill="#e8a020" opacity="0.7" />
                   </svg>
                 </div>
-                <a href="/login" style={{
+                <a href="/app" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   padding: '10px 24px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
@@ -1500,7 +1541,7 @@ export default function PulpLanding() {
                 start writing, stay focused, and grow something beautiful.
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-                <a href="/login" style={{
+                <a href="/app" style={{
                   fontFamily: mono, fontSize: '0.76rem', letterSpacing: '0.06em',
                   padding: '12px 32px', borderRadius: 8, textDecoration: 'none', textTransform: 'lowercase',
                   background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',

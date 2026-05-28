@@ -144,7 +144,7 @@ function MarketHillPaths({ isDark }: { isDark: boolean }) {
   const rng = marketSeededRng(5599)
   const pts: [number,number][] = []
   for (let x = -5; x <= 410; x += 25) pts.push([x, getMarketHillY(x) + 2])
-  const mainD = "M" + pts.map(p => `${p[0].toFixed(0)},${p[1].toFixed(0)}`).join(" Q")
+  const mainD = "M" + pts.map(p => `${p[0].toFixed(0)},${p[1].toFixed(0)}`).join(" L")
   const pebbles: string[] = []
   const grassEdgeD: string[] = []
   const ruts: string[] = []
@@ -1879,23 +1879,25 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             {/* Tree name */}
                             <div style={{
-                              position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 11, fontWeight: 400,
-                              color: t.rarity === 'sacred' ? '#e0d0ff' : (isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)'),
-                              fontFamily: 'Crimson Pro, serif', letterSpacing: t.rarity === 'sacred' ? '0.08em' : '0.04em',
+                              position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+                              fontSize: t.rarity === 'sacred' ? 12 : t.rarity === 'true rare' ? 11.5 : 11,
+                              fontWeight: t.rarity === 'sacred' || t.rarity === 'true rare' ? 500 : 400,
+                              color: t.rarity === 'sacred' ? '#e0d0ff'
+                                : t.rarity === 'true rare' ? (isDark ? '#fcd34d' : '#b45309')
+                                : t.rarity === 'rare' ? (isDark ? '#93c5fd' : '#1d4ed8')
+                                : t.rarity === 'uncommon' ? (isDark ? '#86efac' : '#15803d')
+                                : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)'),
+                              fontFamily: 'Crimson Pro, serif',
+                              letterSpacing: t.rarity === 'sacred' ? '0.12em' : t.rarity === 'true rare' ? '0.08em' : '0.04em',
+                              textTransform: t.rarity === 'sacred' || t.rarity === 'true rare' ? 'uppercase' as const : 'none' as const,
                               animation: revealEffect?.index === i
                                 ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.8s' : t.rarity === 'true rare' ? '0.6s' : '0.25s'} both`
                                 : undefined,
-                              background: t.rarity === 'sacred'
-                                ? (isDark ? 'rgba(60,30,100,0.5)' : 'rgba(140,100,200,0.15)')
-                                : (isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.65)'),
-                              padding: '2px 8px', borderRadius: t.rarity === 'sacred' ? 6 : 3,
-                              backdropFilter: 'blur(4px)', zIndex: 5,
-                              whiteSpace: 'nowrap',
+                              zIndex: 5, whiteSpace: 'nowrap',
                               ...(t.rarity === 'sacred' ? {
                                 textShadow: '0 0 8px rgba(180,140,255,0.6), 0 0 18px rgba(140,100,220,0.3)',
-                                boxShadow: '0 0 6px rgba(160,120,255,0.2), inset 0 0 6px rgba(180,140,255,0.1)',
-                                border: '1px solid rgba(180,140,255,0.15)',
+                              } : t.rarity === 'true rare' ? {
+                                textShadow: isDark ? '0 0 6px rgba(252,211,77,0.4)' : '0 0 6px rgba(180,119,6,0.2)',
                               } : {}),
                             }}>
                               {t.name}
