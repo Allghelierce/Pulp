@@ -52,7 +52,7 @@ function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, s
 
 
 function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onComplete?: () => void, settled: boolean }) {
-  const line1 = "Notes don't need"
+  const line1 = "Notes don't have"
   const line2 = "to be boring."
   const text = line1 + '\n' + line2
   const [charIdx, setCharIdx] = useState(0)
@@ -552,7 +552,7 @@ export default function PulpLanding() {
           <a href="#features" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>features</a>
           <a href="#pricing" style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem', color: inOrchard ? 'rgba(255,255,255,0.8)' : '#6b6864', textDecoration: 'none', transition: 'color 0.4s' }}>pricing</a>
         </div>
-        <a href="/pulp" style={{
+        <a href="/login" style={{
           marginLeft: 'auto',
           fontFamily: 'var(--font-fraunces), serif', fontSize: '0.8rem',
           padding: '7px 18px', borderRadius: 999, textDecoration: 'none',
@@ -657,7 +657,7 @@ export default function PulpLanding() {
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <a href="/pulp" className="cta-btn" style={{
+                <a href="/login" className="cta-btn" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
                   padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
@@ -1542,7 +1542,7 @@ export default function PulpLanding() {
             </h2>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 24 }}>
               {[
-                { label: 'contact', href: 'https://www.cesarvillegas.me' },
+                { label: 'contact', href: 'mailto:pulpsupport@gmail.com' },
                 { label: 'privacy', href: '/privacy' },
                 { label: 'terms', href: '/terms' },
               ].map(link => (
