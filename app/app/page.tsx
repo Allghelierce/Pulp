@@ -3360,6 +3360,8 @@ export default function NoteApp() {
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
                 mini={orchardOpen || statsOpen || shopOpen}
+                noteSort={defaultSort}
+                onChangeNoteSort={(s) => updateSettings({ defaultSort: s })}
                 onCloseAllPanels={closeAllPanels}
                 user={user}
                 sidebarWidth={sidebarWidth}

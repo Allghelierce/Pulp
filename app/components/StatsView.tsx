@@ -56,12 +56,12 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
   const gap = 2
 
   const rings = [
-    { value: quotaProgress, color: '#e6b800', label: 'quota', radius: (size - strokeW) / 2 },
+    { value: quotaProgress, color: '#c9a06c', label: 'quota', radius: (size - strokeW) / 2 },
     { value: streakProgress, color: '#d97706', label: 'streak', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#6B8E6B', label: 'early bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#78350f', label: 'early bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
-  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#e6b800' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
+  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#c9a06c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
 
   return (
     <div className="relative group" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(stretch ? { width: '100%' } : {}) }}>
@@ -147,12 +147,12 @@ export function MiniRings({ isDark, onClick, stretch, quotaTier = 'monthly', goa
             <span style={{ color: isDark ? '#d4d4d8' : '#3f3f46', fontWeight: 500 }}>1.0x</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-            <span style={{ color: isEarlyBird ? '#6B8E6B' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
-            <span style={{ color: isEarlyBird ? '#6B8E6B' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
+            <span style={{ color: isEarlyBird ? '#78350f' : (isDark ? '#52524e' : '#c4c4c0') }}>early bird</span>
+            <span style={{ color: isEarlyBird ? '#78350f' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{isEarlyBird ? '+1.0x' : '—'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-            <span style={{ color: quotaBonus > 0 ? '#e6b800' : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
-            <span style={{ color: quotaBonus > 0 ? '#e6b800' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
+            <span style={{ color: quotaBonus > 0 ? '#c9a06c' : (isDark ? '#52524e' : '#c4c4c0') }}>{quotaTier} quota</span>
+            <span style={{ color: quotaBonus > 0 ? '#c9a06c' : (isDark ? '#52524e' : '#c4c4c0'), fontWeight: 500 }}>{quotaBonus > 0 ? `+${quotaBonus}.0x` : '—'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
             <span style={{ color: streakBonus > 0 ? '#d97706' : (isDark ? '#52524e' : '#c4c4c0') }}>streak ({goalStreak}d)</span>
@@ -188,12 +188,12 @@ function ActivityRings({ focus, isDark, goalStreak = 0, dailyGoalMinutes = 30, q
   const track = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
 
   const rings = [
-    { value: quotaProgress, color: '#e6b800', label: 'Quota', radius: (size - strokeW) / 2 },
+    { value: quotaProgress, color: '#c9a06c', label: 'Quota', radius: (size - strokeW) / 2 },
     { value: streakProgress, color: '#d97706', label: 'Streak', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#6B8E6B', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: isEarlyBird ? earlyBirdProgress : 0, color: '#78350f', label: 'Early Bird', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
-  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#e6b800' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
+  const multColor = multiplier >= 4.5 ? 'gradient' : multiplier >= 4 ? '#c9a06c' : multiplier >= 3 ? '#d97706' : multiplier >= 2 ? '#4ade80' : '#94a3b8'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, gap: 6 }}>
@@ -527,7 +527,7 @@ export const StatsView = memo(function StatsView({
               border: `1px solid ${cardBorder}`,
             }}>
               {([
-                { key: 'focus' as const, label: 'Focus (min)', color: '#e6b800' },
+                { key: 'focus' as const, label: 'Focus (min)', color: '#c9a06c' },
                 { key: 'writing' as const, label: 'Writing (chars)', color: '#d97706' },
                 { key: 'sessions' as const, label: 'Sessions', color: '#f59e0b' },
               ]).map(({ key, label, color }) => (
@@ -581,7 +581,7 @@ export const StatsView = memo(function StatsView({
                   const streakColorTiers = [
                     { min: 0,  color: '#a1a1aa' },
                     { min: 3,  color: '#34d399' },
-                    { min: 7,  color: '#6B8E6B' },
+                    { min: 7,  color: '#78350f' },
                     { min: 14, color: '#4d8cff' },
                     { min: 30, color: '#a855f7' },
                     { min: 45, color: '#c4a6ff' },

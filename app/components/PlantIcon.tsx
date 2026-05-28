@@ -583,7 +583,7 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           </>)}
         </defs>
         <ellipse cx="24" cy="38" rx="14" ry="4" fill="#8B7355" opacity="0.3" />
-        <g style={seedSwayStyle}>
+        <g style={seedSwayStyle} transform="translate(0, 6)">
           {renderSeedShape(uid, shape, color, dark, light)}
         </g>
       </svg>

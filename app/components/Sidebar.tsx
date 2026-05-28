@@ -116,6 +116,8 @@ interface SidebarProps {
   onSearchNavigate?: (noteId: string, pageIdx: number) => void
   onSetCover?: (noteId: string) => void
   mini?: boolean
+  noteSort?: string
+  onChangeNoteSort?: (sort: string) => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -127,7 +129,10 @@ export const Sidebar = memo(function Sidebar({
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini,
+  noteSort = 'modified', onChangeNoteSort,
 }: SidebarProps) {
+  const [sortMenuOpen, setSortMenuOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
   const [nestTargetId, setNestTargetId] = useState<string | null>(null)
   const [bookmarkMenuId, setBookmarkMenuId] = useState<string | null>(null)
   const [renamingBookmarkId, setRenamingBookmarkId] = useState<string | null>(null)
@@ -255,6 +260,7 @@ export const Sidebar = memo(function Sidebar({
       setBookmarkMenuId(null)
       const clickedInsidePicker = (e.target as HTMLElement)?.closest?.('[data-icon-picker]')
       if (!clickedInsidePicker) setIconPicker(null)
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortMenuOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -792,14 +798,35 @@ export const Sidebar = memo(function Sidebar({
           {/* Binder Section */}
           <div className="mb-8">
             <div className="flex items-center justify-between px-6 mb-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" ref={sortRef}>
                 <p className="text-[10px] font-normal text-zinc-400 tracking-wide" style={{ fontFamily: 'Crimson Pro, serif' }}>binder</p>
-                {/* Get rid of the shelf for now
-                <button onClick={onGoToShelf} className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors hover:bg-white/5 group">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#F56A00" /><circle cx="5.2" cy="5.2" r="2" fill="rgba(255,200,80,0.4)" /><path d="M7 1 C5.5 -0.5 3.5 0 4.2 1.5" stroke="#2d5c10" strokeWidth="1" fill="none" /><ellipse cx="4.5" cy="0.8" rx="2" ry="1" fill="#3a7020" opacity="0.85" transform="rotate(-20 4.5 0.8)" /></svg>
-                  <span className="text-[10px] text-zinc-600 group-hover:text-zinc-300 transition-colors">Shelf</span>
-                </button>
-                */}
+                <div className="relative">
+                  <button
+                    onClick={() => setSortMenuOpen(v => !v)}
+                    className="w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-white/[0.06] text-zinc-600 hover:text-zinc-400"
+                    title="Sort notes"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+                  </button>
+                  {sortMenuOpen && (
+                    <div className="absolute left-0 top-full mt-1 z-50 py-1 rounded-lg border border-white/[0.06] bg-zinc-900 shadow-xl" style={{ minWidth: 140 }}>
+                      {([
+                        { value: 'created', label: 'Newest first' },
+                        { value: 'modified', label: 'Oldest first' },
+                        { value: 'title', label: 'A — Z' },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { onChangeNoteSort?.(opt.value); setSortMenuOpen(false) }}
+                          className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${noteSort === opt.value ? 'text-zinc-200 bg-white/[0.05]' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'}`}
+                          style={{ fontFamily: 'Crimson Pro, serif' }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-1.5 relative">
                 <div className="relative flex items-center">

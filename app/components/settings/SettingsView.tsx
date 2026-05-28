@@ -545,24 +545,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 )}
               </SettingSection>
 
-              <SettingSection title="Preferences" isDark={isDark}>
-                <SettingRow
-                  title="Default Sort Order"
-                  isDark={isDark}
-                  description="How your notes are sorted in the sidebar"
-                  control={
-                    <select
-                      value={defaultSort}
-                      onChange={e => onUpdateConfig({ defaultSort: e.target.value })}
-                      className={`text-[11px] border ${isDark ? "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-zinc-500" : "bg-white border-zinc-200 text-zinc-800 focus:border-zinc-400"} rounded-none px-2.5 py-1.5 outline-none transition-colors`}
-                    >
-                      <option value="modified">Date Modified</option>
-                      <option value="created">Date Created</option>
-                      <option value="title">Alphabetical (A-Z)</option>
-                    </select>
-                  }
-                />
-              </SettingSection>
 
               <SettingSection title="Shortcuts" isDark={isDark}>
                 <div className="flex flex-col gap-0.5 px-3 py-2">

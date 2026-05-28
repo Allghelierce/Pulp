@@ -471,6 +471,11 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           {[0, 90, 180, 270].map(angle => (
             <g key={angle} transform={`rotate(${angle} ${wmX} ${hubY})`}>
               <polygon points={`${wmX - 0.4 * sc},${hubY} ${wmX + 0.4 * sc},${hubY} ${wmX + 1 * sc},${hubY - bladeLen} ${wmX - 0.15 * sc},${hubY - bladeLen}`} fill={bladeColor} opacity="0.8" />
+              {isFg && <>
+                <line x1={wmX + 0.1 * sc} y1={hubY} x2={wmX + 0.4 * sc} y2={hubY - bladeLen} stroke={bladeLight} strokeWidth={0.25 * sc} opacity="0.5" />
+                <line x1={wmX - 0.2 * sc} y1={hubY - bladeLen * 0.3} x2={wmX + 0.8 * sc} y2={hubY - bladeLen * 0.3} stroke={bladeLight} strokeWidth={0.2 * sc} opacity="0.35" />
+                <line x1={wmX - 0.1 * sc} y1={hubY - bladeLen * 0.6} x2={wmX + 0.7 * sc} y2={hubY - bladeLen * 0.6} stroke={bladeLight} strokeWidth={0.2 * sc} opacity="0.3" />
+              </>}
             </g>
           ))}
         </g>
