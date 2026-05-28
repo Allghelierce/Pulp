@@ -518,7 +518,6 @@ const PLANT_DESCRIPTIONS: Record<string, string> = {
   plum: 'Deep purple and brooding. Quietly productive, with a richness that sneaks up on you.',
   pineapple: 'Spiky on the outside, golden on the inside. Takes its sweet time but worth the wait.',
   passionfruit: 'Exotic and elusive. The vine twists in ways no one can predict.',
-  pomegranate: 'Ancient and jewel-studded. Crack one open and find a hundred tiny rewards.',
   coconut: 'Tall, breezy, and impossible to rush. Island vibes in tree form.',
   sunflower: 'Always facing the light. A cheerful giant that towers over the rest.',
   grape: 'Grows in clusters, aged to perfection. The longer you wait, the finer it gets.',
@@ -1789,7 +1788,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                           /* Revealed — plant on earthy ground */
                           <div
                             onClick={() => {
-                              prevTabRef.current = activeTab
                               setSelectedPlant(type)
                               setPreviewStage(0)
                             }}
@@ -1997,7 +1995,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         const tagOffX = [(-6), 8, 3, (-9), 5][i % 5]
                         const stringH = [26, 34, 18, 40, 22][i % 5]
                         return (
-                      <div onClick={(e) => { e.stopPropagation(); if (isRevealed) { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(0) } }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center', cursor: isRevealed ? 'pointer' : 'default' }}>
+                      <div onClick={(e) => { e.stopPropagation(); if (isRevealed) { setSelectedPlant(type); setPreviewStage(0) } }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', visibility: isRevealed ? 'visible' : 'hidden', marginTop: -2, marginLeft: tagOffX, transform: `rotate(${-arcRotate}deg)`, transformOrigin: 'top center', cursor: isRevealed ? 'pointer' : 'default' }}>
                         <svg width="4" height={stringH} style={{ overflow: 'visible' }}>
                           <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? '#8b7355' : '#6b5335'} strokeWidth="0.8" strokeLinecap="round" />
                           <line x1="2" y1="0" x2="2" y2={stringH} stroke={isDark ? 'rgba(160,130,90,0.25)' : 'rgba(120,90,50,0.2)'} strokeWidth="1.4" strokeLinecap="round" />
@@ -2191,7 +2189,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             </div>
           )}
 
-          {activeTab === 'shop' && selectedPlant && previewInfo && (() => {
+          {selectedPlant && previewInfo && (() => {
             const stock = shopStock[selectedPlant!] || 0
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
             const cat = previewInfo.category || 'none'
@@ -2234,20 +2232,31 @@ export const BoutiqueView = memo(function BoutiqueView({
                       }
                     </div>
                   </div>
-                  {/* Stage dots */}
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {STAGE_NAMES.map((name, si) => (
-                      <button
-                        key={si}
-                        onClick={() => setPreviewStage(si)}
-                        title={name}
-                        style={{
-                          width: 6, height: 6, borderRadius: '50%', border: 'none', padding: 0, cursor: 'pointer',
-                          background: previewStage === si ? '#d97706' : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'),
-                          transition: 'background 0.15s',
-                        }}
-                      />
-                    ))}
+                  {/* Stage nav */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      onClick={() => setPreviewStage(s => Math.max(0, s - 1))}
+                      disabled={previewStage === 0}
+                      style={{
+                        background: 'none', border: 'none', cursor: previewStage === 0 ? 'default' : 'pointer', padding: 2,
+                        color: previewStage === 0 ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <span style={{ fontSize: 9, fontFamily: font, color: textMuted, letterSpacing: '0.06em', textTransform: 'uppercase', minWidth: 48, textAlign: 'center' }}>
+                      {STAGE_NAMES[previewStage]}
+                    </span>
+                    <button
+                      onClick={() => setPreviewStage(s => Math.min(STAGE_NAMES.length - 1, s + 1))}
+                      disabled={previewStage === STAGE_NAMES.length - 1}
+                      style={{
+                        background: 'none', border: 'none', cursor: previewStage === STAGE_NAMES.length - 1 ? 'default' : 'pointer', padding: 2,
+                        color: previewStage === STAGE_NAMES.length - 1 ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
                   </div>
                 </div>
 
@@ -2305,7 +2314,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 </div>
                 {/* Close button */}
                 <button
-                  onClick={() => { setSelectedPlant(null); setActiveTab(prevTabRef.current) }}
+                  onClick={() => setSelectedPlant(null)}
                   style={{
                     position: 'absolute', top: 12, right: 16,
                     background: 'none', border: 'none', cursor: 'pointer',
@@ -2350,7 +2359,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         className="relative group"
                       >
                         <button
-                          onClick={() => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(0); setActiveTab('shop') }}
+                          onClick={() => { setSelectedPlant(type); setPreviewStage(0) }}
                           style={{
                             width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                             padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
@@ -2451,7 +2460,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <button
                             key={type}
                             className={owned ? rarityCardClass(t.rarity) : ''}
-                            onClick={owned ? () => { prevTabRef.current = activeTab; setSelectedPlant(type); setPreviewStage(3); setActiveTab('shop') } : undefined}
+                            onClick={owned ? () => { setSelectedPlant(type); setPreviewStage(3) } : undefined}
                             style={{
                               borderRadius: 10, border: `1px solid ${owned ? cardBorder : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, overflow: 'hidden',
                               backgroundColor: owned ? cardBg : isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', cursor: owned ? 'pointer' : 'default', textAlign: 'left',

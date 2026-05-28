@@ -1555,29 +1555,24 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
           <g>
             <path d="M26 46 Q28 40 27.5 35 Q27 31 26 28" fill="none" stroke={trunk} strokeWidth="3.3" strokeLinecap="round" />
             <path d="M26 30 Q18 24 10 20" stroke={trunk} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            <path d="M27 28 Q33 24 38 22" stroke={trunk} strokeWidth="1.5" fill="none" strokeLinecap="round" />
             <path d="M26 28 Q26 22 26 16" stroke={trunk} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+            {/* Left canopy — shadow layer */}
             <path d="M4 16 C2 12 4 8 8 6 C12 4 16 8 14 12 C12 16 6 18 4 16 Z" fill={dark} opacity="0.9" />
             <path d="M14 10 C12 6 15 3 20 4 C24 5 26 10 22 14 C19 17 15 14 14 10 Z" fill={dark} opacity="0.9" />
             <path d="M24 8 C26 4 30 4 32 8 C34 12 30 14 27 12 C25 11 23 10 24 8 Z" fill={dark} opacity="0.85" />
-            <path d="M32 12 C34 8 38 9 38 13 C38 16 35 18 33 16 C31 14 31 13 32 12 Z" fill={dark} opacity="0.85" />
+            {/* Left canopy — color layer */}
             <path d="M3 18 C1 14 3 9 7 7 C11 5 15 8 13 13 C11 17 5 20 3 18 Z" fill={color} />
             <path d="M10 12 C8 8 11 4 16 5 C20 6 22 10 18 14 C15 17 11 16 10 12 Z" fill={color} />
             <path d="M20 8 C18 4 21 2 26 3 C30 4 32 8 28 12 C25 15 21 13 20 8 Z" fill={color} />
-            <path d="M30 10 C32 6 36 7 37 11 C38 15 35 17 32 14 C30 13 29 12 30 10 Z" fill={color} opacity="0.95" />
             <path d="M5 23 C3 20 5 17 9 17 C12 17 14 20 11 23 C9 25 6 25 5 23 Z" fill={color} opacity="0.95" />
             <path d="M14 20 C12 16 14 14 18 14 C22 14 23 18 20 21 C17 23 15 22 14 20 Z" fill={color} opacity="0.9" />
             <path d="M24 16 C22 12 25 10 29 11 C32 12 33 16 29 18 C27 20 25 19 24 16 Z" fill={color} opacity="0.9" />
-            <path d="M32 20 C34 17 37 18 37 21 C37 24 34 25 32 23 C31 22 31 21 32 20 Z" fill={color} opacity="0.85" />
+            {/* Fruit clusters — left side only */}
             <path d="M8 22 L8.5 24" stroke={dark} strokeWidth="0.3" strokeLinecap="round" />
             <circle cx="8" cy="25.5" r="1.4" fill="#6b2fa0" />
             <circle cx="9.5" cy="26" r="1.3" fill="#6b2fa0" opacity="0.9" />
-            <path d="M36 18 L36.5 20" stroke={dark} strokeWidth="0.3" strokeLinecap="round" />
-            <circle cx="36.5" cy="21.5" r="1.4" fill="#6b2fa0" />
-            <circle cx="37.8" cy="22" r="1.3" fill="#6b2fa0" opacity="0.9" />
             <circle cx="24.5" cy="19" r="1.3" fill="#6b2fa0" opacity="0.8" />
             <path d="M25 46 Q22 44.5 19 46" stroke={trunk} strokeWidth="1" fill="none" opacity="0.3" />
-            <path d="M29 46 Q32 44.5 35 46" stroke={trunk} strokeWidth="0.8" fill="none" opacity="0.25" />
           </g>
         )
       case 'pineapple':
@@ -2334,27 +2329,59 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
                 }
               `}</style>
             </defs>
+            {/* Ground shadow */}
+            <ellipse cx="24" cy="46" rx="14" ry="2.5" fill="#6a7a8a" opacity="0.15" />
+            {/* Trunk */}
             <path d="M24 46 C23.5 42 23 38 22.5 34 C22 30 22 26 22.5 22 C23 19 23 17 23 15" stroke="#6a7a8a" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+            <path d="M24 46 C23.5 42 23 38 22.5 34" stroke="#5a6a7a" strokeWidth="0.7" opacity="0.12" strokeLinecap="round" fill="none" />
+            {/* Branches */}
             <path d="M22.5 30 C19 27 15 25 11 24" stroke="#6a7a8a" strokeWidth="1" strokeLinecap="round" fill="none" />
             <path d="M22.5 27 C26 24 30 22 34 21" stroke="#6a7a8a" strokeWidth="0.9" strokeLinecap="round" fill="none" />
             <path d="M22.5 24 C19 21 16 18 13 16" stroke="#6a7a8a" strokeWidth="0.8" strokeLinecap="round" fill="none" />
             <path d="M23 22 C26 20 29 18 32 17" stroke="#6a7a8a" strokeWidth="0.7" strokeLinecap="round" fill="none" />
+            <path d="M23 18 C21 15 19 13 17 12" stroke="#6a7a8a" strokeWidth="0.6" strokeLinecap="round" fill="none" />
+            <path d="M23 17 C25 15 27 14 29 13" stroke="#6a7a8a" strokeWidth="0.55" strokeLinecap="round" fill="none" />
+            {/* Foliage masses — icy blue clusters at branch tips */}
+            <path d="M11 24 C8 21 9 17 13 16 C16 15 17 19 15 22 C14 24 12 25 11 24Z" fill="#7a9ab8" />
+            <path d="M13 18 C12 17 13 16 14 17Z" fill="#a8cce0" opacity="0.35" />
+            <path d="M34 21 C31 17 33 13 37 14 C41 15 40 20 37 22Z" fill="#8aacca" />
+            <path d="M37 16 Q36 15 37 14 Q38 15.5 37 16Z" fill="#c0daea" opacity="0.3" />
+            <path d="M13 16 C11 13 13 10 16 10 C19 10 20 14 17 16Z" fill="#8aacca" opacity="0.85" />
+            <path d="M32 17 C30 14 32 11 35 11 C38 11 38 15 35 17Z" fill="#7a9ab8" opacity="0.8" />
+            <path d="M17 12 C15 9 17 7 20 8 C22 9 21 12 19 13Z" fill="#8aacca" opacity="0.7" />
+            <path d="M29 13 C28 10 30 8 32 9 C34 10 33 13 31 14Z" fill="#7a9ab8" opacity="0.7" />
+            <path d="M23 15 C21 12 22 9 25 9 C28 9 28 13 25 15Z" fill="#6a8aa4" opacity="0.75" />
+            {/* Snow caps on foliage */}
+            <path d="M8 17 Q10 15.5 13 16 Q15 15.5 17 16.5 Q15 14.5 13 15 Q10 14.5 8 17Z" fill="#f0f6fc" opacity="0.55" />
+            <path d="M33 13 Q35 12 37 13 Q39 12 41 13.5 Q39 11.5 37 12 Q35 11.5 33 13Z" fill="#f0f6fc" opacity="0.5" />
+            <path d="M15 10 Q17 8.5 19 9.5 Q17 8 15 10Z" fill="#e8f0f8" opacity="0.45" />
+            <path d="M30 8 Q31 7 33 8 Q31 7 30 8Z" fill="#e8f0f8" opacity="0.4" />
+            <path d="M22 9 Q24 7.5 26 8.5 Q24 7 22 9Z" fill="#e8f0f8" opacity="0.45" />
+            {/* Icicles */}
             {[
               {x:11,y:24,h:5,w:1.2},{x:9,y:25,h:3.5,w:0.9},
               {x:34,y:21,h:5,w:1.2},{x:36,y:22,h:3.5,w:0.9},
               {x:13,y:16,h:4.5,w:1.1},{x:11,y:17,h:3,w:0.8},
               {x:32,y:17,h:4.5,w:1.1},{x:34,y:18,h:3,w:0.8},
-              {x:17,y:14,h:4,w:1},{x:29,y:14.5,h:4,w:1},
+              {x:17,y:12,h:4,w:1},{x:29,y:13,h:4,w:1},
               {x:23,y:15,h:5.5,w:1.3},{x:21,y:16,h:4,w:1},{x:25,y:15.5,h:4.5,w:1.1},
             ].map((ic, i) => (
               <path key={i} d={`M${ic.x} ${ic.y} Q${ic.x - ic.w * 0.3} ${ic.y + ic.h * 0.5} ${ic.x} ${ic.y + ic.h}`} stroke={`url(#${uid}-icicle)`} strokeWidth={ic.w} strokeLinecap="round" fill="none" opacity={0.6 + (i % 3) * 0.1} />
             ))}
+            {/* Snow on branches */}
+            <path d="M11 24 Q9.5 23 11 22.5" stroke="#e8f0f8" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.5" />
+            <path d="M34 21 Q33 20 34 19.5" stroke="#e8f0f8" strokeWidth="1.3" strokeLinecap="round" fill="none" opacity="0.45" />
+            <path d="M13 16 Q12 15 13 14.5" stroke="#e8f0f8" strokeWidth="1" strokeLinecap="round" fill="none" opacity="0.4" />
+            {/* Frost sparkles */}
             {[
-              {x:11,y:29},{x:34,y:26},{x:23,y:20.5},{x:17,y:18},
+              {x:11,y:29},{x:34,y:26},{x:23,y:20.5},{x:17,y:18},{x:29,y:17},{x:23,y:10},
             ].map((tip, i) => (
               <circle key={i} cx={tip.x} cy={tip.y} r="0.4" fill="#fff" opacity="0.45" style={{animation: `wvShimmer-${uid} ${3 + i * 0.7}s ease-in-out ${i * 0.4}s infinite`} as React.CSSProperties} />
             ))}
-            <ellipse cx="24" cy="46" rx="14" ry="2" fill="#c0daea" opacity="0.08" />
+            {/* Falling snow */}
+            <circle cx="14" cy="8" r="0.5" fill="#fff" opacity="0.3" style={{animation: `wvSnow-${uid} 4.5s linear infinite`} as React.CSSProperties} />
+            <circle cx="32" cy="6" r="0.4" fill="#e8f0f8" opacity="0.25" style={{animation: `wvSnow-${uid} 5.5s linear 2s infinite`} as React.CSSProperties} />
+            <circle cx="20" cy="10" r="0.35" fill="#fff" opacity="0.2" style={{animation: `wvSnow-${uid} 4s linear 3.5s infinite`} as React.CSSProperties} />
           </g>
         )
 
@@ -2695,17 +2722,42 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
                 <stop offset="100%" stopColor={color} />
               </linearGradient>
             </defs>
+            <ellipse cx="24" cy="46" rx="6" ry="1.5" fill={dark} opacity="0.25" />
             <ellipse cx="24" cy="36" rx="12" ry="10" fill={`url(#${uid}-crglow)`} filter={`url(#${uid}-crblur)`} opacity="0.35" />
-            <path d="M24 47 L24 36" stroke={`url(#${uid}-crbranch)`} strokeWidth="3" strokeLinecap="round" />
-            <path d="M24 42 Q19 38 15 34 Q13 31 11 28 Q10 26 10 23 M15 34 Q16 31 17 28 Q16 27 16 25 M24 40 Q29 36 33 32 Q35 29 37 26 Q38 24 38 22 M33 32 Q32 29 31 26 Q32 25 32 23 M24 38 Q24 34 24 29 M24 32 Q21 28 19 24 Q18 23 18 21 M24 32 Q27 28 29 24 Q30 23 30 21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <path d="M24 42 Q19 38 15 34" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <path d="M24 40 Q29 36 33 32" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-            <path d="M24 38 Q24 34 24 29" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <circle cx="10" cy="23" r="0.9" fill={light} opacity="0.45" />
-            <circle cx="38" cy="22" r="0.8" fill={light} opacity="0.4" />
-            <circle cx="18" cy="21" r="0.6" fill={light} opacity="0.35" />
-            <circle cx="30" cy="21" r="0.55" fill={light} opacity="0.3" />
-            <circle cx="24" cy="29" r="0.55" fill={light} opacity="0.28" />
+            <path d="M24 47 L24 36" stroke={`url(#${uid}-crbranch)`} strokeWidth="3.5" strokeLinecap="round" />
+            {/* Left main branch + sub-branches */}
+            <path d="M24 36 Q19 33 15 30 Q13 27 11 24 Q10 22 10 23" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M15 30 Q16 27 17 24 Q16 23 16 25" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Right main branch + sub-branches */}
+            <path d="M24 36 Q29 33 33 30 Q35 27 37 24 Q38 22 38 22" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M33 30 Q32 27 31 24 Q32 23 32 23" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Center branch + sub-branches */}
+            <path d="M24 36 Q24 32 24 29" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none" />
+            <path d="M24 31 Q21 27 19 24 Q18 23 18 21" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M24 31 Q27 27 29 24 Q30 23 30 21" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            {/* Extra sub-branches for fullness */}
+            <path d="M13 27 Q11 25 9 27" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            <path d="M35 27 Q37 25 39 27" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            <path d="M20 25 Q19 22 17 20" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            <path d="M28 25 Q29 22 31 20" stroke={color} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+            {/* Polyp tips */}
+            <circle cx="10" cy="23" r="1.1" fill={light} opacity="0.5" />
+            <circle cx="38" cy="22" r="1" fill={light} opacity="0.45" />
+            <circle cx="16" cy="25" r="0.7" fill={light} opacity="0.4" />
+            <circle cx="32" cy="23" r="0.7" fill={light} opacity="0.38" />
+            <circle cx="18" cy="21" r="0.8" fill={light} opacity="0.4" />
+            <circle cx="30" cy="21" r="0.75" fill={light} opacity="0.35" />
+            <circle cx="17" cy="20" r="0.5" fill={light} opacity="0.3" />
+            <circle cx="31" cy="20" r="0.5" fill={light} opacity="0.28" />
+            <circle cx="24" cy="29" r="0.7" fill={light} opacity="0.3" />
+            <circle cx="9" cy="27" r="0.6" fill={light} opacity="0.35" />
+            <circle cx="39" cy="27" r="0.55" fill={light} opacity="0.3" />
+            {/* Texture nubs along branches */}
+            <circle cx="13" cy="32" r="0.4" fill={light} opacity="0.2" />
+            <circle cx="20" cy="34" r="0.35" fill={light} opacity="0.18" />
+            <circle cx="28" cy="34" r="0.35" fill={light} opacity="0.18" />
+            <circle cx="35" cy="32" r="0.4" fill={light} opacity="0.2" />
+            {/* Floating particles */}
             <circle cx="14" cy="30" r="0.5" fill="#fff" opacity="0.3">
               <animate attributeName="cy" values="30;22;30" dur="5s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.3;0.05;0.3" dur="5s" repeatCount="indefinite" />
@@ -2713,6 +2765,10 @@ export const PlantIcon = memo(function PlantIcon({ type, size = 40, stage = 0, i
             <circle cx="34" cy="28" r="0.4" fill="#fff" opacity="0.22">
               <animate attributeName="cy" values="28;20;28" dur="4.5s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.22;0.05;0.22" dur="4.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="24" cy="22" r="0.35" fill="#fff" opacity="0.2">
+              <animate attributeName="cy" values="22;16;22" dur="6s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.2;0.05;0.2" dur="6s" repeatCount="indefinite" />
             </circle>
           </g>
         )
