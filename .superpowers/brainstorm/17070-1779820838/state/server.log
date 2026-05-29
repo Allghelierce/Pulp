@@ -1,0 +1,5 @@
+{"type":"server-started","port":56889,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56889","screen_dir":"/Users/trisn999/Documents/Code/Pulp/.superpowers/brainstorm/17070-1779820838/content","state_dir":"/Users/trisn999/Documents/Code/Pulp/.superpowers/brainstorm/17070-1779820838/state"}
+{"type":"screen-added","file":"/Users/trisn999/Documents/Code/Pulp/.superpowers/brainstorm/17070-1779820838/content/sap-directions.html"}
+{"type":"screen-added","file":"/Users/trisn999/Documents/Code/Pulp/.superpowers/brainstorm/17070-1779820838/content/sap-hybrid.html"}
+{"type":"screen-added","file":"/Users/trisn999/Documents/Code/Pulp/.superpowers/brainstorm/17070-1779820838/content/sap-drip-options.html"}
+{"type":"server-stopped","reason":"idle timeout"}

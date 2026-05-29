@@ -1,0 +1,267 @@
+<h2>Tree Redesigns — Matching Tangerine/Abyss/Bamboo/Birch Quality</h2>
+<p class="subtitle">5 trees upgraded with: layered depth, specular highlights, bark/texture detail, subtle shadow work. Adult stages shown.</p>
+
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 16px;">
+
+  <!-- MUSHROOM -->
+  <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px 8px;">
+    <p class="label" style="color: #d84315;">Mushroom</p>
+    <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+      <!-- Ground shadow -->
+      <ellipse cx="24" cy="46" rx="12" ry="1.5" fill="black" opacity="0.1"/>
+      <!-- Stem with subtle shading -->
+      <rect x="20" y="33" width="8" height="13" rx="3" fill="#f5f0e8"/>
+      <rect x="21" y="34" width="6" height="11" rx="2" fill="#ede8df"/>
+      <!-- Stem ring/skirt -->
+      <ellipse cx="24" cy="36" rx="5" ry="1.5" fill="#ede8df" stroke="#d6d0c4" stroke-width="0.3"/>
+      <!-- Stem highlight -->
+      <path d="M22 35 L22 44" stroke="white" stroke-width="0.5" opacity="0.15"/>
+      <!-- Cap shadow layer -->
+      <ellipse cx="24" cy="33" rx="14" ry="9" fill="#a02a0e" opacity="0.4"/>
+      <!-- Cap main -->
+      <ellipse cx="24" cy="31" rx="13.5" ry="8.5" fill="#d84315"/>
+      <!-- Cap gradient overlay -->
+      <ellipse cx="24" cy="29" rx="12" ry="6" fill="#e65100" opacity="0.3"/>
+      <!-- Cap underside gills -->
+      <path d="M11 34 Q24 38 37 34" fill="none" stroke="#8b1a04" stroke-width="0.5" opacity="0.4"/>
+      <path d="M13 33.5 Q24 36.5 35 33.5" fill="none" stroke="#8b1a04" stroke-width="0.3" opacity="0.25"/>
+      <!-- White spots with subtle shadows -->
+      <circle cx="19" cy="27" r="2" fill="#f5f0e8" opacity="0.9"/>
+      <circle cx="19" cy="27.3" r="2" fill="#d6d0c4" opacity="0.15"/>
+      <circle cx="27" cy="29" r="1.6" fill="#f5f0e8" opacity="0.9"/>
+      <circle cx="31" cy="26" r="1.2" fill="#f5f0e8" opacity="0.85"/>
+      <circle cx="24" cy="25" r="1.8" fill="#f5f0e8" opacity="0.9"/>
+      <circle cx="15" cy="30" r="1.1" fill="#f5f0e8" opacity="0.8"/>
+      <circle cx="22" cy="31" r="0.9" fill="#f5f0e8" opacity="0.75"/>
+      <!-- Specular highlight on cap -->
+      <ellipse cx="20" cy="25" rx="4" ry="2.5" fill="white" opacity="0.08" transform="rotate(-15 20 25)"/>
+      <!-- Falling spores -->
+      <circle cx="18" cy="38" r="0.4" fill="#f5f0e8" opacity="0.15">
+        <animate attributeName="cy" values="36;46" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.2;0" dur="4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="29" cy="40" r="0.3" fill="#f5f0e8" opacity="0.12">
+        <animate attributeName="cy" values="37;46" dur="5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.15;0" dur="5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Grass tufts at base -->
+      <path d="M16 46 Q17 44 18 46" stroke="#4a7a3a" stroke-width="0.5" fill="none" opacity="0.3"/>
+      <path d="M30 46 Q31 44 32 46" stroke="#4a7a3a" stroke-width="0.5" fill="none" opacity="0.25"/>
+    </svg>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">Added: cap shadow layer, gill detail, spot shadows, specular highlight, grass tufts</p>
+  </div>
+
+  <!-- LOTUS -->
+  <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px 8px;">
+    <p class="label" style="color: #ec4899;">Lotus</p>
+    <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+      <!-- Water surface -->
+      <ellipse cx="24" cy="44" rx="18" ry="3" fill="#1a3a4a" opacity="0.3"/>
+      <path d="M6 44 Q12 42 18 44 Q24 42 30 44 Q36 42 42 44" stroke="#4a8aaa" stroke-width="0.4" fill="none" opacity="0.3"/>
+      <!-- Lily pad -->
+      <ellipse cx="24" cy="42" rx="14" ry="4" fill="#2e7d32" opacity="0.5"/>
+      <ellipse cx="24" cy="42" rx="13" ry="3.5" fill="#388e3c" opacity="0.4"/>
+      <path d="M24 42 L24 38.5" stroke="#2e7d32" stroke-width="0.3" opacity="0.3"/>
+      <!-- Pad notch -->
+      <path d="M24 42 L28 39 L24 38" fill="#1a3a4a" opacity="0.2"/>
+      <!-- Stem -->
+      <path d="M24 38 Q23 34 23.5 28" stroke="#4a7a3a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <path d="M24 38 Q23 34 23.5 28" stroke="#3a6a2a" stroke-width="0.5" opacity="0.15" fill="none"/>
+      <!-- Outer petals — shadow layer -->
+      <path d="M24 28 Q16 24 10 28 Q14 20 24 24Z" fill="#9e3a6a" opacity="0.3"/>
+      <path d="M24 28 Q32 24 38 28 Q34 20 24 24Z" fill="#9e3a6a" opacity="0.3"/>
+      <!-- Outer petals -->
+      <path d="M24 27 Q16 22 10 26 Q14 18 24 23Z" fill="#f472b6"/>
+      <path d="M24 27 Q32 22 38 26 Q34 18 24 23Z" fill="#ec4899"/>
+      <path d="M24 27 Q20 18 18 14 Q22 16 24 22Z" fill="#f9a8d4" opacity="0.8"/>
+      <path d="M24 27 Q28 18 30 14 Q26 16 24 22Z" fill="#f472b6" opacity="0.8"/>
+      <!-- Inner petals -->
+      <path d="M24 25 Q20 20 18 18 Q22 18 24 22Z" fill="#fce7f3" opacity="0.5"/>
+      <path d="M24 25 Q28 20 30 18 Q26 18 24 22Z" fill="#fbcfe8" opacity="0.4"/>
+      <!-- Center stamen -->
+      <circle cx="24" cy="22" r="2.5" fill="#fbbf24" opacity="0.7"/>
+      <circle cx="24" cy="22" r="1.5" fill="#f59e0b" opacity="0.5"/>
+      <circle cx="24" cy="22" r="0.8" fill="#fef3c7" opacity="0.4"/>
+      <!-- Petal vein hints -->
+      <path d="M20 24 Q22 20 24 24" stroke="#db2777" stroke-width="0.3" fill="none" opacity="0.15"/>
+      <path d="M28 24 Q26 20 24 24" stroke="#db2777" stroke-width="0.3" fill="none" opacity="0.15"/>
+      <!-- Specular -->
+      <ellipse cx="20" cy="21" rx="1.5" ry="2.5" fill="white" opacity="0.1" transform="rotate(-20 20 21)"/>
+      <!-- Water reflections -->
+      <ellipse cx="20" cy="44" rx="2" ry="0.5" fill="#f472b6" opacity="0.1"/>
+      <ellipse cx="28" cy="44" rx="1.5" ry="0.4" fill="#f472b6" opacity="0.08"/>
+    </svg>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">Added: water surface, lily pad, petal shadows + veins, stamen detail, water reflections</p>
+  </div>
+
+  <!-- LYCHEE -->
+  <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px 8px;">
+    <p class="label" style="color: #e91e63;">Lychee</p>
+    <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+      <!-- Root flare -->
+      <path d="M21 46 Q18 44.5 15 46" stroke="#6b5240" stroke-width="0.8" fill="none" opacity="0.3"/>
+      <path d="M27 46 Q30 44.5 33 46" stroke="#6b5240" stroke-width="0.7" fill="none" opacity="0.25"/>
+      <!-- Trunk -->
+      <path d="M24 46 Q23 40 23.5 32" stroke="#8b7355" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      <path d="M24 46 Q23 40 23.5 32" stroke="#6b5240" stroke-width="1" opacity="0.15" fill="none"/>
+      <!-- Bark marks -->
+      <path d="M22.5 40 L25 39.8" stroke="#5a4230" stroke-width="0.5" opacity="0.3"/>
+      <path d="M22.8 36 L25 35.8" stroke="#5a4230" stroke-width="0.4" opacity="0.25"/>
+      <!-- Branches -->
+      <path d="M23.5 34 Q17 30 12 28" stroke="#8b7355" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <path d="M24 32 Q30 28 36 26" stroke="#8b7355" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <path d="M24 30 Q24 24 24 18" stroke="#8b7355" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      <!-- Canopy shadow layer -->
+      <path d="M6 18 C5 12 10 6 18 5 Q24 4 30 5 C38 6 43 12 42 18 C43 24 38 30 30 31 Q24 32 18 31 C10 30 5 24 6 18Z" fill="#2e5a1e" opacity="0.3"/>
+      <!-- Canopy -->
+      <path d="M7 17 C6 11 11 6 19 5 Q24 4 29 5 C37 6 42 11 41 17 C42 23 37 28 29 29 Q24 30 19 29 C11 28 6 23 7 17Z" fill="#4caf50"/>
+      <!-- Canopy highlights -->
+      <path d="M14 10 C18 7 22 6 24 5 Q27 4 30 5 C34 7 38 11 40 16" fill="#66bb6a" opacity="0.2"/>
+      <path d="M10 22 C14 26 20 28 24 29 Q28 28 34 26 C38 23 40 20 41 17" fill="#388e3c" opacity="0.15"/>
+      <!-- Leaf texture -->
+      <path d="M16 12 Q14 10 15 8 Q17 10 16 12Z" fill="#66bb6a" opacity="0.2"/>
+      <path d="M32 14 Q34 12 33 10 Q31 12 32 14Z" fill="#388e3c" opacity="0.15"/>
+      <!-- Lychee fruit clusters -->
+      <path d="M14 24 L14.5 25.5" stroke="#5a4230" stroke-width="0.4"/>
+      <circle cx="14" cy="26.5" r="1.6" fill="#c62828"/>
+      <circle cx="15.5" cy="27" r="1.5" fill="#d32f2f"/>
+      <circle cx="14.8" cy="28.2" r="1.4" fill="#c62828" opacity="0.9"/>
+      <!-- Fruit texture bumps -->
+      <circle cx="13.5" cy="26.2" r="0.3" fill="#ef5350" opacity="0.4"/>
+      <circle cx="14.5" cy="26.8" r="0.25" fill="#ef5350" opacity="0.35"/>
+      <!-- Second cluster -->
+      <path d="M34 22 L34.5 23.5" stroke="#5a4230" stroke-width="0.4"/>
+      <circle cx="34" cy="24.5" r="1.5" fill="#c62828"/>
+      <circle cx="35.5" cy="25" r="1.4" fill="#d32f2f"/>
+      <circle cx="34.8" cy="26" r="1.3" fill="#c62828" opacity="0.9"/>
+      <!-- Specular on fruit -->
+      <circle cx="13.5" cy="26" r="0.5" fill="white" opacity="0.2"/>
+      <circle cx="33.5" cy="24" r="0.4" fill="white" opacity="0.18"/>
+      <!-- Canopy speculars -->
+      <circle cx="16" cy="10" r="0.5" fill="white" opacity="0.15"/>
+      <circle cx="30" cy="12" r="0.45" fill="white" opacity="0.12"/>
+    </svg>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">Added: canopy shadow/highlight layers, bark marks, fruit bump texture, speculars, root flare</p>
+  </div>
+
+  <!-- OAK -->
+  <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px 8px;">
+    <p class="label" style="color: #795548;">Oak</p>
+    <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+      <!-- Root flare -->
+      <path d="M20 46 Q16 44 12 46" stroke="#6b5240" stroke-width="1" fill="none" opacity="0.3"/>
+      <path d="M28 46 Q32 44 36 46" stroke="#6b5240" stroke-width="0.9" fill="none" opacity="0.25"/>
+      <!-- Trunk — thick with bark texture -->
+      <path d="M22 46 Q21 40 22 32" fill="none" stroke="#6b5240" stroke-width="5" stroke-linecap="round"/>
+      <path d="M22 46 Q21 40 22 32" fill="none" stroke="#5a4230" stroke-width="1.5" opacity="0.15"/>
+      <!-- Bark lines -->
+      <path d="M20 42 L23 41.5" stroke="#4a3220" stroke-width="0.6" opacity="0.3"/>
+      <path d="M20 38 L23 37.5" stroke="#4a3220" stroke-width="0.5" opacity="0.25"/>
+      <path d="M20.5 34 L23 33.8" stroke="#4a3220" stroke-width="0.5" opacity="0.2"/>
+      <!-- Knot hole -->
+      <ellipse cx="22" cy="39" rx="1.2" ry="1.6" fill="#3a2a1a"/>
+      <ellipse cx="22" cy="39" rx="0.7" ry="1" fill="#1a1008"/>
+      <!-- Main branches -->
+      <path d="M22 32 Q16 28 10 24" stroke="#6b5240" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M22 30 Q28 26 36 24" stroke="#6b5240" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M22 28 Q22 22 22 16" stroke="#6b5240" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <!-- Canopy shadow -->
+      <path d="M5 16 C4 8 10 3 20 2 Q24 1.5 28 2 C38 3 44 8 43 16 C44 22 40 28 32 30 Q24 32 16 30 C8 28 4 22 5 16Z" fill="#33691e" opacity="0.35"/>
+      <!-- Canopy main -->
+      <path d="M6 15 C5 8 11 3 20 2 Q24 1.5 28 2 C37 3 43 8 42 15 C43 21 39 27 31 28 Q24 30 17 28 C9 26 5 21 6 15Z" fill="#558b2f"/>
+      <!-- Canopy highlight -->
+      <path d="M14 8 C18 5 22 3.5 24 2 Q28 1.5 32 3 C36 5 40 10 42 16" fill="#689f38" opacity="0.2"/>
+      <!-- Bottom shadow on canopy -->
+      <path d="M9 22 C14 26 20 28 24 29 Q28 28 34 26 C38 23 40 20 42 16" fill="#33691e" opacity="0.2"/>
+      <!-- Lobed leaf silhouettes poking out -->
+      <path d="M5 18 Q3.5 16 5 14 Q6.5 16 5 18" fill="#558b2f"/>
+      <path d="M43 14 Q44.5 12 43 10 Q42 12 43 14" fill="#558b2f"/>
+      <path d="M7 24 Q5 22.5 6 21 Q8 22 7 24" fill="#558b2f"/>
+      <path d="M41 22 Q43 20 42 18.5 Q40.5 20 41 22" fill="#558b2f"/>
+      <!-- Inner leaf depth marks -->
+      <path d="M18 10 Q16 8 17 6 Q19 8 18 10Z" fill="#689f38" opacity="0.2"/>
+      <path d="M30 12 Q32 10 31 8 Q29 10 30 12Z" fill="#33691e" opacity="0.15"/>
+      <!-- Acorns -->
+      <path d="M12 24 L12 25.5" stroke="#6b5240" stroke-width="0.4"/>
+      <ellipse cx="12" cy="26.5" rx="1" ry="1.3" fill="#8d6e4a"/>
+      <path d="M11 25.5 Q12 25 13 25.5" fill="#6b5240" stroke="none"/>
+      <circle cx="11.5" cy="26" r="0.3" fill="white" opacity="0.15"/>
+      <path d="M34 22 L34 23.5" stroke="#6b5240" stroke-width="0.4"/>
+      <ellipse cx="34" cy="24.5" rx="0.9" ry="1.2" fill="#8d6e4a"/>
+      <path d="M33 23.5 Q34 23 35 23.5" fill="#6b5240" stroke="none"/>
+      <!-- Specular -->
+      <circle cx="16" cy="8" r="0.5" fill="white" opacity="0.12"/>
+      <circle cx="32" cy="10" r="0.4" fill="white" opacity="0.1"/>
+    </svg>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">Added: thick bark texture, knot hole, canopy shadow/highlight, lobed silhouettes, acorns, root flare</p>
+  </div>
+
+  <!-- SUNFLOWER -->
+  <div style="text-align: center; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px 8px;">
+    <p class="label" style="color: #fdd835;">Sunflower</p>
+    <svg width="80" height="80" viewBox="0 0 48 48" fill="none">
+      <!-- Ground shadow -->
+      <ellipse cx="24" cy="46" rx="6" ry="1" fill="black" opacity="0.08"/>
+      <!-- Stem -->
+      <path d="M24 46 Q23.5 38 23 22" stroke="#558b2f" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M24 46 Q23.5 38 23 22" stroke="#33691e" stroke-width="0.7" opacity="0.15" fill="none"/>
+      <!-- Leaves on stem -->
+      <path d="M23 36 C19 34 14 33 12 35 C15 32 19 33 23 35" fill="#4caf50" opacity="0.6"/>
+      <path d="M23 36 L18 34" stroke="#33691e" stroke-width="0.3" fill="none" opacity="0.2"/>
+      <path d="M23 30 C27 28 32 27 34 29 C31 26 27 27 23 29" fill="#43a047" opacity="0.5"/>
+      <path d="M23 30 L28 28" stroke="#33691e" stroke-width="0.3" fill="none" opacity="0.18"/>
+      <!-- Flower head — back petals (shadow layer) -->
+      <g transform="translate(23, 18)">
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(0)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(30)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(60)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(90)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(120)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(150)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(180)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(210)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(240)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(270)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(300)"/>
+        <path d="M0 0 L-3 -9 L0 -7 L3 -9Z" fill="#c9a800" opacity="0.4" transform="rotate(330)"/>
+      </g>
+      <!-- Flower head — front petals -->
+      <g transform="translate(23, 18)">
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(15)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(45)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#ffeb3b" transform="rotate(75)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(105)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(135)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#ffeb3b" transform="rotate(165)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(195)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(225)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#ffeb3b" transform="rotate(255)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(285)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#fdd835" transform="rotate(315)"/>
+        <path d="M0 0 L-2.5 -8 L0 -6 L2.5 -8Z" fill="#ffeb3b" transform="rotate(345)"/>
+      </g>
+      <!-- Seed head center — layered -->
+      <circle cx="23" cy="18" r="5" fill="#5d4037"/>
+      <circle cx="23" cy="18" r="4" fill="#3e2723"/>
+      <!-- Seed pattern (fibonacci spiral hint) -->
+      <circle cx="22" cy="17" r="0.4" fill="#795548" opacity="0.5"/>
+      <circle cx="24" cy="17" r="0.4" fill="#795548" opacity="0.5"/>
+      <circle cx="23" cy="19" r="0.4" fill="#795548" opacity="0.5"/>
+      <circle cx="21.5" cy="18.5" r="0.35" fill="#795548" opacity="0.4"/>
+      <circle cx="24.5" cy="18.5" r="0.35" fill="#795548" opacity="0.4"/>
+      <circle cx="22.5" cy="16.5" r="0.3" fill="#795548" opacity="0.35"/>
+      <circle cx="23.5" cy="16.5" r="0.3" fill="#795548" opacity="0.35"/>
+      <!-- Specular on center -->
+      <circle cx="21.5" cy="16.5" r="0.8" fill="white" opacity="0.1"/>
+      <!-- Pollen dust -->
+      <circle cx="19" cy="12" r="0.3" fill="#fdd835" opacity="0.2">
+        <animate attributeName="opacity" values="0.2;0.05;0.2" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="28" cy="14" r="0.25" fill="#fdd835" opacity="0.15">
+        <animate attributeName="opacity" values="0.15;0.03;0.15" dur="4s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">Added: double petal layers, seed spiral pattern, stem leaves with veins, pollen particles</p>
+  </div>
+
+</div>

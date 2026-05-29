@@ -1,0 +1,423 @@
+<h2>Faint Rings + Orange Slice Lines</h2>
+<p class="subtitle">Slightly imperfect hand-drawn rings with citrus segment lines inside. Bottom-heavy.</p>
+
+<style>
+  .dual-preview {
+    display: flex; gap: 0; border-radius: 10px; overflow: hidden; height: 340px;
+  }
+  .dual-preview .half {
+    flex: 1; position: relative; overflow: hidden;
+  }
+  .dual-preview .half.light { background: #E0D7C1; }
+  .dual-preview .half.dark { background: #18181b; }
+  .mode-label {
+    position: absolute; top: 8px; left: 10px; font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; opacity: 0.4; font-weight: 600;
+  }
+  .mode-label.light-label { color: #0f0f10; }
+  .mode-label.dark-label { color: #fafaf9; }
+  .divider-line {
+    position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(128,128,128,0.2); z-index: 2;
+  }
+</style>
+
+<div class="cards">
+
+  <!-- V1: Subtle slices, barely visible segments -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="l-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="3" seed="2"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.2"/>
+            </filter>
+            <filter id="l-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="3" seed="7"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.5"/>
+            </filter>
+            <filter id="l-rough3">
+              <feTurbulence type="turbulence" baseFrequency="0.045" numOctaves="2" seed="13"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.0"/>
+            </filter>
+
+            <!-- Large ring, bottom-left -->
+            <g filter="url(#l-rough1)">
+              <circle cx="50" cy="240" r="34" fill="none" stroke="#7a5a1a" stroke-width="3.2" opacity="0.06"/>
+              <circle cx="50" cy="240" r="31" fill="none" stroke="#7a5a1a" stroke-width="1.2" opacity="0.03"/>
+              <circle cx="50" cy="240" r="28" fill="#7a5a1a" opacity="0.012"/>
+              <!-- Slice segment lines radiating from center -->
+              <line x1="50" y1="240" x2="50" y2="212" stroke="#7a5a1a" stroke-width="0.6" opacity="0.03"/>
+              <line x1="50" y1="240" x2="74" y2="226" stroke="#7a5a1a" stroke-width="0.5" opacity="0.025"/>
+              <line x1="50" y1="240" x2="74" y2="254" stroke="#7a5a1a" stroke-width="0.6" opacity="0.03"/>
+              <line x1="50" y1="240" x2="50" y2="268" stroke="#7a5a1a" stroke-width="0.5" opacity="0.025"/>
+              <line x1="50" y1="240" x2="26" y2="254" stroke="#7a5a1a" stroke-width="0.6" opacity="0.028"/>
+              <line x1="50" y1="240" x2="26" y2="226" stroke="#7a5a1a" stroke-width="0.5" opacity="0.025"/>
+              <!-- Center pip -->
+              <circle cx="50" cy="240" r="3.5" fill="none" stroke="#7a5a1a" stroke-width="0.7" opacity="0.035"/>
+            </g>
+
+            <!-- Medium ring, bottom-right -->
+            <g filter="url(#l-rough2)">
+              <circle cx="158" cy="270" r="22" fill="none" stroke="#8B6914" stroke-width="2.5" opacity="0.05"/>
+              <circle cx="158" cy="270" r="19" fill="#8B6914" opacity="0.01"/>
+              <!-- Slice lines -->
+              <line x1="158" y1="270" x2="158" y2="250" stroke="#8B6914" stroke-width="0.5" opacity="0.025"/>
+              <line x1="158" y1="270" x2="176" y2="260" stroke="#8B6914" stroke-width="0.4" opacity="0.02"/>
+              <line x1="158" y1="270" x2="176" y2="280" stroke="#8B6914" stroke-width="0.5" opacity="0.025"/>
+              <line x1="158" y1="270" x2="158" y2="290" stroke="#8B6914" stroke-width="0.4" opacity="0.02"/>
+              <line x1="158" y1="270" x2="140" y2="280" stroke="#8B6914" stroke-width="0.5" opacity="0.022"/>
+              <line x1="158" y1="270" x2="140" y2="260" stroke="#8B6914" stroke-width="0.4" opacity="0.02"/>
+              <circle cx="158" cy="270" r="2.5" fill="none" stroke="#8B6914" stroke-width="0.5" opacity="0.03"/>
+            </g>
+
+            <!-- Small ring, mid-bottom -->
+            <g filter="url(#l-rough3)">
+              <circle cx="115" cy="205" r="13" fill="none" stroke="#7a5a1a" stroke-width="1.8" opacity="0.04"/>
+              <!-- Slice lines -->
+              <line x1="115" y1="205" x2="115" y2="193" stroke="#7a5a1a" stroke-width="0.4" opacity="0.02"/>
+              <line x1="115" y1="205" x2="126" y2="199" stroke="#7a5a1a" stroke-width="0.35" opacity="0.018"/>
+              <line x1="115" y1="205" x2="126" y2="211" stroke="#7a5a1a" stroke-width="0.4" opacity="0.02"/>
+              <line x1="115" y1="205" x2="115" y2="217" stroke="#7a5a1a" stroke-width="0.35" opacity="0.018"/>
+              <line x1="115" y1="205" x2="104" y2="211" stroke="#7a5a1a" stroke-width="0.4" opacity="0.02"/>
+              <line x1="115" y1="205" x2="104" y2="199" stroke="#7a5a1a" stroke-width="0.35" opacity="0.018"/>
+              <circle cx="115" cy="205" r="1.8" fill="none" stroke="#7a5a1a" stroke-width="0.4" opacity="0.025"/>
+            </g>
+
+            <!-- Tiny scattered drops -->
+            <circle cx="85" cy="290" r="3" fill="#7a5a1a" opacity="0.025" filter="url(#l-rough1)"/>
+            <circle cx="130" cy="310" r="2" fill="#8B6914" opacity="0.02" filter="url(#l-rough2)"/>
+            <circle cx="30" cy="300" r="2.5" fill="#7a5a1a" opacity="0.02" filter="url(#l-rough3)"/>
+            <!-- Sparse upper -->
+            <circle cx="150" cy="110" r="1.5" fill="#7a5a1a" opacity="0.015"/>
+            <circle cx="35" cy="140" r="1.8" fill="#8B6914" opacity="0.015"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="d1-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="3" seed="2"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.2"/>
+            </filter>
+            <filter id="d1-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="3" seed="7"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.5"/>
+            </filter>
+            <filter id="d1-rough3">
+              <feTurbulence type="turbulence" baseFrequency="0.045" numOctaves="2" seed="13"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.0"/>
+            </filter>
+
+            <g filter="url(#d1-rough1)">
+              <circle cx="50" cy="240" r="34" fill="none" stroke="#c9a84c" stroke-width="3.2" opacity="0.07"/>
+              <circle cx="50" cy="240" r="31" fill="none" stroke="#c9a84c" stroke-width="1.2" opacity="0.035"/>
+              <circle cx="50" cy="240" r="28" fill="#c9a84c" opacity="0.012"/>
+              <line x1="50" y1="240" x2="50" y2="212" stroke="#c9a84c" stroke-width="0.6" opacity="0.035"/>
+              <line x1="50" y1="240" x2="74" y2="226" stroke="#c9a84c" stroke-width="0.5" opacity="0.03"/>
+              <line x1="50" y1="240" x2="74" y2="254" stroke="#c9a84c" stroke-width="0.6" opacity="0.035"/>
+              <line x1="50" y1="240" x2="50" y2="268" stroke="#c9a84c" stroke-width="0.5" opacity="0.03"/>
+              <line x1="50" y1="240" x2="26" y2="254" stroke="#c9a84c" stroke-width="0.6" opacity="0.032"/>
+              <line x1="50" y1="240" x2="26" y2="226" stroke="#c9a84c" stroke-width="0.5" opacity="0.03"/>
+              <circle cx="50" cy="240" r="3.5" fill="none" stroke="#c9a84c" stroke-width="0.7" opacity="0.04"/>
+            </g>
+
+            <g filter="url(#d1-rough2)">
+              <circle cx="158" cy="270" r="22" fill="none" stroke="#c9a84c" stroke-width="2.5" opacity="0.055"/>
+              <circle cx="158" cy="270" r="19" fill="#c9a84c" opacity="0.01"/>
+              <line x1="158" y1="270" x2="158" y2="250" stroke="#c9a84c" stroke-width="0.5" opacity="0.03"/>
+              <line x1="158" y1="270" x2="176" y2="260" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <line x1="158" y1="270" x2="176" y2="280" stroke="#c9a84c" stroke-width="0.5" opacity="0.03"/>
+              <line x1="158" y1="270" x2="158" y2="290" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <line x1="158" y1="270" x2="140" y2="280" stroke="#c9a84c" stroke-width="0.5" opacity="0.027"/>
+              <line x1="158" y1="270" x2="140" y2="260" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <circle cx="158" cy="270" r="2.5" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.035"/>
+            </g>
+
+            <g filter="url(#d1-rough3)">
+              <circle cx="115" cy="205" r="13" fill="none" stroke="#c9a84c" stroke-width="1.8" opacity="0.045"/>
+              <line x1="115" y1="205" x2="115" y2="193" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <line x1="115" y1="205" x2="126" y2="199" stroke="#c9a84c" stroke-width="0.35" opacity="0.022"/>
+              <line x1="115" y1="205" x2="126" y2="211" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <line x1="115" y1="205" x2="115" y2="217" stroke="#c9a84c" stroke-width="0.35" opacity="0.022"/>
+              <line x1="115" y1="205" x2="104" y2="211" stroke="#c9a84c" stroke-width="0.4" opacity="0.025"/>
+              <line x1="115" y1="205" x2="104" y2="199" stroke="#c9a84c" stroke-width="0.35" opacity="0.022"/>
+              <circle cx="115" cy="205" r="1.8" fill="none" stroke="#c9a84c" stroke-width="0.4" opacity="0.03"/>
+            </g>
+
+            <circle cx="85" cy="290" r="3" fill="#c9a84c" opacity="0.03" filter="url(#d1-rough1)"/>
+            <circle cx="130" cy="310" r="2" fill="#c9a84c" opacity="0.025" filter="url(#d1-rough2)"/>
+            <circle cx="30" cy="300" r="2.5" fill="#c9a84c" opacity="0.025" filter="url(#d1-rough3)"/>
+            <circle cx="150" cy="110" r="1.5" fill="#c9a84c" opacity="0.018"/>
+            <circle cx="35" cy="140" r="1.8" fill="#c9a84c" opacity="0.018"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Whisper</h3>
+      <p>Very faint rings with barely-visible segment lines. You'd only notice them if you looked. SVG turbulence wobbles the edges slightly.</p>
+    </div>
+  </div>
+
+  <!-- V2: More visible slices, slightly bolder -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="l2-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="4" seed="5"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.8"/>
+            </filter>
+            <filter id="l2-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="3" seed="11"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.4"/>
+            </filter>
+            <filter id="l2-rough3">
+              <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="3" seed="19"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.6"/>
+            </filter>
+
+            <!-- Large ring -->
+            <g filter="url(#l2-rough1)">
+              <circle cx="55" cy="230" r="38" fill="none" stroke="#7a5a1a" stroke-width="3.8" opacity="0.08"/>
+              <circle cx="55" cy="230" r="35" fill="none" stroke="#7a5a1a" stroke-width="1.5" opacity="0.04"/>
+              <circle cx="55" cy="230" r="32" fill="#7a5a1a" opacity="0.018"/>
+              <!-- Bolder slice lines with slight curve via quadratic -->
+              <path d="M55,230 Q56,214 55,196" stroke="#7a5a1a" stroke-width="0.8" opacity="0.045" fill="none"/>
+              <path d="M55,230 Q70,222 82,216" stroke="#7a5a1a" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <path d="M55,230 Q72,238 84,246" stroke="#7a5a1a" stroke-width="0.8" opacity="0.045" fill="none"/>
+              <path d="M55,230 Q54,248 55,264" stroke="#7a5a1a" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <path d="M55,230 Q40,240 28,248" stroke="#7a5a1a" stroke-width="0.8" opacity="0.042" fill="none"/>
+              <path d="M55,230 Q40,220 27,213" stroke="#7a5a1a" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <!-- Inner ring (pith) -->
+              <circle cx="55" cy="230" r="5" fill="none" stroke="#7a5a1a" stroke-width="0.8" opacity="0.04"/>
+              <!-- Tiny seeds in segments -->
+              <ellipse cx="62" cy="220" rx="1.2" ry="0.5" fill="#7a5a1a" opacity="0.03" transform="rotate(-30 62 220)"/>
+              <ellipse cx="48" cy="220" rx="1.2" ry="0.5" fill="#7a5a1a" opacity="0.025" transform="rotate(30 48 220)"/>
+              <ellipse cx="65" cy="238" rx="1.2" ry="0.5" fill="#7a5a1a" opacity="0.028" transform="rotate(30 65 238)"/>
+            </g>
+
+            <!-- Medium ring -->
+            <g filter="url(#l2-rough2)">
+              <circle cx="150" cy="280" r="24" fill="none" stroke="#8B6914" stroke-width="2.8" opacity="0.065"/>
+              <circle cx="150" cy="280" r="21" fill="#8B6914" opacity="0.012"/>
+              <path d="M150,280 Q151,268 150,258" stroke="#8B6914" stroke-width="0.6" opacity="0.035" fill="none"/>
+              <path d="M150,280 Q162,274 170,268" stroke="#8B6914" stroke-width="0.55" opacity="0.03" fill="none"/>
+              <path d="M150,280 Q162,286 170,292" stroke="#8B6914" stroke-width="0.6" opacity="0.035" fill="none"/>
+              <path d="M150,280 Q149,292 150,302" stroke="#8B6914" stroke-width="0.55" opacity="0.03" fill="none"/>
+              <path d="M150,280 Q138,286 130,292" stroke="#8B6914" stroke-width="0.6" opacity="0.032" fill="none"/>
+              <path d="M150,280 Q138,274 130,268" stroke="#8B6914" stroke-width="0.55" opacity="0.03" fill="none"/>
+              <circle cx="150" cy="280" r="3" fill="none" stroke="#8B6914" stroke-width="0.6" opacity="0.035"/>
+            </g>
+
+            <!-- Small ring -->
+            <g filter="url(#l2-rough3)">
+              <circle cx="105" cy="195" r="15" fill="none" stroke="#7a5a1a" stroke-width="2" opacity="0.05"/>
+              <path d="M105,195 Q106,187 105,182" stroke="#7a5a1a" stroke-width="0.45" opacity="0.028" fill="none"/>
+              <path d="M105,195 Q113,190 118,186" stroke="#7a5a1a" stroke-width="0.4" opacity="0.025" fill="none"/>
+              <path d="M105,195 Q113,200 118,204" stroke="#7a5a1a" stroke-width="0.45" opacity="0.028" fill="none"/>
+              <path d="M105,195 Q104,203 105,208" stroke="#7a5a1a" stroke-width="0.4" opacity="0.025" fill="none"/>
+              <path d="M105,195 Q97,200 92,204" stroke="#7a5a1a" stroke-width="0.45" opacity="0.028" fill="none"/>
+              <path d="M105,195 Q97,190 92,186" stroke="#7a5a1a" stroke-width="0.4" opacity="0.025" fill="none"/>
+              <circle cx="105" cy="195" r="2" fill="none" stroke="#7a5a1a" stroke-width="0.45" opacity="0.03"/>
+            </g>
+
+            <!-- Drops -->
+            <circle cx="80" cy="305" r="3.5" fill="#7a5a1a" opacity="0.03" filter="url(#l2-rough1)"/>
+            <circle cx="175" cy="310" r="2" fill="#8B6914" opacity="0.025" filter="url(#l2-rough2)"/>
+            <circle cx="25" cy="285" r="2.8" fill="#7a5a1a" opacity="0.022" filter="url(#l2-rough3)"/>
+            <circle cx="140" cy="100" r="1.5" fill="#7a5a1a" opacity="0.015"/>
+            <circle cx="30" cy="130" r="2" fill="#8B6914" opacity="0.015"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="d2-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="4" seed="5"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.8"/>
+            </filter>
+            <filter id="d2-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="3" seed="11"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.4"/>
+            </filter>
+            <filter id="d2-rough3">
+              <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="3" seed="19"/>
+              <feDisplacementMap in="SourceGraphic" scale="1.6"/>
+            </filter>
+
+            <g filter="url(#d2-rough1)">
+              <circle cx="55" cy="230" r="38" fill="none" stroke="#c9a84c" stroke-width="3.8" opacity="0.09"/>
+              <circle cx="55" cy="230" r="35" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.045"/>
+              <circle cx="55" cy="230" r="32" fill="#c9a84c" opacity="0.018"/>
+              <path d="M55,230 Q56,214 55,196" stroke="#c9a84c" stroke-width="0.8" opacity="0.05" fill="none"/>
+              <path d="M55,230 Q70,222 82,216" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <path d="M55,230 Q72,238 84,246" stroke="#c9a84c" stroke-width="0.8" opacity="0.05" fill="none"/>
+              <path d="M55,230 Q54,248 55,264" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <path d="M55,230 Q40,240 28,248" stroke="#c9a84c" stroke-width="0.8" opacity="0.048" fill="none"/>
+              <path d="M55,230 Q40,220 27,213" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <circle cx="55" cy="230" r="5" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.045"/>
+              <ellipse cx="62" cy="220" rx="1.2" ry="0.5" fill="#c9a84c" opacity="0.035" transform="rotate(-30 62 220)"/>
+              <ellipse cx="48" cy="220" rx="1.2" ry="0.5" fill="#c9a84c" opacity="0.03" transform="rotate(30 48 220)"/>
+              <ellipse cx="65" cy="238" rx="1.2" ry="0.5" fill="#c9a84c" opacity="0.032" transform="rotate(30 65 238)"/>
+            </g>
+
+            <g filter="url(#d2-rough2)">
+              <circle cx="150" cy="280" r="24" fill="none" stroke="#c9a84c" stroke-width="2.8" opacity="0.07"/>
+              <circle cx="150" cy="280" r="21" fill="#c9a84c" opacity="0.012"/>
+              <path d="M150,280 Q151,268 150,258" stroke="#c9a84c" stroke-width="0.6" opacity="0.04" fill="none"/>
+              <path d="M150,280 Q162,274 170,268" stroke="#c9a84c" stroke-width="0.55" opacity="0.035" fill="none"/>
+              <path d="M150,280 Q162,286 170,292" stroke="#c9a84c" stroke-width="0.6" opacity="0.04" fill="none"/>
+              <path d="M150,280 Q149,292 150,302" stroke="#c9a84c" stroke-width="0.55" opacity="0.035" fill="none"/>
+              <path d="M150,280 Q138,286 130,292" stroke="#c9a84c" stroke-width="0.6" opacity="0.037" fill="none"/>
+              <path d="M150,280 Q138,274 130,268" stroke="#c9a84c" stroke-width="0.55" opacity="0.035" fill="none"/>
+              <circle cx="150" cy="280" r="3" fill="none" stroke="#c9a84c" stroke-width="0.6" opacity="0.04"/>
+            </g>
+
+            <g filter="url(#d2-rough3)">
+              <circle cx="105" cy="195" r="15" fill="none" stroke="#c9a84c" stroke-width="2" opacity="0.055"/>
+              <path d="M105,195 Q106,187 105,182" stroke="#c9a84c" stroke-width="0.45" opacity="0.032" fill="none"/>
+              <path d="M105,195 Q113,190 118,186" stroke="#c9a84c" stroke-width="0.4" opacity="0.03" fill="none"/>
+              <path d="M105,195 Q113,200 118,204" stroke="#c9a84c" stroke-width="0.45" opacity="0.032" fill="none"/>
+              <path d="M105,195 Q104,203 105,208" stroke="#c9a84c" stroke-width="0.4" opacity="0.03" fill="none"/>
+              <path d="M105,195 Q97,200 92,204" stroke="#c9a84c" stroke-width="0.45" opacity="0.032" fill="none"/>
+              <path d="M105,195 Q97,190 92,186" stroke="#c9a84c" stroke-width="0.4" opacity="0.03" fill="none"/>
+              <circle cx="105" cy="195" r="2" fill="none" stroke="#c9a84c" stroke-width="0.45" opacity="0.035"/>
+            </g>
+
+            <circle cx="80" cy="305" r="3.5" fill="#c9a84c" opacity="0.035" filter="url(#d2-rough1)"/>
+            <circle cx="175" cy="310" r="2" fill="#c9a84c" opacity="0.03" filter="url(#d2-rough2)"/>
+            <circle cx="25" cy="285" r="2.8" fill="#c9a84c" opacity="0.027" filter="url(#d2-rough3)"/>
+            <circle cx="140" cy="100" r="1.5" fill="#c9a84c" opacity="0.018"/>
+            <circle cx="30" cy="130" r="2" fill="#c9a84c" opacity="0.018"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Readable</h3>
+      <p>Slightly bolder. Curved segment lines (not perfectly straight), tiny seed shapes in segments, more visible inner pith ring. You can tell they're orange slices.</p>
+    </div>
+  </div>
+
+  <!-- V3: Most visible, thicker imperfection -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="l3-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.025" numOctaves="4" seed="3"/>
+              <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+            </filter>
+            <filter id="l3-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="4" seed="9"/>
+              <feDisplacementMap in="SourceGraphic" scale="2.0"/>
+            </filter>
+
+            <!-- Large ring -->
+            <g filter="url(#l3-rough1)">
+              <circle cx="60" cy="225" r="40" fill="none" stroke="#7a5a1a" stroke-width="4.5" opacity="0.09"/>
+              <circle cx="60" cy="225" r="37" fill="none" stroke="#7a5a1a" stroke-width="1.8" opacity="0.045"/>
+              <circle cx="60" cy="225" r="33" fill="#7a5a1a" opacity="0.022"/>
+              <!-- Bold curved slices -->
+              <path d="M60,225 Q62,208 58,190" stroke="#7a5a1a" stroke-width="1" opacity="0.055" fill="none"/>
+              <path d="M60,225 Q78,216 92,206" stroke="#7a5a1a" stroke-width="0.9" opacity="0.05" fill="none"/>
+              <path d="M60,225 Q80,234 94,244" stroke="#7a5a1a" stroke-width="1" opacity="0.055" fill="none"/>
+              <path d="M60,225 Q58,244 62,260" stroke="#7a5a1a" stroke-width="0.9" opacity="0.05" fill="none"/>
+              <path d="M60,225 Q42,236 30,246" stroke="#7a5a1a" stroke-width="1" opacity="0.052" fill="none"/>
+              <path d="M60,225 Q44,216 30,207" stroke="#7a5a1a" stroke-width="0.9" opacity="0.05" fill="none"/>
+              <!-- Pith -->
+              <circle cx="60" cy="225" r="6" fill="none" stroke="#7a5a1a" stroke-width="1" opacity="0.05"/>
+              <!-- Seeds -->
+              <ellipse cx="68" cy="214" rx="1.5" ry="0.6" fill="#7a5a1a" opacity="0.04" transform="rotate(-30 68 214)"/>
+              <ellipse cx="52" cy="214" rx="1.5" ry="0.6" fill="#7a5a1a" opacity="0.035" transform="rotate(30 52 214)"/>
+              <ellipse cx="70" cy="236" rx="1.5" ry="0.6" fill="#7a5a1a" opacity="0.038" transform="rotate(30 70 236)"/>
+              <ellipse cx="50" cy="236" rx="1.5" ry="0.6" fill="#7a5a1a" opacity="0.035" transform="rotate(-30 50 236)"/>
+            </g>
+
+            <!-- Medium ring -->
+            <g filter="url(#l3-rough2)">
+              <circle cx="148" cy="275" r="26" fill="none" stroke="#8B6914" stroke-width="3.2" opacity="0.075"/>
+              <circle cx="148" cy="275" r="23" fill="#8B6914" opacity="0.015"/>
+              <path d="M148,275 Q149,262 147,252" stroke="#8B6914" stroke-width="0.8" opacity="0.045" fill="none"/>
+              <path d="M148,275 Q162,268 172,260" stroke="#8B6914" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <path d="M148,275 Q162,282 172,290" stroke="#8B6914" stroke-width="0.8" opacity="0.045" fill="none"/>
+              <path d="M148,275 Q147,288 149,298" stroke="#8B6914" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <path d="M148,275 Q134,282 124,290" stroke="#8B6914" stroke-width="0.8" opacity="0.042" fill="none"/>
+              <path d="M148,275 Q134,268 124,260" stroke="#8B6914" stroke-width="0.7" opacity="0.04" fill="none"/>
+              <circle cx="148" cy="275" r="3.5" fill="none" stroke="#8B6914" stroke-width="0.7" opacity="0.04"/>
+            </g>
+
+            <!-- Drops -->
+            <circle cx="100" cy="300" r="4" fill="#7a5a1a" opacity="0.035" filter="url(#l3-rough1)"/>
+            <circle cx="180" cy="320" r="2.5" fill="#8B6914" opacity="0.028" filter="url(#l3-rough2)"/>
+            <circle cx="20" cy="290" r="3.2" fill="#7a5a1a" opacity="0.025" filter="url(#l3-rough1)"/>
+            <circle cx="135" cy="105" r="1.5" fill="#7a5a1a" opacity="0.015"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 340" preserveAspectRatio="xMidYMid slice">
+            <filter id="d3-rough1">
+              <feTurbulence type="turbulence" baseFrequency="0.025" numOctaves="4" seed="3"/>
+              <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+            </filter>
+            <filter id="d3-rough2">
+              <feTurbulence type="turbulence" baseFrequency="0.03" numOctaves="4" seed="9"/>
+              <feDisplacementMap in="SourceGraphic" scale="2.0"/>
+            </filter>
+
+            <g filter="url(#d3-rough1)">
+              <circle cx="60" cy="225" r="40" fill="none" stroke="#c9a84c" stroke-width="4.5" opacity="0.1"/>
+              <circle cx="60" cy="225" r="37" fill="none" stroke="#c9a84c" stroke-width="1.8" opacity="0.05"/>
+              <circle cx="60" cy="225" r="33" fill="#c9a84c" opacity="0.022"/>
+              <path d="M60,225 Q62,208 58,190" stroke="#c9a84c" stroke-width="1" opacity="0.06" fill="none"/>
+              <path d="M60,225 Q78,216 92,206" stroke="#c9a84c" stroke-width="0.9" opacity="0.055" fill="none"/>
+              <path d="M60,225 Q80,234 94,244" stroke="#c9a84c" stroke-width="1" opacity="0.06" fill="none"/>
+              <path d="M60,225 Q58,244 62,260" stroke="#c9a84c" stroke-width="0.9" opacity="0.055" fill="none"/>
+              <path d="M60,225 Q42,236 30,246" stroke="#c9a84c" stroke-width="1" opacity="0.058" fill="none"/>
+              <path d="M60,225 Q44,216 30,207" stroke="#c9a84c" stroke-width="0.9" opacity="0.055" fill="none"/>
+              <circle cx="60" cy="225" r="6" fill="none" stroke="#c9a84c" stroke-width="1" opacity="0.055"/>
+              <ellipse cx="68" cy="214" rx="1.5" ry="0.6" fill="#c9a84c" opacity="0.045" transform="rotate(-30 68 214)"/>
+              <ellipse cx="52" cy="214" rx="1.5" ry="0.6" fill="#c9a84c" opacity="0.04" transform="rotate(30 52 214)"/>
+              <ellipse cx="70" cy="236" rx="1.5" ry="0.6" fill="#c9a84c" opacity="0.042" transform="rotate(30 70 236)"/>
+              <ellipse cx="50" cy="236" rx="1.5" ry="0.6" fill="#c9a84c" opacity="0.04" transform="rotate(-30 50 236)"/>
+            </g>
+
+            <g filter="url(#d3-rough2)">
+              <circle cx="148" cy="275" r="26" fill="none" stroke="#c9a84c" stroke-width="3.2" opacity="0.08"/>
+              <circle cx="148" cy="275" r="23" fill="#c9a84c" opacity="0.015"/>
+              <path d="M148,275 Q149,262 147,252" stroke="#c9a84c" stroke-width="0.8" opacity="0.05" fill="none"/>
+              <path d="M148,275 Q162,268 172,260" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <path d="M148,275 Q162,282 172,290" stroke="#c9a84c" stroke-width="0.8" opacity="0.05" fill="none"/>
+              <path d="M148,275 Q147,288 149,298" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <path d="M148,275 Q134,282 124,290" stroke="#c9a84c" stroke-width="0.8" opacity="0.048" fill="none"/>
+              <path d="M148,275 Q134,268 124,260" stroke="#c9a84c" stroke-width="0.7" opacity="0.045" fill="none"/>
+              <circle cx="148" cy="275" r="3.5" fill="none" stroke="#c9a84c" stroke-width="0.7" opacity="0.045"/>
+            </g>
+
+            <circle cx="100" cy="300" r="4" fill="#c9a84c" opacity="0.04" filter="url(#d3-rough1)"/>
+            <circle cx="180" cy="320" r="2.5" fill="#c9a84c" opacity="0.032" filter="url(#d3-rough2)"/>
+            <circle cx="20" cy="290" r="3.2" fill="#c9a84c" opacity="0.03" filter="url(#d3-rough1)"/>
+            <circle cx="135" cy="105" r="1.5" fill="#c9a84c" opacity="0.018"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Bold Citrus</h3>
+      <p>Most visible. Thicker wobbly rings, curved segment lines, visible seeds and pith. Clearly reads as orange slices even at a glance. Heavier SVG displacement for hand-drawn feel.</p>
+    </div>
+  </div>
+
+</div>

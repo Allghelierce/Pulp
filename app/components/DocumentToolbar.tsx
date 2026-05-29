@@ -172,6 +172,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   const [insertOpen, setInsertOpen] = useState(false)
   const [tablePickerOpen, setTablePickerOpen] = useState(false)
   const [tableHover, setTableHover] = useState<[number, number]>([0, 0])
+  const [showSapInfo, setShowSapInfo] = useState(false)
+  const sapInfoRef = useRef<HTMLDivElement>(null)
   const tablePickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -180,6 +182,13 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [alignOpen])
+
+  useEffect(() => {
+    if (!showSapInfo) return
+    const handler = (e: MouseEvent) => { if (!sapInfoRef.current?.contains(e.target as Node)) setShowSapInfo(false) }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [showSapInfo])
 
 
   useEffect(() => {
@@ -569,8 +578,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       </div>
 
       {/* Currency + Avatar pill */}
-      {!hideCurrencies && <div className="relative">
-        <div onClick={onOpenGrove} className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+      {!hideCurrencies && <div className="relative" ref={sapInfoRef}>
+        <div className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           {userAvatarUrl ? (
             <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
           ) : userEmail ? (
@@ -579,7 +588,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           ) : null}
           {sap != null && (
-            <span className="flex items-center gap-1.5 pl-1.5 text-[12px] font-normal tabular-nums">
+            <span className="flex items-center gap-1.5 pl-1.5 text-[12px] font-normal tabular-nums" onClick={(e) => { e.stopPropagation(); setShowSapInfo(v => !v) }}>
               <PulpIcon size={17} />
               <span style={{ color: theme === 'dark' ? 'rgba(212,208,200,0.9)' : 'rgba(58,54,48,0.85)', fontSize: 13 }}>{Math.floor(sap)}</span>
             </span>
@@ -590,6 +599,57 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </span>
           )}
         </div>
+        {showSapInfo && (
+          <div
+            style={{
+              position: 'absolute', top: '100%', right: 0, marginTop: 8, zIndex: 999,
+              width: 280, borderRadius: 12,
+              background: theme === 'dark' ? '#09090b' : '#fafaf8',
+              border: `1px solid ${theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+              boxShadow: '0 20px 60px -10px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <PulpIcon size={17} />
+                <h2 style={{ fontSize: 14, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: theme === 'dark' ? '#e4e0d8' : '#18181b', margin: 0 }}>
+                  You have <span style={{ fontWeight: 500, color: '#d97706' }}>{Math.floor(sap).toLocaleString()}</span> sap
+                </h2>
+              </div>
+              <button onClick={() => setShowSapInfo(false)} className="w-6 h-6 flex items-center justify-center rounded-full" style={{ color: theme === 'dark' ? '#71717a' : '#a1a1aa' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              {[
+                { icon: <PulpIcon size={14} />, text: 'Sap is your currency. Spend it on seeds in the shop.' },
+                { icon: '🌳', text: 'Collect sap from grown trees in your grove.' },
+                { icon: '⏰', text: 'Early bird (6–10:30am) and daily quota boost your multiplier.' },
+                { icon: '🔥', text: 'Longer streaks increase your sap multiplier up to 5x.' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-2.5">
+                  <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>
+                  <p style={{ fontSize: 12, color: theme === 'dark' ? '#a1a09c' : '#52524e', fontFamily: 'Crimson Pro, serif', lineHeight: 1.4, margin: 0 }}>
+                    {item.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 pb-4">
+              <button
+                onClick={() => { setShowSapInfo(false); onOpenGrove?.() }}
+                style={{
+                  width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
+                  fontFamily: 'Crimson Pro, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
+                }}
+                onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
+                onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
+              >
+                Open Grove
+              </button>
+            </div>
+          </div>
+        )}
       </div>}
 
       <div className="shrink-0 pr-[68px]" />

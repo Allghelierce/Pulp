@@ -1,0 +1,188 @@
+<h2>Coffee Stain Variations</h2>
+<p class="subtitle">Clustered toward the bottom half. Each shown in light and dark mode side-by-side.</p>
+
+<style>
+  .dual-preview {
+    display: flex; gap: 0; border-radius: 10px; overflow: hidden; height: 280px;
+  }
+  .dual-preview .half {
+    flex: 1; position: relative; overflow: hidden;
+  }
+  .dual-preview .half.light { background: #E0D7C1; }
+  .dual-preview .half.dark { background: #18181b; }
+  .mode-label {
+    position: absolute; top: 8px; left: 10px; font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; opacity: 0.4; font-weight: 600;
+  }
+  .mode-label.light-label { color: #0f0f10; }
+  .mode-label.dark-label { color: #fafaf9; }
+  .divider-line {
+    position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(128,128,128,0.2); z-index: 2;
+  }
+</style>
+
+<div class="cards">
+
+  <!-- Variation A: Faint Rings -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <!-- Bottom-heavy placement -->
+            <!-- Large ring, bottom-left -->
+            <circle cx="45" cy="210" r="36" fill="none" stroke="#7a5a1a" stroke-width="3.5" opacity="0.06"/>
+            <circle cx="45" cy="210" r="33" fill="none" stroke="#7a5a1a" stroke-width="1.5" opacity="0.03"/>
+            <ellipse cx="45" cy="210" rx="34" ry="32" fill="#7a5a1a" opacity="0.015"/>
+            <!-- Medium ring, bottom-right -->
+            <circle cx="160" cy="240" r="22" fill="none" stroke="#8B6914" stroke-width="2.5" opacity="0.055"/>
+            <ellipse cx="160" cy="240" rx="20" ry="18" fill="#8B6914" opacity="0.012"/>
+            <!-- Small ring, mid-bottom -->
+            <circle cx="110" cy="180" r="14" fill="none" stroke="#7a5a1a" stroke-width="2" opacity="0.04"/>
+            <!-- Faint drips -->
+            <ellipse cx="75" cy="250" rx="6" ry="4" fill="#8B6914" opacity="0.03" transform="rotate(20 75 250)"/>
+            <circle cx="130" cy="260" r="3" fill="#7a5a1a" opacity="0.035"/>
+            <circle cx="90" cy="195" r="2" fill="#8B6914" opacity="0.03"/>
+            <!-- Sparse upper scatter -->
+            <circle cx="150" cy="100" r="1.5" fill="#7a5a1a" opacity="0.02"/>
+            <circle cx="30" cy="130" r="2" fill="#8B6914" opacity="0.02"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <circle cx="45" cy="210" r="36" fill="none" stroke="#c9a84c" stroke-width="3.5" opacity="0.07"/>
+            <circle cx="45" cy="210" r="33" fill="none" stroke="#c9a84c" stroke-width="1.5" opacity="0.035"/>
+            <ellipse cx="45" cy="210" rx="34" ry="32" fill="#c9a84c" opacity="0.015"/>
+            <circle cx="160" cy="240" r="22" fill="none" stroke="#c9a84c" stroke-width="2.5" opacity="0.06"/>
+            <ellipse cx="160" cy="240" rx="20" ry="18" fill="#c9a84c" opacity="0.012"/>
+            <circle cx="110" cy="180" r="14" fill="none" stroke="#c9a84c" stroke-width="2" opacity="0.045"/>
+            <ellipse cx="75" cy="250" rx="6" ry="4" fill="#c9a84c" opacity="0.035" transform="rotate(20 75 250)"/>
+            <circle cx="130" cy="260" r="3" fill="#c9a84c" opacity="0.04"/>
+            <circle cx="90" cy="195" r="2" fill="#c9a84c" opacity="0.03"/>
+            <circle cx="150" cy="100" r="1.5" fill="#c9a84c" opacity="0.02"/>
+            <circle cx="30" cy="130" r="2" fill="#c9a84c" opacity="0.02"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Faint Rings</h3>
+      <p>Mostly ring outlines, barely-there fills. Ghostly mug marks. Very subtle, won't compete with content.</p>
+    </div>
+  </div>
+
+  <!-- Variation B: Wet Puddles -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <!-- Filled puddle blots, bottom-heavy -->
+            <!-- Big puddle bottom-center -->
+            <ellipse cx="100" cy="230" rx="42" ry="28" fill="#7a5a1a" opacity="0.04" transform="rotate(-8 100 230)"/>
+            <ellipse cx="95" cy="225" rx="28" ry="18" fill="#8B6914" opacity="0.055"/>
+            <ellipse cx="110" cy="235" rx="16" ry="10" fill="#7a5a1a" opacity="0.035"/>
+            <!-- Medium puddle bottom-left -->
+            <ellipse cx="35" cy="250" rx="24" ry="16" fill="#8B6914" opacity="0.045" transform="rotate(12 35 250)"/>
+            <ellipse cx="38" cy="248" rx="14" ry="9" fill="#7a5a1a" opacity="0.03"/>
+            <!-- Small blot bottom-right -->
+            <ellipse cx="170" cy="210" rx="18" ry="12" fill="#8B6914" opacity="0.04" transform="rotate(-15 170 210)"/>
+            <!-- Drips trailing down -->
+            <ellipse cx="130" cy="260" rx="7" ry="4.5" fill="#7a5a1a" opacity="0.035" transform="rotate(25 130 260)"/>
+            <circle cx="85" cy="265" r="4" fill="#8B6914" opacity="0.03"/>
+            <circle cx="155" cy="245" r="3" fill="#7a5a1a" opacity="0.03"/>
+            <!-- Light upper hint -->
+            <ellipse cx="160" cy="120" rx="8" ry="5" fill="#8B6914" opacity="0.02"/>
+            <circle cx="40" cy="150" r="2.5" fill="#7a5a1a" opacity="0.02"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <ellipse cx="100" cy="230" rx="42" ry="28" fill="#c9a84c" opacity="0.04" transform="rotate(-8 100 230)"/>
+            <ellipse cx="95" cy="225" rx="28" ry="18" fill="#c9a84c" opacity="0.06"/>
+            <ellipse cx="110" cy="235" rx="16" ry="10" fill="#a08030" opacity="0.04"/>
+            <ellipse cx="35" cy="250" rx="24" ry="16" fill="#c9a84c" opacity="0.05" transform="rotate(12 35 250)"/>
+            <ellipse cx="38" cy="248" rx="14" ry="9" fill="#a08030" opacity="0.03"/>
+            <ellipse cx="170" cy="210" rx="18" ry="12" fill="#c9a84c" opacity="0.045" transform="rotate(-15 170 210)"/>
+            <ellipse cx="130" cy="260" rx="7" ry="4.5" fill="#a08030" opacity="0.04" transform="rotate(25 130 260)"/>
+            <circle cx="85" cy="265" r="4" fill="#c9a84c" opacity="0.035"/>
+            <circle cx="155" cy="245" r="3" fill="#a08030" opacity="0.035"/>
+            <ellipse cx="160" cy="120" rx="8" ry="5" fill="#c9a84c" opacity="0.02"/>
+            <circle cx="40" cy="150" r="2.5" fill="#a08030" opacity="0.02"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Wet Puddles</h3>
+      <p>Filled organic blobs, no rings. Like spilled coffee soaked into paper. More visible, painterly feel.</p>
+    </div>
+  </div>
+
+  <!-- Variation C: Rings + Drips -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;position:relative;">
+      <div class="divider-line"></div>
+      <div class="dual-preview">
+        <div class="half light">
+          <span class="mode-label light-label">Light</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <!-- Ring + drip combos, bottom-heavy -->
+            <!-- Main ring with drip trail -->
+            <circle cx="55" cy="200" r="30" fill="none" stroke="#7a5a1a" stroke-width="3" opacity="0.06"/>
+            <ellipse cx="55" cy="200" rx="28" ry="26" fill="#7a5a1a" opacity="0.015"/>
+            <!-- Drip trailing from ring -->
+            <ellipse cx="80" cy="218" rx="8" ry="5" fill="#8B6914" opacity="0.04" transform="rotate(35 80 218)"/>
+            <ellipse cx="92" cy="228" rx="5" ry="3" fill="#7a5a1a" opacity="0.035" transform="rotate(40 92 228)"/>
+            <circle cx="100" cy="238" r="2.5" fill="#8B6914" opacity="0.03"/>
+            <circle cx="105" cy="245" r="1.5" fill="#7a5a1a" opacity="0.025"/>
+            <!-- Second ring, bottom-right -->
+            <circle cx="155" cy="245" r="20" fill="none" stroke="#8B6914" stroke-width="2.5" opacity="0.05"/>
+            <ellipse cx="155" cy="245" rx="18" ry="16" fill="#8B6914" opacity="0.01"/>
+            <!-- Drip from second ring -->
+            <ellipse cx="140" cy="258" rx="5" ry="3.5" fill="#7a5a1a" opacity="0.03" transform="rotate(-20 140 258)"/>
+            <circle cx="133" cy="265" r="2" fill="#8B6914" opacity="0.025"/>
+            <!-- Splatter drops mid-bottom -->
+            <circle cx="110" cy="190" r="3" fill="#7a5a1a" opacity="0.03"/>
+            <circle cx="25" cy="260" r="4" fill="#8B6914" opacity="0.025"/>
+            <circle cx="180" cy="195" r="2" fill="#7a5a1a" opacity="0.025"/>
+            <!-- Faint upper -->
+            <circle cx="140" cy="90" r="1.8" fill="#8B6914" opacity="0.018"/>
+            <circle cx="30" cy="110" r="2.2" fill="#7a5a1a" opacity="0.015"/>
+          </svg>
+        </div>
+        <div class="half dark">
+          <span class="mode-label dark-label">Dark</span>
+          <svg width="100%" height="100%" viewBox="0 0 200 280" preserveAspectRatio="xMidYMid slice">
+            <circle cx="55" cy="200" r="30" fill="none" stroke="#c9a84c" stroke-width="3" opacity="0.07"/>
+            <ellipse cx="55" cy="200" rx="28" ry="26" fill="#c9a84c" opacity="0.015"/>
+            <ellipse cx="80" cy="218" rx="8" ry="5" fill="#c9a84c" opacity="0.045" transform="rotate(35 80 218)"/>
+            <ellipse cx="92" cy="228" rx="5" ry="3" fill="#a08030" opacity="0.04" transform="rotate(40 92 228)"/>
+            <circle cx="100" cy="238" r="2.5" fill="#c9a84c" opacity="0.035"/>
+            <circle cx="105" cy="245" r="1.5" fill="#a08030" opacity="0.03"/>
+            <circle cx="155" cy="245" r="20" fill="none" stroke="#c9a84c" stroke-width="2.5" opacity="0.055"/>
+            <ellipse cx="155" cy="245" rx="18" ry="16" fill="#c9a84c" opacity="0.012"/>
+            <ellipse cx="140" cy="258" rx="5" ry="3.5" fill="#a08030" opacity="0.035" transform="rotate(-20 140 258)"/>
+            <circle cx="133" cy="265" r="2" fill="#c9a84c" opacity="0.03"/>
+            <circle cx="110" cy="190" r="3" fill="#a08030" opacity="0.035"/>
+            <circle cx="25" cy="260" r="4" fill="#c9a84c" opacity="0.03"/>
+            <circle cx="180" cy="195" r="2" fill="#a08030" opacity="0.03"/>
+            <circle cx="140" cy="90" r="1.8" fill="#c9a84c" opacity="0.02"/>
+            <circle cx="30" cy="110" r="2.2" fill="#a08030" opacity="0.018"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Rings + Drip Trails</h3>
+      <p>Mug rings with drips trailing off them, like someone slid the cup. Most storytelling, most texture.</p>
+    </div>
+  </div>
+
+</div>

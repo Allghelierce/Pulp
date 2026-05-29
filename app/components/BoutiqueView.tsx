@@ -1813,6 +1813,13 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 : undefined,
                               zIndex: 0,
                             }} />
+                            {/* Subtle paper texture */}
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: 'inherit',
+                              backgroundImage: `radial-gradient(circle at 20% 30%, ${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 1px, transparent 1px), radial-gradient(circle at 70% 60%, ${isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)'} 1px, transparent 1px), radial-gradient(circle at 40% 80%, ${isDark ? 'rgba(255,255,255,0.025)' : 'rgba(0,0,0,0.018)'} 1px, transparent 1px)`,
+                              backgroundSize: '8px 8px, 12px 12px, 6px 6px',
+                              zIndex: 1, pointerEvents: 'none',
+                            }} />
                             {/* Sacred white flash */}
                             {revealEffect?.index === i && t.rarity === 'sacred' && (
                               <div style={{
@@ -1855,32 +1862,10 @@ export const BoutiqueView = memo(function BoutiqueView({
                               boxShadow: `inset 0 0 20px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
                               pointerEvents: 'none', zIndex: 4,
                             }} />
-                            {/* Rarity label */}
-                            <div style={{
-                              position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
-                              letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
-                              animation: revealEffect?.index === i
-                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '1s' : t.rarity === 'true rare' ? '0.7s' : '0.3s'} both`
-                                : undefined,
-                              background: t.rarity === 'sacred'
-                                ? (isDark ? 'rgba(80,40,140,0.4)' : 'rgba(140,100,200,0.2)')
-                                : (isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)'),
-                              padding: t.rarity === 'sacred' ? '2px 10px' : '2px 6px', borderRadius: t.rarity === 'sacred' ? 6 : 3,
-                              backdropFilter: 'blur(4px)', zIndex: 5,
-                              whiteSpace: 'nowrap',
-                              ...(t.rarity === 'sacred' ? {
-                                textShadow: '0 0 6px rgba(180,140,255,0.8), 0 0 14px rgba(140,100,220,0.5), 0 0 28px rgba(100,60,200,0.3)',
-                                boxShadow: '0 0 8px rgba(160,120,255,0.3), 0 0 20px rgba(120,80,220,0.15), inset 0 0 8px rgba(180,140,255,0.15)',
-                                border: '1px solid rgba(180,140,255,0.25)',
-                              } : {}),
-                            }}>
-                              {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
-                            </div>
                             {/* Tree name */}
                             <div style={{
-                              position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-                              fontSize: t.rarity === 'sacred' ? 12 : t.rarity === 'true rare' ? 11.5 : 11,
+                              position: 'absolute', top: 7, left: '50%', transform: 'translateX(-50%)',
+                              fontSize: t.rarity === 'sacred' ? 15 : t.rarity === 'true rare' ? 14 : 13,
                               fontWeight: t.rarity === 'sacred' || t.rarity === 'true rare' ? 500 : 400,
                               color: t.rarity === 'sacred' ? '#e0d0ff'
                                 : t.rarity === 'true rare' ? (isDark ? '#fcd34d' : '#b45309')
@@ -1888,7 +1873,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 : t.rarity === 'uncommon' ? (isDark ? '#86efac' : '#15803d')
                                 : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)'),
                               fontFamily: 'Crimson Pro, serif',
-                              letterSpacing: t.rarity === 'sacred' ? '0.12em' : t.rarity === 'true rare' ? '0.08em' : '0.04em',
+                              letterSpacing: t.rarity === 'sacred' ? '0.12em' : t.rarity === 'true rare' ? '0.08em' : '0.02em',
                               textTransform: t.rarity === 'sacred' || t.rarity === 'true rare' ? 'uppercase' as const : 'none' as const,
                               animation: revealEffect?.index === i
                                 ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.8s' : t.rarity === 'true rare' ? '0.6s' : '0.25s'} both`
@@ -1901,6 +1886,21 @@ export const BoutiqueView = memo(function BoutiqueView({
                               } : {}),
                             }}>
                               {t.name}
+                            </div>
+                            {/* Rarity label */}
+                            <div style={{
+                              position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                              fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
+                              letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
+                              animation: revealEffect?.index === i
+                                ? `rarity-color-in ${t.rarity === 'sacred' ? '1.2s' : t.rarity === 'true rare' ? '1s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '1s' : t.rarity === 'true rare' ? '0.7s' : '0.3s'} both`
+                                : undefined,
+                              zIndex: 5, whiteSpace: 'nowrap',
+                              ...(t.rarity === 'sacred' ? {
+                                textShadow: '0 0 6px rgba(180,140,255,0.8), 0 0 14px rgba(140,100,220,0.5)',
+                              } : {}),
+                            }}>
+                              {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
                             </div>
                             {/* Stock / sold out */}
                             {soldOut ? (

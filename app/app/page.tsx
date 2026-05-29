@@ -1361,9 +1361,6 @@ export default function NoteApp() {
     setHibernationScheduled({ startDate, endDate })
   }, [hibernationCooldownEnd])
 
-  // DEV: inject flag — actual injection happens after Supabase load
-  const devTreesInjectedRef = useRef(false)
-
   // Load player data from Supabase when user is available
   useEffect(() => {
     if (!user) return
