@@ -1706,10 +1706,10 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
                 </linearGradient>
               </defs>
               {isNight && <>
-              <ellipse cx={lx + 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx + 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx + 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx + 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              <ellipse cx={lx + 10} cy={ly + 2} rx={55 * sc} ry={22 * sc} fill="url(#lamp-wash-a)" opacity="0.7" />
+              <ellipse cx={lx + 16} cy={ly + 1} rx={38 * sc} ry={16 * sc} fill="url(#lamp-wash-b)" />
+              <ellipse cx={lx + 6} cy={ly + 6} rx={24 * sc} ry={8 * sc} fill="url(#lamp-ground)" />
+              <ellipse cx={lx + 18} cy={ly + 5} rx={18 * sc} ry={6 * sc} fill="url(#lamp-ground)" opacity="0.5" />
               <path d={`M${lx + 0.5},${ly - 7 * sc} L${lx - 4 * sc},${ly + 4 * sc} L${lx + 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
               <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
               <circle cx={lx + 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
