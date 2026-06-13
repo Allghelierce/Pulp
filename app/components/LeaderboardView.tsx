@@ -601,10 +601,12 @@ export const LeaderboardView = memo(function LeaderboardView({
                   {isDemo ? 'sample league' : 'weekly standings'}
                 </span>
               </div>
-              <h2 style={{ fontFamily: font, fontSize: 22, fontWeight: 600, color: accentDeep, letterSpacing: '-0.01em', margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
-                {showPicker ? 'Weekly Standings' : (schoolLabel || 'Weekly Standings')}
-                {isDemo && !showPicker && <span style={{ fontSize: 15 }}>🪶</span>}
-              </h2>
+              {!showPicker && schoolLabel && (
+                <h2 style={{ fontFamily: font, fontSize: 22, fontWeight: 600, color: accentDeep, letterSpacing: '-0.01em', margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
+                  {schoolLabel}
+                  {isDemo && <span style={{ fontSize: 15 }}>🪶</span>}
+                </h2>
+              )}
               {!showPicker && (
                 <p style={{ fontFamily: font, fontSize: 12, color: textMuted, textTransform: 'lowercase', margin: '5px 0 0' }}>
                   {entries.length} student{entries.length === 1 ? '' : 's'} · ranked by pulp

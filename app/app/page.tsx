@@ -1195,7 +1195,14 @@ export default function NoteApp() {
   const setHibernationScheduled = useGroveStore(s => s.setHibernationScheduled)
   const unlockedCosmetics = useGroveStore(s => s.unlockedCosmetics)
   const setUnlockedCosmetics = useGroveStore(s => s.setUnlockedCosmetics)
-  const [timerOpen, setTimerOpen] = useState(false)
+  const [timerOpen, setTimerOpen] = useState(() => {
+    if (typeof window === "undefined") return false
+    try {
+      const s = sessionStorage.getItem("pulp-timer") || localStorage.getItem("pulp-timer-backup")
+      if (s) { const t = JSON.parse(s); return !!(t.running || t.done) }
+    } catch {}
+    return false
+  })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
@@ -3407,6 +3414,7 @@ export default function NoteApp() {
                 onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                 onOpenTimer={() => { if (timerOpen && timerRunning) return; setTimerOpen(t => !t) }}
                 timerOpen={timerOpen}
+                timerRunning={timerRunning}
                 onSetNoteParent={setNoteParent}
                 onChangeNoteIcon={changeNoteIcon}
                 onGoToShelf={() => setCurrentView("shelf")}
@@ -3430,6 +3438,9 @@ export default function NoteApp() {
                 onSetCover={(noteId) => {
                   editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(0); setCurrentView("editor")
                   setTimeout(() => setShowCoverModal(true), 100)
+                }}
+                onSearchNavigate={(noteId, pageIdx) => {
+                  closeAllPanels(); editor.flushSync(); setActiveTabId(noteId); setCurrentPageIdx(pageIdx); setCurrentView("editor")
                 }}
               />
 
@@ -4272,28 +4283,39 @@ export default function NoteApp() {
             />
           </div></Suspense>}
 
-          {statsOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
-              <DashboardView
-                isOpen={statsOpen}
-                onClose={() => setStatsOpen(false)}
-                theme={theme}
-                xp={xp}
-                grove={grove}
-                inventory={inventory}
-                activeNotebookId={activeTabId ?? undefined}
-                activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
-                achievements={achievements}
-                notes={notes}
-                goalStreak={goalStreak}
-                sap={sap}
-                dailyGoalMinutes={dailyGoalMinutes}
-                hibernation={hibernation}
-                hibernationScheduled={hibernationScheduled}
-                quotaTier={quotaTier}
-              />
-            </div>
-          </Suspense>}
+          <AnimatePresence>
+            {statsOpen && (
+              <m.div
+                key="stats-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}
+              >
+                <Suspense fallback={null}>
+                  <DashboardView
+                    isOpen
+                    onClose={() => setStatsOpen(false)}
+                    theme={theme}
+                    xp={xp}
+                    grove={grove}
+                    inventory={inventory}
+                    activeNotebookId={activeTabId ?? undefined}
+                    activeNotebookName={notes.find(n => n.id === activeTabId)?.subject}
+                    achievements={achievements}
+                    notes={notes}
+                    goalStreak={goalStreak}
+                    sap={sap}
+                    dailyGoalMinutes={dailyGoalMinutes}
+                    hibernation={hibernation}
+                    hibernationScheduled={hibernationScheduled}
+                    quotaTier={quotaTier}
+                  />
+                </Suspense>
+              </m.div>
+            )}
+          </AnimatePresence>
 
           {leaderboardOpen && <Suspense fallback={null}>
             <LeaderboardView
@@ -4308,23 +4330,34 @@ export default function NoteApp() {
             />
           </Suspense>}
 
-          {shopOpen && <Suspense fallback={null}>
-            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}><BoutiqueView
-              isOpen={shopOpen}
-              onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
-              theme={theme}
-              accent={accent}
-              sap={isAdmin ? 999999 : sap}
-              inventory={inventory}
-              setSap={setSap}
-              setInventory={setInventory}
-              setGrove={setGrove}
-              onUpdateConfig={updateSettings}
-              initialTab={shopInitialTab}
-              initialScrollTo={shopScrollTo}
-              isAdmin={isAdmin}
-            /></div>
-          </Suspense>}
+          <AnimatePresence>
+            {shopOpen && (
+              <m.div
+                key="shop-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}
+              >
+                <Suspense fallback={null}><BoutiqueView
+                  isOpen
+                  onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
+                  theme={theme}
+                  accent={accent}
+                  sap={isAdmin ? 999999 : sap}
+                  inventory={inventory}
+                  setSap={setSap}
+                  setInventory={setInventory}
+                  setGrove={setGrove}
+                  onUpdateConfig={updateSettings}
+                  initialTab={shopInitialTab}
+                  initialScrollTo={shopScrollTo}
+                  isAdmin={isAdmin}
+                /></Suspense>
+              </m.div>
+            )}
+          </AnimatePresence>
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
@@ -4561,8 +4594,8 @@ export default function NoteApp() {
           hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen}
         />
 
-        {/* Persistent timer toggle — visible even when the sidebar is collapsed */}
-        {sidebarWidth <= 40 && notes.filter(n => !n.archived).length > 0 && (
+        {/* Persistent timer toggle — visible even when the sidebar is collapsed (hidden while running to lock it in) */}
+        {sidebarWidth <= 40 && !timerRunning && notes.filter(n => !n.archived).length > 0 && (
           <button
             onClick={() => { if (timerOpen && timerRunning) return; setTimerOpen(!timerOpen) }}
             title="Focus timer  (⌘⌥T)"

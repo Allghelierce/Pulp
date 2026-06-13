@@ -93,6 +93,7 @@ interface SidebarProps {
   onCloseAllPanels?: () => void
   onOpenTimer?: () => void
   timerOpen?: boolean
+  timerRunning?: boolean
   onUnlockDev: () => void
   onGoToShelf: () => void
   onOpenShop?: () => void
@@ -124,7 +125,7 @@ export const Sidebar = memo(function Sidebar({
   notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds,
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
-  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, onUnlockDev, onGoToShelf,
+  onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, timerRunning, onUnlockDev, onGoToShelf,
   onOpenShop, onOpenLeaderboard, onOpenStats, onGoHome,
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
@@ -692,48 +693,46 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-full top-0 ml-2 z-[9999] rounded-lg border border-white/10 shadow-2xl shadow-black/50 overflow-hidden" style={{ width: 300, maxHeight: 'min(400px, calc(100vh - 160px))', background: '#09090b', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate' }} onMouseDown={e => e.stopPropagation()}>
+              <div className="absolute left-full top-0 ml-2 z-[9999] rounded-lg border border-white/10 shadow-xl shadow-black/40 overflow-hidden" style={{ width: 240, maxHeight: 'min(360px, calc(100vh - 160px))', background: '#0a0a0b', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate' }} onMouseDown={e => e.stopPropagation()}>
                 {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
-                  <div className="px-4 py-6 text-center">
-                    <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>
+                  <div className="px-3 py-5 text-center">
+                    <p className="text-[12px] text-zinc-500" style={{ fontFamily: 'Crimson Pro, serif' }}>No results for &ldquo;{searchQuery}&rdquo;</p>
                   </div>
                 ) : (
-                  <div className="overflow-y-auto" style={{ maxHeight: 'min(400px, calc(100vh - 160px))' }}>
+                  <div className="overflow-y-auto py-1" style={{ maxHeight: 'min(360px, calc(100vh - 160px))' }}>
                     {searchResults.map((r, i) => (
                       <button
                         key={`${r.noteId}-${r.pageIdx}-${r.matchType}-${i}`}
-                        className="w-full text-left px-3.5 py-2.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
+                        className="w-full text-left px-3 py-1.5 hover:bg-white/[0.04] transition-colors flex flex-col gap-0.5"
                         onClick={() => {
                           onSearchNavigate?.(r.noteId, r.pageIdx)
                           setSearchQuery(""); setSearchFocused(false)
                         }}
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
-                          <span className="text-[11px] font-normal text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="w-1 h-1 rounded-full shrink-0" style={{ background: r.matchType === "title" ? "#d97706" : r.matchType === "box" ? "#8b5cf6" : "#52525b" }} />
+                          {r.noteIcon && <span className="text-[10px] shrink-0">{r.noteIcon}</span>}
+                          <span className="text-[12px] text-zinc-200 truncate" style={{ fontFamily: 'Crimson Pro, serif' }}>{r.noteName || "Untitled"}</span>
                           {r.matchType !== "title" && (
-                            <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
+                            <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p{r.pageIdx + 1}</span>
                           )}
                         </div>
                         {r.matchType !== "title" && (
-                          <p className="text-[10px] text-zinc-500 leading-relaxed truncate">{r.snippet}</p>
+                          <p className="text-[10px] text-zinc-500 leading-snug truncate pl-2.5">{r.snippet}</p>
                         )}
-                        <span className="text-[8px] uppercase tracking-widest font-normal mt-0.5" style={{ color: r.matchType === "title" ? "#f59e0b" : r.matchType === "box" ? "#8b5cf6" : "#71717a" }}>
-                          {r.matchType === "title" ? "Title" : r.matchType === "box" ? "Textbox" : "Page content"}
-                        </span>
                       </button>
                     ))}
                     {(aiResults.length > 0 || aiSearching) && (
                       <>
-                        {searchResults.length > 0 && <div className="border-t border-white/5" />}
-                        <div className="px-3.5 py-1.5 flex items-center gap-1.5">
+                        {searchResults.length > 0 && <div className="border-t border-white/5 my-1" />}
+                        <div className="px-3 py-1 flex items-center gap-1.5">
                           {aiSearching && (
-                            <svg width="12" height="12" viewBox="0 0 24 24" className="animate-spin text-orange-400 shrink-0">
+                            <svg width="10" height="10" viewBox="0 0 24 24" className="animate-spin shrink-0" style={{ color: '#d97706' }}>
                               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" />
                             </svg>
                           )}
-                          <span className="text-[9px] uppercase tracking-widest font-normal text-orange-400/70">
-                            {aiSearching ? "Searching with AI…" : "AI Results"}
+                          <span className="text-[8px] uppercase tracking-[0.15em] font-medium" style={{ color: 'rgba(217,119,6,0.7)' }}>
+                            {aiSearching ? "Searching…" : "AI"}
                           </span>
                         </div>
                         {aiResults
@@ -741,20 +740,20 @@ export const Sidebar = memo(function Sidebar({
                           .map((r, i) => (
                           <button
                             key={`ai-${r.noteId}-${r.pageIdx}-${i}`}
-                            className="w-full text-left px-3.5 py-2.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
+                            className="w-full text-left px-3 py-1.5 hover:bg-white/[0.04] transition-colors flex flex-col gap-0.5"
                             onClick={() => {
                               onSearchNavigate?.(r.noteId, r.pageIdx)
                               apiFetch("/api/search-click", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: searchQuery, noteId: r.noteId, pageIndex: r.pageIdx }) }).catch(() => {})
                               setSearchQuery(""); setSearchFocused(false)
                             }}
                           >
-                            <div className="flex items-center gap-2 min-w-0">
-                              {r.noteIcon && <span className="text-[11px] shrink-0">{r.noteIcon}</span>}
-                              <span className="text-[11px] font-normal text-zinc-200 truncate">{r.noteName || "Untitled"}</span>
-                              <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p.{r.pageIdx + 1}</span>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="w-1 h-1 rounded-full shrink-0" style={{ background: '#d97706' }} />
+                              {r.noteIcon && <span className="text-[10px] shrink-0">{r.noteIcon}</span>}
+                              <span className="text-[12px] text-zinc-200 truncate" style={{ fontFamily: 'Crimson Pro, serif' }}>{r.noteName || "Untitled"}</span>
+                              <span className="text-[9px] text-zinc-600 shrink-0 ml-auto tabular-nums">p{r.pageIdx + 1}</span>
                             </div>
-                            <p className="text-[10px] text-orange-400/60 leading-relaxed truncate">{r.reason}</p>
-                            <span className="text-[8px] uppercase tracking-widest font-normal mt-0.5 text-orange-400/50">Semantic match</span>
+                            <p className="text-[10px] leading-snug truncate pl-2.5" style={{ color: 'rgba(217,119,6,0.55)' }}>{r.reason}</p>
                           </button>
                         ))}
                       </>
@@ -999,8 +998,8 @@ export const Sidebar = memo(function Sidebar({
           </div>
         </div>
 
-        {/* Focus — dock button */}
-        {onOpenTimer && (
+        {/* Focus — dock button (hidden while a session runs to lock it in) */}
+        {onOpenTimer && !timerRunning && (
           <div className="shrink-0 z-10 relative px-3 pb-1 pt-5" style={{ opacity: sidebarWidth > 40 ? 1 : 0, visibility: sidebarWidth > 40 ? 'visible' : 'hidden', transition: "opacity 100ms ease" }}>
             <div className="absolute left-0 right-0 bottom-full h-10 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent, rgba(35,33,33,0.95))' }} />
             <button

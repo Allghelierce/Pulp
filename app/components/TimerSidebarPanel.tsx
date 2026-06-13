@@ -152,6 +152,45 @@ function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { p
   )
 }
 
+// Watering can whose water level drops as the next watering becomes due.
+function WateringCan({ frac, urgent, stroke }: { frac: number; urgent: boolean; stroke: string }) {
+  const f = Math.max(0, Math.min(1, frac))
+  // Body interior runs from y≈19 (under the rim) to y≈35 (bottom).
+  const topY = 19, botY = 35
+  const fillY = botY - f * (botY - topY)
+  const waterTop = urgent ? "#fca5a5" : "#7dd3fc"
+  const waterBot = urgent ? "#ef4444" : "#0ea5e9"
+  // Slightly tapered tub with rounded bottom corners.
+  const body = "M17 18 H31 Q32.4 18 32.2 19.4 L30.7 33 Q30.4 35.5 27.9 35.5 H20.1 Q17.6 35.5 17.3 33 L15.8 19.4 Q15.6 18 17 18 Z"
+  return (
+    <svg width="42" height="40" viewBox="0 0 44 42" fill="none">
+      <defs>
+        <linearGradient id="pulp-water-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={waterTop} />
+          <stop offset="1" stopColor={waterBot} />
+        </linearGradient>
+        <clipPath id="pulp-can-clip"><path d={body} /></clipPath>
+      </defs>
+      {/* water fill */}
+      <g clipPath="url(#pulp-can-clip)">
+        <rect x="14" width="20" y={fillY} height="42" fill="url(#pulp-water-grad)" style={{ transition: "y 600ms cubic-bezier(0.4,0,0.2,1)" }} />
+      </g>
+      {/* tub */}
+      <path d={body} stroke={stroke} strokeWidth="1.5" strokeLinejoin="round" />
+      {/* rim */}
+      <path d="M16.5 18 Q24 15.6 31.5 18" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+      {/* arched handle */}
+      <path d="M20 17 Q24 9 28 17" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+      {/* spout (tapered tube) */}
+      <path d="M16.5 22.5 L7 13.5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M14.5 26 L5 17" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+      {/* sprinkler rose */}
+      <path d="M5 17 L7 13.5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M4 18.5 L8.5 12.5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
@@ -261,6 +300,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const waterSec = waterSecLeft % 60
   const waterUrgent = waterMsLeft > 0 && waterMsLeft < 60_000
   const showWaterWidget = running && waterDeadline !== null
+  const waterWindowMs = Math.floor(total / 3) * 1000 + 90_000
+  const waterFrac = waterWindowMs > 0 ? Math.max(0, Math.min(1, waterMsLeft / waterWindowMs)) : 0
+  const waterColor = "#0ea5e9"
+  // Sap accrued so far this session — ramps toward the projected payout as time passes.
+  const liveSap = total > 0 ? Math.round(effectiveSap * Math.min(1, elapsed / total)) : 0
 
   const sliderMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -326,8 +370,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             style={{
               height: 24,
               padding: "0 6px",
-              backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(217,119,6,0.08)",
-              color: waterUrgent ? "#fca5a5" : "#d4a574",
+              backgroundColor: waterUrgent ? "rgba(239,68,68,0.15)" : "rgba(14,165,233,0.1)",
+              color: waterUrgent ? "#fca5a5" : waterColor,
               animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
             }}
           >
@@ -377,15 +421,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             // When running, the panel settles into the page — squish only slightly.
             minHeight: running ? 540 : 560,
             maxHeight: "calc(100vh - 24px)",
-            backgroundColor: bgColor,
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            border: `1px solid ${borderColor}`,
+            // Floating card before start; once running it dissolves into the page (no chrome).
+            backgroundColor: running ? "transparent" : bgColor,
+            backdropFilter: running ? "none" : "blur(24px)",
+            WebkitBackdropFilter: running ? "none" : "blur(24px)",
+            border: running ? "1px solid transparent" : `1px solid ${borderColor}`,
             borderRadius: 24,
-            // Floating before start; recessed/built-in while running.
-            boxShadow: running
-              ? `inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 4px rgba(0,0,0,0.16)`
-              : `0 25px 50px -12px rgba(0,0,0,0.45)`,
+            boxShadow: running ? "none" : `0 25px 50px -12px rgba(0,0,0,0.45)`,
             fontFamily: serifFont,
             userSelect: 'none',
           }}
@@ -395,31 +437,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             className="flex items-center justify-between px-3 py-1.5 shrink-0"
             style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
           >
-            <div className="flex items-center gap-2">
-              {showWaterWidget && (
-                <div
-                  className="flex items-center gap-1.5"
-                  title={waterUrgent ? "Water the tree soon!" : "Time until next watering"}
-                >
-                  <div className="relative w-3.5 h-3.5">
-                    <svg viewBox="0 0 24 24" className="w-full h-full -rotate-90">
-                      <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                      <circle
-                        cx="12" cy="12" r="10" fill="none"
-                        stroke={waterUrgent ? "#ef4444" : "#d4a574"}
-                        strokeWidth="3" strokeLinecap="round"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        strokeDashoffset={1 - Math.min(1, waterMsLeft / (Math.floor(total / 3) * 1000 + 90_000))}
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-[9px] font-normal tabular-nums tracking-[0.05em]" style={{ color: waterUrgent ? "#ef4444" : "#d4a574" }}>
-                    {String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}
-                  </span>
-                </div>
-              )}
-            </div>
+            <div />
             <div className="flex items-center gap-0.5">
               {!(running && !done) && (
                 <button
@@ -559,7 +577,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   style={{
                     fontFamily: serifFont,
                     fontWeight: 400,
-                    fontSize: 44,
+                    fontSize: 54,
                     lineHeight: 1,
                     ...(running && !done ? {
                       backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 30%, #e8a33a 45%, #f0c060 50%, #e8a33a 55%, #d97706 70%, #d97706 100%)',
@@ -588,6 +606,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 {!running && !done && !treeDead && (
                   <div className="mt-3 flex justify-center">
                     <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} sapDisplay={effectiveSap} />
+                  </div>
+                )}
+                {running && !done && !treeDead && (
+                  <div className="mt-3 flex items-center justify-center gap-1.5">
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
+                    <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
+                    <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
                   </div>
                 )}
               </div>
@@ -665,27 +690,22 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             {/* Bottom controls — pushed down */}
             <div className="flex flex-col items-center mt-auto">
-              {/* Watering can */}
+              {/* Watering can — chromeless, blends into the running panel */}
               {showWaterWidget && !treeDead && (
                 <button
                   onClick={onWater}
-                  title="Water the tree"
-                  className="mb-3 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+                  title={waterUrgent ? "Water the tree soon!" : "Water the tree"}
+                  className="mb-3 flex flex-col items-center gap-0.5 transition-transform hover:scale-[1.06] active:scale-[0.96]"
                   style={{
-                    backgroundColor: waterUrgent ? "rgba(239,68,68,0.12)" : "rgba(217,119,6,0.08)",
-                    border: `1px solid ${waterUrgent ? "rgba(239,68,68,0.35)" : "rgba(217,119,6,0.2)"}`,
-                    color: waterUrgent ? "#fca5a5" : "#d4a574",
+                    background: "none",
+                    border: "none",
+                    color: waterUrgent ? "#ef4444" : waterColor,
                     fontFamily: serifFont,
                     animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 11v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-6" />
-                    <path d="M3 11h12" />
-                    <path d="M15 13l5-3v8l-5-3" />
-                    <path d="M7 8c0-2 2-3 2-3" />
-                  </svg>
-                  <span className="text-[11px] font-normal">Water</span>
+                  <WateringCan frac={waterFrac} urgent={waterUrgent} stroke={isDark ? "#cbd5e1" : "#64748b"} />
+                  <span className="text-[10px] tabular-nums tracking-[0.04em]" style={{ opacity: 0.85 }}>{String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}</span>
                 </button>
               )}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }

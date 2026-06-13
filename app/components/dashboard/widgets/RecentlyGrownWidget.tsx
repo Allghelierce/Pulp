@@ -27,8 +27,11 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
   }
 
   const itemW = 70
-  const halfW = styled.length * itemW
-  const doubled = [...styled, ...styled]
+  const setW = styled.length * itemW
+  // Tile enough copies to overflow even a wide widget, so the loop never shows a gap.
+  const reps = Math.max(3, Math.ceil(900 / Math.max(1, setW)) + 1)
+  const tiled = Array.from({ length: reps }).flatMap(() => styled)
+  const duration = Math.max(8, setW / 20) // constant ~20px/s regardless of tree count
 
   return (
     <div style={{ position: 'relative', height: '100%', overflow: 'hidden', borderRadius: 20 }}>
@@ -56,11 +59,12 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
         WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
       }}>
         <div style={{
-          display: 'flex', alignItems: 'flex-end', width: halfW * 2,
-          animation: 'conveyorScroll 35s linear infinite',
+          display: 'flex', alignItems: 'flex-end', width: setW * reps,
+          ['--setw' as string]: `${setW}px`,
+          animation: `conveyorScroll ${duration}s linear infinite`,
           willChange: 'transform',
         }}>
-          {doubled.map(({ tree, yOff, tilt, size }, i) => (
+          {tiled.map(({ tree, yOff, tilt, size }, i) => (
             <div key={`t-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               width: itemW, flexShrink: 0, marginBottom: yOff,
@@ -76,7 +80,7 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
           ))}
         </div>
       </div>
-      <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
+      <style>{`@keyframes conveyorScroll { from { transform: translateX(0) } to { transform: translateX(calc(-1 * var(--setw))) } }`}</style>
     </div>
   )
 })
