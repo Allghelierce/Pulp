@@ -18,6 +18,23 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     if (sel && sel.rangeCount > 0) savedRange.current = sel.getRangeAt(0).cloneRange()
   }, [])
 
+  // Continuously track the last selection made inside any contenteditable so it
+  // survives focus moving elsewhere (e.g. into the AI hub input). This lets the
+  // AI apply edits back to the exact text the user had highlighted.
+  useEffect(() => {
+    const onSelChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0) return
+      const node = sel.getRangeAt(0).commonAncestorContainer
+      const el = (node.nodeType === 1 ? node : node.parentNode) as HTMLElement | null
+      if (el?.closest?.('[contenteditable="true"]')) {
+        savedRange.current = sel.getRangeAt(0).cloneRange()
+      }
+    }
+    document.addEventListener("selectionchange", onSelChange)
+    return () => document.removeEventListener("selectionchange", onSelChange)
+  }, [])
+
   const restoreSelection = useCallback(() => {
     const sel = window.getSelection()
     if (sel && savedRange.current) {

@@ -75,6 +75,61 @@ function buildDemoEntries(userPulp: number, userName: string, avatarColor: strin
   return [...bots, you].sort((a, b) => b.pulpDelta - a.pulpDelta)
 }
 
+// Hand-drawn amber doodles behind the board — trophy, laurels, stars, pennants — matching the notebook aesthetic.
+function BoardDoodles({ isDark }: { isDark: boolean }) {
+  const stroke = '#d97706'
+  const op = isDark ? 0.085 : 0.07
+  return (
+    <svg
+      viewBox="0 0 520 700" preserveAspectRatio="xMidYMid slice"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: op, color: stroke }}
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+    >
+      {/* pennant garland near the top */}
+      <path d="M30 60 Q160 96 260 70 Q380 40 500 78" strokeDasharray="2 5" />
+      {[
+        [70, 66], [120, 82], [180, 78], [240, 70], [320, 56], [400, 56], [460, 70],
+      ].map(([x, y], i) => (
+        <path key={i} d={`M${x} ${y} l14 4 l-9 14 z`} />
+      ))}
+
+      {/* big trophy, lower-left */}
+      <g transform="translate(40 470) scale(1.1)">
+        <path d="M16 6h40v14a20 20 0 0 1-40 0z" />
+        <path d="M16 10h-10a10 10 0 0 0 12 14" />
+        <path d="M56 10h10a10 10 0 0 1-12 14" />
+        <path d="M30 40v8h12v-8" />
+        <path d="M24 48h24" />
+        <path d="M26 56h20" />
+        <path d="M36 26l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5-3.7-3.4 5-.6z" />
+      </g>
+
+      {/* laurel wreath, right side */}
+      <g transform="translate(420 430)">
+        <path d="M0 70 Q-34 36 -26 -10" />
+        {[0, 1, 2, 3, 4, 5].map(i => (
+          <path key={i} d={`M${-26 + i * 5} ${-6 + i * 13} q -16 -6 -22 6 q 14 5 22 -6`} />
+        ))}
+        <path d="M0 70 Q34 36 26 -10" />
+        {[0, 1, 2, 3, 4, 5].map(i => (
+          <path key={`r${i}`} d={`M${26 - i * 5} ${-6 + i * 13} q 16 -6 22 6 q -14 5 -22 -6`} />
+        ))}
+      </g>
+
+      {/* scattered sparkles */}
+      {[[460, 180, 9], [70, 250, 7], [250, 600, 8], [150, 520, 6], [410, 620, 7], [300, 150, 6]].map(([x, y, r], i) => (
+        <g key={i} transform={`translate(${x} ${y})`}>
+          <path d={`M0 ${-r} L0 ${r} M${-r} 0 L${r} 0`} />
+        </g>
+      ))}
+
+      {/* underline flourish */}
+      <path d="M150 120 Q260 138 370 120" strokeDasharray="1 6" />
+    </svg>
+  )
+}
+
 export const LeaderboardView = memo(function LeaderboardView({
   isOpen, onClose, theme, sap, embedded,
   userName = 'You', avatarColor = '#d97706', level = 1, treesGrown = 0,
@@ -90,20 +145,26 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null)
   const [schoolQuery, setSchoolQuery] = useState('')
   const [savingSchool, setSavingSchool] = useState(false)
+  const [changingSchool, setChangingSchool] = useState(false)
 
   const accent = '#d97706'
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
-  const textSecondary = isDark ? '#8a8680' : '#7a7670'
-  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
-  const bgColor = isDark ? '#09090b' : '#f5f3ef'
-  const hoverBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'
-  const inputBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
+  const accentDeep = isDark ? '#e0922f' : '#b45309'
+  const paper = isDark ? '#141210' : '#f5f3ef'
+  const textPrimary = isDark ? '#e8e2d6' : '#2a2620'
+  const textSecondary = isDark ? '#9a948a' : '#6b6258'
+  const textMuted = isDark ? '#6b645a' : '#a89f92'
+  const cardBorder = isDark ? 'rgba(217,160,90,0.12)' : 'rgba(120,90,40,0.14)'
+  const hoverBg = isDark ? 'rgba(217,119,6,0.06)' : 'rgba(120,90,40,0.05)'
+  const inputBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(120,90,40,0.04)'
+  const youBg = isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.07)'
+  const ruled = isDark ? 'rgba(217,119,6,0.045)' : 'rgba(180,120,40,0.06)'
 
   const applyData = useCallback((data: { school: string; members: LiveMember[]; user_rank: number | null }) => {
     setSchool(data.school)
     setNeedsSchool(false)
+    setChangingSchool(false)
     setIsDemo(false)
+    const youId = data.user_rank != null ? data.members[data.user_rank - 1]?.user_id : null
     setMembers(data.members.map(m => ({
       id: m.user_id,
       name: m.display_name,
@@ -112,7 +173,7 @@ export const LeaderboardView = memo(function LeaderboardView({
       treesGrown: m.trees_grown,
       pulpDelta: m.pulp_delta,
       totalPulp: m.pulp_current,
-      isYou: data.user_rank != null && m.user_id === data.members[data.user_rank - 1]?.user_id,
+      isYou: youId != null && m.user_id === youId,
     })))
     setUserRank(data.user_rank)
   }, [])
@@ -131,7 +192,6 @@ export const LeaderboardView = memo(function LeaderboardView({
           ...(chosenSchool ? { school: chosenSchool } : {}),
         }),
       })
-      if (res.status === 401) { setIsDemo(true); return }
       if (!res.ok) { setIsDemo(true); return }
       const data = await res.json()
       if (data.needs_school) { setNeedsSchool(true); return }
@@ -145,12 +205,13 @@ export const LeaderboardView = memo(function LeaderboardView({
   }, [sap, userName, avatarColor, level, treesGrown, applyData])
 
   useEffect(() => {
-    if (!isOpen) { setSelectedPlayer(null); return }
+    if (!isOpen) { setSelectedPlayer(null); setChangingSchool(false); return }
     setLoading(true)
     sync()
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (selectedPlayer !== null) setSelectedPlayer(null)
+        else if (changingSchool) setChangingSchool(false)
         else onClose()
       }
     }
@@ -168,7 +229,8 @@ export const LeaderboardView = memo(function LeaderboardView({
   const resolvedRank = isDemo
     ? (() => { const i = demoEntries.findIndex(e => e.isYou); return i >= 0 ? i + 1 : null })()
     : userRank
-  const schoolLabel = isDemo ? 'Demo University' : (school || '')
+  const schoolLabel = isDemo ? 'Inkwell University' : (school || '')
+  const showPicker = needsSchool || changingSchool
 
   const chooseSchool = useCallback((name: string) => {
     setSavingSchool(true)
@@ -183,10 +245,27 @@ export const LeaderboardView = memo(function LeaderboardView({
     : SCHOOLS
   const exactMatch = SCHOOLS.some(s => s.toLowerCase() === schoolQuery.trim().toLowerCase())
 
+  // Sketchy laurel that hugs the champion avatar.
+  const ChampionLaurel = ({ color }: { color: string }) => (
+    <svg width="84" height="64" viewBox="0 0 84 64" className="absolute -top-1 left-1/2 -translate-x-1/2 pointer-events-none" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M28 56 Q8 40 12 16" />
+      {[0, 1, 2, 3].map(i => <path key={i} d={`M${12 + i * 3} ${18 + i * 9} q -10 -3 -14 4 q 9 3 14 -4`} />)}
+      <path d="M56 56 Q76 40 72 16" />
+      {[0, 1, 2, 3].map(i => <path key={`r${i}`} d={`M${72 - i * 3} ${18 + i * 9} q 10 -3 14 4 q -9 3 -14 -4`} />)}
+    </svg>
+  )
+
   const renderSchoolPicker = () => (
-    <div className="flex-1 flex flex-col px-6 pt-4 pb-4 overflow-hidden">
-      <p style={{ fontFamily: font, fontSize: 16, color: textPrimary, margin: 0 }}>Pick your school</p>
-      <p style={{ fontFamily: font, fontSize: 12, color: textMuted, margin: '4px 0 12px' }}>
+    <div className="flex-1 flex flex-col px-6 pt-5 pb-4 overflow-hidden relative z-10">
+      <div className="flex items-center gap-2.5 mb-1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
+        </svg>
+        <p style={{ fontFamily: font, fontSize: 18, color: textPrimary, margin: 0 }}>
+          {changingSchool ? 'Switch school' : 'Join your school'}
+        </p>
+      </div>
+      <p style={{ fontFamily: font, fontSize: 12.5, color: textMuted, margin: '0 0 14px 32px' }}>
         Compete with classmates on pulp earned each week.
       </p>
       <input
@@ -195,9 +274,9 @@ export const LeaderboardView = memo(function LeaderboardView({
         onChange={e => setSchoolQuery(e.target.value)}
         placeholder="Search schools…"
         style={{
-          fontFamily: font, fontSize: 13, color: textPrimary,
+          fontFamily: font, fontSize: 13.5, color: textPrimary,
           background: inputBg, border: `1px solid ${cardBorder}`,
-          borderRadius: 10, padding: '9px 12px', outline: 'none', marginBottom: 10,
+          borderRadius: 12, padding: '10px 13px', outline: 'none', marginBottom: 10,
         }}
       />
       <div className="flex-1 overflow-y-auto -mx-1 px-1">
@@ -205,10 +284,10 @@ export const LeaderboardView = memo(function LeaderboardView({
           <button
             disabled={savingSchool}
             onClick={() => chooseSchool(schoolQuery.trim())}
-            className="w-full text-left rounded-lg mb-1 transition-colors"
-            style={{ fontFamily: font, fontSize: 13, color: accent, padding: '10px 12px', background: isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.05)' }}
+            className="w-full text-left rounded-xl mb-1.5 transition-colors flex items-center gap-2"
+            style={{ fontFamily: font, fontSize: 13.5, color: accent, padding: '11px 13px', background: youBg, border: `1px dashed ${accent}55` }}
           >
-            Use “{schoolQuery.trim()}”
+            <span style={{ fontSize: 15 }}>+</span> Add “{schoolQuery.trim()}”
           </button>
         )}
         {filteredSchools.map(s => (
@@ -216,18 +295,24 @@ export const LeaderboardView = memo(function LeaderboardView({
             key={s}
             disabled={savingSchool}
             onClick={() => chooseSchool(s)}
-            className="w-full text-left rounded-lg mb-0.5 transition-colors"
-            style={{ fontFamily: font, fontSize: 13, color: textPrimary, padding: '10px 12px', background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.background = hoverBg }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+            className="w-full text-left rounded-xl mb-0.5 transition-colors"
+            style={{ fontFamily: font, fontSize: 13.5, color: textPrimary, padding: '11px 13px', background: school === s ? youBg : 'transparent' }}
+            onMouseEnter={e => { if (school !== s) e.currentTarget.style.background = hoverBg }}
+            onMouseLeave={e => { if (school !== s) e.currentTarget.style.background = 'transparent' }}
           >
-            {s}
+            {s}{school === s ? '  ·  current' : ''}
           </button>
         ))}
-        {filteredSchools.length === 0 && !schoolQuery.trim() && (
-          <p style={{ fontFamily: font, fontSize: 12, color: textMuted, padding: '10px 12px' }}>No schools.</p>
-        )}
       </div>
+      {changingSchool && (
+        <button
+          onClick={() => setChangingSchool(false)}
+          className="mt-2 text-[12px] self-start transition-colors"
+          style={{ fontFamily: font, color: textMuted, background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          ← back to standings
+        </button>
+      )}
     </div>
   )
 
@@ -235,15 +320,18 @@ export const LeaderboardView = memo(function LeaderboardView({
     const top3 = entries.slice(0, 3)
     const rest = entries.slice(3)
     const podiumOrder = [top3[1], top3[0], top3[2]]
-    const podiumHeights = [100, 130, 80]
+    const podiumHeights = [104, 134, 84]
     const podiumLabels = ['2nd', '1st', '3rd']
     const podiumMedals = [MEDAL_COLORS[1], MEDAL_COLORS[0], MEDAL_COLORS[2]]
 
     if (entries.length === 0) {
       return (
-        <div className="flex-1 flex items-center justify-center flex-col gap-2 px-8 text-center">
-          <div style={{ fontFamily: font, fontSize: 13, color: textSecondary }}>No one here yet</div>
-          <div style={{ fontFamily: font, fontSize: 11, color: textMuted }}>
+        <div className="flex-1 flex items-center justify-center flex-col gap-2 px-8 text-center relative z-10">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
+          </svg>
+          <div style={{ fontFamily: font, fontSize: 14, color: textSecondary }}>No one here yet</div>
+          <div style={{ fontFamily: font, fontSize: 12, color: textMuted }}>
             Be the first at {schoolLabel} — focus to earn pulp.
           </div>
         </div>
@@ -252,16 +340,9 @@ export const LeaderboardView = memo(function LeaderboardView({
 
     return (
       <>
-        {/* Subtitle */}
-        <div className="px-6 pt-3 pb-1 shrink-0">
-          <span style={{ fontFamily: font, fontSize: 10, color: textMuted, textTransform: 'lowercase', letterSpacing: '0.04em' }}>
-            ranked by pulp gained this week
-          </span>
-        </div>
-
         {/* Podium */}
-        <div className="px-6 pt-3 pb-2 shrink-0">
-          <div className="flex items-end justify-center gap-3" style={{ height: 200 }}>
+        <div className="px-6 pt-5 pb-2 shrink-0 relative z-10">
+          <div className="flex items-end justify-center gap-3" style={{ height: 210 }}>
             {podiumOrder.map((p, i) => {
               if (!p) return <div key={i} style={{ width: 100 }} />
               const height = podiumHeights[i]
@@ -270,51 +351,45 @@ export const LeaderboardView = memo(function LeaderboardView({
                 <div
                   key={p.id}
                   className="flex flex-col items-center cursor-pointer group"
-                  style={{ width: isFirst ? 120 : 100 }}
+                  style={{ width: isFirst ? 124 : 100 }}
                   onClick={() => setSelectedPlayer(entries.indexOf(p))}
                 >
-                  <div className="relative mb-2 group-hover:scale-110 transition-transform">
+                  <div className="relative mb-2 group-hover:scale-110 transition-transform" style={{ paddingTop: isFirst ? 18 : 0 }}>
+                    {isFirst && <ChampionLaurel color={MEDAL_COLORS[0]} />}
                     <div
                       className="rounded-full flex items-center justify-center font-normal shrink-0"
                       style={{
-                        width: isFirst ? 48 : 40, height: isFirst ? 48 : 40,
+                        width: isFirst ? 50 : 40, height: isFirst ? 50 : 40,
                         background: p.avatarColor, color: '#fff',
-                        fontSize: isFirst ? 18 : 15,
+                        fontSize: isFirst ? 19 : 15,
                         border: `2.5px solid ${podiumMedals[i]}`,
-                        boxShadow: isFirst ? `0 0 20px ${podiumMedals[i]}40` : 'none',
+                        boxShadow: isFirst ? `0 0 22px ${podiumMedals[i]}45` : 'none',
                         fontFamily: font,
                       }}
                     >
                       {p.name[0]?.toUpperCase()}
                     </div>
-                    {isFirst && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill={MEDAL_COLORS[0]} stroke="none">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-1.5 max-w-full">
                     <span className="font-normal tabular-nums shrink-0" style={{ color: podiumMedals[i], fontSize: isFirst ? 16 : 14, fontFamily: font }}>
                       {['#2', '#1', '#3'][i]}
                     </span>
-                    <p className="font-normal truncate" style={{ color: p.isYou ? accent : textPrimary, fontFamily: font, fontSize: isFirst ? 14 : 12 }}>
+                    <p className="font-normal truncate" style={{ color: p.isYou ? accent : textPrimary, fontFamily: font, fontSize: isFirst ? 14.5 : 12.5 }}>
                       {p.name}{p.isYou ? ' (You)' : ''}
                     </p>
                   </div>
-                  <p className="text-[10px] font-normal tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>
+                  <p className="text-[10.5px] font-normal tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>
                     +{formatPulp(p.pulpDelta)} pulp
                   </p>
 
                   <div
-                    className="w-full mt-2 rounded-t-lg flex items-start justify-center pt-2 gap-1.5"
+                    className="w-full mt-2 rounded-t-xl flex items-start justify-center pt-2 gap-1.5"
                     style={{
                       height,
                       background: isDark
-                        ? `linear-gradient(180deg, ${podiumMedals[i]}18 0%, ${podiumMedals[i]}08 100%)`
-                        : `linear-gradient(180deg, ${podiumMedals[i]}14 0%, ${podiumMedals[i]}06 100%)`,
-                      border: `1px solid ${podiumMedals[i]}20`,
+                        ? `linear-gradient(180deg, ${podiumMedals[i]}24 0%, ${podiumMedals[i]}0a 100%)`
+                        : `linear-gradient(180deg, ${podiumMedals[i]}1c 0%, ${podiumMedals[i]}08 100%)`,
+                      border: `1.5px solid ${podiumMedals[i]}40`,
                       borderBottom: 'none',
                     }}
                   >
@@ -334,36 +409,36 @@ export const LeaderboardView = memo(function LeaderboardView({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-4 pb-2">
+        <div className="flex-1 overflow-y-auto px-4 pb-2 relative z-10">
           {rest.map((p, i) => {
             const rank = i + 4
             const isUser = p.isYou
             return (
               <div
                 key={p.id}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors cursor-pointer"
-                style={{ background: isUser ? (isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.04)') : 'transparent' }}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl mb-1 transition-colors cursor-pointer"
+                style={{ background: isUser ? youBg : 'transparent', border: `1px solid ${isUser ? cardBorder : 'transparent'}` }}
                 onMouseEnter={e => { if (!isUser) e.currentTarget.style.background = hoverBg }}
                 onMouseLeave={e => { if (!isUser) e.currentTarget.style.background = 'transparent' }}
                 onClick={() => setSelectedPlayer(entries.indexOf(p))}
               >
-                <span className="text-[12px] font-normal w-6 text-center tabular-nums" style={{ color: isUser ? accent : textMuted, fontFamily: font }}>
+                <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: isUser ? accent : textMuted, fontFamily: font }}>
                   {rank}
                 </span>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0" style={{ background: p.avatarColor, color: '#fff', fontFamily: font }}>
                   {p.name[0]?.toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-normal truncate" style={{ color: isUser ? accent : textPrimary, fontFamily: font }}>
+                  <div className="text-[12.5px] font-normal truncate" style={{ color: isUser ? accent : textPrimary, fontFamily: font }}>
                     {p.name}{isUser ? ' (You)' : ''}
                   </div>
-                  <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>
+                  <div className="text-[9.5px]" style={{ color: textMuted, fontFamily: font }}>
                     Lv.{p.level} · {formatPulp(p.totalPulp)} total
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isUser ? accent : textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                  <span className="text-[12px] font-normal tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
+                  <span className="text-[12.5px] font-normal tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
                     +{formatPulp(p.pulpDelta)}
                   </span>
                 </div>
@@ -374,21 +449,21 @@ export const LeaderboardView = memo(function LeaderboardView({
 
         {/* You — sticky bottom */}
         {resolvedRank && (
-          <div className="px-4 py-3 shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: isDark ? 'rgba(234,88,12,0.06)' : 'rgba(234,88,12,0.05)', border: `1px solid ${isDark ? 'rgba(234,88,12,0.1)' : 'rgba(234,88,12,0.12)'}` }}>
-              <span className="text-[12px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>#{resolvedRank}</span>
+          <div className="px-4 py-3 shrink-0 relative z-10" style={{ borderTop: `1px solid ${cardBorder}` }}>
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: youBg, border: `1px solid ${isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.14)'}` }}>
+              <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>#{resolvedRank}</span>
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0" style={{ background: avatarColor, color: '#fff', fontFamily: font }}>
                 {userName[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-normal" style={{ color: accent, fontFamily: font }}>{userName} (You)</div>
-                <div className="text-[9px]" style={{ color: textMuted, fontFamily: font }}>
+                <div className="text-[12.5px] font-normal" style={{ color: accent, fontFamily: font }}>{userName} (You)</div>
+                <div className="text-[9.5px]" style={{ color: textMuted, fontFamily: font }}>
                   {resolvedRank === 1 ? 'Top of your school!' : resolvedRank <= 3 ? 'On the podium' : 'Keep focusing to climb'}
                 </div>
               </div>
               <div className="flex items-center gap-1">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                <span className="text-[12px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
+                <span className="text-[12.5px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
                   +{formatPulp(entries.find(e => e.isYou)?.pulpDelta ?? 0)}
                 </span>
               </div>
@@ -425,7 +500,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           transition={{ type: "spring", damping: 25, stiffness: 350 }}
           onMouseDown={e => e.stopPropagation()}
           className="relative overflow-hidden"
-          style={{ width: 320, borderRadius: 16, background: bgColor, boxShadow: isDark ? '0 30px 80px -15px rgba(0,0,0,0.8)' : '0 30px 80px -15px rgba(0,0,0,0.2)', border: `1px solid ${cardBorder}` }}
+          style={{ width: 320, borderRadius: 20, background: paper, boxShadow: isDark ? '0 30px 80px -15px rgba(0,0,0,0.8)' : '0 30px 80px -15px rgba(80,50,10,0.18)', border: `1px solid ${cardBorder}` }}
         >
           <div className="relative h-20 flex items-end justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${medalColor}30 0%, ${medalColor}10 100%)`, borderBottom: `1px solid ${cardBorder}` }}>
             {rank <= 3 && (
@@ -441,11 +516,11 @@ export const LeaderboardView = memo(function LeaderboardView({
               </div>
             )}
             <div className="absolute top-3 right-3 px-2 py-0.5 rounded-lg text-[10px] font-normal" style={{ background: `${medalColor}20`, color: medalColor, fontFamily: font }}>#{rank}</div>
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-normal truncate max-w-[180px]" style={{ background: `${accent}18`, color: accent, fontFamily: font }}>{schoolLabel}</div>
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-lg text-[10px] font-normal truncate max-w-[180px]" style={{ background: `${accent}18`, color: accentDeep, fontFamily: font }}>{schoolLabel}</div>
           </div>
 
           <div className="flex flex-col items-center -mt-8 relative z-10">
-            <div className="rounded-full flex items-center justify-center font-normal" style={{ width: 56, height: 56, background: entry.avatarColor, color: '#fff', fontSize: 22, border: `3px solid ${bgColor}`, boxShadow: `0 0 0 2px ${medalColor}, 0 8px 24px rgba(0,0,0,0.2)`, fontFamily: font }}>
+            <div className="rounded-full flex items-center justify-center font-normal" style={{ width: 56, height: 56, background: entry.avatarColor, color: '#fff', fontSize: 22, border: `3px solid ${paper}`, boxShadow: `0 0 0 2px ${medalColor}, 0 8px 24px rgba(0,0,0,0.2)`, fontFamily: font }}>
               {entry.name[0]?.toUpperCase()}
             </div>
             <p className="text-[14px] font-normal mt-2" style={{ color: textPrimary, fontFamily: font }}>{entry.name}{entry.isYou ? ' (You)' : ''}</p>
@@ -455,7 +530,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           <div className="px-5 py-4">
             <div className="grid grid-cols-3 gap-2">
               {statItems.map(s => (
-                <div key={s.label} className="flex flex-col items-center gap-1.5 py-3 rounded-lg" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${cardBorder}` }}>
+                <div key={s.label} className="flex flex-col items-center gap-1.5 py-3 rounded-xl" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(120,90,40,0.04)', border: `1px solid ${cardBorder}` }}>
                   {s.icon}
                   <span className="text-[14px] font-normal tabular-nums" style={{ color: textPrimary, fontFamily: font }}>{s.value}</span>
                   <span className="text-[8px] font-normal uppercase tracking-widest" style={{ color: textMuted, fontFamily: font }}>{s.label}</span>
@@ -467,10 +542,10 @@ export const LeaderboardView = memo(function LeaderboardView({
           <div className="px-5 pb-4">
             <button
               onClick={() => setSelectedPlayer(null)}
-              className="w-full py-2 rounded-lg text-[11px] font-normal transition-all"
-              style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', color: textSecondary, fontFamily: font }}
-              onMouseEnter={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
+              className="w-full py-2 rounded-xl text-[11px] font-normal transition-all"
+              style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(120,90,40,0.06)', color: textSecondary, fontFamily: font }}
+              onMouseEnter={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(120,90,40,0.1)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(120,90,40,0.06)' }}
             >
               Close
             </button>
@@ -485,40 +560,81 @@ export const LeaderboardView = memo(function LeaderboardView({
       <div
         onMouseDown={e => e.stopPropagation()}
         onClick={e => e.stopPropagation()}
-        className={`relative w-full ${embedded ? '' : 'max-w-[520px]'} rounded-2xl overflow-hidden flex flex-col ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} ${embedded ? '' : 'border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]'}`}
-        style={{ background: embedded ? 'transparent' : bgColor, height: embedded ? '100%' : 700 }}
+        className={`relative w-full ${embedded ? '' : 'max-w-[520px]'} rounded-[20px] overflow-hidden flex flex-col ${embedded ? '' : 'border shadow-[0_32px_80px_-12px_rgba(60,40,10,0.45)]'}`}
+        style={{ background: paper, height: embedded ? '100%' : 700, borderColor: embedded ? undefined : cardBorder }}
       >
-        {/* Header */}
-        <div className="px-6 pt-5 pb-4 shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-          <div className="flex items-center justify-between">
+        {/* Hand-drawn background: ruled paper + amber doodles */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `repeating-linear-gradient(transparent, transparent 31px, ${ruled} 31px, ${ruled} 32px)` }} />
+        <BoardDoodles isDark={isDark} />
+
+        {/* Header — pennant banner */}
+        <div className="px-6 pt-5 pb-4 shrink-0 relative z-10" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 style={{ fontFamily: font, fontSize: 20, fontWeight: 500, color: accent, letterSpacing: '-0.01em', margin: 0, lineHeight: 1.2 }} className="truncate">
-                {needsSchool ? 'Leaderboard' : (schoolLabel || 'Leaderboard')}
-              </h2>
-              <p style={{ fontFamily: font, fontSize: 12, color: textMuted, margin: '4px 0 0', textTransform: 'lowercase' }}>
-                {needsSchool
-                  ? 'join your school to compete'
-                  : `${daysLeftInWeek()}d left · ${entries.length} student${entries.length === 1 ? '' : 's'}`}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {isDemo && (
-                <span style={{ fontFamily: font, fontSize: 9, color: isDark ? '#fbbf24' : '#b45309', background: isDark ? 'rgba(251,191,36,0.1)' : 'rgba(180,83,9,0.08)', border: `1px solid ${isDark ? 'rgba(251,191,36,0.2)' : 'rgba(180,83,9,0.15)'}`, padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  Demo
+              <div className="flex items-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={accent} stroke="none"><path d="M4 2v20l8-5 8 5V2z" /></svg>
+                <span style={{ fontFamily: font, fontSize: 11, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.16em' }}>
+                  {isDemo ? 'sample league' : 'weekly standings'}
                 </span>
+              </div>
+              <h2 style={{ fontFamily: font, fontSize: 22, fontWeight: 600, color: accentDeep, letterSpacing: '-0.01em', margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
+                {showPicker ? 'Leaderboard' : (schoolLabel || 'Leaderboard')}
+                {isDemo && !showPicker && <span style={{ fontSize: 15 }}>🪶</span>}
+              </h2>
+              {!showPicker && (
+                <p style={{ fontFamily: font, fontSize: 12, color: textMuted, textTransform: 'lowercase', margin: '5px 0 0' }}>
+                  {entries.length} student{entries.length === 1 ? '' : 's'} · ranked by pulp
+                </p>
               )}
-              {!embedded && (
-                <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: textMuted, fontSize: 24, lineHeight: 1 }}>&times;</button>
+            </div>
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <div className="flex items-center gap-1.5">
+                {!embedded && (
+                  <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: textMuted, fontSize: 24, lineHeight: 1 }}>&times;</button>
+                )}
+              </div>
+              {!showPicker && (
+                <div
+                  className="flex items-center gap-1.5 rounded-full"
+                  style={{
+                    fontFamily: font, padding: '5px 11px',
+                    background: isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)',
+                    border: `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.22)'}`,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: accentDeep, letterSpacing: '0.01em' }}>
+                    {daysLeftInWeek() === 0 ? 'last day' : `${daysLeftInWeek()}d left`}
+                  </span>
+                </div>
               )}
             </div>
           </div>
+          {!showPicker && (
+            isDemo ? (
+              <p className="mt-2.5 text-[11px]" style={{ fontFamily: font, color: textMuted }}>
+                a preview of the standings — sign in to compete at your own school.
+              </p>
+            ) : school ? (
+              <button
+                onClick={() => { setSchoolQuery(''); setChangingSchool(true) }}
+                className="mt-2 inline-flex items-center gap-1 text-[10.5px] transition-colors"
+                style={{ fontFamily: font, color: textMuted, background: 'none', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.color = accent }}
+                onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                change school
+              </button>
+            ) : null
+          )}
         </div>
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center relative z-10">
             <div className="text-[12px]" style={{ color: textMuted, fontFamily: font }}>Loading…</div>
           </div>
-        ) : needsSchool ? (
+        ) : showPicker ? (
           renderSchoolPicker()
         ) : (
           renderBoard()

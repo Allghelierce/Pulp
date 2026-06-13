@@ -142,6 +142,12 @@ function htmlToPlain(html: string): string {
   return html.replace(/<br\s*\/?>\n/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
 }
 
+function plainToHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>")
+}
+
 const MarginEngravings = memo(function MarginEngravings({ theme }: { theme: "light" | "dark" }) {
   const dk = theme === "dark"
   const color = dk ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.055)"
@@ -4284,15 +4290,18 @@ export default function NoteApp() {
             </div>
           </Suspense>}
 
-          {leaderboardOpen && (
-            <motion.div key="leaderboard-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme === 'dark' ? '#18181b' : '#fafaf9' }}>
-              <button onClick={() => setLeaderboardOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', cursor: 'pointer', color: theme === 'dark' ? '#a1a1aa' : '#71717a', fontSize: 28 }}>&times;</button>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 32, color: '#d97706', marginBottom: 8 }}>Leaderboard</p>
-                <p style={{ fontFamily: "'EB Garamond', serif", fontSize: 18, color: theme === 'dark' ? '#a1a1aa' : '#71717a' }}>Coming soon</p>
-              </div>
-            </motion.div>
-          )}
+          {leaderboardOpen && <Suspense fallback={null}>
+            <LeaderboardView
+              isOpen={leaderboardOpen}
+              onClose={() => setLeaderboardOpen(false)}
+              theme={theme}
+              sap={sap}
+              userName={user?.email?.split('@')[0] || 'You'}
+              avatarColor={accentSolid}
+              level={Math.floor(Math.sqrt(xp / 100)) + 1}
+              treesGrown={grove.length}
+            />
+          </Suspense>}
 
           {shopOpen && <Suspense fallback={null}>
             <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}><BoutiqueView
@@ -4324,8 +4333,8 @@ export default function NoteApp() {
             noteName={activeNote?.subject}
             userId={user?.id}
             onClose={() => setAiHubOpen(false)}
-            onInsertText={text => editor.insertHTML(text.replace(/\n/g, "<br>"))}
-            onReplaceSelection={text => { document.execCommand("insertText", false, text) }}
+            onInsertText={text => { editor.insertHTML(plainToHtml(text)); editor.syncContent() }}
+            onReplaceSelection={text => { editor.insertHTML(plainToHtml(text)); editor.syncContent() }}
           />
 
           {slashMenu && (

@@ -338,25 +338,30 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
       {isOpen && (
         <motion.div
           key="timer-panel"
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -8 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed z-40 flex flex-col select-none shadow-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed z-40 flex flex-col select-none"
           style={{
             left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
             bottom: 12,
-            transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
+            transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 420ms ease, min-height 420ms cubic-bezier(0.16, 1, 0.3, 1)",
             display: hidden ? 'none' : undefined,
             width: 250,
             height: "auto",
-            minHeight: 560,
-            maxHeight: "calc(100vh - 40px)",
+            // When running, the panel settles into the page — squish to always fit the viewport.
+            minHeight: running ? 460 : 560,
+            maxHeight: "calc(100vh - 24px)",
             backgroundColor: bgColor,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
             border: `1px solid ${borderColor}`,
             borderRadius: 24,
+            // Floating before start; recessed/built-in while running.
+            boxShadow: running
+              ? `inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 4px rgba(0,0,0,0.16)`
+              : `0 25px 50px -12px rgba(0,0,0,0.45)`,
             fontFamily: serifFont,
             userSelect: 'none',
           }}
