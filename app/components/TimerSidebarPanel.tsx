@@ -165,6 +165,30 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [justWatered, setJustWatered] = useState(false)
+  // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
+  const [pageLeft, setPageLeft] = useState<number | null>(null)
+  useEffect(() => {
+    const measure = () => {
+      const el = document.getElementById("pulp-page-surface")
+      setPageLeft(el ? el.getBoundingClientRect().left : null)
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    const id = setInterval(measure, 400) // catch sidebar drags / zoom / layout shifts
+    return () => { window.removeEventListener("resize", measure); clearInterval(id) }
+  }, [])
+
+  // Center the panel in the gap between the sidebar (or window edge) and the page.
+  const sidebarRight = sidebarWidth > 40 ? sidebarWidth : 0
+  const minLeft = sidebarWidth > 40 ? sidebarWidth + 10 : 78
+  const panelLeftFor = (panelW: number) => {
+    if (pageLeft == null) return minLeft
+    const gap = pageLeft - sidebarRight
+    const centered = sidebarRight + (gap - panelW) / 2
+    // If the gap can't fit the panel, keep it pinned left instead of overlapping the page.
+    if (centered < minLeft) return minLeft
+    return centered
+  }
 
   useEffect(() => {
     if (!running || done || treeDead) setGiveUpStage(0)
@@ -272,7 +296,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="fixed z-40 flex items-center gap-2 select-none shadow-lg"
         style={{
-          left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
+          left: panelLeftFor(160),
           bottom: 12,
           transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1)",
           display: hidden ? 'none' : undefined,
@@ -344,14 +368,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="fixed z-40 flex flex-col select-none"
           style={{
-            left: sidebarWidth > 40 ? sidebarWidth + 10 : 78,
+            left: panelLeftFor(250),
             bottom: 12,
             transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 420ms ease, min-height 420ms cubic-bezier(0.16, 1, 0.3, 1)",
             display: hidden ? 'none' : undefined,
             width: 250,
             height: "auto",
-            // When running, the panel settles into the page — squish to always fit the viewport.
-            minHeight: running ? 460 : 560,
+            // When running, the panel settles into the page — squish only slightly.
+            minHeight: running ? 540 : 560,
             maxHeight: "calc(100vh - 24px)",
             backgroundColor: bgColor,
             backdropFilter: "blur(24px)",
@@ -397,44 +421,19 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
             <div className="flex items-center gap-0.5">
-              {running && !done ? (
+              {!(running && !done) && (
                 <button
-                  onClick={() => setMinimized(true)}
+                  onClick={() => setShowGuide(true)}
                   className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
                   style={{ color: subtleColor }}
-                  title="Minimize"
+                  title="How to use"
                 >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9l6 6 6-6" />
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowGuide(true)}
-                    className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-                    style={{ color: subtleColor }}
-                    title="How to use"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                      <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                  </button>
-                  {(elapsed > 0 || done) && (
-                    <button
-                      onClick={() => setMinimized(true)}
-                      className="w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-white/5"
-                      style={{ color: subtleColor }}
-                      title="Minimize"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M6 15l6 6 6-6" />
-                      </svg>
-                    </button>
-                  )}
-                </>
               )}
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
-import { LazyMotion, domAnimation, m, motion } from "framer-motion"
+import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-motion"
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
@@ -1196,6 +1196,9 @@ export default function NoteApp() {
   const unlockedCosmetics = useGroveStore(s => s.unlockedCosmetics)
   const setUnlockedCosmetics = useGroveStore(s => s.setUnlockedCosmetics)
   const [timerOpen, setTimerOpen] = useState(false)
+  const [timerRunning, setTimerRunning] = useState(false)
+  const timerRunningRef = useRef(false)
+  const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
   const [toolbarAiOpen, setToolbarAiOpen] = useState(false)
@@ -2424,7 +2427,9 @@ export default function NoteApp() {
 
       if (keyStr === shortcuts.timer) {
         e.preventDefault()
-        setTimerOpen(!timerOpen)
+        // Can't hide the panel mid-session
+        if (timerRunningRef.current) return
+        setTimerOpen(o => !o)
       }
 
       if (keyStr === shortcuts.toggleSidebar) {
@@ -3400,7 +3405,7 @@ export default function NoteApp() {
                 onSetDraggedNoteId={setDraggedNoteId}
                 onDropNote={handleDropNote}
                 onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
-                onOpenTimer={() => setTimerOpen(t => !t)}
+                onOpenTimer={() => { if (timerOpen && timerRunning) return; setTimerOpen(t => !t) }}
                 timerOpen={timerOpen}
                 onSetNoteParent={setNoteParent}
                 onChangeNoteIcon={changeNoteIcon}
@@ -3598,7 +3603,7 @@ export default function NoteApp() {
                   onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
                   onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
-                  onTimerOpen={() => setTimerOpen(!timerOpen)}
+                  onTimerOpen={() => { if (timerOpen && timerRunning) return; setTimerOpen(!timerOpen) }}
                   onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                   onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
                   onInsertImage={() => {
@@ -3753,7 +3758,7 @@ export default function NoteApp() {
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
                 <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: 600 }}>
-                  <div style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
+                  <div id="pulp-page-surface" style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
@@ -4529,6 +4534,7 @@ export default function NoteApp() {
           sidebarWidth={sidebarWidth}
           timerOpen={timerOpen}
           onSetTimerOpen={setTimerOpen}
+          onRunningChange={handleTimerRunningChange}
           sap={sap}
           grove={grove}
           achievements={achievements}
@@ -4558,7 +4564,7 @@ export default function NoteApp() {
         {/* Persistent timer toggle — visible even when the sidebar is collapsed */}
         {sidebarWidth <= 40 && notes.filter(n => !n.archived).length > 0 && (
           <button
-            onClick={() => setTimerOpen(!timerOpen)}
+            onClick={() => { if (timerOpen && timerRunning) return; setTimerOpen(!timerOpen) }}
             title="Focus timer  (⌘⌥T)"
             className={`fixed bottom-3 left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer ${timerOpen ? "" : "hover:scale-[1.04] active:scale-[0.97]"}`}
             style={{

@@ -146,6 +146,8 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [schoolQuery, setSchoolQuery] = useState('')
   const [savingSchool, setSavingSchool] = useState(false)
   const [changingSchool, setChangingSchool] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [appliedName, setAppliedName] = useState<string | null>(null)
 
   const accent = '#d97706'
   const accentDeep = isDark ? '#e0922f' : '#b45309'
@@ -192,12 +194,12 @@ export const LeaderboardView = memo(function LeaderboardView({
           ...(chosenSchool ? { school: chosenSchool } : {}),
         }),
       })
-      if (!res.ok) { setIsDemo(true); return }
+      if (!res.ok) { setIsDemo(true); setNeedsSchool(false); setChangingSchool(false); return }
       const data = await res.json()
       if (data.needs_school) { setNeedsSchool(true); return }
       applyData(data)
     } catch {
-      setIsDemo(true)
+      setIsDemo(true); setNeedsSchool(false); setChangingSchool(false)
     } finally {
       setLoading(false)
       setSavingSchool(false)
@@ -237,6 +239,18 @@ export const LeaderboardView = memo(function LeaderboardView({
     setLoading(true)
     sync(name)
   }, [sync])
+
+  const applyForSchool = useCallback(async (name: string) => {
+    setApplying(true)
+    try {
+      const res = await apiFetch('/api/school-application', {
+        method: 'POST',
+        body: JSON.stringify({ school_name: name }),
+      })
+      if (res.ok) setAppliedName(name)
+    } catch { /* ignore */ }
+    finally { setApplying(false) }
+  }, [])
 
   if (!isOpen) return null
 
@@ -281,14 +295,24 @@ export const LeaderboardView = memo(function LeaderboardView({
       />
       <div className="flex-1 overflow-y-auto -mx-1 px-1">
         {!exactMatch && schoolQuery.trim() && (
-          <button
-            disabled={savingSchool}
-            onClick={() => chooseSchool(schoolQuery.trim())}
-            className="w-full text-left rounded-xl mb-1.5 transition-colors flex items-center gap-2"
-            style={{ fontFamily: font, fontSize: 13.5, color: accent, padding: '11px 13px', background: youBg, border: `1px dashed ${accent}55` }}
-          >
-            <span style={{ fontSize: 15 }}>+</span> Add “{schoolQuery.trim()}”
-          </button>
+          appliedName === schoolQuery.trim() ? (
+            <div
+              className="w-full rounded-xl mb-1.5 flex items-start gap-2"
+              style={{ fontFamily: font, fontSize: 12.5, color: textSecondary, padding: '11px 13px', background: youBg, border: `1px solid ${cardBorder}` }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 1, flexShrink: 0 }}><path d="M20 6 9 17l-5-5"/></svg>
+              <span>Application sent — we’ll review “{appliedName}” and add it soon.</span>
+            </div>
+          ) : (
+            <button
+              disabled={applying}
+              onClick={() => applyForSchool(schoolQuery.trim())}
+              className="w-full text-left rounded-xl mb-1.5 transition-colors flex items-center gap-2"
+              style={{ fontFamily: font, fontSize: 13.5, color: accent, padding: '11px 13px', background: youBg, border: `1px dashed ${accent}55`, opacity: applying ? 0.6 : 1 }}
+            >
+              <span style={{ fontSize: 15 }}>+</span> {applying ? 'Sending…' : `Apply to add “${schoolQuery.trim()}”`}
+            </button>
+          )
         )}
         {filteredSchools.map(s => (
           <button
@@ -578,7 +602,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                 </span>
               </div>
               <h2 style={{ fontFamily: font, fontSize: 22, fontWeight: 600, color: accentDeep, letterSpacing: '-0.01em', margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
-                {showPicker ? 'Leaderboard' : (schoolLabel || 'Leaderboard')}
+                {showPicker ? 'Weekly Standings' : (schoolLabel || 'Weekly Standings')}
                 {isDemo && !showPicker && <span style={{ fontSize: 15 }}>🪶</span>}
               </h2>
               {!showPicker && (

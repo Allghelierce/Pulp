@@ -22,3 +22,15 @@ create table if not exists pulp_weekly (
 
 create index if not exists idx_pulp_weekly_school_week on pulp_weekly(school, week_start);
 create index if not exists idx_pulp_weekly_user on pulp_weekly(user_id);
+
+-- Applications to add a new (unlisted) school. Reviewed before becoming joinable.
+create table if not exists school_applications (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  school_name text not null,
+  status text not null default 'pending', -- pending, approved, rejected
+  created_at timestamptz not null default now(),
+  unique (user_id, school_name)
+);
+
+create index if not exists idx_school_applications_status on school_applications(status);

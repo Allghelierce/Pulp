@@ -692,7 +692,7 @@ export const Sidebar = memo(function Sidebar({
               )}
             </div>
             {searchFocused && searchQuery.trim().length >= 2 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 z-[9999] rounded-lg border border-white/10 shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(400px, calc(100vh - 160px))', background: '#09090b', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate' }} onMouseDown={e => e.stopPropagation()}>
+              <div className="absolute left-full top-0 ml-2 z-[9999] rounded-lg border border-white/10 shadow-2xl shadow-black/50 overflow-hidden" style={{ width: 300, maxHeight: 'min(400px, calc(100vh - 160px))', background: '#09090b', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate' }} onMouseDown={e => e.stopPropagation()}>
                 {searchResults.length === 0 && aiResults.length === 0 && !aiSearching ? (
                   <div className="px-4 py-6 text-center">
                     <p className="text-[11px] text-zinc-500">No results for &ldquo;{searchQuery}&rdquo;</p>

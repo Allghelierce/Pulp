@@ -15,6 +15,39 @@ const FEATURES = [
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
 
+// Per-feature screenshots. Drop real images at these paths in /public; until then a placeholder shows.
+const FEATURE_IMAGES = [
+  '/feature-timer.png',
+  '/feature-orchard.png',
+  '/feature-ai.png',
+  '/feature-notebooks.png',
+  '/feature-leaderboard.png',
+  '/feature-shop.png',
+]
+
+function FeatureShot({ src, label }: { src: string, label: string }) {
+  const [ok, setOk] = useState(true)
+  return (
+    <div style={{
+      width: '100%', aspectRatio: '4 / 3', borderRadius: 16,
+      border: '1px solid rgba(15,15,16,0.08)',
+      background: ok ? '#fff' : 'repeating-linear-gradient(135deg, rgba(0,0,0,0.018) 0 14px, rgba(0,0,0,0.04) 14px 28px)',
+      boxShadow: '0 12px 30px -18px rgba(0,0,0,0.25)',
+      overflow: 'hidden', position: 'relative',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {ok ? (
+        <img src={src} alt={label} onError={() => setOk(false)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#a8a29a' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5a2 2 0 0 0-2.8 0L5 21"/></svg>
+          <span style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace', fontSize: '0.62rem', letterSpacing: '0.12em', textTransform: 'lowercase' }}>{label} — screenshot soon</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, suffix?: string, delay?: number }) {
   const [count, setCount] = useState(0)
   const [started, setStarted] = useState(false)
@@ -1243,7 +1276,6 @@ export default function PulpLanding() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 72 }}>
               {FEATURES.map((f, i) => {
-                const Demo = FEATURE_DEMOS[i]
                 const flip = i % 2 === 1
                 return (
                   <motion.div
@@ -1264,7 +1296,7 @@ export default function PulpLanding() {
                       </p>
                     </div>
                     <div style={{ order: flip ? 1 : 2 }}>
-                      <Demo />
+                      <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
                     </div>
                   </motion.div>
                 )

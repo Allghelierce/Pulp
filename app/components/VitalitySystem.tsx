@@ -12,6 +12,7 @@ interface VitalitySystemProps {
   sidebarWidth: number
   timerOpen: boolean
   onSetTimerOpen: (open: boolean) => void
+  onRunningChange?: (running: boolean) => void
   sap: number
   grove: Tree[]
   achievements: Achievement[]
@@ -39,7 +40,7 @@ interface VitalitySystemProps {
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
-  theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen,
+  theme, totalChars, sidebarWidth, timerOpen, onSetTimerOpen, onRunningChange,
   sap, grove, achievements, setSap, setGrove, setAchievements,
   lastCharCount, setLastCharCount,
   checkAchievementRef, claimAchievementRef,
@@ -166,6 +167,9 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed])
 
   useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
+
+  // Report run state up so the page can lock the focus toggle while a session is live
+  useEffect(() => { onRunningChange?.(timerRunning && !timerDone) }, [timerRunning, timerDone, onRunningChange])
 
   // Streak break detection — lose 25% sap if goal streak is broken
   const streakCheckedRef = useRef(false)
