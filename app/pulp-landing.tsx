@@ -1279,7 +1279,7 @@ export default function PulpLanding() {
             const [galIdx, setGalIdx] = useState(1)
             return (
               <div style={{ maxWidth: 1100, margin: '0 auto', paddingTop: 48 }}>
-                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 420 }}
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 420, overflow: 'hidden', padding: '0 8px' }}
                   tabIndex={0}
                   onKeyDown={e => { if (e.key === 'ArrowLeft') setGalIdx((galIdx - 1 + galleryImages.length) % galleryImages.length); if (e.key === 'ArrowRight') setGalIdx((galIdx + 1) % galleryImages.length) }}
                 >
@@ -1290,9 +1290,9 @@ export default function PulpLanding() {
                     return (
                       <div key={i} onClick={() => !isActive && setGalIdx(i)} style={{
                         position: 'absolute',
-                        width: isActive ? '70%' : '60%',
+                        width: isActive ? '66%' : '54%',
                         transition: 'all 0.4s cubic-bezier(0.2,0.8,0.2,1)',
-                        transform: `translateX(${offset * 55}%) scale(${isActive ? 1 : 0.88})`,
+                        transform: `translateX(${offset * 40}%) scale(${isActive ? 1 : 0.88})`,
                         zIndex: isActive ? 3 : 2 - Math.abs(offset),
                         opacity: visible ? (isActive ? 1 : 0.6) : 0,
                         pointerEvents: visible ? 'auto' : 'none',

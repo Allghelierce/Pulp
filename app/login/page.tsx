@@ -12,7 +12,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser()
+      const { data, error } = await supabase.auth.getUser()
+      if (error) {
+        await supabase.auth.signOut({ scope: 'local' })
+        return
+      }
       if (data.user) window.location.href = '/app'
     }
     checkUser()
