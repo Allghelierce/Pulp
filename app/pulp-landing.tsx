@@ -15,6 +15,228 @@ const FEATURES = [
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
 
+// ---- Feature demos: small animated mockups shown beside each feature ----
+const D_ACCENT = '#d97706'
+const D_MONO = '"JetBrains Mono", ui-monospace, monospace'
+const D_SERIF = '"Georgia", Georgia, serif'
+
+function DemoFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      width: '100%', height: 280, borderRadius: 16,
+      border: '1px solid rgba(15,15,16,0.07)',
+      background: 'linear-gradient(160deg, rgba(255,255,255,0.6), rgba(0,0,0,0.015))',
+      boxShadow: '0 8px 24px -16px rgba(0,0,0,0.18)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden', position: 'relative',
+    }}>{children}</div>
+  )
+}
+
+function FocusTimerDemo() {
+  const [sec, setSec] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setSec(s => (s + 1) % 80), 70)
+    return () => clearInterval(id)
+  }, [])
+  const pct = sec / 80
+  const R = 52, C = 2 * Math.PI * R
+  const stage = Math.min(4, Math.floor(pct * 5))
+  const rem = Math.round(25 * (1 - pct) * 60)
+  const mm = String(Math.floor(rem / 60)).padStart(2, '0')
+  const ss = String(rem % 60).padStart(2, '0')
+  return (
+    <DemoFrame>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+        <div style={{ position: 'relative', width: 128, height: 128 }}>
+          <svg width="128" height="128" viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r={R} fill="none" stroke="rgba(15,15,16,0.08)" strokeWidth="6" />
+            <circle cx="64" cy="64" r={R} fill="none" stroke={D_ACCENT} strokeWidth="6" strokeLinecap="round"
+              strokeDasharray={C} strokeDashoffset={C * (1 - pct)} transform="rotate(-90 64 64)"
+              style={{ transition: 'stroke-dashoffset 0.1s linear' }} />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontFamily: D_MONO, fontSize: '1.3rem', color: '#0f0f10', letterSpacing: '0.04em' }}>{mm}:{ss}</span>
+            <span style={{ fontFamily: D_MONO, fontSize: '0.55rem', color: D_ACCENT, letterSpacing: '0.18em', textTransform: 'lowercase', marginTop: 2 }}>focus</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: 110, justifyContent: 'flex-end' }}>
+          <PlantIcon type="tangerine" size={86} stage={stage} hideGround />
+        </div>
+      </div>
+    </DemoFrame>
+  )
+}
+
+function OrchardDemo() {
+  const trees = [
+    { type: 'pine', stage: 4, size: 78 },
+    { type: 'sakura', stage: 4, size: 92 },
+    { type: 'tangerine', stage: 3, size: 70 },
+    { type: 'oak', stage: 4, size: 84 },
+  ]
+  return (
+    <DemoFrame>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 46, background: 'linear-gradient(to top, rgba(120,140,80,0.18), transparent)' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, paddingBottom: 24 }}>
+        {trees.map((t, i) => (
+          <PlantIcon key={i} type={t.type} size={t.size} stage={t.stage} hideGround />
+        ))}
+      </div>
+    </DemoFrame>
+  )
+}
+
+function InlineAiDemo() {
+  const text = 'summarize these notes into 3 key points'
+  const [i, setI] = useState(0)
+  const [accepted, setAccepted] = useState(false)
+  useEffect(() => {
+    if (i < text.length) { const t = setTimeout(() => setI(i + 1), 55); return () => clearTimeout(t) }
+    const t1 = setTimeout(() => setAccepted(true), 650)
+    const t2 = setTimeout(() => { setAccepted(false); setI(0) }, 2100)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [i])
+  return (
+    <DemoFrame>
+      <div style={{ width: '78%', background: '#fff', borderRadius: 10, border: '1px solid rgba(15,15,16,0.08)', padding: '16px 18px', boxShadow: '0 6px 18px -12px rgba(0,0,0,0.2)' }}>
+        {[0.92, 0.7].map((w, k) => (
+          <div key={k} style={{ height: 7, width: `${w * 100}%`, borderRadius: 4, background: 'rgba(15,15,16,0.08)', marginBottom: 10 }} />
+        ))}
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: 14, minHeight: 22 }}>
+          <span style={{ fontFamily: D_MONO, fontSize: '0.62rem', color: D_ACCENT, background: 'rgba(217,119,6,0.1)', borderRadius: 5, padding: '2px 6px', marginRight: 8, letterSpacing: '0.06em' }}>ai</span>
+          <span style={{ fontFamily: D_SERIF, fontSize: '0.85rem', color: accepted ? '#0f0f10' : D_ACCENT, transition: 'color 0.3s' }}>
+            {text.slice(0, i)}
+            {i < text.length && <span style={{ opacity: 0.6 }}>▍</span>}
+            {accepted && <span style={{ fontFamily: D_MONO, fontSize: '0.55rem', color: '#9a9590', marginLeft: 8 }}>↵ accepted</span>}
+          </span>
+        </div>
+      </div>
+    </DemoFrame>
+  )
+}
+
+function NotebooksDemo() {
+  const types = ['notebook', 'single page', 'cornell', 'vault']
+  const [a, setA] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setA(p => (p + 1) % types.length), 1500)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <DemoFrame>
+      <div style={{ position: 'relative', width: 200, height: 150 }}>
+        {types.map((t, i) => {
+          const off = i - a
+          const active = i === a
+          return (
+            <div key={t} style={{
+              position: 'absolute', inset: 0, margin: 'auto', width: 150, height: 110,
+              borderRadius: 10, border: '1px solid rgba(15,15,16,0.1)',
+              background: active ? '#fff' : '#f5f1ea',
+              boxShadow: active ? '0 10px 26px -12px rgba(0,0,0,0.28)' : '0 3px 8px -6px rgba(0,0,0,0.2)',
+              transform: `translate(${off * 14}px, ${off * 10}px) scale(${active ? 1 : 0.94})`,
+              opacity: Math.abs(off) > 2 ? 0 : 1,
+              zIndex: 10 - Math.abs(off),
+              transition: 'all 0.5s cubic-bezier(0.2,0.8,0.2,1)',
+              display: 'flex', flexDirection: 'column', padding: 14,
+            }}>
+              <div style={{ width: 30, height: 4, borderRadius: 2, background: D_ACCENT, marginBottom: 10, opacity: active ? 1 : 0.3 }} />
+              <div style={{ height: 5, width: '80%', borderRadius: 3, background: 'rgba(15,15,16,0.1)', marginBottom: 7 }} />
+              <div style={{ height: 5, width: '60%', borderRadius: 3, background: 'rgba(15,15,16,0.08)', marginBottom: 'auto' }} />
+              <span style={{ fontFamily: D_MONO, fontSize: '0.58rem', color: active ? D_ACCENT : '#b3aea6', letterSpacing: '0.08em', textTransform: 'lowercase' }}>{t}</span>
+            </div>
+          )
+        })}
+      </div>
+    </DemoFrame>
+  )
+}
+
+function LeaderboardDemo() {
+  const rows = [
+    { name: 'maya', w: 0.95, you: false },
+    { name: 'you', w: 0.82, you: true },
+    { name: 'leo', w: 0.64, you: false },
+    { name: 'ada', w: 0.5, you: false },
+  ]
+  const [grown, setGrown] = useState(false)
+  useEffect(() => {
+    const tick = () => { setGrown(false); setTimeout(() => setGrown(true), 120) }
+    tick()
+    const id = setInterval(tick, 2600)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <DemoFrame>
+      <div style={{ width: '76%', display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {rows.map((r, i) => (
+          <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontFamily: D_MONO, fontSize: '0.7rem', color: i === 0 ? D_ACCENT : '#b3aea6', width: 16 }}>{i + 1}</span>
+            <div style={{ flex: 1, height: 18, borderRadius: 9, background: 'rgba(15,15,16,0.05)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{
+                height: '100%', width: grown ? `${r.w * 100}%` : '0%',
+                borderRadius: 9,
+                background: r.you ? D_ACCENT : 'rgba(15,15,16,0.16)',
+                transition: `width 1s cubic-bezier(0.2,0.8,0.2,1) ${i * 0.08}s`,
+                display: 'flex', alignItems: 'center', paddingLeft: 8,
+              }}>
+                <span style={{ fontFamily: D_MONO, fontSize: '0.55rem', color: r.you ? '#fff' : '#7a756e', textTransform: 'lowercase' }}>{r.name}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </DemoFrame>
+  )
+}
+
+function SeedShopDemo() {
+  const seeds = [
+    { type: 'sunflower', price: 40, rare: false },
+    { type: 'sakura', price: 120, rare: false },
+    { type: 'prismatic', price: 900, rare: true },
+  ]
+  const [hot, setHot] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setHot(p => (p + 1) % seeds.length), 1200)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <DemoFrame>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: D_MONO, fontSize: '0.72rem', color: '#7a756e' }}>
+          <span style={{ width: 9, height: 9, borderRadius: '50%', background: D_ACCENT, display: 'inline-block' }} />
+          <span style={{ color: '#0f0f10' }}>1,240</span> sap
+        </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          {seeds.map((s, i) => {
+            const active = i === hot
+            return (
+              <div key={s.type} style={{
+                width: 78, padding: '12px 8px', borderRadius: 12,
+                border: `1px solid ${active ? D_ACCENT : 'rgba(15,15,16,0.08)'}`,
+                background: '#fff',
+                boxShadow: active ? '0 10px 22px -12px rgba(217,119,6,0.5)' : '0 3px 8px -8px rgba(0,0,0,0.2)',
+                transform: active ? 'translateY(-6px)' : 'none',
+                transition: 'all 0.35s cubic-bezier(0.2,0.8,0.2,1)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                position: 'relative',
+              }}>
+                {s.rare && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: '0.6rem' }}>✦</span>}
+                <PlantIcon type={s.type} size={42} stage={1} isSeed hideGround />
+                <span style={{ fontFamily: D_MONO, fontSize: '0.6rem', color: s.rare ? D_ACCENT : '#7a756e' }}>{s.price}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </DemoFrame>
+  )
+}
+
+const FEATURE_DEMOS = [FocusTimerDemo, OrchardDemo, InlineAiDemo, NotebooksDemo, LeaderboardDemo, SeedShopDemo]
+
 function AnimatedCounter({ target, suffix = '', delay = 0 }: { target: number, suffix?: string, delay?: number }) {
   const [count, setCount] = useState(0)
   const [started, setStarted] = useState(false)
@@ -1241,98 +1463,36 @@ export default function PulpLanding() {
               -- features
             </motion.span>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '48px 48px' }}>
-              {FEATURES.map((f, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 60, scale: 0.92, rotateX: 8 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                  viewport={{ once: true, margin: '-40px' }}
-                  transition={{ duration: 0.7, delay: i * 0.08, ease: [0.2, 0.8, 0.2, 1] }}
-                  style={{
-                    padding: '24px 20px', borderRadius: 12,
-                    border: '1px solid rgba(15,15,16,0.06)',
-                    background: 'rgba(0,0,0,0.015)',
-                    transformOrigin: 'center bottom',
-                  }}
-                >
-                  <div style={{ marginBottom: 12 }}>{f.icon}</div>
-                  <h3 style={{ fontFamily: serif, fontSize: '1.1rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 8px 0' }}>
-                    {f.label}
-                  </h3>
-                  <p style={{ fontFamily: serif, fontSize: '0.88rem', lineHeight: 1.65, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
-                    {f.desc}
-                  </p>
-                </motion.div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 72 }}>
+              {FEATURES.map((f, i) => {
+                const Demo = FEATURE_DEMOS[i]
+                const flip = i % 2 === 1
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 48 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}
+                  >
+                    <div style={{ order: flip ? 2 : 1 }}>
+                      <div style={{ marginBottom: 16 }}>{f.icon}</div>
+                      <h3 style={{ fontFamily: serif, fontSize: '1.5rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
+                        {f.label}
+                      </h3>
+                      <p style={{ fontFamily: serif, fontSize: '0.95rem', lineHeight: 1.7, color: '#6b6864', textTransform: 'lowercase', margin: 0, maxWidth: 400 }}>
+                        {f.desc}
+                      </p>
+                    </div>
+                    <div style={{ order: flip ? 1 : 2 }}>
+                      <Demo />
+                    </div>
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
-
-          {/* Image gallery */}
-          {(() => {
-            const galleryImages = [
-              { src: '/screenshot-shop.png', label: 'seed shop' },
-              { src: '/screenshot-editor.png', label: 'editor' },
-              { src: '/screenshot-shop-2.png', label: 'orchard' },
-              { src: '', label: 'coming soon' },
-            ]
-            const [galIdx, setGalIdx] = useState(1)
-            return (
-              <div style={{ maxWidth: 1100, margin: '0 auto', paddingTop: 48 }}>
-                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 420, overflow: 'hidden', padding: '0 8px' }}
-                  tabIndex={0}
-                  onKeyDown={e => { if (e.key === 'ArrowLeft') setGalIdx((galIdx - 1 + galleryImages.length) % galleryImages.length); if (e.key === 'ArrowRight') setGalIdx((galIdx + 1) % galleryImages.length) }}
-                >
-                  {galleryImages.map((img, i) => {
-                    const offset = i - galIdx
-                    const isActive = i === galIdx
-                    const visible = Math.abs(offset) <= 1
-                    return (
-                      <div key={i} onClick={() => !isActive && setGalIdx(i)} style={{
-                        position: 'absolute',
-                        width: isActive ? '66%' : '54%',
-                        transition: 'all 0.4s cubic-bezier(0.2,0.8,0.2,1)',
-                        transform: `translateX(${offset * 40}%) scale(${isActive ? 1 : 0.88})`,
-                        zIndex: isActive ? 3 : 2 - Math.abs(offset),
-                        opacity: visible ? (isActive ? 1 : 0.6) : 0,
-                        pointerEvents: visible ? 'auto' : 'none',
-                        cursor: isActive ? 'default' : 'pointer',
-                        filter: isActive ? 'none' : 'brightness(0.7)',
-                      }}>
-                        <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: isActive ? '0 12px 40px -8px rgba(0,0,0,0.2)' : '0 4px 16px -4px rgba(0,0,0,0.1)' }}>
-                          {img.src ? (
-                            <img src={img.src} alt={img.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                          ) : (
-                            <div style={{ width: '100%', aspectRatio: '16/9', background: '#d4cbb8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <span style={{ fontFamily: mono, fontSize: '0.7rem', color: '#a09888', letterSpacing: '0.1em', textTransform: 'lowercase' }}>coming soon</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                  <button onClick={() => setGalIdx((galIdx - 1 + galleryImages.length) % galleryImages.length)}
-                    style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 8, opacity: 0.4, zIndex: 5 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b6560" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                  </button>
-                  <button onClick={() => setGalIdx((galIdx + 1) % galleryImages.length)}
-                    style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 8, opacity: 0.4, zIndex: 5 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b6560" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                  </button>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
-                  {galleryImages.map((_, i) => (
-                    <button key={i} onClick={() => setGalIdx(i)} style={{
-                      width: i === galIdx ? 20 : 6, height: 6, borderRadius: 3,
-                      background: i === galIdx ? '#d97706' : 'rgba(0,0,0,0.12)',
-                      border: 'none', cursor: 'pointer', padding: 0,
-                      transition: 'width 0.2s, background 0.2s',
-                    }} />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
         </section>
 
         {/* Pricing */}
