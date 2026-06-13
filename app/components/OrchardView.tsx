@@ -646,6 +646,50 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
 
         {/* Windmills rendered in live overlay to avoid cache doubling */}
 
+        {/* Tree of life — distant horizon centerpiece, flat-shaded in the mountain palette,
+            base tucked behind the rolling/back hills so only the crown rises over the ridge */}
+        {(() => {
+          const cx = 100
+          const lite = lerpColor(p.mtnTop, p.snowTop, 0.4)   // sun-caught foliage, echoes snow caps
+          const shadow = p.mtnBot                            // underside / trunk
+          const haze = p.skyHorizon                          // atmospheric fade into the hills
+          // Crown: cluster of soft lobes sharing one fill → seamless lobed silhouette
+          const lobes: [number, number, number, number][] = [
+            [cx, 15.5, 24, 8],      // broad base mass
+            [cx, 9, 18, 8],         // central dome
+            [cx - 16, 13.5, 11.5, 7],
+            [cx + 16, 13.5, 11.5, 7],
+            [cx - 9, 7.5, 9.5, 6],
+            [cx + 9, 7.5, 9.5, 6],
+            [cx, 4.8, 8.5, 5.2],    // crest
+          ]
+          return (
+            <g style={{ pointerEvents: 'none' }}>
+              {/* faint elevation glow — barely-there, gives the crown presence */}
+              <ellipse cx={cx} cy={11} rx={34} ry={18} fill={p.sunColor} opacity={isDark ? 0.05 : 0.045} />
+              {/* trunk + boughs (hidden mostly behind the ridge), darkest tone */}
+              <polygon points={`${cx - 1.3},31 ${cx - 0.5},14 ${cx + 0.5},14 ${cx + 1.3},31`} fill={shadow} />
+              <path d={`M${cx},17 C${cx - 4},14 ${cx - 7},11 ${cx - 9},8`} stroke={shadow} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+              <path d={`M${cx},17 C${cx + 4},14 ${cx + 7},11 ${cx + 9},8`} stroke={shadow} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+              {/* canopy silhouette — same gradient as the far mountains */}
+              {lobes.map((l, i) => (
+                <ellipse key={i} cx={l[0]} cy={l[1]} rx={l[2]} ry={l[3]} fill="url(#hill-far)" />
+              ))}
+              {/* underside shadow band for roundness */}
+              <ellipse cx={cx} cy={20} rx={21} ry={5} fill={shadow} opacity="0.35" />
+              <ellipse cx={cx - 15} cy={18} rx={9} ry={4} fill={shadow} opacity="0.28" />
+              <ellipse cx={cx + 15} cy={18} rx={9} ry={4} fill={shadow} opacity="0.28" />
+              {/* atmospheric haze over the lower crown, fading it into the hills */}
+              <ellipse cx={cx} cy={20.5} rx={25} ry={6.5} fill={haze} opacity={isDark ? 0.22 : 0.2} />
+              {/* sun-caught highlights along the upper lobes */}
+              <ellipse cx={cx - 4} cy={6.5} rx={7} ry={4} fill={lite} opacity="0.22" />
+              <ellipse cx={cx + 6} cy={8} rx={5.5} ry={3.2} fill={lite} opacity="0.16" />
+              {/* crisp rim of light along the crest */}
+              <path d={`M${cx - 13},8 Q${cx},2 ${cx + 13},8`} stroke={lite} strokeWidth="0.3" fill="none" opacity="0.35" />
+            </g>
+          )
+        })()}
+
         {/* Extra rolling hills — left side, between mountains and back hill */}
         <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26 C42,30 50,32 58,30 C64,28 68,25 72,23 C78,22 85,24 90,28 C95,31 100,33 110,34 L210,36 L210,42 L-10,42 Z" fill={p.hillMidBot} />
         <path d="M-10,33 C-5,31 5,26 15,23 C22,21 28,22 35,26" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.25" />

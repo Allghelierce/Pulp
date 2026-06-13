@@ -380,13 +380,11 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (existingPartial) {
       const newFocus = Math.min(growthTarget, (existingPartial.focusMinutes || 0) + sessionMinutes)
       const ratio = newFocus / growthTarget
-      setGrove(g => {
-        const next = g.map(t => t.id === existingPartial.id
-          ? { ...t, focusMinutes: newFocus, stage: computeStage(ratio), progress: ratio * 100 }
-          : t)
-        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-        return next
-      })
+      const next = grove.map(t => t.id === existingPartial.id
+        ? { ...t, focusMinutes: newFocus, stage: computeStage(ratio), progress: ratio * 100 }
+        : t)
+      setGrove(next)
+      checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
     } else {
       const ratio = Math.min(1, sessionMinutes / growthTarget)
       const newTree = {
@@ -395,12 +393,10 @@ export const VitalitySystem = memo(function VitalitySystem({
         plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined,
         focusMinutes: sessionMinutes, growthTarget,
       }
-      setGrove(g => {
-        const next = [...g, newTree]
-        checkAchievement('full_grove', a => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
-        checkAchievement('tangerine_grove', a => ({ progress: next.filter(t => t.type === 'tangerine').length }))
-        return next
-      })
+      const next = [...grove, newTree]
+      setGrove(next)
+      checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+      checkAchievement('tangerine_grove', () => ({ progress: next.filter(t => t.type === 'tangerine').length }))
     }
 
     setTimerElapsed(0)
@@ -420,13 +416,11 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [])
 
   const claimAchievement = useCallback((id: string) => {
-    setAchievements(prev => {
-      const target = prev.find(x => x.id === id)
-      if (!target || !target.completed || target.claimed) return prev
-      setSap(s => s + target.reward)
-      return prev.map(x => x.id === id ? { ...x, claimed: true } : x)
-    })
-  }, [setSap, setAchievements])
+    const target = achievements.find(x => x.id === id)
+    if (!target || !target.completed || target.claimed) return
+    setSap(s => s + target.reward)
+    setAchievements(prev => prev.map(x => x.id === id && !x.claimed ? { ...x, claimed: true } : x))
+  }, [achievements, setSap, setAchievements])
 
   useEffect(() => {
     checkAchievementRef.current = checkAchievement

@@ -155,9 +155,9 @@ export function deckStats(deck: Deck, now: number): DeckStats {
   return { total: deck.cards.length, dueNow, newCount, learning, mature, nextDue }
 }
 
-// Retention-ish readiness: share of the deck that is mature and not overdue.
-// (Hook for sap = readiness later — kept here so it's one definition.)
-export function readiness(deck: Deck, now: number): number {
+// Lore: how deeply a notebook is known — share of the deck that is mature and
+// not overdue. Drives orchard roots + sap later. One definition, kept here.
+export function lore(deck: Deck, now: number): number {
   if (!deck.cards.length) return 0
   const healthy = deck.cards.filter(c => c.reps > 0 && c.due > now && c.intervalDays >= 4).length
   return healthy / deck.cards.length
