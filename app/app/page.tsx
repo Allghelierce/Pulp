@@ -53,6 +53,7 @@ const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
 const NotebookChat = lazy(() => _preloadChat().then(m => ({ default: m.NotebookChat })))
+const ReviewView = lazy(() => import("@/app/components/ReviewView").then(m => ({ default: m.ReviewView })))
 const VersionHistoryPanel = lazy(() => _preloadVersionHistory().then(m => ({ default: m.VersionHistoryPanel })))
 const GridView = lazy(() => _preloadGrid().then(m => ({ default: m.GridView })))
 const AiInlineMenu = lazy(() => _preloadAiInline().then(m => ({ default: m.AiInlineMenu })))
@@ -1224,8 +1225,9 @@ export default function NoteApp() {
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [statsOpen, setStatsOpen] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -3635,6 +3637,7 @@ export default function NoteApp() {
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
+                  onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) } : undefined}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
                   lineWidth={lineWidth}
@@ -4532,6 +4535,17 @@ export default function NoteApp() {
                 }
               }}
             />
+          )}
+
+          {reviewOpen && activeNote && (
+            <Suspense fallback={null}>
+              <ReviewView
+                note={activeNote}
+                theme={theme}
+                accent={accent}
+                onClose={() => setReviewOpen(false)}
+              />
+            </Suspense>
           )}
 
           {showNotebookChat && activeNote && (
