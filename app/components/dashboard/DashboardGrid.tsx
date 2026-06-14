@@ -202,6 +202,7 @@ export const DashboardGrid = memo(function DashboardGrid({
                 onPin={() => onPin(widget.instanceId)}
                 onRemove={() => onRemove(widget.instanceId)}
                 onDragStart={handleDragStart}
+                transparent={def.transparent}
               >
                 <Component {...widgetProps} size={widget.size} />
               </WidgetWrapper>

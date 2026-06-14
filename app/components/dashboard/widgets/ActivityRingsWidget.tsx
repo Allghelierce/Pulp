@@ -16,8 +16,21 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
 
-  const quotaTarget = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 / 7 : dailyGoalMinutes * 30 / 30
-  const quotaProgress = Math.min(1, focus / Math.max(1, quotaTarget))
+  // Quota tracks focus across the tier's window vs the goal scaled to that window.
+  const periodDays = quotaTier === 'daily' ? 1 : quotaTier === 'weekly' ? 7 : 30
+  const periodFocus = (() => {
+    if (periodDays === 1) return focus
+    const map = new Map(dailyStats.map(e => [e.date, e.focusMinutes ?? 0]))
+    const now = new Date()
+    let sum = 0
+    for (let i = 0; i < periodDays; i++) {
+      const d = new Date(now); d.setDate(d.getDate() - i)
+      sum += map.get(d.toISOString().split("T")[0]) ?? 0
+    }
+    return sum
+  })()
+  const quotaTarget = dailyGoalMinutes * periodDays
+  const quotaProgress = Math.min(1, periodFocus / Math.max(1, quotaTarget))
   const streakProgress = Math.min(1, goalStreak / 30)
 
   const [editing, setEditing] = useState(false)
@@ -186,5 +199,6 @@ registerWidget({
   defaultSize: [2, 2],
   minSize: [2, 2],
   maxSize: [3, 3],
+  transparent: true,
   component: ActivityRingsWidget,
 })

@@ -9,13 +9,14 @@ interface WidgetWrapperProps {
   onPin: () => void
   onRemove: () => void
   onDragStart: (instanceId: string, e: React.PointerEvent) => void
+  transparent?: boolean
   children: React.ReactNode
 }
 
 const font = 'Crimson Pro, serif'
 
 export const WidgetWrapper = memo(function WidgetWrapper({
-  isDark, pinned, editMode, instanceId, onPin, onRemove, onDragStart, children,
+  isDark, pinned, editMode, instanceId, onPin, onRemove, onDragStart, transparent, children,
 }: WidgetWrapperProps) {
   const cardBg = isDark ? '#141210' : '#f5f3ef'
   const shadow = isDark
@@ -30,9 +31,9 @@ export const WidgetWrapper = memo(function WidgetWrapper({
   return (
     <div
       style={{
-        background: cardBg,
+        background: transparent ? 'transparent' : cardBg,
         borderRadius: 20,
-        boxShadow: hover ? hoverShadow : shadow,
+        boxShadow: transparent ? 'none' : (hover ? hoverShadow : shadow),
         overflow: 'hidden',
         position: 'relative',
         width: '100%',
