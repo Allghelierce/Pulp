@@ -77,6 +77,15 @@ alter table group_members enable row level security;
 alter table group_weekly  enable row level security;
 alter table group_trees   enable row level security;
 
+-- Helper functions (security definer) to avoid recursive RLS on group_members.
+create or replace function public.is_group_member(g bigint)
+returns boolean language sql security definer stable set search_path = public as
+$$ select exists(select 1 from group_members where group_id = g and user_id = auth.uid()) $$;
+
+create or replace function public.is_active_group_member(g bigint)
+returns boolean language sql security definer stable set search_path = public as
+$$ select exists(select 1 from group_members where group_id = g and user_id = auth.uid() and status = 'active') $$;
+
 -- Friendships: a user sees/acts on rows where they are a party.
 create policy friendships_select on friendships for select
   using (auth.uid() = requester_id or auth.uid() = addressee_id);
@@ -90,19 +99,15 @@ create policy friendships_delete on friendships for delete
 -- Groups: members read their groups; owner updates. (Writes go through
 -- server routes using the service role, which bypasses RLS.)
 create policy groups_select on study_groups for select
-  using (exists (select 1 from group_members m
-                 where m.group_id = study_groups.id and m.user_id = auth.uid()));
+  using (public.is_group_member(study_groups.id));
 create policy groups_update on study_groups for update
   using (auth.uid() = owner_id);
 
 create policy group_members_select on group_members for select
-  using (exists (select 1 from group_members m
-                 where m.group_id = group_members.group_id and m.user_id = auth.uid()));
+  using (public.is_group_member(group_members.group_id));
 
 create policy group_weekly_select on group_weekly for select
-  using (exists (select 1 from group_members m
-                 where m.group_id = group_weekly.group_id and m.user_id = auth.uid() and m.status = 'active'));
+  using (public.is_active_group_member(group_weekly.group_id));
 
 create policy group_trees_select on group_trees for select
-  using (exists (select 1 from group_members m
-                 where m.group_id = group_trees.group_id and m.user_id = auth.uid() and m.status = 'active'));
+  using (public.is_active_group_member(group_trees.group_id));

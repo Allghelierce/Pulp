@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
   const { data: rows } = await supabaseAdmin.from('group_members')
     .select('study_groups(*)').eq('user_id', user.id).eq('status', 'active')
-  const groups = await Promise.all((rows ?? []).map((r: any) => archiveIfExpired(r.study_groups)).filter(Boolean))
+  const groups = (await Promise.all((rows ?? []).map((r: any) => r.study_groups ? archiveIfExpired(r.study_groups) : null))).filter(Boolean)
   return NextResponse.json({ groups })
 }
 

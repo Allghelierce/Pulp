@@ -32,15 +32,15 @@ export function validateUsername(raw: string): UsernameResult {
   return { ok: true, value }
 }
 
-const FOUR_MONTHS_MS = 4 * 31 * 24 * 60 * 60 * 1000
-
 export type TermResult = { ok: true } | { ok: false; error: string }
 
 export function validateTerm(startISO: string, endISO: string): TermResult {
-  const start = new Date(startISO).getTime()
-  const end = new Date(endISO).getTime()
-  if (Number.isNaN(start) || Number.isNaN(end)) return { ok: false, error: 'Invalid dates' }
-  if (end <= start) return { ok: false, error: 'Term end must be after start' }
-  if (end - start > FOUR_MONTHS_MS) return { ok: false, error: 'Term cannot exceed 4 months' }
+  const start = new Date(startISO)
+  const end = new Date(endISO)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return { ok: false, error: 'Invalid dates' }
+  if (end.getTime() <= start.getTime()) return { ok: false, error: 'Term end must be after start' }
+  const max = new Date(start)
+  max.setMonth(max.getMonth() + 4)
+  if (end.getTime() > max.getTime()) return { ok: false, error: 'Term cannot exceed 4 months' }
   return { ok: true }
 }

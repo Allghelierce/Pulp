@@ -77,6 +77,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, status: 'accepted' })
     }
 
+    const { data: forward } = await supabaseAdmin.from('friendships')
+      .select('id, status').eq('requester_id', user.id).eq('addressee_id', target.user_id).maybeSingle()
+    if (forward) return NextResponse.json({ ok: true, status: forward.status })
+
     const { error } = await supabaseAdmin.from('friendships')
       .upsert({ requester_id: user.id, addressee_id: target.user_id, status: 'pending' },
               { onConflict: 'requester_id,addressee_id' })
