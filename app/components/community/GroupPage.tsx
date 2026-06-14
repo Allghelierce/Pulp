@@ -1,10 +1,12 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
+import { PlantIcon } from "@/app/components/PlantIcon"
 
 const accent = '#d97706'
 interface Member { user_id: string; role: string; status: string; focus_minutes_total: number; username?: string; level?: number }
 interface Group { id: number; name: string; owner_id: string; invite_code: string; term_end: string; status: string }
+interface GroupTree { type?: string; stage?: number }
 
 export const GroupPage = memo(function GroupPage({
   theme, groupId, currentUserId, onBack,
@@ -14,12 +16,15 @@ export const GroupPage = memo(function GroupPage({
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [lb, setLb] = useState<{ weekly: { user_id: string; username: string; focus_minutes: number }[]; allTime: { user_id: string; username: string; focus_minutes_total: number; trees: number }[] }>({ weekly: [], allTime: [] })
+  const [grove, setGrove] = useState<GroupTree[]>([])
 
   const load = useCallback(async () => {
     const res = await apiFetch(`/api/groups?id=${groupId}`)
     if (res.ok) { const j = await res.json(); setGroup(j.group); setMembers(j.members) }
     const lbRes = await apiFetch(`/api/groups/leaderboard?id=${groupId}`)
     if (lbRes.ok) setLb(await lbRes.json())
+    const grRes = await apiFetch(`/api/groups/grove?id=${groupId}`)
+    if (grRes.ok) setGrove((await grRes.json()).trees || [])
   }, [groupId])
   useEffect(() => { load() }, [load])
 
@@ -95,6 +100,15 @@ export const GroupPage = memo(function GroupPage({
           </div>
         ))}
       </>}
+
+      <div style={{ marginTop: 20 }}>
+        <h3 style={{ color: text, fontSize: 15, margin: '0 0 8px' }}>Communal grove</h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 4,
+          padding: 16, borderRadius: 14, background: isDark ? 'rgba(120,140,80,0.10)' : 'rgba(120,140,80,0.14)' }}>
+          {grove.length === 0 && <span style={{ color: '#8a857e', fontSize: 13 }}>No trees yet — start a session here.</span>}
+          {grove.map((t, i) => <PlantIcon key={i} type={t.type || 'tangerine'} size={48} stage={t.stage ?? 3} hideGround />)}
+        </div>
+      </div>
 
       {!isOwner && <button onClick={leave} style={{ marginTop: 18, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}>Leave group</button>}
     </div>
