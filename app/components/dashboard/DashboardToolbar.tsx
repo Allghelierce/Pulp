@@ -27,7 +27,8 @@ export const DashboardToolbar = memo(function DashboardToolbar({
       flexShrink: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 16, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '0.02em' }}>
+        {/* Matches the market's viewTitle (app/theme/palette.ts) */}
+        <span style={{ fontFamily: font, fontSize: 26, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
           Stats
         </span>
       </div>
