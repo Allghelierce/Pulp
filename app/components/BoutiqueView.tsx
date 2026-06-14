@@ -2451,7 +2451,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               {owned && <Sparkles rarity={t.rarity} count={3} />}
                               {/* Outer wrapper centers via flex (no transform), so the rarity
                                   animation's transform on the inner div can't break centering. */}
-                              <div style={{ position: 'absolute', left: 0, right: 0, bottom: '7%', display: 'flex', justifyContent: 'center', zIndex: 2 }}>
+                              <div style={{ position: 'absolute', left: 0, right: 0, bottom: (() => { const sh = t?.shape || ''; return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? '2%' : ['cactus', 'agave', 'sage'].includes(sh) ? '4%' : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? '6%' : '7%' })(), display: 'flex', justifyContent: 'center', zIndex: 2 }}>
                                 <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})` }}>
                                   <PlantIcon type={type} size={120} stage={3} hideGround />
                                 </div>
