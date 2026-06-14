@@ -29,6 +29,7 @@ const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
+import { CommunityView } from "@/app/components/CommunityView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
@@ -1209,6 +1210,7 @@ export default function NoteApp() {
   const timerRunningRef = useRef(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [friendCode, setFriendCode] = useState<string | null>(null)
+  const [communityOpen, setCommunityOpen] = useState(false)
   const [grade, setGrade] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
@@ -1229,9 +1231,10 @@ export default function NoteApp() {
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [statsOpen, setStatsOpen] = useState(false)
+  const statsOpenedBeforeRef = useRef(false)
   const [reviewOpen, setReviewOpen] = useState(false)
-  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false) }, [])
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -4381,10 +4384,13 @@ export default function NoteApp() {
           </div></Suspense>}
 
           <AnimatePresence>
-            {statsOpen && (
+            {statsOpen && (() => {
+              const firstOpen = !statsOpenedBeforeRef.current
+              statsOpenedBeforeRef.current = true
+              return (
               <m.div
                 key="stats-view"
-                initial={{ opacity: 0 }}
+                initial={firstOpen ? { opacity: 0 } : false}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -4411,7 +4417,8 @@ export default function NoteApp() {
                   />
                 </Suspense>
               </m.div>
-            )}
+              )
+            })()}
             {reviewOpen && notes.find(n => n.id === activeTabId) && (
               <m.div
                 key="review-view"
@@ -4435,6 +4442,18 @@ export default function NoteApp() {
                     }}
                   />
                 </Suspense>
+              </m.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {communityOpen && (
+              <m.div key="community-view"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+                <CommunityView theme={theme} friendCode={friendCode}
+                  onClose={() => setCommunityOpen(false)} />
               </m.div>
             )}
           </AnimatePresence>
@@ -4748,6 +4767,20 @@ export default function NoteApp() {
               <path d="M5 6 L5.3 5.2 L5.6 6 L5.3 6.8Z" fill="currentColor" opacity="0.2" />
             </svg>
             <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
+          </button>
+        )}
+        {notes.filter(n => !n.archived).length > 0 && (
+          <button
+            onClick={() => { if (communityOpen) { setCommunityOpen(false) } else { startTransition(() => { closeAllPanels(); setCommunityOpen(true) }) } }}
+            title="Community"
+            className="fixed bottom-[76px] left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-[1.04] active:scale-[0.97]"
+            style={{ width: 56, height: 56,
+              background: communityOpen ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))' : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+              border: communityOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-0.5" style={{ opacity: communityOpen ? 1 : 0.6 }}>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span className="text-[8px] font-normal tracking-wide" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', opacity: communityOpen ? 1 : 0.5 }}>friends</span>
           </button>
         )}
         {!user && (
