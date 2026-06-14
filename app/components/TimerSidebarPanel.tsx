@@ -309,6 +309,30 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   // Sap accrued so far this session — ramps toward the projected payout as time passes.
   const liveSap = total > 0 ? Math.round(effectiveSap * Math.min(1, elapsed / total)) : 0
 
+  // Tree + watering can as reusable blocks so they can swap places while running.
+  const treeVisual = (
+    <div
+      className="relative w-full mx-auto"
+      style={{ height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined }}
+      onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
+    >
+      <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
+        <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
+      </div>
+    </div>
+  )
+  const waterWidget = showWaterWidget && !treeDead ? (
+    <button
+      onClick={onWater}
+      title={waterUrgent ? "Water the tree soon!" : "Water the tree"}
+      className="mb-3 flex flex-col items-center gap-0.5 transition-transform hover:scale-[1.06] active:scale-[0.96]"
+      style={{ background: "none", border: "none", color: waterUrgent ? "#ef4444" : waterColor, fontFamily: serifFont, animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined }}
+    >
+      <WateringCan frac={waterFrac} urgent={waterUrgent} stroke={isDark ? "#cbd5e1" : "#64748b"} />
+      <span className="text-[13px] tabular-nums tracking-[0.04em]" style={{ opacity: 0.9, fontWeight: 500 }}>{String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}</span>
+    </button>
+  ) : null
+
   const sliderMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const snapPoints = [30, 60, 90, 120]
@@ -632,16 +656,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 </div>
               )}
 
-              {/* Tree view — click to change plant */}
-              <div
-                className="relative w-full mx-auto"
-                style={{ height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined }}
-                onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
-              >
-                    <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
-                      <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
-                    </div>
-                  </div>
+              {/* Tree view (click to change plant) — swaps with the watering can while running */}
+              {(running && showWaterWidget) ? waterWidget : treeVisual}
 
               {/* Growth status — below tree, replaces change plant */}
               {!running && !done && !treeDead && (() => {
@@ -693,24 +709,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
 
             {/* Bottom controls — pushed down */}
             <div className="flex flex-col items-center mt-auto">
-              {/* Watering can — chromeless, blends into the running panel */}
-              {showWaterWidget && !treeDead && (
-                <button
-                  onClick={onWater}
-                  title={waterUrgent ? "Water the tree soon!" : "Water the tree"}
-                  className="mb-3 flex flex-col items-center gap-0.5 transition-transform hover:scale-[1.06] active:scale-[0.96]"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: waterUrgent ? "#ef4444" : waterColor,
-                    fontFamily: serifFont,
-                    animation: waterUrgent ? "pulp-water-pulse 1.2s ease-in-out infinite" : undefined,
-                  }}
-                >
-                  <WateringCan frac={waterFrac} urgent={waterUrgent} stroke={isDark ? "#cbd5e1" : "#64748b"} />
-                  <span className="text-[10px] tabular-nums tracking-[0.04em]" style={{ opacity: 0.85 }}>{String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}</span>
-                </button>
-              )}
+              {/* Tree drops here while running (swapped with the watering can above) */}
+              {running && showWaterWidget && !treeDead && treeVisual}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
