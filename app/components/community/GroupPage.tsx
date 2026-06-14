@@ -13,10 +13,13 @@ export const GroupPage = memo(function GroupPage({
   const text = isDark ? '#fafafa' : '#0f0f10'
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
+  const [lb, setLb] = useState<{ weekly: { user_id: string; username: string; focus_minutes: number }[]; allTime: { user_id: string; username: string; focus_minutes_total: number; trees: number }[] }>({ weekly: [], allTime: [] })
 
   const load = useCallback(async () => {
     const res = await apiFetch(`/api/groups?id=${groupId}`)
     if (res.ok) { const j = await res.json(); setGroup(j.group); setMembers(j.members) }
+    const lbRes = await apiFetch(`/api/groups/leaderboard?id=${groupId}`)
+    if (lbRes.ok) setLb(await lbRes.json())
   }, [groupId])
   useEffect(() => { load() }, [load])
 
@@ -56,6 +59,26 @@ export const GroupPage = memo(function GroupPage({
           background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', color: text }}>
           <span>@{m.username ?? 'writer'}{m.role === 'owner' ? ' 👑' : ''}</span>
           <span style={{ marginLeft: 'auto', color: '#8a857e', fontSize: 12 }}>{m.focus_minutes_total} min</span>
+        </div>
+      ))}
+
+      <h3 style={{ color: text, fontSize: 15, margin: '18px 0 8px' }}>This week</h3>
+      {lb.weekly.map((r, i) => (
+        <div key={r.user_id} style={{ display: 'flex', gap: 10, padding: '6px 12px', borderRadius: 10, marginBottom: 4,
+          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', color: text }}>
+          <span style={{ color: '#8a857e', width: 22 }}>#{i + 1}</span>
+          <span>@{r.username}</span>
+          <span style={{ marginLeft: 'auto', color: accent, fontSize: 13 }}>{r.focus_minutes} min</span>
+        </div>
+      ))}
+
+      <h3 style={{ color: text, fontSize: 15, margin: '18px 0 8px' }}>All term</h3>
+      {lb.allTime.map((r, i) => (
+        <div key={r.user_id} style={{ display: 'flex', gap: 10, padding: '6px 12px', borderRadius: 10, marginBottom: 4,
+          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', color: text }}>
+          <span style={{ color: '#8a857e', width: 22 }}>#{i + 1}</span>
+          <span>@{r.username}</span>
+          <span style={{ marginLeft: 'auto', color: '#8a857e', fontSize: 13 }}>{r.focus_minutes_total} min · 🌳 {r.trees}</span>
         </div>
       ))}
 
