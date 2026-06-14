@@ -534,8 +534,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           </pattern>
         </defs>
 
-        {/* Sky */}
-        <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
+        {/* Sky — extends above y=0 to fill the viewBox's top strip (was transparent) */}
+        <rect x="0" y="-4" width="200" height="104" fill="url(#sky-g)" />
 
         {/* Atmospheric haze layers */}
         <defs>
@@ -3231,12 +3231,12 @@ export const OrchardView = memo(function OrchardView({
           <span ref={collectBtnRef} className="absolute top-2 left-2 opacity-0 pointer-events-none z-[60]">
             <span ref={sapCounterRef}>{sap}</span>
           </span>
-          {/* Sap production rate — top-right corner */}
-          <span data-orchard-ui className="absolute top-3 right-4 z-[60] flex items-center gap-1.5 pointer-events-none" style={{
-            fontSize: 10, color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.8)',
-            fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.01em', textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          {/* Sap production rate — bottom-right corner */}
+          <span data-orchard-ui className="absolute bottom-5 right-5 z-[60] flex items-center gap-2 pointer-events-none" style={{
+            fontSize: 15, color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.9)',
+            fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.01em', textShadow: '0 1px 5px rgba(0,0,0,0.5)',
           }}>
-            <PulpIcon size={9} />
+            <PulpIcon size={13} />
             {(() => {
               const maxSap = grove.filter(t => t && t.type !== 'spoiled').reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
               const rate = (maxSap * sapMultiplier) / 30
@@ -3281,13 +3281,13 @@ export const OrchardView = memo(function OrchardView({
 
             {/* Grove header — market style with divider, plus action buttons */}
             <div data-orchard-ui className="absolute top-4 left-0 right-0 z-30 flex flex-col items-center pointer-events-none">
-              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', textShadow: '0 1px 4px rgba(0,0,0,0.45)' }}>
+              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 5px rgba(0,0,0,0.5)' }}>
                 {groveHeader.eyebrow}
               </span>
-              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 26, fontWeight: 400, lineHeight: 1.15, color: '#fff', letterSpacing: '0.12em', textTransform: 'uppercase', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 46, fontWeight: 400, lineHeight: 1.1, color: '#fff', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 3px 16px rgba(0,0,0,0.55)' }}>
                 {groveHeader.title}
               </span>
-              <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 8, opacity: 0.5 }}>
+              <svg width="300" height="14" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: 0.5 }}>
                 <line x1="0" y1="6" x2="95" y2="6" stroke="#fff" strokeWidth="0.5" />
                 <polygon points="110,2 114,6 110,10 106,6" fill="#fff" opacity="0.7" />
                 <line x1="125" y1="6" x2="220" y2="6" stroke="#fff" strokeWidth="0.5" />
