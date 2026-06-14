@@ -2168,7 +2168,6 @@ export const BoutiqueView = memo(function BoutiqueView({
           {selectedPlant && previewInfo && (() => {
             const stock = shopStock[selectedPlant!] || 0
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
-            const cat = previewInfo.category || 'none'
             const desc = PLANT_DESCRIPTIONS[selectedPlant!] || `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
             const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
             const canAfford = seedCost <= sap
@@ -2240,7 +2239,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                   <span style={{ fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font, marginBottom: 4 }}>
                     {RARITY_LABEL[previewInfo.rarity]}
-                    {cat !== 'none' && <span style={{ color: CATEGORY_COLOR[cat], marginLeft: 8 }}>{CATEGORY_LABEL[cat]}</span>}
                   </span>
                   <div style={{ fontSize: 20, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 6 }}>
                     {previewInfo.name}
@@ -2451,8 +2449,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                               {owned && <RarityScene rarity={t.rarity} isDark={isDark} />}
                               <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 12px ${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.06)'}`, pointerEvents: 'none', zIndex: 4 }} />
                               {owned && <Sparkles rarity={t.rarity} count={3} />}
-                              <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'absolute', left: '50%', bottom: '7%', transform: 'translateX(-50%)', zIndex: 2, filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})`, }}>
-                                <PlantIcon type={type} size={120} stage={3} hideGround />
+                              {/* Outer wrapper centers via flex (no transform), so the rarity
+                                  animation's transform on the inner div can't break centering. */}
+                              <div style={{ position: 'absolute', left: 0, right: 0, bottom: '7%', display: 'flex', justifyContent: 'center', zIndex: 2 }}>
+                                <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})` }}>
+                                  <PlantIcon type={type} size={120} stage={3} hideGround />
+                                </div>
                               </div>
                               {owned && (
                               <svg viewBox="0 0 100 18" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '12%', zIndex: 3 }}>
