@@ -28,6 +28,7 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
+import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
@@ -1206,6 +1207,8 @@ export default function NoteApp() {
   })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [friendCode, setFriendCode] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -1400,6 +1403,8 @@ export default function NoteApp() {
           if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
+        setNeedsOnboarding(!(profile as any).username)
+        setFriendCode((profile as any).friend_code ?? null)
       } else {
         // First time — create profile from localStorage state, then migrate legacy
         const saved = localStorage.getItem('pulp-grove')
@@ -1412,6 +1417,7 @@ export default function NoteApp() {
         })
         // Migrate legacy user_settings blob
         await db.migrateFromLegacy(user.id)
+        setNeedsOnboarding(true)
       }
 
       if (achievementRows.length) {
@@ -4752,6 +4758,9 @@ export default function NoteApp() {
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
         <PlantImagePreloader />
+        {needsOnboarding && user && (
+          <OnboardingModal theme={theme} onDone={(r) => { setFriendCode(r.friend_code); setNeedsOnboarding(false) }} />
+        )}
       </>
     </LazyMotion>
   )
