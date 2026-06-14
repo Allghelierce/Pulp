@@ -42,6 +42,9 @@ export function getPalette(isDark: boolean): Palette {
   return isDark ? DARK : LIGHT
 }
 
+// Shared panel-shell shadow (neutral). Use for full-screen modal panels.
+export const PANEL_SHADOW = '0 32px 80px -12px rgba(0,0,0,0.5)'
+
 // Typography — one source of truth for heading levels across the panel views.
 // Spread these into inline style props, e.g. style={{ ...type.viewTitle }}.
 export const FONT_SERIF = 'Crimson Pro, serif'

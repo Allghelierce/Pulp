@@ -355,53 +355,65 @@ export const LeaderboardView = memo(function LeaderboardView({
     const roadCol = isDark ? '#2a2418' : '#b89a6a'
     const grassCol = isDark ? P.hillNearTop : P.fieldMid1
 
-    const featuredPos = [
-      { left: 50, bottom: 44, size: 132 },
-      { left: 24, bottom: 33, size: 98 },
-      { left: 76, bottom: 33, size: 98 },
-    ]
     const featured = entries.slice(0, 3)
     const rest = entries.slice(3)
-    const perRow = 5
+    const perRow = 6
 
-    const tree = (p: Entry, left: number, bottom: number, size: number, rankIdx: number, featuredTree: boolean) => {
+    // A planted tree: anchored by its BASE on the ground line (top% + translateY(-100%)),
+    // so every tree actually sits on the field. Depth: front = bigger/brighter/on top.
+    const tree = (p: Entry, xPct: number, groundY: number, size: number, rankIdx: number, featuredTree: boolean, dim: number) => {
       const medal = rankIdx < 3 ? MEDAL_COLORS[rankIdx] : accent
+      const showPlate = featuredTree || p.isYou
       return (
         <div
           key={p.id}
           onClick={() => setSelectedPlayer(entries.indexOf(p))}
-          className="absolute flex flex-col items-center cursor-pointer group"
-          style={{ left: `${left}%`, bottom: `${bottom}%`, transform: 'translateX(-50%)', zIndex: Math.round(200 - bottom) }}
-          title={`${p.name} · +${formatPulp(p.pulpDelta)} pulp`}
+          className="absolute cursor-pointer group"
+          style={{ left: `${xPct}%`, top: `${groundY}%`, transform: 'translate(-50%, -100%)', zIndex: Math.round(groundY * 10) }}
+          title={`#${rankIdx + 1} · ${p.name} · +${formatPulp(p.pulpDelta)} pulp`}
         >
-          {rankIdx === 0 && (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill={MEDAL_COLORS[0]} stroke="none" style={{ marginBottom: -4, filter: 'drop-shadow(0 0 6px rgba(217,119,6,0.5))' }}>
-              <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" />
-            </svg>
-          )}
-          {p.isYou && rankIdx !== 0 && (
-            <span style={{ fontFamily: font, fontSize: 9, color: '#fff', background: accent, padding: '1px 6px', borderRadius: 6, marginBottom: 2, whiteSpace: 'nowrap' }}>You</span>
-          )}
-          <div className="group-hover:scale-105 transition-transform" style={{ transformOrigin: 'bottom center', filter: p.isYou ? `drop-shadow(0 0 6px ${accent}80)` : undefined }}>
-            <PlantIcon type={speciesFor(p.name)} size={size} stage={4} hideGround disableSway={!featuredTree} />
-          </div>
-          {/* name plate */}
-          <div
-            className={featuredTree ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity'}
-            style={{
-              marginTop: featuredTree ? 0 : 2, display: 'flex', alignItems: 'center', gap: 4,
-              background: isDark ? 'rgba(20,16,12,0.8)' : 'rgba(245,243,239,0.85)',
-              border: `1px solid ${medal}40`, borderRadius: 8, padding: '2px 7px',
-              backdropFilter: 'blur(2px)', whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: medal, fontWeight: 600 }}>#{rankIdx + 1}</span>
-            <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: p.isYou ? accent : textPrimary, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-            <span style={{ fontFamily: font, fontSize: featuredTree ? 10.5 : 9.5, color: textMuted }}>+{formatPulp(p.pulpDelta)}</span>
+          <div className="relative flex flex-col items-center">
+            {/* floating plate + crown, above the canopy */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center" style={{ bottom: '100%', marginBottom: 1 }}>
+              {rankIdx === 0 && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={MEDAL_COLORS[0]} stroke="none" style={{ filter: 'drop-shadow(0 0 5px rgba(217,119,6,0.55))' }}>
+                  <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" />
+                </svg>
+              )}
+              <div
+                className={showPlate ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity'}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 4, marginTop: 1,
+                  background: isDark ? 'rgba(20,16,12,0.82)' : 'rgba(245,243,239,0.9)',
+                  border: `1px solid ${(p.isYou ? accent : medal)}55`, borderRadius: 8, padding: '1.5px 7px',
+                  backdropFilter: 'blur(2px)', whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: medal, fontWeight: 600 }}>#{rankIdx + 1}</span>
+                <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: p.isYou ? accent : textPrimary, maxWidth: 76, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                <span style={{ fontFamily: font, fontSize: featuredTree ? 10 : 9, color: textMuted }}>+{formatPulp(p.pulpDelta)}</span>
+              </div>
+            </div>
+            {/* tree */}
+            <div className="group-hover:scale-105 transition-transform" style={{ transformOrigin: 'bottom center', filter: `brightness(${dim})${p.isYou ? ` drop-shadow(0 0 7px ${accent})` : ''}` }}>
+              <PlantIcon type={speciesFor(p.name)} size={size} stage={4} hideGround disableSway={!featuredTree} />
+            </div>
+            {/* ground shadow — anchors the tree to the field */}
+            <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -1, width: size * 0.5, height: size * 0.11, background: 'radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 72%)', borderRadius: '50%' }} />
           </div>
         </div>
       )
     }
+
+    // Featured trio sits at the front (largest, lowest, top of z-order). #1 most forward.
+    const featuredPlace = [
+      { x: 50, groundY: 91, size: 124 }, // #1
+      { x: 27, groundY: 85, size: 92 },  // #2
+      { x: 73, groundY: 85, size: 92 },  // #3
+    ]
+    // The rest recede in rows behind the trio: higher up the field, smaller, dimmer.
+    const restRows = Math.max(1, Math.ceil(rest.length / perRow))
+    const yRestFront = 80, yRestBack = 67
 
     return (
       <>
@@ -453,34 +465,35 @@ export const LeaderboardView = memo(function LeaderboardView({
             {/* mid hills */}
             <path d="M0,60 Q50,52 100,59 Q150,66 200,58 L200,84 L0,84 Z" fill="url(#lb-hillmid)" />
             {/* near field where trees stand */}
-            <path d="M0,66 Q60,60 120,66 Q165,70 200,64 L200,100 L0,100 Z" fill="url(#lb-field)" />
-            {/* lake */}
-            <ellipse cx="150" cy="88" rx="34" ry="6" fill="url(#lb-lake)" />
-            <ellipse cx="150" cy="86.5" rx="30" ry="4.6" fill={P.oceanTop} opacity="0.5" />
-            {[80, 86].map((y, i) => <path key={i} d={`M${134 + i*6},${y} q8,-1.4 16,0`} stroke={isDark ? '#3a4a44' : '#cfe4e8'} strokeWidth="0.4" fill="none" opacity="0.5" />)}
-            {/* winding road */}
-            <path d="M92,100 Q86,90 104,82 Q124,75 114,66 Q108,61 118,57" stroke={roadCol} strokeWidth="5" fill="none" opacity={isDark ? 0.5 : 0.7} strokeLinecap="round" />
-            <path d="M92,100 Q86,90 104,82 Q124,75 114,66 Q108,61 118,57" stroke={isDark ? '#3a3220' : '#cdb487'} strokeWidth="0.5" fill="none" strokeDasharray="1.5 2.5" opacity="0.6" />
-            {/* grass tufts */}
-            {[[20,82],[44,90],[70,86],[176,94],[36,96],[190,82],[12,90],[60,95],[100,92]].map(([x,y],i)=>(
-              <path key={i} d={`M${x},${y} l-1,-3 M${x},${y} l0,-3.6 M${x},${y} l1,-3`} stroke={grassCol} strokeWidth="0.4" fill="none" opacity="0.55" strokeLinecap="round" />
+            <path d="M0,64 Q60,58 120,64 Q165,68 200,62 L200,100 L0,100 Z" fill="url(#lb-field)" />
+            {/* lake — tucked in the back so trees stand in front of it */}
+            <ellipse cx="166" cy="70" rx="26" ry="3.4" fill="url(#lb-lake)" />
+            <ellipse cx="166" cy="69.2" rx="22" ry="2.4" fill={P.oceanTop} opacity="0.5" />
+            {[69, 71].map((y, i) => <path key={i} d={`M${154 + i * 5},${y} q6,-1 12,0`} stroke={isDark ? '#3a4a44' : '#cfe4e8'} strokeWidth="0.3" fill="none" opacity="0.5" />)}
+            {/* a quiet back road on the left slope */}
+            <path d="M14,100 Q24,88 18,78 Q12,71 26,66" stroke={roadCol} strokeWidth="3.4" fill="none" opacity={isDark ? 0.4 : 0.55} strokeLinecap="round" />
+            {/* grass tufts — edges + foreground only, clear of the trees */}
+            {[[6,96],[14,90],[190,94],[182,88],[4,86],[196,90],[22,98]].map(([x,y],i)=>(
+              <path key={i} d={`M${x},${y} l-1,-3 M${x},${y} l0,-3.6 M${x},${y} l1,-3`} stroke={grassCol} strokeWidth="0.4" fill="none" opacity="0.5" strokeLinecap="round" />
             ))}
           </svg>
           {/* sun/moon glow */}
           <div className="absolute pointer-events-none" style={{ left: '50%', top: '8%', width: 210, height: 210, transform: 'translateX(-50%)', background: `radial-gradient(circle, ${P.sunColor} 0%, transparent 70%)`, opacity: isDark ? 0.3 : Math.max(0.35, P.sunGlow) }} />
 
-          {/* trees */}
+          {/* trees — far rows first so near rows paint over them */}
           {rest.map((p, j) => {
             const row = Math.floor(j / perRow)
             const colsInRow = Math.min(perRow, rest.length - row * perRow)
             const col = j % perRow
-            const spread = Math.min(82, 28 + colsInRow * 12)
-            const left = colsInRow === 1 ? 50 : (50 - spread / 2 + col * (spread / (colsInRow - 1)))
-            const bottom = Math.max(5, 21 - row * 10)
-            const size = Math.max(40, 58 - row * 6)
-            return tree(p, left, bottom, size, j + 3, false)
+            const t = restRows <= 1 ? 0 : row / (restRows - 1)   // 0 front .. 1 back
+            const groundY = yRestFront - (yRestFront - yRestBack) * t
+            const margin = 12 + t * 16                            // back rows pull inward (perspective)
+            const x = colsInRow === 1 ? 50 : margin + col * ((100 - 2 * margin) / (colsInRow - 1))
+            const size = Math.round(58 - t * 22)                  // 58 front .. 36 back
+            const dim = 1 - t * 0.18                              // atmospheric fade
+            return tree(p, x, groundY, size, j + 3, false, dim)
           })}
-          {featured.map((p, i) => tree(p, featuredPos[i].left, featuredPos[i].bottom, featuredPos[i].size, i, true))}
+          {featured.map((p, i) => tree(p, featuredPlace[i].x, featuredPlace[i].groundY, featuredPlace[i].size, i, true, 1))}
         </div>
         {renderStickyYou()}
       </>
@@ -697,7 +710,7 @@ export const LeaderboardView = memo(function LeaderboardView({
       <div
         onMouseDown={e => e.stopPropagation()}
         onClick={e => e.stopPropagation()}
-        className={`relative w-full ${embedded ? '' : 'max-w-[520px]'} rounded-[20px] overflow-hidden flex flex-col ${embedded ? '' : 'border shadow-[0_32px_80px_-12px_rgba(60,40,10,0.45)]'}`}
+        className={`relative w-full ${embedded ? '' : 'max-w-[520px]'} rounded-2xl overflow-hidden flex flex-col ${embedded ? '' : 'border shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)]'}`}
         style={{ background: paper, height: embedded ? '100%' : 700, borderColor: embedded ? undefined : cardBorder }}
       >
         {/* Hand-drawn background: ruled paper + amber doodles */}
@@ -729,7 +742,9 @@ export const LeaderboardView = memo(function LeaderboardView({
             <div className="flex flex-col items-end gap-2 shrink-0">
               <div className="flex items-center gap-1.5">
                 {!embedded && (
-                  <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: textMuted, fontSize: 24, lineHeight: 1 }}>&times;</button>
+                  <button onClick={onClose} className={`w-7 h-7 flex items-center justify-center rounded-full transition-all ${isDark ? "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800" : "text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/80"}`}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
                 )}
               </div>
               {!showPicker && (

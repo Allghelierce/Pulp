@@ -428,8 +428,8 @@ export const StatsView = memo(function StatsView({
       >
         {/* Card: Level + Rings + Stats */}
         <div
-          className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
-          style={{ backgroundColor: bg, padding: '24px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+          className="rounded-2xl border"
+          style={{ backgroundColor: bg, borderColor: cardBorder, padding: '24px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
         >
           <div className="flex items-center gap-3 mb-4">
             <div
@@ -566,8 +566,8 @@ export const StatsView = memo(function StatsView({
 
         {/* Card: Consistency Graph */}
         <div
-          className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
-          style={{ backgroundColor: bg, padding: '20px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+          className="rounded-2xl border"
+          style={{ backgroundColor: bg, borderColor: cardBorder, padding: '20px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
         >
                 {/* Consistency Graph */}
                 {(() => {
@@ -751,8 +751,8 @@ export const StatsView = memo(function StatsView({
           const doubled = [...styled, ...styled]
           return (
             <div
-              className={`rounded-2xl ${isDark ? "border-zinc-800/80" : "border-zinc-200/80"} border`}
-              style={{ position: 'relative', height: 90, overflow: 'hidden', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+              className="rounded-2xl border"
+              style={{ position: 'relative', height: 90, overflow: 'hidden', borderColor: cardBorder, boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
             >
               <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Crimson Pro, serif', zIndex: 2 }}>Recently Grown</span>
               <div style={{
