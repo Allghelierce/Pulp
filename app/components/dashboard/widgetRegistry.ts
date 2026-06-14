@@ -32,6 +32,8 @@ export interface WidgetDefinition {
   minSize: [number, number]
   maxSize: [number, number]
   component: ComponentType<WidgetProps>
+  /** Render without the card background/shadow (widget supplies its own visuals). */
+  transparent?: boolean
 }
 
 export interface WidgetInstance {
