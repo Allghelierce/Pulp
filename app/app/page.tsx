@@ -1209,6 +1209,7 @@ export default function NoteApp() {
   const timerRunningRef = useRef(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [friendCode, setFriendCode] = useState<string | null>(null)
+  const [grade, setGrade] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -1405,6 +1406,7 @@ export default function NoteApp() {
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
         setNeedsOnboarding(!(profile as any).username)
         setFriendCode((profile as any).friend_code ?? null)
+        setGrade((profile as any).grade ?? null)
       } else {
         // First time — create profile from localStorage state, then migrate legacy
         const saved = localStorage.getItem('pulp-grove')
@@ -4374,6 +4376,7 @@ export default function NoteApp() {
               goalStreak={goalStreak}
               quotaTier={quotaTier}
               reduceMotion={reduceMotion}
+              grade={grade}
             />
           </div></Suspense>}
 
@@ -4759,7 +4762,7 @@ export default function NoteApp() {
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
         <PlantImagePreloader />
         {needsOnboarding && user && (
-          <OnboardingModal theme={theme} onDone={(r) => { setFriendCode(r.friend_code); setNeedsOnboarding(false) }} />
+          <OnboardingModal theme={theme} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
       </>
     </LazyMotion>

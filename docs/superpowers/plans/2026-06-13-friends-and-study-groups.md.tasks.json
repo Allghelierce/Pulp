@@ -4,20 +4,20 @@
     {
       "id": 5,
       "subject": "Task 0: Social schema migration + RLS",
-      "status": "pending",
+      "status": "completed",
       "description": "Create supabase/migrations/20260613_social.sql: add username+friend_code to player_profiles; tables friendships, study_groups, group_members, group_weekly, group_trees with indexes; term<=4mo CHECK; RLS select/owner-update policies.\n\n```json:metadata\n{\"files\": [\"supabase/migrations/20260613_social.sql\"], \"verifyCommand\": \"apply in Supabase SQL editor; select count(*) from group_members; => 0\", \"acceptanceCriteria\": [\"profile username+friend_code unique\", \"5 social tables with indexes\", \"term<=4mo CHECK\", \"RLS policies present\", \"valid SQL applies clean\"]}\n```"
     },
     {
       "id": 6,
       "subject": "Task 1: Social utilities + db helpers",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [5],
       "description": "Create lib/social.ts (generateFriendCode PULP-XXXX, generateInviteCode 8ch, validateUsername, validateTerm 4mo); append lib/db.ts social helpers (getProfileByUsername, getProfileByFriendCode, getMyGroups, types).\n\n```json:metadata\n{\"files\": [\"lib/social.ts\", \"lib/db.ts\"], \"verifyCommand\": \"npx tsc --noEmit\", \"acceptanceCriteria\": [\"generateFriendCode PULP-XXXX\", \"generateInviteCode 8ch\", \"validateUsername rules\", \"validateTerm 4mo guard\", \"db helpers exported, tsc passes\"]}\n```"
     },
     {
       "id": 7,
       "subject": "Task 2: Username + school onboarding",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6],
       "description": "POST /api/profile/username (validate, 409 dup, assign friend_code, set school); OnboardingModal (username+school, blocking); render in page when !profile.username.\n\n```json:metadata\n{\"files\": [\"app/api/profile/username/route.ts\", \"app/components/OnboardingModal.tsx\", \"app/app/page.tsx\", \"tests/social/onboarding.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/onboarding.spec.ts\", \"acceptanceCriteria\": [\"claim endpoint w/ 409 dup + friend code\", \"blocking modal w/ school\", \"no re-show after reload\"]}\n```"
     },

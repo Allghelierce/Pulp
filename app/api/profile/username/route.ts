@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   const v = validateUsername(body.username ?? '')
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
   const school = typeof body.school === 'string' ? body.school.trim().slice(0, 80) : null
+  const grade = typeof body.grade === 'string' ? body.grade.trim().slice(0, 40) : null
 
   // Uniqueness (case-insensitive) excluding self.
   const { data: existing } = await supabaseAdmin
@@ -43,8 +44,8 @@ export async function POST(req: Request) {
   }
 
   const { error } = await supabaseAdmin.from('player_profiles')
-    .update({ username: v.value, school }).eq('user_id', user.id)
+    .update({ username: v.value, school, ...(grade ? { grade } : {}) }).eq('user_id', user.id)
   if (error) return NextResponse.json({ error: "Could not save" }, { status: 500 })
 
-  return NextResponse.json({ username: v.value, friend_code: friendCode })
+  return NextResponse.json({ username: v.value, friend_code: friendCode, grade })
 }

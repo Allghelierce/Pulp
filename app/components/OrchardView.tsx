@@ -8,6 +8,7 @@ import { SummerTerrain } from "./SummerTerrain"
 import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
+import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
 
@@ -36,6 +37,7 @@ interface OrchardViewProps {
   goalStreak?: number
   quotaTier?: 'monthly' | 'weekly' | 'daily'
   reduceMotion?: boolean
+  grade?: string | null
 }
 
 type RGB = [number, number, number]
@@ -2649,8 +2651,9 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false,
+  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false, grade,
 }: OrchardViewProps) {
+  const groveHeader = groveTitle(grade)
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
   // One unified orchard: default to all trees, filter by notebook on demand.
@@ -3322,8 +3325,27 @@ export const OrchardView = memo(function OrchardView({
             perspective: '800px',
           }}>
 
+            {/* Grove title header — market style */}
+            <div data-orchard-ui className="absolute top-3 left-0 right-0 z-30 flex justify-center pointer-events-none">
+              <div
+                className="flex flex-col items-center rounded-2xl px-5 py-2"
+                style={{
+                  backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.14)',
+                  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.18)'}`,
+                }}
+              >
+                <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)' }}>
+                  {groveHeader.eyebrow}
+                </span>
+                <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 18, fontWeight: 600, lineHeight: 1.15, color: '#fff', letterSpacing: '-0.01em' }}>
+                  {groveHeader.title}
+                </span>
+              </div>
+            </div>
+
             {/* Plot switcher overlay */}
-            <div data-orchard-ui className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
+            <div data-orchard-ui className="absolute top-[58px] left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
               {/* Notebook filter */}
               <div className="relative pointer-events-auto">
                 <button

@@ -2,6 +2,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { getLevel, TREE_TYPES } from "@/app/constants"
+import { getPalette, getType, ACCENT } from "@/app/theme/palette"
 import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
@@ -347,13 +348,11 @@ export const StatsView = memo(function StatsView({
   const [draftGoals, setDraftGoals] = useState(loadGoals)
 
   const isDark = theme === 'dark'
-  const bg = isDark ? '#09090b' : '#f5f3ef'
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
-  const textSecondary = isDark ? '#8a8680' : '#7a7670'
-  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
+  const palette = getPalette(isDark)
+  const { bg, textPrimary, textSecondary, textMuted, cardBorder } = palette
+  const type = getType(palette)
 
-  const levelColor = '#d97706'
+  const levelColor = ACCENT
   const emptyCell = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'
 
   const heatmapColors = useMemo(() => [
@@ -655,7 +654,7 @@ export const StatsView = memo(function StatsView({
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Crimson Pro, serif' }}>Consistency</span>
+                          <span style={{ ...type.sectionHeader }}>Consistency</span>
                           {currentStreak > 0 && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                               <motion.svg

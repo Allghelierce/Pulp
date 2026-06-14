@@ -1,6 +1,7 @@
 "use client"
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
+import { getPalette, getType } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
@@ -637,13 +638,10 @@ export const BoutiqueView = memo(function BoutiqueView({
     }
   }, [isOpen, initialTab, initialScrollTo])
 
-  const bg = isDark ? '#09090b' : '#f5f3ef'
-  const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
-  const textSecondary = isDark ? '#8a8680' : '#7a7670'
-  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
-  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
+  const palette = getPalette(isDark)
+  const { bg, cardBg, cardBorder, textPrimary, textSecondary, textMuted } = palette
+  const type = getType(palette)
+  const dividerColor = cardBorder
 
   useEffect(() => {
     if (!isOpen) return
@@ -1578,7 +1576,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
               {(() => { return (<>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
+                <span style={{ ...type.viewTitle }}>Market</span>
                 {/* Ornamental divider */}
                 <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>
                   {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>

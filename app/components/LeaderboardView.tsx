@@ -5,6 +5,8 @@ import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { DEMO_COMPETITORS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { getPalette, getType } from "@/app/theme/palette"
+import { themePalette } from "@/lib/orchardSky"
 
 // Deterministic tree species per student so a name always grows the same tree.
 const FOREST_SPECIES = ['oak', 'pine', 'sakura', 'tangerine', 'plum', 'bamboo', 'cedarwood', 'birch', 'bonsai', 'pear']
@@ -121,13 +123,9 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [appliedName, setAppliedName] = useState<string | null>(null)
   const [boardView, setBoardView] = useState<'forest' | 'list'>('forest')
 
-  const accent = '#d97706'
-  const accentDeep = isDark ? '#e0922f' : '#b45309'
-  const paper = isDark ? '#141210' : '#f5f3ef'
-  const textPrimary = isDark ? '#e8e2d6' : '#2a2620'
-  const textSecondary = isDark ? '#9a948a' : '#6b6258'
-  const textMuted = isDark ? '#6b645a' : '#a89f92'
-  const cardBorder = isDark ? 'rgba(217,160,90,0.12)' : 'rgba(120,90,40,0.14)'
+  const palette = getPalette(isDark)
+  const { bg: paper, cardBorder, textPrimary, textSecondary, textMuted, accent, accentDeep } = palette
+  const type = getType(palette)
   const hoverBg = isDark ? 'rgba(217,119,6,0.06)' : 'rgba(120,90,40,0.05)'
   const inputBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(120,90,40,0.04)'
   const youBg = isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.07)'
@@ -350,22 +348,12 @@ export const LeaderboardView = memo(function LeaderboardView({
   const renderForest = () => {
     if (entries.length === 0) return emptyState
 
-    // Palette mirrors OrchardView (day for light, dusk for dark) so the scene matches the real orchard.
-    const P = isDark
-      ? {
-          skyTop: '#1e1018', skyMid: '#281614', skyLow: '#321e0e', skyHorizon: '#2e1a08', skyField: '#18140c', skyBottom: '#141008',
-          mtnTop: '#1e1810', mtnMid: '#18140c', mtnBot: '#14100a', snowTop: '#3e3628', snowFade: '#1e1810',
-          hillMidTop: '#1c2612', hillMidBot: '#18200e', hillNearTop: '#223014', hillNearBot: '#1e2810',
-          fieldTop: '#263414', fieldMid1: '#222e12', fieldMid2: '#243012', fieldBot: '#202a0e',
-          sunColor: '#d97706', sunGlow: 0.85, starOp: 0.55,
-        }
-      : {
-          skyTop: '#87aacc', skyMid: '#9dbdcc', skyLow: '#b8ccbb', skyHorizon: '#c8d8b8', skyField: '#d4debb', skyBottom: '#dae4c0',
-          mtnTop: '#5a6858', mtnMid: '#4a5848', mtnBot: '#3a4838', snowTop: '#e8e8e0', snowFade: '#a0a898',
-          hillMidTop: '#4a6a3a', hillMidBot: '#3e5e30', hillNearTop: '#507840', hillNearBot: '#446a34',
-          fieldTop: '#5a7a48', fieldMid1: '#527242', fieldMid2: '#4e6e3e', fieldBot: '#4a6838',
-          sunColor: '#f4d79a', sunGlow: 0.5, starOp: 0,
-        }
+    // Exact orchard theme-mode palette (night for dark, day↔dusk blend for light).
+    const P = themePalette(isDark)
+    const cliff = isDark ? '#161820' : '#8898a8'
+    const cliffOp = isDark ? 0.7 : 0.25
+    const roadCol = isDark ? '#2a2418' : '#b89a6a'
+    const grassCol = isDark ? P.hillNearTop : P.fieldMid1
 
     const featuredPos = [
       { left: 50, bottom: 44, size: 132 },
@@ -418,7 +406,7 @@ export const LeaderboardView = memo(function LeaderboardView({
     return (
       <>
         <div className="flex-1 relative overflow-hidden">
-          {/* Orchard-style terrain: layered sky, mountains, hills, field */}
+          {/* Orchard-style terrain: sky, haze, cliffs, mountains, hills, lake, road, field, grass */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
             <defs>
               <linearGradient id="lb-sky" x1="0" y1="0" x2="0" y2="1">
@@ -426,6 +414,8 @@ export const LeaderboardView = memo(function LeaderboardView({
                 <stop offset="40%" stopColor={P.skyLow} /><stop offset="60%" stopColor={P.skyHorizon} />
                 <stop offset="80%" stopColor={P.skyField} /><stop offset="100%" stopColor={P.skyBottom} />
               </linearGradient>
+              <radialGradient id="lb-haze1" cx="25%" cy="35%" r="50%"><stop offset="0%" stopColor={isDark ? '#1a1040' : '#b8c8e8'} stopOpacity={isDark ? 0.12 : 0.08} /><stop offset="100%" stopColor={isDark ? '#1a1040' : '#b8c8e8'} stopOpacity="0" /></radialGradient>
+              <radialGradient id="lb-haze2" cx="72%" cy="28%" r="40%"><stop offset="0%" stopColor={isDark ? '#201830' : '#c8b8d8'} stopOpacity={isDark ? 0.1 : 0.06} /><stop offset="100%" stopColor={isDark ? '#201830' : '#c8b8d8'} stopOpacity="0" /></radialGradient>
               <linearGradient id="lb-mtn" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={P.mtnTop} /><stop offset="60%" stopColor={P.mtnMid} /><stop offset="100%" stopColor={P.mtnBot} />
               </linearGradient>
@@ -439,6 +429,9 @@ export const LeaderboardView = memo(function LeaderboardView({
                 <stop offset="0%" stopColor={P.fieldTop} /><stop offset="30%" stopColor={P.fieldMid1} />
                 <stop offset="70%" stopColor={P.fieldMid2} /><stop offset="100%" stopColor={P.fieldBot} />
               </linearGradient>
+              <linearGradient id="lb-lake" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.oceanTop} /><stop offset="60%" stopColor={P.oceanMid} /><stop offset="100%" stopColor={P.oceanBot} />
+              </linearGradient>
               <linearGradient id="lb-horizon" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={P.skyHorizon} stopOpacity="0" />
                 <stop offset="70%" stopColor={P.skyHorizon} stopOpacity="0" />
@@ -446,21 +439,35 @@ export const LeaderboardView = memo(function LeaderboardView({
               </linearGradient>
             </defs>
             <rect width="200" height="100" fill="url(#lb-sky)" />
+            <rect width="200" height="44" fill="url(#lb-haze1)" /><rect width="200" height="44" fill="url(#lb-haze2)" />
             <rect width="200" height="60" fill="url(#lb-horizon)" />
             {/* stars (dark only) */}
-            {P.starOp > 0 && [[18,12],[40,8],[64,16],[92,10],[120,14],[150,9],[176,15],[30,20],[108,7],[140,19],[80,13],[190,11]].map(([x,y],i)=>(
-              <circle key={i} cx={x} cy={y} r={i%3===0?0.7:0.45} fill="#e8f0ff" opacity={P.starOp*(i%3===0?1:0.6)} />
+            {P.starOpacity > 0.2 && [[18,10],[40,7],[64,14],[92,9],[120,12],[150,8],[176,13],[30,18],[108,6],[140,17],[80,11],[190,9],[52,16],[164,5],[10,15]].map(([x,y],i)=>(
+              <circle key={i} cx={x} cy={y} r={i%3===0?0.7:0.4} fill="#e8f0ff" opacity={(i%3===0?0.85:0.5)} />
             ))}
+            {/* distant cliffs behind mountains — angular, faint */}
+            <path d="M0,40 L10,30 L18,34 L28,24 L38,32 L48,26 L60,34 L72,27 L84,33 L96,28 L110,36 L122,29 L134,24 L148,32 L160,28 L176,35 L188,30 L200,34 L200,52 L0,52 Z" fill={cliff} opacity={cliffOp} />
             {/* mountains + snow caps */}
             <path d="M0,54 L14,42 L22,48 L34,36 L44,47 L56,40 L66,50 L80,39 L90,48 L100,43 L114,53 L126,44 L138,38 L150,49 L162,43 L176,52 L188,45 L200,50 L200,72 L0,72 Z" fill="url(#lb-mtn)" />
-            <path d="M30,40 L34,36 L38,40 Z M76,43 L80,39 L84,43 Z M134,42 L138,38 L142,42 Z" fill="url(#lb-snow)" />
+            <path d="M30,40 L34,36 L38,40 L35,40.5 Z M76,43 L80,39 L84,43 L80.5,43.5 Z M134,42 L138,38 L142,42 L138.5,42.5 Z" fill="url(#lb-snow)" />
             {/* mid hills */}
             <path d="M0,60 Q50,52 100,59 Q150,66 200,58 L200,84 L0,84 Z" fill="url(#lb-hillmid)" />
             {/* near field where trees stand */}
-            <path d="M0,68 Q60,62 120,68 Q165,72 200,66 L200,100 L0,100 Z" fill="url(#lb-field)" />
+            <path d="M0,66 Q60,60 120,66 Q165,70 200,64 L200,100 L0,100 Z" fill="url(#lb-field)" />
+            {/* lake */}
+            <ellipse cx="150" cy="88" rx="34" ry="6" fill="url(#lb-lake)" />
+            <ellipse cx="150" cy="86.5" rx="30" ry="4.6" fill={P.oceanTop} opacity="0.5" />
+            {[80, 86].map((y, i) => <path key={i} d={`M${134 + i*6},${y} q8,-1.4 16,0`} stroke={isDark ? '#3a4a44' : '#cfe4e8'} strokeWidth="0.4" fill="none" opacity="0.5" />)}
+            {/* winding road */}
+            <path d="M92,100 Q86,90 104,82 Q124,75 114,66 Q108,61 118,57" stroke={roadCol} strokeWidth="5" fill="none" opacity={isDark ? 0.5 : 0.7} strokeLinecap="round" />
+            <path d="M92,100 Q86,90 104,82 Q124,75 114,66 Q108,61 118,57" stroke={isDark ? '#3a3220' : '#cdb487'} strokeWidth="0.5" fill="none" strokeDasharray="1.5 2.5" opacity="0.6" />
+            {/* grass tufts */}
+            {[[20,82],[44,90],[70,86],[176,94],[36,96],[190,82],[12,90],[60,95],[100,92]].map(([x,y],i)=>(
+              <path key={i} d={`M${x},${y} l-1,-3 M${x},${y} l0,-3.6 M${x},${y} l1,-3`} stroke={grassCol} strokeWidth="0.4" fill="none" opacity="0.55" strokeLinecap="round" />
+            ))}
           </svg>
-          {/* sun glow behind champion */}
-          <div className="absolute pointer-events-none" style={{ left: '50%', top: '10%', width: 200, height: 200, transform: 'translateX(-50%)', background: `radial-gradient(circle, ${P.sunColor}${isDark ? '88' : 'cc'} 0%, transparent 70%)`, opacity: P.sunGlow }} />
+          {/* sun/moon glow */}
+          <div className="absolute pointer-events-none" style={{ left: '50%', top: '8%', width: 210, height: 210, transform: 'translateX(-50%)', background: `radial-gradient(circle, ${P.sunColor} 0%, transparent 70%)`, opacity: isDark ? 0.3 : Math.max(0.35, P.sunGlow) }} />
 
           {/* trees */}
           {rest.map((p, j) => {
@@ -703,12 +710,12 @@ export const LeaderboardView = memo(function LeaderboardView({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill={accent} stroke="none"><path d="M4 2v20l8-5 8 5V2z" /></svg>
-                <span style={{ fontFamily: font, fontSize: 11, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.16em' }}>
+                <span style={{ ...type.eyebrow }}>
                   {isDemo ? 'sample league' : 'weekly standings'}
                 </span>
               </div>
               {!showPicker && schoolLabel && (
-                <h2 style={{ fontFamily: font, fontSize: 22, fontWeight: 600, color: accentDeep, letterSpacing: '-0.01em', margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
+                <h2 style={{ ...type.viewTitle, margin: '3px 0 0', lineHeight: 1.15 }} className="truncate flex items-center gap-1.5">
                   {schoolLabel}
                   {isDemo && <span style={{ fontSize: 15 }}>🪶</span>}
                 </h2>
