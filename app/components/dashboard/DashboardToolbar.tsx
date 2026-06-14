@@ -25,7 +25,7 @@ export const DashboardToolbar = memo(function DashboardToolbar({
     <div style={{ position: 'relative', padding: '16px 24px 8px', flexShrink: 0 }}>
       {/* Centered title + ornamental divider — matches the market */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-        <span style={{ fontFamily: font, fontSize: 26, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
+        <span style={{ fontFamily: font, fontSize: 32, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
           Stats
         </span>
         <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>

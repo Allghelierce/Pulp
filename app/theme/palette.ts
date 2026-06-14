@@ -77,7 +77,7 @@ export function getType(p: Palette) {
     // Big title at the top of a tab (Market, Leaderboard, etc.)
     viewTitle: {
       fontFamily: FONT_SERIF,
-      fontSize: 26,
+      fontSize: 32,
       fontWeight: 400,
       letterSpacing: '0.12em',
       textTransform: 'uppercase' as const,

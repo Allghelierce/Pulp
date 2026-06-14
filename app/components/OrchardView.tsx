@@ -3041,21 +3041,28 @@ export const OrchardView = memo(function OrchardView({
       }
       if (closest >= 0 && closestDist < 200) {
         const key = selectedNotebookRef.current ?? '_all'
-        const currentOrder = slotOrderRef.current[key] || currentPlotTreesRef.current.map((t: any) => t.id)
-        const dragIdx = currentOrder.indexOf(ds.treeId)
+        // Normalize to a full order that includes every tree currently on screen,
+        // even ones not yet saved in slotOrder (newly planted / first drag).
+        const visualOrder = [...placedRef.current].sort((a, b) => a.slotIndex - b.slotIndex).map((p: any) => p.tree.id)
+        const baseOrder = slotOrderRef.current[key] ? [...slotOrderRef.current[key]] : []
+        for (const id of visualOrder) if (!baseOrder.includes(id)) baseOrder.push(id)
+        const dragIdx = baseOrder.indexOf(ds.treeId)
         if (dragIdx >= 0) {
           const targetTreeId = placedRef.current.find(p => p.slotIndex === closest)?.tree?.id
-          const newOrder = [...currentOrder]
-          newOrder.splice(dragIdx, 1)
-          if (targetTreeId) {
-            const targetIdx = newOrder.indexOf(targetTreeId)
-            if (targetIdx >= 0) newOrder.splice(targetIdx, 0, ds.treeId)
-            else newOrder.push(ds.treeId)
+          if (targetTreeId && targetTreeId !== ds.treeId) {
+            // Swap the dragged tree with the tree already in that slot — no cascade.
+            const targetIdx = baseOrder.indexOf(targetTreeId)
+            if (targetIdx >= 0) {
+              ;[baseOrder[dragIdx], baseOrder[targetIdx]] = [baseOrder[targetIdx], baseOrder[dragIdx]]
+            }
+          } else if (!targetTreeId) {
+            // Dropped on an empty slot — move the dragged tree to the end.
+            baseOrder.splice(dragIdx, 1)
+            baseOrder.push(ds.treeId)
           } else {
-            const insertAt = Math.min(closest, newOrder.length)
-            newOrder.splice(insertAt, 0, ds.treeId)
+            return // dropped back on itself
           }
-          const updated = { ...slotOrderRef.current, [key]: newOrder }
+          const updated = { ...slotOrderRef.current, [key]: baseOrder }
           setSlotOrder(updated)
           localStorage.setItem('pulp-slot-order', JSON.stringify(updated))
         }
@@ -3221,6 +3228,7 @@ export const OrchardView = memo(function OrchardView({
           100% { transform: translateY(var(--drip-dist)) scale(0); opacity: 0; }
         }
         @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
+        @keyframes orchard-mode-glow { 0% { opacity: 0 } 100% { opacity: 1 } }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
@@ -3278,7 +3286,7 @@ export const OrchardView = memo(function OrchardView({
           {(activeTool === 'axe' || editMode) && (
             <div data-orchard-ui className="absolute inset-0 pointer-events-none z-[55]" style={{
               boxShadow: `inset 0 0 90px 6px ${activeTool === 'axe' ? 'rgba(239,68,68,0.5)' : 'rgba(217,119,6,0.5)'}`,
-              transition: 'box-shadow 0.25s ease',
+              animation: 'orchard-mode-glow 0.5s ease both',
             }} />
           )}
 
