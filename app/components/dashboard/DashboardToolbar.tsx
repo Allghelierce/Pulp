@@ -19,21 +19,23 @@ export const DashboardToolbar = memo(function DashboardToolbar({
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const btnBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
   const btnHover = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+  const dividerC = isDark ? '#dcd8d0' : '#2a2620'
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '16px 24px 8px',
-      flexShrink: 0,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Matches the market's viewTitle (app/theme/palette.ts) */}
+    <div style={{ position: 'relative', padding: '16px 24px 8px', flexShrink: 0 }}>
+      {/* Centered title + ornamental divider — matches the market */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
         <span style={{ fontFamily: font, fontSize: 26, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
           Stats
         </span>
+        <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>
+          <line x1="0" y1="6" x2="95" y2="6" stroke={dividerC} strokeWidth="0.5" />
+          <polygon points="110,2 114,6 110,10 106,6" fill={isDark ? '#e8e4dc' : '#4a4640'} opacity="0.6" />
+          <line x1="125" y1="6" x2="220" y2="6" stroke={dividerC} strokeWidth="0.5" />
+        </svg>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ position: 'absolute', top: 16, right: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
         <button
           onClick={onOpenLibrary}
           style={{
