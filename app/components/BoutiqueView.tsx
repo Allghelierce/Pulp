@@ -583,8 +583,7 @@ function generateMarketSeeds(epoch: number): { seeds: string[]; stock: Record<st
       if (r <= 0) { picked = t; break }
     }
     selected.push(picked)
-    const sv = rng() * 100
-    stock[picked] = sv < 2 ? 7 : sv < 7 ? 3 : sv < 27 ? 2 : 1
+    stock[picked] = 1
     if (rng() < 0.07) {
       const pcts = [10, 15, 20, 25, 30]
       discounts[picked] = pcts[Math.floor(rng() * pcts.length)]
@@ -1889,7 +1888,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             {/* Rarity label */}
                             <div style={{
-                              position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                              position: 'absolute', top: 40, left: '50%', transform: 'translateX(-50%)',
                               fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
                               letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
                               animation: revealEffect?.index === i
@@ -1902,8 +1901,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             }}>
                               {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
                             </div>
-                            {/* Stock / sold out */}
-                            {soldOut ? (
+                            {/* Sold out */}
+                            {soldOut && (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
                                 fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
@@ -1911,15 +1910,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
                               }}>Sold out</div>
-                            ) : (
-                              <div style={{
-                                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 400,
-                                color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
-                                background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)',
-                                padding: '2px 6px', borderRadius: 3,
-                                backdropFilter: 'blur(4px)', zIndex: 5,
-                              }}>x{shopStock[type]}</div>
                             )}
                             {/* Discount badge - now on price tag */}
                             {discount > 0 && false && (

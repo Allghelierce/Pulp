@@ -4,6 +4,15 @@ import { motion, AnimatePresence } from "framer-motion"
 import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { DEMO_COMPETITORS } from "@/app/constants"
+import { PlantIcon } from "./PlantIcon"
+
+// Deterministic tree species per student so a name always grows the same tree.
+const FOREST_SPECIES = ['oak', 'pine', 'sakura', 'tangerine', 'plum', 'bamboo', 'cedarwood', 'birch', 'bonsai', 'pear']
+function speciesFor(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return FOREST_SPECIES[h % FOREST_SPECIES.length]
+}
 
 interface LeaderboardViewProps {
   isOpen: boolean
@@ -110,6 +119,7 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [changingSchool, setChangingSchool] = useState(false)
   const [applying, setApplying] = useState(false)
   const [appliedName, setAppliedName] = useState<string | null>(null)
+  const [boardView, setBoardView] = useState<'forest' | 'list'>('forest')
 
   const accent = '#d97706'
   const accentDeep = isDark ? '#e0922f' : '#b45309'
@@ -302,6 +312,174 @@ export const LeaderboardView = memo(function LeaderboardView({
     </div>
   )
 
+  const renderStickyYou = () => resolvedRank ? (
+    <div className="px-4 py-3 shrink-0 relative z-10" style={{ borderTop: `1px solid ${cardBorder}` }}>
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: youBg, border: `1px solid ${isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.14)'}` }}>
+        <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>#{resolvedRank}</span>
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0" style={{ background: avatarColor, color: '#fff', fontFamily: font }}>
+          {userName[0]?.toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[12.5px] font-normal" style={{ color: accent, fontFamily: font }}>{userName} (You)</div>
+          <div className="text-[9.5px]" style={{ color: textMuted, fontFamily: font }}>
+            {resolvedRank === 1 ? 'Top of your school!' : resolvedRank <= 3 ? 'On the podium' : 'Keep focusing to climb'}
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          <span className="text-[12.5px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
+            +{formatPulp(entries.find(e => e.isYou)?.pulpDelta ?? 0)}
+          </span>
+        </div>
+      </div>
+    </div>
+  ) : null
+
+  const emptyState = (
+    <div className="flex-1 flex items-center justify-center flex-col gap-2 px-8 text-center relative z-10">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
+      </svg>
+      <div style={{ fontFamily: font, fontSize: 14, color: textSecondary }}>No one here yet</div>
+      <div style={{ fontFamily: font, fontSize: 12, color: textMuted }}>
+        Be the first at {schoolLabel} — focus to grow your tree.
+      </div>
+    </div>
+  )
+
+  const renderForest = () => {
+    if (entries.length === 0) return emptyState
+
+    // Palette mirrors OrchardView (day for light, dusk for dark) so the scene matches the real orchard.
+    const P = isDark
+      ? {
+          skyTop: '#1e1018', skyMid: '#281614', skyLow: '#321e0e', skyHorizon: '#2e1a08', skyField: '#18140c', skyBottom: '#141008',
+          mtnTop: '#1e1810', mtnMid: '#18140c', mtnBot: '#14100a', snowTop: '#3e3628', snowFade: '#1e1810',
+          hillMidTop: '#1c2612', hillMidBot: '#18200e', hillNearTop: '#223014', hillNearBot: '#1e2810',
+          fieldTop: '#263414', fieldMid1: '#222e12', fieldMid2: '#243012', fieldBot: '#202a0e',
+          sunColor: '#d97706', sunGlow: 0.85, starOp: 0.55,
+        }
+      : {
+          skyTop: '#87aacc', skyMid: '#9dbdcc', skyLow: '#b8ccbb', skyHorizon: '#c8d8b8', skyField: '#d4debb', skyBottom: '#dae4c0',
+          mtnTop: '#5a6858', mtnMid: '#4a5848', mtnBot: '#3a4838', snowTop: '#e8e8e0', snowFade: '#a0a898',
+          hillMidTop: '#4a6a3a', hillMidBot: '#3e5e30', hillNearTop: '#507840', hillNearBot: '#446a34',
+          fieldTop: '#5a7a48', fieldMid1: '#527242', fieldMid2: '#4e6e3e', fieldBot: '#4a6838',
+          sunColor: '#f4d79a', sunGlow: 0.5, starOp: 0,
+        }
+
+    const featuredPos = [
+      { left: 50, bottom: 44, size: 132 },
+      { left: 24, bottom: 33, size: 98 },
+      { left: 76, bottom: 33, size: 98 },
+    ]
+    const featured = entries.slice(0, 3)
+    const rest = entries.slice(3)
+    const perRow = 5
+
+    const tree = (p: Entry, left: number, bottom: number, size: number, rankIdx: number, featuredTree: boolean) => {
+      const medal = rankIdx < 3 ? MEDAL_COLORS[rankIdx] : accent
+      return (
+        <div
+          key={p.id}
+          onClick={() => setSelectedPlayer(entries.indexOf(p))}
+          className="absolute flex flex-col items-center cursor-pointer group"
+          style={{ left: `${left}%`, bottom: `${bottom}%`, transform: 'translateX(-50%)', zIndex: Math.round(200 - bottom) }}
+          title={`${p.name} · +${formatPulp(p.pulpDelta)} pulp`}
+        >
+          {rankIdx === 0 && (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={MEDAL_COLORS[0]} stroke="none" style={{ marginBottom: -4, filter: 'drop-shadow(0 0 6px rgba(217,119,6,0.5))' }}>
+              <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm0 2h14v2H5z" />
+            </svg>
+          )}
+          {p.isYou && rankIdx !== 0 && (
+            <span style={{ fontFamily: font, fontSize: 9, color: '#fff', background: accent, padding: '1px 6px', borderRadius: 6, marginBottom: 2, whiteSpace: 'nowrap' }}>You</span>
+          )}
+          <div className="group-hover:scale-105 transition-transform" style={{ transformOrigin: 'bottom center', filter: p.isYou ? `drop-shadow(0 0 6px ${accent}80)` : undefined }}>
+            <PlantIcon type={speciesFor(p.name)} size={size} stage={4} hideGround disableSway={!featuredTree} />
+          </div>
+          {/* name plate */}
+          <div
+            className={featuredTree ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity'}
+            style={{
+              marginTop: featuredTree ? 0 : 2, display: 'flex', alignItems: 'center', gap: 4,
+              background: isDark ? 'rgba(20,16,12,0.8)' : 'rgba(245,243,239,0.85)',
+              border: `1px solid ${medal}40`, borderRadius: 8, padding: '2px 7px',
+              backdropFilter: 'blur(2px)', whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: medal, fontWeight: 600 }}>#{rankIdx + 1}</span>
+            <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: p.isYou ? accent : textPrimary, maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+            <span style={{ fontFamily: font, fontSize: featuredTree ? 10.5 : 9.5, color: textMuted }}>+{formatPulp(p.pulpDelta)}</span>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <>
+        <div className="flex-1 relative overflow-hidden">
+          {/* Orchard-style terrain: layered sky, mountains, hills, field */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lb-sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.skyTop} /><stop offset="20%" stopColor={P.skyMid} />
+                <stop offset="40%" stopColor={P.skyLow} /><stop offset="60%" stopColor={P.skyHorizon} />
+                <stop offset="80%" stopColor={P.skyField} /><stop offset="100%" stopColor={P.skyBottom} />
+              </linearGradient>
+              <linearGradient id="lb-mtn" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.mtnTop} /><stop offset="60%" stopColor={P.mtnMid} /><stop offset="100%" stopColor={P.mtnBot} />
+              </linearGradient>
+              <linearGradient id="lb-snow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.snowTop} /><stop offset="100%" stopColor={P.snowFade} stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="lb-hillmid" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.hillMidTop} /><stop offset="100%" stopColor={P.hillMidBot} />
+              </linearGradient>
+              <linearGradient id="lb-field" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.fieldTop} /><stop offset="30%" stopColor={P.fieldMid1} />
+                <stop offset="70%" stopColor={P.fieldMid2} /><stop offset="100%" stopColor={P.fieldBot} />
+              </linearGradient>
+              <linearGradient id="lb-horizon" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={P.skyHorizon} stopOpacity="0" />
+                <stop offset="70%" stopColor={P.skyHorizon} stopOpacity="0" />
+                <stop offset="100%" stopColor={P.skyHorizon} stopOpacity={isDark ? 0.25 : 0.15} />
+              </linearGradient>
+            </defs>
+            <rect width="200" height="100" fill="url(#lb-sky)" />
+            <rect width="200" height="60" fill="url(#lb-horizon)" />
+            {/* stars (dark only) */}
+            {P.starOp > 0 && [[18,12],[40,8],[64,16],[92,10],[120,14],[150,9],[176,15],[30,20],[108,7],[140,19],[80,13],[190,11]].map(([x,y],i)=>(
+              <circle key={i} cx={x} cy={y} r={i%3===0?0.7:0.45} fill="#e8f0ff" opacity={P.starOp*(i%3===0?1:0.6)} />
+            ))}
+            {/* mountains + snow caps */}
+            <path d="M0,54 L14,42 L22,48 L34,36 L44,47 L56,40 L66,50 L80,39 L90,48 L100,43 L114,53 L126,44 L138,38 L150,49 L162,43 L176,52 L188,45 L200,50 L200,72 L0,72 Z" fill="url(#lb-mtn)" />
+            <path d="M30,40 L34,36 L38,40 Z M76,43 L80,39 L84,43 Z M134,42 L138,38 L142,42 Z" fill="url(#lb-snow)" />
+            {/* mid hills */}
+            <path d="M0,60 Q50,52 100,59 Q150,66 200,58 L200,84 L0,84 Z" fill="url(#lb-hillmid)" />
+            {/* near field where trees stand */}
+            <path d="M0,68 Q60,62 120,68 Q165,72 200,66 L200,100 L0,100 Z" fill="url(#lb-field)" />
+          </svg>
+          {/* sun glow behind champion */}
+          <div className="absolute pointer-events-none" style={{ left: '50%', top: '10%', width: 200, height: 200, transform: 'translateX(-50%)', background: `radial-gradient(circle, ${P.sunColor}${isDark ? '88' : 'cc'} 0%, transparent 70%)`, opacity: P.sunGlow }} />
+
+          {/* trees */}
+          {rest.map((p, j) => {
+            const row = Math.floor(j / perRow)
+            const colsInRow = Math.min(perRow, rest.length - row * perRow)
+            const col = j % perRow
+            const spread = Math.min(82, 28 + colsInRow * 12)
+            const left = colsInRow === 1 ? 50 : (50 - spread / 2 + col * (spread / (colsInRow - 1)))
+            const bottom = Math.max(5, 21 - row * 10)
+            const size = Math.max(40, 58 - row * 6)
+            return tree(p, left, bottom, size, j + 3, false)
+          })}
+          {featured.map((p, i) => tree(p, featuredPos[i].left, featuredPos[i].bottom, featuredPos[i].size, i, true))}
+        </div>
+        {renderStickyYou()}
+      </>
+    )
+  }
+
   const renderBoard = () => {
     const top3 = entries.slice(0, 3)
     const rest = entries.slice(3)
@@ -310,19 +488,7 @@ export const LeaderboardView = memo(function LeaderboardView({
     const podiumLabels = ['2nd', '1st', '3rd']
     const podiumMedals = [MEDAL_COLORS[1], MEDAL_COLORS[0], MEDAL_COLORS[2]]
 
-    if (entries.length === 0) {
-      return (
-        <div className="flex-1 flex items-center justify-center flex-col gap-2 px-8 text-center relative z-10">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
-          </svg>
-          <div style={{ fontFamily: font, fontSize: 14, color: textSecondary }}>No one here yet</div>
-          <div style={{ fontFamily: font, fontSize: 12, color: textMuted }}>
-            Be the first at {schoolLabel} — focus to earn pulp.
-          </div>
-        </div>
-      )
-    }
+    if (entries.length === 0) return emptyState
 
     return (
       <>
@@ -433,29 +599,7 @@ export const LeaderboardView = memo(function LeaderboardView({
           })}
         </div>
 
-        {/* You — sticky bottom */}
-        {resolvedRank && (
-          <div className="px-4 py-3 shrink-0 relative z-10" style={{ borderTop: `1px solid ${cardBorder}` }}>
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: youBg, border: `1px solid ${isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.14)'}` }}>
-              <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: accent, fontFamily: font }}>#{resolvedRank}</span>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-normal shrink-0" style={{ background: avatarColor, color: '#fff', fontFamily: font }}>
-                {userName[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12.5px] font-normal" style={{ color: accent, fontFamily: font }}>{userName} (You)</div>
-                <div className="text-[9.5px]" style={{ color: textMuted, fontFamily: font }}>
-                  {resolvedRank === 1 ? 'Top of your school!' : resolvedRank <= 3 ? 'On the podium' : 'Keep focusing to climb'}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                <span className="text-[12.5px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
-                  +{formatPulp(entries.find(e => e.isYou)?.pulpDelta ?? 0)}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
+        {renderStickyYou()}
       </>
     )
   }
@@ -599,22 +743,44 @@ export const LeaderboardView = memo(function LeaderboardView({
             </div>
           </div>
           {!showPicker && (
-            isDemo ? (
-              <p className="mt-2.5 text-[11px]" style={{ fontFamily: font, color: textMuted }}>
-                a preview of the standings — sign in to compete at your own school.
-              </p>
-            ) : school ? (
-              <button
-                onClick={() => { setSchoolQuery(''); setChangingSchool(true) }}
-                className="mt-2 inline-flex items-center gap-1 text-[10.5px] transition-colors"
-                style={{ fontFamily: font, color: textMuted, background: 'none', border: 'none', cursor: 'pointer' }}
-                onMouseEnter={e => { e.currentTarget.style.color = accent }}
-                onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                change school
-              </button>
-            ) : null
+            <div className="mt-2.5 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                {isDemo ? (
+                  <p className="text-[11px]" style={{ fontFamily: font, color: textMuted, margin: 0 }}>
+                    a preview — sign in to compete at your own school.
+                  </p>
+                ) : school ? (
+                  <button
+                    onClick={() => { setSchoolQuery(''); setChangingSchool(true) }}
+                    className="inline-flex items-center gap-1 text-[10.5px] transition-colors"
+                    style={{ fontFamily: font, color: textMuted, background: 'none', border: 'none', cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = accent }}
+                    onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    change school
+                  </button>
+                ) : null}
+              </div>
+              {/* Forest / List toggle */}
+              <div className="flex items-center rounded-full shrink-0" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(120,90,40,0.07)', padding: 2 }}>
+                {([['forest', 'Forest'], ['list', 'List']] as const).map(([v, label]) => (
+                  <button
+                    key={v}
+                    onClick={() => setBoardView(v)}
+                    className="rounded-full transition-colors"
+                    style={{
+                      fontFamily: font, fontSize: 10.5, padding: '3px 11px',
+                      background: boardView === v ? accent : 'transparent',
+                      color: boardView === v ? '#fff' : textMuted,
+                      fontWeight: boardView === v ? 600 : 400,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
@@ -624,6 +790,8 @@ export const LeaderboardView = memo(function LeaderboardView({
           </div>
         ) : showPicker ? (
           renderSchoolPicker()
+        ) : boardView === 'forest' ? (
+          renderForest()
         ) : (
           renderBoard()
         )}
