@@ -196,7 +196,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats, onStartReview,
+  grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats,
 }: TimerSidebarPanelProps) {
   const [now, setNow] = useState(() => Date.now())
   const [giveUpStage, setGiveUpStage] = useState(0)
@@ -205,7 +205,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [justWatered, setJustWatered] = useState(false)
-  const [mode, setMode] = useState<"write" | "review">("write")
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
   const [pageLeft, setPageLeft] = useState<number | null>(null)
   useEffect(() => {
@@ -266,7 +265,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMin = total > 0 ? Math.round(total / 60) : 0
-  const sessionContribution = growthTarget > 0 ? Math.min(1, (priorMinutes + sessionMin) / growthTarget) : 0
+  // Tree maxes out at its grow time, but sap keeps climbing past full-grown
+  // (at half rate) so longer sessions are still rewarded.
+  const rawContribution = growthTarget > 0 ? (priorMinutes + sessionMin) / growthTarget : 0
+  const sessionContribution = rawContribution <= 1 ? rawContribution : 1 + (rawContribution - 1) * 0.5
   const effectiveSap = Math.round(baseSap * multiplier * sessionContribution)
   const sessionMinutes = total > 0 ? elapsed / 60 : 0
   const cumulativeMinutes = priorMinutes + sessionMinutes
@@ -292,7 +294,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     if (treeDead) onDismissDead()
     else if (done) onClaim()
     else if (running) setGiveUpStage(1)
-    else if (mode === "review") onStartReview?.()
     else onStart()
   }
 
@@ -597,16 +598,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                   : null}
                 </p>
-                {!running && !done && !treeDead && (
-                  <div className="mt-3 flex justify-center">
+                {!treeDead && (
+                  <div className="mt-3 flex flex-col items-center gap-2">
                     <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} sapDisplay={effectiveSap} />
-                  </div>
-                )}
-                {running && !done && !treeDead && (
-                  <div className="mt-3 flex items-center justify-center gap-1.5">
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
-                    <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
-                    <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
+                    {running && !done && (
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
+                        <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
+                        <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -705,31 +706,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
-              {/* Mode toggle — Write vs Review (only before a session starts) */}
-              {!running && !done && !treeDead && (
-                <div className="w-full flex gap-1 p-0.5 rounded-lg mb-3" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" }}>
-                  {(["write", "review"] as const).map(m => (
-                    <button
-                      key={m}
-                      onClick={() => setMode(m)}
-                      className="flex-1 py-1 rounded-md text-[11px] transition-all"
-                      style={{
-                        fontFamily: serifFont,
-                        letterSpacing: "0.02em",
-                        textTransform: "capitalize",
-                        color: mode === m ? (isDark ? "#fafafa" : "#18181b") : subtleColor,
-                        backgroundColor: mode === m ? (isDark ? "rgba(255,255,255,0.08)" : "#fff") : "transparent",
-                        boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                      }}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Duration slider (hidden while running, and in review mode) */}
-              {!running && mode === "write" && (
+              {/* Duration slider (hidden while running) */}
+              {!running && (
                 <div className="w-full">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     {[15, 45, 90].map(m => (
@@ -824,7 +802,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : mode === "review" ? "Start Review" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
             </div>
           </div>
