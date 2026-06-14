@@ -968,7 +968,7 @@ const BoxTextarea = memo(function BoxTextarea({
               const paper = document.getElementById('editor-paper')
               if (paper) {
                 let zoom = 1
-                const zoomWrapper = document.querySelector('.shrink-0[style*="maxWidth"]') as HTMLElement | null
+                const zoomWrapper = document.getElementById('pulp-page-surface')
                 if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
 
                 let layer = document.getElementById('ghost-layer')
@@ -987,10 +987,12 @@ const BoxTextarea = memo(function BoxTextarea({
                 ghost.className = 'erased'
                 ghost.textContent = ghostText
                 ghost.style.position = 'absolute'
-                ghost.style.left = (ghostRect.left - paperRect.left) + 'px'
-                ghost.style.top = (ghostRect.top - paperRect.top) + 'px'
-                ghost.style.width = ghostRect.width + 'px'
-                ghost.style.height = ghostRect.height + 'px'
+                // ghostRect/paperRect are post-zoom (visual) px; the ghost lives inside the
+                // zoomed #pulp-page-surface, so convert the delta back to layout px (÷ zoom).
+                ghost.style.left = ((ghostRect.left - paperRect.left) / zoom) + 'px'
+                ghost.style.top = ((ghostRect.top - paperRect.top) / zoom) + 'px'
+                ghost.style.width = (ghostRect.width / zoom) + 'px'
+                ghost.style.height = (ghostRect.height / zoom) + 'px'
                 ghost.style.overflow = 'hidden'
 
                 const comp = window.getComputedStyle(ref.current)
@@ -4395,7 +4397,7 @@ export default function NoteApp() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
                 <Suspense fallback={null}>
                   <DashboardView
@@ -4427,7 +4429,7 @@ export default function NoteApp() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
                 <Suspense fallback={null}>
                   <ReviewView
@@ -4452,7 +4454,7 @@ export default function NoteApp() {
               <m.div key="community-view"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
                 <CommunityView theme={theme} friendCode={friendCode} currentUserId={user?.id ?? ''}
                   onClose={() => setCommunityOpen(false)} onActiveGroupChange={setActiveGroupId} />
               </m.div>
@@ -4480,7 +4482,7 @@ export default function NoteApp() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50, touchAction: 'manipulation' }}
               >
                 <Suspense fallback={null}><BoutiqueView
                   isOpen
