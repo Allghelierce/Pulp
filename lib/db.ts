@@ -332,3 +332,61 @@ export async function migrateFromLegacy(userId: string) {
     await Promise.all(s.trashNotes.map((noteId: string) => addToTrash(userId, noteId)))
   }
 }
+
+// ─── Social: friends ───
+export interface PublicProfile {
+  user_id: string
+  username: string | null
+  friend_code: string | null
+  display_name?: string
+  avatar_color?: string
+  level?: number
+}
+
+export async function getProfileByUsername(username: string): Promise<PublicProfile | null> {
+  const { data } = await supabase
+    .from('player_profiles')
+    .select('user_id, username, friend_code')
+    .ilike('username', username)
+    .single()
+  return data
+}
+
+export async function getProfileByFriendCode(code: string): Promise<PublicProfile | null> {
+  const { data } = await supabase
+    .from('player_profiles')
+    .select('user_id, username, friend_code')
+    .eq('friend_code', code)
+    .single()
+  return data
+}
+
+// ─── Social: groups ───
+export interface StudyGroup {
+  id: number
+  owner_id: string
+  name: string
+  school: string | null
+  invite_code: string
+  term_start: string
+  term_end: string
+  status: 'active' | 'archived'
+  max_members: number
+}
+
+export interface GroupMember {
+  group_id: number
+  user_id: string
+  role: 'owner' | 'member'
+  status: 'pending' | 'active'
+  focus_minutes_total: number
+}
+
+export async function getMyGroups(userId: string): Promise<StudyGroup[]> {
+  const { data } = await supabase
+    .from('group_members')
+    .select('study_groups(*)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+  return (data ?? []).map((r: any) => r.study_groups).filter(Boolean)
+}
