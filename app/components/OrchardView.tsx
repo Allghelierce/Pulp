@@ -2696,7 +2696,8 @@ export const OrchardView = memo(function OrchardView({
     if (!el || screenshotBusy) return
     setScreenshotBusy(true)
     const overlays = el.querySelectorAll<HTMLElement>('[data-orchard-ui]')
-    overlays.forEach(o => o.style.visibility = 'hidden')
+    overlays.forEach(o => o.style.display = 'none')
+    const restore = () => overlays.forEach(o => o.style.display = '')
     try {
       const url = await toPng(el, {
         pixelRatio: 2,
@@ -2709,7 +2710,7 @@ export const OrchardView = memo(function OrchardView({
       })
       setScreenshotData(url)
     } catch { /* ignore */ }
-    overlays.forEach(o => o.style.visibility = '')
+    restore()
     setScreenshotBusy(false)
   }, [screenshotBusy])
 
@@ -3273,6 +3274,14 @@ export const OrchardView = memo(function OrchardView({
           <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 80, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.3)' : 'rgba(50,45,38,0.12)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} onOpenShop={onOpenShop} />
 
+          {/* Mode indicator — edge glow: red for chop, amber for arrange */}
+          {(activeTool === 'axe' || editMode) && (
+            <div data-orchard-ui className="absolute inset-0 pointer-events-none z-[55]" style={{
+              boxShadow: `inset 0 0 90px 6px ${activeTool === 'axe' ? 'rgba(239,68,68,0.5)' : 'rgba(217,119,6,0.5)'}`,
+              transition: 'box-shadow 0.25s ease',
+            }} />
+          )}
+
 
           {/* Orchard scene */}
           <div className="flex-1 relative overflow-hidden" style={{
@@ -3648,7 +3657,7 @@ export const OrchardView = memo(function OrchardView({
 
           {/* Tool hint labels */}
           {(activeTool === 'axe' || editMode) && (
-            <div data-orchard-ui className="absolute left-1/2 -translate-x-1/2 top-12 z-50">
+            <div data-orchard-ui className="absolute left-1/2 -translate-x-1/2 top-[176px] z-50">
               {activeTool === 'axe' && (
                 <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
                   Tap tree to chop
