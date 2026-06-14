@@ -152,7 +152,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
           )}
-          <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? '180 days' : `${heatmapOffset * 180 + 120}–${heatmapOffset * 180 + 1}d ago`}</span>
+          <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? 'Last 180 days' : `${heatmapOffset * 180 + 180}–${heatmapOffset * 180 + 1}d ago`}</span>
           {heatmapOffset > 0 && (
             <button onClick={() => setHeatmapOffset(o => o - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
@@ -174,8 +174,8 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
             const dx = x2 - x1, dy = y2 - y1
             const dist = Math.sqrt(dx * dx + dy * dy)
             if (dist === 0) continue
-            const rA = a.cell.level === 0 ? 4 : [0, 2.5, 3, 3.8, 4.5][a.cell.level]
-            const rB = b.cell.level === 0 ? 4 : [0, 2.5, 3, 3.8, 4.5][b.cell.level]
+            const rA = a.cell.level === 0 ? 1.6 : [0, 2.5, 3, 3.8, 4.5][a.cell.level]
+            const rB = b.cell.level === 0 ? 1.6 : [0, 2.5, 3, 3.8, 4.5][b.cell.level]
             const nx = dx / dist, ny = dy / dist
             segments.push(
               <line key={`${ri}-${j}`} x1={x1 + nx * rA} y1={y1 + ny * rA} x2={x2 - nx * rB} y2={y2 - ny * rB}
@@ -198,16 +198,10 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
             )
           }
           const isEmpty = c.level === 0
-          const r = isEmpty ? 4 : [0, 2.5, 3, 3.8, 4.5][c.level]
+          const r = isEmpty ? 1.6 : [0, 2.5, 3, 3.8, 4.5][c.level]
           return (
-            <g key={c.date}>
-              <circle cx={px(col)} cy={py(row)} r={r}
-                fill={isEmpty ? (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') : heatmapColors[c.level]} />
-              {isEmpty && (
-                <text x={px(col)} y={py(row)} textAnchor="middle" dominantBaseline="central"
-                  fill={isDark ? '#6a6660' : '#8a8680'} fontSize="3" fontWeight="600">{c.dayNum}</text>
-              )}
-            </g>
+            <circle key={c.date} cx={px(col)} cy={py(row)} r={r}
+              fill={isEmpty ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : heatmapColors[c.level]} />
           )
         }))}
       </svg>

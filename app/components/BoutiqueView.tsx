@@ -2477,7 +2477,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                               {owned && <RarityScene rarity={t.rarity} isDark={isDark} />}
                               <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 12px ${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.06)'}`, pointerEvents: 'none', zIndex: 4 }} />
                               {owned && <Sparkles rarity={t.rarity} count={3} />}
-                              <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', zIndex: 2, bottom: '7%', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})`, }}>
+                              <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'absolute', left: '50%', bottom: '7%', transform: 'translateX(-50%)', zIndex: 2, filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})`, }}>
                                 <PlantIcon type={type} size={120} stage={3} hideGround />
                               </div>
                               {owned && (

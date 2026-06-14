@@ -16,11 +16,25 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
 
-  const quotaTarget = quotaTier === 'daily' ? dailyGoalMinutes : quotaTier === 'weekly' ? dailyGoalMinutes * 7 / 7 : dailyGoalMinutes * 30 / 30
-  const quotaProgress = Math.min(1, focus / Math.max(1, quotaTarget))
+  // Quota tracks focus across the tier's window vs the goal scaled to that window.
+  const periodDays = quotaTier === 'daily' ? 1 : quotaTier === 'weekly' ? 7 : 30
+  const periodFocus = (() => {
+    if (periodDays === 1) return focus
+    const map = new Map(dailyStats.map(e => [e.date, e.focusMinutes ?? 0]))
+    const now = new Date()
+    let sum = 0
+    for (let i = 0; i < periodDays; i++) {
+      const d = new Date(now); d.setDate(d.getDate() - i)
+      sum += map.get(d.toISOString().split("T")[0]) ?? 0
+    }
+    return sum
+  })()
+  const quotaTarget = dailyGoalMinutes * periodDays
+  const quotaProgress = Math.min(1, periodFocus / Math.max(1, quotaTarget))
   const streakProgress = Math.min(1, goalStreak / 30)
 
   const [editing, setEditing] = useState(false)
+  const [hover, setHover] = useState(false)
   const [draft, setDraft] = useState(String(dailyGoalMinutes))
   const [draftTier, setDraftTier] = useState(quotaTier)
 
@@ -33,9 +47,9 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
 
   const rings = [
-    { value: quotaProgress, label: 'quota', color: '#ea580c', radius: (size - strokeW) / 2 },
-    { value: streakProgress, label: 'streak', color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
-    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
+    { value: quotaProgress, label: 'quota', display: `${Math.round(quotaProgress * 100)}%`, color: '#ea580c', radius: (size - strokeW) / 2 },
+    { value: streakProgress, label: 'streak', display: `${goalStreak}d`, color: '#d97706', radius: (size - strokeW) / 2 - strokeW - gap },
+    { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', display: isEarlyBird ? `${Math.round(earlyBirdProgress * 100)}%` : 'off', color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
   const saveQuota = () => {
@@ -61,7 +75,11 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
   }
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 8, gap: 2 }}>
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 8, gap: 2 }}
+    >
       {!editing && (
         <button
           onClick={() => { setDraft(String(dailyGoalMinutes)); setEditing(true) }}
@@ -121,14 +139,22 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           {quotaTier} · {goalStreak}d
         </text>
       </svg>
-      <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
-        {rings.map((ring, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: ring.color }} />
-            <span style={{ fontSize: 8, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ring.label}</span>
-          </div>
-        ))}
-      </div>
+      {/* Ring legend — hidden until hover, like the timer rings */}
+      {!editing && (
+        <div style={{
+          position: 'absolute', bottom: 6, left: 0, right: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+          opacity: hover ? 1 : 0, transition: 'opacity 0.18s ease', pointerEvents: 'none',
+        }}>
+          {rings.map((ring, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: ring.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 8, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', width: 52 }}>{ring.label}</span>
+              <span style={{ fontSize: 8, fontWeight: 500, color: textPrimary, fontFamily: 'Inter, system-ui, sans-serif' }}>{ring.display}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {editing && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 4 }}>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -186,5 +212,6 @@ registerWidget({
   defaultSize: [2, 2],
   minSize: [2, 2],
   maxSize: [3, 3],
+  transparent: true,
   component: ActivityRingsWidget,
 })

@@ -2653,7 +2653,9 @@ export const OrchardView = memo(function OrchardView({
 }: OrchardViewProps) {
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
-  const selectedNotebook = activeTabId && activeNotesForDefault.some(n => n.id === activeTabId) ? activeTabId : (activeNotesForDefault.length > 0 ? activeNotesForDefault[0].id : '_unassigned')
+  // One unified orchard: default to all trees, filter by notebook on demand.
+  const [selectedNotebook, setSelectedNotebook] = useState<string>('_all')
+  const [showNbMenu, setShowNbMenu] = useState(false)
   const [plotPage, setPlotPage] = useState(0)
   useEffect(() => {
     setPlotPage(0)
@@ -2766,6 +2768,7 @@ export const OrchardView = memo(function OrchardView({
 
   const filteredTrees = useMemo(() => {
     const all = grove.filter(t => t !== null)
+    if (selectedNotebook === '_all') return all
     if (selectedNotebook === '_unassigned') return all.filter(t => !t.notebookId)
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
@@ -2890,9 +2893,22 @@ export const OrchardView = memo(function OrchardView({
     })
   }, [userId])
 
-  const nbUnlocked = unlockedPlots[selectedNotebook] || 1
+  const isAllView = selectedNotebook === '_all'
+  // In the unified "All" view, pages cover every tree and are all accessible
+  // (plots/unlocks are per-notebook only). Never cull in this view.
+  const allPages = Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT))
+  const nbUnlocked = isAllView ? allPages : (unlockedPlots[selectedNotebook] || 1)
   const totalPlots = Math.min(MAX_PLOTS, Math.max(1, Math.ceil(filteredTrees.length / TREES_PER_PLOT)))
   const accessiblePlots = Math.min(totalPlots, nbUnlocked)
+
+  const nbLabel = (id: string) => id === '_all' ? 'All notebooks' : id === '_unassigned' ? 'Unassigned' : (notes.find(n => n.id === id)?.subject || 'Notebook')
+  const filterOptions = useMemo(() => {
+    const opts: { id: string; label: string; count: number }[] = [{ id: '_all', label: 'All notebooks', count: grove.filter(Boolean).length }]
+    activeNotesForDefault.forEach(n => { const c = notebookTreeCounts[n.id] || 0; if (c > 0) opts.push({ id: n.id, label: n.subject, count: c }) })
+    const un = notebookTreeCounts['_unassigned'] || 0
+    if (un > 0) opts.push({ id: '_unassigned', label: 'Unassigned', count: un })
+    return opts
+  }, [activeNotesForDefault, notebookTreeCounts, grove])
 
   const unlockNextPlot = () => {
     const nextPlot = nbUnlocked + 1
@@ -2918,6 +2934,7 @@ export const OrchardView = memo(function OrchardView({
 
   // Auto-convert overflow trees to sap
   useEffect(() => {
+    if (isAllView) return // unified view shows everything; culling is per-notebook only
     const maxCapacity = nbUnlocked * TREES_PER_PLOT
     if (filteredTrees.length <= maxCapacity) return
     const overflow = filteredTrees.slice(maxCapacity)
@@ -3307,6 +3324,35 @@ export const OrchardView = memo(function OrchardView({
 
             {/* Plot switcher overlay */}
             <div data-orchard-ui className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
+              {/* Notebook filter */}
+              <div className="relative pointer-events-auto">
+                <button
+                  onClick={() => setShowNbMenu(v => !v)}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-normal uppercase tracking-widest transition-opacity hover:opacity-100 opacity-90"
+                  style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: 'rgba(255,255,255,0.9)' }}
+                >
+                  <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nbLabel(selectedNotebook)}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showNbMenu ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                {showNbMenu && (
+                  <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowNbMenu(false)} />
+                  <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 rounded-xl py-1.5 z-40" style={{ minWidth: 180, maxHeight: 280, overflowY: 'auto', backgroundColor: isDark ? 'rgba(20,18,16,0.96)' : 'rgba(255,255,255,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 12px 32px -8px rgba(0,0,0,0.4)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+                    {filterOptions.map(o => (
+                      <button
+                        key={o.id}
+                        onClick={() => { setSelectedNotebook(o.id); setShowNbMenu(false) }}
+                        className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left transition-colors"
+                        style={{ backgroundColor: o.id === selectedNotebook ? (isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)') : 'transparent' }}
+                      >
+                        <span style={{ fontSize: 12, fontWeight: 400, color: o.id === selectedNotebook ? '#d97706' : (isDark ? '#e4e4e7' : '#27272a'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+                        <span style={{ fontSize: 10, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)', flexShrink: 0 }}>{o.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                  </>
+                )}
+              </div>
               {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
                 <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
@@ -3319,7 +3365,7 @@ export const OrchardView = memo(function OrchardView({
                     <button onClick={() => setPlotPage(p => Math.min(nbUnlocked - 1, p + 1))} className="p-0.5 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
-                  ) : nbUnlocked < MAX_PLOTS ? (
+                  ) : (!isAllView && nbUnlocked < MAX_PLOTS) ? (
                     <button
                       onClick={unlockNextPlot}
                       disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)}
@@ -3444,7 +3490,7 @@ export const OrchardView = memo(function OrchardView({
                     {filteredTrees.length === 0 && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10 pointer-events-none">
                         <p className="text-[11px] font-normal" style={{ color: isDark ? '#8a8780' : '#7a7670' }}>
-                          {selectedNotebook === null ? 'Your orchard is empty.' :
+                          {isAllView ? 'Your orchard is empty.' :
                            selectedNotebook === '_unassigned' ? 'No unassigned trees.' :
                            'No trees grown for this notebook yet.'}
                         </p>

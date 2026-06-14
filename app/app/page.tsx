@@ -3722,6 +3722,7 @@ export default function NoteApp() {
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
+                  onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) } : undefined}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
                   lineWidth={lineWidth}
