@@ -264,7 +264,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMin = total > 0 ? Math.round(total / 60) : 0
-  const sessionContribution = growthTarget > 0 ? Math.min(1, (priorMinutes + sessionMin) / growthTarget) : 0
+  // Tree maxes out at its grow time, but sap keeps climbing past full-grown
+  // (at half rate) so longer sessions are still rewarded.
+  const rawContribution = growthTarget > 0 ? (priorMinutes + sessionMin) / growthTarget : 0
+  const sessionContribution = rawContribution <= 1 ? rawContribution : 1 + (rawContribution - 1) * 0.5
   const effectiveSap = Math.round(baseSap * multiplier * sessionContribution)
   const sessionMinutes = total > 0 ? elapsed / 60 : 0
   const cumulativeMinutes = priorMinutes + sessionMinutes
@@ -603,16 +606,16 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </span>
                   : null}
                 </p>
-                {!running && !done && !treeDead && (
-                  <div className="mt-3 flex justify-center">
+                {!treeDead && (
+                  <div className="mt-3 flex flex-col items-center gap-2">
                     <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} sapDisplay={effectiveSap} />
-                  </div>
-                )}
-                {running && !done && !treeDead && (
-                  <div className="mt-3 flex items-center justify-center gap-1.5">
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
-                    <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
-                    <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
+                    {running && !done && (
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
+                        <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
+                        <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
