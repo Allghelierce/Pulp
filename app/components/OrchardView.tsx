@@ -1743,7 +1743,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(10, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 2px 4px rgba(0,0,0,${isDark ? '0.2' : '0.1'}))` }} onClick={onOpenShop}>
+            <g transform="translate(6, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 2px 4px rgba(0,0,0,${isDark ? '0.2' : '0.1'}))` }} onClick={onOpenShop}>
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
                   <stop offset="0%" stopColor="#e8a030" />
@@ -1972,7 +1972,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
               {/* Cast shadow */}
               {(() => {
-                const stallWorldX = 10 + 175 * 0.065
+                const stallWorldX = 6 + 175 * 0.065
                 const dir = stallWorldX < lightX ? -1 : 1
                 const stretch = Math.abs(stallWorldX - lightX) / 100
                 const offX = dir * 60 * (0.3 + stretch * 0.5)
@@ -1993,10 +1993,13 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <g>
               {isNight && <>
-              <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              {/* Light pool shifted right + down so it falls on the shop */}
+              <g transform="translate(4, 3)">
+                <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+                <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+                <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+                <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              </g>
               <path d={`M${lx - 0.5},${ly - 7 * sc} L${lx + 4 * sc},${ly + 4 * sc} L${lx - 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
