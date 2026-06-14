@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
 import { PlantIcon } from "@/app/components/PlantIcon"
+import { useGroupPresence } from "./useGroupPresence"
 
 const accent = '#d97706'
 interface Member { user_id: string; role: string; status: string; focus_minutes_total: number; username?: string; level?: number }
@@ -27,6 +28,30 @@ export const GroupPage = memo(function GroupPage({
     if (grRes.ok) setGrove((await grRes.json()).trees || [])
   }, [groupId])
   useEffect(() => { load() }, [load])
+
+  const myUsername = members.find(m => m.user_id === currentUserId)?.username ?? 'writer'
+  const { peers, setStatus, broadcastTree } = useGroupPresence(group ? groupId : null, { user_id: currentUserId, username: myUsername }, load)
+
+  // 1s ticker so focusing countdowns update live
+  const [now, setNow] = useState(() => 0)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const t = setInterval(() => setNow(n => n + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  // Bridge focus-session start/complete from VitalitySystem (decoupled via window event)
+  useEffect(() => {
+    if (!group) return
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (!detail || detail.groupId !== groupId) return
+      if (detail.kind === 'start') setStatus('focusing', detail.timerEnd)
+      else if (detail.kind === 'complete') { setStatus('online'); broadcastTree(); load() }
+    }
+    window.addEventListener('pulp-group-session', handler)
+    return () => window.removeEventListener('pulp-group-session', handler)
+  }, [group, groupId, setStatus, broadcastTree, load])
 
   const isOwner = group?.owner_id === currentUserId
   const archived = group?.status === 'archived'
@@ -60,9 +85,22 @@ export const GroupPage = memo(function GroupPage({
 
       <h3 style={{ color: text, fontSize: 15, margin: '18px 0 8px' }}>Members ({active.length}/6)</h3>
       {active.map(m => (
-        <div key={m.user_id} style={{ display: 'flex', gap: 10, padding: '8px 12px', borderRadius: 10, marginBottom: 6,
+        <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 10, marginBottom: 6,
           background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', color: text }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+            background: peers[m.user_id] ? (peers[m.user_id].status === 'focusing' ? accent : '#22c55e') : '#52525250' }} />
           <span>@{m.username ?? 'writer'}{m.role === 'owner' ? ' 👑' : ''}</span>
+          {(() => {
+            const p = peers[m.user_id]
+            void now // re-render each tick
+            if (p?.status === 'focusing' && p.timer_end) {
+              const rem = Math.max(0, Math.round((p.timer_end - Date.now()) / 1000))
+              const mm = String(Math.floor(rem / 60)).padStart(2, '0')
+              const ss = String(rem % 60).padStart(2, '0')
+              return <span style={{ color: accent, fontSize: 12 }}>focusing {mm}:{ss}</span>
+            }
+            return null
+          })()}
           <span style={{ marginLeft: 'auto', color: '#8a857e', fontSize: 12 }}>{m.focus_minutes_total} min</span>
         </div>
       ))}
