@@ -4343,7 +4343,7 @@ export default function NoteApp() {
 
           </div>
 
-          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
