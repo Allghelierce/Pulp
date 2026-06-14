@@ -2,7 +2,6 @@
 import { useState, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
-import { GRADES } from "@/lib/term"
 
 const accent = '#d97706'
 
@@ -11,7 +10,6 @@ export const OnboardingModal = memo(function OnboardingModal({
 }: { theme: "light" | "dark"; onDone: (r: { username: string; friend_code: string }) => void }) {
   const [username, setUsername] = useState("")
   const [school, setSchool] = useState(SCHOOLS[0])
-  const [grade, setGrade] = useState(GRADES[7]) // 7th Grade default
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isDark = theme === 'dark'
@@ -19,7 +17,7 @@ export const OnboardingModal = memo(function OnboardingModal({
   const submit = async () => {
     setBusy(true); setError(null)
     const res = await apiFetch('/api/profile/username', {
-      method: 'POST', body: JSON.stringify({ username, school, grade }),
+      method: 'POST', body: JSON.stringify({ username, school }),
     })
     const json = await res.json()
     setBusy(false)
