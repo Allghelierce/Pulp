@@ -3547,20 +3547,6 @@ export default function NoteApp() {
                 }}
                 className="hover:bg-white/10 transition-colors"
               />
-              {/* natural right-edge fade onto content */}
-              <div
-                aria-hidden
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  left: '100%',
-                  width: 40,
-                  pointerEvents: 'none',
-                  zIndex: 240,
-                  background: 'linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.10) 30%, rgba(0,0,0,0.03) 60%, transparent)',
-                }}
-              />
             </m.div>
           )}
 
