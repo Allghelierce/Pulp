@@ -121,6 +121,11 @@ export const OrangeAIHub = memo(function OrangeAIHub({
     if (!msg || streaming) return
     setInput("")
 
+    if (!userId) {
+      setMessages(prev => [...prev, { role: "user", content: msg }, { role: "assistant", content: "Sign in to use the AI." }])
+      return
+    }
+
     const context = selectedContext || noteText || ""
     setMessages(prev => [...prev, { role: "user", content: msg }])
 
@@ -138,7 +143,10 @@ export const OrangeAIHub = memo(function OrangeAIHub({
           body: JSON.stringify(body),
         })
 
-        if (!res.ok) throw new Error("Edit request failed")
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}))
+          throw new Error(d.error || `Edit request failed (${res.status})`)
+        }
 
         setStatus("streaming")
         const reader = res.body?.getReader()
@@ -189,7 +197,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
         setMessages(prev => [...prev, { role: "assistant", content: err instanceof Error ? err.message : "Something went wrong." }])
       }
     }
-  }, [input, streaming, aiMode, selectedContext, noteText, streamFromAPI])
+  }, [input, streaming, aiMode, selectedContext, noteText, streamFromAPI, userId])
 
   const acceptEdit = useCallback(() => {
     if (!pendingEdit?.edited) return
@@ -405,8 +413,11 @@ export const OrangeAIHub = memo(function OrangeAIHub({
                   ref={inputRef as React.RefObject<HTMLInputElement>}
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleSend() } }}
-                  placeholder={aiMode === "edit" ? "rewrite..." : "..."}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") { e.preventDefault(); handleSend() }
+                    else if (e.key === "Tab") { e.preventDefault(); setAiMode(m => m === "plan" ? "edit" : "plan") }
+                  }}
+                  placeholder={aiMode === "edit" ? "rewrite · tab to plan" : "ask anything · tab to edit"}
                   style={{
                     flex: 1, background: "none", border: "none", outline: "none",
                     fontSize: 13, color: isDark ? "#e4e4e7" : "#18181b",

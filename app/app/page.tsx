@@ -49,6 +49,7 @@ const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.Bouti
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
 const DashboardView = lazy(() => _preloadDashboard().then(m => ({ default: m.DashboardView })))
 const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
+const ReviewView = lazy(() => import("@/app/components/ReviewView").then(m => ({ default: m.ReviewView })))
 
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
@@ -1224,8 +1225,9 @@ export default function NoteApp() {
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [statsOpen, setStatsOpen] = useState(false)
-  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setShowSettings(false) }, [])
+  const [reviewOpen, setReviewOpen] = useState(false)
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -2363,6 +2365,91 @@ export default function NoteApp() {
     return () => document.removeEventListener('input', handler)
   }, [autoCapitalize])
 
+  // Live syntax highlighting for code blocks
+  useEffect(() => {
+    const KEYWORDS = new Set([
+      "const", "let", "var", "function", "return", "if", "else", "for", "while", "do",
+      "switch", "case", "break", "continue", "new", "class", "extends", "super", "this",
+      "typeof", "instanceof", "in", "of", "import", "from", "export", "default", "try",
+      "catch", "finally", "throw", "async", "await", "yield", "delete", "void", "static",
+      "null", "undefined", "true", "false", "def", "lambda", "elif", "with", "as", "pass",
+      "raise", "and", "or", "not", "is", "None", "True", "False", "self", "print", "public",
+      "private", "protected", "int", "float", "string", "bool", "struct", "enum", "fn", "match",
+    ])
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const tokenize = (text: string) => {
+      const re = /(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)/g
+      let out = "", last = 0, m: RegExpExecArray | null
+      while ((m = re.exec(text))) {
+        out += esc(text.slice(last, m.index))
+        if (m[1]) out += `<span style="color:#6a9955">${esc(m[1])}</span>`
+        else if (m[2]) out += `<span style="color:#ce9178">${esc(m[2])}</span>`
+        else if (m[3]) out += `<span style="color:#b5cea8">${esc(m[3])}</span>`
+        else if (m[4]) out += KEYWORDS.has(m[4]) ? `<span style="color:#569cd6">${esc(m[4])}</span>` : esc(m[4])
+        last = re.lastIndex
+      }
+      out += esc(text.slice(last))
+      return out
+    }
+    const caretOffset = (pre: HTMLElement) => {
+      const sel = window.getSelection()
+      if (!sel || !sel.rangeCount || !pre.contains(sel.anchorNode)) return -1
+      const r = sel.getRangeAt(0).cloneRange()
+      r.selectNodeContents(pre)
+      r.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset)
+      return r.toString().length
+    }
+    const restoreCaret = (pre: HTMLElement, offset: number) => {
+      const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT)
+      let count = 0, node: Node | null
+      while ((node = walker.nextNode())) {
+        const len = node.textContent?.length ?? 0
+        if (count + len >= offset) {
+          const r = document.createRange()
+          r.setStart(node, Math.max(0, offset - count))
+          r.collapse(true)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(r)
+          return
+        }
+        count += len
+      }
+    }
+    const highlight = (pre: HTMLElement) => {
+      const text = pre.textContent ?? ""
+      const offset = caretOffset(pre)
+      const html = tokenize(text)
+      if (html === pre.innerHTML) return
+      pre.innerHTML = html
+      if (offset >= 0) restoreCaret(pre, offset)
+    }
+    // Keep code-block newlines as pure "\n" text so highlighting + caret stay consistent
+    const keydown = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement
+      const pre = t?.closest?.(".pulp-code-block pre") as HTMLElement | null
+      if (!pre) return
+      if (e.key === "Enter") { e.preventDefault(); document.execCommand("insertText", false, "\n") }
+      else if (e.key === "Tab") { e.preventDefault(); document.execCommand("insertText", false, "  ") }
+    }
+    let raf = 0
+    const input = (e: Event) => {
+      if ((e as InputEvent).isComposing) return
+      const t = e.target as HTMLElement
+      const pre = t?.closest?.(".pulp-code-block pre") as HTMLElement | null
+      if (!pre) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => highlight(pre))
+    }
+    document.addEventListener("keydown", keydown, true)
+    document.addEventListener("input", input)
+    return () => {
+      document.removeEventListener("keydown", keydown, true)
+      document.removeEventListener("input", input)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
   // Keyboard shortcuts for tools
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -3460,6 +3547,20 @@ export default function NoteApp() {
                 }}
                 className="hover:bg-white/10 transition-colors"
               />
+              {/* natural right-edge fade onto content */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: '100%',
+                  width: 40,
+                  pointerEvents: 'none',
+                  zIndex: 240,
+                  background: 'linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.10) 30%, rgba(0,0,0,0.03) 60%, transparent)',
+                }}
+              />
             </m.div>
           )}
 
@@ -4315,6 +4416,31 @@ export default function NoteApp() {
                 </Suspense>
               </m.div>
             )}
+            {reviewOpen && notes.find(n => n.id === activeTabId) && (
+              <m.div
+                key="review-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}
+              >
+                <Suspense fallback={null}>
+                  <ReviewView
+                    note={notes.find(n => n.id === activeTabId)!}
+                    theme={theme}
+                    accent={accentSolid}
+                    onClose={() => setReviewOpen(false)}
+                    onComplete={({ reviewed, again }) => {
+                      // Sap from recall — rate scaled by the quality of the orchard.
+                      const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (TREE_TYPES[t.type]?.sapYield || 0), 0) / 25))
+                      const earned = Math.round(Math.max(0, reviewed - again * 0.5) * 2 * orchardMult)
+                      if (earned > 0) setSap(sap + earned)
+                    }}
+                  />
+                </Suspense>
+              </m.div>
+            )}
           </AnimatePresence>
 
           {leaderboardOpen && <Suspense fallback={null}>
@@ -4591,7 +4717,8 @@ export default function NoteApp() {
           dailyGoalMinutes={dailyGoalMinutes}
           quotaTier={quotaTier}
           isHibernating={isHibernating}
-          hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen}
+          hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen || reviewOpen}
+          onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed (hidden while running to lock it in) */}

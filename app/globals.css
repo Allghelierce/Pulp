@@ -123,6 +123,10 @@ details.toggle-block summary:focus {
   cursor: text;
 }
 
+.pulp-code-block pre[data-placeholder]:empty::before {
+  color: rgba(255, 255, 255, 0.28);
+}
+
 /* ── Task list checkboxes ────────────────────────────────────── */
 .task-item input[type="checkbox"] {
   cursor: pointer;

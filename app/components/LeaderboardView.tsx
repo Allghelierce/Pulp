@@ -75,58 +75,20 @@ function buildDemoEntries(userPulp: number, userName: string, avatarColor: strin
   return [...bots, you].sort((a, b) => b.pulpDelta - a.pulpDelta)
 }
 
-// Hand-drawn amber doodles behind the board — trophy, laurels, stars, pennants — matching the notebook aesthetic.
+// One quiet, centered trophy watermark behind the board — coherent, not cluttered.
 function BoardDoodles({ isDark }: { isDark: boolean }) {
-  const stroke = '#d97706'
-  const op = isDark ? 0.085 : 0.07
+  const op = isDark ? 0.055 : 0.05
   return (
-    <svg
-      viewBox="0 0 520 700" preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: op, color: stroke }}
-      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-    >
-      {/* pennant garland near the top */}
-      <path d="M30 60 Q160 96 260 70 Q380 40 500 78" strokeDasharray="2 5" />
-      {[
-        [70, 66], [120, 82], [180, 78], [240, 70], [320, 56], [400, 56], [460, 70],
-      ].map(([x, y], i) => (
-        <path key={i} d={`M${x} ${y} l14 4 l-9 14 z`} />
-      ))}
-
-      {/* big trophy, lower-left */}
-      <g transform="translate(40 470) scale(1.1)">
-        <path d="M16 6h40v14a20 20 0 0 1-40 0z" />
-        <path d="M16 10h-10a10 10 0 0 0 12 14" />
-        <path d="M56 10h10a10 10 0 0 1-12 14" />
-        <path d="M30 40v8h12v-8" />
-        <path d="M24 48h24" />
-        <path d="M26 56h20" />
-        <path d="M36 26l2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5-3.7-3.4 5-.6z" />
-      </g>
-
-      {/* laurel wreath, right side */}
-      <g transform="translate(420 430)">
-        <path d="M0 70 Q-34 36 -26 -10" />
-        {[0, 1, 2, 3, 4, 5].map(i => (
-          <path key={i} d={`M${-26 + i * 5} ${-6 + i * 13} q -16 -6 -22 6 q 14 5 22 -6`} />
-        ))}
-        <path d="M0 70 Q34 36 26 -10" />
-        {[0, 1, 2, 3, 4, 5].map(i => (
-          <path key={`r${i}`} d={`M${26 - i * 5} ${-6 + i * 13} q 16 -6 22 6 q -14 5 -22 -6`} />
-        ))}
-      </g>
-
-      {/* scattered sparkles */}
-      {[[460, 180, 9], [70, 250, 7], [250, 600, 8], [150, 520, 6], [410, 620, 7], [300, 150, 6]].map(([x, y, r], i) => (
-        <g key={i} transform={`translate(${x} ${y})`}>
-          <path d={`M0 ${-r} L0 ${r} M${-r} 0 L${r} 0`} />
-        </g>
-      ))}
-
-      {/* underline flourish */}
-      <path d="M150 120 Q260 138 370 120" strokeDasharray="1 6" />
-    </svg>
+    <div className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ opacity: op }}>
+      <svg width="240" height="240" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      </svg>
+    </div>
   )
 }
 

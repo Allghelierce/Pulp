@@ -37,6 +37,7 @@ interface VitalitySystemProps {
   quotaTier: 'monthly' | 'weekly' | 'daily'
   isHibernating?: boolean
   hidden?: boolean
+  onStartReview?: () => void
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -48,7 +49,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   quotaTier,
-  isHibernating = false, hidden = false,
+  isHibernating = false, hidden = false, onStartReview,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -502,6 +503,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       onOpenStats={onOpenStats}
       isHibernating={isHibernating}
       hidden={hidden}
+      onStartReview={onStartReview}
     />
   )
 })

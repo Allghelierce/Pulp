@@ -560,7 +560,7 @@ export const Sidebar = memo(function Sidebar({
         </div>
       )}
 
-      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: mini ? 58 : sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 100ms cubic-bezier(0.25, 1, 0.5, 1)", boxShadow: "1px 0 3px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.03)" }}>
+      <div id="app-sidebar" className={`text-white flex flex-col shrink-0 h-full ${searchFocused && searchQuery.trim().length >= 2 ? "" : "overflow-hidden"} relative z-[250]`} style={{ width: mini ? 58 : sidebarWidth, scrollbarGutter: "stable", transition: isDragging ? "none" : "width 100ms cubic-bezier(0.25, 1, 0.5, 1)", boxShadow: "0 0 0 1px rgba(255,255,255,0.03)" }}>
         <div className="absolute inset-0 z-0 overflow-hidden" style={{ backdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)', WebkitBackdropFilter: 'url("#liquid-glass-filter") blur(24px) saturate(1.4)' }} />
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -1px 0 3px rgba(0,0,0,0.18), inset 0 0 40px rgba(255,255,255,0.01)' }} />

@@ -39,6 +39,7 @@ interface TimerSidebarPanelProps {
   dailyGoalMinutes?: number
   isHibernating?: boolean
   hidden?: boolean
+  onStartReview?: () => void
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -195,7 +196,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
   waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
-  grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats,
+  grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats, onStartReview,
 }: TimerSidebarPanelProps) {
   const [now, setNow] = useState(() => Date.now())
   const [giveUpStage, setGiveUpStage] = useState(0)
@@ -204,6 +205,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [justWatered, setJustWatered] = useState(false)
+  const [mode, setMode] = useState<"write" | "review">("write")
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
   const [pageLeft, setPageLeft] = useState<number | null>(null)
   useEffect(() => {
@@ -290,6 +292,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     if (treeDead) onDismissDead()
     else if (done) onClaim()
     else if (running) setGiveUpStage(1)
+    else if (mode === "review") onStartReview?.()
     else onStart()
   }
 
@@ -576,23 +579,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   className="tabular-nums"
                   style={{
                     fontFamily: serifFont,
-                    fontWeight: 400,
-                    fontSize: 54,
+                    fontWeight: 300,
+                    fontSize: 44,
                     lineHeight: 1,
-                    ...(running && !done ? {
-                      backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 30%, #e8a33a 45%, #f0c060 50%, #e8a33a 55%, #d97706 70%, #d97706 100%)',
-                      backgroundSize: '400% 100%',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      animation: 'pulp-timer-shimmer 16s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-                    } : {
-                      color: done ? mainColor : textColor,
-                    }),
+                    color: textColor,
                   }}
                 >
                   {String(minutes).padStart(2, "0")}
-                  <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
+                  <span>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : done
@@ -705,14 +699,37 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   }}
                 >
                   <WateringCan frac={waterFrac} urgent={waterUrgent} stroke={isDark ? "#cbd5e1" : "#64748b"} />
-                  <span className="text-[10px] tabular-nums tracking-[0.04em]" style={{ opacity: 0.85 }}>{String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}</span>
+                  <span className="text-[13px] tabular-nums tracking-[0.04em]" style={{ opacity: 0.9, fontWeight: 500 }}>{String(waterMin).padStart(1, "0")}:{String(waterSec).padStart(2, "0")}</span>
                 </button>
               )}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
-              {/* Duration slider (hidden while running) */}
-              {!running && (
+              {/* Mode toggle — Write vs Review (only before a session starts) */}
+              {!running && !done && !treeDead && (
+                <div className="w-full flex gap-1 p-0.5 rounded-lg mb-3" style={{ backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)" }}>
+                  {(["write", "review"] as const).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className="flex-1 py-1 rounded-md text-[11px] transition-all"
+                      style={{
+                        fontFamily: serifFont,
+                        letterSpacing: "0.02em",
+                        textTransform: "capitalize",
+                        color: mode === m ? (isDark ? "#fafafa" : "#18181b") : subtleColor,
+                        backgroundColor: mode === m ? (isDark ? "rgba(255,255,255,0.08)" : "#fff") : "transparent",
+                        boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                      }}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Duration slider (hidden while running, and in review mode) */}
+              {!running && mode === "write" && (
                 <div className="w-full">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     {[15, 45, 90].map(m => (
@@ -807,7 +824,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
-                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
+                {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : mode === "review" ? "Start Review" : "Start Session"}
               </button>
             </div>
           </div>
