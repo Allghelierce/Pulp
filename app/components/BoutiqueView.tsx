@@ -1,7 +1,7 @@
 "use client"
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
-import { getPalette, getType } from "@/app/theme/palette"
+import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
@@ -1590,14 +1590,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <button
                     onClick={() => { setActiveTab('satchel'); setSelectedPlant(null) }}
                     className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '4px 14px', borderRadius: 5,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                    }}
+                    style={{ ...chipButton(palette) }}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
                     Satchel
@@ -1605,14 +1598,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <button
                     onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
                     className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '4px 14px', borderRadius: 5,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                    }}
+                    style={{ ...chipButton(palette) }}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
                     Catalog

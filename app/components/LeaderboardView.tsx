@@ -5,7 +5,7 @@ import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { DEMO_COMPETITORS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
-import { getPalette, getType } from "@/app/theme/palette"
+import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { themePalette } from "@/lib/orchardSky"
 
 // Deterministic tree species per student so a name always grows the same tree.
@@ -785,18 +785,13 @@ export const LeaderboardView = memo(function LeaderboardView({
                 ) : null}
               </div>
               {/* Forest / List toggle */}
-              <div className="flex items-center rounded-full shrink-0" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(120,90,40,0.07)', padding: 2 }}>
+              <div className="flex items-center gap-2 shrink-0">
                 {([['forest', 'Forest'], ['list', 'List']] as const).map(([v, label]) => (
                   <button
                     key={v}
                     onClick={() => setBoardView(v)}
-                    className="rounded-full transition-colors"
-                    style={{
-                      fontFamily: font, fontSize: 10.5, padding: '3px 11px',
-                      background: boardView === v ? accent : 'transparent',
-                      color: boardView === v ? '#fff' : textMuted,
-                      fontWeight: boardView === v ? 600 : 400,
-                    }}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{ ...chipButton(palette, boardView === v) }}
                   >
                     {label}
                   </button>
