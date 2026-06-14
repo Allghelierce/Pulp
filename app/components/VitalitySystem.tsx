@@ -38,6 +38,7 @@ interface VitalitySystemProps {
   isHibernating?: boolean
   hidden?: boolean
   onStartReview?: () => void
+  activeGroupId?: number | null
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -49,7 +50,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   quotaTier,
-  isHibernating = false, hidden = false, onStartReview,
+  isHibernating = false, hidden = false, onStartReview, activeGroupId,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -382,6 +383,14 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     const computeStage = (ratio: number) => ratio >= 1 ? 4 : ratio >= 0.6 ? 3 : ratio >= 0.3 ? 2 : ratio >= 0.1 ? 1 : 0
 
+    if (activeGroupId) {
+      const treeSnapshot = { type: treeType, stage: computeStage(Math.min(1, sessionMinutes / growthTarget)) }
+      apiFetch('/api/groups/report', {
+        method: 'POST',
+        body: JSON.stringify({ groupId: activeGroupId, minutes: Math.round(sessionMinutes), tree: treeSnapshot }),
+      }).catch(() => {})
+    }
+
     if (existingPartial) {
       const newFocus = Math.min(growthTarget, (existingPartial.focusMinutes || 0) + sessionMinutes)
       const ratio = newFocus / growthTarget
@@ -408,7 +417,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, activeGroupId])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 

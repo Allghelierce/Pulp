@@ -7,8 +7,8 @@ import { GroupPage } from "./community/GroupPage"
 const accent = '#d97706'
 
 export const CommunityView = memo(function CommunityView({
-  theme, friendCode, currentUserId, onClose,
-}: { theme: "light" | "dark"; friendCode: string | null; currentUserId: string; onClose: () => void }) {
+  theme, friendCode, currentUserId, onClose, onActiveGroupChange,
+}: { theme: "light" | "dark"; friendCode: string | null; currentUserId: string; onClose: () => void; onActiveGroupChange?: (id: number | null) => void }) {
   const [tab, setTab] = useState<'friends' | 'groups'>('friends')
   const [openGroupId, setOpenGroupId] = useState<number | null>(null)
   const isDark = theme === 'dark'
@@ -18,6 +18,11 @@ export const CommunityView = memo(function CommunityView({
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [onClose, openGroupId])
+
+  useEffect(() => {
+    onActiveGroupChange?.(openGroupId)
+    return () => onActiveGroupChange?.(null)
+  }, [openGroupId, onActiveGroupChange])
 
   const bg = isDark ? '#0e0c09' : '#ede6d8'
 

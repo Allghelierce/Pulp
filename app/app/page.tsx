@@ -1211,6 +1211,7 @@ export default function NoteApp() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [friendCode, setFriendCode] = useState<string | null>(null)
   const [communityOpen, setCommunityOpen] = useState(false)
+  const [activeGroupId, setActiveGroupId] = useState<number | null>(null)
   const [grade, setGrade] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
@@ -4453,7 +4454,7 @@ export default function NoteApp() {
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
                 <CommunityView theme={theme} friendCode={friendCode} currentUserId={user?.id ?? ''}
-                  onClose={() => setCommunityOpen(false)} />
+                  onClose={() => setCommunityOpen(false)} onActiveGroupChange={setActiveGroupId} />
               </m.div>
             )}
           </AnimatePresence>
@@ -4734,6 +4735,7 @@ export default function NoteApp() {
           isHibernating={isHibernating}
           hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen || reviewOpen}
           onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
+          activeGroupId={activeGroupId}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed (hidden while running to lock it in) */}
