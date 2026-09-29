@@ -18,12 +18,15 @@ const font = 'Crimson Pro, serif'
 export const WidgetWrapper = memo(function WidgetWrapper({
   isDark, pinned, editMode, instanceId, onPin, onRemove, onDragStart, transparent, children,
 }: WidgetWrapperProps) {
-  const cardBg = isDark ? '#141210' : '#f5f3ef'
+  const cardBg = isDark ? '#201d18' : '#ffffff'
+  // Cards previously sat too close to the page bg with no edge, so they blended in.
+  // A lighter surface + a defined border gives each widget a clear boundary.
+  const cardBorder = isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.08)'
   const shadow = isDark
-    ? '0 2px 16px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3)'
-    : '0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)'
+    ? '0 4px 20px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)'
+    : '0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)'
   const hoverShadow = isDark
-    ? '0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)'
+    ? '0 8px 30px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.5)'
     : '0 4px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)'
 
   const [hover, setHover] = useState(false)
@@ -32,6 +35,7 @@ export const WidgetWrapper = memo(function WidgetWrapper({
     <div
       style={{
         background: transparent ? 'transparent' : cardBg,
+        border: transparent ? 'none' : cardBorder,
         borderRadius: 20,
         boxShadow: transparent ? 'none' : (hover ? hoverShadow : shadow),
         overflow: 'hidden',

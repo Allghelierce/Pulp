@@ -21,7 +21,7 @@ import type { Achievement, NoteData } from "@/app/types"
 
 const TAB_DESCRIPTIONS: Record<string, string> = {
   general: "Account, shortcuts, and application preferences",
-  grove: "Study quota, streak penalties, and hibernation",
+  grove: "Streak penalties and hibernation",
   appearance: "Theme, fonts, paper style, and visual customization",
   editor: "Writing tools, layout, and focus mode",
   archive: "Archived notebooks and notes",
@@ -750,6 +750,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
             {/* ── Grove ── */}
             {activeTab === "grove" && (<>
+              {/* Study Quota archived for now — hidden but preserved. */}
+              {false && (
               <SettingSection title="Study Quota" isDark={isDark}>
                 <div className="px-5 py-4 flex flex-col gap-3">
                   <p className={`text-[11px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -803,6 +805,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   })}
                 </div>
               </SettingSection>
+              )}
 
               <SettingSection title="Daily Goal" isDark={isDark}>
                 <SettingRow

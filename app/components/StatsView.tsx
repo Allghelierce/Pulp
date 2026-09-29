@@ -1,10 +1,9 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { getLevel, TREE_TYPES } from "@/app/constants"
+import { getLevel } from "@/app/constants"
 import { getPalette, getType, ACCENT } from "@/app/theme/palette"
 import type { Tree } from "@/app/types"
-import { PlantIcon } from "./PlantIcon"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
 
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -349,7 +348,12 @@ export const StatsView = memo(function StatsView({
 
   const isDark = theme === 'dark'
   const palette = getPalette(isDark)
-  const { bg, textPrimary, textSecondary, textMuted, cardBorder } = palette
+  const { bg, cardBg, textPrimary, textSecondary, textMuted, cardBorder } = palette
+  // Cards were painted with the page bg, so they blended into the modal backdrop.
+  // Use an opaque, clearly-separated surface + stronger border/shadow instead.
+  const statsCardBg = isDark ? 'rgba(30,29,34,0.96)' : '#ffffff'
+  const statsCardBorder = isDark ? 'rgba(255,255,255,0.11)' : 'rgba(0,0,0,0.1)'
+  const statsCardShadow = '0 12px 40px -10px rgba(0,0,0,0.5)'
   const type = getType(palette)
 
   const levelColor = ACCENT
@@ -429,7 +433,7 @@ export const StatsView = memo(function StatsView({
         {/* Card: Level + Rings + Stats */}
         <div
           className="rounded-2xl border"
-          style={{ backgroundColor: bg, borderColor: cardBorder, padding: '24px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+          style={{ backgroundColor: statsCardBg, borderColor: statsCardBorder, padding: '24px 28px', boxShadow: statsCardShadow }}
         >
           <div className="flex items-center gap-3 mb-4">
             <div
@@ -567,7 +571,7 @@ export const StatsView = memo(function StatsView({
         {/* Card: Consistency Graph */}
         <div
           className="rounded-2xl border"
-          style={{ backgroundColor: bg, borderColor: cardBorder, padding: '20px 28px', boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
+          style={{ backgroundColor: statsCardBg, borderColor: statsCardBorder, padding: '20px 28px', boxShadow: statsCardShadow }}
         >
                 {/* Consistency Graph */}
                 {(() => {
@@ -739,66 +743,6 @@ export const StatsView = memo(function StatsView({
                 })()}
         </div>
 
-        {/* Card: Recently Grown */}
-        {grove.length > 0 && (() => {
-          const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 10)
-          const itemW = 80
-          const styled = recent.map((tree, i) => {
-            const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
-            return { tree, yOff: Math.round(seed * 8 - 2), tilt: ((seed * 6) - 3) * 0.7, size: 38 + Math.round(seed * 6) }
-          })
-          const halfW = styled.length * itemW
-          const doubled = [...styled, ...styled]
-          return (
-            <div
-              className="rounded-2xl border"
-              style={{ position: 'relative', height: 90, overflow: 'hidden', borderColor: cardBorder, boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)' }}
-            >
-              <span style={{ position: 'absolute', top: 6, left: 12, fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Crimson Pro, serif', zIndex: 2 }}>Recently Grown</span>
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: isDark
-                  ? 'linear-gradient(180deg, #09090b 0%, #110f0a 30%, #1a1610 55%, #2a2418 80%, #1e1a12 100%)'
-                  : 'linear-gradient(180deg, #f5f3ef 0%, #ebe5d8 30%, #ddd5c4 55%, #c8b890 80%, #b0a078 100%)',
-              }} />
-              <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: 30 }} preserveAspectRatio="none" viewBox="0 0 100 10">
-                <ellipse cx="15" cy="6" rx="18" ry="5" fill={isDark ? '#2e2818' : '#c0a878'} />
-                <ellipse cx="50" cy="7" rx="30" ry="4.5" fill={isDark ? '#2a2414' : '#baa470'} />
-                <ellipse cx="85" cy="5.5" rx="20" ry="5.5" fill={isDark ? '#2c2616' : '#c4ac7c'} />
-                <rect y="8" width="100" height="3" fill={isDark ? '#1a1610' : '#b09a68'} />
-              </svg>
-              <div style={{
-                position: 'absolute', bottom: 12, left: 0, right: 0, height: 60,
-                overflow: 'hidden',
-                maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-              }}>
-                <div style={{
-                  display: 'flex', alignItems: 'flex-end', width: halfW * 2,
-                  animation: 'conveyorScroll 40s linear infinite',
-                  willChange: 'transform',
-                }}>
-                  {doubled.map(({ tree, yOff, tilt, size }, i) => (
-                    <div key={`t-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      width: itemW, flexShrink: 0,
-                      marginBottom: yOff,
-                      transform: `rotate(${tilt}deg)`,
-                    }}>
-                      <PlantIcon type={tree.type} size={size} stage={tree.stage} hideGround disableSway />
-                      <div style={{
-                        width: size * 0.6, height: 4, borderRadius: '50%', marginTop: -2,
-                        background: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',
-                        filter: 'blur(1.5px)',
-                      }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <style>{`@keyframes conveyorScroll { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }`}</style>
-            </div>
-          )
-        })()}
       </div>
     </div>
   )

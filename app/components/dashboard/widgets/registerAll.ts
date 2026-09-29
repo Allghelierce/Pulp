@@ -1,7 +1,8 @@
 import "./ActivityRingsWidget"
 import "./StatsSummaryWidget"
 import "./ConsistencyHeatmapWidget"
-import "./RecentlyGrownWidget"
+// Recently Grown archived for now — unregistered so it drops from all layouts.
+// import "./RecentlyGrownWidget"
 import "./TodayVsYesterdayWidget"
 import "./NotebookStatsWidget"
 import "./LevelProgressWidget"
