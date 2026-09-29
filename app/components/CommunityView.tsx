@@ -3,13 +3,14 @@ import { useState, useEffect, memo } from "react"
 import { FriendsPanel } from "./community/FriendsPanel"
 import { GroupsPanel } from "./community/GroupsPanel"
 import { GroupPage } from "./community/GroupPage"
+import { PartyPanel } from "./community/PartyPanel"
 
 const accent = '#d97706'
 
 export const CommunityView = memo(function CommunityView({
   theme, friendCode, currentUserId, onClose, onActiveGroupChange,
 }: { theme: "light" | "dark"; friendCode: string | null; currentUserId: string; onClose: () => void; onActiveGroupChange?: (id: number | null) => void }) {
-  const [tab, setTab] = useState<'friends' | 'groups'>('friends')
+  const [tab, setTab] = useState<'party' | 'friends' | 'groups'>('party')
   const [openGroupId, setOpenGroupId] = useState<number | null>(null)
   const isDark = theme === 'dark'
 
@@ -37,7 +38,7 @@ export const CommunityView = memo(function CommunityView({
   return (
     <div style={{ position: 'absolute', inset: 0, background: bg, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 20px', fontFamily: 'Crimson Pro, serif' }}>
-        {(['friends', 'groups'] as const).map(t => (
+        {(['party', 'friends', 'groups'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', textTransform: 'capitalize',
               background: tab === t ? accent : 'transparent', color: tab === t ? '#fff' : (isDark ? '#a1a1aa' : '#6b6864') }}>
@@ -48,7 +49,9 @@ export const CommunityView = memo(function CommunityView({
           background: 'transparent', color: isDark ? '#a1a1aa' : '#6b6864' }}>Close</button>
       </div>
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {tab === 'friends' ? <FriendsPanel theme={theme} friendCode={friendCode} /> : <GroupsPanel theme={theme} onOpenGroup={setOpenGroupId} />}
+        {tab === 'party' ? <PartyPanel theme={theme} />
+          : tab === 'friends' ? <FriendsPanel theme={theme} friendCode={friendCode} />
+          : <GroupsPanel theme={theme} onOpenGroup={setOpenGroupId} />}
       </div>
     </div>
   )

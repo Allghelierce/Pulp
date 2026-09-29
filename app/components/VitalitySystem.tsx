@@ -5,6 +5,7 @@ import type { Achievement, Tree } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 import { apiFetch } from "@/lib/apiFetch"
+import { recordFocus } from "@/lib/party"
 
 interface VitalitySystemProps {
   theme: "light" | "dark"
@@ -374,6 +375,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     updateGoalStreak(sessionMinutes)
     logFocusSession(sessionMinutes, 0)
+    recordFocus(sessionMinutes)
 
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
