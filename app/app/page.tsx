@@ -4497,14 +4497,25 @@ export default function NoteApp() {
               <m.div
                 key="party-view"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50,
-                  background: theme === 'dark' ? '#0e0c09' : '#ede6d8', overflow: 'auto' }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setLeaderboardOpen(false)}
+                style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)', padding: 16 }}
               >
-                <button onClick={() => setLeaderboardOpen(false)}
-                  style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', cursor: 'pointer',
-                    color: theme === 'dark' ? '#a1a1aa' : '#6b6864', fontSize: 24, lineHeight: 1, zIndex: 2 }}>&times;</button>
-                <PartyPanel theme={theme} />
+                <m.div
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
+                  onClick={e => e.stopPropagation()}
+                  style={{ position: 'relative', width: '100%', maxWidth: 440, maxHeight: '82vh', overflowY: 'auto',
+                    background: theme === 'dark' ? '#18181b' : '#fff', borderRadius: 16,
+                    border: `1px solid ${theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    boxShadow: '0 24px 60px -12px rgba(0,0,0,0.45)' }}
+                >
+                  <button onClick={() => setLeaderboardOpen(false)}
+                    style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', cursor: 'pointer',
+                      color: theme === 'dark' ? '#a1a1aa' : '#6b6864', fontSize: 24, lineHeight: 1, zIndex: 2 }}>&times;</button>
+                  <PartyPanel theme={theme} />
+                </m.div>
               </m.div>
             )}
           </AnimatePresence>
