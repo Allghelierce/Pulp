@@ -350,9 +350,9 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
       const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
       const json = await res.json()
       if (json.url) { window.location.href = json.url; return }
-      openConfirm?.('Checkout unavailable', json.error || 'Could not start checkout.', () => {})
-    } catch { openConfirm?.('Checkout unavailable', 'Something went wrong starting checkout.', () => {}) }
-  }, [user, openConfirm])
+      window.location.href = '/oops'
+    } catch { window.location.href = '/oops' }
+  }, [user])
 
   const openBillingPortal = useCallback(async () => {
     try {
@@ -360,7 +360,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
       const json = await res.json()
       if (json.url) { window.location.href = json.url; return }
       openConfirm?.('Billing', json.error || 'No subscription found.', () => {})
-    } catch { /* ignore */ }
+    } catch { window.location.href = '/oops' }
   }, [openConfirm])
 
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -2611,6 +2611,33 @@ export default function NoteApp() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Deep-link checkout from the landing pricing buttons (?checkout=<plan>).
+  // Intent persists in localStorage across the login round-trip.
+  useEffect(() => {
+    if (isLoading) return
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const urlPlan = params.get('checkout')
+      if (urlPlan) {
+        localStorage.setItem('pulp-pending-checkout', urlPlan)
+        params.delete('checkout')
+        const q = params.toString()
+        window.history.replaceState({}, '', '/app' + (q ? '?' + q : ''))
+      }
+      const plan = localStorage.getItem('pulp-pending-checkout')
+      if (!plan) return
+      if (!user) { window.location.href = '/login'; return }
+      localStorage.removeItem('pulp-pending-checkout')
+      ;(async () => {
+        try {
+          const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
+          const json = await res.json()
+          window.location.href = json.url || '/oops'
+        } catch { window.location.href = '/oops' }
+      })()
+    } catch { /* no-op */ }
+  }, [user, isLoading])
+
   const isAdmin = user?.email === 'pvt.trisn@gmail.com'
   const ALL_COSMETICS = [
     "accent_#d97706", "accent_#ef4444", "accent_#ec4899", "accent_#a855f7", "accent_#3b82f6", "accent_#06b6d4", "accent_#22c55e", "accent_#64748b",
