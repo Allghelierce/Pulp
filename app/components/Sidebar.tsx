@@ -1016,7 +1016,7 @@ export const Sidebar = memo(function Sidebar({
                 border: timerOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)',
               }}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/60 group-hover:text-amber-500/80"}`}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className={`mb-1 transition-colors ${timerOpen ? "text-emerald-500" : "text-emerald-600/70 group-hover:text-emerald-500/90"}`}>
                 <ellipse cx="12" cy="21" rx="7" ry="1.5" fill="currentColor" opacity="0.25" />
                 <path d="M12 20 C12 16 11.5 14 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 <path d="M12 14 C9 12 7 10.5 7 8.5 C7 8.5 9.5 9 12 12" fill="currentColor" opacity="0.7" />
