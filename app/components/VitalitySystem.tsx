@@ -37,6 +37,8 @@ interface VitalitySystemProps {
   quotaTier: 'monthly' | 'weekly' | 'daily'
   isHibernating?: boolean
   hidden?: boolean
+  onStartReview?: () => void
+  activeGroupId?: number | null
 }
 
 export const VitalitySystem = memo(function VitalitySystem({
@@ -48,7 +50,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   goalStreak, setGoalStreak,
   goalStreakLastDate, setGoalStreakLastDate, dailyGoalMinutes,
   quotaTier,
-  isHibernating = false, hidden = false,
+  isHibernating = false, hidden = false, onStartReview, activeGroupId,
 }: VitalitySystemProps) {
 
   // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
@@ -272,13 +274,16 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTreeDead(false)
     setDeathReason(null)
     setTimerRunning(true)
+    if (activeGroupId) {
+      try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'start', groupId: activeGroupId, timerEnd: Date.now() + timerTotal * 1000 } })) } catch {}
+    }
     setWaterCount(0)
     if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
       setWaterDeadline(Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000)
     } else {
       setWaterDeadline(null)
     }
-  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory])
+  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
 
   const [waterCount, setWaterCount] = useState(0)
 
@@ -381,6 +386,15 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     const computeStage = (ratio: number) => ratio >= 1 ? 4 : ratio >= 0.6 ? 3 : ratio >= 0.3 ? 2 : ratio >= 0.1 ? 1 : 0
 
+    if (activeGroupId) {
+      const treeSnapshot = { type: treeType, stage: computeStage(Math.min(1, sessionMinutes / growthTarget)) }
+      apiFetch('/api/groups/report', {
+        method: 'POST',
+        body: JSON.stringify({ groupId: activeGroupId, minutes: Math.round(sessionMinutes), tree: treeSnapshot }),
+      }).catch(() => {})
+      try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'complete', groupId: activeGroupId } })) } catch {}
+    }
+
     if (existingPartial) {
       const newFocus = Math.min(growthTarget, (existingPartial.focusMinutes || 0) + sessionMinutes)
       const ratio = newFocus / growthTarget
@@ -407,7 +421,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, activeGroupId])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
@@ -496,6 +510,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       onOpenStats={onOpenStats}
       isHibernating={isHibernating}
       hidden={hidden}
+      onStartReview={onStartReview}
     />
   )
 })

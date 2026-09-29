@@ -78,10 +78,14 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     ))
   }, [editorRef, setNotes])
 
-  // Called on every onInput — schedules a debounced state sync
+  // Called on every onInput — schedules a debounced state sync.
+  // Text is contentEditable (not React-driven), so this debounce only gates
+  // persistence + derived UI (word count, sidebar), not typing responsiveness.
+  // Kept generous to avoid re-rendering the whole page on every keystroke;
+  // blur / tab-switch / nav / unload all flushSync first, so nothing is lost.
   const syncContent = useCallback(() => {
     clearTimeout(syncTimer.current)
-    syncTimer.current = setTimeout(commitToState, 80)
+    syncTimer.current = setTimeout(commitToState, 250)
   }, [commitToState])
 
   // Call this before page/tab navigation to immediately commit pending edits

@@ -20,7 +20,7 @@ interface PricingTier {
   buttonLabel: string
   buttonDisabled?: boolean
   onSelect?: () => void
-  ctaOverride?: (props: { className: string; style?: React.CSSProperties; children: React.ReactNode }) => React.ReactNode
+  ctaOverride?: (props: { className: string; style?: React.CSSProperties; children: React.ReactNode; isYearly: boolean }) => React.ReactNode
 }
 
 interface PricingSectionProps {
@@ -178,6 +178,7 @@ function PricingSection({ tiers, isDark, accentColor = "#d97706", className }: P
             <div className="px-5 pb-4">
               {tier.ctaOverride ? (
                 tier.ctaOverride({
+                  isYearly,
                   className: "w-full h-9 rounded-lg text-[12px] font-semibold transition-all flex items-center justify-center gap-1.5 text-white hover:opacity-90 active:scale-[0.98]",
                   style: { backgroundColor: accentColor },
                   children: (

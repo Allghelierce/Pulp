@@ -33,7 +33,7 @@ const VIEW_LABELS = ["Left Wall", "Front Wall", "Right Wall"]
 
 // ── Camera rig ──────────────────────────────────────────────────────────────
 function CameraRig({ viewIdx }: { viewIdx: number }) {
-  const { camera } = useThree()
+  const { camera, invalidate } = useThree()
   const lookTarget = useRef(new Vector3(0, 0.6, -4))
   const initialized = useRef(false)
   useEffect(() => {
@@ -44,11 +44,15 @@ function CameraRig({ viewIdx }: { viewIdx: number }) {
       initialized.current = true
     }
   }, [camera])
+  // demand mode: kick the render loop when the target view changes
+  useEffect(() => { invalidate() }, [viewIdx, invalidate])
   useFrame((_, delta) => {
     const s = Math.min(delta * 3.5, 1)
     camera.position.lerp(VIEWS[viewIdx].pos, s)
     lookTarget.current.lerp(VIEWS[viewIdx].look, s)
     camera.lookAt(lookTarget.current)
+    // keep rendering only while still easing toward the target
+    if (camera.position.distanceToSquared(VIEWS[viewIdx].pos) > 1e-6) invalidate()
   })
   return null
 }
@@ -60,9 +64,15 @@ function Book({ x, y, z, rotY = 0, w, h, d, color, label, onClick }: {
 }) {
   const ref = useRef<Group>(null)
   const [hov, setHov] = useState(false)
+  const { invalidate } = useThree()
+  // demand mode: kick the render loop when hover state flips
+  useEffect(() => { invalidate() }, [hov, invalidate])
   useFrame((_, dt) => {
     if (!ref.current) return
-    ref.current.position.y = MathUtils.lerp(ref.current.position.y, y + (hov ? 0.12 : 0), dt * 9)
+    const target = y + (hov ? 0.12 : 0)
+    ref.current.position.y = MathUtils.lerp(ref.current.position.y, target, dt * 9)
+    // keep rendering only while still easing toward the target
+    if (Math.abs(ref.current.position.y - target) > 1e-4) invalidate()
   })
   const col = new Color(color)
   return (
@@ -806,7 +816,7 @@ export function ShelfRoom3D({ notes, onOpenNote, onCreateNote, onBack }: ShelfRo
         <Plus className="w-3.5 h-3.5" /> New Note
       </button>
 
-      <Canvas shadows camera={{ position: [0, 0.15, 1.1], fov: 62 }}
+      <Canvas shadows frameloop="demand" camera={{ position: [0, 0.15, 1.1], fov: 62 }}
         style={{ width: '100%', height: '100%' }}>
         <Suspense fallback={null}>
           <CameraRig viewIdx={viewIdx} />

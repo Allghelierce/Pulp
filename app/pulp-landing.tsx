@@ -10,7 +10,6 @@ const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { label: 'living orchard', desc: 'every notebook grows its own orchard. see where your time goes — and what you have to show for it.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 20V14"/><path d="M14 14c0-2 1.5-3.5 3-4.5 1.5 1 3 2.5 3 4.5a3 3 0 0 1-6 0z"/><path d="M7 20V10"/><path d="M4 10c0-2.5 1.5-4.5 3-5.5 1.5 1 3 3 3 5.5a3 3 0 0 1-6 0z"/><path d="M2 22h20"/></svg> },
   { label: 'inline ai', desc: 'ai that understands your entire notebook. edit, rewrite, and expand — right where you write.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/><path d="M8.24 2.69A4 4 0 0 0 8 6c0 1.95 1.4 3.58 3.25 3.93"/><path d="M12 10v12"/><path d="M8 16h8"/><path d="M6 20h12"/></svg> },
-  { label: 'notebooks', desc: 'multiple types — standard, single page, cornell, and encrypted vaults.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
   { label: 'leaderboards', desc: 'compete with other players. climb the ranks, win exclusive trees, and prove your focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> },
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
@@ -20,7 +19,6 @@ const FEATURE_IMAGES = [
   '/feature-timer.png',
   '/feature-orchard.png',
   '/feature-ai.png',
-  '/feature-notebooks.png',
   '/feature-leaderboard.png',
   '/feature-shop.png',
 ]
@@ -90,26 +88,28 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
   const text = line1 + '\n' + line2
   const [charIdx, setCharIdx] = useState(0)
   const [showCursor, setShowCursor] = useState(true)
+  const [cursorFading, setCursorFading] = useState(false)
   const [typingDone, setTypingDone] = useState(false)
 
   useEffect(() => {
     if (charIdx >= text.length) {
-      const t = setTimeout(() => { setShowCursor(false); setTypingDone(true); onComplete?.() }, 800)
+      setCursorFading(true)
+      const t = setTimeout(() => { setShowCursor(false); setTypingDone(true); onComplete?.() }, 600)
       return () => clearTimeout(t)
     }
     const ch = text[charIdx]
     const prev = charIdx > 0 ? text[charIdx - 1] : ''
-    let delay = 40 + Math.random() * 30
-    if (ch === '\n') delay = 60
-    else if (ch === ' ') delay = 70 + Math.random() * 40
-    else if (prev === ' ' || prev === '\n' || charIdx === 0) delay = 80 + Math.random() * 30
-    else if ("'.,".includes(ch)) delay = 90 + Math.random() * 30
+    let delay = 34 + Math.random() * 25
+    if (ch === '\n') delay = 51
+    else if (ch === ' ') delay = 59 + Math.random() * 34
+    else if (prev === ' ' || prev === '\n' || charIdx === 0) delay = 68 + Math.random() * 25
+    else if ("'.,".includes(ch)) delay = 77 + Math.random() * 25
     const t = setTimeout(() => setCharIdx(i => i + 1), delay)
     return () => clearTimeout(t)
   }, [charIdx, text.length])
 
   const cursorEl = showCursor ? (
-    <span style={{ display: 'inline-block', width: 3, height: '0.75em', background: '#d97706', marginLeft: 2, verticalAlign: 'baseline', animation: 'cursorBlink 0.5s step-end infinite' }} />
+    <span style={{ display: 'inline-block', width: 3, height: '0.75em', background: '#d97706', marginLeft: 2, verticalAlign: 'baseline', animation: cursorFading ? 'cursorFadeOut 0.4s ease-out forwards' : 'cursorBlink 1s ease-in-out infinite' }} />
   ) : null
 
   const displayed = text.slice(0, charIdx)
@@ -158,7 +158,7 @@ function TypewriterHeadline({ serif, onComplete, settled }: { serif: string, onC
         </span>
       ))}
       {cursorEl}
-      <style>{`@keyframes cursorBlink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }`}</style>
+      <style>{`@keyframes cursorBlink { 0%, 100% { opacity: 1 } 50% { opacity: 0.15 } } @keyframes cursorFadeOut { from { opacity: 1 } to { opacity: 0 } }`}</style>
     </h1>
   )
 }
@@ -644,7 +644,7 @@ export default function PulpLanding() {
           {/* Left: Text Content with hand-drawn line */}
           <div
             style={{
-              width: heroSettled ? (isMobile ? '100%' : '44%') : '100%',
+              width: '100%',
               position: 'relative',
               paddingLeft: heroSettled && !isMobile ? 36 : 0,
               textAlign: 'left' as const,
@@ -715,292 +715,6 @@ export default function PulpLanding() {
             </div>
           </div>
 
-          {/* Right: Conveyor belt cards */}
-          <style>{`@keyframes cvSwTwk { 0%, 100% { opacity: 0.9 } 50% { opacity: 0.1 } } @keyframes cvSacredGlow { 0% { background-position: 0% 50% } 50% { background-position: 100% 50% } 100% { background-position: 0% 50% } }`}</style>
-          {!isMobile && (() => {
-            const cardW = 240
-            const cardH = 220
-            const timerH = 440
-            const gap = 20
-            const tallH = 320
-            const leftCards = [
-              { label: 'starweaver', content: (
-                <div style={{ width: '100%', height: '100%', background: '#E0D7C1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 48 52" width="160" height="173">
-                    <ellipse cx="24" cy="49" rx="14" ry="3.5" fill="#c8bfa8" />
-                    <ellipse cx="24" cy="48" rx="12" ry="3" fill="#b8af98" />
-                    <path d="M24 46 Q22.8 40 24.5 34 Q23.5 28 24.2 22 Q24 18 24 14" stroke="#3e3570" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-                    <path d="M24 36 Q20 33 15 30 Q12 29 10 28.5" stroke="#3e3570" strokeWidth="0.55" strokeLinecap="round" fill="none" />
-                    <path d="M24 36 Q28 32 33 30 Q36 29.5 38 30" stroke="#3e3570" strokeWidth="0.55" strokeLinecap="round" fill="none" />
-                    <path d="M24 30 Q19 25 14 21 Q11 19.5 9 20" stroke="#3e3570" strokeWidth="0.5" strokeLinecap="round" fill="none" />
-                    <path d="M24 30 Q29 24 35 20 Q38 18 40 17.5" stroke="#3e3570" strokeWidth="0.5" strokeLinecap="round" fill="none" />
-                    <path d="M24 24 Q18 18 12 14 Q9 12.5 7 13" stroke="#3e3570" strokeWidth="0.4" strokeLinecap="round" fill="none" />
-                    <path d="M24 24 Q30 17 36 13 Q39 11 42 11.5" stroke="#3e3570" strokeWidth="0.4" strokeLinecap="round" fill="none" />
-                    <path d="M24 19 Q21 15 18 12 Q16 10.5 15 8" stroke="#3e3570" strokeWidth="0.3" strokeLinecap="round" fill="none" />
-                    <path d="M24 19 Q27 14 31 11 Q33 9.5 34 8" stroke="#3e3570" strokeWidth="0.3" strokeLinecap="round" fill="none" />
-                    <path d="M10 28.5 Q17 29 24 27 Q31 29 38 30" stroke="#7986cb" strokeWidth="0.3" opacity="0.22" fill="none" />
-                    <path d="M9 20 Q16 20.5 24 18.5 Q32 20.5 40 17.5" stroke="#c5cae9" strokeWidth="0.25" opacity="0.18" fill="none" />
-                    <path d="M7 13 Q15 14 24 12 Q33 14 42 11.5" stroke="#7986cb" strokeWidth="0.2" opacity="0.14" fill="none" />
-                    <path d="M24 27 L24.7 25.8 L24 24.6 L23.3 25.8Z" fill="#fff" style={{ animation: 'cvSwTwk 2s ease-in-out infinite' }} />
-                    <path d="M17 24 L17.5 23.2 L17 22.4 L16.5 23.2Z" fill="#e8eaf6" style={{ animation: 'cvSwTwk 2.4s ease-in-out infinite 0.3s' }} />
-                    <path d="M31 24 L31.5 23.2 L31 22.4 L30.5 23.2Z" fill="#e8eaf6" style={{ animation: 'cvSwTwk 2.2s ease-in-out infinite 0.7s' }} />
-                    <path d="M24 18.5 L24.6 17.3 L24 16.1 L23.4 17.3Z" fill="#fff" style={{ animation: 'cvSwTwk 1.8s ease-in-out infinite 1s' }} />
-                    <path d="M15 19 L15.4 18.3 L15 17.6 L14.6 18.3Z" fill="#c5cae9" style={{ animation: 'cvSwTwk 2.6s ease-in-out infinite 0.5s' }} />
-                    <path d="M33 19 L33.4 18.3 L33 17.6 L32.6 18.3Z" fill="#c5cae9" style={{ animation: 'cvSwTwk 2.8s ease-in-out infinite 1.3s' }} />
-                    <path d="M19 14 L19.4 13.2 L19 12.4 L18.6 13.2Z" fill="#e8eaf6" style={{ animation: 'cvSwTwk 2.1s ease-in-out infinite 1.6s' }} />
-                    <path d="M29 14 L29.4 13.2 L29 12.4 L28.6 13.2Z" fill="#fff" style={{ animation: 'cvSwTwk 2.5s ease-in-out infinite 0.9s' }} />
-                    <path d="M24 12 L24.7 10.6 L24 9.2 L23.3 10.6Z" fill="#fff" style={{ animation: 'cvSwTwk 1.9s ease-in-out infinite 0.2s' }} />
-                  </svg>
-                  <div style={{ position: 'absolute', top: 8, right: 10, textAlign: 'right' }}>
-                    <div style={{ fontSize: 9, fontFamily: 'system-ui', background: 'linear-gradient(90deg, #7c3aed, #c084fc, #7c3aed)', backgroundSize: '200% 100%', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'cvSacredGlow 3s ease-in-out infinite' }}>sacred</div>
-                    <div style={{ fontSize: 7, fontFamily: 'system-ui', color: '#7c3aed', opacity: 0.4 }}>0.8%</div>
-                  </div>
-                </div>
-              ), bg: '#E0D7C1', h: cardH, rot: -1.2, br: '18px 14px 20px 12px' },
-              { label: 'tangerine', content: (
-                <div style={{ width: '100%', height: '100%', background: '#E0D7C1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 48 52" width="155" height="168">
-                    <ellipse cx="24" cy="49" rx="15" ry="4" fill="#c8bfa8" />
-                    <ellipse cx="24" cy="48" rx="13" ry="3.5" fill="#b8af98" />
-                    {/* Trunk with bark texture */}
-                    <path d="M22 46 C21.5 42 22 38 23 34 C23.5 32 24 31 24 30" fill="none" stroke="#5a4020" strokeWidth="4" strokeLinecap="round" />
-                    <path d="M22 46 C21.5 42 22 38 23 34 C23.5 32 24 31 24 30" fill="none" stroke="#3a2810" strokeWidth="1.5" opacity="0.12" strokeLinecap="round" />
-                    <path d="M22.5 36 C20 34.5 18 35 17 36" stroke="#5a4020" strokeWidth="1" fill="none" strokeLinecap="round" />
-                    {/* Knot hole */}
-                    <ellipse cx="22" cy="39" rx="1.5" ry="2" fill="#3a2810" />
-                    <ellipse cx="22" cy="39" rx="0.9" ry="1.3" fill="#1a1008" />
-                    {/* Main branches */}
-                    <path d="M24 30 C20 28 16 28 12 30" stroke="#5a4020" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                    <path d="M24 30 C28 28 32 28 36 30" stroke="#5a4020" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                    <path d="M14 30 C12 28 10 24 8 22" stroke="#5a4020" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                    <path d="M34 30 C36 28 38 24 40 22" stroke="#5a4020" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                    <path d="M24 30 C24 26 24 22 24 18" stroke="#5a4020" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                    {/* Canopy */}
-                    <path d="M7 22 C6 14 12 7 18 6 Q21 5 24 6 Q27 5 30 6 C36 7 42 14 41 22 C42 28 38 33 32 34 Q28 35 24 34 Q20 35 16 34 C10 33 6 28 7 22 Z" fill="#4a8c3a" />
-                    {/* Canopy shading */}
-                    <path d="M10 28 C14 33 20 35 24 34 Q28 35 34 33 C38 30 40 26 41 22" fill="#3a7a2a" opacity="0.2" />
-                    <path d="M14 12 C18 8 22 7 24 6 Q27 5 30 6 C34 8 38 12 40 18" fill="#56a046" opacity="0.15" />
-                    {/* Leaf bumps */}
-                    <path d="M9 14 Q7 12 9 10 Q10.5 12 9 14" fill="#4a8c3a" />
-                    <path d="M38 12 Q40 10 39.5 8.5 Q38 10 38 12" fill="#4a8c3a" />
-                    <path d="M6.5 25 Q5 23.5 6 22 Q7.5 23.5 6.5 25" fill="#4a8c3a" />
-                    <path d="M41.5 24 Q43 22 42 20 Q41 22 41.5 24" fill="#4a8c3a" />
-                    <path d="M15 34 Q13 34.5 14 33 Q15.5 33.5 15 34" fill="#4a8c3a" />
-                    <path d="M33 34 Q35 34.5 34 33 Q32.5 33.5 33 34" fill="#4a8c3a" />
-                    {/* Leaf vein highlights */}
-                    <circle cx="14" cy="12" r="0.6" fill="#6aac5a" opacity="0.3" />
-                    <circle cx="20" cy="10" r="0.5" fill="#6aac5a" opacity="0.3" />
-                    <circle cx="34" cy="14" r="0.5" fill="#6aac5a" opacity="0.25" />
-                    <circle cx="24" cy="16" r="0.5" fill="#6aac5a" opacity="0.25" />
-                    {/* Oranges with highlights */}
-                    <circle cx="11" cy="28" r="1.8" fill="#d97706" />
-                    <circle cx="11.3" cy="27.5" r="0.6" fill="#f59e0b" opacity="0.4" />
-                    <circle cx="14" cy="30" r="1.6" fill="#d97706" />
-                    <circle cx="35" cy="28" r="1.8" fill="#d97706" />
-                    <circle cx="35.3" cy="27.5" r="0.6" fill="#f59e0b" opacity="0.4" />
-                    <circle cx="32" cy="30" r="1.6" fill="#d97706" />
-                    <circle cx="18" cy="27" r="1.5" fill="#d97706" opacity="0.85" />
-                    <circle cx="26" cy="28" r="1.5" fill="#d97706" opacity="0.85" />
-                    <circle cx="24" cy="32" r="1.4" fill="#d97706" opacity="0.75" />
-                    <circle cx="30" cy="22" r="1.2" fill="#e8a030" opacity="0.6" />
-                    <circle cx="16" cy="18" r="1.1" fill="#e8a030" opacity="0.5" />
-                    {/* Roots */}
-                    <path d="M21 46 C19 45 17 45 15 46" stroke="#5a4020" strokeWidth="0.9" fill="none" opacity="0.3" />
-                    <path d="M25 46 C27 45 29 45 31 46" stroke="#5a4020" strokeWidth="0.8" fill="none" opacity="0.25" />
-                  </svg>
-                  <div style={{ position: 'absolute', top: 8, right: 10, textAlign: 'right' }}>
-                    <div style={{ fontSize: 9, fontFamily: 'system-ui', color: '#78716c', opacity: 0.7 }}>common</div>
-                    <div style={{ fontSize: 7, fontFamily: 'system-ui', color: '#78716c', opacity: 0.4 }}>free</div>
-                  </div>
-                </div>
-              ), bg: '#E0D7C1', h: tallH, rot: 0.8, br: '14px 18px 12px 20px' },
-              { label: 'bamboo', content: (
-                <div style={{ width: '100%', height: '100%', background: '#E0D7C1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 48 60" width="135" height="155">
-                    <ellipse cx="24" cy="57" rx="15" ry="4" fill="#c8bfa8" />
-                    <ellipse cx="24" cy="56" rx="13" ry="3.5" fill="#b8af98" />
-                    <path d="M16 54 L16 14" stroke="#1a3a0a" strokeWidth="1.7" strokeLinecap="round" opacity="0.8" />
-                    <path d="M14.5 30 L17.5 30" stroke="#1a3a0a" strokeWidth="0.4" opacity="0.35" />
-                    <path d="M24 54 L24 8" stroke="#4d7c0f" strokeWidth="2.3" strokeLinecap="round" />
-                    <path d="M24 54 L24 8" stroke="#1a3a0a" strokeWidth="0.7" opacity="0.1" />
-                    <path d="M22 41 L26 41" stroke="#1a3a0a" strokeWidth="0.65" opacity="0.4" />
-                    <path d="M22 33 L26 33" stroke="#1a3a0a" strokeWidth="0.65" opacity="0.4" />
-                    <path d="M22.5 25 L25.5 25" stroke="#1a3a0a" strokeWidth="0.5" opacity="0.35" />
-                    <path d="M23 10 L25 10" stroke="#1a3a0a" strokeWidth="0.4" opacity="0.3" />
-                    <path d="M24 32 C18 30 10 28 6 24 C10 24 18 28 24 31" fill="#4d7c0f" opacity="0.6" />
-                    <path d="M24 24 C30 22 38 18 44 16 C38 18 30 21 24 23" fill="#4d7c0f" opacity="0.55" />
-                    <path d="M24 16 C18 14 10 10 4 8 C10 9 18 12 24 15" fill="#4d7c0f" opacity="0.5" />
-                    <path d="M24 8 C20 6 14 4 10 4 C14 3 20 5 24 7" fill="#4d7c0f" opacity="0.4" />
-                    <path d="M24 8 C28 6 34 6 38 6 C34 7 28 7 24 7" fill="#4d7c0f" opacity="0.3" />
-                    <path d="M32 54 L32 20" stroke="#4d7c0f" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-                    <path d="M30.5 36 L33.5 36" stroke="#1a3a0a" strokeWidth="0.4" opacity="0.3" />
-                    <path d="M32 30 C36 28 40 26 44 26 C40 27 36 28 32 29" fill="#4d7c0f" opacity="0.35" />
-                    <path d="M16 22 C12 20 8 18 6 18 C8 17 12 19 16 21" fill="#4d7c0f" opacity="0.35" />
-                  </svg>
-                  <div style={{ position: 'absolute', top: 8, right: 10, textAlign: 'right' }}>
-                    <div style={{ fontSize: 9, fontFamily: 'system-ui', color: '#2563eb', opacity: 0.7 }}>rare</div>
-                    <div style={{ fontSize: 7, fontFamily: 'system-ui', color: '#2563eb', opacity: 0.4 }}>4%</div>
-                  </div>
-                </div>
-              ), bg: '#E0D7C1', h: cardH, rot: -0.7, br: '20px 12px 16px 18px' },
-              { label: 'cattail', content: (
-                <div style={{ width: '100%', height: '100%', background: '#E0D7C1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                  <svg viewBox="0 0 48 52" width="170" height="195">
-                    <ellipse cx="24" cy="49" rx="14" ry="4" fill="#c8bfa8" />
-                    <ellipse cx="24" cy="48" rx="12" ry="3.5" fill="#b8af98" />
-                    <line x1="24" y1="46" x2="24" y2="14" stroke="#7a9a6a" strokeWidth="1.2" />
-                    <line x1="19" y1="46" x2="19" y2="22" stroke="#7a9a6a" strokeWidth="1" />
-                    <line x1="29" y1="46" x2="29" y2="24" stroke="#7a9a6a" strokeWidth="1" />
-                    <path d="M23 14 Q22.5 18 23 24 Q24 24.5 25 24 Q25.5 18 25 14 Q24 13 23 14" fill="#6d4c41" />
-                    <circle cx="24" cy="16.5" r="0.35" fill="#8d6c51" opacity="0.5" />
-                    <circle cx="23.5" cy="19" r="0.3" fill="#8d6c51" opacity="0.45" />
-                    <circle cx="24.2" cy="22" r="0.3" fill="#8d6c51" opacity="0.4" />
-                    <path d="M18.2 22 Q17.8 25 18.2 30 Q19 30.3 19.8 30 Q20.2 25 19.8 22 Q19 21.5 18.2 22" fill="#5a3c31" />
-                    <circle cx="19" cy="24" r="0.3" fill="#8d6c51" opacity="0.45" />
-                    <circle cx="18.8" cy="27.5" r="0.3" fill="#8d6c51" opacity="0.4" />
-                    <path d="M28.2 24 Q27.8 27 28.2 32 Q29 32.3 29.8 32 Q30.2 27 29.8 24 Q29 23.5 28.2 24" fill="#5a3c31" />
-                    <circle cx="29" cy="26" r="0.3" fill="#8d6c51" opacity="0.45" />
-                    <circle cx="29.2" cy="29.5" r="0.3" fill="#8d6c51" opacity="0.4" />
-                    <path d="M24 46 Q18 36 14 26 Q16 29 24 46" fill="#7a9a6a" opacity="0.8" />
-                    <path d="M24 46 Q30 38 34 30 Q32 33 24 46" fill="#6a8a5a" opacity="0.8" />
-                    <path d="M19 46 Q15 38 12 30 Q14 33 19 46" fill="#7a9a6a" opacity="0.8" />
-                    <path d="M29 46 Q33 40 36 34 Q34 37 29 46" fill="#6a8a5a" opacity="0.8" />
-                  </svg>
-                  <div style={{ position: 'absolute', top: 8, right: 10, textAlign: 'right' }}>
-                    <div style={{ fontSize: 9, fontFamily: 'system-ui', color: '#16a34a', opacity: 0.7 }}>uncommon</div>
-                    <div style={{ fontSize: 7, fontFamily: 'system-ui', color: '#16a34a', opacity: 0.4 }}>12%</div>
-                  </div>
-                </div>
-              ), bg: '#E0D7C1', h: cardH, rot: 0.5, br: '16px 14px 18px 12px' },
-            ]
-            const rightCards = [
-              { label: 'inline ai', content: (
-                <div style={{ width: '100%', height: '100%', padding: '10px 11px', fontFamily: 'Georgia, serif', fontSize: 6.5, color: '#4a4540', lineHeight: 1.7, overflow: 'hidden' }}>
-                  <style>{`
-                    @keyframes cvStrike { 0%,15% { width: 0 } 35% { width: 100% } 100% { width: 100% } }
-                    @keyframes cvReplace { 0%,40% { opacity: 0; transform: translateY(4px) } 60%,100% { opacity: 1; transform: translateY(0) } }
-                    @keyframes cvSpark { 0%,100% { opacity: 0.5 } 50% { opacity: 1 } }
-                    @keyframes cvCursor { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
-                  `}</style>
-                  <div style={{ color: '#6b6560' }}>photosynthesis converts</div>
-                  <div style={{ color: '#6b6560' }}>sunlight into energy. plants</div>
-                  <div style={{ color: '#6b6560' }}>absorb CO₂ and release O₂.</div>
-                  <div style={{ margin: '5px 0 3px', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <svg width="7" height="7" viewBox="0 0 24 24" fill="#d97706" style={{ animation: 'cvSpark 2s ease-in-out infinite', flexShrink: 0 }}>
-                      <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4Z" />
-                    </svg>
-                    <span style={{ fontSize: 5, color: '#d97706', fontWeight: 600 }}>rewriting...</span>
-                  </div>
-                  <div style={{ position: 'relative', margin: '0 0 3px' }}>
-                    <span style={{ color: '#a09888', fontSize: 6 }}>this happens in the leaves</span>
-                    <div style={{ position: 'absolute', top: '50%', left: 0, height: 0.8, background: '#d97706', opacity: 0.7, animation: 'cvStrike 5s ease-out infinite' }} />
-                  </div>
-                  <div style={{ padding: '3px 5px', borderRadius: 3, background: 'rgba(217,119,6,0.06)', borderLeft: '1.5px solid #d97706', animation: 'cvReplace 5s ease-out infinite' }}>
-                    <span style={{ color: '#d97706', fontSize: 6 }}>the light-dependent reactions occur in the thylakoid membranes of chloroplasts</span>
-                    <span style={{ display: 'inline-block', width: 1, height: 8, background: '#d97706', marginLeft: 1, verticalAlign: 'middle', animation: 'cvCursor 1s step-end infinite' }} />
-                  </div>
-                  <div style={{ color: '#6b6560', marginTop: 3 }}>the calvin cycle then fixes</div>
-                  <div style={{ color: '#6b6560' }}>carbon into glucose.</div>
-                </div>
-              ), bg: '#cfc5b0', h: cardH, rot: 1, br: '20px 16px 14px 18px' },
-              { label: 'focus timer', timer: true, bg: '#ccc3af', h: timerH, rot: -0.6, br: '16px 20px 18px 12px' },
-              { label: 'stats', content: (
-                <svg viewBox="0 0 130 130" width="140" height="140">
-                  <defs>
-                    <linearGradient id="cv-mult" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#ef4444" />
-                      <stop offset="50%" stopColor="#f59e0b" />
-                      <stop offset="100%" stopColor="#fcd34d" />
-                    </linearGradient>
-                  </defs>
-                  {[
-                    { r: 58, color: '#c9a06c', pct: 0.92, sw: 5 },
-                    { r: 47, color: '#d97706', pct: 0.93, sw: 5 },
-                    { r: 36, color: '#78350f', pct: 1, sw: 5 },
-                  ].map((ring, i) => {
-                    const circ = 2 * Math.PI * ring.r
-                    const gap = circ * 0.04
-                    const track = circ - gap
-                    const fill = track * ring.pct
-                    return (
-                      <g key={i}>
-                        <circle cx="65" cy="65" r={ring.r} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={ring.sw} strokeLinecap="round" strokeDasharray={`${track} ${gap}`} strokeDashoffset={-gap / 2} transform="rotate(-90 65 65)" />
-                        <circle cx="65" cy="65" r={ring.r} fill="none" stroke={ring.color} strokeWidth={ring.sw} strokeLinecap="round" strokeDasharray={`${fill} ${circ - fill}`} transform={`rotate(${-90 + (gap / circ) * 180} 65 65)`} />
-                      </g>
-                    )
-                  })}
-                  <text x="65" y="63" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 16, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.03em', fill: 'url(#cv-mult)' }}>4.5x</text>
-                  <text x="65" y="80" textAnchor="middle" style={{ fontSize: 8, fontFamily: 'Inter, system-ui, sans-serif', fill: '#a09888' }}>28d streak</text>
-                </svg>
-              ), bg: '#d9d0be', h: tallH, rot: 1.3, br: '14px 18px 20px 16px' },
-            ]
-
-            const leftTotal = leftCards.reduce((s, c) => s + c.h + gap, 0)
-            const rightTotal = rightCards.reduce((s, c) => s + c.h + gap, 0)
-
-            const renderCard = (card: { label: string; icon?: React.ReactNode; content?: React.ReactNode; bg: string; h: number; rot: number; br: string; timer?: boolean }, idx: number) => (
-              <div key={idx}
-                onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1.04)`; e.currentTarget.style.boxShadow = '0 20px 44px -10px rgba(0,0,0,0.16)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${card.rot}deg) scale(1)`; e.currentTarget.style.boxShadow = '0 16px 36px -10px rgba(0,0,0,0.1)' }}
-                style={{
-                width: cardW, height: card.h, flexShrink: 0,
-                background: card.bg, borderRadius: card.br, overflow: 'hidden',
-                boxShadow: '0 16px 36px -10px rgba(0,0,0,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8,
-                transform: `rotate(${card.rot}deg) scale(1)`,
-                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                marginBottom: gap,
-              }}>
-                {card.timer ? (
-                  <DemoTimer serif={serif} />
-                ) : card.content ? (
-                  card.content
-                ) : (
-                  <>
-                    {card.icon}
-                    <span style={{ fontFamily: mono, fontSize: '0.6rem', color: '#a09888', letterSpacing: '0.1em', textTransform: 'lowercase' }}>{card.label}</span>
-                  </>
-                )}
-              </div>
-            )
-
-            return (
-              <div style={{
-                position: 'absolute', right: 0, top: 0, bottom: 0,
-                width: cardW * 2 + 60,
-                overflow: 'hidden',
-                opacity: heroSettled ? 1 : 0,
-                transition: 'opacity 1s cubic-bezier(0.2,0.8,0.2,1) 0.2s',
-                maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
-              }}>
-                <style>{`
-                  @keyframes beltDown { 0% { transform: translateY(0) } 100% { transform: translateY(-${leftTotal}px) } }
-                  @keyframes beltUp { 0% { transform: translateY(-${rightTotal}px) } 100% { transform: translateY(0) } }
-                `}</style>
-
-                {/* Left belt — scrolls DOWN */}
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, width: cardW,
-                  animation: `beltDown ${leftCards.length * 8}s linear infinite`,
-                }}>
-                  {leftCards.map((c, i) => renderCard(c, i))}
-                  {leftCards.map((c, i) => renderCard(c, i + leftCards.length))}
-                  {leftCards.map((c, i) => renderCard(c, i + leftCards.length * 2))}
-                </div>
-
-                {/* Right belt — scrolls UP */}
-                <div style={{
-                  position: 'absolute', right: 0, top: 0, width: cardW,
-                  animation: `beltUp ${rightCards.length * 8}s linear infinite`,
-                }}>
-                  {rightCards.map((c, i) => renderCard(c, i))}
-                  {rightCards.map((c, i) => renderCard(c, i + rightCards.length))}
-                  {rightCards.map((c, i) => renderCard(c, i + rightCards.length * 2))}
-                </div>
-              </div>
-            )
-          })()}
         </div>
 
         {/* Cart of oranges — bottom left */}
@@ -1274,7 +988,7 @@ export default function PulpLanding() {
               -- features
             </motion.span>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 72 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 44 }}>
               {FEATURES.map((f, i) => {
                 const flip = i % 2 === 1
                 return (
@@ -1284,7 +998,7 @@ export default function PulpLanding() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-80px' }}
                     transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}
+                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}
                   >
                     <div style={{ order: flip ? 2 : 1 }}>
                       <div style={{ marginBottom: 16 }}>{f.icon}</div>
@@ -1295,7 +1009,7 @@ export default function PulpLanding() {
                         {f.desc}
                       </p>
                     </div>
-                    <div style={{ order: flip ? 1 : 2 }}>
+                    <div style={{ order: flip ? 1 : 2, maxWidth: 340, width: '100%', marginLeft: flip ? 0 : 'auto', marginRight: flip ? 'auto' : 0 }}>
                       <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
                     </div>
                   </motion.div>

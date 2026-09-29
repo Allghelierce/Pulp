@@ -39,6 +39,7 @@ interface TimerSidebarPanelProps {
   dailyGoalMinutes?: number
   isHibernating?: boolean
   hidden?: boolean
+  onStartReview?: () => void
 }
 
 const PRESET_TIMES: Record<"focus" | "short" | "long", number> = {
@@ -603,23 +604,14 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   className="tabular-nums"
                   style={{
                     fontFamily: serifFont,
-                    fontWeight: 400,
-                    fontSize: 54,
+                    fontWeight: 300,
+                    fontSize: 44,
                     lineHeight: 1,
-                    ...(running && !done ? {
-                      backgroundImage: 'linear-gradient(90deg, #d97706 0%, #d97706 30%, #e8a33a 45%, #f0c060 50%, #e8a33a 55%, #d97706 70%, #d97706 100%)',
-                      backgroundSize: '400% 100%',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      animation: 'pulp-timer-shimmer 16s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-                    } : {
-                      color: done ? mainColor : textColor,
-                    }),
+                    color: textColor,
                   }}
                 >
                   {String(minutes).padStart(2, "0")}
-                  <span style={{ color: subtleColor, WebkitTextFillColor: subtleColor, backgroundImage: 'none' }}>:{String(seconds).padStart(2, "0")}</span>
+                  <span>:{String(seconds).padStart(2, "0")}</span>
                 </div>
                 <p className="text-[11px] uppercase tracking-[0.18em] mt-4" style={{ color: treeDead ? "#ef4444" : subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                   {treeDead ? "tree withered" : done

@@ -8,6 +8,7 @@ import { SummerTerrain } from "./SummerTerrain"
 import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import type { NoteData } from "@/app/types"
+import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
 
@@ -36,6 +37,7 @@ interface OrchardViewProps {
   goalStreak?: number
   quotaTier?: 'monthly' | 'weekly' | 'daily'
   reduceMotion?: boolean
+  grade?: string | null
 }
 
 type RGB = [number, number, number]
@@ -532,8 +534,8 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           </pattern>
         </defs>
 
-        {/* Sky */}
-        <rect x="0" y="0" width="200" height="100" fill="url(#sky-g)" />
+        {/* Sky — extends above y=0 to fill the viewBox's top strip (was transparent) */}
+        <rect x="0" y="-4" width="200" height="104" fill="url(#sky-g)" />
 
         {/* Atmospheric haze layers */}
         <defs>
@@ -1741,7 +1743,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
         {(() => {
           const eyeC = isDark ? '#1a1410' : '#3a3020'
           return (
-            <g transform="translate(10, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 2px 4px rgba(0,0,0,${isDark ? '0.2' : '0.1'}))` }} onClick={onOpenShop}>
+            <g transform="translate(6, 38) scale(0.065)" style={{ cursor: 'pointer', pointerEvents: 'all', filter: `drop-shadow(0px 2px 4px rgba(0,0,0,${isDark ? '0.2' : '0.1'}))` }} onClick={onOpenShop}>
               <defs>
                 <radialGradient id="o-body-orch" cx="38%" cy="35%">
                   <stop offset="0%" stopColor="#e8a030" />
@@ -1970,7 +1972,7 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
               <path d="M236 207 Q237 205 238 203" stroke={isDark ? '#3e2a14' : '#6a5030'} strokeWidth="0.8" fill="none" strokeLinecap="round" />
               {/* Cast shadow */}
               {(() => {
-                const stallWorldX = 10 + 175 * 0.065
+                const stallWorldX = 6 + 175 * 0.065
                 const dir = stallWorldX < lightX ? -1 : 1
                 const stretch = Math.abs(stallWorldX - lightX) / 100
                 const offX = dir * 60 * (0.3 + stretch * 0.5)
@@ -1991,10 +1993,13 @@ const Terrain = memo(function Terrain({ isDark: isDarkProp, treeCount, treeBases
           return (
             <g>
               {isNight && <>
-              <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
-              <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
-              <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
-              <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              {/* Light pool shifted right + down so it falls on the shop */}
+              <g transform="translate(4, 3)">
+                <ellipse cx={lx - 14} cy={ly} rx={42 * sc} ry={17 * sc} fill="url(#lamp-wash-a)" />
+                <ellipse cx={lx - 22} cy={ly + 1} rx={30 * sc} ry={13 * sc} fill="url(#lamp-wash-b)" />
+                <ellipse cx={lx - 8} cy={ly + 6} rx={20 * sc} ry={6 * sc} fill="url(#lamp-ground)" />
+                <ellipse cx={lx - 20} cy={ly + 5} rx={16 * sc} ry={5 * sc} fill="url(#lamp-ground)" opacity="0.7" />
+              </g>
               <path d={`M${lx - 0.5},${ly - 7 * sc} L${lx + 4 * sc},${ly + 4 * sc} L${lx - 6 * sc},${ly + 4 * sc} Z`} fill="url(#lamp-cone)" opacity="0.5" />
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={5 * sc} fill="url(#lamp-glow)" />
               <circle cx={lx - 1.5 * sc} cy={ly - 7.5 * sc} r={2 * sc} fill={glassL} opacity="0.08" />
@@ -2649,8 +2654,9 @@ const NOTE_TYPE_ICONS: Record<string, string> = {
 export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
-  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false,
+  onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false, grade,
 }: OrchardViewProps) {
+  const groveHeader = groveTitle(grade)
 
   const activeNotesForDefault = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
   // One unified orchard: default to all trees, filter by notebook on demand.
@@ -2690,7 +2696,8 @@ export const OrchardView = memo(function OrchardView({
     if (!el || screenshotBusy) return
     setScreenshotBusy(true)
     const overlays = el.querySelectorAll<HTMLElement>('[data-orchard-ui]')
-    overlays.forEach(o => o.style.visibility = 'hidden')
+    overlays.forEach(o => o.style.display = 'none')
+    const restore = () => overlays.forEach(o => o.style.display = '')
     try {
       const url = await toPng(el, {
         pixelRatio: 2,
@@ -2703,7 +2710,7 @@ export const OrchardView = memo(function OrchardView({
       })
       setScreenshotData(url)
     } catch { /* ignore */ }
-    overlays.forEach(o => o.style.visibility = '')
+    restore()
     setScreenshotBusy(false)
   }, [screenshotBusy])
 
@@ -3034,21 +3041,28 @@ export const OrchardView = memo(function OrchardView({
       }
       if (closest >= 0 && closestDist < 200) {
         const key = selectedNotebookRef.current ?? '_all'
-        const currentOrder = slotOrderRef.current[key] || currentPlotTreesRef.current.map((t: any) => t.id)
-        const dragIdx = currentOrder.indexOf(ds.treeId)
+        // Normalize to a full order that includes every tree currently on screen,
+        // even ones not yet saved in slotOrder (newly planted / first drag).
+        const visualOrder = [...placedRef.current].sort((a, b) => a.slotIndex - b.slotIndex).map((p: any) => p.tree.id)
+        const baseOrder = slotOrderRef.current[key] ? [...slotOrderRef.current[key]] : []
+        for (const id of visualOrder) if (!baseOrder.includes(id)) baseOrder.push(id)
+        const dragIdx = baseOrder.indexOf(ds.treeId)
         if (dragIdx >= 0) {
           const targetTreeId = placedRef.current.find(p => p.slotIndex === closest)?.tree?.id
-          const newOrder = [...currentOrder]
-          newOrder.splice(dragIdx, 1)
-          if (targetTreeId) {
-            const targetIdx = newOrder.indexOf(targetTreeId)
-            if (targetIdx >= 0) newOrder.splice(targetIdx, 0, ds.treeId)
-            else newOrder.push(ds.treeId)
+          if (targetTreeId && targetTreeId !== ds.treeId) {
+            // Swap the dragged tree with the tree already in that slot — no cascade.
+            const targetIdx = baseOrder.indexOf(targetTreeId)
+            if (targetIdx >= 0) {
+              ;[baseOrder[dragIdx], baseOrder[targetIdx]] = [baseOrder[targetIdx], baseOrder[dragIdx]]
+            }
+          } else if (!targetTreeId) {
+            // Dropped on an empty slot — move the dragged tree to the end.
+            baseOrder.splice(dragIdx, 1)
+            baseOrder.push(ds.treeId)
           } else {
-            const insertAt = Math.min(closest, newOrder.length)
-            newOrder.splice(insertAt, 0, ds.treeId)
+            return // dropped back on itself
           }
-          const updated = { ...slotOrderRef.current, [key]: newOrder }
+          const updated = { ...slotOrderRef.current, [key]: baseOrder }
           setSlotOrder(updated)
           localStorage.setItem('pulp-slot-order', JSON.stringify(updated))
         }
@@ -3214,6 +3228,7 @@ export const OrchardView = memo(function OrchardView({
           100% { transform: translateY(var(--drip-dist)) scale(0); opacity: 0; }
         }
         @keyframes dash-spin { 0% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -34.56 } }
+        @keyframes orchard-mode-glow { 0% { opacity: 0 } 100% { opacity: 1 } }
       `}</style>
       <div
         onWheel={(e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation() } }}
@@ -3221,71 +3236,22 @@ export const OrchardView = memo(function OrchardView({
       >
         {/* Main orchard area */}
         <div ref={captureRef} className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Topbar with sap count */}
-          <div data-orchard-ui className="absolute top-0 left-0 right-0 h-10 z-[60] flex items-center justify-center" style={{
-            backgroundColor: isDark ? 'rgba(24,24,27,0.85)' : 'rgba(250,250,250,0.9)',
-            backdropFilter: 'blur(20px) saturate(1.2)',
-            WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
-            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
+          {/* Hidden sap collect anchor (animation target) */}
+          <span ref={collectBtnRef} className="absolute top-2 left-2 opacity-0 pointer-events-none z-[60]">
+            <span ref={sapCounterRef}>{sap}</span>
+          </span>
+          {/* Sap production rate — bottom-right corner */}
+          <span data-orchard-ui className="absolute bottom-5 right-5 z-[60] flex items-center gap-2 pointer-events-none" style={{
+            fontSize: 15, color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.9)',
+            fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.01em', textShadow: '0 1px 5px rgba(0,0,0,0.5)',
           }}>
-            <div className="flex items-center justify-center w-full h-full gap-2.5" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-              {/* Hidden collect target for sap animation */}
-              <span ref={collectBtnRef} className="absolute left-2 opacity-0 pointer-events-none">
-                <span ref={sapCounterRef}>{sap}</span>
-              </span>
-
-              <button
-                onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }}
-                className="flex items-center justify-center rounded-md transition-all"
-                style={{
-                  width: 30, height: 30,
-                  backgroundColor: activeTool === 'axe' ? (isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)') : 'transparent',
-                  color: activeTool === 'axe' ? '#ef4444' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
-                }}
-                title="Chop"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
-              </button>
-              <button
-                onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }}
-                className="flex items-center justify-center rounded-md transition-all"
-                style={{
-                  width: 30, height: 30,
-                  backgroundColor: editMode ? (isDark ? 'rgba(217,119,6,0.2)' : 'rgba(217,119,6,0.1)') : 'transparent',
-                  color: editMode ? '#d97706' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
-                }}
-                title="Edit layout"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button
-                onClick={captureOrchard}
-                className="flex items-center justify-center rounded-md transition-all"
-                style={{
-                  width: 30, height: 30,
-                  backgroundColor: 'transparent',
-                  color: screenshotBusy ? '#d97706' : (isDark ? 'rgba(161,161,170,0.7)' : 'rgba(113,113,122,0.7)'),
-                  opacity: screenshotBusy ? 0.5 : 1,
-                }}
-                title="Screenshot"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              </button>
-
-              {/* Sap production rate */}
-              <span className="absolute right-3 flex items-center gap-1.5" style={{
-                fontSize: 10, color: isDark ? 'rgba(161,161,170,0.5)' : 'rgba(113,113,122,0.5)',
-                fontFamily: 'Inter, system-ui, sans-serif', letterSpacing: '-0.01em',
-              }}>
-                <PulpIcon size={9} />
-                {(() => {
-                  const maxSap = grove.filter(t => t && t.type !== 'spoiled').reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
-                  const rate = (maxSap * sapMultiplier) / 30
-                  return rate < 1 ? rate.toFixed(1) : Math.round(rate)
-                })()}/min
-              </span>
-            </div>
-          </div>
+            <PulpIcon size={13} />
+            {(() => {
+              const maxSap = grove.filter(t => t && t.type !== 'spoiled').reduce((s: number, t: any) => s + getTreeSapMax(t), 0)
+              const rate = (maxSap * sapMultiplier) / 30
+              return rate < 1 ? rate.toFixed(1) : Math.round(rate)
+            })()}/min
+          </span>
           {/* Sap drop animations */}
           <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none" style={{ fontFamily: 'Crimson Pro, serif' }}>
               {collectAllAnim.active && collectAllAnim.current >= collectAllAnim.total && collectAllAnim.total > 0 && (
@@ -3316,45 +3282,81 @@ export const OrchardView = memo(function OrchardView({
           <div data-orchard-ui className="absolute left-0 top-0 bottom-0 z-50 pointer-events-none" style={{ width: 80, background: `linear-gradient(to right, ${isDark ? 'rgba(9,9,11,0.3)' : 'rgba(50,45,38,0.12)'} 0%, transparent 100%)` }} />
           <Terrain isDark={isDark} treeCount={currentPlotTrees.length} treeBases={placed} chopMode={activeTool === 'axe'} showChopHint={showChopHint} orchardTimeMode={orchardTimeMode} onToggleChop={handleToggleChop} onOpenShop={onOpenShop} />
 
+          {/* Mode indicator — edge glow: red for chop, amber for arrange */}
+          {(activeTool === 'axe' || editMode) && (
+            <div data-orchard-ui className="absolute inset-0 pointer-events-none z-[55]" style={{
+              boxShadow: `inset 0 0 90px 6px ${activeTool === 'axe' ? 'rgba(239,68,68,0.5)' : 'rgba(217,119,6,0.5)'}`,
+              animation: 'orchard-mode-glow 0.5s ease both',
+            }} />
+          )}
+
 
           {/* Orchard scene */}
           <div className="flex-1 relative overflow-hidden" style={{
             perspective: '800px',
           }}>
 
-            {/* Plot switcher overlay */}
-            <div data-orchard-ui className="absolute top-3 left-0 right-0 z-30 flex items-center justify-center gap-3 pointer-events-none">
-              {/* Notebook filter */}
-              <div className="relative pointer-events-auto">
-                <button
-                  onClick={() => setShowNbMenu(v => !v)}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[9px] font-normal uppercase tracking-widest transition-opacity hover:opacity-100 opacity-90"
-                  style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: 'rgba(255,255,255,0.9)' }}
-                >
-                  <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nbLabel(selectedNotebook)}</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showNbMenu ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}><path d="M6 9l6 6 6-6"/></svg>
+            {/* Grove header — market style with divider, plus action buttons */}
+            <div data-orchard-ui className="absolute top-4 left-0 right-0 z-30 flex flex-col items-center pointer-events-none">
+              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 5px rgba(0,0,0,0.5)' }}>
+                {groveHeader.eyebrow}
+              </span>
+              <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 46, fontWeight: 400, lineHeight: 1.1, color: '#fff', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 3px 16px rgba(0,0,0,0.55)' }}>
+                {groveHeader.title}
+              </span>
+              <svg width="300" height="14" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: 0.5 }}>
+                <line x1="0" y1="6" x2="95" y2="6" stroke="#fff" strokeWidth="0.5" />
+                <polygon points="110,2 114,6 110,10 106,6" fill="#fff" opacity="0.7" />
+                <line x1="125" y1="6" x2="220" y2="6" stroke="#fff" strokeWidth="0.5" />
+              </svg>
+
+              {/* Action buttons — under the header, aligned */}
+              <div className="flex items-center gap-2 mt-3 pointer-events-auto" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                {/* Notebook filter */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNbMenu(v => !v)}
+                    className="flex items-center gap-1.5 rounded-md px-3 text-[9px] font-normal uppercase tracking-widest transition-opacity hover:opacity-100 opacity-90"
+                    style={{ height: 30, backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: 'rgba(255,255,255,0.9)' }}
+                    title="Filter by notebook"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nbLabel(selectedNotebook)}</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showNbMenu ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}><path d="M6 9l6 6 6-6"/></svg>
+                  </button>
+                  {showNbMenu && (
+                    <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowNbMenu(false)} />
+                    <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 rounded-xl py-1.5 z-40" style={{ minWidth: 180, maxHeight: 280, overflowY: 'auto', backgroundColor: isDark ? 'rgba(20,18,16,0.96)' : 'rgba(255,255,255,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 12px 32px -8px rgba(0,0,0,0.4)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+                      {filterOptions.map(o => (
+                        <button key={o.id} onClick={() => { setSelectedNotebook(o.id); setShowNbMenu(false) }} className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left transition-colors" style={{ backgroundColor: o.id === selectedNotebook ? (isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)') : 'transparent' }}>
+                          <span style={{ fontSize: 12, fontWeight: 400, color: o.id === selectedNotebook ? '#d97706' : (isDark ? '#e4e4e7' : '#27272a'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
+                          <span style={{ fontSize: 10, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)', flexShrink: 0 }}>{o.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                    </>
+                  )}
+                </div>
+                {/* Chop */}
+                <button onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: activeTool === 'axe' ? 'rgba(239,68,68,0.28)' : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: activeTool === 'axe' ? '#fca5a5' : 'rgba(255,255,255,0.82)' }} title="Chop">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
                 </button>
-                {showNbMenu && (
-                  <>
-                  <div className="fixed inset-0 z-30" onClick={() => setShowNbMenu(false)} />
-                  <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 rounded-xl py-1.5 z-40" style={{ minWidth: 180, maxHeight: 280, overflowY: 'auto', backgroundColor: isDark ? 'rgba(20,18,16,0.96)' : 'rgba(255,255,255,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 12px 32px -8px rgba(0,0,0,0.4)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
-                    {filterOptions.map(o => (
-                      <button
-                        key={o.id}
-                        onClick={() => { setSelectedNotebook(o.id); setShowNbMenu(false) }}
-                        className="w-full flex items-center justify-between gap-3 px-3 py-1.5 text-left transition-colors"
-                        style={{ backgroundColor: o.id === selectedNotebook ? (isDark ? 'rgba(217,119,6,0.16)' : 'rgba(217,119,6,0.1)') : 'transparent' }}
-                      >
-                        <span style={{ fontSize: 12, fontWeight: 400, color: o.id === selectedNotebook ? '#d97706' : (isDark ? '#e4e4e7' : '#27272a'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.label}</span>
-                        <span style={{ fontSize: 10, color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)', flexShrink: 0 }}>{o.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                  </>
-                )}
+                {/* Edit */}
+                <button onClick={() => { setEditMode(e => !e); setActiveTool('none'); setChopTarget(null) }} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: editMode ? 'rgba(217,119,6,0.32)' : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: editMode ? '#fbbf24' : 'rgba(255,255,255,0.82)' }} title="Edit layout">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                {/* Screenshot */}
+                <button onClick={captureOrchard} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: screenshotBusy ? '#fbbf24' : 'rgba(255,255,255,0.82)', opacity: screenshotBusy ? 0.5 : 1 }} title="Screenshot">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </button>
               </div>
-              {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
-                <div className="flex items-center gap-2 rounded-full px-3 py-1.5 pointer-events-auto" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+            </div>
+
+            {/* Plot switcher — moved to bottom center */}
+            {(filteredTrees.length > TREES_PER_PLOT || nbUnlocked > 1) && (
+              <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+                <div className="flex items-center gap-2 rounded-full px-3 py-1.5" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.22)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
                   <button onClick={() => setPlotPage(p => Math.max(0, p - 1))} disabled={plotPage === 0} className="p-0.5 disabled:opacity-30 hover:opacity-100 opacity-70 transition-opacity" style={{ color: '#fff' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
@@ -3366,13 +3368,7 @@ export const OrchardView = memo(function OrchardView({
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                     </button>
                   ) : (!isAllView && nbUnlocked < MAX_PLOTS) ? (
-                    <button
-                      onClick={unlockNextPlot}
-                      disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40"
-                      style={{ color: '#d97706' }}
-                      title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}
-                    >
+                    <button onClick={unlockNextPlot} disabled={(gems ?? 0) < (PLOT_COST[nbUnlocked] || 0)} className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-normal uppercase tracking-wider transition-all disabled:opacity-40" style={{ color: '#d97706' }} title={`Unlock plot ${nbUnlocked + 1} for ${PLOT_COST[nbUnlocked]} gems`}>
                       <GemIcon size={9} /> {PLOT_COST[nbUnlocked]}
                     </button>
                   ) : (
@@ -3381,9 +3377,8 @@ export const OrchardView = memo(function OrchardView({
                     </span>
                   )}
                 </div>
-              )}
-              {/* Axe chop toggle is now the stump in the terrain */}
-            </div>
+              </div>
+            )}
             <div ref={orchardRef} className="absolute inset-0" style={{
               transform: 'rotateX(8deg)',
               transformOrigin: 'center 40%',
@@ -3670,7 +3665,7 @@ export const OrchardView = memo(function OrchardView({
 
           {/* Tool hint labels */}
           {(activeTool === 'axe' || editMode) && (
-            <div data-orchard-ui className="absolute left-1/2 -translate-x-1/2 top-12 z-50">
+            <div data-orchard-ui className="absolute left-1/2 -translate-x-1/2 top-[176px] z-50">
               {activeTool === 'axe' && (
                 <span className="text-[9px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: '#ef4444', backgroundColor: isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.1)' }}>
                   Tap tree to chop

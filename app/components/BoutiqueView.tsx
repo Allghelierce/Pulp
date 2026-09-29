@@ -1,7 +1,9 @@
 "use client"
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
+import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
+import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 
@@ -583,8 +585,7 @@ function generateMarketSeeds(epoch: number): { seeds: string[]; stock: Record<st
       if (r <= 0) { picked = t; break }
     }
     selected.push(picked)
-    const sv = rng() * 100
-    stock[picked] = sv < 2 ? 7 : sv < 7 ? 3 : sv < 27 ? 2 : 1
+    stock[picked] = 1
     if (rng() < 0.07) {
       const pcts = [10, 15, 20, 25, 30]
       discounts[picked] = pcts[Math.floor(rng() * pcts.length)]
@@ -638,13 +639,10 @@ export const BoutiqueView = memo(function BoutiqueView({
     }
   }, [isOpen, initialTab, initialScrollTo])
 
-  const bg = isDark ? '#09090b' : '#f5f3ef'
-  const cardBg = isDark ? 'rgba(24,24,27,0.5)' : '#ffffff'
-  const cardBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
-  const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
-  const textSecondary = isDark ? '#8a8680' : '#7a7670'
-  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
-  const dividerColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'
+  const palette = getPalette(isDark)
+  const { bg, cardBg, cardBorder, textPrimary, textSecondary, textMuted } = palette
+  const type = getType(palette)
+  const dividerColor = cardBorder
 
   useEffect(() => {
     if (!isOpen) return
@@ -1579,7 +1577,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
               {(() => { return (<>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginBottom: 10, marginTop: 16, position: 'relative', zIndex: 1 }}>
-                <span style={{ fontSize: 36, fontWeight: 400, fontFamily: 'Crimson Pro, serif', color: isDark ? '#e8e4dc' : '#2a2620', letterSpacing: '0.18em', textTransform: 'uppercase' }}>Market</span>
+                <span style={{ ...type.viewTitle }}>Market</span>
                 {/* Ornamental divider */}
                 <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>
                   {(() => { const c = isDark ? '#dcd8d0' : '#2a2620'; return (<>
@@ -1593,14 +1591,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <button
                     onClick={() => { setActiveTab('satchel'); setSelectedPlant(null) }}
                     className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '4px 14px', borderRadius: 5,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                    }}
+                    style={{ ...chipButton(palette) }}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
                     Satchel
@@ -1608,14 +1599,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <button
                     onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
                     className="transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      padding: '4px 14px', borderRadius: 5,
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-                      color: isDark ? '#dcd8d0' : '#2a2620', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 10, fontWeight: 400, fontFamily: font, letterSpacing: '0.04em',
-                    }}
+                    style={{ ...chipButton(palette) }}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
                     Catalog
@@ -1889,7 +1873,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             </div>
                             {/* Rarity label */}
                             <div style={{
-                              position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
+                              position: 'absolute', top: 40, left: '50%', transform: 'translateX(-50%)',
                               fontSize: 7, fontWeight: 400, color: t.rarity === 'sacred' ? '#d4b8ff' : rarityCol,
                               letterSpacing: t.rarity === 'sacred' ? '0.14em' : '0.08em', textTransform: 'uppercase',
                               animation: revealEffect?.index === i
@@ -1902,8 +1886,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             }}>
                               {t.rarity === 'sacred' ? '✦ ' : ''}{RARITY_LABEL[t.rarity]}{t.rarity === 'sacred' ? ' ✦' : ''}
                             </div>
-                            {/* Stock / sold out */}
-                            {soldOut ? (
+                            {/* Sold out */}
+                            {soldOut && (
                               <div style={{
                                 position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
                                 fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase',
@@ -1911,15 +1895,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 padding: '2px 6px', borderRadius: 3,
                                 backdropFilter: 'blur(4px)', zIndex: 5,
                               }}>Sold out</div>
-                            ) : (
-                              <div style={{
-                                position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: 7, fontWeight: 400,
-                                color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)',
-                                background: isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)',
-                                padding: '2px 6px', borderRadius: 3,
-                                backdropFilter: 'blur(4px)', zIndex: 5,
-                              }}>x{shopStock[type]}</div>
                             )}
                             {/* Discount badge - now on price tag */}
                             {discount > 0 && false && (
@@ -1943,7 +1918,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.6s' : t.rarity === 'true rare' ? '0.4s' : '0.15s') : undefined,
                                 position: 'relative',
                               }}>
-                                <PlantIcon type={type} size={120} stage={3} hideGround />
+                                <CachedPlantIcon type={type} size={120} stage={3} hideGround />
                                 {/* Ground blend */}
                                 {(() => { const tc = getTerrainColors(type, isDark); return (
                                 <div style={{
@@ -2194,7 +2169,6 @@ export const BoutiqueView = memo(function BoutiqueView({
           {selectedPlant && previewInfo && (() => {
             const stock = shopStock[selectedPlant!] || 0
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
-            const cat = previewInfo.category || 'none'
             const desc = PLANT_DESCRIPTIONS[selectedPlant!] || `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
             const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
             const canAfford = seedCost <= sap
@@ -2266,7 +2240,6 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
                   <span style={{ fontSize: 9, fontWeight: 400, color: rarityCol, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: font, marginBottom: 4 }}>
                     {RARITY_LABEL[previewInfo.rarity]}
-                    {cat !== 'none' && <span style={{ color: CATEGORY_COLOR[cat], marginLeft: 8 }}>{CATEGORY_LABEL[cat]}</span>}
                   </span>
                   <div style={{ fontSize: 20, fontWeight: 400, color: textPrimary, fontFamily: font, letterSpacing: '-0.01em', marginBottom: 6 }}>
                     {previewInfo.name}
@@ -2363,24 +2336,24 @@ export const BoutiqueView = memo(function BoutiqueView({
                         <button
                           onClick={() => { setSelectedPlant(type); setPreviewStage(0) }}
                           style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                            width: '100%', aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '10px 8px', borderRadius: 12, cursor: 'pointer',
                             border: `1px solid ${t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') : `${rc}30`}`,
                             backgroundColor: t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : (isDark ? `${rc}10` : `${rc}08`),
-                            transition: 'all 0.15s', fontFamily: font, textAlign: 'left',
+                            transition: 'all 0.15s', fontFamily: font, textAlign: 'center',
                             boxShadow: t.rarity === 'common' || t.rarity === 'uncommon' ? `inset 0 0 0 1px ${rc}10` : `inset 0 0 0 1px ${rc}15, 0 0 12px ${rc}08`,
                           }}
                           onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = `${rc}40` }}
                           onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }}
                         >
                           <div style={{
-                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            width: 52, height: 52, borderRadius: 12, flexShrink: 0,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             background: `${rc}15`,
                           }}>
-                            <PlantIcon type={type} size={22} isSeed />
+                            <PlantIcon type={type} size={38} isSeed />
                           </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ minWidth: 0, width: '100%' }}>
                             <div style={{ fontSize: 11, fontWeight: 400, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
                             <div style={{ fontSize: 8, fontWeight: 400, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
                           </div>
@@ -2477,8 +2450,12 @@ export const BoutiqueView = memo(function BoutiqueView({
                               {owned && <RarityScene rarity={t.rarity} isDark={isDark} />}
                               <div style={{ position: 'absolute', inset: 0, boxShadow: `inset 0 0 12px ${isDark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.06)'}`, pointerEvents: 'none', zIndex: 4 }} />
                               {owned && <Sparkles rarity={t.rarity} count={3} />}
-                              <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'absolute', left: '50%', bottom: '7%', transform: 'translateX(-50%)', zIndex: 2, filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})`, }}>
-                                <PlantIcon type={type} size={120} stage={3} hideGround />
+                              {/* Outer wrapper centers via flex (no transform), so the rarity
+                                  animation's transform on the inner div can't break centering. */}
+                              <div style={{ position: 'absolute', left: 0, right: 0, bottom: (() => { const sh = t?.shape || ''; return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? '2%' : ['cactus', 'agave', 'sage', 'pineapple'].includes(sh) ? '4%' : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? '6%' : '7%' })(), display: 'flex', justifyContent: 'center', zIndex: 2 }}>
+                                <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})` }}>
+                                  <CachedPlantIcon type={type} size={120} stage={3} hideGround />
+                                </div>
                               </div>
                               {owned && (
                               <svg viewBox="0 0 100 18" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '12%', zIndex: 3 }}>

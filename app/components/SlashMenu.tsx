@@ -353,8 +353,7 @@ function makeColumns(num: number): string {
   return `<div contenteditable="false" style="display:flex;gap:4px;margin:12px 0">${cols}</div><br/>`
 }
 
-function makeTOC(mode: "@" | "/", accent: string): string {
-  const isLight = mode === "/"
+function makeTOC(isLight: boolean, accent: string): string {
   const headers = Array.from(document.querySelectorAll("[contenteditable]:not([data-box-style]) h1, [contenteditable]:not([data-box-style]) h2, [contenteditable]:not([data-box-style]) h3"))
 
   const bgColor = isLight ? "rgba(250,248,244,0.5)" : "rgba(255,255,255,0.03)"
@@ -401,7 +400,7 @@ function makeTOC(mode: "@" | "/", accent: string): string {
   return `<div ${wrapperStyle}><div ${titleStyle}>Contents</div><div ${subtitleStyle}>${headers.length} section${headers.length !== 1 ? "s" : ""}</div><div ${ruleStyle}></div>${items}</div><br/>`
 }
 
-const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="margin:8px 0;border-radius:8px;overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#18181b;border:1px solid rgba(255,255,255,0.08)"><div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:#121214;border-bottom:1px solid rgba(255,255,255,0.06)"><span style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:#d97706;font-family:-apple-system,sans-serif">Code</span><button onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="font-size:10px;color:#a1a1aa;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;cursor:pointer;font-family:-apple-system,sans-serif">Copy</button></div><pre contenteditable="true" spellcheck="false" style="margin:0;padding:14px 16px;color:#e4e4e7;font-size:12.5px;line-height:1.6;outline:none;white-space:pre-wrap;min-height:2.5em">// Your code here</pre></div><br/>`
+const CODE_BLOCK_HTML = `<div class="pulp-code-block" contenteditable="false" style="position:relative;margin:8px 0;border-radius:8px;overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#1e1e1e;border:1px solid rgba(255,255,255,0.07)"><div contenteditable="false" style="position:absolute;top:8px;right:10px;display:flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;background:#2a2a2a;border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-family:-apple-system,sans-serif;font-size:12px;color:#b4b4b4;user-select:none"><span>JavaScript</span><span style="opacity:0.5;font-size:9px;margin-left:-2px">▾</span><span style="width:1px;height:14px;background:rgba(255,255,255,0.12);margin:0 2px"></span><button title="Copy" onclick="const pre=this.closest('.pulp-code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent||'');const o=this.innerHTML;this.textContent='✓';setTimeout(()=>this.innerHTML=o,1200)" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;color:#b4b4b4;background:transparent;border:none;border-radius:4px;cursor:pointer">⧉</button></div><pre contenteditable="true" spellcheck="false" data-placeholder="Type or paste code…" style="margin:0;padding:16px 18px;color:#d4d4d4;font-size:13px;line-height:1.6;outline:none;white-space:pre-wrap;tab-size:2;min-height:1.6em"></pre></div><br/>`
 
 // ─── Table Grid Picker ──────────────────────────────────────────────────────
 
@@ -827,7 +826,7 @@ export const SlashMenu = memo(function SlashMenu({
     {
       id: "toc", label: "Table of Contents", group: "Blocks",
       icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6" /><line x1="6" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" /></svg>,
-      action: () => onSelect(() => insertHTML(makeTOC(mode, accent)))
+      action: () => onSelect(() => insertHTML(makeTOC(theme ? theme === "light" : mode === "/", accent)))
     },
     {
       id: "code", label: "Code Block", group: "Blocks",

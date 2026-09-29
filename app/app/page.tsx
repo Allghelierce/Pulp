@@ -28,6 +28,8 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
+import { OnboardingModal } from "@/app/components/OnboardingModal"
+import { CommunityView } from "@/app/components/CommunityView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
@@ -49,11 +51,11 @@ const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.Bouti
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
 const DashboardView = lazy(() => _preloadDashboard().then(m => ({ default: m.DashboardView })))
 const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
+const ReviewView = lazy(() => import("@/app/components/ReviewView").then(m => ({ default: m.ReviewView })))
 
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
 const AiCommandBar = lazy(() => _preloadAiCmd().then(m => ({ default: m.AiCommandBar })))
 const NotebookChat = lazy(() => _preloadChat().then(m => ({ default: m.NotebookChat })))
-const ReviewView = lazy(() => import("@/app/components/ReviewView").then(m => ({ default: m.ReviewView })))
 const VersionHistoryPanel = lazy(() => _preloadVersionHistory().then(m => ({ default: m.VersionHistoryPanel })))
 const GridView = lazy(() => _preloadGrid().then(m => ({ default: m.GridView })))
 const AiInlineMenu = lazy(() => _preloadAiInline().then(m => ({ default: m.AiInlineMenu })))
@@ -919,7 +921,10 @@ const BoxTextarea = memo(function BoxTextarea({
             } else if (
               e.key === 'Backspace' &&
               range.startContainer.nodeType === Node.TEXT_NODE &&
-              range.startOffset > 0
+              // Only handle when a char will remain before the caret. Deleting the first
+              // char (offset 1 → 0) lands the caret at the line start, where manual ranges
+              // get the wrong affinity (jump to end of prev line) — let the browser do it.
+              range.startOffset > 1
             ) {
               const textNode = range.startContainer as Text
               const charRange = document.createRange()
@@ -966,7 +971,7 @@ const BoxTextarea = memo(function BoxTextarea({
               const paper = document.getElementById('editor-paper')
               if (paper) {
                 let zoom = 1
-                const zoomWrapper = document.querySelector('.shrink-0[style*="maxWidth"]') as HTMLElement | null
+                const zoomWrapper = document.getElementById('pulp-page-surface')
                 if (zoomWrapper && zoomWrapper.style.zoom) zoom = parseFloat(zoomWrapper.style.zoom) || 1
 
                 let layer = document.getElementById('ghost-layer')
@@ -985,10 +990,12 @@ const BoxTextarea = memo(function BoxTextarea({
                 ghost.className = 'erased'
                 ghost.textContent = ghostText
                 ghost.style.position = 'absolute'
-                ghost.style.left = (ghostRect.left - paperRect.left) + 'px'
-                ghost.style.top = (ghostRect.top - paperRect.top) + 'px'
-                ghost.style.width = ghostRect.width + 'px'
-                ghost.style.height = ghostRect.height + 'px'
+                // ghostRect/paperRect are post-zoom (visual) px; the ghost lives inside the
+                // zoomed #pulp-page-surface, so convert the delta back to layout px (÷ zoom).
+                ghost.style.left = ((ghostRect.left - paperRect.left) / zoom) + 'px'
+                ghost.style.top = ((ghostRect.top - paperRect.top) / zoom) + 'px'
+                ghost.style.width = (ghostRect.width / zoom) + 'px'
+                ghost.style.height = (ghostRect.height / zoom) + 'px'
                 ghost.style.overflow = 'hidden'
 
                 const comp = window.getComputedStyle(ref.current)
@@ -1206,6 +1213,11 @@ export default function NoteApp() {
   })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [friendCode, setFriendCode] = useState<string | null>(null)
+  const [communityOpen, setCommunityOpen] = useState(false)
+  const [activeGroupId, setActiveGroupId] = useState<number | null>(null)
+  const [grade, setGrade] = useState<string | null>(null)
   const handleTimerRunningChange = useCallback((r: boolean) => { timerRunningRef.current = r; setTimerRunning(r) }, [])
   const [allCompacted, setAllCompacted] = useState(false)
   const [toolbarFormattingOpen, setToolbarFormattingOpen] = useState(false)
@@ -1225,9 +1237,10 @@ export default function NoteApp() {
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'satchel' | 'catalog'>('shop')
   const [shopScrollTo, setShopScrollTo] = useState<string | undefined>(undefined)
   const [statsOpen, setStatsOpen] = useState(false)
+  const statsOpenedBeforeRef = useRef(false)
   const [reviewOpen, setReviewOpen] = useState(false)
-  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false) }, [])
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -1400,6 +1413,9 @@ export default function NoteApp() {
           if (items.length) setInventory(items)
         }
         if (profile.unlocked_cosmetics?.length) setUnlockedCosmetics(profile.unlocked_cosmetics)
+        setNeedsOnboarding(!(profile as any).username)
+        setFriendCode((profile as any).friend_code ?? null)
+        setGrade((profile as any).grade ?? null)
       } else {
         // First time — create profile from localStorage state, then migrate legacy
         const saved = localStorage.getItem('pulp-grove')
@@ -1412,6 +1428,7 @@ export default function NoteApp() {
         })
         // Migrate legacy user_settings blob
         await db.migrateFromLegacy(user.id)
+        setNeedsOnboarding(true)
       }
 
       if (achievementRows.length) {
@@ -2117,7 +2134,7 @@ export default function NoteApp() {
           span.parentNode?.removeChild(span)
         }
         x = rect.left
-        y = rect.top - 12 // open a bit higher so it's clearly above the line
+        y = rect.bottom + 16 // sit just below the line, with breathing room
       }
       setAiMenu({ x, y, selectedText })
       return
@@ -2160,7 +2177,7 @@ export default function NoteApp() {
         const rect = r.getBoundingClientRect()
         const m = {
           x: rect.right - 20,
-          y: rect.bottom + 14,
+          y: rect.bottom + 16,
           filter: "",
           type: isBox ? ("textarea" as const) : ("editor" as const),
           mode: menuMode,
@@ -2214,7 +2231,7 @@ export default function NoteApp() {
 
       const m = {
         x: rect.left,
-        y: rect.bottom + 14,
+        y: rect.bottom + 16,
         filter: "",
         type: isBox ? ("textarea" as const) : ("editor" as const),
         mode: menuMode,
@@ -2364,6 +2381,91 @@ export default function NoteApp() {
     document.addEventListener('input', handler)
     return () => document.removeEventListener('input', handler)
   }, [autoCapitalize])
+
+  // Live syntax highlighting for code blocks
+  useEffect(() => {
+    const KEYWORDS = new Set([
+      "const", "let", "var", "function", "return", "if", "else", "for", "while", "do",
+      "switch", "case", "break", "continue", "new", "class", "extends", "super", "this",
+      "typeof", "instanceof", "in", "of", "import", "from", "export", "default", "try",
+      "catch", "finally", "throw", "async", "await", "yield", "delete", "void", "static",
+      "null", "undefined", "true", "false", "def", "lambda", "elif", "with", "as", "pass",
+      "raise", "and", "or", "not", "is", "None", "True", "False", "self", "print", "public",
+      "private", "protected", "int", "float", "string", "bool", "struct", "enum", "fn", "match",
+    ])
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const tokenize = (text: string) => {
+      const re = /(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|(`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)/g
+      let out = "", last = 0, m: RegExpExecArray | null
+      while ((m = re.exec(text))) {
+        out += esc(text.slice(last, m.index))
+        if (m[1]) out += `<span style="color:#6a9955">${esc(m[1])}</span>`
+        else if (m[2]) out += `<span style="color:#ce9178">${esc(m[2])}</span>`
+        else if (m[3]) out += `<span style="color:#b5cea8">${esc(m[3])}</span>`
+        else if (m[4]) out += KEYWORDS.has(m[4]) ? `<span style="color:#569cd6">${esc(m[4])}</span>` : esc(m[4])
+        last = re.lastIndex
+      }
+      out += esc(text.slice(last))
+      return out
+    }
+    const caretOffset = (pre: HTMLElement) => {
+      const sel = window.getSelection()
+      if (!sel || !sel.rangeCount || !pre.contains(sel.anchorNode)) return -1
+      const r = sel.getRangeAt(0).cloneRange()
+      r.selectNodeContents(pre)
+      r.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset)
+      return r.toString().length
+    }
+    const restoreCaret = (pre: HTMLElement, offset: number) => {
+      const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT)
+      let count = 0, node: Node | null
+      while ((node = walker.nextNode())) {
+        const len = node.textContent?.length ?? 0
+        if (count + len >= offset) {
+          const r = document.createRange()
+          r.setStart(node, Math.max(0, offset - count))
+          r.collapse(true)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(r)
+          return
+        }
+        count += len
+      }
+    }
+    const highlight = (pre: HTMLElement) => {
+      const text = pre.textContent ?? ""
+      const offset = caretOffset(pre)
+      const html = tokenize(text)
+      if (html === pre.innerHTML) return
+      pre.innerHTML = html
+      if (offset >= 0) restoreCaret(pre, offset)
+    }
+    // Keep code-block newlines as pure "\n" text so highlighting + caret stay consistent
+    const keydown = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement
+      const pre = t?.closest?.(".pulp-code-block pre") as HTMLElement | null
+      if (!pre) return
+      if (e.key === "Enter") { e.preventDefault(); document.execCommand("insertText", false, "\n") }
+      else if (e.key === "Tab") { e.preventDefault(); document.execCommand("insertText", false, "  ") }
+    }
+    let raf = 0
+    const input = (e: Event) => {
+      if ((e as InputEvent).isComposing) return
+      const t = e.target as HTMLElement
+      const pre = t?.closest?.(".pulp-code-block pre") as HTMLElement | null
+      if (!pre) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => highlight(pre))
+    }
+    document.addEventListener("keydown", keydown, true)
+    document.addEventListener("input", input)
+    return () => {
+      document.removeEventListener("keydown", keydown, true)
+      document.removeEventListener("input", input)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
 
   // Keyboard shortcuts for tools
   useEffect(() => {
@@ -4259,7 +4361,7 @@ export default function NoteApp() {
 
           </div>
 
-          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}>
+          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
@@ -4283,18 +4385,22 @@ export default function NoteApp() {
               goalStreak={goalStreak}
               quotaTier={quotaTier}
               reduceMotion={reduceMotion}
+              grade={grade}
             />
           </div></Suspense>}
 
           <AnimatePresence>
-            {statsOpen && (
+            {statsOpen && (() => {
+              const firstOpen = !statsOpenedBeforeRef.current
+              statsOpenedBeforeRef.current = true
+              return (
               <m.div
                 key="stats-view"
-                initial={{ opacity: 0 }}
+                initial={firstOpen ? { opacity: 0 } : false}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50 }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
                 <Suspense fallback={null}>
                   <DashboardView
@@ -4317,21 +4423,71 @@ export default function NoteApp() {
                   />
                 </Suspense>
               </m.div>
+              )
+            })()}
+            {reviewOpen && notes.find(n => n.id === activeTabId) && (
+              <m.div
+                key="review-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
+              >
+                <Suspense fallback={null}>
+                  <ReviewView
+                    note={notes.find(n => n.id === activeTabId)!}
+                    theme={theme}
+                    accent={accentSolid}
+                    onClose={() => setReviewOpen(false)}
+                    onComplete={({ reviewed, again }) => {
+                      // Sap from recall — rate scaled by the quality of the orchard.
+                      const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (TREE_TYPES[t.type]?.sapYield || 0), 0) / 25))
+                      const earned = Math.round(Math.max(0, reviewed - again * 0.5) * 2 * orchardMult)
+                      if (earned > 0) setSap(sap + earned)
+                    }}
+                  />
+                </Suspense>
+              </m.div>
             )}
           </AnimatePresence>
 
-          {leaderboardOpen && <Suspense fallback={null}>
-            <LeaderboardView
-              isOpen={leaderboardOpen}
-              onClose={() => setLeaderboardOpen(false)}
-              theme={theme}
-              sap={sap}
-              userName={user?.email?.split('@')[0] || 'You'}
-              avatarColor={accentSolid}
-              level={Math.floor(Math.sqrt(xp / 100)) + 1}
-              treesGrown={grove.length}
-            />
-          </Suspense>}
+          <AnimatePresence>
+            {communityOpen && (
+              <m.div key="community-view"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
+                <CommunityView theme={theme} friendCode={friendCode} currentUserId={user?.id ?? ''}
+                  onClose={() => setCommunityOpen(false)} onActiveGroupChange={setActiveGroupId} />
+              </m.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {leaderboardOpen && (
+              <m.div
+                key="leaderboard-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+              >
+                <Suspense fallback={null}>
+                  <LeaderboardView
+                    isOpen={leaderboardOpen}
+                    onClose={() => setLeaderboardOpen(false)}
+                    theme={theme}
+                    sap={sap}
+                    userName={user?.email?.split('@')[0] || 'You'}
+                    avatarColor={accentSolid}
+                    level={Math.floor(Math.sqrt(xp / 100)) + 1}
+                    treesGrown={grove.length}
+                  />
+                </Suspense>
+              </m.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {shopOpen && (
@@ -4340,8 +4496,8 @@ export default function NoteApp() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 72 : 0, zIndex: 50, touchAction: 'manipulation' }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50, touchAction: 'manipulation' }}
               >
                 <Suspense fallback={null}><BoutiqueView
                   isOpen
@@ -4605,7 +4761,9 @@ export default function NoteApp() {
           dailyGoalMinutes={dailyGoalMinutes}
           quotaTier={quotaTier}
           isHibernating={isHibernating}
-          hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen}
+          hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen || reviewOpen}
+          onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
+          activeGroupId={activeGroupId}
         />
 
         {/* Persistent timer toggle — visible even when the sidebar is collapsed (hidden while running to lock it in) */}
@@ -4641,6 +4799,20 @@ export default function NoteApp() {
             <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
           </button>
         )}
+        {notes.filter(n => !n.archived).length > 0 && (
+          <button
+            onClick={() => { if (communityOpen) { setCommunityOpen(false) } else { startTransition(() => { closeAllPanels(); setCommunityOpen(true) }) } }}
+            title="Community"
+            className="fixed bottom-[76px] left-3 z-[60] flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer hover:scale-[1.04] active:scale-[0.97]"
+            style={{ width: 56, height: 56,
+              background: communityOpen ? 'linear-gradient(135deg, rgba(217,119,6,0.15), rgba(217,119,6,0.08))' : 'linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.02))',
+              border: communityOpen ? '1px solid rgba(217,119,6,0.2)' : '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-0.5" style={{ opacity: communityOpen ? 1 : 0.6 }}>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span className="text-[8px] font-normal tracking-wide" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', opacity: communityOpen ? 1 : 0.5 }}>friends</span>
+          </button>
+        )}
         {!user && (
           <button
             onClick={() => window.location.href = "/login"}
@@ -4652,6 +4824,9 @@ export default function NoteApp() {
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}
         <PlantImagePreloader />
+        {needsOnboarding && user && (
+          <OnboardingModal theme={theme} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
+        )}
       </>
     </LazyMotion>
   )

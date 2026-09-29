@@ -7,11 +7,13 @@ import type { PaperStyle } from "@/app/lib/paperStyle"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
-import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
 import { verifyPasswordAndDelete } from "@/app/actions/deleteAccount"
 import { changePassword } from "@/app/actions/changePassword"
+import { apiFetch } from "@/lib/apiFetch"
+import { SCHOOLS } from "@/lib/schools"
+import { GRADES } from "@/lib/term"
 import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
@@ -293,6 +295,74 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
+  // ── Profile identity (username / school / grade) with one-week edit cooldown ──
+  type Identity = { username: string | null; school: string | null; grade: string | null; friend_code: string | null; changed_at: Record<string, string>; cooldown_ms: number }
+  const [identity, setIdentity] = useState<Identity | null>(null)
+  const [editField, setEditField] = useState<null | 'username' | 'school' | 'grade'>(null)
+  const [editDraft, setEditDraft] = useState("")
+  const [idBusy, setIdBusy] = useState(false)
+  const [idError, setIdError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    apiFetch('/api/profile/identity').then(r => r.ok ? r.json() : null).then(d => { if (d) setIdentity(d) }).catch(() => {})
+  }, [user])
+
+  const cooldownLeft = useCallback((field: string): number => {
+    if (!identity) return 0
+    const last = identity.changed_at?.[field] ? new Date(identity.changed_at[field]).getTime() : 0
+    if (!last) return 0
+    const rem = last + identity.cooldown_ms - Date.now()
+    return rem > 0 ? rem : 0
+  }, [identity])
+
+  const fmtCooldown = (ms: number): string => {
+    const days = Math.ceil(ms / (24 * 60 * 60 * 1000))
+    return days <= 1 ? "1 day" : `${days} days`
+  }
+
+  const startEdit = (field: 'username' | 'school' | 'grade') => {
+    setIdError(null)
+    setEditDraft(identity?.[field] ?? (field === 'school' ? SCHOOLS[0] : field === 'grade' ? GRADES[7] : ''))
+    setEditField(field)
+  }
+
+  const saveIdentity = async () => {
+    if (!editField) return
+    setIdBusy(true); setIdError(null)
+    try {
+      const res = await apiFetch('/api/profile/identity', { method: 'POST', body: JSON.stringify({ field: editField, value: editDraft }) })
+      const json = await res.json()
+      if (!res.ok) {
+        setIdError(json.cooldown_until ? `Locked for ${fmtCooldown(new Date(json.cooldown_until).getTime() - Date.now())}` : (json.error || 'Could not save'))
+      } else {
+        setIdentity(prev => prev ? { ...prev, [editField]: json.value, changed_at: json.changed_at } : prev)
+        setEditField(null)
+      }
+    } catch { setIdError('Could not save') }
+    finally { setIdBusy(false) }
+  }
+
+  // ── Stripe checkout / billing portal ──
+  const startCheckout = useCallback(async (plan: string) => {
+    if (!user) { window.location.href = '/login'; return }
+    try {
+      const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
+      const json = await res.json()
+      if (json.url) { window.location.href = json.url; return }
+      openConfirm?.('Checkout unavailable', json.error || 'Could not start checkout.', () => {})
+    } catch { openConfirm?.('Checkout unavailable', 'Something went wrong starting checkout.', () => {}) }
+  }, [user, openConfirm])
+
+  const openBillingPortal = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/stripe/portal', { method: 'POST' })
+      const json = await res.json()
+      if (json.url) { window.location.href = json.url; return }
+      openConfirm?.('Billing', json.error || 'No subscription found.', () => {})
+    } catch { /* ignore */ }
+  }, [openConfirm])
+
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
@@ -340,10 +410,10 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onMouseDown={onClose}>
-      <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#09090b] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3f1] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
+      <div onMouseDown={e => e.stopPropagation()} className={`relative w-full max-w-[900px] ${isDark ? "bg-[#09090b] text-zinc-100 border-zinc-800/80" : "bg-[#f5f3ef] text-zinc-900 border-zinc-200/80"} rounded-2xl shadow-[0_32px_80px_-12px_rgba(0,0,0,0.5)] border flex overflow-hidden`} style={{ height: 660 }}>
 
         {/* ── Sidebar ── */}
-        <div className={`w-[200px] ${isDark ? "bg-[#09090b] border-zinc-800/80" : "bg-[#f5f3f1] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
+        <div className={`w-[200px] ${isDark ? "bg-[#09090b] border-zinc-800/80" : "bg-[#f5f3ef] border-zinc-200/70"} border-r flex flex-col shrink-0`}>
           <div className="px-5 pt-6 pb-4 flex items-center gap-2.5">
             <button
               onClick={onClose}
@@ -414,7 +484,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
             </div>
           </div>
 
-          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#09090b]" : "bg-[#f5f3f1]"}`}>
+          <div className={`flex-1 overflow-y-auto px-8 py-6 ${isDark ? "bg-[#09090b]" : "bg-[#f5f3ef]"}`}>
 
             {/* ── General ── */}
             {activeTab === "general" && (<>
@@ -444,8 +514,16 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                     </div>
                   </button>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[13px] font-normal truncate ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>{user?.email ?? "Not signed in"}</p>
-                    <span className={`inline-flex items-center gap-1 mt-0.5 text-[10px] font-normal px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
+                    <p className={`text-[18px] font-semibold leading-tight truncate ${isDark ? "text-zinc-50" : "text-zinc-900"}`}>
+                      {identity?.username ?? (user ? "—" : "Not signed in")}
+                    </p>
+                    <p className={`text-[11px] font-normal truncate ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>{user?.email ?? ""}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-normal px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>Free Plan</span>
+                      {identity?.friend_code && (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-normal px-1.5 py-0.5 rounded-full ${isDark ? "bg-zinc-800 text-zinc-400" : "bg-zinc-100 text-zinc-500"}`}>#{identity.friend_code}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {user ? (
@@ -544,6 +622,74 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   </div>
                 )}
               </SettingSection>
+
+              {user && (
+                <SettingSection title="Profile" isDark={isDark}>
+                  {([
+                    { field: 'username' as const, label: 'Username', value: identity?.username },
+                    { field: 'school' as const, label: 'School', value: identity?.school },
+                    { field: 'grade' as const, label: 'Grade', value: identity?.grade },
+                  ]).map(({ field, label, value }) => {
+                    const left = cooldownLeft(field)
+                    const locked = left > 0
+                    return (
+                      <div key={field}>
+                        <SettingRow
+                          title={label}
+                          isDark={isDark}
+                          description={locked ? `Editable again in ${fmtCooldown(left)}` : "One change per week"}
+                          control={
+                            <div className="flex items-center gap-2.5">
+                              <span className={`text-[12px] font-normal max-w-[140px] truncate ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{value ?? "—"}</span>
+                              <button
+                                disabled={locked || editField === field}
+                                onClick={() => startEdit(field)}
+                                className={`text-[11.5px] font-normal px-3.5 py-1.5 rounded-lg transition-all ${(locked || editField === field) ? (isDark ? "text-zinc-600 bg-zinc-800/50 cursor-not-allowed" : "text-zinc-400 bg-zinc-100 cursor-not-allowed") : (isDark ? "text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700" : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200")}`}
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          }
+                        />
+                        {editField === field && (
+                          <div className={`mx-5 mb-4 flex flex-col gap-2 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
+                            {field === 'username' ? (
+                              <input
+                                autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)} placeholder="username"
+                                className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-600" : "bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400"}`}
+                              />
+                            ) : (
+                              <select
+                                autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)}
+                                className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"}`}
+                              >
+                                {(field === 'school' ? SCHOOLS : GRADES).map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            )}
+                            <p className={`text-[10.5px] ${isDark ? "text-amber-500/80" : "text-amber-600"}`}>Heads up — you can only change this once a week.</p>
+                            {idError && <p className="text-[11px] text-red-500">{idError}</p>}
+                            <div className="flex gap-2 mt-0.5">
+                              <button
+                                disabled={idBusy || !editDraft.trim()}
+                                onClick={saveIdentity}
+                                className={`flex-1 text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all ${(idBusy || !editDraft.trim()) ? (isDark ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-zinc-100 text-zinc-400 cursor-not-allowed") : (isDark ? "bg-amber-600 hover:bg-amber-500 text-white" : "bg-amber-500 hover:bg-amber-600 text-white")}`}
+                              >
+                                {idBusy ? "Saving…" : "Save"}
+                              </button>
+                              <button
+                                onClick={() => { setEditField(null); setIdError(null) }}
+                                className={`text-[11.5px] font-normal px-3.5 py-2 rounded-lg transition-all ${isDark ? "text-zinc-400 bg-zinc-800 hover:bg-zinc-700" : "text-zinc-600 bg-zinc-100 hover:bg-zinc-200"}`}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </SettingSection>
+              )}
 
 
               <SettingSection title="Shortcuts" isDark={isDark}>
@@ -1179,20 +1325,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   accentColor="#d97706"
                   tiers={[
                     {
-                      name: "Creator",
-                      price: { monthly: 4, yearly: 36 },
-                      description: "Write smarter with AI",
-                      buttonLabel: "Upgrade to Creator",
-                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
-                      features: [
-                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
-                        { name: "Grove & Achievements", description: "Plant trees, earn sap, unlock rewards", included: true },
-                        { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
-                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
-                      ],
-                    },
-                    {
                       name: "Pro",
                       price: { monthly: 8, yearly: 72 },
                       description: "The full Pulp experience",
@@ -1200,16 +1332,39 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       highlight: true,
                       badge: "Most Popular",
                       icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
+                      ctaOverride: ({ isYearly, ...props }) => <button {...props} onClick={() => startCheckout(isYearly ? 'pro_yearly' : 'pro_monthly')} />,
                       features: [
-                        { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
+                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
+                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                         { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
                         { name: "Rare Seed Drops", description: "Bonus rare & sacred seeds every month", included: true },
-                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
+                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
+                      ],
+                    },
+                    {
+                      name: "Lifetime",
+                      price: "$99",
+                      description: "Pay once, Pro forever",
+                      buttonLabel: "Get Lifetime",
+                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
+                      ctaOverride: ({ isYearly: _i, ...props }) => <button {...props} onClick={() => startCheckout('lifetime')} />,
+                      features: [
+                        { name: "Everything in Pro", description: "All features, forever", included: true },
+                        { name: "One-time payment", description: "No subscription, no renewals", included: true },
+                        { name: "Future updates", description: "All new features included", included: true },
                       ],
                     },
                   ]}
                 />
+
+                {/* Manage existing subscription */}
+                <button
+                  onClick={openBillingPortal}
+                  className={`mx-auto block text-[11.5px] font-normal transition-colors ${isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-500 hover:text-zinc-700"}`}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Already subscribed? Manage billing →
+                </button>
 
                 {/* Guarantee + Enterprise */}
                 <div className="space-y-2">

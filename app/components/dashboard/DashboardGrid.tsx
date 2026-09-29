@@ -18,6 +18,7 @@ export const DashboardGrid = memo(function DashboardGrid({
   const gridRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const [gridWidth, setGridWidth] = useState(0)
+  const [settled, setSettled] = useState(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null)
   const [dragSize, setDragSize] = useState<{ w: number; h: number } | null>(null)
@@ -35,13 +36,21 @@ export const DashboardGrid = memo(function DashboardGrid({
   useEffect(() => {
     const el = gridRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => {
-      const w = el.clientWidth
-      if (w) setGridWidth(w)
-    })
+    const apply = () => { const w = el.clientWidth; if (w) setGridWidth(w) }
+    apply() // measure right away so widgets render at the correct width, no slide-in
+    const ro = new ResizeObserver(apply)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Enable position transitions only after the initial width has settled, so the
+  // first layout (fallback width -> measured width) doesn't animate on every open.
+  useEffect(() => {
+    if (gridWidth && !settled) {
+      const id = requestAnimationFrame(() => setSettled(true))
+      return () => cancelAnimationFrame(id)
+    }
+  }, [gridWidth, settled])
 
   const getCellWidth = useCallback(() => {
     const w = gridWidth || gridRef.current?.clientWidth || 960
@@ -190,7 +199,7 @@ export const DashboardGrid = memo(function DashboardGrid({
                 position: 'absolute',
                 left, top, width, height,
                 zIndex: 1,
-                transition: isDragging ? 'none' : 'left 300ms ease, top 300ms ease, width 300ms ease, height 300ms ease',
+                transition: (isDragging || !settled) ? 'none' : 'left 300ms ease, top 300ms ease, width 300ms ease, height 300ms ease',
                 opacity: isDragging ? 0.3 : 1,
               }}
             >
