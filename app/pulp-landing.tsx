@@ -173,7 +173,7 @@ const DEMO_TREES = [
   'abyss', 'starweaver', 'leviathan', 'prismatic',
 ] as const
 
-function DemoTimer({ serif }: { serif: string }) {
+function DemoTimer({ serif, dark = false }: { serif: string, dark?: boolean }) {
   const [started, setStarted] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [sapReward, setSapReward] = useState<number | null>(null)
@@ -222,7 +222,9 @@ function DemoTimer({ serif }: { serif: string }) {
   const done = elapsed >= total
 
   const mainColor = "#d97706"
-  const subtleColor = "#71717a"
+  const subtleColor = dark ? "#8a8680" : "#71717a"
+  const faintStroke = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"
+  const innerBg = dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)"
 
   const boxW = 220
   const boxH = 420
@@ -240,7 +242,7 @@ function DemoTimer({ serif }: { serif: string }) {
         viewBox={`-1 -1 ${boxW + 2} ${boxH + 2}`}
       >
         <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
-          fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
+          fill="none" stroke={faintStroke} strokeWidth="1" />
         <rect x="0" y="0" width={boxW} height={boxH} rx="4" ry="4"
           fill="none" stroke={mainColor} strokeWidth="2"
           strokeDasharray={perim} strokeDashoffset={dashOffset}
@@ -248,7 +250,7 @@ function DemoTimer({ serif }: { serif: string }) {
       </svg>
 
       <div style={{
-        background: 'rgba(0,0,0,0.02)', borderRadius: 4, overflow: 'hidden',
+        background: innerBg, borderRadius: 4, overflow: 'hidden',
         height: boxH,
       }}>
         <div style={{ padding: '36px 16px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%' }}>
@@ -1281,11 +1283,11 @@ export default function PulpLanding() {
                       width: '100%', aspectRatio: '4 / 3', borderRadius: 16,
                       border: '1px solid rgba(15,15,16,0.08)',
                       boxShadow: '0 12px 30px -18px rgba(0,0,0,0.25)',
-                      overflow: 'hidden', background: '#fdfcfa',
+                      overflow: 'hidden', background: 'linear-gradient(180deg, #1a1c22 0%, #141310 100%)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <div style={{ transform: 'scale(0.58)', transformOrigin: 'center' }}>
-                        <DemoTimer serif={serif} />
+                        <DemoTimer serif={serif} dark />
                       </div>
                     </div>
                   ) : (
