@@ -14,6 +14,7 @@ import { changePassword } from "@/app/actions/changePassword"
 import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { GRADES } from "@/lib/term"
+import { signGrove } from "@/app/lib/groveIntegrity"
 import type { Achievement, NoteData } from "@/app/types"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
@@ -296,7 +297,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   // ── Profile identity (username / school / grade) with one-week edit cooldown ──
-  type Identity = { username: string | null; school: string | null; grade: string | null; friend_code: string | null; changed_at: Record<string, string>; cooldown_ms: number }
+  type Identity = { username: string | null; school: string | null; grade: string | null; friend_code: string | null; changed_at: Record<string, string>; cooldown_ms: number; archived_grades?: Record<string, number> }
   const [identity, setIdentity] = useState<Identity | null>(null)
   const [editField, setEditField] = useState<null | 'username' | 'school' | 'grade'>(null)
   const [editDraft, setEditDraft] = useState("")
@@ -336,6 +337,18 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
       if (!res.ok) {
         setIdError(json.cooldown_until ? `Locked for ${fmtCooldown(new Date(json.cooldown_until).getTime() - Date.now())}` : (json.error || 'Could not save'))
       } else {
+        // Grade change resets/restores the grove server-side. Sync the local cache
+        // (the client ignores an empty server grove on load) and reload to apply it.
+        if (editField === 'grade' && Array.isArray(json.grove)) {
+          try {
+            const raw = localStorage.getItem('pulp-grove')
+            const data = raw ? JSON.parse(raw) : {}
+            data.grove = json.grove
+            localStorage.setItem('pulp-grove', JSON.stringify(signGrove(data)))
+          } catch { /* ignore */ }
+          window.location.reload()
+          return
+        }
         setIdentity(prev => prev ? { ...prev, [editField]: json.value, changed_at: json.changed_at } : prev)
         setEditField(null)
       }
@@ -663,7 +676,18 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                 autoFocus value={editDraft} onChange={e => setEditDraft(e.target.value)}
                                 className={`text-[12px] px-3 py-2 rounded-lg border outline-none ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-100" : "bg-white border-zinc-200 text-zinc-900"}`}
                               >
-                                {(field === 'school' ? SCHOOLS : GRADES).map(o => <option key={o} value={o}>{o}</option>)}
+                                {field === 'school'
+                                  ? SCHOOLS.map(o => <option key={o} value={o}>{o}</option>)
+                                  : (() => {
+                                      const curIdx = GRADES.indexOf(identity?.grade ?? '')
+                                      const archived = identity?.archived_grades ?? {}
+                                      return GRADES.map((o, idx) => {
+                                        const isPast = curIdx >= 0 && idx < curIdx
+                                        const hasArchive = Object.prototype.hasOwnProperty.call(archived, o)
+                                        const disabled = isPast && !hasArchive
+                                        return <option key={o} value={o} disabled={disabled}>{o}{hasArchive ? ' · restore' : ''}</option>
+                                      })
+                                    })()}
                               </select>
                             )}
                             <p className={`text-[10.5px] ${isDark ? "text-amber-500/80" : "text-amber-600"}`}>Heads up — you can only change this once a week.</p>
@@ -683,6 +707,18 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                                 Cancel
                               </button>
                             </div>
+                          </div>
+                        )}
+                        {field === 'grade' && identity?.archived_grades && Object.keys(identity.archived_grades).length > 0 && (
+                          <div className={`mx-5 mb-4 flex flex-col gap-1.5 p-3 rounded-lg border ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-200"}`}>
+                            <p className={`text-[10.5px] uppercase tracking-wider ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Past years</p>
+                            {Object.entries(identity.archived_grades).map(([g, n]) => (
+                              <div key={g} className={`flex items-center justify-between text-[12px] ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+                                <span>{g}</span>
+                                <span className={isDark ? "text-zinc-500" : "text-zinc-400"}>{n} {n === 1 ? 'tree' : 'trees'} · archived</span>
+                              </div>
+                            ))}
+                            <p className={`text-[10.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>Select a past year above to restore its orchard.</p>
                           </div>
                         )}
                       </div>

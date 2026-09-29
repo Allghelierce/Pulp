@@ -19,9 +19,14 @@ export async function GET(req: Request) {
 
   const { data } = await supabaseAdmin
     .from('player_profiles')
-    .select('username, school, grade, friend_code, identity_changed_at')
+    .select('username, school, grade, friend_code, identity_changed_at, grove_archive')
     .eq('user_id', user.id)
     .single()
+
+  // Summarize archived groves (grade -> tree count) for the past-years view.
+  const archive = (data?.grove_archive ?? {}) as Record<string, unknown[]>
+  const archived_grades: Record<string, number> = {}
+  for (const [g, trees] of Object.entries(archive)) archived_grades[g] = Array.isArray(trees) ? trees.length : 0
 
   return NextResponse.json({
     username: data?.username ?? null,
@@ -30,6 +35,7 @@ export async function GET(req: Request) {
     friend_code: data?.friend_code ?? null,
     changed_at: data?.identity_changed_at ?? {},
     cooldown_ms: COOLDOWN_MS,
+    archived_grades,
   })
 }
 
@@ -49,7 +55,7 @@ export async function POST(req: Request) {
 
   const { data: profile } = await supabaseAdmin
     .from('player_profiles')
-    .select('identity_changed_at')
+    .select('identity_changed_at, grade, grove, grove_archive')
     .eq('user_id', user.id)
     .single()
 
@@ -81,11 +87,36 @@ export async function POST(req: Request) {
   }
 
   const nextChanged = { ...changed, [field]: new Date(now).toISOString() }
+  const updates: Record<string, unknown> = { [field]: value, identity_changed_at: nextChanged }
+
+  // Changing school year: snapshot the current grove into the archive (keyed by the
+  // old grade), then either restore the target grade's archived grove or start fresh.
+  // The wallet (gems/juice/inventory/achievements) is account-level and untouched.
+  let responseGrove: unknown[] | undefined
+  if (field === 'grade') {
+    const currentGrade = (profile?.grade ?? null) as string | null
+    if (currentGrade !== value) {
+      const currentGrove = Array.isArray(profile?.grove) ? (profile!.grove as unknown[]) : []
+      const archive = { ...((profile?.grove_archive ?? {}) as Record<string, unknown[]>) }
+      // Snapshot current grove under the old grade (only if there's something to keep).
+      if (currentGrade && currentGrove.length > 0) archive[currentGrade] = currentGrove
+      // Restore if returning to an archived grade, else a fresh empty grove.
+      let nextGrove: unknown[] = []
+      if (Object.prototype.hasOwnProperty.call(archive, value)) {
+        nextGrove = archive[value] ?? []
+        delete archive[value]
+      }
+      updates.grove = nextGrove
+      updates.grove_archive = archive
+      responseGrove = nextGrove
+    }
+  }
+
   const { error } = await supabaseAdmin
     .from('player_profiles')
-    .update({ [field]: value, identity_changed_at: nextChanged })
+    .update(updates)
     .eq('user_id', user.id)
   if (error) return NextResponse.json({ error: "Could not save" }, { status: 500 })
 
-  return NextResponse.json({ ok: true, field, value, changed_at: nextChanged })
+  return NextResponse.json({ ok: true, field, value, changed_at: nextChanged, ...(responseGrove !== undefined ? { grove: responseGrove } : {}) })
 }
