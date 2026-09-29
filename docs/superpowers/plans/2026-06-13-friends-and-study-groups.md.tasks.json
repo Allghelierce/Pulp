@@ -24,70 +24,70 @@
     {
       "id": 8,
       "subject": "Task 3: Community tab shell + nav wiring",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6],
       "description": "CommunityView full-bleed (Friends/Groups tabs, Escape close) + stub panels; wire communityOpen state, AnimatePresence m.div render, nav button, closeAllPanels in app/app/page.tsx.\n\n```json:metadata\n{\"files\": [\"app/components/CommunityView.tsx\", \"app/components/community/FriendsPanel.tsx\", \"app/components/community/GroupsPanel.tsx\", \"app/app/page.tsx\", \"tests/social/community-tab.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/community-tab.spec.ts\", \"acceptanceCriteria\": [\"fade-in tab like Stats/Shop\", \"Friends+Groups tabs, Escape closes\", \"closeAllPanels mutual exclusion\"]}\n```"
     },
     {
       "id": 9,
       "subject": "Task 4: Friends API",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6],
       "description": "app/api/friends/route.ts: GET friends/incoming/outgoing; POST request (by username/friend_code, self+dup guards, reverse auto-accept), accept/decline addressee-only.\n\n```json:metadata\n{\"files\": [\"app/api/friends/route.ts\", \"tests/social/friends.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/friends.spec.ts\", \"acceptanceCriteria\": [\"GET friends/incoming/outgoing\", \"request by username/code w/ self+dup guards\", \"accept/decline addressee-only\", \"reverse request auto-accept\"]}\n```"
     },
     {
       "id": 10,
       "subject": "Task 5: Friends panel UI",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [9, 8],
       "description": "FriendsPanel: friend code + copy, add-by-code/username (auto-detect PULP- prefix), incoming Accept/Decline, friends list; loads GET /api/friends, refresh after action.\n\n```json:metadata\n{\"files\": [\"app/components/community/FriendsPanel.tsx\", \"tests/social/friends.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/friends.spec.ts\", \"acceptanceCriteria\": [\"friend code + copy\", \"add by code/username auto-detect\", \"accept/decline incoming\", \"auto-refresh from API\"]}\n```"
     },
     {
       "id": 11,
       "subject": "Task 6: Groups API + archive sweep",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [6],
       "description": "app/api/groups/route.ts (create w/ term<=4mo + invite code + owner membership; list w/ archiveIfExpired; get by id member-gated) + app/api/groups/membership/route.ts (join pending w/ full/archived guards; owner approve(cap)/decline; leave owner->400).\n\n```json:metadata\n{\"files\": [\"app/api/groups/route.ts\", \"app/api/groups/membership/route.ts\", \"tests/social/groups.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/groups.spec.ts\", \"acceptanceCriteria\": [\"create w/ term validation + invite code + owner membership\", \"list w/ lazy archive\", \"get by id member-gated\", \"join pending w/ full/archived guards\", \"owner approve(cap)/decline, leave(owner 400)\"]}\n```"
     },
     {
       "id": 12,
       "subject": "Task 7: Groups panel (create/join/list)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [11, 8],
       "description": "GroupsPanel: list active groups (row->onOpenGroup), create form (name+term dates, default +3mo, client 4mo guard), join-by-code; thread openGroupId in CommunityView to swap to GroupPage.\n\n```json:metadata\n{\"files\": [\"app/components/community/GroupsPanel.tsx\", \"app/components/CommunityView.tsx\", \"tests/social/groups.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/groups.spec.ts\", \"acceptanceCriteria\": [\"list groups, row opens GroupPage\", \"create form w/ term dates + 4mo guard\", \"join by code shows request sent\"]}\n```"
     },
     {
       "id": 13,
       "subject": "Task 8: Group page shell",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [12],
       "description": "GroupPage: load GET /api/groups?id=; roster active + owner pending Approve/Decline; invite code copyable; days-until term_end; archived read-only banner; Leave for non-owner. Wire currentUserId from page.\n\n```json:metadata\n{\"files\": [\"app/components/community/GroupPage.tsx\", \"app/components/CommunityView.tsx\", \"app/app/page.tsx\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint\", \"acceptanceCriteria\": [\"roster + owner approve/decline\", \"invite code + term countdown\", \"archived read-only banner\", \"leave for non-owner only\"]}\n```"
     },
     {
       "id": 14,
       "subject": "Task 9: Session reporting + VitalitySystem integration",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [11, 13],
       "description": "app/api/groups/report/route.ts (membership-gated active group; upsert group_weekly +min, increment focus_minutes_total, insert group_trees); VitalitySystem.claimReward calls report (best-effort .catch) when activeGroupId; track activeGroupId in page from open GroupPage.\n\n```json:metadata\n{\"files\": [\"app/api/groups/report/route.ts\", \"app/components/VitalitySystem.tsx\", \"app/app/page.tsx\", \"tests/social/report.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/report.spec.ts\", \"acceptanceCriteria\": [\"report endpoint membership-gated, weekly+total+tree\", \"claimReward reports when activeGroupId\", \"best-effort failure non-blocking\"]}\n```"
     },
     {
       "id": 15,
       "subject": "Task 10: Leaderboard + contributions",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [14],
       "description": "app/api/groups/leaderboard/route.ts (weekly via group_weekly current week + allTime via focus_minutes_total + tree counts, member-gated, sorted desc, username tiebreak); GroupPage renders This week + All term ranked lists.\n\n```json:metadata\n{\"files\": [\"app/api/groups/leaderboard/route.ts\", \"app/components/community/GroupPage.tsx\", \"tests/social/report.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/report.spec.ts\", \"acceptanceCriteria\": [\"leaderboard endpoint weekly+allTime member-gated sorted\", \"two ranked lists w/ minutes+trees\", \"username tiebreak\"]}\n```"
     },
     {
       "id": 16,
       "subject": "Task 11: Communal grove rendering",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [14],
       "description": "app/api/groups/grove/route.ts (member-gated, group_trees newest last, cap 200); GroupPage renders trees via PlantIcon in a ground strip (works archived).\n\n```json:metadata\n{\"files\": [\"app/api/groups/grove/route.ts\", \"app/components/community/GroupPage.tsx\", \"tests/social/report.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint && npx playwright test tests/social/report.spec.ts\", \"acceptanceCriteria\": [\"grove endpoint member-gated cap 200\", \"PlantIcon ground strip render incl archived\"]}\n```"
     },
     {
       "id": 17,
       "subject": "Task 12: Live presence (Supabase Realtime)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [13, 14],
       "description": "useGroupPresence hook (channel group:{id}, track/sync, broadcast tree); GroupPage merges presence (online dot + live focusing timer from timer_end) + re-fetch grove on tree event; VitalitySystem emits start/complete events routed to GroupPage channel; clean untrack/unsubscribe.\n\n```json:metadata\n{\"files\": [\"app/components/community/useGroupPresence.ts\", \"app/components/community/GroupPage.tsx\", \"app/components/VitalitySystem.tsx\", \"app/app/page.tsx\", \"tests/social/presence.spec.ts\"], \"verifyCommand\": \"npx tsc --noEmit && npm run lint\", \"acceptanceCriteria\": [\"join group:{id} presence tracking\", \"online indicator + live focusing timer\", \"tree broadcast re-fetches grove\", \"clean untrack/unsubscribe on leave\"]}\n```"
     }

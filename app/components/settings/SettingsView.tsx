@@ -7,7 +7,6 @@ import type { PaperStyle } from "@/app/lib/paperStyle"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 import { SettingSection } from "./SettingSection"
 import { PricingSection } from "@/components/blocks/pricing-section"
-import MinimalPaymentModal from "@/components/ui/minimal-payment-modal"
 import { Zap, Sparkles } from "lucide-react"
 import { DestructiveButton } from "@/components/ui/destructive-button"
 import { verifyPasswordAndDelete } from "@/app/actions/deleteAccount"
@@ -343,6 +342,26 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     } catch { setIdError('Could not save') }
     finally { setIdBusy(false) }
   }
+
+  // ── Stripe checkout / billing portal ──
+  const startCheckout = useCallback(async (plan: string) => {
+    if (!user) { window.location.href = '/login'; return }
+    try {
+      const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
+      const json = await res.json()
+      if (json.url) { window.location.href = json.url; return }
+      openConfirm?.('Checkout unavailable', json.error || 'Could not start checkout.', () => {})
+    } catch { openConfirm?.('Checkout unavailable', 'Something went wrong starting checkout.', () => {}) }
+  }, [user, openConfirm])
+
+  const openBillingPortal = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/stripe/portal', { method: 'POST' })
+      const json = await res.json()
+      if (json.url) { window.location.href = json.url; return }
+      openConfirm?.('Billing', json.error || 'No subscription found.', () => {})
+    } catch { /* ignore */ }
+  }, [openConfirm])
 
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -1306,20 +1325,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   accentColor="#d97706"
                   tiers={[
                     {
-                      name: "Creator",
-                      price: { monthly: 4, yearly: 36 },
-                      description: "Write smarter with AI",
-                      buttonLabel: "Upgrade to Creator",
-                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
-                      features: [
-                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
-                        { name: "Grove & Achievements", description: "Plant trees, earn sap, unlock rewards", included: true },
-                        { name: "Focus Timer Rewards", description: "Grow plants and earn XP while you study", included: true },
-                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
-                      ],
-                    },
-                    {
                       name: "Pro",
                       price: { monthly: 8, yearly: 72 },
                       description: "The full Pulp experience",
@@ -1327,16 +1332,39 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                       highlight: true,
                       badge: "Most Popular",
                       icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: (props) => <MinimalPaymentModal><button {...props} /></MinimalPaymentModal>,
+                      ctaOverride: ({ isYearly, ...props }) => <button {...props} onClick={() => startCheckout(isYearly ? 'pro_yearly' : 'pro_monthly')} />,
                       features: [
-                        { name: "Everything in Creator", description: "AI, sync, and all gamification", included: true },
+                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
+                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
                         { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
                         { name: "Rare Seed Drops", description: "Bonus rare & sacred seeds every month", included: true },
-                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
+                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
+                      ],
+                    },
+                    {
+                      name: "Lifetime",
+                      price: "$99",
+                      description: "Pay once, Pro forever",
+                      buttonLabel: "Get Lifetime",
+                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
+                      ctaOverride: ({ isYearly: _i, ...props }) => <button {...props} onClick={() => startCheckout('lifetime')} />,
+                      features: [
+                        { name: "Everything in Pro", description: "All features, forever", included: true },
+                        { name: "One-time payment", description: "No subscription, no renewals", included: true },
+                        { name: "Future updates", description: "All new features included", included: true },
                       ],
                     },
                   ]}
                 />
+
+                {/* Manage existing subscription */}
+                <button
+                  onClick={openBillingPortal}
+                  className={`mx-auto block text-[11.5px] font-normal transition-colors ${isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-500 hover:text-zinc-700"}`}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Already subscribed? Manage billing →
+                </button>
 
                 {/* Guarantee + Enterprise */}
                 <div className="space-y-2">

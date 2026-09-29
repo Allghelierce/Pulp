@@ -921,7 +921,10 @@ const BoxTextarea = memo(function BoxTextarea({
             } else if (
               e.key === 'Backspace' &&
               range.startContainer.nodeType === Node.TEXT_NODE &&
-              range.startOffset > 0
+              // Only handle when a char will remain before the caret. Deleting the first
+              // char (offset 1 → 0) lands the caret at the line start, where manual ranges
+              // get the wrong affinity (jump to end of prev line) — let the browser do it.
+              range.startOffset > 1
             ) {
               const textNode = range.startContainer as Text
               const charRange = document.createRange()
@@ -2131,7 +2134,7 @@ export default function NoteApp() {
           span.parentNode?.removeChild(span)
         }
         x = rect.left
-        y = rect.top - 12 // open a bit higher so it's clearly above the line
+        y = rect.bottom + 16 // sit just below the line, with breathing room
       }
       setAiMenu({ x, y, selectedText })
       return
@@ -2174,7 +2177,7 @@ export default function NoteApp() {
         const rect = r.getBoundingClientRect()
         const m = {
           x: rect.right - 20,
-          y: rect.bottom + 14,
+          y: rect.bottom + 16,
           filter: "",
           type: isBox ? ("textarea" as const) : ("editor" as const),
           mode: menuMode,
@@ -2228,7 +2231,7 @@ export default function NoteApp() {
 
       const m = {
         x: rect.left,
-        y: rect.bottom + 14,
+        y: rect.bottom + 16,
         filter: "",
         type: isBox ? ("textarea" as const) : ("editor" as const),
         mode: menuMode,
@@ -4396,7 +4399,7 @@ export default function NoteApp() {
                 initial={firstOpen ? { opacity: 0 } : false}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
                 <Suspense fallback={null}>
@@ -4428,7 +4431,7 @@ export default function NoteApp() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
                 <Suspense fallback={null}>
@@ -4453,7 +4456,7 @@ export default function NoteApp() {
             {communityOpen && (
               <m.div key="community-view"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
                 <CommunityView theme={theme} friendCode={friendCode} currentUserId={user?.id ?? ''}
                   onClose={() => setCommunityOpen(false)} onActiveGroupChange={setActiveGroupId} />
@@ -4461,18 +4464,30 @@ export default function NoteApp() {
             )}
           </AnimatePresence>
 
-          {leaderboardOpen && <Suspense fallback={null}>
-            <LeaderboardView
-              isOpen={leaderboardOpen}
-              onClose={() => setLeaderboardOpen(false)}
-              theme={theme}
-              sap={sap}
-              userName={user?.email?.split('@')[0] || 'You'}
-              avatarColor={accentSolid}
-              level={Math.floor(Math.sqrt(xp / 100)) + 1}
-              treesGrown={grove.length}
-            />
-          </Suspense>}
+          <AnimatePresence>
+            {leaderboardOpen && (
+              <m.div
+                key="leaderboard-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+              >
+                <Suspense fallback={null}>
+                  <LeaderboardView
+                    isOpen={leaderboardOpen}
+                    onClose={() => setLeaderboardOpen(false)}
+                    theme={theme}
+                    sap={sap}
+                    userName={user?.email?.split('@')[0] || 'You'}
+                    avatarColor={accentSolid}
+                    level={Math.floor(Math.sqrt(xp / 100)) + 1}
+                    treesGrown={grove.length}
+                  />
+                </Suspense>
+              </m.div>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {shopOpen && (
@@ -4481,7 +4496,7 @@ export default function NoteApp() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50, touchAction: 'manipulation' }}
               >
                 <Suspense fallback={null}><BoutiqueView

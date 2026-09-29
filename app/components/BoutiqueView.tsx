@@ -2335,24 +2335,24 @@ export const BoutiqueView = memo(function BoutiqueView({
                         <button
                           onClick={() => { setSelectedPlant(type); setPreviewStage(0) }}
                           style={{
-                            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                            width: '100%', aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            padding: '10px 8px', borderRadius: 12, cursor: 'pointer',
                             border: `1px solid ${t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') : `${rc}30`}`,
                             backgroundColor: t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : (isDark ? `${rc}10` : `${rc}08`),
-                            transition: 'all 0.15s', fontFamily: font, textAlign: 'left',
+                            transition: 'all 0.15s', fontFamily: font, textAlign: 'center',
                             boxShadow: t.rarity === 'common' || t.rarity === 'uncommon' ? `inset 0 0 0 1px ${rc}10` : `inset 0 0 0 1px ${rc}15, 0 0 12px ${rc}08`,
                           }}
                           onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = `${rc}40` }}
                           onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }}
                         >
                           <div style={{
-                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            width: 52, height: 52, borderRadius: 12, flexShrink: 0,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             background: `${rc}15`,
                           }}>
-                            <PlantIcon type={type} size={22} isSeed />
+                            <PlantIcon type={type} size={38} isSeed />
                           </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ minWidth: 0, width: '100%' }}>
                             <div style={{ fontSize: 11, fontWeight: 400, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
                             <div style={{ fontSize: 8, fontWeight: 400, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
                           </div>
