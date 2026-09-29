@@ -1,0 +1,59 @@
+{
+  "planPath": "docs/superpowers/plans/2026-09-29-immersive-leaderboard-and-unified-loader.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Shared PulpLoader component",
+      "status": "pending",
+      "description": "**Goal:** One component renders the orange dot-grid loader in fullscreen/panel/inline variants.\n\n**Files:**\n- Create: app/components/PulpLoader.tsx\n\n**Acceptance Criteria:**\n- Same 16 frames + .pulp-dot/pulp-spin styling as PulpLoadingScreen\n- fullscreen = h-screen bg-[#0e0c0b] centered (identical to boot)\n- panel = fixed inset-0 z-[120] dim overlay centered\n- inline = small centered, no bg\n- npm run build compiles\n\n**Verify:** npm run build succeeds\n\n```json:metadata\n{\"files\": [\"app/components/PulpLoader.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"3 variants render\", \"frames+styling preserved\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: PulpLoadingScreen delegates to PulpLoader",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** Boot screen reuses the shared component; imports keep working.\n\n**Files:**\n- Modify: app/components/PulpLoadingScreen.tsx\n\n**Acceptance Criteria:**\n- Renders <PulpLoader variant=\"fullscreen\" /> only\n- Boot look identical\n- npm run build compiles\n\n**Verify:** npm run build succeeds\n\n```json:metadata\n{\"files\": [\"app/components/PulpLoadingScreen.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"wraps PulpLoader fullscreen\", \"boot unchanged\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: Use PulpLoader in all Suspense fallbacks",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** Replace blank fallback={null} with the panel loader everywhere in page.tsx.\n\n**Files:**\n- Modify: app/app/page.tsx (fallbacks at 3451,3599,4391,4432,4464,4503,4529,4638,4724)\n\n**Acceptance Criteria:**\n- PulpLoader imported\n- All panel Suspense fallback={null} -> fallback={<PulpLoader variant=\"panel\" />}\n- Boot path unchanged\n- npm run build compiles\n\n**Verify:** grep -c \"fallback={null}\" app/app/page.tsx -> 0; npm run build succeeds\n\n```json:metadata\n{\"files\": [\"app/app/page.tsx\"], \"verifyCommand\": \"grep -c 'fallback={null}' app/app/page.tsx; npm run build\", \"acceptanceCriteria\": [\"no fallback={null} left\", \"build passes\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: LeaderboardRow memoized row with delta",
+      "status": "pending",
+      "description": "**Goal:** Focused memoized rank row with metric + up/down delta glyph.\n\n**Files:**\n- Create: app/components/leaderboard/LeaderboardRow.tsx\n\n**Acceptance Criteria:**\n- memo() wrapped; props {rank,entry,metric,accent,textPrimary,textMuted,onClick}\n- metric picks pulpDelta vs totalPulp; formatPulp rule\n- avatar dot, name, value, rankChange glyph\n- isYou accent bg\n- npm run build compiles\n\n**Verify:** npm run build succeeds\n\n```json:metadata\n{\"files\": [\"app/components/leaderboard/LeaderboardRow.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"memoized\", \"metric+delta\", \"exports RowEntry\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 5: Podium top-3 as trees",
+      "status": "pending",
+      "blockedBy": [3],
+      "description": "**Goal:** Top 3 leaders as their tree species, scaled by rank, medal glow, rise-in motion.\n\n**Files:**\n- Create: app/components/leaderboard/Podium.tsx\n\n**Acceptance Criteria:**\n- props {entries,metric,isDark}; order 2nd,1st,3rd with #1 centered/largest\n- CachedPlantIcon per player via speciesFor(name); avatar, name, value\n- MEDAL_COLORS glow; framer-motion staggered rise\n- handles <3 entries\n- npm run build compiles\n\n**Verify:** npm run build succeeds\n\n```json:metadata\n{\"files\": [\"app/components/leaderboard/Podium.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"top3 trees\", \"medal glow\", \"handles sparse\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 6: ContestBanner + PastWinnersStrip (cosmetic)",
+      "status": "pending",
+      "description": "**Goal:** Weekly prize banner (sap+trophy, display-only) with countdown, and recent-#1 strip.\n\n**Files:**\n- Create: app/components/leaderboard/ContestBanner.tsx\n- Create: app/components/leaderboard/PastWinnersStrip.tsx\n\n**Acceptance Criteria:**\n- Banner: {prizeSap,daysLeft,accent,isDark}; trophy, prize, reset countdown; title tooltip\n- Strip: {winners,isDark}; CachedPlantIcon+name; empty renders nothing\n- No payout (no setSap/setJuice/setGems)\n- npm run build compiles\n\n**Verify:** npm run build; grep -rE 'setSap|setJuice|setGems' app/components/leaderboard/ -> empty\n\n```json:metadata\n{\"files\": [\"app/components/leaderboard/ContestBanner.tsx\", \"app/components/leaderboard/PastWinnersStrip.tsx\"], \"verifyCommand\": \"npm run build; grep -rE 'setSap|setJuice|setGems' app/components/leaderboard/\", \"acceptanceCriteria\": [\"display-only\", \"countdown\", \"empty strip hidden\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 7: Wire tabs/sorting/podium/rows/backdrop into LeaderboardView",
+      "status": "pending",
+      "blockedBy": [3, 4, 5],
+      "description": "**Goal:** Weekly/Season/School tabs over the same fetched data, with podium, rows, contest banner, past winners, and orchard-sky backdrop.\n\n**Files:**\n- Modify: app/components/LeaderboardView.tsx\n\n**Acceptance Criteria:**\n- Segmented tabs Weekly(default)/Season/School; local state; no refetch on switch\n- Weekly sort by pulpDelta (metric delta); Season by totalPulp (metric total); School existing order\n- Top3 -> Podium; ranks 4+ -> LeaderboardRow keeping setSelectedPlayer\n- Weekly shows ContestBanner (CONTEST_PRIZE_SAP=500, daysLeftInWeek()) + PastWinnersStrip placeholder from top entry\n- Replace BoardDoodles watermark with orchard-sky gradient (themePalette), pointer-events-none, behind content\n- School picker flow unchanged + reachable\n- resolvedRank/your-row highlight intact\n- npm run build + lint pass\n\n**Verify:** npm run build && npm run lint; manual: 3 tabs, re-order without flash, podium trees, weekly banner+countdown\n\n```json:metadata\n{\"files\": [\"app/components/LeaderboardView.tsx\"], \"verifyCommand\": \"npm run build && npm run lint\", \"acceptanceCriteria\": [\"3 tabs no refetch\", \"per-tab sort\", \"podium+rows\", \"weekly banner\", \"sky backdrop\", \"picker intact\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 8: Playwright smoke test for contest tabs",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "**Goal:** Lock in tab re-order without refetch + loader in fallbacks.\n\n**Files:**\n- Create: tests/leaderboard-contest.spec.ts\n\n**Acceptance Criteria:**\n- Opens leaderboard, asserts Weekly/Season/School tabs exist\n- Clicking Season activates it (color assert) without reload\n- Passes locally\n\n**Verify:** npm run test -- tests/leaderboard-contest.spec.ts passes\n\n```json:metadata\n{\"files\": [\"tests/leaderboard-contest.spec.ts\"], \"verifyCommand\": \"npm run test -- tests/leaderboard-contest.spec.ts\", \"acceptanceCriteria\": [\"tabs exist\", \"season activates\", \"passes\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-09-29T00:00:00Z"
+}
