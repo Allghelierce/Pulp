@@ -30,6 +30,7 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
+import { PartyPanel } from "@/app/components/community/PartyPanel"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PulpLoader } from "@/app/components/PulpLoader"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
@@ -51,7 +52,6 @@ const OrchardView = lazy(() => _preloadOrchard().then(m => ({ default: m.Orchard
 const BoutiqueView = lazy(() => _preloadBoutique().then(m => ({ default: m.BoutiqueView })))
 const StatsView = lazy(() => _preloadStats().then(m => ({ default: m.StatsView })))
 const DashboardView = lazy(() => _preloadDashboard().then(m => ({ default: m.DashboardView })))
-const LeaderboardView = lazy(() => _preloadLeaderboard().then(m => ({ default: m.LeaderboardView })))
 const ReviewView = lazy(() => import("@/app/components/ReviewView").then(m => ({ default: m.ReviewView })))
 
 const SettingsView = lazy(() => _preloadSettings().then(m => ({ default: m.SettingsView })))
@@ -4495,24 +4495,16 @@ export default function NoteApp() {
           <AnimatePresence>
             {leaderboardOpen && (
               <m.div
-                key="leaderboard-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                key="party-view"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50,
+                  background: theme === 'dark' ? '#0e0c09' : '#ede6d8', overflow: 'auto' }}
               >
-                <Suspense fallback={<PulpLoader variant="panel" />}>
-                  <LeaderboardView
-                    isOpen={leaderboardOpen}
-                    onClose={() => setLeaderboardOpen(false)}
-                    theme={theme}
-                    sap={sap}
-                    userName={user?.email?.split('@')[0] || 'You'}
-                    avatarColor={accentSolid}
-                    level={Math.floor(Math.sqrt(xp / 100)) + 1}
-                    treesGrown={grove.length}
-                  />
-                </Suspense>
+                <button onClick={() => setLeaderboardOpen(false)}
+                  style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', cursor: 'pointer',
+                    color: theme === 'dark' ? '#a1a1aa' : '#6b6864', fontSize: 24, lineHeight: 1, zIndex: 2 }}>&times;</button>
+                <PartyPanel theme={theme} />
               </m.div>
             )}
           </AnimatePresence>
