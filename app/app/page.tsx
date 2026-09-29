@@ -31,6 +31,7 @@ import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
+import { PulpLoader } from "@/app/components/PulpLoader"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
 const _preloadOrchard = () => import("@/app/components/OrchardView")
 const _preloadBoutique = () => import("@/app/components/BoutiqueView")
@@ -3448,7 +3449,7 @@ export default function NoteApp() {
             </div>
           )}
           {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
-          {showSettings && <Suspense fallback={null}>
+          {showSettings && <Suspense fallback={<PulpLoader variant="panel" />}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
               <SettingsView
                 user={user}
@@ -3596,7 +3597,7 @@ export default function NoteApp() {
 
           {/* Sidebar edge resize handle - disabled for compact collapsible sidebar */}
 
-          {currentView === "shelf" && (<Suspense fallback={null}>
+          {currentView === "shelf" && (<Suspense fallback={<PulpLoader variant="panel" />}>
             <div className="absolute inset-0 z-50 anim-fade-in bg-white dark:bg-[#09090b]">
               <ShelfView
                 notes={notes}
@@ -4388,7 +4389,7 @@ export default function NoteApp() {
 
           </div>
 
-          {orchardMounted && <Suspense fallback={null}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
+          {orchardMounted && <Suspense fallback={<PulpLoader variant="panel" />}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
               onClose={() => setOrchardOpen(false)}
@@ -4429,7 +4430,7 @@ export default function NoteApp() {
                 transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
-                <Suspense fallback={null}>
+                <Suspense fallback={<PulpLoader variant="panel" />}>
                   <DashboardView
                     isOpen
                     onClose={() => setStatsOpen(false)}
@@ -4461,7 +4462,7 @@ export default function NoteApp() {
                 transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
               >
-                <Suspense fallback={null}>
+                <Suspense fallback={<PulpLoader variant="panel" />}>
                   <ReviewView
                     note={notes.find(n => n.id === activeTabId)!}
                     theme={theme}
@@ -4500,7 +4501,7 @@ export default function NoteApp() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
               >
-                <Suspense fallback={null}>
+                <Suspense fallback={<PulpLoader variant="panel" />}>
                   <LeaderboardView
                     isOpen={leaderboardOpen}
                     onClose={() => setLeaderboardOpen(false)}
@@ -4526,7 +4527,7 @@ export default function NoteApp() {
                 transition={{ duration: 0.32, ease: [0.33, 1, 0.68, 1] }}
                 style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50, touchAction: 'manipulation' }}
               >
-                <Suspense fallback={null}><BoutiqueView
+                <Suspense fallback={<PulpLoader variant="panel" />}><BoutiqueView
                   isOpen
                   onClose={() => { setShopOpen(false); setShopInitialTab('shop'); setShopScrollTo(undefined) }}
                   theme={theme}
@@ -4635,7 +4636,7 @@ export default function NoteApp() {
             />
           )}
 
-          {showCoverModal && (<Suspense fallback={null}>
+          {showCoverModal && (<Suspense fallback={<PulpLoader variant="panel" />}>
             <CoverModal
               existingCover={activeNote?.cover}
               onConfirm={setCover}
@@ -4721,7 +4722,7 @@ export default function NoteApp() {
           )}
 
           {reviewOpen && activeNote && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<PulpLoader variant="panel" />}>
               <ReviewView
                 note={activeNote}
                 theme={theme}

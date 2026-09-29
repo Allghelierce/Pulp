@@ -5,6 +5,9 @@ import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
 import { DEMO_COMPETITORS } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
+import { PulpLoader } from "@/app/components/PulpLoader"
+import { ContestBanner } from "./leaderboard/ContestBanner"
+import { PastWinnersStrip } from "./leaderboard/PastWinnersStrip"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { themePalette } from "@/lib/orchardSky"
 
@@ -30,6 +33,7 @@ interface LeaderboardViewProps {
 
 const font = 'Crimson Pro, serif'
 const MEDAL_COLORS = ['#d97706', '#9a9590', '#a07050']
+const CONTEST_PRIZE_SAP = 500
 
 function formatPulp(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
@@ -122,6 +126,7 @@ export const LeaderboardView = memo(function LeaderboardView({
   const [applying, setApplying] = useState(false)
   const [appliedName, setAppliedName] = useState<string | null>(null)
   const [boardView, setBoardView] = useState<'forest' | 'list'>('forest')
+  const [timeframe, setTimeframe] = useState<'weekly' | 'season'>('weekly')
 
   const palette = getPalette(isDark)
   const { bg: paper, cardBorder, textPrimary, textSecondary, textMuted, accent, accentDeep } = palette
@@ -198,9 +203,22 @@ export const LeaderboardView = memo(function LeaderboardView({
   )
 
   const entries = isDemo ? demoEntries : members
-  const resolvedRank = isDemo
-    ? (() => { const i = demoEntries.findIndex(e => e.isYou); return i >= 0 ? i + 1 : null })()
-    : userRank
+  const metric: 'delta' | 'total' = timeframe === 'season' ? 'total' : 'delta'
+  const orderedEntries = useMemo(() => {
+    const arr = [...entries]
+    arr.sort((a, b) => metric === 'total' ? b.totalPulp - a.totalPulp : b.pulpDelta - a.pulpDelta)
+    return arr
+  }, [entries, metric])
+  const metricText = (p: Entry) => metric === 'total' ? formatPulp(p.totalPulp) : `+${formatPulp(p.pulpDelta)}`
+  const pastWinners = useMemo(() => {
+    // Placeholder until weekly history persists (see spec non-goals). Empty renders nothing.
+    return [] as { name: string; species: string }[]
+  }, [])
+  const resolvedRank = (() => {
+    const i = orderedEntries.findIndex(e => e.isYou)
+    if (i >= 0) return i + 1
+    return isDemo ? null : userRank
+  })()
   const schoolLabel = isDemo ? 'Inkwell University' : (school || '')
   const showPicker = needsSchool || changingSchool
 
@@ -326,7 +344,7 @@ export const LeaderboardView = memo(function LeaderboardView({
         <div className="flex items-center gap-1">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
           <span className="text-[12.5px] font-normal tabular-nums" style={{ color: accent, fontFamily: font }}>
-            +{formatPulp(entries.find(e => e.isYou)?.pulpDelta ?? 0)}
+            {(() => { const you = orderedEntries.find(e => e.isYou); return you ? metricText(you) : '+0' })()}
           </span>
         </div>
       </div>
@@ -346,7 +364,7 @@ export const LeaderboardView = memo(function LeaderboardView({
   )
 
   const renderForest = () => {
-    if (entries.length === 0) return emptyState
+    if (orderedEntries.length === 0) return emptyState
 
     // Exact orchard theme-mode palette (night for dark, day↔dusk blend for light).
     const P = themePalette(isDark)
@@ -355,8 +373,8 @@ export const LeaderboardView = memo(function LeaderboardView({
     const roadCol = isDark ? '#2a2418' : '#b89a6a'
     const grassCol = isDark ? P.hillNearTop : P.fieldMid1
 
-    const featured = entries.slice(0, 3)
-    const rest = entries.slice(3)
+    const featured = orderedEntries.slice(0, 3)
+    const rest = orderedEntries.slice(3)
     const perRow = 6
 
     // A planted tree: anchored by its BASE on the ground line (top% + translateY(-100%)),
@@ -367,10 +385,10 @@ export const LeaderboardView = memo(function LeaderboardView({
       return (
         <div
           key={p.id}
-          onClick={() => setSelectedPlayer(entries.indexOf(p))}
+          onClick={() => setSelectedPlayer(orderedEntries.indexOf(p))}
           className="absolute cursor-pointer group"
           style={{ left: `${xPct}%`, top: `${groundY}%`, transform: 'translate(-50%, -100%)', zIndex: Math.round(groundY * 10) }}
-          title={`#${rankIdx + 1} · ${p.name} · +${formatPulp(p.pulpDelta)} pulp`}
+          title={`#${rankIdx + 1} · ${p.name} · ${metricText(p)} ${metric === 'total' ? 'total' : 'pulp'}`}
         >
           <div className="relative flex flex-col items-center">
             {/* floating plate + crown, above the canopy */}
@@ -391,7 +409,7 @@ export const LeaderboardView = memo(function LeaderboardView({
               >
                 <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: medal, fontWeight: 600 }}>#{rankIdx + 1}</span>
                 <span style={{ fontFamily: font, fontSize: featuredTree ? 11 : 10, color: p.isYou ? accent : textPrimary, maxWidth: 76, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                <span style={{ fontFamily: font, fontSize: featuredTree ? 10 : 9, color: textMuted }}>+{formatPulp(p.pulpDelta)}</span>
+                <span style={{ fontFamily: font, fontSize: featuredTree ? 10 : 9, color: textMuted }}>{metricText(p)}</span>
               </div>
             </div>
             {/* tree */}
@@ -501,14 +519,14 @@ export const LeaderboardView = memo(function LeaderboardView({
   }
 
   const renderBoard = () => {
-    const top3 = entries.slice(0, 3)
-    const rest = entries.slice(3)
+    const top3 = orderedEntries.slice(0, 3)
+    const rest = orderedEntries.slice(3)
     const podiumOrder = [top3[1], top3[0], top3[2]]
     const podiumHeights = [104, 134, 84]
     const podiumLabels = ['2nd', '1st', '3rd']
     const podiumMedals = [MEDAL_COLORS[1], MEDAL_COLORS[0], MEDAL_COLORS[2]]
 
-    if (entries.length === 0) return emptyState
+    if (orderedEntries.length === 0) return emptyState
 
     return (
       <>
@@ -520,11 +538,14 @@ export const LeaderboardView = memo(function LeaderboardView({
               const height = podiumHeights[i]
               const isFirst = i === 1
               return (
-                <div
+                <motion.div
                   key={p.id}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, type: 'spring', stiffness: 220, damping: 22 }}
                   className="flex flex-col items-center cursor-pointer group"
                   style={{ width: isFirst ? 124 : 100 }}
-                  onClick={() => setSelectedPlayer(entries.indexOf(p))}
+                  onClick={() => setSelectedPlayer(orderedEntries.indexOf(p))}
                 >
                   <div className="relative mb-2 group-hover:scale-110 transition-transform" style={{ paddingTop: isFirst ? 18 : 0 }}>
                     {isFirst && <ChampionLaurel color={MEDAL_COLORS[0]} />}
@@ -551,7 +572,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                     </p>
                   </div>
                   <p className="text-[10.5px] font-normal tabular-nums mt-0.5" style={{ color: podiumMedals[i], fontFamily: font }}>
-                    +{formatPulp(p.pulpDelta)} pulp
+                    {metricText(p)} {metric === 'total' ? 'total' : 'pulp'}
                   </p>
 
                   <div
@@ -574,7 +595,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                       {podiumLabels[i]}
                     </span>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
           </div>
@@ -592,7 +613,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                 style={{ background: isUser ? youBg : 'transparent', border: `1px solid ${isUser ? cardBorder : 'transparent'}` }}
                 onMouseEnter={e => { if (!isUser) e.currentTarget.style.background = hoverBg }}
                 onMouseLeave={e => { if (!isUser) e.currentTarget.style.background = 'transparent' }}
-                onClick={() => setSelectedPlayer(entries.indexOf(p))}
+                onClick={() => setSelectedPlayer(orderedEntries.indexOf(p))}
               >
                 <span className="text-[12.5px] font-normal w-6 text-center tabular-nums" style={{ color: isUser ? accent : textMuted, fontFamily: font }}>
                   {rank}
@@ -611,7 +632,7 @@ export const LeaderboardView = memo(function LeaderboardView({
                 <div className="flex items-center gap-1">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isUser ? accent : textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                   <span className="text-[12.5px] font-normal tabular-nums" style={{ color: isUser ? accent : textSecondary, fontFamily: font }}>
-                    +{formatPulp(p.pulpDelta)}
+                    {metricText(p)}
                   </span>
                 </div>
               </div>
@@ -626,7 +647,7 @@ export const LeaderboardView = memo(function LeaderboardView({
 
   const renderPlayerPopup = () => {
     if (selectedPlayer === null) return null
-    const entry = entries[selectedPlayer]
+    const entry = orderedEntries[selectedPlayer]
     if (!entry) return null
     const rank = selectedPlayer + 1
     const medalColor = rank <= 3 ? MEDAL_COLORS[rank - 1] : accent
@@ -735,7 +756,7 @@ export const LeaderboardView = memo(function LeaderboardView({
               )}
               {!showPicker && (
                 <p style={{ fontFamily: font, fontSize: 12, color: textMuted, textTransform: 'lowercase', margin: '5px 0 0' }}>
-                  {entries.length} student{entries.length === 1 ? '' : 's'} · ranked by pulp
+                  {orderedEntries.length} student{orderedEntries.length === 1 ? '' : 's'} · {timeframe === 'season' ? 'all-time total' : 'this week'}
                 </p>
               )}
             </div>
@@ -784,8 +805,19 @@ export const LeaderboardView = memo(function LeaderboardView({
                   </button>
                 ) : null}
               </div>
-              {/* Forest / List toggle */}
+              {/* Timeframe + Forest/List toggles */}
               <div className="flex items-center gap-2 shrink-0">
+                {([['weekly', 'Weekly'], ['season', 'Season']] as const).map(([v, label]) => (
+                  <button
+                    key={v}
+                    onClick={() => setTimeframe(v)}
+                    className="transition-all hover:scale-105 active:scale-95"
+                    style={{ ...chipButton(palette, timeframe === v) }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <span style={{ width: 1, height: 16, background: cardBorder, margin: '0 1px' }} />
                 {([['forest', 'Forest'], ['list', 'List']] as const).map(([v, label]) => (
                   <button
                     key={v}
@@ -801,9 +833,16 @@ export const LeaderboardView = memo(function LeaderboardView({
           )}
         </div>
 
+        {!loading && !showPicker && timeframe === 'weekly' && orderedEntries.length > 0 && (
+          <>
+            <ContestBanner prizeSap={CONTEST_PRIZE_SAP} daysLeft={daysLeftInWeek()} accent={accent} isDark={isDark} />
+            <PastWinnersStrip winners={pastWinners} isDark={isDark} />
+          </>
+        )}
+
         {loading ? (
           <div className="flex-1 flex items-center justify-center relative z-10">
-            <div className="text-[12px]" style={{ color: textMuted, fontFamily: font }}>Loading…</div>
+            <PulpLoader variant="inline" />
           </div>
         ) : showPicker ? (
           renderSchoolPicker()
