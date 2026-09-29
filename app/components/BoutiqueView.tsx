@@ -3,6 +3,7 @@ import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { TREE_TYPES } from "@/app/constants"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
+import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 
@@ -1917,7 +1918,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.6s' : t.rarity === 'true rare' ? '0.4s' : '0.15s') : undefined,
                                 position: 'relative',
                               }}>
-                                <PlantIcon type={type} size={120} stage={3} hideGround />
+                                <CachedPlantIcon type={type} size={120} stage={3} hideGround />
                                 {/* Ground blend */}
                                 {(() => { const tc = getTerrainColors(type, isDark); return (
                                 <div style={{
@@ -2453,7 +2454,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                   animation's transform on the inner div can't break centering. */}
                               <div style={{ position: 'absolute', left: 0, right: 0, bottom: (() => { const sh = t?.shape || ''; return ['coral', 'whirlpool', 'lotus', 'cattail', 'mushroom'].includes(sh) ? '2%' : ['cactus', 'agave', 'sage', 'pineapple'].includes(sh) ? '4%' : ['palm', 'papaya', 'bamboo', 'mangrove'].includes(sh) ? '6%' : '7%' })(), display: 'flex', justifyContent: 'center', zIndex: 2 }}>
                                 <div className={owned ? rarityPlantClass(t.rarity) : ''} style={{ position: 'relative', filter: owned ? 'none' : `brightness(0) opacity(${isDark ? 0.35 : 0.25})` }}>
-                                  <PlantIcon type={type} size={120} stage={3} hideGround />
+                                  <CachedPlantIcon type={type} size={120} stage={3} hideGround />
                                 </div>
                               </div>
                               {owned && (
