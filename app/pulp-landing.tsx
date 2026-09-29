@@ -1276,7 +1276,21 @@ export default function PulpLanding() {
                   transition={{ duration: 0.5, delay: (i % 3) * 0.06, ease: [0.2, 0.8, 0.2, 1] }}
                   style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
                 >
-                  <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
+                  {f.label === 'focus timer' ? (
+                    <div style={{
+                      width: '100%', aspectRatio: '4 / 3', borderRadius: 16,
+                      border: '1px solid rgba(15,15,16,0.08)',
+                      boxShadow: '0 12px 30px -18px rgba(0,0,0,0.25)',
+                      overflow: 'hidden', background: '#fdfcfa',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <div style={{ transform: 'scale(0.58)', transformOrigin: 'center' }}>
+                        <DemoTimer serif={serif} />
+                      </div>
+                    </div>
+                  ) : (
+                    <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
+                  )}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                       <span style={{ display: 'inline-flex', transform: 'scale(0.72)', transformOrigin: 'left center' }}>{f.icon}</span>
