@@ -278,11 +278,8 @@ export const VitalitySystem = memo(function VitalitySystem({
       try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'start', groupId: activeGroupId, timerEnd: Date.now() + timerTotal * 1000 } })) } catch {}
     }
     setWaterCount(0)
-    if (timerTotal >= WATER_REQUIRED_THRESHOLD) {
-      setWaterDeadline(Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000)
-    } else {
-      setWaterDeadline(null)
-    }
+    // Watering feature removed — sessions never require watering.
+    setWaterDeadline(null)
   }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
 
   const [waterCount, setWaterCount] = useState(0)

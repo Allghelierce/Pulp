@@ -852,8 +852,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             <div className="px-5 py-4 space-y-3">
               {[
                 { icon: '🌱', text: 'Focus to grow your tree. Rarer trees take multiple sessions.' },
-                { icon: '💧', text: 'Sessions 10min+ need watering every 15 min.' },
-                { icon: '💀', text: 'Quit or miss water → tree gone for good.' },
+                { icon: '💀', text: 'Quit early → tree gone for good.' },
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <span className="shrink-0 mt-0.5" style={{ fontSize: 14 }}>{item.icon}</span>
