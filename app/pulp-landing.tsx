@@ -10,7 +10,6 @@ const FEATURES = [
   { label: 'focus timer', desc: 'pomodoro sessions that grow trees as you write. stay focused, watch your orchard grow.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
   { label: 'living orchard', desc: 'every notebook grows its own orchard. see where your time goes — and what you have to show for it.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 20V14"/><path d="M14 14c0-2 1.5-3.5 3-4.5 1.5 1 3 2.5 3 4.5a3 3 0 0 1-6 0z"/><path d="M7 20V10"/><path d="M4 10c0-2.5 1.5-4.5 3-5.5 1.5 1 3 3 3 5.5a3 3 0 0 1-6 0z"/><path d="M2 22h20"/></svg> },
   { label: 'inline ai', desc: 'ai that understands your entire notebook. edit, rewrite, and expand — right where you write.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/><path d="M8.24 2.69A4 4 0 0 0 8 6c0 1.95 1.4 3.58 3.25 3.93"/><path d="M12 10v12"/><path d="M8 16h8"/><path d="M6 20h12"/></svg> },
-  { label: 'leaderboards', desc: 'compete with other players. climb the ranks, win exclusive trees, and prove your focus.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> },
   { label: 'seed shop', desc: 'spend sap on seeds. grow fruit trees, lumber trees, and rare gem-producing trees.', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg> },
 ]
 
@@ -19,7 +18,6 @@ const FEATURE_IMAGES = [
   '/feature-timer.png',
   '/feature-orchard.png',
   '/feature-ai.png',
-  '/feature-leaderboard.png',
   '/feature-shop.png',
 ]
 
@@ -694,23 +692,13 @@ export default function PulpLanding() {
               transition: 'opacity 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s, transform 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.6s',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                <a href="/app" className="cta-btn" style={{
+                <a href="/app" className="btn-pop" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.9rem',
-                  padding: '14px 20px 14px 36px', borderRadius: 999, textDecoration: 'none',
+                  padding: '14px 28px', borderRadius: 999, textDecoration: 'none',
                   background: 'linear-gradient(to bottom, #e8a020, #d97706)', color: '#fff',
                   boxShadow: '0 2px 0 rgba(0,0,0,0.2), 0 4px 12px -2px rgba(234,88,12,0.35)',
-                  display: 'inline-flex', alignItems: 'center', gap: 0,
-                  position: 'relative', overflow: 'hidden',
-                }}>
-                  <span className="cta-label" style={{ marginRight: 36, marginLeft: -8, transition: 'opacity 0.5s' }}>try it — it's free</span>
-                  <span className="cta-chevron" style={{
-                    position: 'absolute', right: 4, top: 4, bottom: 4,
-                    borderRadius: 999, display: 'grid', placeItems: 'center',
-                    background: 'rgba(255,255,255,0.15)',
-                  }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  </span>
-                </a>
+                  display: 'inline-flex', alignItems: 'center',
+                }}>Go to pulp</a>
                 <a href="/app" style={{
                   fontFamily: 'var(--font-fraunces), serif', fontSize: '0.85rem',
                   color: '#9a958e', textDecoration: 'underline', textUnderlineOffset: 3,
@@ -1266,7 +1254,7 @@ export default function PulpLanding() {
         </section>
 
         {/* Features */}
-        <section id="features" ref={featuresRef} style={{ padding: '48px 80px 100px', scrollMarginTop: 80 }}>
+        <section id="features" ref={featuresRef} style={{ padding: '48px 80px 72px', scrollMarginTop: 80 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <motion.span
               initial={{ opacity: 0, x: -30 }}
@@ -1278,33 +1266,30 @@ export default function PulpLanding() {
               -- features
             </motion.span>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 44 }}>
-              {FEATURES.map((f, i) => {
-                const flip = i % 2 === 1
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 48 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}
-                  >
-                    <div style={{ order: flip ? 2 : 1 }}>
-                      <div style={{ marginBottom: 16 }}>{f.icon}</div>
-                      <h3 style={{ fontFamily: serif, fontSize: '1.5rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: '0 0 12px 0', letterSpacing: '-0.02em' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 28 }}>
+              {FEATURES.map((f, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.06, ease: [0.2, 0.8, 0.2, 1] }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+                >
+                  <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                      <span style={{ display: 'inline-flex', transform: 'scale(0.72)', transformOrigin: 'left center' }}>{f.icon}</span>
+                      <h3 style={{ fontFamily: serif, fontSize: '1.15rem', fontWeight: 400, color: '#0f0f10', textTransform: 'lowercase', margin: 0, letterSpacing: '-0.02em' }}>
                         {f.label}
                       </h3>
-                      <p style={{ fontFamily: serif, fontSize: '0.95rem', lineHeight: 1.7, color: '#6b6864', textTransform: 'lowercase', margin: 0, maxWidth: 400 }}>
-                        {f.desc}
-                      </p>
                     </div>
-                    <div style={{ order: flip ? 1 : 2, maxWidth: 460, width: '100%', marginLeft: flip ? 0 : 'auto', marginRight: flip ? 'auto' : 0 }}>
-                      <FeatureShot src={FEATURE_IMAGES[i]} label={f.label} />
-                    </div>
-                  </motion.div>
-                )
-              })}
+                    <p style={{ fontFamily: serif, fontSize: '0.85rem', lineHeight: 1.55, color: '#6b6864', textTransform: 'lowercase', margin: 0 }}>
+                      {f.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
