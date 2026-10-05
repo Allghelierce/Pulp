@@ -58,7 +58,8 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview
 
   let subtitle: React.ReactNode = null
   if (planted) {
-    if (planted.grew) subtitle = `Grew to ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()}`
+    if (planted.noTree) subtitle = "Write notes during a session to plant a tree"
+    else if (planted.grew) subtitle = `Grew to ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()}`
     else if (tagged) {
       const left = Math.max(0, tagged.recallNeeded - tagged.recallDone)
       subtitle = (
@@ -99,11 +100,11 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview
             transition={{ type: "spring", stiffness: 260, damping: 12, delay: 0.12 }}
             style={{ width: 56, height: 56, borderRadius: 12, background: `${accent}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
           >
-            <PlantIcon type={planted.type} size={50} stage={planted.stage} />
+            {planted.noTree ? <span style={{ fontSize: 26 }}>⏱️</span> : <PlantIcon type={planted.type} size={50} stage={planted.stage} />}
           </motion.div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 17, color: fg, fontWeight: 600 }}>
-              {planted.grew ? `${name} grew` : `${name} ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()} planted`} 🌱
+              {planted.noTree ? "Session logged" : <>{planted.grew ? `${name} grew` : `${name} ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()} planted`} 🌱</>}
             </div>
             <div style={{ fontSize: 13.5, color: muted, marginTop: 2 }}>{subtitle}</div>
           </div>
@@ -111,7 +112,7 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview
             <button
               onClick={() => { setPlanted(null); onReview(tagged.topic, planted.notebookId) }}
               style={{ marginLeft: 6, background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap" }}
-            >Review now</button>
+            >Recall now</button>
           )}
           <button
             onClick={() => setPlanted(null)}

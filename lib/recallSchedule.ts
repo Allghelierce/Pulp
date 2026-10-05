@@ -17,6 +17,7 @@ export interface ScheduledCard {
   due: number         // epoch ms when next due
   last?: number       // epoch ms of last review
   topic?: string      // topic display name from session-end tagging; compare via normalizeTopic
+  treeId?: number     // tree planted by the session that made this card (per-session recall)
 }
 
 export interface Deck {
@@ -193,7 +194,7 @@ export function deckStorageKey(noteId: string): string {
 // if they had none. Creates the deck if missing. Returns how many were added.
 // `noteHash` (optional) overrides the deck's fingerprint, e.g. to mark the
 // deck as in sync with the notes the cards came from.
-export function addTopicCards(noteId: string, cards: Card[], topic: string, now: number, noteHash?: string): number {
+export function addTopicCards(noteId: string, cards: Card[], topic: string, now: number, noteHash?: string, treeId?: number): number {
   const deck: Deck = loadDeck(noteId) ?? { noteId, cards: [], generatedAt: now, noteHash: noteHash ?? "" }
   const byId = new Map(deck.cards.map((c, i) => [c.id, i]))
   const next = [...deck.cards]
@@ -202,11 +203,11 @@ export function addTopicCards(noteId: string, cards: Card[], topic: string, now:
     const sc = freshCard(c, now)
     const i = byId.get(sc.id)
     if (i !== undefined) {
-      if (!next[i].topic) next[i] = { ...next[i], topic }
+      if (!next[i].topic) next[i] = { ...next[i], topic, ...(treeId != null ? { treeId } : {}) }
       continue
     }
     byId.set(sc.id, next.length)
-    next.push({ ...sc, topic })
+    next.push({ ...sc, topic, ...(treeId != null ? { treeId } : {}) })
     added++
   }
   saveDeck({ ...deck, cards: next, noteHash: noteHash ?? deck.noteHash })

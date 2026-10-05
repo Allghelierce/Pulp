@@ -14,8 +14,19 @@ import { addTopicCards, hashNotes, loadDeck } from "@/lib/recallSchedule"
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
 
+type Snapshot = { noteId: string | null; lines: string; review: string }
+function readSnapshot(): Snapshot | null {
+  try { return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null') } catch { return null }
+}
+// Text written in the session's notebook since it started; null if unknown (no snapshot).
+function sessionWrittenText(noteId: string | null): string | null {
+  const snap = readSnapshot()
+  if (!noteId || !snap || snap.noteId !== noteId) return null
+  return newText(snap.lines || "", noteLines(readNote(noteId)))
+}
+
 // Claim feedback events, consumed by PlantedToast.
-export interface PlantedDetail { treeId: number; type: string; stage: number; notebookId?: string; recallNeeded: number; tagging: boolean; grew?: boolean }
+export interface PlantedDetail { treeId: number; type: string; stage: number; notebookId?: string; recallNeeded: number; tagging: boolean; grew?: boolean; noTree?: boolean }
 export interface TaggedDetail { treeId: number | null; topic: string; cards: number; recallDone: number; recallNeeded: number }
 function emitPlanted(d: PlantedDetail) {
   try { window.dispatchEvent(new CustomEvent('pulp-tree-planted', { detail: d })) } catch { }
@@ -291,6 +302,10 @@ export const VitalitySystem = memo(function VitalitySystem({
     return () => { document.removeEventListener('visibilitychange', check); clearInterval(interval) }
   }, [timerRunning, waterDeadline])
 
+  // Latest elapsed seconds, readable from the interval without a state updater.
+  const timerElapsedRef = useRef(timerElapsed)
+  useEffect(() => { timerElapsedRef.current = timerElapsed }, [timerElapsed])
+
   // Timer tick
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
@@ -303,29 +318,32 @@ export const VitalitySystem = memo(function VitalitySystem({
           setDeathReason("Your tree wasn't watered in time")
           return
         }
-        setTimerElapsed((prev: number) => {
-          if (prev >= timerTotal) {
-            setTimerRunning(false)
-            setTimerDone(true)
-            return timerTotal
+        // Side effects stay out of the setState updater: updaters run during
+        // render, and calling store setters there warns ("Cannot update a component…").
+        const prev = timerElapsedRef.current
+        if (prev >= timerTotal) {
+          setTimerRunning(false)
+          setTimerDone(true)
+          setTimerElapsed(timerTotal)
+          return
+        }
+        const next = prev + 1
+        timerElapsedRef.current = next
+        setTimerElapsed(next)
+        if (next % 60 === 0) {
+          const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
+          checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
+          if (!isHibernatingRef.current) {
+            const groveSap = groveRef.current.reduce((sum, t) => sum + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0)
+            const hour = new Date().getHours()
+            const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
+            const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
+            const streakBonus = Math.min(1, goalStreak / 30)
+            const mult = Math.min(5, 1 + earlyBird + quotaBonus + streakBonus)
+            const perMinute = Math.max(1, Math.round((groveSap / 60) * mult))
+            setSapRef.current(s => s + perMinute)
           }
-          const next = prev + 1
-          if (next > 0 && next % 60 === 0) {
-            const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
-            checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
-            if (!isHibernatingRef.current) {
-              const groveSap = groveRef.current.reduce((sum, t) => sum + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0)
-              const hour = new Date().getHours()
-              const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
-              const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-              const streakBonus = Math.min(1, goalStreak / 30)
-              const mult = Math.min(5, 1 + earlyBird + quotaBonus + streakBonus)
-              const perMinute = Math.max(1, Math.round((groveSap / 60) * mult))
-              setSapRef.current(s => s + perMinute)
-            }
-          }
-          return next
-        })
+        }
       }, 1000)
     }
     return () => clearInterval(interval)
@@ -445,8 +463,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   // call that names the topic + writes cards. Patches the planted tree (if any)
   // and queues the cards in that notebook's deck. Fails silently.
   const tagSessionTopic = useCallback((treeId: number | null, recallNeeded: number, noteId: string | null): boolean => {
-    let snap: { noteId: string | null; lines: string; review: string } | null = null
-    try { snap = JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null') } catch { }
+    const snap = readSnapshot()
     try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
     if (!noteId || !snap || snap.noteId !== noteId) return false
     const note = readNote(noteId)
@@ -469,7 +486,7 @@ export const VitalitySystem = memo(function VitalitySystem({
           // If the deck was in sync with the notes at session start, it now covers the new text too.
           const deck = loadDeck(noteId)
           const inSync = !deck || deck.noteHash === hashNotes(snap!.review || "")
-          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined)
+          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined, treeId ?? undefined)
           if (added > 0) {
             try { window.dispatchEvent(new CustomEvent('pulp-cards-queued', { detail: { noteId, topic, count: added } })) } catch { }
           }
@@ -522,6 +539,20 @@ export const VitalitySystem = memo(function VitalitySystem({
       try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'complete', groupId: activeGroupId } })) } catch {}
     }
 
+    // No notes written -> no tree. The session still counts (stats/streak above), and the seed comes back.
+    // (Unknown — e.g. a session started before this shipped — keeps the old behavior.)
+    const writtenNow = sessionWrittenText(selectedNotebookId)
+    if (writtenNow !== null && writtenNow.length < MIN_TOPIC_TEXT) {
+      try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
+      if (selectedSeed && selectedSeed !== 'tangerine') setInventory(inv => [...inv, selectedSeed])
+      emitPlanted({ treeId: Date.now(), type: treeType, stage: 0, notebookId: selectedNotebookId ?? undefined, recallNeeded: 0, tagging: false, noTree: true })
+      setTimerElapsed(0)
+      setTimerDone(false)
+      setTreeDead(false)
+      setWaterDeadline(null)
+      return
+    }
+
     if (existingPartial) {
       const newFocus = Math.min(growthTarget, (existingPartial.focusMinutes || 0) + sessionMinutes)
       const ratio = newFocus / growthTarget
@@ -555,7 +586,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, activeGroupId, selectedNotebookId, tagSessionTopic])
+  }, [timerDone, treeDead, timerTotal, selectedSeed, setGrove, setInventory, checkAchievement, activeTabId, grove, setSap, updateGoalStreak, isHibernating, activeGroupId, selectedNotebookId, tagSessionTopic])
 
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 

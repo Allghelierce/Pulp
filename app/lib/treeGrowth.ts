@@ -61,9 +61,11 @@ const oldest = (trees: Tree[]): Tree | undefined =>
 //   anywhere, else no growth.
 // Full trees and legacy trees are never touched by the topic paths.
 // NOTE: banking writes localStorage — call outside React state updaters.
-export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string): Tree[] {
+export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string, treeId?: number): Tree[] {
   if (weight <= 0) return grove
   const waiting = grove.filter(t => isTopicTree(t) && !isFullyGrown(t))
+  // Card from a specific session: grow that session's own tree first.
+  if (treeId != null && waiting.some(t => t.id === treeId)) return feedTopicTree(grove, treeId, weight)
   if (topic && topic.trim()) {
     const k = normalizeTopic(topic)
     const match = oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
