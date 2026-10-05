@@ -10,7 +10,7 @@ const AUTO_HIDE_MS = 9000
 
 // Reward moment after "Claim Reward": the tree pops in, then the AI-named topic
 // and queued cards fill in, with a shortcut to recall it.
-export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview }: {
+export const PlantedToast = memo(function PlantedToast({ theme, accent }: {
   theme: "light" | "dark"
   accent: string
   onReview?: (topic: string, notebookId?: string) => void
@@ -65,12 +65,11 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview
       subtitle = (
         <>
           <span style={{ color: accent }}>{tagged.topic}</span>
-          {tagged.cards > 0 && <> · {tagged.cards} card{tagged.cards !== 1 ? "s" : ""} queued</>}
-          {" · "}{left > 0 ? `recall ${left} to grow it` : "fully grown!"}
+          {left <= 0 ? " · fully grown!" : tagged.cards > 0 ? <> · {tagged.cards} card{tagged.cards !== 1 ? "s" : ""} ready tomorrow</> : ""}
         </>
       )
     } else if (planted.tagging && !tagFailed) subtitle = <span style={{ opacity: 0.8 }}>Naming your topic…</span>
-    else subtitle = `Recall ${planted.recallNeeded} cards to grow it into a full tree`
+    else subtitle = "Recall it later to grow it into a full tree"
   }
 
   return (
@@ -108,12 +107,6 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent, onReview
             </div>
             <div style={{ fontSize: 13.5, color: muted, marginTop: 2 }}>{subtitle}</div>
           </div>
-          {tagged && onReview && tagged.recallDone < tagged.recallNeeded && (
-            <button
-              onClick={() => { setPlanted(null); onReview(tagged.topic, planted.notebookId) }}
-              style={{ marginLeft: 6, background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 14, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap" }}
-            >Recall now</button>
-          )}
           <button
             onClick={() => setPlanted(null)}
             aria-label="Dismiss"

@@ -194,7 +194,16 @@ export function deckStorageKey(noteId: string): string {
 // if they had none. Creates the deck if missing. Returns how many were added.
 // `noteHash` (optional) overrides the deck's fingerprint, e.g. to mark the
 // deck as in sync with the notes the cards came from.
-export function addTopicCards(noteId: string, cards: Card[], topic: string, now: number, noteHash?: string, treeId?: number): number {
+// Session cards wait before their first recall: remembering later (spacing)
+// beats quizzing right away. First due = next 6am at least 6h from now (i.e. "tomorrow morning").
+export function firstRecallDue(now: number): number {
+  const d = new Date(now + 6 * 3_600_000)
+  if (d.getHours() >= 6) d.setDate(d.getDate() + 1)
+  d.setHours(6, 0, 0, 0)
+  return d.getTime()
+}
+
+export function addTopicCards(noteId: string, cards: Card[], topic: string, now: number, noteHash?: string, treeId?: number, firstDue = now): number {
   const deck: Deck = loadDeck(noteId) ?? { noteId, cards: [], generatedAt: now, noteHash: noteHash ?? "" }
   const byId = new Map(deck.cards.map((c, i) => [c.id, i]))
   const next = [...deck.cards]
@@ -207,7 +216,7 @@ export function addTopicCards(noteId: string, cards: Card[], topic: string, now:
       continue
     }
     byId.set(sc.id, next.length)
-    next.push({ ...sc, topic, ...(treeId != null ? { treeId } : {}) })
+    next.push({ ...sc, due: firstDue, topic, ...(treeId != null ? { treeId } : {}) })
     added++
   }
   saveDeck({ ...deck, cards: next, noteHash: noteHash ?? deck.noteHash })

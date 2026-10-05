@@ -9,7 +9,7 @@ import { recordFocus } from "@/lib/party"
 import { extractTextFromHTML } from "@/lib/sanitize"
 import { SAPLING_STAGE, FULL_STAGE, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
-import { addTopicCards, hashNotes, loadDeck } from "@/lib/recallSchedule"
+import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
 
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
@@ -486,7 +486,7 @@ export const VitalitySystem = memo(function VitalitySystem({
           // If the deck was in sync with the notes at session start, it now covers the new text too.
           const deck = loadDeck(noteId)
           const inSync = !deck || deck.noteHash === hashNotes(snap!.review || "")
-          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined, treeId ?? undefined)
+          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined, treeId ?? undefined, firstRecallDue(Date.now()))
           if (added > 0) {
             try { window.dispatchEvent(new CustomEvent('pulp-cards-queued', { detail: { noteId, topic, count: added } })) } catch { }
           }
