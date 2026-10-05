@@ -26,7 +26,7 @@ function sessionWrittenText(noteId: string | null): string | null {
 }
 
 // Claim feedback events, consumed by PlantedToast.
-export interface PlantedDetail { treeId: number; type: string; stage: number; notebookId?: string; recallNeeded: number; tagging: boolean; grew?: boolean; noTree?: boolean }
+export interface PlantedDetail { treeId: number; type: string; stage: number; notebookId?: string; recallNeeded: number; tagging: boolean; grew?: boolean; noTree?: boolean; wroteSome?: boolean }
 export interface TaggedDetail { treeId: number | null; topic: string; cards: number; recallDone: number; recallNeeded: number }
 function emitPlanted(d: PlantedDetail) {
   try { window.dispatchEvent(new CustomEvent('pulp-tree-planted', { detail: d })) } catch { }
@@ -372,8 +372,8 @@ export const VitalitySystem = memo(function VitalitySystem({
       try { window.dispatchEvent(new CustomEvent('pulp-group-session', { detail: { kind: 'start', groupId: activeGroupId, timerEnd: Date.now() + timerTotal * 1000 } })) } catch {}
     }
     setWaterCount(0)
-    // Watering feature removed — sessions never require watering.
-    setWaterDeadline(null)
+    // Presence check: sessions of 10+ min need a tap on the watering can every 15 min (+90s grace).
+    setWaterDeadline(timerTotal >= WATER_REQUIRED_THRESHOLD ? Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000 : null)
   }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
 
   const [waterCount, setWaterCount] = useState(0)
@@ -541,11 +541,13 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     // No notes written -> no tree. The session still counts (stats/streak above), and the seed comes back.
     // (Unknown — e.g. a session started before this shipped — keeps the old behavior.)
+    // Notes scale with session length: about a sentence (~40 chars) per 10 minutes.
     const writtenNow = sessionWrittenText(selectedNotebookId)
-    if (writtenNow !== null && writtenNow.length < MIN_TOPIC_TEXT) {
+    const notesNeeded = Math.max(MIN_TOPIC_TEXT, Math.round((sessionMinutes / 10) * MIN_TOPIC_TEXT))
+    if (writtenNow !== null && writtenNow.length < notesNeeded) {
       try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
       if (selectedSeed && selectedSeed !== 'tangerine') setInventory(inv => [...inv, selectedSeed])
-      emitPlanted({ treeId: Date.now(), type: treeType, stage: 0, notebookId: selectedNotebookId ?? undefined, recallNeeded: 0, tagging: false, noTree: true })
+      emitPlanted({ treeId: Date.now(), type: treeType, stage: 0, notebookId: selectedNotebookId ?? undefined, recallNeeded: 0, tagging: false, noTree: true, wroteSome: writtenNow.length >= MIN_TOPIC_TEXT })
       setTimerElapsed(0)
       setTimerDone(false)
       setTreeDead(false)

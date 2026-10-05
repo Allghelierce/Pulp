@@ -58,7 +58,9 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent }: {
 
   let subtitle: React.ReactNode = null
   if (planted) {
-    if (planted.noTree) subtitle = "Write notes during a session to plant a tree"
+    if (planted.noTree) subtitle = planted.wroteSome
+      ? "A bit more notes next time — about a sentence every 10 minutes plants a tree"
+      : "Write notes during a session to plant a tree"
     else if (planted.grew) subtitle = `Grew to ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()}`
     else if (tagged) {
       const left = Math.max(0, tagged.recallNeeded - tagged.recallDone)
