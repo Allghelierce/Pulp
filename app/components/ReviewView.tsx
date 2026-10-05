@@ -36,17 +36,17 @@ interface ReviewViewProps {
   onShowTopic?: (topic: string) => void
 }
 
+// "now", "soon", "in 5h", "tomorrow", "in 3 days" — reads after "Next card …".
 function relDue(due: number, now: number): string {
   const ms = due - now
   if (ms <= 0) return "now"
-  if (ms < 86_400_000) {
-    const h = Math.round(ms / 3_600_000)
-    return h <= 1 ? "soon" : `${h}h`
-  }
-  const d = Math.round(ms / 86_400_000)
-  if (d < 30) return `${d}d`
-  if (d < 365) return `${Math.round(d / 30)}mo`
-  return `${(d / 365).toFixed(1)}y`
+  if (ms < 90 * 60_000) return "soon"
+  const days = Math.round((new Date(due).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 86_400_000)
+  if (days === 0) return `in ${Math.round(ms / 3_600_000)}h`
+  if (days === 1) return "tomorrow"
+  if (days < 30) return `in ${days} days`
+  if (days < 365) return `in ${Math.round(days / 30)} mo`
+  return `in ${(days / 365).toFixed(1)} y`
 }
 
 type Phase = "loading" | "generating" | "error" | "card" | "caughtup" | "empty" | "done"
@@ -367,7 +367,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             <div style={{ fontSize: 40 }}>🌿</div>
             <div style={{ fontSize: 18, color: fg, marginTop: 8 }}>All caught up</div>
             <div style={{ fontSize: 13.5, color: muted, marginTop: 8, lineHeight: 1.55 }}>
-              Nothing due right now.{stats.nextDue ? ` Next card in ${relDue(stats.nextDue, now)}.` : ""}
+              Nothing due right now.{stats.nextDue ? ` Next card ${relDue(stats.nextDue, now)}.` : ""}
             </div>
             <div style={{ fontSize: 12.5, color: muted, marginTop: 6 }}>{stats.mature} mature · {stats.learning} learning · {stats.newCount} new</div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
@@ -518,7 +518,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             )}
             <div style={{ fontSize: 12.5, color: muted, marginTop: 18, lineHeight: 1.55 }}>
               {stats.dueNow > 0 ? `${stats.dueNow} still due.` : "Nothing left due."}
-              {stats.nextDue ? ` Next card returns in ${relDue(stats.nextDue, now)}.` : ""}
+              {stats.nextDue ? ` Next card returns ${relDue(stats.nextDue, now)}.` : ""}
             </div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
               {stats.dueNow > 0 && deck && (
