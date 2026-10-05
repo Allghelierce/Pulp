@@ -2,7 +2,10 @@
 // Imported by app/api/recall/route.ts (prod) and scripts/recall-eval.ts (offline eval).
 // Keep prompt tweaks HERE so the eval harness always tests what production runs.
 
-export const MODEL = "llama-3.3-70b-versatile"
+// llama-3.3-70b-versatile was removed from Groq. gpt-oss models are reasoning
+// models — call them with reasoning_effort "low" and room in max_tokens.
+export const MODEL = "openai/gpt-oss-120b"        // card generation (question quality)
+export const GRADE_MODEL = "openai/gpt-oss-20b"   // answer grading (fast; 11/11 on grader tests)
 export const MAX_TEXT = 12000
 export const MIN_TEXT = 80
 

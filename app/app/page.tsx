@@ -274,7 +274,7 @@ const ScrollModePage = memo(function ScrollModePage({
 const BoxItem = memo(function BoxItem({
   box, boxIndex = 0, isSelected, selectedCount, loadingBoxId, accentSolid, theme, paperStyle, handwrittenEffect,
   startDrag, startResize, deleteBox, updateBox, updateBoxContent, setSelectedBoxIds,
-  onKeyDown, onInput, onRewrite, onImageGen,
+  onKeyDown, onInput, onRewrite,
   formattingOpen, setFormattingOpen, aiOpen, setAiOpen,
   onDragStart, onDragEnd, spellCheck: spellCheckProp
 }: {
@@ -289,7 +289,6 @@ const BoxItem = memo(function BoxItem({
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   onInput: (e: React.FormEvent<HTMLElement>) => void
   onRewrite: (text: string, id: string) => void
-  onImageGen: (text: string, id: string) => void
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
   onDragStart: () => void; onDragEnd: () => void; handwrittenEffect: boolean
@@ -476,7 +475,7 @@ const BoxItem = memo(function BoxItem({
           }}>×</button>
       )}
       {isSelected && selectedCount === 1 && !isImage && !isSticky && !isEmpty && !hideChrome && (
-        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} paperStyle={paperStyle} onUpdateBox={updateBox} onRewrite={onRewrite} onImageGen={onImageGen}
+        <BoxToolbar box={box} accentSolid={accentSolid} theme={theme} paperStyle={paperStyle} onUpdateBox={updateBox} onRewrite={onRewrite}
           formattingOpen={formattingOpen} setFormattingOpen={setFormattingOpen} aiOpen={aiOpen} setAiOpen={setAiOpen} />
       )}
 
@@ -586,11 +585,10 @@ const BOX_STYLES = [
   { value: "margin", label: "Mg" },
 ]
 
-const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyle, onUpdateBox, onRewrite, onImageGen, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
+const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyle, onUpdateBox, onRewrite, formattingOpen, setFormattingOpen, aiOpen, setAiOpen }: {
   box: TextBoxType; accentSolid: string; theme: "light" | "dark"; paperStyle: PaperStyle
   onUpdateBox: (id: string, updates: Partial<TextBoxType>) => void
   onRewrite: (text: string, id: string) => void
-  onImageGen: (text: string, id: string) => void
   formattingOpen: boolean; setFormattingOpen: (v: boolean) => void
   aiOpen: boolean; setAiOpen: (v: boolean) => void
 }) {
@@ -830,7 +828,6 @@ const BoxToolbar = memo(function BoxToolbar({ box, accentSolid, theme, paperStyl
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}>
           <button style={triggerStyle} onClick={() => { onRewrite(box.content, box.id); setAiOpen(false) }}>Rewrite</button>
-          <button style={triggerStyle} onClick={() => { onImageGen(box.content, box.id); setAiOpen(false) }}>Img Gen</button>
           <div style={{ width: 1, height: 12, background: dk ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)", margin: "0 6px", transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }} />
           {(["left", "center", "right"] as const).map(align => (
             <button key={align} style={{ ...triggerStyle, padding: "2px 4px", color: box.textAlign === align ? accentSolid : triggerStyle.color }}
@@ -1174,8 +1171,6 @@ export default function NoteApp() {
   const [bindingCompact, setBindingCompact] = useState(false)
   const [renamingFolder, setRenamingFolder] = useState<number | null>(null)
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null)
-  const [sketchMode, setSketchMode] = useState(false)
-  const [sketchPrompt, setSketchPrompt] = useState("")
   const [drawLineMode, setDrawLineMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined)
@@ -1655,7 +1650,6 @@ export default function NoteApp() {
   const drawingRef = useRef<{ undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }>({ undo: () => { }, redo: () => { }, canUndo: false, canRedo: false })
   const boxes = useBoxDrawing({
     activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
-    sketchMode, sketchPrompt, setSketchMode, setSketchPrompt,
     drawLineMode, setDrawLineMode, activeTool, setActiveTool, stickyColor,
     onError: openAlert,
     drawingUndo: () => drawingRef.current.undo(), drawingRedo: () => drawingRef.current.redo(),
@@ -3679,9 +3673,6 @@ export default function NoteApp() {
                   gridView={gridView}
                   setGridView={setGridView}
                   setCarouselIdx={setCarouselIdx}
-                  sketchMode={sketchMode}
-                  setSketchMode={setSketchMode}
-                  setSketchPrompt={setSketchPrompt}
                   drawLineMode={drawLineMode}
                   setDrawLineMode={setDrawLineMode}
 
@@ -4274,7 +4265,6 @@ export default function NoteApp() {
                                   onKeyDown={handleEditorKeyDown}
                                   onInput={handleEditorInput}
                                   onRewrite={boxes.rewriteBox}
-                                  onImageGen={boxes.generateSketch}
                                   formattingOpen={boxes.selectedBoxIdsRef.current.has(box.id) && toolbarFormattingOpen}
                                   setFormattingOpen={setToolbarFormattingOpen}
                                   aiOpen={boxes.selectedBoxIdsRef.current.has(box.id) && toolbarAiOpen}

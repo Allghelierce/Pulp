@@ -13,10 +13,6 @@ interface UseBoxDrawingOptions {
   notes: NoteData[]
   setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void
   paperRef: React.RefObject<HTMLDivElement | null>
-  sketchMode: boolean
-  sketchPrompt: string
-  setSketchMode: (v: boolean) => void
-  setSketchPrompt: (v: string) => void
   drawLineMode: boolean
   setDrawLineMode: (v: boolean) => void
   activeTool: string
@@ -31,7 +27,7 @@ interface UseBoxDrawingOptions {
 
 export function useBoxDrawing({
   activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
-  sketchMode, sketchPrompt, setSketchMode, setSketchPrompt, drawLineMode, setDrawLineMode,
+  drawLineMode, setDrawLineMode,
   activeTool, setActiveTool, stickyColor, onError,
   drawingUndo, drawingRedo, drawingCanUndo, drawingCanRedo
 }: UseBoxDrawingOptions) {
@@ -58,7 +54,7 @@ export function useBoxDrawing({
   const activeTabIdRef = useRef(activeTabId)
   const currentPageIdxRef = useRef(currentPageIdx)
   const notesRef = useRef(notes)
-  const sketchRef = useRef({ sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor })
+  const sketchRef = useRef({ drawLineMode, activeTool, stickyColor })
   const accentRef = useRef(accent)
   // Page attaches its selection rect div to this ref for zero-React-state drag updates
   const selectionRectRef = useRef<HTMLDivElement | null>(null)
@@ -92,7 +88,7 @@ export function useBoxDrawing({
     selectedDrawingIdsRef.current = new Set()
   }, [currentPageIdx, setSelectedBoxIds])
   useEffect(() => { notesRef.current = notes }, [notes])
-  useEffect(() => { sketchRef.current = { sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor } }, [sketchMode, sketchPrompt, drawLineMode, activeTool, stickyColor])
+  useEffect(() => { sketchRef.current = { drawLineMode, activeTool, stickyColor } }, [drawLineMode, activeTool, stickyColor])
 
   // Keyboard shortcuts — delete selected boxes/lines, select all
   useEffect(() => {
@@ -409,26 +405,6 @@ export function useBoxDrawing({
     })
   })
 
-  // generateSketch needs to be stable too
-  const generateSketch = useCallback(async (prompt: string, boxId: string) => {
-    if (!prompt.trim() || !activeTabIdRef.current) return
-    setLoadingBoxId(boxId)
-    try {
-      const res = await apiFetch('/api/sketch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: prompt.trim() }) })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      if (!data.url) { onError?.("Sketch Error", "No image was generated. Try a different prompt."); return }
-      setNotes(prev => prev.map(n => n.id !== activeTabIdRef.current ? n : {
-        ...n, boxes: { ...n.boxes, [currentPageIdxRef.current]: (n.boxes[currentPageIdxRef.current] || []).map(b => b.id === boxId ? { ...b, content: data.url } : b) }
-      }))
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error"
-      console.error('Sketch failed:', err)
-      onError?.("Sketch Error", `Failed to generate sketch: ${msg}`)
-    } finally {
-      setLoadingBoxId(null)
-    }
-  }, [setNotes])
 
   const rewriteBox = useCallback(async (text: string, boxId: string) => {
     if (!text.trim() || !activeTabIdRef.current) return
@@ -468,7 +444,7 @@ export function useBoxDrawing({
       }
 
       if (!active) {
-        const { activeTool, stickyColor, sketchMode, sketchPrompt } = sketchRef.current
+        const { activeTool, stickyColor } = sketchRef.current
         if (activeTool === 'sticky') {
           const r = paperRef.current?.getBoundingClientRect()
           if (r) {
@@ -538,10 +514,6 @@ export function useBoxDrawing({
             const sel = window.getSelection()
             sel?.removeAllRanges()
             sel?.addRange(range)
-          }
-          if (sketchMode) {
-            requestAnimationFrame(() => generateSketch(sketchPrompt, id))
-            setSketchMode(false); setSketchPrompt('')
           }
         }
       } else {
@@ -990,6 +962,6 @@ export function useBoxDrawing({
     lineSelectionVersion, selectedLineRef,
     hlineSelectionVersion, selectedHLineIdsRef,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
-    autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, generateSketch, rewriteBox])
+    autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox])
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
+import { GROQ_MODEL, REASONING_EFFORT } from "@/lib/aiModels"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -50,8 +51,9 @@ export async function POST(request: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          max_tokens: 1024,
+          model: GROQ_MODEL,
+          max_tokens: 2048,
+          reasoning_effort: REASONING_EFFORT,
           temperature: 0.5,
           stream: true,
           messages,
@@ -91,8 +93,9 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 1024,
+        model: GROQ_MODEL,
+        max_tokens: 2048,
+        reasoning_effort: REASONING_EFFORT,
         temperature: 0.5,
         messages,
       }),
