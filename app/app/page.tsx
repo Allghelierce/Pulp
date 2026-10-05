@@ -16,6 +16,7 @@ import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
+import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
 import { useVersionHistory } from "@/app/hooks/useVersionHistory"
@@ -1723,6 +1724,21 @@ export default function NoteApp() {
 
   // Hooks
   const editor = useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, accent })
+
+  // Page-aware AI (shortcut menu + chat): grab the selection when the user asks,
+  // then write the answer back over exactly that text — main page or text box.
+  const { savedRange, execCmd, syncContent } = editor
+  const captureSelection = useCallback(() => captureRange(savedRange.current), [savedRange])
+  const replaceCapturedSelection = useCallback((sel: CapturedSelection, text: string): boolean => {
+    if (!isLive(sel)) {
+      openAlert("Selection is gone", "The text you selected isn't on this page anymore.")
+      return false
+    }
+    savedRange.current = sel.range.cloneRange()
+    execCmd("insertText", text)
+    syncContent()
+    return true
+  }, [savedRange, execCmd, syncContent, openAlert])
   const drawingRef = useRef<{ undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }>({ undo: () => { }, redo: () => { }, canUndo: false, canRedo: false })
   const boxes = useBoxDrawing({
     activeTabId, currentPageIdx, zoom, accent, notes, setNotes, paperRef,
@@ -1738,7 +1754,7 @@ export default function NoteApp() {
   // Slash (@ and /) menu
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null)
   const [showImageModal, setShowImageModal] = useState(false)
-  const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string } | null>(null)
+  const [aiMenu, setAiMenu] = useState<{ x: number; y: number; selectedText?: string; initialPrompt?: string; sel?: CapturedSelection | null } | null>(null)
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [showNotebookChat, setShowNotebookChat] = useState(false)
   const [aiHubOpen, setAiHubOpen] = useState(false)
@@ -2218,7 +2234,7 @@ export default function NoteApp() {
         x = rect.left
         y = rect.bottom + 16 // sit just below the line, with breathing room
       }
-      setAiMenu({ x, y, selectedText })
+      setAiMenu({ x, y, selectedText, sel: selectedText && sel ? captureRange(sel.getRangeAt(0)) : null })
       return
     }
 
@@ -3846,7 +3862,7 @@ export default function NoteApp() {
                     }
                     setShowImageModal(true)
                   }}
-                  onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt })}
+                  onOpenAiMenu={(x, y, selectedText, initialPrompt) => setAiMenu({ x, y, selectedText, initialPrompt, sel: selectedText ? captureSelection() : null })}
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
@@ -4790,13 +4806,14 @@ export default function NoteApp() {
               isDark={theme === "dark"}
               onClose={() => setAiMenu(null)}
               onSubmit={async (prompt: string, selectedText?: string) => {
+                const captured = aiMenu.sel
                 setAiMenu(null)
 
                 try {
                   const response = await apiFetch("/api/ai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt, text: selectedText || "" })
+                    body: JSON.stringify({ prompt, text: selectedText || "", page: getPageText() })
                   })
 
                   const data = await response.json()
@@ -4812,7 +4829,9 @@ export default function NoteApp() {
                   }
 
                   // Insert inline: replace selected text or insert at cursor
-                  if (selectedText) {
+                  if (selectedText && captured) {
+                    replaceCapturedSelection(captured, result)
+                  } else if (selectedText) {
                     editor.execCmd("insertText", result)
                   } else {
                     const escaped = result.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
@@ -4865,6 +4884,9 @@ export default function NoteApp() {
               accent={accent}
               userId={user?.id}
               onClose={() => setShowNotebookChat(false)}
+              getPageText={getPageText}
+              captureSelection={captureSelection}
+              onReplaceSelection={replaceCapturedSelection}
             />
           )}
 
