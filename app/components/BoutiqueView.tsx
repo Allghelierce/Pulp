@@ -7,6 +7,10 @@ import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
 
+
+// How long a seed card cracks before its face shows, by rarity (ms).
+const CRACK_MS: Record<string, number> = { sacred: 1600, 'true rare': 1200, rare: 650, common: 500 }
+
 export type TabId = 'shop' | 'satchel' | 'catalog'
 
 const MAX_SEEDS = 30
@@ -712,7 +716,7 @@ export const BoutiqueView = memo(function BoutiqueView({
     const type = dailySeeds[index]
     const rarity = type ? TREE_TYPES[type]?.rarity || 'common' : 'common'
     setCrackingCard(index)
-    const crackDur = rarity === 'sacred' ? 3500 : rarity === 'true rare' ? 2800 : rarity === 'rare' ? 1400 : 1100
+    const crackDur = CRACK_MS[rarity] ?? CRACK_MS.common
     setTimeout(() => {
       const next = new Set(revealedCards)
       next.add(index)
@@ -1696,7 +1700,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           width: cardW, height: cardH, borderRadius: 12,
                           position: 'relative', overflow: 'hidden',
                           cursor: 'pointer',
-                          ['--crack-dur' as string]: t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s',
+                          ['--crack-dur' as string]: `${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`,
                           boxShadow: isDailyDeal
                             ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
                             : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
@@ -1916,7 +1920,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                                 animation: revealEffect?.index === i
                                   ? `pop-${t.rarity === 'true rare' ? 'true-rare' : t.rarity} ${t.rarity === 'sacred' ? '2.2s' : t.rarity === 'true rare' ? '1.6s' : t.rarity === 'rare' ? '1s' : t.rarity === 'uncommon' ? '0.8s' : '0.6s'} cubic-bezier(0.22, 1, 0.36, 1) both`
                                   : undefined,
-                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.6s' : t.rarity === 'true rare' ? '0.4s' : '0.15s') : undefined,
+                                animationDelay: revealEffect?.index === i ? (t.rarity === 'sacred' ? '0.25s' : t.rarity === 'true rare' ? '0.15s' : '0.05s') : undefined,
                                 position: 'relative',
                               }}>
                                 <CachedPlantIcon type={type} size={120} stage={3} hideGround />
@@ -1952,7 +1956,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <div style={{
                             position: 'absolute', inset: 0, borderRadius: 'inherit', zIndex: 5,
                             background: isDark ? (RARITY_BG[t.rarity] || RARITY_BG.common) : (SHOP_BG[t.rarity] || SHOP_BG.common),
-                            animation: `rarity-color-in ${t.rarity === 'sacred' ? '3s' : t.rarity === 'true rare' ? '2.4s' : t.rarity === 'rare' ? '1.2s' : '0.8s'} cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.5s' : t.rarity === 'true rare' ? '0.4s' : '0.15s'} both`,
+                            animation: `rarity-color-in ${(CRACK_MS[t.rarity] ?? CRACK_MS.common) * 0.85 / 1000}s cubic-bezier(0.22, 1, 0.36, 1) ${t.rarity === 'sacred' ? '0.2s' : t.rarity === 'true rare' ? '0.15s' : '0.05s'} both`,
                           }} />
                         )}
                         {/* Crack overlay — fades out to reveal */}
@@ -1962,7 +1966,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                             background: isDark
                               ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
                               : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
-                            animation: `seed-crack-fade ${t.rarity === 'sacred' ? '3.5s' : t.rarity === 'true rare' ? '2.8s' : t.rarity === 'rare' ? '1.4s' : '1.1s'} cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+                            animation: `seed-crack-fade ${`${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`} cubic-bezier(0.4, 0, 0.2, 1) forwards`,
                             willChange: 'opacity, transform',
                           }} />
                         )}
