@@ -4930,7 +4930,7 @@ export default function NoteApp() {
           activeTabId={activeTabId}
           initialNotes={initialNotesRef.current}
           onOpenSatchel={() => { startTransition(() => { closeAllPanels(); setShopOpen(true); setShopInitialTab('satchel') }) }}
-          onOpenStats={() => { startTransition(() => { closeAllPanels(); setSettingsInitialTab('grove'); setShowSettings(true) }) }}
+          onOpenStats={() => { startTransition(() => { closeAllPanels(); setSettingsInitialTab('general'); setShowSettings(true) }) }}
           goalStreak={goalStreak}
           setGoalStreak={setGoalStreak}
           goalStreakLastDate={goalStreakLastDate}

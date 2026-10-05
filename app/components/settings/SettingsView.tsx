@@ -21,18 +21,16 @@ import type { Achievement, NoteData } from "@/app/types"
 
 const TAB_DESCRIPTIONS: Record<string, string> = {
   general: "Account, shortcuts, and application preferences",
-  grove: "Streak penalties and hibernation",
   appearance: "Theme, fonts, paper style, and visual customization",
   editor: "Writing tools, layout, and focus mode",
   archive: "Archived notebooks and notes",
-  data: "Storage, exports, and account management",
+  data: "Sync, storage, and trash",
   subscription: "Manage your plan and billing",
   help: "Welcome guide, support, and bug reports",
 }
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
   general: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  grove: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><path d="m8 8 4-4 4 4"/></svg>,
   appearance: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 0 0 0 20 4 4 0 0 0 0-8 4 4 0 0 1 0-8"/><circle cx="12" cy="9" r="1" fill="currentColor"/></svg>,
   editor: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   archive: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>,
@@ -44,7 +42,6 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
 export const SETTINGS_TABS = [
   { id: "subscription", label: "Pro", group: "Premium" },
   { id: "general", label: "General", group: "App" },
-  { id: "grove", label: "Grove", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
   { id: "archive", label: "Archive", group: "Advanced" },
@@ -53,42 +50,43 @@ export const SETTINGS_TABS = [
 ] as const
 export type SettingsTabId = typeof SETTINGS_TABS[number]["id"]
 
+// Cosmetics (accents, fonts, page styles) are free for everyone — Pro is for AI.
 export const ACCENT_COLORS: { hex: string; name: string; cost?: number; pro?: boolean }[] = [
   { hex: "#71717a", name: "Gray" },
-  { hex: "#d97706", name: "Orange", cost: 1 },
-  { hex: "#ef4444", name: "Red", cost: 1 },
-  { hex: "#ec4899", name: "Pink", cost: 2 },
-  { hex: "#a855f7", name: "Purple", cost: 2 },
-  { hex: "#3b82f6", name: "Blue", cost: 2 },
-  { hex: "#06b6d4", name: "Cyan", cost: 2 },
-  { hex: "#22c55e", name: "Green", pro: true },
-  { hex: "#64748b", name: "Slate", pro: true },
-  { hex: "#2B1D21", name: "Obsidian", cost: 500 },
+  { hex: "#d97706", name: "Orange" },
+  { hex: "#ef4444", name: "Red" },
+  { hex: "#ec4899", name: "Pink" },
+  { hex: "#a855f7", name: "Purple" },
+  { hex: "#3b82f6", name: "Blue" },
+  { hex: "#06b6d4", name: "Cyan" },
+  { hex: "#22c55e", name: "Green" },
+  { hex: "#64748b", name: "Slate" },
+  { hex: "#2B1D21", name: "Obsidian" },
 ]
 
 export const FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "Georgia", label: "Georgia" },
-  { value: "Palatino", label: "Palatino", cost: 1 },
-  { value: "Arial", label: "Arial", cost: 1 },
-  { value: "Courier New", label: "Mono", cost: 2 },
+  { value: "Palatino", label: "Palatino" },
+  { value: "Arial", label: "Arial" },
+  { value: "Courier New", label: "Mono" },
 ]
 
 export const HEADING_FONT_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "Georgia", label: "Georgia" },
-  { value: "Didot", label: "Didot", cost: 1 },
-  { value: "Palatino", label: "Palatino", cost: 2 },
-  { value: "Bodoni", label: "Bodoni", pro: true },
+  { value: "Didot", label: "Didot" },
+  { value: "Palatino", label: "Palatino" },
+  { value: "Bodoni", label: "Bodoni" },
 ]
 
 export const PAGE_STYLE_OPTIONS: { value: string; label: string; cost?: number; pro?: boolean }[] = [
   { value: "lined", label: "Lined" },
-  { value: "dotgrid", label: "Grid", cost: 1 },
-  { value: "plain", label: "Plain", cost: 2 },
-  { value: "steno", label: "Steno", pro: true },
-  { value: "dark-lined", label: "Dark Lined", cost: 3 },
-  { value: "dark-grid", label: "Dark Grid", cost: 3 },
-  { value: "dark-plain", label: "Dark Plain", cost: 3 },
-  { value: "dark-steno", label: "Dark Steno", pro: true },
+  { value: "dotgrid", label: "Grid" },
+  { value: "plain", label: "Plain" },
+  { value: "steno", label: "Steno" },
+  { value: "dark-lined", label: "Dark Lined" },
+  { value: "dark-grid", label: "Dark Grid" },
+  { value: "dark-plain", label: "Dark Plain" },
+  { value: "dark-steno", label: "Dark Steno" },
 ]
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -135,107 +133,8 @@ export interface PulpConfig {
   scrollMode: boolean
 }
 
-function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: {
-  isDark: boolean
-  onSchedule?: (startDate: string, endDate: string) => void
-  cooldownEnd?: string | null
-  openConfirm?: (title: string, message: string, onConfirm: () => void, confirmLabel?: string, danger?: boolean) => void
-}) {
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const today = new Date().toISOString().split('T')[0]
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-  const maxEnd = (() => {
-    if (!startDate) return ''
-    const d = new Date(startDate)
-    d.setDate(d.getDate() + 90)
-    return d.toISOString().split('T')[0]
-  })()
-  const minEnd = (() => {
-    if (!startDate) return ''
-    const d = new Date(startDate)
-    d.setDate(d.getDate() + 4)
-    return d.toISOString().split('T')[0]
-  })()
 
-  const inCooldown = cooldownEnd && today < cooldownEnd
-
-  const valid = startDate && endDate && startDate >= tomorrow && (!cooldownEnd || startDate >= cooldownEnd) && (() => {
-    const days = Math.round((new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000)
-    return days >= 4 && days <= 90
-  })()
-
-  const handleSchedule = () => {
-    if (!valid || !onSchedule) return
-    if (openConfirm) {
-      openConfirm(
-        'Confirm Hibernation',
-        `Hibernate from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}? This cannot be undone. Your streak will freeze and you won't earn sap during this period.`,
-        () => {
-          openConfirm(
-            'Are you sure?',
-            'Once hibernation begins, it cannot be cancelled. Your sap is protected but you cannot participate in competitions.',
-            () => onSchedule(startDate, endDate),
-            'Confirm Hibernation'
-          )
-        },
-        'Schedule Hibernation'
-      )
-    } else {
-      onSchedule(startDate, endDate)
-    }
-  }
-
-  const font = 'Crimson Pro, serif'
-  const inputStyle = {
-    fontFamily: font, fontSize: 12, fontWeight: 400 as const,
-    padding: '6px 10px', borderRadius: 6,
-    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
-    color: isDark ? '#dcd8d0' : '#2a2620',
-  }
-
-  return (
-    <div className="px-5 py-4 space-y-3">
-      {inCooldown ? (
-        <p className={`text-[11px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-          Cooldown active until {new Date(cooldownEnd!).toLocaleDateString()}. You can schedule again after.
-        </p>
-      ) : (
-        <>
-          <p className={`text-[10px] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            Freeze your streak and protect your sap during breaks. Must be planned 24h ahead, 4–90 days. Cannot be undone.
-          </p>
-          <div className="flex items-center gap-3">
-            <div>
-              <label className={`text-[9px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Start</label>
-              <input type="date" value={startDate} min={cooldownEnd || tomorrow} onChange={e => { setStartDate(e.target.value); setEndDate('') }} style={inputStyle} />
-            </div>
-            <div>
-              <label className={`text-[9px] uppercase tracking-[0.1em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>End</label>
-              <input type="date" value={endDate} min={minEnd} max={maxEnd} onChange={e => setEndDate(e.target.value)} disabled={!startDate} style={{ ...inputStyle, opacity: startDate ? 1 : 0.4 }} />
-            </div>
-          </div>
-          <button
-            onClick={handleSchedule}
-            disabled={!valid}
-            className="transition-all"
-            style={{
-              fontFamily: font, fontSize: 11, fontWeight: 400, padding: '7px 16px', borderRadius: 8, border: 'none', cursor: valid ? 'pointer' : 'default',
-              background: valid ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
-              color: valid ? '#fff' : (isDark ? '#5a5650' : '#a8a4a0'),
-              opacity: valid ? 1 : 0.6,
-            }}
-          >
-            Schedule Hibernation
-          </button>
-        </>
-      )}
-    </div>
-  )
-}
-
-export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, hibernation, hibernationScheduled, onScheduleHibernation, hibernationCooldownEnd, quotaTier = 'monthly', quotaLockedUntil, onChangeQuotaTier, dailyGoalMinutes = 30, onChangeDailyGoalMinutes, initialTab }: {
+export const SettingsView = memo(function SettingsView({ user, onClose, config, onUpdateConfig, achievements, onClaimAchievement, trashNotes, onRestoreNote, onPermanentlyDeleteNote, unlockedCosmetics, setUnlockedCosmetics, onOpenShopItem, openConfirm, onSyncNow, archivedNotes = [], onUnarchiveNote, xp, dailyGoalMinutes = 30, onChangeDailyGoalMinutes, initialTab }: {
   user: { id: string; email?: string; user_metadata?: { avatar_url?: string; [key: string]: unknown } } | null
   onClose: () => void
   config: PulpConfig
@@ -743,70 +642,6 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 </div>
               </SettingSection>
 
-              <SettingSection title="About" isDark={isDark}>
-                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0 (2026.03)</span>} />
-              </SettingSection>
-            </>)}
-
-            {/* ── Grove ── */}
-            {activeTab === "grove" && (<>
-              {/* Study Quota archived for now — hidden but preserved. */}
-              {false && (
-              <SettingSection title="Study Quota" isDark={isDark}>
-                <div className="px-5 py-4 flex flex-col gap-3">
-                  <p className={`text-[11px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                    Choose your commitment level. Higher tiers earn bigger sap multipliers but penalize missed targets.
-                  </p>
-                  {(['monthly', 'weekly', 'daily'] as const).map(tier => {
-                    const isActive = quotaTier === tier
-                    const isLocked = !!quotaLockedUntil && new Date().toISOString().split('T')[0] < quotaLockedUntil && !isActive
-                    const labels = { monthly: { name: 'Monthly', bonus: 'No bonus', penalty: '10% sap', desc: 'Low bar, safety net' }, weekly: { name: 'Weekly', bonus: '+1x sap', penalty: '20% sap', desc: 'Medium commitment' }, daily: { name: 'Daily', bonus: '+2x sap', penalty: '25% sap', desc: 'High risk, high reward' } }
-                    const l = labels[tier]
-                    return (
-                      <button
-                        key={tier}
-                        disabled={isLocked}
-                        onClick={() => {
-                          if (isActive || isLocked) return
-                          if (openConfirm) {
-                            openConfirm(
-                              `Switch to ${l.name} Quota?`,
-                              `${l.desc}. Miss penalty: ${l.penalty}. You won't be able to change for ${tier === 'monthly' ? '30 days' : '7 days'}.`,
-                              () => onChangeQuotaTier?.(tier),
-                              'Confirm',
-                              tier === 'daily'
-                            )
-                          } else {
-                            onChangeQuotaTier?.(tier)
-                          }
-                        }}
-                        className="text-left rounded-lg p-3 transition-all"
-                        style={{
-                          background: isActive ? (isDark ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.06)') : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'),
-                          border: `1px solid ${isActive ? 'rgba(217,119,6,0.3)' : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`,
-                          opacity: isLocked ? 0.4 : 1,
-                          cursor: isLocked ? 'not-allowed' : isActive ? 'default' : 'pointer',
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className={`text-[12px] font-medium ${isActive ? 'text-orange-500' : isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{l.name}</span>
-                          <span className={`text-[10px] ${tier === 'daily' ? 'text-green-400' : tier === 'weekly' ? 'text-green-400' : isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>{l.bonus}</span>
-                        </div>
-                        <div className={`text-[10px] mt-0.5 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                          {l.desc} · Miss: {l.penalty}
-                        </div>
-                        {isActive && quotaLockedUntil && (
-                          <div className={`text-[9px] mt-1 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                            Locked until {new Date(quotaLockedUntil).toLocaleDateString()}
-                          </div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </SettingSection>
-              )}
-
               <SettingSection title="Daily Goal" isDark={isDark}>
                 <SettingRow
                   title="Minutes per day"
@@ -828,30 +663,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                 />
               </SettingSection>
 
-              <SettingSection title="Hibernation" isDark={isDark}>
-                {hibernation ? (
-                  <div className="px-5 py-4">
-                    <div className={`flex items-center gap-2 text-[12px] font-normal ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                      Hibernating until {new Date(hibernation.endDate).toLocaleDateString()}
-                    </div>
-                    <p className={`text-[10px] mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                      Streak frozen at {hibernation.streakFrozen} days. No sap gain or loss.
-                    </p>
-                  </div>
-                ) : hibernationScheduled ? (
-                  <div className="px-5 py-4">
-                    <div className={`flex items-center gap-2 text-[12px] font-normal ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      Hibernation scheduled: {new Date(hibernationScheduled.startDate).toLocaleDateString()} — {new Date(hibernationScheduled.endDate).toLocaleDateString()}
-                    </div>
-                    <p className={`text-[10px] mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                      Cannot be cancelled once it starts.
-                    </p>
-                  </div>
-                ) : (
-                  <HibernationScheduler isDark={isDark} onSchedule={onScheduleHibernation} cooldownEnd={hibernationCooldownEnd} openConfirm={openConfirm} />
-                )}
+              <SettingSection title="About" isDark={isDark}>
+                <SettingRow title="Version" isDark={isDark} control={<span className={`text-[11.5px] font-mono tabular-nums ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>1.0.0 (2026.03)</span>} />
               </SettingSection>
             </>)}
 
@@ -1206,14 +1019,13 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                {user && onSyncNow && <SyncSection isDark={isDark} onSyncNow={onSyncNow} />}
                <SettingSection title="Local Storage" isDark={isDark}>
                  <StorageBar isDark={isDark} />
-               </SettingSection>
-               <SettingSection title="Exports" isDark={isDark}>
-                 <div className="flex flex-col gap-2 p-5">
-                   <button className={`w-full py-2.5 rounded-lg border text-[12px] font-normal transition-all ${isDark ? "bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300" : "bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 shadow-sm"}`}>
-                     Export Binder as JSON
-                   </button>
-                   <button 
-                     onClick={() => { if (confirm("Clear all local storage? This cannot be undone.")) { localStorage.clear(); window.location.reload(); } }}
+                 <div className="px-5 pb-5">
+                   <button
+                     onClick={() => {
+                       const clear = () => { localStorage.clear(); window.location.reload() }
+                       if (openConfirm) openConfirm("Clear local cache?", "Removes everything Pulp stored in this browser. Synced notebooks reload from the cloud; anything unsynced is lost.", clear, "Clear", true)
+                       else if (confirm("Clear all local storage? This cannot be undone.")) clear()
+                     }}
                      className={`w-full py-2.5 rounded-lg border text-[12px] font-normal transition-all ${isDark ? "bg-red-900/20 border-red-900/30 hover:bg-red-900/30 text-red-400" : "bg-red-50 border-red-100 hover:bg-red-100/50 text-red-600 shadow-sm"}`}
                    >
                      Clear Local Cache
