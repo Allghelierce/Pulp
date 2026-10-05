@@ -24,10 +24,11 @@ export function recallNeededFor(type: string): number {
 
 export const isTopicTree = (t: Tree): boolean => t.recallNeeded != null
 
-// Only full trees produce sap. Legacy trees: full when timer-grown to mature.
+// Only full topic trees produce sap. Legacy trees (pre-topics) keep producing
+// at every stage, as they did before, so nobody loses existing income.
 export function isFullyGrown(t: Tree): boolean {
   if (isTopicTree(t)) return (t.recallDone || 0) >= (t.recallNeeded || 0)
-  return t.stage >= 3
+  return true
 }
 
 // ── banked nutrients: recall with no sapling waiting ────────────────
