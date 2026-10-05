@@ -315,7 +315,7 @@ const ScrollModePage = memo(function ScrollModePage({
             backgroundColor: box.boxHighlightColor || undefined,
             transform: box.boxRotation ? `rotate(${box.boxRotation}deg)` : undefined,
           }}
-          dangerouslySetInnerHTML={{ __html: box.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHTML(box.content) }}
         />
       ))}
       {!isActive && (

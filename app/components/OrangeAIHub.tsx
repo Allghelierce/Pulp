@@ -198,12 +198,16 @@ export const OrangeAIHub = memo(function OrangeAIHub({
 
         const decoder = new TextDecoder()
         let full = ""
+        let buffer = ""
 
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          const chunk = decoder.decode(value)
-          for (const line of chunk.split("\n")) {
+          // Same line buffering as streamFromAPI: SSE lines and multi-byte chars split across reads.
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split("\n")
+          buffer = lines.pop() ?? ""
+          for (const line of lines) {
             if (!line.startsWith("data: ")) continue
             try {
               const json = JSON.parse(line.slice(6))

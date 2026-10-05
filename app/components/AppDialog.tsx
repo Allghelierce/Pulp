@@ -9,11 +9,13 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
   const [val, setVal] = useState(config.type === "prompt" ? (config.defaultValue ?? "") : "")
   const [checked, setChecked] = useState(false)
 
+  // Close first: a callback that opens a follow-up dialog (e.g. "Access denied")
+  // must not have it wiped by this dialog's close.
   const confirm = () => {
+    onClose()
     if (config.type === "prompt") config.onConfirm(val.trim() || (config.defaultValue ?? ""))
     else if (config.type === "confirm") config.onConfirm(checked)
     else if (config.type === "alert" && (config as any).onConfirm) (config as any).onConfirm()
-    onClose()
   }
 
   const danger = config.type === "confirm" && config.danger
@@ -45,7 +47,8 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
           boxShadow: '0 20px 60px -10px rgba(0,0,0,0.6)',
         }}
         onKeyDown={e => {
-          if (e.key === "Enter" && config.type !== "alert") { e.preventDefault(); confirm(); }
+          // Buttons handle their own Enter (so Enter on Cancel cancels); IME composition isn't a submit.
+          if (e.key === "Enter" && config.type !== "alert" && (e.target as HTMLElement).tagName !== "BUTTON" && !e.nativeEvent.isComposing) { e.preventDefault(); confirm(); }
           if (e.key === "Escape") onClose();
         }}
       >
@@ -121,6 +124,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
             )}
             <button
               onClick={confirm}
+              autoFocus={config.type !== "prompt"}
               style={{
                 flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
                 fontFamily: font, color: '#fff', background: btnColor, border: 'none', cursor: 'pointer',

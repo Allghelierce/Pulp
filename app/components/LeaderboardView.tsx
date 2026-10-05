@@ -1,5 +1,5 @@
 "use client"
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { apiFetch } from "@/lib/apiFetch"
 import { SCHOOLS } from "@/lib/schools"
@@ -181,14 +181,19 @@ export const LeaderboardView = memo(function LeaderboardView({
     }
   }, [sap, userName, avatarColor, level, treesGrown, applyData])
 
+  // Refs: the Escape handler is registered once per open and must see the latest panel state.
+  const selectedPlayerRef = useRef(selectedPlayer)
+  selectedPlayerRef.current = selectedPlayer
+  const changingSchoolRef = useRef(changingSchool)
+  changingSchoolRef.current = changingSchool
   useEffect(() => {
     if (!isOpen) { setSelectedPlayer(null); setChangingSchool(false); return }
     setLoading(true)
     sync()
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (selectedPlayer !== null) setSelectedPlayer(null)
-        else if (changingSchool) setChangingSchool(false)
+        if (selectedPlayerRef.current !== null) setSelectedPlayer(null)
+        else if (changingSchoolRef.current) setChangingSchool(false)
         else onClose()
       }
     }

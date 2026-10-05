@@ -469,7 +469,12 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       }
       const rect = wrap.getBoundingClientRect()
       const isGripArea = e.clientY < rect.top + 4
-      if (isGripArea || target === wrap) {
+      if (!(isGripArea || target === wrap)) {
+        // Clicking into a cell ends the whole-table selection.
+        document.querySelectorAll('.pulp-table-selected').forEach(el => el.classList.remove('pulp-table-selected'))
+        return
+      }
+      {
         e.preventDefault()
         e.stopPropagation()
         document.querySelectorAll('.pulp-table-selected').forEach(el => el.classList.remove('pulp-table-selected'))
@@ -486,6 +491,12 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       if (e.key !== 'Backspace' && e.key !== 'Delete') return
       const selected = document.querySelector('.pulp-table-selected')
       if (!selected) return
+      // Only while the table itself is the selection — never from an unrelated input.
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0 || !sel.getRangeAt(0).intersectsNode(selected)) {
+        selected.classList.remove('pulp-table-selected')
+        return
+      }
       e.preventDefault()
       const next = selected.nextSibling || selected.previousSibling
       const parent = selected.parentNode

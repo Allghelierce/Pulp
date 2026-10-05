@@ -405,7 +405,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !recordingShortcut) {
         e.stopPropagation()
         e.preventDefault()
         onClose()
@@ -1759,6 +1759,10 @@ function formatShortcutDisplay(key: string) {
   }).join(" ")
 }
 
+// Set while a shortcut is being recorded, so Escape cancels the recording
+// instead of closing Settings (both listen on window, Settings first).
+let recordingShortcut = false
+
 function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
   label: string; id: string; currentKey: string; defaultKey: string; onUpdate: (id: string, key: string) => void; isDark: boolean
 }) {
@@ -1767,6 +1771,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
 
   useEffect(() => {
     if (!isRecording) return
+    recordingShortcut = true
     const handler = (e: KeyboardEvent) => {
       e.preventDefault()
       e.stopPropagation()
@@ -1789,7 +1794,7 @@ function ShortcutKey({ label, id, currentKey, defaultKey, onUpdate, isDark }: {
       }
     }
     window.addEventListener("keydown", handler, true)
-    return () => window.removeEventListener("keydown", handler, true)
+    return () => { recordingShortcut = false; window.removeEventListener("keydown", handler, true) }
   }, [isRecording, id, onUpdate])
 
   return (
