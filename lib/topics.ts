@@ -57,7 +57,8 @@ export function takeBanked(topic: string, max = Infinity): number {
 
 // ── freshness: 1 = nothing due, 0 = long overdue (visual only) ──────
 // Reads every recall deck in localStorage and looks at cards tagged `topic`.
-export function topicFreshness(topic: string, now = Date.now()): number {
+// `live` (optional): only decks of notebooks still in use count.
+export function topicFreshness(topic: string, now = Date.now(), live?: ReadonlySet<string>): number {
   const k = normalizeTopic(topic)
   let worstOverdueDays = 0
   try {
@@ -65,6 +66,7 @@ export function topicFreshness(topic: string, now = Date.now()): number {
       const key = localStorage.key(i)
       if (!key?.startsWith(RECALL_PREFIX)) continue
       const deck = JSON.parse(localStorage.getItem(key) || "null")
+      if (live && !live.has(deck?.noteId)) continue
       for (const c of deck?.cards || []) {
         if (!c.topic || normalizeTopic(c.topic) !== k) continue
         if (c.due < now) worstOverdueDays = Math.max(worstOverdueDays, (now - c.due) / DAY)

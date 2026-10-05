@@ -41,13 +41,15 @@ export function growTree(grove: Tree[], type: string, minutes: number, notebookI
 }
 
 // Add `weight` of recall to one topic tree; finishing it jumps to FULL_STAGE.
+// Weight past what the tree needs is banked under its topic (as at tagging).
 function feedTopicTree(grove: Tree[], id: number, weight: number): Tree[] {
   return grove.map(t => {
     if (t.id !== id) return t
+    const need = t.recallNeeded || 0
     const done = (t.recallDone || 0) + weight
-    return done >= (t.recallNeeded || 0)
-      ? { ...t, recallDone: done, stage: FULL_STAGE, progress: 100 }
-      : { ...t, recallDone: done }
+    if (done < need) return { ...t, recallDone: done }
+    if (done > need && t.topic) bankNutrients(t.topic, done - need)
+    return { ...t, recallDone: need, stage: FULL_STAGE, progress: 100 }
   })
 }
 
@@ -70,6 +72,9 @@ export function applyRecall(grove: Tree[], topic: string | undefined, weight: nu
     const k = normalizeTopic(topic)
     const match = oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
     if (match) return feedTopicTree(grove, match.id, weight)
+    // A sapling whose tagging failed has no topic: let this notebook's recall finish it.
+    const untagged = oldest(waiting.filter(t => !t.topic && (t.notebookId ?? undefined) === (notebookId ?? undefined)))
+    if (untagged) return feedTopicTree(grove, untagged.id, weight)
     bankNutrients(topic, weight)
     return grove
   }

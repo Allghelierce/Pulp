@@ -1,7 +1,7 @@
 "use client"
 import { memo, useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { isDue, loadDeck } from "@/lib/recallSchedule"
+import { isDue, loadDeck, sessionDueCount } from "@/lib/recallSchedule"
 import { normalizeTopic } from "@/lib/topics"
 
 interface Due { count: number; topics: string[] }
@@ -22,7 +22,8 @@ function readDue(noteId: string): Due {
     e.n++
     byTopic.set(k, e)
   }
-  return { count, topics: [...byTopic.values()].sort((a, b) => b.n - a.n).map(e => e.name) }
+  // Count what "Recall now" will actually review (new cards are paced per session).
+  return { count: count && sessionDueCount(deck, now), topics: [...byTopic.values()].sort((a, b) => b.n - a.n).map(e => e.name) }
 }
 
 // "5 cards due · Photosynthesis  [Recall now]" — keeps recall front and center

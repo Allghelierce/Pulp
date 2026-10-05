@@ -157,12 +157,17 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                     {r.lastStudied > 0 && <> · {relTime(r.lastStudied, now)}</>}
                   </div>
                 </div>
-                {r.due > 0 ? (
+                {r.due > 0 ? (() => {
+                  const nb = bestNotebookFor(r)
+                  // The session opens one notebook, so show that notebook's count.
+                  const n = (nb && r.dueByNotebook[nb]) || r.due
+                  return (
                   <button
-                    onClick={() => onRecall(r.name, bestNotebookFor(r))}
+                    onClick={() => onRecall(r.name, nb)}
                     style={{ flexShrink: 0, background: accent, color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontSize: 14, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap" }}
-                  >Recall · {r.due}</button>
-                ) : (
+                  >Recall · {n}</button>
+                  )
+                })() : (
                   <span style={{ flexShrink: 0, fontSize: 12.5, color: subtle, whiteSpace: "nowrap" }}>{r.cards === 0 ? "no cards" : r.nextDue ? `ready ${dueIn(r.nextDue, now)}` : "all caught up"}</span>
                 )}
               </motion.div>

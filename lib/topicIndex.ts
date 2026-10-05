@@ -73,7 +73,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now(), live?: Readonly
   }
   for (const r of rows.values()) {
     r.banked = getBanked(r.name)
-    r.freshness = topicFreshness(r.name, now)
+    r.freshness = topicFreshness(r.name, now, live)
   }
   // Most urgent first: due cards, then waiting saplings, then most faded.
   return [...rows.values()].sort((a, b) =>
@@ -86,9 +86,10 @@ export function bestNotebookFor(r: TopicRow): string | undefined {
   return entries[0]?.[0] ?? r.notebookIds[0]
 }
 
-// Cards due now across every notebook (tagged or not) — sidebar badge.
+// Topic cards due now across every notebook — the sidebar badge for the Recall hub,
+// so it matches the hub's own total (untagged cards live on each notebook's toolbar).
 export function totalDueAll(now = Date.now(), live?: ReadonlySet<string>): number {
   let n = 0
-  for (const deck of readDecks(live)) for (const c of deck.cards) if (isDue(c, now)) n++
+  for (const deck of readDecks(live)) for (const c of deck.cards) if (c.topic && isDue(c, now)) n++
   return n
 }

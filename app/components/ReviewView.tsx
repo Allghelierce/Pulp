@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/apiFetch"
 import {
   type Deck, type ScheduledCard, type Grade,
   loadDeck, saveDeck, buildDeck, mergeCards, buildSession, applyGrade,
-  previewIntervals, deckStats, hashNotes, isNew,
+  previewIntervals, deckStats, hashNotes, isNew, sessionDueCount,
 } from "@/lib/recallSchedule"
 import type { GradeResult, Verdict } from "@/lib/recallPrompt"
 import { normalizeTopic } from "@/lib/topics"
@@ -90,6 +90,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const [gradeFailed, setGradeFailed] = useState(false)
   const answerRef = useRef<HTMLTextAreaElement>(null)
   const studied = useRef<Set<string>>(new Set())
+  // Cards already sent back once this session; a second "again" lets them go
+  // (they're due again in 10 min) so an unanswerable card can't loop forever.
+  const requeued = useRef<Set<string>>(new Set())
   // "Review ahead" re-studies cards early — practice only, no growth.
   const reviewingAhead = useRef(false)
   const driftDismissed = useRef(false)
@@ -112,8 +115,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   }, [])
 
   const startSession = useCallback((d: Deck) => {
-    const session = buildSession(scoped(d), Date.now())
+    const session = buildSession(scoped(d), Date.now(), !!topicKey)
     studied.current = new Set()
+    requeued.current = new Set()
     reviewingAhead.current = false
     setLog([])
     setGrown({})
@@ -189,7 +193,11 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       onCorrect?.(weight, current.topic, current.treeId)
       const t = current.topic
       if (t) {
-        setGrown(prev => ({ ...prev, [t]: (prev[t] || 0) + weight }))
+        // Keyed by normalized topic so "Photosynthesis"/"photosynthesis" share a chip.
+        setGrown(prev => {
+          const k = Object.keys(prev).find(x => normalizeTopic(x) === normalizeTopic(t)) ?? t
+          return { ...prev, [k]: (prev[k] || 0) + weight }
+        })
         setFlash({ topic: t, id: gnow })
       }
     }
@@ -199,7 +207,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     setDeck(nextDeck)
 
     const rest = queue.slice(1)
-    const nextQueue = g === "again" ? [...rest, updated] : rest
+    const requeue = g === "again" && !requeued.current.has(updated.id)
+    if (requeue) requeued.current.add(updated.id)
+    const nextQueue = requeue ? [...rest, updated] : rest
     resetAttempt()
     if (nextQueue.length === 0) {
       setPhase("done")
@@ -269,6 +279,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   }, [phase, revealed, answer, grading, onClose])
 
   const stats = deck ? deckStats(scoped(deck), now) : null
+  // Notebook sessions pace new cards, so show what this session will actually cover.
+  const dueShown = !stats || !deck ? 0 : topicKey ? stats.dueNow : sessionDueCount(deck, now)
   const gradeColor = (g: Grade): string =>
     g === "again" ? (isDark ? "#f87171" : "#dc2626")
       : g === "hard" ? (isDark ? "#fbbf24" : "#d97706")
@@ -286,7 +298,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {stats && phase !== "loading" && (
             <div style={{ fontSize: 12, color: muted, display: "flex", gap: 12 }}>
-              <span title="Due now"><b style={{ color: stats.dueNow ? accent : muted }}>{stats.dueNow}</b> due</span>
+              <span title="Due now"><b style={{ color: dueShown ? accent : muted }}>{dueShown}</b> due</span>
               {stats.total > stats.dueNow && <span title="Scheduled for later">{stats.total - stats.dueNow} later</span>}
               <span title="Mature cards">{stats.mature} mature</span>
             </div>
@@ -362,10 +374,14 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
               {deck && deck.cards.some(c => inScope(c) && !isNew(c)) && (
                 <button onClick={() => {
                   const ahead = deck.cards.filter(c => inScope(c) && !isNew(c)).sort((a, b) => a.due - b.due).slice(0, 25)
-                  if (ahead.length) { studied.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
+                  if (ahead.length) { studied.current = new Set(); requeued.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
                 }} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
               )}
-              <button onClick={() => generate(deck)} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>
+              {/* Topic mode: new notebook-wide cards wouldn't belong to this topic. */}
+              {!topicKey && <button onClick={() => generate(deck)} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>}
+              {topicKey && !deck?.cards.some(c => inScope(c) && !isNew(c)) && (
+                <button onClick={onClose} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Done</button>
+              )}
             </div>
           </div>
         )}

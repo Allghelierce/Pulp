@@ -56,16 +56,17 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent }: {
   const muted = isDark ? "#a1a1aa" : "#71717a"
   const name = planted ? (TREE_TYPES[planted.type]?.name || "Tree") : ""
 
+  // Banked recall on this topic finished the new tree at tagging (recallNeeded 0 = no tree).
+  const grownByBank = !!tagged && tagged.recallNeeded > 0 && tagged.recallDone >= tagged.recallNeeded
   let subtitle: React.ReactNode = null
   if (planted) {
     if (planted.noTree) subtitle = "Write notes during a session to plant a tree"
     else if (planted.grew) subtitle = `Grew to ${STAGE_NAMES[Math.min(4, planted.stage)].toLowerCase()}`
     else if (tagged) {
-      const left = Math.max(0, tagged.recallNeeded - tagged.recallDone)
       subtitle = (
         <>
           <span style={{ color: accent }}>{tagged.topic}</span>
-          {left <= 0 ? " · fully grown!" : tagged.cards > 0 ? <> · {tagged.cards} card{tagged.cards !== 1 ? "s" : ""} ready tomorrow</> : ""}
+          {grownByBank ? " · banked recall grew it to full!" : tagged.cards > 0 ? <> · {tagged.cards} card{tagged.cards !== 1 ? "s" : ""} ready tomorrow</> : ""}
         </>
       )
     } else if (planted.tagging && !tagFailed) subtitle = <span style={{ opacity: 0.8 }}>Naming your topic…</span>
@@ -99,7 +100,7 @@ export const PlantedToast = memo(function PlantedToast({ theme, accent }: {
             transition={{ type: "spring", stiffness: 260, damping: 12, delay: 0.12 }}
             style={{ width: 56, height: 56, borderRadius: 12, background: `${accent}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
           >
-            {planted.noTree ? <span style={{ fontSize: 26 }}>⏱️</span> : <PlantIcon type={planted.type} size={50} stage={planted.stage} />}
+            {planted.noTree ? <span style={{ fontSize: 26 }}>⏱️</span> : <PlantIcon type={planted.type} size={50} stage={grownByBank ? 4 : planted.stage} />}
           </motion.div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 17, color: fg, fontWeight: 600 }}>

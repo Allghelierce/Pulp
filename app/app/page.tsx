@@ -11,7 +11,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
-import { deckStorageKey, isDue, loadDeck } from "@/lib/recallSchedule"
+import { deckStorageKey, loadDeck, sessionDueCount } from "@/lib/recallSchedule"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -100,12 +100,11 @@ function cloudWrite(q: PromiseLike<{ error: { message: string } | null }>, label
   q.then(({ error }) => { if (error) console.error(`Cloud ${label} failed:`, error.message) }, err => console.error(`Cloud ${label} failed:`, err))
 }
 
-// Cards to recall in a notebook right now (new ones included once their first due comes).
+// Cards the notebook's recall session would show right now (matches the session it opens).
 function countRecallDue(noteId: string | undefined): number {
   const deck = noteId ? loadDeck(noteId) : null
   if (!deck) return 0
-  const now = Date.now()
-  return deck.cards.filter(c => isDue(c, now)).length
+  return sessionDueCount(deck, Date.now())
 }
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
@@ -3961,7 +3960,7 @@ export default function NoteApp() {
                   theme={theme}
                   accent={accentSolid}
                   hidden={reviewOpen || timerRunning}
-                  onReview={() => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
+                  onReview={() => { startTransition(() => { closeAllPanels(); if (activeNote) setReviewNoteId(activeNote.id); setReviewOpen(true) }) }}
                 />
               </div>
             )}
@@ -5008,7 +5007,7 @@ export default function NoteApp() {
           quotaTier={quotaTier}
           isHibernating={isHibernating}
           hidden={orchardOpen || statsOpen || showSettings || shopOpen || leaderboardOpen || reviewOpen}
-          onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
+          onStartReview={() => { setTimerOpen(false); startTransition(() => { closeAllPanels(); if (activeNote) setReviewNoteId(activeNote.id); setReviewOpen(true) }) }}
           activeGroupId={activeGroupId}
         />
 

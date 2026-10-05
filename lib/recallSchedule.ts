@@ -79,8 +79,9 @@ export function mergeCards(deck: Deck, cards: Card[], noteText: string, now: num
     if (existing) merged.push({ ...existing, a: c.a, hint: c.hint })
     else merged.push(freshCard(c, now))
   }
-  // Topic-tagged cards come from session-end tagging, not this batch — keep them.
-  for (const c of deck.cards) if (c.topic && !seen.has(c.id)) merged.push(c)
+  // Topic-tagged cards come from session-end tagging, not this batch, and cards
+  // already reviewed carry history — keep both ("Add more cards" must not delete).
+  for (const c of deck.cards) if ((c.topic || c.last) && !seen.has(c.id)) merged.push(c)
   return { ...deck, cards: merged, generatedAt: now, noteHash: hashNotes(noteText) }
 }
 
@@ -140,10 +141,19 @@ export const isDue = (c: ScheduledCard, now: number): boolean => c.due <= now
 export const isNew = (c: ScheduledCard): boolean => c.reps === 0 && !c.last
 
 // ── session selection ───────────────────────────────────────────────
-export function buildSession(deck: Deck, now: number): ScheduledCard[] {
+// `uncapped` (topic sessions): review every due card so the topic's tree is
+// fully refreshed; notebook sessions pace new cards and cap the length.
+export function buildSession(deck: Deck, now: number, uncapped = false): ScheduledCard[] {
   const due = deck.cards.filter(c => !isNew(c) && isDue(c, now)).sort((a, b) => a.due - b.due)
-  const fresh = deck.cards.filter(c => isNew(c) && isDue(c, now)).slice(0, NEW_PER_SESSION)
-  return [...due, ...fresh].slice(0, SESSION_CAP)
+  const fresh = deck.cards.filter(c => isNew(c) && isDue(c, now))
+  if (uncapped) return [...due, ...fresh]
+  return [...due, ...fresh.slice(0, NEW_PER_SESSION)].slice(0, SESSION_CAP)
+}
+
+// How many cards a notebook session would show right now — badges use this so
+// "recall · N" matches the session it opens.
+export function sessionDueCount(deck: Deck, now: number): number {
+  return buildSession(deck, now).length
 }
 
 export interface DeckStats {
