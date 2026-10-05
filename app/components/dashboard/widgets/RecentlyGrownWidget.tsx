@@ -1,6 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { TREE_TYPES } from "@/app/constants"
+import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 import { CachedPlantImage } from "./CachedPlantImage"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 
@@ -12,9 +13,21 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
   const styled = useMemo(() => {
     if (grove.length === 0) return []
     const recent = [...grove].sort((a, b) => new Date(b.plantedAt).getTime() - new Date(a.plantedAt).getTime()).slice(0, 5)
+    // Freshness per topic (reads localStorage) — once per grove change, not per frame.
+    const fresh: Record<string, number> = {}
     return recent.map((tree, i) => {
       const seed = ((tree.type.charCodeAt(0) * 7 + i * 13) % 100) / 100
-      return { tree, yOff: Math.round(seed * 6 - 1), tilt: ((seed * 6) - 3) * 0.5, size: 34 + Math.round(seed * 4) }
+      const name = TREE_TYPES[tree.type]?.name ?? tree.type
+      let label = name
+      let filter: string | undefined
+      if (tree.topic) {
+        const k = normalizeTopic(tree.topic)
+        if (!(k in fresh)) fresh[k] = topicFreshness(tree.topic)
+        filter = freshnessFilter(fresh[k])
+        label = `${name} · ${tree.topic}`
+        if (isTopicTree(tree) && !isFullyGrown(tree)) label += ` · ${Math.floor(tree.recallDone || 0)}/${tree.recallNeeded} recalled`
+      }
+      return { tree, label, filter, yOff: Math.round(seed * 6 - 1), tilt: ((seed * 6) - 3) * 0.5, size: 34 + Math.round(seed * 4) }
     })
   }, [grove])
 
@@ -64,13 +77,15 @@ const RecentlyGrownWidget = memo(function RecentlyGrownWidget({ isDark, grove }:
           animation: `conveyorScroll ${duration}s linear infinite`,
           willChange: 'transform',
         }}>
-          {tiled.map(({ tree, yOff, tilt, size }, i) => (
-            <div key={`t-${i}`} title={TREE_TYPES[tree.type]?.name ?? tree.type} style={{
+          {tiled.map(({ tree, label, filter, yOff, tilt, size }, i) => (
+            <div key={`t-${i}`} title={label} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               width: itemW, flexShrink: 0, marginBottom: yOff,
               transform: `rotate(${tilt}deg)`,
             }}>
-              <CachedPlantImage type={tree.type} size={size} stage={tree.stage} />
+              <div style={filter ? { filter } : undefined}>
+                <CachedPlantImage type={tree.type} size={size} stage={tree.stage} />
+              </div>
               <div style={{
                 width: size * 0.6, height: 3, borderRadius: '50%', marginTop: -2,
                 background: isDark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.12)',

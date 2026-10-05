@@ -6,6 +6,7 @@ import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import { MiniRings } from './StatsView'
+import { isFullyGrown } from "@/lib/topics"
 
 interface TimerSidebarPanelProps {
   isOpen: boolean
@@ -205,6 +206,22 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [justWatered, setJustWatered] = useState(false)
+  // Quiet "N cards queued · Topic" note after a session; fades on its own.
+  const [queued, setQueued] = useState<{ count: number; topic: string; key: number } | null>(null)
+  useEffect(() => {
+    const onQueued = (e: Event) => {
+      const d = (e as CustomEvent<{ noteId?: string; topic?: string; count?: number }>).detail
+      if (!d?.count) return
+      setQueued({ count: d.count, topic: d.topic || '', key: Date.now() })
+    }
+    window.addEventListener('pulp-cards-queued', onQueued)
+    return () => window.removeEventListener('pulp-cards-queued', onQueued)
+  }, [])
+  useEffect(() => {
+    if (!queued) return
+    const t = setTimeout(() => setQueued(null), 6000)
+    return () => clearTimeout(t)
+  }, [queued])
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
   const [pageLeft, setPageLeft] = useState<number | null>(null)
   useEffect(() => {
@@ -256,7 +273,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const treeType = selectedSeed || 'tangerine'
   const treeInfo = TREE_TYPES[treeType]
   const growthTarget = treeInfo?.growthMinutes || 25
-  const baseSap = treeInfo?.sapYield || 2
   const hour = new Date().getHours()
   const isEarlyBird = hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
@@ -265,11 +281,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMin = total > 0 ? Math.round(total / 60) : 0
-  // Tree maxes out at its grow time, but sap keeps climbing past full-grown
-  // (at half rate) so longer sessions are still rewarded.
-  const rawContribution = growthTarget > 0 ? (priorMinutes + sessionMin) / growthTarget : 0
-  const sessionContribution = rawContribution <= 1 ? rawContribution : 1 + (rawContribution - 1) * 0.5
-  const effectiveSap = Math.round(baseSap * multiplier * sessionContribution)
+  // Matches VitalitySystem's per-minute payout: only fully grown trees make sap.
+  const groveSap = grove.reduce((sum, t) => sum + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0)
+  const sapPerMinute = isHibernating ? 0 : Math.max(1, Math.round((groveSap / 60) * multiplier))
+  const effectiveSap = sapPerMinute * sessionMin
   const sessionMinutes = total > 0 ? elapsed / 60 : 0
   const cumulativeMinutes = priorMinutes + sessionMinutes
   const cumulativeRatio = Math.min(1, cumulativeMinutes / growthTarget)
@@ -308,7 +323,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const waterFrac = waterWindowMs > 0 ? Math.max(0, Math.min(1, waterMsLeft / waterWindowMs)) : 0
   const waterColor = "#0ea5e9"
   // Sap accrued so far this session — ramps toward the projected payout as time passes.
-  const liveSap = total > 0 ? Math.round(effectiveSap * Math.min(1, elapsed / total)) : 0
+  const liveSap = sapPerMinute * Math.floor(elapsed / 60)
 
   // Tree + watering can as reusable blocks so they can swap places while running.
   const treeVisual = (
@@ -659,12 +674,29 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <div className="text-center" style={{ marginTop: 4 }}>
                     <span style={{ fontFamily: serifFont, letterSpacing: '0.02em', fontSize: 11, color: willFinish ? mainColor : subtleColor }}>
                       {willFinish
-                        ? priorMinutes > 0 ? `${remaining} min left — will fully grow` : `${growthTarget} min — will fully grow`
+                        ? priorMinutes > 0 ? `${remaining} min left — grows a sapling` : `${growthTarget} min — grows a sapling`
                         : priorMinutes > 0 ? `${remaining} min left · ${sessionMin}min set — grows ${Math.round(sessionMin / remaining * 100)}%` : `${growthTarget} min to grow · ${sessionMin}min set — grows ${Math.round(sessionMin / growthTarget * 100)}%`}
                     </span>
+                    <div style={{ fontFamily: serifFont, fontSize: 10, fontStyle: 'italic', color: subtleColor, opacity: 0.8, marginTop: 2 }}>
+                      focus grows a sapling · recall finishes it
+                    </div>
                   </div>
                 )
               })()}
+
+              {/* Cards queued from the last session — quiet, fades out */}
+              <AnimatePresence>
+                {queued && (
+                  <motion.div
+                    key={queued.key}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}
+                    className="text-center"
+                    style={{ marginTop: 4, fontFamily: serifFont, fontSize: 11, color: subtleColor }}
+                  >
+                    <span style={{ color: mainColor }}>{queued.count}</span> card{queued.count === 1 ? '' : 's'} queued{queued.topic ? ` · ${queued.topic}` : ''}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Growth timeline */}
               {(running || done) && !treeDead && (
@@ -710,6 +742,21 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               {!running && (
                 <div className="w-full">
                   <div className="flex items-center justify-center gap-2 mb-3">
+                    {/* Dev-only 30s preset for quick testing */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <button
+                        onClick={() => onSetTotal(30)}
+                        className="px-2.5 py-0.5 rounded-lg text-[10px] font-normal transition-all"
+                        style={{
+                          fontFamily: 'Inter, system-ui, sans-serif',
+                          color: total === 30 ? textColor : subtleColor,
+                          backgroundColor: total === 30 ? `${mainColor}20` : 'transparent',
+                          border: `1px solid ${total === 30 ? `${mainColor}40` : 'transparent'}`,
+                        }}
+                      >
+                        30s
+                      </button>
+                    )}
                     {[15, 45, 90].map(m => (
                       <button
                         key={m}
@@ -735,7 +782,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       className="absolute top-0 left-0 h-full rounded-full"
                       style={{
                         backgroundColor: `${mainColor}40`,
-                        width: `${((total / 60 - 5) / 175) * 100}%`,
+                        width: `${Math.max(0, (total / 60 - 5) / 175) * 100}%`,
                       }}
                     />
                     {[30, 60, 90, 120].map(sp => (
@@ -752,7 +799,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         height: 11,
                         marginLeft: -5.5,
                         backgroundColor: mainColor,
-                        left: `${((total / 60 - 5) / 175) * 100}%`,
+                        left: `${Math.max(0, (total / 60 - 5) / 175) * 100}%`,
                         boxShadow: `0 0 0 2px ${bgColor}, 0 0 6px ${mainColor}55`,
                       }}
                     />
@@ -760,7 +807,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   <div className="flex justify-between text-[9px] uppercase tracking-[0.1em]" style={{ color: subtleColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
                     <span>5m</span>
                     <span className="tabular-nums" style={{ color: textColor, fontWeight: 400 }}>
-                      {Math.floor(total / 60)} min
+                      {total < 60 ? `${total} sec` : `${Math.floor(total / 60)} min`}
                     </span>
                     <span>180m</span>
                   </div>

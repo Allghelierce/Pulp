@@ -1,9 +1,14 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { PlantIcon } from "./PlantIcon"
+import { TREE_TYPES } from "@/app/constants"
+import { topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 
-export type PreviewTree = { type: string; stage?: number; x: number; y: number }
+export type PreviewTree = {
+  type: string; stage?: number; x: number; y: number
+  topic?: string; recallNeeded?: number; recallDone?: number
+}
 
 /**
  * Static orchard for marketing surfaces (landing belt cards).
@@ -26,9 +31,22 @@ export const OrchardPreview = memo(function OrchardPreview({
   posX?: number
   posY?: number
 }) {
+  // Freshness per topic (reads localStorage) — once per tree set, not per render frame.
+  const freshByTopic = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const t of trees) {
+      if (!t.topic) continue
+      const k = normalizeTopic(t.topic)
+      if (!(k in m)) m[k] = topicFreshness(t.topic)
+    }
+    return m
+  }, [trees])
+
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, transform: `scale(${scale})`, transformOrigin: `${posX}% ${posY}%` }}>
+        {/* Plain <img>: decorative background, duplicated across belt cards. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/landing-terrain.png"
           alt=""
@@ -50,9 +68,17 @@ export const OrchardPreview = memo(function OrchardPreview({
           const depthScale = 0.6 + depthT * 0.55
           const size = Math.round((baseSize * depthScale) / 16) * 16 || 16
           const scaleY = 0.74 + depthT * 0.26
+          const base = "brightness(0.82) saturate(0.85)"
+          const filter = t.topic ? `${base} ${freshnessFilter(freshByTopic[normalizeTopic(t.topic)] ?? 1)}` : base
+          let label: string | undefined
+          if (t.topic) {
+            label = `${TREE_TYPES[t.type]?.name ?? t.type} · ${t.topic}`
+            if (t.recallNeeded != null && (t.recallDone || 0) < t.recallNeeded) label += ` · ${Math.floor(t.recallDone || 0)}/${t.recallNeeded} recalled`
+          }
           return (
             <div
               key={i}
+              title={label}
               style={{
                 position: "absolute",
                 left: `${t.x}%`,
@@ -60,8 +86,8 @@ export const OrchardPreview = memo(function OrchardPreview({
                 transform: `translate(-50%, -76%) scaleY(${scaleY})`,
                 transformOrigin: "center bottom",
                 zIndex: Math.round(t.y),
-                filter: "brightness(0.82) saturate(0.85)",
-                pointerEvents: "none",
+                filter,
+                pointerEvents: label ? "auto" : "none",
               }}
             >
               <PlantIcon type={t.type} size={size} stage={t.stage ?? 3} hideGround />
