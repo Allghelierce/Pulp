@@ -9,15 +9,12 @@ interface DocumentToolbarProps {
   zoom: string
   theme: "light" | "dark"
   gridView: boolean
-  sketchMode: boolean
   drawLineMode: boolean
   currentPageIdx: number
   saveSelection: () => void
   setZoom: (v: string) => void
   setCarouselIdx: (idx: number) => void
   setGridView: (fn: (v: boolean) => boolean) => void
-  setSketchMode: (v: boolean) => void
-  setSketchPrompt: (v: string) => void
   setDrawLineMode: (v: boolean) => void
   insertTable: (rows: number, cols: number) => void
   insertColumns: (num: number) => void
