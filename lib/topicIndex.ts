@@ -19,6 +19,7 @@ export interface TopicRow {
   banked: number
   freshness: number      // 0..1
   lastStudied: number    // newest card review or tree plant, epoch ms
+  nextDue: number        // soonest future due among cards not due yet, 0 if none
 }
 
 function readDecks(): Deck[] {
@@ -40,7 +41,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
     const key = normalizeTopic(name)
     let r = rows.get(key)
     if (!r) {
-      r = { key, name: name.trim(), due: 0, cards: 0, dueByNotebook: {}, notebookIds: [], saplings: 0, fullTrees: 0, recallLeft: 0, banked: 0, freshness: 1, lastStudied: 0 }
+      r = { key, name: name.trim(), due: 0, cards: 0, dueByNotebook: {}, notebookIds: [], saplings: 0, fullTrees: 0, recallLeft: 0, banked: 0, freshness: 1, lastStudied: 0, nextDue: 0 }
       rows.set(key, r)
     }
     return r
@@ -56,7 +57,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
       if (isDue(c, now)) {
         r.due++
         r.dueByNotebook[deck.noteId] = (r.dueByNotebook[deck.noteId] || 0) + 1
-      }
+      } else if (!r.nextDue || c.due < r.nextDue) r.nextDue = c.due
       if (c.last) r.lastStudied = Math.max(r.lastStudied, c.last)
     }
   }

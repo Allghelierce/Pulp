@@ -255,6 +255,19 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     return () => window.removeEventListener("keydown", onKey)
   }, [phase, revealed, grade, suggestedGrade, allowedGrades])
 
+  // Esc closes — unless a typed answer would be lost.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return
+      if (phase === "card" && !revealed && answer.trim()) return
+      if (grading || phase === "generating") return
+      e.preventDefault()
+      onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [phase, revealed, answer, grading, onClose])
+
   const stats = deck ? deckStats(scoped(deck), now) : null
   const gradeColor = (g: Grade): string =>
     g === "again" ? (isDark ? "#f87171" : "#dc2626")

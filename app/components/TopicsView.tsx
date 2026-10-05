@@ -15,6 +15,16 @@ const relTime = (ms: number, now: number) => {
   return `${Math.floor(d / 30)} mo ago`
 }
 
+// "tomorrow", "in 3h", "in 5 days" — when a topic's next card comes due.
+const dueIn = (ms: number, now: number) => {
+  const h = (ms - now) / 3_600_000
+  if (h < 1) return "soon"
+  const days = Math.round((new Date(ms).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 86_400_000)
+  if (days === 0) return `in ${Math.round(h)}h`
+  if (days === 1) return "tomorrow"
+  return days < 30 ? `in ${days} days` : `in ${Math.round(days / 30)} mo`
+}
+
 // Every topic you've studied, most urgent first. The front door to recall:
 // find a topic, see how it's doing, recall it, or jump to its trees.
 export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes, onClose, onRecall, onShowTopic }: {
@@ -34,6 +44,18 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
     window.addEventListener("focus", refresh)
     return () => { window.removeEventListener("pulp-cards-queued", refresh); window.removeEventListener("focus", refresh) }
   }, [])
+
+  // Esc clears the search first, then closes.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return
+      e.preventDefault()
+      if (query) setQuery("")
+      else onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [query, onClose])
 
   const now = Date.now()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is a refresh trigger
@@ -141,7 +163,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                     style={{ flexShrink: 0, background: accent, color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontSize: 14, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap" }}
                   >Recall · {r.due}</button>
                 ) : (
-                  <span style={{ flexShrink: 0, fontSize: 12.5, color: subtle, whiteSpace: "nowrap" }}>{r.cards > 0 ? "all caught up" : "no cards"}</span>
+                  <span style={{ flexShrink: 0, fontSize: 12.5, color: subtle, whiteSpace: "nowrap" }}>{r.cards === 0 ? "no cards" : r.nextDue ? `next ${dueIn(r.nextDue, now)}` : "all caught up"}</span>
                 )}
               </motion.div>
             )
