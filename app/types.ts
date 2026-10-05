@@ -59,6 +59,11 @@ export interface Tree {
   focusMinutes?: number
   growthTarget?: number
   lastHarvest?: number
+  // Topics-as-trees (see docs/timer-recall-design.txt). Trees without
+  // `recallNeeded` are legacy and keep their timer-only growth rules.
+  topic?: string        // AI-named topic of the session that planted it
+  recallNeeded?: number // correct-answer weight needed to go sapling -> full
+  recallDone?: number   // correct-answer weight absorbed so far
 }
 
 export interface SlashMenuState {
