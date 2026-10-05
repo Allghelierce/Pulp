@@ -2841,6 +2841,10 @@ export default function NoteApp() {
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    // The user's JWT (not the anon key) so row-level security accepts the keepalive writes.
+    let accessToken = ''
+    supabase.auth.getSession().then(({ data }) => { accessToken = data.session?.access_token || '' })
+    const { data: authSub } = supabase.auth.onAuthStateChange((_e, session) => { accessToken = session?.access_token || '' })
 
     const flushAll = () => {
       const { settings: s, grove: g, user: u, dirty, folders: f } = flushRefs.current
@@ -2859,7 +2863,7 @@ export default function NoteApp() {
       dirty.settings = false; dirty.grove = false; dirty.note = false; dirty.folders = false; dirty.bookmarks = false
 
       if (!u) return
-      const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }
+      const headers = { apikey: supabaseKey, Authorization: `Bearer ${accessToken || supabaseKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }
 
       if (dGrove && g) {
         const invMap: Record<string, number> = {}
@@ -2869,14 +2873,16 @@ export default function NoteApp() {
           body: JSON.stringify({ user_id: u.id, gems: 0, juice: g.juice, last_char_count: g.lastCharCount, grove: g.grove, inventory: invMap, unlocked_cosmetics: g.unlockedCosmetics })
         }).catch(() => {})
       }
-      if (dNote) {
-        const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
-        if (note) {
-          fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, {
-            method: 'POST', headers, keepalive: true,
-            body: JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
-          }).catch(() => {})
-        }
+      // Cloud note queue is tracked separately from the local-save flag (which clears first).
+      const noteIds = new Set(cloudPending.current)
+      if (dNote && activeTabIdRef.current) noteIds.add(activeTabIdRef.current)
+      const cloudNotes = notesRef.current.filter(n => noteIds.has(n.id) && !n.deletedAt)
+      if (cloudNotes.length) {
+        cloudPending.current.clear()
+        fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, {
+          method: 'POST', headers, keepalive: true,
+          body: JSON.stringify(cloudNotes.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })))
+        }).catch(() => {})
       }
       if (dSettings && s) {
         fetch(`${supabaseUrl}/rest/v1/settings?on_conflict=user_id`, {
@@ -2899,6 +2905,7 @@ export default function NoteApp() {
     window.addEventListener('beforeunload', onBeforeUnload)
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () => {
+      authSub.subscription.unsubscribe()
       window.removeEventListener('beforeunload', onBeforeUnload)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
@@ -2974,27 +2981,47 @@ export default function NoteApp() {
     return () => clearTimeout(groveSaveTimer.current)
   }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
 
-  // Cloud autosave (debounced off notes array, not activeNote object ref)
+  // Cloud autosave (debounced off notes array). Every note whose object changed
+  // since the last run is queued — not just the active one — so edits made right
+  // before a tab switch, folder moves, and renames of other notes all sync.
   const cloudSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const cloudAbort = useRef<AbortController | undefined>(undefined)
+  const cloudPending = useRef<Set<string>>(new Set())
+  const cloudPrevNotes = useRef<NoteData[] | null>(null)
   useEffect(() => {
-    if (!autoSave || isLoading || !user || !activeTabId) return
+    if (!autoSave || isLoading || !user) { cloudPrevNotes.current = null; return }
+    const prev = cloudPrevNotes.current
+    cloudPrevNotes.current = notes
+    if (!prev) return // first run after load: nothing edited yet
+    const before = new Map(prev.map(n => [n.id, n]))
+    for (const n of notes) if (before.get(n.id) !== n) cloudPending.current.add(n.id)
+    if (cloudPending.current.size === 0) return
     flushRefs.current.dirty.note = true
     clearTimeout(cloudSaveTimer.current)
     cloudAbort.current?.abort()
     cloudSaveTimer.current = setTimeout(async () => {
       flushRefs.current.dirty.note = false
-      const note = notesRef.current.find(n => n.id === activeTabIdRef.current)
-      if (!note) return
+      const ids = [...cloudPending.current]
+      cloudPending.current.clear()
+      const batch = ids.map(id => notesRef.current.find(n => n.id === id)).filter((n): n is NoteData => !!n && !n.deletedAt)
+      if (!batch.length) return
       const ac = new AbortController()
       cloudAbort.current = ac
-      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id }, { signal: ac.signal } as any)
-      if (ac.signal.aborted) return
-      if (error) console.error("Save failed:", error.message)
-      else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }), signal: ac.signal }).catch(() => { })
+      const { error } = await supabase.from("notes").upsert(batch.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })), { signal: ac.signal } as any)
+      if (ac.signal.aborted || error) {
+        // Superseded or failed: requeue so the next save carries these notes too.
+        for (const id of ids) cloudPending.current.add(id)
+        if (error && !ac.signal.aborted) { flushRefs.current.dirty.note = true; console.error("Save failed:", error.message) }
+        return
+      }
+      for (const note of batch) {
+        apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }), signal: ac.signal }).catch(() => { })
+      }
     }, 800)
-    return () => { clearTimeout(cloudSaveTimer.current); cloudAbort.current?.abort() }
-  }, [notes, user, autoSave, isLoading, activeTabId])
+    // Only the timer is cleared here; an in-flight save is aborted (and requeued)
+    // only when a newer save is actually scheduled above.
+    return () => clearTimeout(cloudSaveTimer.current)
+  }, [notes, user, autoSave, isLoading])
 
   // Sync editor DOM with active note/page
   const lastSyncKey = useRef<string>("")
@@ -3325,9 +3352,12 @@ export default function NoteApp() {
   const deleteNote = (id: string) => {
     const note = notes.find(n => n.id === id)
     if (!note) return
-    setNotes(ns => ns.filter(n => n.id !== id))
+    // Subpages move up to the deleted note's parent instead of becoming unreachable.
+    setNotes(ns => ns.filter(n => n.id !== id).map(n => n.parentId === id ? { ...n, parentId: note.parentId } : n))
     setTrashNotes(ts => [...ts, { ...note, deletedAt: new Date().toISOString() }])
-    if (activeTabId === id) setActiveTabId(null)
+    // Open another notebook rather than none: with no active tab, edits to the
+    // fallback note on screen would have nowhere to go.
+    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id && !n.archived && !n.deletedAt)?.id ?? null)
     if (user) {
       cloudWrite(supabase.from("notes").delete().eq("id", id), "note delete")
       db.addToTrash(user.id, id)
@@ -3362,9 +3392,9 @@ export default function NoteApp() {
   }, [user])
 
   const archiveNote = useCallback((id: string) => {
-    if (activeTabId === id) setActiveTabId(null)
+    if (activeTabId === id) setActiveTabId(notes.find(n => n.id !== id && !n.archived && !n.deletedAt)?.id ?? null)
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: true } : n))
-  }, [activeTabId])
+  }, [activeTabId, notes])
 
   const unarchiveNote = useCallback((id: string) => {
     setNotes(ns => ns.map(n => n.id === id ? { ...n, archived: false } : n))
