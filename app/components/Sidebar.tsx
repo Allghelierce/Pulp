@@ -75,6 +75,7 @@ interface SidebarProps {
   sidebarWidth: number
   isDragging?: boolean
   unlockedIds: Set<string>
+  vaultLockVersion?: number
   onAddNote: (folderId?: number | null) => void
   onAddTypedNote: (folderId: number | null, noteType?: "notebook" | "singlepage" | "vault" | "cornell") => void
   onAddFolder: () => void
@@ -124,7 +125,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = memo(function Sidebar({
-  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds,
+  notes, folders, activeTabId, accent, draggedNoteId, renamingFolder, user, sidebarWidth, isDragging, unlockedIds, vaultLockVersion,
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, timerRunning, onUnlockDev, onGoToShelf,
@@ -209,7 +210,8 @@ export const Sidebar = memo(function Sidebar({
       if (results.length >= 20) break
     }
     return results
-  }, [searchQuery, notes, stripHtml])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- vaultLockVersion: unlock state is a ref
+  }, [searchQuery, notes, stripHtml, vaultLockVersion])
 
   useEffect(() => {
     const q = searchQuery.trim()
@@ -247,7 +249,8 @@ export const Sidebar = memo(function Sidebar({
       setAiSearching(false)
     }, 400)
     return () => { if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current) }
-  }, [searchQuery, notes, stripHtml])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- vaultLockVersion: unlock state is a ref
+  }, [searchQuery, notes, stripHtml, vaultLockVersion])
 
   useEffect(() => {
     if (!searchFocused) return

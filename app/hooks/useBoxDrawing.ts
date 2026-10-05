@@ -559,7 +559,7 @@ export function useBoxDrawing({
     document.addEventListener('mouseup', handleUp.current)
   }, [])
 
-  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '' || !!b.boxHighlightColor || selectedBoxIdsRef.current.has(b.id))), [updateBoxes])
+  const pruneEmpty = useCallback(() => updateBoxes(bs => bs.filter(b => b.content.trim() !== '' || !!b.boxHighlightColor || !!b.template || selectedBoxIdsRef.current.has(b.id))), [updateBoxes])
 
   const startDrag = useCallback((e: React.MouseEvent, box: TextBox) => {
     const target = e.target as HTMLElement

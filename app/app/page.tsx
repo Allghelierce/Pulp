@@ -1288,6 +1288,10 @@ export default function NoteApp() {
   const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const unlockedVaults = useRef<Set<string>>(new Set())
+  // Bumped on every lock/unlock so memos that hide vault text recompute.
+  const [vaultLockVersion, setVaultLockVersion] = useState(0)
+  const unlockVault = (id: string) => { unlockedVaults.current.add(id); setVaultLockVersion(v => v + 1) }
+  const lockVault = (id: string) => { unlockedVaults.current.delete(id); setVaultLockVersion(v => v + 1) }
   // A vault nobody unlocked this session: its text stays off-screen and out of AI/recall.
   const isLockedVault = (n: NoteData | null | undefined): boolean => n?.noteType === "vault" && !unlockedVaults.current.has(n.id)
   const grove = useGroveStore(s => s.grove)
@@ -1777,7 +1781,8 @@ export default function NoteApp() {
   // Built only while the AI hub is open; rebuilt when the note or page changes.
   const aiNotebookContext = useMemo(
     () => (activeNote && aiHubOpen && !isLockedVault(activeNote) ? notebookContext(activeNote, currentPageIdx) : undefined),
-    [activeNote, aiHubOpen, currentPageIdx]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- vaultLockVersion: lock state lives in a ref
+    [activeNote, aiHubOpen, currentPageIdx, vaultLockVersion]
   )
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
@@ -2882,14 +2887,16 @@ export default function NoteApp() {
       dirty.settings = false; dirty.grove = false; dirty.note = false; dirty.folders = false; dirty.bookmarks = false
 
       if (!u) return
+      let keepaliveBytes = 0 // shared 64KB keepalive quota across this flush
       const headers = { apikey: supabaseKey, Authorization: `Bearer ${accessToken || supabaseKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' }
 
       if (dGrove && g) {
         const invMap: Record<string, number> = {}
         for (const item of g.inventory) invMap[item] = (invMap[item] || 0) + 1
+        const groveBody = JSON.stringify({ user_id: u.id, gems: 0, juice: g.juice, last_char_count: g.lastCharCount, grove: g.grove, inventory: invMap, unlocked_cosmetics: g.unlockedCosmetics })
+        keepaliveBytes += new TextEncoder().encode(groveBody).length
         fetch(`${supabaseUrl}/rest/v1/player_profiles?on_conflict=user_id`, {
-          method: 'POST', headers, keepalive: true,
-          body: JSON.stringify({ user_id: u.id, gems: 0, juice: g.juice, last_char_count: g.lastCharCount, grove: g.grove, inventory: invMap, unlocked_cosmetics: g.unlockedCosmetics })
+          method: 'POST', headers, keepalive: true, body: groveBody,
         }).catch(() => {})
       }
       // Cloud note queue is tracked separately from the local-save flag (which clears first).
@@ -2898,9 +2905,11 @@ export default function NoteApp() {
       const noteIds = new Set(cloudPending.current)
       if (dNote && activeTabIdRef.current) noteIds.add(activeTabIdRef.current)
       // The 64KB keepalive quota is shared by all in-flight requests: budget bytes.
-      let budget = 56_000
+      let budget = 56_000 - keepaliveBytes
       const enc = new TextEncoder()
-      for (const note of notesRef.current) {
+      // Active note first: it's the one most likely mid-edit.
+      const ordered = [...notesRef.current].sort((a, b) => (b.id === activeTabIdRef.current ? 1 : 0) - (a.id === activeTabIdRef.current ? 1 : 0))
+      for (const note of ordered) {
         if (!noteIds.has(note.id) || note.deletedAt) continue
         const body = JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
         const bytes = enc.encode(body).length
@@ -3253,7 +3262,7 @@ export default function NoteApp() {
           ? { ...baseNote, pages: [""], icon: "🔐" }
           : { ...baseNote, pages: [""] }
 
-      if (noteType === "vault") unlockedVaults.current.add(id)
+      if (noteType === "vault") unlockVault(id)
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
@@ -3704,7 +3713,7 @@ export default function NoteApp() {
                   if (n?.noteType === "vault" && !unlockedVaults.current.has(id)) {
                     openPrompt("Vault Locked", "", "Enter password", "Unlock", pwd => {
                       if (pwd === (n.password || "")) {
-                        unlockedVaults.current.add(id)
+                        unlockVault(id)
                         editor.flushSync(); setActiveTabId(id); setCurrentPageIdx(0); setCurrentView("editor")
                       } else {
                         openAlert("Access Denied", "Incorrect password.")
@@ -3720,6 +3729,7 @@ export default function NoteApp() {
                 onArchiveNote={archiveNote}
                 onUnarchiveNote={unarchiveNote}
                 unlockedIds={unlockedVaults.current}
+                vaultLockVersion={vaultLockVersion}
                 onToggleFolder={toggleFolder}
                 onRenameFolder={renameFolder}
                 onDeleteFolder={deleteFolder}
@@ -3904,7 +3914,7 @@ export default function NoteApp() {
                   isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
                   onLock={() => {
                     if (activeNote) {
-                      unlockedVaults.current.delete(activeNote.id)
+                      lockVault(activeNote.id)
                       setNotes(prev => [...prev])
                     }
                   }}
@@ -4158,7 +4168,7 @@ export default function NoteApp() {
                             }
                             if (boxEl) {
                               const box = (activeNote.boxes[currentPageIdx] || []).find(b => b.id === clickedBoxId)
-                              if (!box || box.content.trim() !== '' || box.boxHighlightColor) return
+                              if (!box || box.template || box.content.trim() !== '' || box.boxHighlightColor) return
                             }
                             boxes.onPaperMouseDown(e)
                           }}
@@ -4192,7 +4202,7 @@ export default function NoteApp() {
                                     if (n) {
                                       openPrompt("Vault Locked", "", "Enter password", "Unlock", pwd => {
                                         if (pwd === (n.password || "")) {
-                                          unlockedVaults.current.add(n.id)
+                                          unlockVault(n.id)
                                           setNotes(prev => [...prev])
                                         } else {
                                           openAlert("Access Denied", "Incorrect password.")
@@ -4704,7 +4714,8 @@ export default function NoteApp() {
                       setGrove(next)
                       // Name the tree that grew (an untagged card may grow a topic's sapling).
                       const grew = next.find((t, i) => t !== current[i])
-                      return { grew: grew?.topic || topic || "sapling" }
+                      // Untagged tree: no named chip to show (or focus in the orchard).
+                      return grew?.topic || topic ? { grew: (grew?.topic || topic)! } : "none"
                     }}
                     onComplete={({ reviewed, again, practice }) => {
                       if (practice) return // reviewing ahead earns nothing
