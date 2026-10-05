@@ -779,7 +779,7 @@ export const Sidebar = memo(function Sidebar({
             <button onClick={onOpenRecall} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
               <span className="text-[12px] font-normal" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em', color: '#d97706' }}>recall</span>
-              {recallDue > 0 && <span className="ml-auto tabular-nums text-[10.5px]" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', background: 'rgba(217,119,6,0.12)', borderRadius: 999, padding: '0 7px' }}>{recallDue} due</span>}
+              {recallDue > 0 && <span className="ml-auto mr-8 tabular-nums text-[10.5px]" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', background: 'rgba(217,119,6,0.12)', borderRadius: 999, padding: '0 7px' }}>{recallDue} due</span>}
             </button>
           )}
           {onOpenShop && (

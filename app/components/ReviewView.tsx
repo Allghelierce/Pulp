@@ -287,7 +287,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           {stats && phase !== "loading" && (
             <div style={{ fontSize: 12, color: muted, display: "flex", gap: 12 }}>
               <span title="Due now"><b style={{ color: stats.dueNow ? accent : muted }}>{stats.dueNow}</b> due</span>
-              <span title="New cards">{stats.newCount} new</span>
+              {stats.total > stats.dueNow && <span title="Scheduled for later">{stats.total - stats.dueNow} later</span>}
               <span title="Mature cards">{stats.mature} mature</span>
             </div>
           )}

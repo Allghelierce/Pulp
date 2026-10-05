@@ -87,7 +87,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
   const rowBg = isDark ? "rgba(255,255,255,0.02)" : "#fff"
 
   const status = (r: TopicRow) => {
-    if (r.saplings > 0) return { text: `sapling · ${r.recallLeft} to grow`, color: accent }
+    if (r.saplings > 0) return { text: `sapling · ${Math.ceil(r.recallLeft)} to grow`, color: accent }
     if (r.freshness < 0.999) return { text: "fading", color: isDark ? "#fbbf24" : "#b45309" }
     if (r.fullTrees > 0) return { text: "fully grown", color: isDark ? "#4ade80" : "#16a34a" }
     if (r.banked > 0) return { text: `${Math.round(r.banked * 10) / 10} banked`, color: muted }
@@ -154,7 +154,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                   <div style={{ fontSize: 12.5, color: subtle, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     <span style={{ color: st.color }}>{st.text}</span>
                     {nb.length > 0 && <> · {nb.join(", ")}</>}
-                    {" · "}{relTime(r.lastStudied, now)}
+                    {r.lastStudied > 0 && <> · {relTime(r.lastStudied, now)}</>}
                   </div>
                 </div>
                 {r.due > 0 ? (
@@ -163,7 +163,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
                     style={{ flexShrink: 0, background: accent, color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontSize: 14, fontFamily: font, cursor: "pointer", whiteSpace: "nowrap" }}
                   >Recall · {r.due}</button>
                 ) : (
-                  <span style={{ flexShrink: 0, fontSize: 12.5, color: subtle, whiteSpace: "nowrap" }}>{r.cards === 0 ? "no cards" : r.nextDue ? `next ${dueIn(r.nextDue, now)}` : "all caught up"}</span>
+                  <span style={{ flexShrink: 0, fontSize: 12.5, color: subtle, whiteSpace: "nowrap" }}>{r.cards === 0 ? "no cards" : r.nextDue ? `ready ${dueIn(r.nextDue, now)}` : "all caught up"}</span>
                 )}
               </motion.div>
             )
