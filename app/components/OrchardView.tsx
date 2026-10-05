@@ -3891,7 +3891,7 @@ export const OrchardView = memo(function OrchardView({
                                 fontFamily: 'EB Garamond, serif',
                               }}
                             >
-                              Review {ft.topic}
+                              Recall {ft.topic}
                             </button>
                           )}
                           <button

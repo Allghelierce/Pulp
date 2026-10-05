@@ -25,7 +25,7 @@ function readDue(noteId: string): Due {
   return { count, topics: [...byTopic.values()].sort((a, b) => b.n - a.n).map(e => e.name) }
 }
 
-// "5 cards due · Photosynthesis  [Review now]" — keeps recall front and center
+// "5 cards due · Photosynthesis  [Recall now]" — keeps recall front and center
 // on the notebook itself. Dismiss hides it until the due count changes.
 export const DueCard = memo(function DueCard({ noteId, theme, accent, hidden, onReview }: {
   noteId: string | null
@@ -84,7 +84,7 @@ export const DueCard = memo(function DueCard({ noteId, theme, accent, hidden, on
           <button
             onClick={onReview}
             style={{ background: accent, color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 14, fontFamily: font, cursor: "pointer" }}
-          >Review now</button>
+          >Recall now</button>
           <button
             onClick={() => setDismissedAt(key)}
             aria-label="Hide"

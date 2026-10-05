@@ -11,6 +11,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
+import { loadDeck } from "@/lib/recallSchedule"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -32,6 +33,8 @@ import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PlantedToast } from "@/app/components/PlantedToast"
 import { DueCard } from "@/app/components/DueCard"
+import { TopicsView } from "@/app/components/TopicsView"
+import { totalDueAll } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -89,6 +92,14 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 }
 
 const noop = () => { }
+
+// Cards to recall in a notebook: new (never seen) or due now.
+function countRecallDue(noteId: string | undefined): number {
+  const deck = noteId ? loadDeck(noteId) : null
+  if (!deck) return 0
+  const now = Date.now()
+  return deck.cards.filter(c => c.reps === 0 || c.due <= now).length
+}
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
@@ -149,6 +160,7 @@ const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, t
 function htmlToPlain(html: string): string {
   return html.replace(/<br\s*\/?>\n/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
 }
+
 
 function plainToHtml(text: string): string {
   return text
@@ -1245,11 +1257,22 @@ export default function NoteApp() {
   const [statsOpen, setStatsOpen] = useState(false)
   const statsOpenedBeforeRef = useRef(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  // Recall hub (Topics list) + cross-notebook due badge for the sidebar.
+  const [topicsOpen, setTopicsOpen] = useState(false)
+  const [allRecallDue, setAllRecallDue] = useState(0)
+  useEffect(() => {
+    const refresh = () => setAllRecallDue(totalDueAll())
+    const id = setTimeout(refresh, 0)
+    const iv = setInterval(refresh, 60_000)
+    window.addEventListener('pulp-cards-queued', refresh)
+    window.addEventListener('focus', refresh)
+    return () => { clearTimeout(id); clearInterval(iv); window.removeEventListener('pulp-cards-queued', refresh); window.removeEventListener('focus', refresh) }
+  }, [reviewOpen])
   // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
-  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setShowSettings(false); setCommunityOpen(false) }, [])
+  fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -1638,6 +1661,16 @@ export default function NoteApp() {
     () => (notes.find(n => n.id === activeTabId) ?? notes.filter(n => !n.archived)[0]) as NoteData,
     [notes, activeTabId]
   )
+
+  // Toolbar "recall · N" — refreshes when cards are queued and when recall closes.
+  const [recallTick, setRecallTick] = useState(0)
+  useEffect(() => {
+    const refresh = () => setRecallTick(t => t + 1)
+    window.addEventListener('pulp-cards-queued', refresh)
+    return () => window.removeEventListener('pulp-cards-queued', refresh)
+  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- recallTick/reviewOpen are refresh triggers
+  const recallDue = useMemo(() => countRecallDue(activeNote?.id), [activeNote?.id, recallTick, reviewOpen])
 
   const wordCount = useMemo(() => {
     if (!activeNote) return 0
@@ -3571,6 +3604,8 @@ export default function NoteApp() {
                 onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                 onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                 onOpenStats={() => { if (statsOpen) { setStatsOpen(false) } else { startTransition(() => { closeAllPanels(); setStatsOpen(true) }) } }}
+                onOpenRecall={() => { if (topicsOpen) { setTopicsOpen(false) } else { startTransition(() => { closeAllPanels(); setTopicsOpen(true) }) } }}
+                recallDue={allRecallDue}
                 onGoHome={() => { closeAllPanels(); setCurrentView("editor") }}
                 sap={sap}
                 xp={xp}
@@ -3774,6 +3809,7 @@ export default function NoteApp() {
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
+                  recallDue={recallDue}
                   onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) } : undefined}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
@@ -4475,6 +4511,26 @@ export default function NoteApp() {
               </m.div>
               )
             })()}
+            {topicsOpen && !reviewOpen && (
+              <m.div
+                key="topics-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}
+              >
+                <TopicsView
+                  theme={theme}
+                  accent={accentSolid}
+                  grove={grove}
+                  notes={notes.filter(n => !n.archived && !n.deletedAt)}
+                  onClose={() => setTopicsOpen(false)}
+                  onRecall={(topic, notebookId) => { startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) }) }}
+                  onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
+                />
+              </m.div>
+            )}
             {reviewOpen && (() => {
               const reviewNote = notes.find(n => n.id === (reviewNoteId ?? activeTabId))
               if (!reviewNote) return null
@@ -4587,7 +4643,7 @@ export default function NoteApp() {
           </AnimatePresence>
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
           <OrangeAIHub
