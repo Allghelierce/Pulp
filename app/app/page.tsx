@@ -11,7 +11,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
-import { loadDeck } from "@/lib/recallSchedule"
+import { isDue, loadDeck } from "@/lib/recallSchedule"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -93,12 +93,12 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 
 const noop = () => { }
 
-// Cards to recall in a notebook: new (never seen) or due now.
+// Cards to recall in a notebook right now (new ones included once their first due comes).
 function countRecallDue(noteId: string | undefined): number {
   const deck = noteId ? loadDeck(noteId) : null
   if (!deck) return 0
   const now = Date.now()
-  return deck.cards.filter(c => c.reps === 0 || c.due <= now).length
+  return deck.cards.filter(c => isDue(c, now)).length
 }
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
@@ -4593,19 +4593,20 @@ export default function NoteApp() {
                     accent={accentSolid}
                     onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
                     onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
-                    onCorrect={(weight, topic) => {
+                    onCorrect={(weight, topic, treeId) => {
                       // Topics as trees: recall finishes that topic's sapling, or banks
                       // nutrients if none is waiting. Read the store directly (not an
                       // updater) since banking writes localStorage.
                       const current = useGroveStore.getState().grove
-                      const next = applyRecall(current, topic, weight, reviewNote.id)
+                      const next = applyRecall(current, topic, weight, reviewNote.id, treeId)
                       if (next !== current) setGrove(next)
                     }}
-                    onComplete={({ reviewed, again }) => {
+                    onComplete={({ reviewed, again, practice }) => {
+                      if (practice) return // reviewing ahead earns nothing
                       // Sap from recall — rate scaled by the quality of the orchard (full trees only).
                       const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0) / 25))
                       const earned = Math.round(Math.max(0, reviewed - again * 0.5) * 2 * orchardMult)
-                      if (earned > 0) setSap(sap + earned)
+                      if (earned > 0) setSap(prev => prev + earned)
                     }}
                   />
                 </Suspense>

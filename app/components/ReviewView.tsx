@@ -1,12 +1,12 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react"
 import type { NoteData } from "@/app/types"
-import { extractTextFromHTML } from "@/lib/sanitize"
+import { notebookReviewText } from "@/lib/notebookText"
 import { apiFetch } from "@/lib/apiFetch"
 import {
   type Deck, type ScheduledCard, type Grade,
   loadDeck, saveDeck, buildDeck, mergeCards, buildSession, applyGrade,
-  previewIntervals, deckStats, hashNotes,
+  previewIntervals, deckStats, hashNotes, isNew,
 } from "@/lib/recallSchedule"
 import type { GradeResult, Verdict } from "@/lib/recallPrompt"
 import { normalizeTopic } from "@/lib/topics"
@@ -25,30 +25,15 @@ interface ReviewViewProps {
   theme: "light" | "dark"
   accent: string
   onClose: () => void
-  onComplete?: (result: { noteId: string; reviewed: number; again: number }) => void
+  /** `practice` is true for "Review ahead" sessions, which earn nothing. */
+  onComplete?: (result: { noteId: string; reviewed: number; again: number; practice: boolean }) => void
   /** Fired after a graded answer with a 0..1 growth weight (correct = 1, partial = 0.5)
-   *  and the answered card's topic tag (undefined for untagged cards). */
-  onCorrect?: (weight: number, topic?: string) => void
+   *  the answered card's topic tag (undefined for untagged cards), and the tree its session planted. */
+  onCorrect?: (weight: number, topic?: string, treeId?: number) => void
   /** Limit the session to cards tagged with this topic ("Review <topic>" from the orchard). */
   topic?: string
   /** Summary "show in orchard" for a topic whose tree grew this session. */
   onShowTopic?: (topic: string) => void
-}
-
-function gatherNotebookText(note: NoteData): string {
-  const pageTexts = note.pages.map((html, i) => {
-    const text = extractTextFromHTML(html)
-    return text ? `[Page ${i + 1}]\n${text}` : ""
-  }).filter(Boolean)
-  const boxTexts: string[] = []
-  for (const [pageIdx, boxes] of Object.entries(note.boxes)) {
-    for (const box of boxes) {
-      if (!box.content.trim()) continue
-      const text = extractTextFromHTML(box.content)
-      if (text) boxTexts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
-    }
-  }
-  return [...pageTexts, ...boxTexts].join("\n\n")
 }
 
 function relDue(due: number, now: number): string {
@@ -77,7 +62,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const isDark = theme === "dark"
   const font = "'Crimson Pro', serif"
 
-  const noteText = useMemo(() => gatherNotebookText(note), [note])
+  const noteText = useMemo(() => notebookReviewText(note), [note])
   const noteHash = useMemo(() => hashNotes(noteText), [noteText])
 
   // Topic mode: only cards tagged with `topic` are studied/counted.
@@ -201,7 +186,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     // per session counts ("again" requeues can't be farmed), and never when reviewing ahead.
     const weight = result ? VERDICT_WEIGHT[result.verdict] : 0
     if (weight > 0 && firstAttempt && !reviewingAhead.current) {
-      onCorrect?.(weight, current.topic)
+      onCorrect?.(weight, current.topic, current.treeId)
       const t = current.topic
       if (t) {
         setGrown(prev => ({ ...prev, [t]: (prev[t] || 0) + weight }))
@@ -218,7 +203,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     resetAttempt()
     if (nextQueue.length === 0) {
       setPhase("done")
-      onComplete?.({ noteId: note.id, reviewed: studied.current.size, again: [...log, g].filter(x => x === "again").length })
+      onComplete?.({ noteId: note.id, reviewed: studied.current.size, again: [...log, g].filter(x => x === "again").length, practice: reviewingAhead.current })
     } else {
       setQueue(nextQueue)
     }
@@ -361,9 +346,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             </div>
             <div style={{ fontSize: 12.5, color: muted, marginTop: 6 }}>{stats.mature} mature · {stats.learning} learning · {stats.newCount} new</div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
-              {deck && deck.cards.some(c => inScope(c) && c.reps > 0) && (
+              {deck && deck.cards.some(c => inScope(c) && !isNew(c)) && (
                 <button onClick={() => {
-                  const ahead = deck.cards.filter(c => inScope(c) && c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
+                  const ahead = deck.cards.filter(c => inScope(c) && !isNew(c)).sort((a, b) => a.due - b.due).slice(0, 25)
                   if (ahead.length) { studied.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
                 }} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
               )}
@@ -376,8 +361,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           <div style={{ width: "100%", maxWidth: 580 }}>
             <div style={{ fontSize: 12, color: muted, marginBottom: 12, textAlign: "center" }}>
               {studied.current.size + 1} of {studied.current.size + queue.length}
-              {current.reps === 0 && <span style={{ color: accent, marginLeft: 8 }}>new</span>}
-              {current.reps > 0 && current.lapses > 0 && <span style={{ color: isDark ? "#f87171" : "#dc2626", marginLeft: 8 }}>lapsed</span>}
+              {isNew(current) && <span style={{ color: accent, marginLeft: 8 }}>new</span>}
+              {!isNew(current) && current.lapses > 0 && <span style={{ color: isDark ? "#f87171" : "#dc2626", marginLeft: 8 }}>lapsed</span>}
               {current.topic && !topicKey && <span style={{ color: subtle, marginLeft: 8 }}>· {current.topic}</span>}
             </div>
             <div style={{ height: 18, marginTop: -6, marginBottom: 6, textAlign: "center" }}>

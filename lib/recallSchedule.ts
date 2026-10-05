@@ -132,17 +132,24 @@ export function previewIntervals(card: ScheduledCard, now: number): Record<Grade
   }
 }
 
+// ── due / new ───────────────────────────────────────────────────────
+// A card is due once its due time has passed — new cards included, so session
+// cards scheduled for "tomorrow morning" stay quiet until then.
+export const isDue = (c: ScheduledCard, now: number): boolean => c.due <= now
+// Never reviewed. (A lapsed card also has reps 0, but it has `last`.)
+export const isNew = (c: ScheduledCard): boolean => c.reps === 0 && !c.last
+
 // ── session selection ───────────────────────────────────────────────
 export function buildSession(deck: Deck, now: number): ScheduledCard[] {
-  const due = deck.cards.filter(c => c.reps > 0 && c.due <= now).sort((a, b) => a.due - b.due)
-  const fresh = deck.cards.filter(c => c.reps === 0).slice(0, NEW_PER_SESSION)
+  const due = deck.cards.filter(c => !isNew(c) && isDue(c, now)).sort((a, b) => a.due - b.due)
+  const fresh = deck.cards.filter(c => isNew(c) && isDue(c, now)).slice(0, NEW_PER_SESSION)
   return [...due, ...fresh].slice(0, SESSION_CAP)
 }
 
 export interface DeckStats {
   total: number
   dueNow: number      // cards ready to review right now (incl. new)
-  newCount: number
+  newCount: number    // never reviewed (due now or waiting)
   learning: number    // seen but interval < 7d
   mature: number      // interval >= 7d
   nextDue?: number    // soonest future due time among non-due cards
@@ -151,10 +158,10 @@ export interface DeckStats {
 export function deckStats(deck: Deck, now: number): DeckStats {
   let dueNow = 0, newCount = 0, learning = 0, mature = 0, nextDue: number | undefined
   for (const c of deck.cards) {
-    if (c.reps === 0) { newCount++; dueNow++; continue }
-    if (c.due <= now) dueNow++
+    if (isDue(c, now)) dueNow++
     else if (nextDue === undefined || c.due < nextDue) nextDue = c.due
-    if (c.intervalDays >= 7) mature++; else learning++
+    if (isNew(c)) newCount++
+    else if (c.intervalDays >= 7) mature++; else learning++
   }
   return { total: deck.cards.length, dueNow, newCount, learning, mature, nextDue }
 }

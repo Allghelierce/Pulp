@@ -1,7 +1,7 @@
 "use client"
 import { memo, useEffect, useMemo, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { loadDeck } from "@/lib/recallSchedule"
+import { isDue, loadDeck } from "@/lib/recallSchedule"
 import { normalizeTopic } from "@/lib/topics"
 
 interface Due { count: number; topics: string[] }
@@ -14,7 +14,7 @@ function readDue(noteId: string): Due {
   const byTopic = new Map<string, { name: string; n: number }>()
   let count = 0
   for (const c of deck.cards) {
-    if (c.reps > 0 && c.due > now) continue
+    if (!isDue(c, now)) continue
     count++
     if (!c.topic) continue
     const k = normalizeTopic(c.topic)

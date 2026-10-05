@@ -1,7 +1,7 @@
 // One row per topic across all notebooks: due cards, saplings waiting, freshness.
 // Built from recall decks (localStorage) + the grove. Powers the Topics list.
 import type { Tree } from "@/app/types"
-import type { Deck } from "@/lib/recallSchedule"
+import { isDue, type Deck } from "@/lib/recallSchedule"
 import { normalizeTopic, isTopicTree, isFullyGrown, getBanked, topicFreshness } from "@/lib/topics"
 
 const RECALL_PREFIX = "pulp-recall-"
@@ -9,7 +9,7 @@ const RECALL_PREFIX = "pulp-recall-"
 export interface TopicRow {
   key: string            // normalizeTopic(name)
   name: string           // display name
-  due: number            // cards due now (incl. new)
+  due: number            // cards due now (incl. new ones whose first due has come)
   cards: number          // total tagged cards
   dueByNotebook: Record<string, number>
   notebookIds: string[]
@@ -53,7 +53,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
       const r = row(c.topic)
       r.cards++
       addNotebook(r, deck.noteId)
-      if (c.reps === 0 || c.due <= now) {
+      if (isDue(c, now)) {
         r.due++
         r.dueByNotebook[deck.noteId] = (r.dueByNotebook[deck.noteId] || 0) + 1
       }
@@ -86,6 +86,6 @@ export function bestNotebookFor(r: TopicRow): string | undefined {
 // Cards due now across every notebook (tagged or not) — sidebar badge.
 export function totalDueAll(now = Date.now()): number {
   let n = 0
-  for (const deck of readDecks()) for (const c of deck.cards) if (c.reps === 0 || c.due <= now) n++
+  for (const deck of readDecks()) for (const c of deck.cards) if (isDue(c, now)) n++
   return n
 }

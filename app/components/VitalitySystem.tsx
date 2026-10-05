@@ -7,6 +7,7 @@ import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 import { apiFetch } from "@/lib/apiFetch"
 import { recordFocus } from "@/lib/party"
 import { extractTextFromHTML } from "@/lib/sanitize"
+import { notebookReviewText as reviewText } from "@/lib/notebookText"
 import { SAPLING_STAGE, FULL_STAGE, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
 import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
@@ -54,24 +55,6 @@ function noteLines(note: NoteData | null): string {
     for (const box of boxes || []) if (box?.content) parts.push(toText(box.content))
   }
   return parts.join("\n")
-}
-
-// Same text ReviewView fingerprints (its gatherNotebookText), so deck drift stays in sync.
-function reviewText(note: NoteData | null): string {
-  if (!note) return ""
-  const pageTexts = (note.pages || []).map((html: string, i: number) => {
-    const text = extractTextFromHTML(html)
-    return text ? `[Page ${i + 1}]\n${text}` : ""
-  }).filter(Boolean)
-  const boxTexts: string[] = []
-  for (const [pageIdx, boxes] of Object.entries(note.boxes || {}) as [string, TextBox[]][]) {
-    for (const box of boxes || []) {
-      if (!box?.content?.trim()) continue
-      const text = extractTextFromHTML(box.content)
-      if (text) boxTexts.push(`[Page ${Number(pageIdx) + 1} - Text Box]\n${text}`)
-    }
-  }
-  return [...pageTexts, ...boxTexts].join("\n\n")
 }
 
 // Lines present now that weren't in the snapshot (multiset diff).
