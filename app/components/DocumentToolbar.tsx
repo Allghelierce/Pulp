@@ -51,6 +51,8 @@ interface DocumentToolbarProps {
   onOpenChat: () => void
   chatOpen: boolean
   onOpenReview?: () => void
+  /** Cards due (or new) in the active notebook — shown as "recall · N". */
+  recallDue?: number
   isVault?: boolean
   isUnlocked?: boolean
   onLock?: () => void
@@ -97,7 +99,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   onDownload, theme,
   onStartSidebarDrag, sidebarWidth, isSidebarDragging,
   sap, isVault, isUnlocked, onLock,
-  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, isTextActive, onOpenChat, chatOpen, onOpenReview,
+  sidebarOpen, onSidebarToggle, onTimerOpen, onOpenShop, onOpenGrove, onInsertImage, onOpenAiMenu, isTextActive, onOpenChat, chatOpen, onOpenReview, recallDue = 0,
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = [],
   goalStreak = 0,
@@ -564,15 +566,20 @@ export const DocumentToolbar = memo(function DocumentToolbar({
           {!compact && "chat"}
         </button>}
 
-        {/* Review button */}
+        {/* Recall button — amber so it stands out; pill shows cards due */}
         {!ultraCompact && onOpenReview && <button
           onClick={onOpenReview}
-          title="Recall review — quiz yourself on this notebook"
+          title={recallDue > 0 ? `Recall — ${recallDue} card${recallDue === 1 ? '' : 's'} due in this notebook` : "Recall — quiz yourself on this notebook"}
           className={`${btn(false)} flex items-center gap-1.5`}
-          style={btnFont}
+          style={{ ...btnFont, color: '#d97706', border: '1px solid rgba(217,119,6,0.55)' }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-          {!compact && "review"}
+          {!compact && "recall"}
+          {recallDue > 0 && (
+            <span style={{ padding: '0 6px', borderRadius: 999, fontSize: 10, lineHeight: '16px', background: 'rgba(217,119,6,0.16)', fontVariantNumeric: 'tabular-nums' }}>
+              {compact ? recallDue : `· ${recallDue}`}
+            </span>
+          )}
         </button>}
 
 
