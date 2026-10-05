@@ -7,6 +7,7 @@ import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import { MiniRings } from './StatsView'
 import { isFullyGrown } from "@/lib/topics"
+import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
 
 interface TimerSidebarPanelProps {
   isOpen: boolean
@@ -85,41 +86,69 @@ function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { p
   const stage = idle ? idleStage : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
   const plantSize = (idle && idleStage === -1) ? 60 : stage === 0 ? 50 : 70 + Math.max(0, stage) * 12
 
+  // Each stage change replays the plant's entrance and fires a themed burst.
+  // Idle shows PlantIcon stage idleStage, running shows stage - 1, so align them.
+  const visual = (idle ? idleStage + 1 : stage) as VisualStage
+  const burst = useStageTransition(visual, !idle)
+  const entrance = stageEntrance(visual)
+  const animateEntrance = !idle && burst !== null
+
+  const plant = idle && idleStage === -1 ? (
+    <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+  ) : idle ? (
+    <PlantIcon type={plantType} size={plantSize} stage={idleStage} />
+  ) : stage === 0 ? (
+    <div className="relative">
+      <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+      <motion.div
+         animate={{ opacity: [0.2, 0.5, 0.2] }}
+         transition={{ duration: 2, repeat: Infinity }}
+         className="absolute inset-0 blur-md"
+      >
+        <PlantIcon type={plantType} size={plantSize} isSeed={true} />
+      </motion.div>
+    </div>
+  ) : (
+    <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
+  )
+
   return (
     <div className="relative w-full h-full">
-      {/* Hill — fixed position, never moves */}
-      <div className="absolute bottom-[4px] left-0 w-full z-0">
+      {/* Hill — fixed position, never moves; nudges when the plant grows */}
+      <motion.div
+        key={burst ? `hill-${burst.seed}` : 'hill'}
+        className="absolute bottom-[4px] left-0 w-full z-0"
+        initial={false}
+        animate={burst ? { y: [0, 2, -1, 0] } : { y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         <MossyHill isDark={isDark ?? true} overlap={0} />
-      </div>
+      </motion.div>
 
       {/* Plant — positioned from the bottom so it sits on the hill */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 flex flex-col items-center" style={{ bottom: (stage <= 0) ? 18 : 30 }}>
+      <div className="absolute left-1/2 z-10" style={{ bottom: (stage <= 0) ? 18 : 30, width: 0, height: 0 }}>
         {!idle && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 w-20 h-3 rounded-full blur-xl"
-            style={{ backgroundColor: color + '33', bottom: -4 }}
+            className="absolute w-20 h-3 rounded-full blur-xl"
+            style={{ backgroundColor: color + '33', bottom: -4, left: -40 }}
           />
         )}
-
-        {idle && idleStage === -1 ? (
-          <PlantIcon type={plantType} size={plantSize} isSeed={true} />
-        ) : idle ? (
-          <PlantIcon type={plantType} size={plantSize} stage={idleStage} />
-        ) : stage === 0 ? (
-          <div className="relative">
-            <PlantIcon type={plantType} size={plantSize} isSeed={true} />
-            <motion.div
-               animate={{ opacity: [0.2, 0.5, 0.2] }}
-               transition={{ duration: 2, repeat: Infinity }}
-               className="absolute inset-0 blur-md"
-            >
-              <PlantIcon type={plantType} size={plantSize} isSeed={true} />
-            </motion.div>
-          </div>
-        ) : (
-          <PlantIcon type={plantType} size={plantSize} stage={stage - 1} />
-        )}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={`${plantType}-${visual}`}
+            className="absolute bottom-0 flex flex-col items-center"
+            style={{ left: 0, x: "-50%", transformOrigin: "50% 100%" }}
+            initial={animateEntrance ? entrance.initial : false}
+            animate={animateEntrance ? entrance.animate : { opacity: 1 }}
+            transition={animateEntrance ? entrance.transition : undefined}
+            exit={stageExit}
+          >
+            {plant}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {burst && <StageBurst key={burst.seed} type={plantType} from={burst.from} to={burst.to} seed={burst.seed} />}
 
       {stage >= 3 && (
         <div className="absolute inset-0 pointer-events-none z-20">
@@ -135,7 +164,7 @@ function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { p
                 rotate: shape === 'crystal' ? [0, 180] : 0
               }}
               transition={{
-                duration: shape === 'ethereal' ? 3 : 2 + Math.random(),
+                duration: shape === 'ethereal' ? 3 : 2 + (i % 3) * 0.4,
                 repeat: Infinity,
                 delay: i * 0.4,
                 ease: "easeOut"
