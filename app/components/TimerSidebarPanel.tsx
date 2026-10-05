@@ -6,7 +6,7 @@ import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import { MiniRings } from './StatsView'
-import { isFullyGrown } from "@/lib/topics"
+import { isFullyGrown, isTopicTree } from "@/lib/topics"
 import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
 
 interface TimerSidebarPanelProps {
@@ -309,7 +309,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
-  const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+  const existingPartial = grove.find(t => !isTopicTree(t) && t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMin = total > 0 ? Math.round(total / 60) : 0
   // Matches VitalitySystem's per-minute payout: only fully grown trees make sap.
@@ -617,7 +617,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                               <div className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full border-[1.5px]" style={{ backgroundColor: info.color, borderColor: isDark ? '#18181b' : '#fafafa', boxShadow: `0 0 6px ${info.color}` }} />
                             )}
                             {(() => {
-                              const partial = grove.find(t => t.type === type && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+                              const partial = grove.find(t => !isTopicTree(t) && t.type === type && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
                               if (!partial) return null
                               const ratio = Math.min(1, (partial.focusMinutes || 0) / (partial.growthTarget || 1))
                               const r = 5, cx = 7, cy = 7, circ = 2 * Math.PI * r

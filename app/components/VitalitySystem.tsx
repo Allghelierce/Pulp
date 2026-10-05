@@ -11,6 +11,7 @@ import { notebookReviewText as reviewText } from "@/lib/notebookText"
 import { SAPLING_STAGE, FULL_STAGE, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
 import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
+import { computeStage } from "@/app/lib/treeGrowth"
 
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
@@ -118,14 +119,16 @@ export const VitalitySystem = memo(function VitalitySystem({
   isHibernating = false, hidden = false, onStartReview, activeGroupId,
 }: VitalitySystemProps) {
 
-  // ─── Marathon tracking (2h continuous session, only ticks when timer running) ───
-  const sessionStartRef = useRef(Date.now())
   const groveRef = useRef(grove)
   groveRef.current = grove
   const isHibernatingRef = useRef(isHibernating)
   isHibernatingRef.current = isHibernating
   const setSapRef = useRef(setSap)
   setSapRef.current = setSap
+  const quotaTierRef = useRef(quotaTier)
+  quotaTierRef.current = quotaTier
+  const goalStreakRef = useRef(goalStreak)
+  goalStreakRef.current = goalStreak
 
   // ─── Timer State ───
   const GRACE_PERIOD_MS = 15 * 60 * 1000
@@ -154,7 +157,15 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
     return t.elapsed ?? 0
   })
-  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(activeTabId || (initialNotes.length > 0 ? initialNotes[0].id : null))
+  // ─── Marathon tracking (2h continuous session) ───
+  // Reset in startSession; a restored session is backdated by its elapsed time.
+  const sessionStartRef = useRef(Date.now() - timerElapsed * 1000)
+  // A live/finished session keeps the notebook it started in, even across a reload.
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(() => {
+    const t = _saved.current
+    if (t && !_backupExpired && (t.running || t.done) && t.notebookId) return t.notebookId
+    return activeTabId || (initialNotes.length > 0 ? initialNotes[0].id : null)
+  })
   const [timerTotal, setTimerTotal] = useState(() => _backupExpired ? 25 * 60 : (_saved.current?.total ?? 25 * 60))
   const [timerRunning, setTimerRunning] = useState(() => {
     const t = _saved.current
@@ -198,6 +209,10 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (_isBackup && _backupExpired) {
       if (!_wasInCancelWindow) {
         setDeathReason("You were away too long")
+      } else {
+        // Left inside the cancel window: counts as a cancel, so refund the seed.
+        const seed = _saved.current?.selectedSeed
+        if (seed && seed !== 'tangerine') setInventory(inv => [...inv, seed])
       }
       localStorage.removeItem('pulp-timer-backup')
     }
@@ -226,12 +241,13 @@ export const VitalitySystem = memo(function VitalitySystem({
       preset: timerPreset,
       waterDeadline,
       selectedSeed,
+      notebookId: selectedNotebookId,
       timestamp: Date.now()
     })
     sessionStorage.setItem('pulp-timer', data)
     if (timerRunning) localStorage.setItem('pulp-timer-backup', data)
     else localStorage.removeItem('pulp-timer-backup')
-  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed])
+  }, [timerElapsed, timerTotal, timerRunning, timerDone, timerPreset, waterDeadline, selectedSeed, selectedNotebookId])
 
   useEffect(() => { waterDeadlineRef.current = waterDeadline }, [waterDeadline])
 
@@ -320,8 +336,8 @@ export const VitalitySystem = memo(function VitalitySystem({
             const groveSap = groveRef.current.reduce((sum, t) => sum + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0)
             const hour = new Date().getHours()
             const earlyBird = (hour >= 6 && (hour < 10 || (hour === 10 && new Date().getMinutes() <= 30))) ? 1 : 0
-            const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
-            const streakBonus = Math.min(1, goalStreak / 30)
+            const quotaBonus = quotaTierRef.current === 'daily' ? 2 : quotaTierRef.current === 'weekly' ? 1 : 0
+            const streakBonus = Math.min(1, goalStreakRef.current / 30)
             const mult = Math.min(5, 1 + earlyBird + quotaBonus + streakBonus)
             const perMinute = Math.max(1, Math.round((groveSap / 60) * mult))
             setSapRef.current(s => s + perMinute)
@@ -341,10 +357,13 @@ export const VitalitySystem = memo(function VitalitySystem({
         setInventory(inv => { const next = [...inv]; next.splice(next.indexOf(selectedSeed!), 1); return next })
       }
     }
-    setSelectedNotebookId(activeTabId)
+    // No tab open: keep the last notebook so the tree still lands in an orchard.
+    const sessionNoteId = activeTabId ?? selectedNotebookId
+    setSelectedNotebookId(sessionNoteId)
+    sessionStartRef.current = Date.now()
     try {
-      const note = readNote(activeTabId)
-      sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ noteId: activeTabId, lines: noteLines(note), review: reviewText(note) }))
+      const note = readNote(sessionNoteId)
+      sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ noteId: sessionNoteId, lines: noteLines(note), review: reviewText(note) }))
     } catch { }
     setTimerElapsed(0)
     setTimerDone(false)
@@ -357,7 +376,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     setWaterCount(0)
     // Watering feature removed — sessions never require watering.
     setWaterDeadline(null)
-  }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
+  }, [timerTotal, activeTabId, selectedNotebookId, selectedSeed, inventory, setInventory, activeGroupId])
 
   const [waterCount, setWaterCount] = useState(0)
 
@@ -369,12 +388,14 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [])
 
   const cancelSession = useCallback(() => {
+    // Cancelling (first minute) is free: the seed goes back.
+    if (selectedSeed && selectedSeed !== 'tangerine') setInventory(inv => [...inv, selectedSeed])
     setTimerRunning(false)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
     setWaterDeadline(null)
-  }, [])
+  }, [selectedSeed, setInventory])
 
 
   const waterClicksRef = useRef<number[]>([])
@@ -611,8 +632,9 @@ export const VitalitySystem = memo(function VitalitySystem({
       if (diff >= 100) {
         setGrove(prev => prev.filter(Boolean).map(tree => {
           if (tree.type === 'spoiled' || tree.stage >= 4) return tree
-          const newProgress = (tree.progress || 0) + (diff / 100) * 5
-          let newStage = Math.min(4, Math.floor(newProgress / 25))
+          const newProgress = Math.min(100, (tree.progress || 0) + (diff / 100) * 5)
+          // Same thresholds as sessions, and never step a tree backwards.
+          let newStage = Math.max(tree.stage, computeStage(newProgress / 100))
           // Topic trees: writing can't push past sapling — recall finishes them.
           if (isTopicTree(tree) && !isFullyGrown(tree)) newStage = Math.max(tree.stage, Math.min(SAPLING_STAGE, newStage))
           return { ...tree, progress: newProgress, stage: newStage }

@@ -8,11 +8,14 @@ export const runtime = 'nodejs'
 // user_id in metadata; we map back to player_profiles via stripe_customer_id.
 async function setPro(opts: { customerId?: string | null; userId?: string | null; active: boolean; expiresAt: string | null }) {
   const update = { pro_access: opts.active, pro_expires_at: opts.expiresAt }
+  let res: { error: { message: string } | null } | null = null
   if (opts.userId) {
-    await supabaseAdmin.from('player_profiles').update(update).eq('user_id', opts.userId)
+    res = await supabaseAdmin.from('player_profiles').update(update).eq('user_id', opts.userId)
   } else if (opts.customerId) {
-    await supabaseAdmin.from('player_profiles').update(update).eq('stripe_customer_id', opts.customerId)
+    res = await supabaseAdmin.from('player_profiles').update(update).eq('stripe_customer_id', opts.customerId)
   }
+  // Throw so the route returns 500 and Stripe retries the event.
+  if (res?.error) throw new Error(res.error.message)
 }
 
 export async function POST(req: Request) {
@@ -32,8 +35,11 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded': {
         const s = event.data.object as any
+        // Delayed methods (ACH, SEPA) complete "unpaid"; grant on async_payment_succeeded instead.
+        if (s.payment_status === 'unpaid') break
         const userId = s.metadata?.user_id || s.client_reference_id
         if (s.mode === 'payment') {
           // One-time lifetime — permanent Pro.
@@ -41,6 +47,13 @@ export async function POST(req: Request) {
         } else {
           // Subscription — expiry set by the subscription.* events below; grant now too.
           await setPro({ customerId: s.customer, userId, active: true, expiresAt: null })
+        }
+        break
+      }
+      case 'checkout.session.async_payment_failed': {
+        const s = event.data.object as any
+        if (s.mode === 'payment') {
+          await setPro({ customerId: s.customer, userId: s.metadata?.user_id || s.client_reference_id, active: false, expiresAt: null })
         }
         break
       }
