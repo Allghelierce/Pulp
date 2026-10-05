@@ -456,6 +456,24 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
     return () => document.removeEventListener('keydown', handler, true)
   }, [editorRef, commitToState])
 
+  // Code block "Copy": delegated, since saved pages are sanitized (inline handlers stripped).
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const btn = (e.target as HTMLElement).closest?.('.pulp-code-block button[title="Copy"]') as HTMLElement | null
+      if (!btn) return
+      e.preventDefault()
+      const pre = btn.closest('.pulp-code-block')?.querySelector('pre')
+      navigator.clipboard?.writeText(pre?.textContent || '').catch(() => {})
+      if (btn.dataset.copied) return
+      const original = btn.innerHTML
+      btn.dataset.copied = '1'
+      btn.textContent = '✓'
+      setTimeout(() => { btn.innerHTML = original; delete btn.dataset.copied }, 1200)
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [])
+
   // Table selection: click grip to select whole table, Backspace/Delete to remove
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -492,8 +510,9 @@ export function useEditor({ editorRef, activeTabId, currentPageIdx, setNotes, ac
       const selected = document.querySelector('.pulp-table-selected')
       if (!selected) return
       // Only while the table itself is the selection — never from an unrelated input.
+      // The grip selects the whole table; a caret inside a cell must not delete it.
       const sel = window.getSelection()
-      if (!sel || sel.rangeCount === 0 || !sel.getRangeAt(0).intersectsNode(selected)) {
+      if (!sel || sel.rangeCount === 0 || sel.getRangeAt(0).collapsed || !sel.containsNode(selected, false)) {
         selected.classList.remove('pulp-table-selected')
         return
       }

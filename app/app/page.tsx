@@ -367,7 +367,7 @@ const BoxItem = memo(function BoxItem({
   const imageSrc = rawImage ? box.content : htmlImgMatch?.[1] || ''
   const isSticky = !!box.boxHighlightColor
   const isTitle = !!box.isTitle
-  const isEmpty = !isSticky && !isImage && !isTitle && box.content.trim() === ''
+  const isEmpty = !isSticky && !isImage && !isTitle && !box.template && box.content.trim() === ''
   const hideChrome = pristine && !isEmpty
   return (
     <div
@@ -1176,6 +1176,9 @@ export default function NoteApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [dialog, setDialog] = useState<DialogConfig | null>(null)
+  // Stable per-config key (configs are fresh objects per open).
+  const dialogSeq = useRef(new WeakMap<DialogConfig, number>()).current
+  if (dialog && !dialogSeq.has(dialog)) dialogSeq.set(dialog, Math.random())
 
   const notesRef = useRef(notes)
   const initialNotesRef = useRef(notes)
@@ -1285,6 +1288,8 @@ export default function NoteApp() {
   const [quizState, setQuizState] = useState<{ questions: { q: string; a: string }[]; current: number; revealed: boolean; loading: boolean } | null>(null)
   const [currentView, setCurrentView] = useState<"editor" | "shelf">("editor")
   const unlockedVaults = useRef<Set<string>>(new Set())
+  // A vault nobody unlocked this session: its text stays off-screen and out of AI/recall.
+  const isLockedVault = (n: NoteData | null | undefined): boolean => n?.noteType === "vault" && !unlockedVaults.current.has(n.id)
   const grove = useGroveStore(s => s.grove)
   const setGrove = useGroveStore(s => s.setGrove)
   const inventory = useGroveStore(s => s.inventory)
@@ -1321,7 +1326,8 @@ export default function NoteApp() {
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   // Review needs a notebook; if it's gone (deleted, no tab open), close instead of rendering blank.
   useEffect(() => {
-    if (reviewOpen && !notes.some(n => n.id === (reviewNoteId ?? activeTabId))) {
+    const target = notes.find(n => n.id === (reviewNoteId ?? activeTabId))
+    if (reviewOpen && (!target || isLockedVault(target))) {
       setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined)
     }
   }, [reviewOpen, reviewNoteId, activeTabId, notes])
@@ -1770,7 +1776,7 @@ export default function NoteApp() {
   const [aiHubOpen, setAiHubOpen] = useState(false)
   // Built only while the AI hub is open; rebuilt when the note or page changes.
   const aiNotebookContext = useMemo(
-    () => (activeNote && aiHubOpen ? notebookContext(activeNote, currentPageIdx) : undefined),
+    () => (activeNote && aiHubOpen && !isLockedVault(activeNote) ? notebookContext(activeNote, currentPageIdx) : undefined),
     [activeNote, aiHubOpen, currentPageIdx]
   )
   const [showVersionHistory, setShowVersionHistory] = useState(false)
@@ -2891,10 +2897,15 @@ export default function NoteApp() {
       // still runs. keepalive bodies cap at 64KB, so send per note and skip oversize ones.
       const noteIds = new Set(cloudPending.current)
       if (dNote && activeTabIdRef.current) noteIds.add(activeTabIdRef.current)
+      // The 64KB keepalive quota is shared by all in-flight requests: budget bytes.
+      let budget = 56_000
+      const enc = new TextEncoder()
       for (const note of notesRef.current) {
         if (!noteIds.has(note.id) || note.deletedAt) continue
         const body = JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
-        if (body.length > 60_000) continue
+        const bytes = enc.encode(body).length
+        if (bytes > budget) continue
+        budget -= bytes
         fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, { method: 'POST', headers, keepalive: true, body }).catch(() => {})
       }
       if (dSettings && s) {
@@ -3491,11 +3502,11 @@ export default function NoteApp() {
         const newBoxes = { ...n.boxes }
 
         newBoxes[currentPageIdx] = [
-          { id: uid(), x: 50, y: 55, w: 400, h: 50, content: "" }, // Title
-          { id: uid(), x: 600, y: 55, w: 150, h: 50, content: "" }, // Date
-          { id: uid(), x: 50, y: topH + 55, w: 200, h: 550, content: "" }, // Keywords
-          { id: uid(), x: leftW + 20, y: topH + 55, w: 460, h: 550, content: "" }, // Notes
-          { id: uid(), x: 50, y: botH + 55, w: 700, h: 100, content: "" }, // Summary
+          { id: uid(), x: 50, y: 55, w: 400, h: 50, content: "", template: true }, // Title
+          { id: uid(), x: 600, y: 55, w: 150, h: 50, content: "", template: true }, // Date
+          { id: uid(), x: 50, y: topH + 55, w: 200, h: 550, content: "", template: true }, // Keywords
+          { id: uid(), x: leftW + 20, y: topH + 55, w: 460, h: 550, content: "", template: true }, // Notes
+          { id: uid(), x: 50, y: botH + 55, w: 700, h: 100, content: "", template: true }, // Summary
         ]
         return { ...n, pages: newPages, boxes: newBoxes }
       }))
@@ -3619,7 +3630,8 @@ export default function NoteApp() {
               <button onClick={() => setStreakNudgeDismissed(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.4, fontSize: 13, lineHeight: 1, padding: 0 }}>×</button>
             </div>
           )}
-          {dialog && <AppDialog config={dialog} accent={accent} onClose={() => setDialog(null)} />}
+          {/* Keyed per dialog so a follow-up dialog gets fresh input/focus state. */}
+          {dialog && <AppDialog key={dialogSeq.get(dialog)} config={dialog} accent={accent} onClose={() => setDialog(null)} />}
           {showSettings && <Suspense fallback={<PulpLoader variant="panel" />}>
             <div style={{ position: 'absolute', inset: 0, zIndex: 50 }}>
               <SettingsView
@@ -4082,7 +4094,7 @@ export default function NoteApp() {
                 <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: 600 }}>
                   <div id="pulp-page-surface" style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
-                    {scrollMode && activeNote.pages.map((pageHtml, idx) => {
+                    {scrollMode && !isLockedVault(activeNote) && activeNote.pages.map((pageHtml, idx) => {
                       if (idx >= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (
@@ -4137,7 +4149,7 @@ export default function NoteApp() {
                             const clickedBoxId = boxEl ? boxEl.id.replace('box-', '') : null
                             // Remove empty non-sticky, non-title boxes (except the one being clicked)
                             const emptyIds = (activeNote.boxes[currentPageIdx] || [])
-                              .filter(b => b.content.trim() === '' && !b.boxHighlightColor && !b.isTitle && b.id !== clickedBoxId)
+                              .filter(b => b.content.trim() === '' && !b.boxHighlightColor && !b.isTitle && !b.template && b.id !== clickedBoxId)
                               .map(b => b.id)
                             if (emptyIds.length > 0) {
                               setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
@@ -4492,7 +4504,7 @@ export default function NoteApp() {
                                 currentPageIdx={currentPageIdx}
                                 totalPages={activeNote.pages.length}
                                 theme={theme}
-                                onOpenGrid={() => { setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
+                                onOpenGrid={() => { if (isLockedVault(activeNote)) return; setCarouselIdx(currentPageIdx); setGridView(v => !v) }}
                               />
                               {!scrollMode && <>
                               {/* Next — hold 500ms to jump to last */}
@@ -4528,7 +4540,7 @@ export default function NoteApp() {
                       {!scrollMode && <div style={{ height: 60, marginTop: -8, background: "radial-gradient(ellipse 90% 55% at 46% 0%, rgba(0,0,0,0.22) 0%, transparent 70%)", pointerEvents: "none", position: "relative", zIndex: 0 }} />}
                     </div>
                     {/* Scroll mode: following pages */}
-                    {scrollMode && activeNote.pages.map((pageHtml, idx) => {
+                    {scrollMode && !isLockedVault(activeNote) && activeNote.pages.map((pageHtml, idx) => {
                       if (idx <= currentPageIdx) return null
                       const inkColor = getInkColor(paperStyle, theme === "dark")
                       return (

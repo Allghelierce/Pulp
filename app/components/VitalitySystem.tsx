@@ -25,7 +25,9 @@ function readSnapshot(): Snapshot | null {
 function sessionWrittenText(noteId: string | null): string | null {
   const snap = readSnapshot()
   if (!noteId || !snap || snap.noteId !== noteId) return null
-  return newText(snap.lines || "", noteLines(readNote(noteId)))
+  const note = readNote(noteId)
+  if (note?.noteType === 'vault') return null // unknown: vaults aren't read, so the tree still plants
+  return newText(snap.lines || "", noteLines(note))
 }
 
 // Claim feedback events, consumed by PlantedToast.
@@ -480,6 +482,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
     if (!noteId || !snap || snap.noteId !== noteId) return false
     const note = readNote(noteId)
+    if (note?.noteType === 'vault') return false // vault text never goes to the AI
     const written = newText(snap.lines || "", noteLines(note))
     if (written.length < MIN_TOPIC_TEXT) return false
     const endReview = reviewText(note)

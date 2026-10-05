@@ -42,13 +42,14 @@ export function growTree(grove: Tree[], type: string, minutes: number, notebookI
 
 // Add `weight` of recall to one topic tree; finishing it jumps to FULL_STAGE.
 // Weight past what the tree needs is banked under its topic (as at tagging).
-function feedTopicTree(grove: Tree[], id: number, weight: number): Tree[] {
+function feedTopicTree(grove: Tree[], id: number, weight: number, topic?: string): Tree[] {
   return grove.map(t => {
     if (t.id !== id) return t
     const need = t.recallNeeded || 0
     const done = (t.recallDone || 0) + weight
     if (done < need) return { ...t, recallDone: done }
-    if (done > need && t.topic) bankNutrients(t.topic, done - need)
+    const bankAs = t.topic || topic
+    if (done > need && bankAs) bankNutrients(bankAs, done - need)
     return { ...t, recallDone: need, stage: FULL_STAGE, progress: 100 }
   })
 }
@@ -67,14 +68,14 @@ export function applyRecall(grove: Tree[], topic: string | undefined, weight: nu
   if (weight <= 0) return grove
   const waiting = grove.filter(t => isTopicTree(t) && !isFullyGrown(t))
   // Card from a specific session: grow that session's own tree first.
-  if (treeId != null && waiting.some(t => t.id === treeId)) return feedTopicTree(grove, treeId, weight)
+  if (treeId != null && waiting.some(t => t.id === treeId)) return feedTopicTree(grove, treeId, weight, topic)
   if (topic && topic.trim()) {
     const k = normalizeTopic(topic)
     const match = oldest(waiting.filter(t => t.topic && normalizeTopic(t.topic) === k))
     if (match) return feedTopicTree(grove, match.id, weight)
     // A sapling whose tagging failed has no topic: let this notebook's recall finish it.
     const untagged = oldest(waiting.filter(t => !t.topic && (t.notebookId ?? undefined) === (notebookId ?? undefined)))
-    if (untagged) return feedTopicTree(grove, untagged.id, weight)
+    if (untagged) return feedTopicTree(grove, untagged.id, weight, topic)
     bankNutrients(topic, weight)
     return grove
   }

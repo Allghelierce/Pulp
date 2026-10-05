@@ -176,11 +176,13 @@ export const Sidebar = memo(function Sidebar({
     const q = searchQuery.trim().toLowerCase()
     if (q.length < 2) return []
     const results: { noteId: string; noteName: string; noteIcon?: string; pageIdx: number; snippet: string; matchType: "title" | "content" | "box" }[] = []
+    // Locked vaults stay out of search (title only, no content) until unlocked.
     const activeNotes = notes.filter(n => !n.archived)
     for (const note of activeNotes) {
       if (note.subject.toLowerCase().includes(q)) {
         results.push({ noteId: note.id, noteName: note.subject, noteIcon: note.icon, pageIdx: 0, snippet: note.subject, matchType: "title" })
       }
+      if (note.noteType === "vault" && !unlockedIds.has(note.id)) continue
       for (let pi = 0; pi < note.pages.length; pi++) {
         const text = stripHtml(note.pages[pi]).toLowerCase()
         const idx = text.indexOf(q)
@@ -227,7 +229,7 @@ export const Sidebar = memo(function Sidebar({
         })
         if (!res.ok) { setAiSearching(false); return }
         const data = await res.json()
-        const activeNotes = notes.filter(n => !n.archived)
+        const activeNotes = notes.filter(n => !n.archived && !(n.noteType === "vault" && !unlockedIds.has(n.id)))
         const mapped = (data.results || [])
           .filter((r: { note_id: string }) => activeNotes.some(n => n.id === r.note_id))
           .map((r: { note_id: string; page_index: number; chunk_text: string; similarity: number }) => {
@@ -692,6 +694,7 @@ export const Sidebar = memo(function Sidebar({
                   }
                 }}
                 placeholder="Search notes…"
+                data-search-input
                 className="relative w-full bg-zinc-900/40 border border-white/[0.06] rounded-lg pl-7 pr-2.5 py-1 text-[11px] outline-none focus:border-white/20 transition-colors text-zinc-400 placeholder:text-zinc-600"
               />
               {searchQuery && (

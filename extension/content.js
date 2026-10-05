@@ -83,9 +83,14 @@ window.addEventListener("message", (e) => {
   }
 })
 
+// Only Pulp itself may change blocking: the manifest matches every *.vercel.app
+// site, so check the host, and ignore messages from other frames/windows.
+const PULP_HOST = /^(localhost|pulp\.ink|www\.pulp\.ink|pulp[\w-]*\.vercel\.app)$/
+const isPulpMessage = (e) => e.source === window && e.origin === location.origin && PULP_HOST.test(location.hostname)
+
 // Listen for direct updates from the Pulp app via postMessage
 window.addEventListener("message", (e) => {
-  if (!isExtensionValid()) return
+  if (!isExtensionValid() || !isPulpMessage(e)) return
   if (e.data && e.data.type === "pulp-focus-config") {
     const sites = e.data.blockedSites || []
     chrome.storage.local.set({ blockedSites: sites }, () => {

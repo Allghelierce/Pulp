@@ -497,10 +497,10 @@ export function useBoxDrawing({
           const bw = paperW - x - 40
           const newBox: TextBox = { id, x, y: y - 18, w: Math.max(bw, 120), h: 32, content: '' }
           const currentBoxes = notesRef.current.find(n => n.id === tid)?.boxes[pidx] || []
-          const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor)
+          const hasEmpty = currentBoxes.some(b => b.content.trim() === '' && !b.boxHighlightColor && !b.template)
           flushSync(() => {
             setNotes(prev => prev.map(n => n.id !== tid ? n : {
-              ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) : (n.boxes[pidx] || [])), newBox] }
+              ...n, boxes: { ...n.boxes, [pidx]: [...(hasEmpty ? (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor || !!b.template) : (n.boxes[pidx] || [])), newBox] }
             }))
             setSelectedBoxIds(new Set([id]))
             if (activeTool === 'textbox') setActiveTool('select')
@@ -522,7 +522,7 @@ export function useBoxDrawing({
         const hasEmpty = (currentTab?.boxes[pidx] || []).some(b => b.content.trim() === '' && !b.boxHighlightColor)
         if (hasEmpty) {
           setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor) }
+            ...n, boxes: { ...n.boxes, [pidx]: (n.boxes[pidx] || []).filter(b => b.content.trim() !== '' || !!b.boxHighlightColor || !!b.template) }
           }))
         }
         setSelectedBoxIds(pendingSelected)

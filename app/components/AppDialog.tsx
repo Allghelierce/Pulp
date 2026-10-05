@@ -48,7 +48,7 @@ export const AppDialog = memo(function AppDialog({ config, accent, onClose }: { 
         }}
         onKeyDown={e => {
           // Buttons handle their own Enter (so Enter on Cancel cancels); IME composition isn't a submit.
-          if (e.key === "Enter" && config.type !== "alert" && (e.target as HTMLElement).tagName !== "BUTTON" && !e.nativeEvent.isComposing) { e.preventDefault(); confirm(); }
+          if (e.key === "Enter" && !e.repeat && config.type !== "alert" && (e.target as HTMLElement).tagName !== "BUTTON" && !e.nativeEvent.isComposing) { e.preventDefault(); confirm(); }
           if (e.key === "Escape") onClose();
         }}
       >
