@@ -4,6 +4,7 @@ import type { NoteData } from "@/app/types"
 import { extractTextFromHTML } from "@/lib/sanitize"
 import { apiFetch } from "@/lib/apiFetch"
 import { supabase } from "@/lib/supabase"
+import type { CapturedSelection } from "@/lib/pageContext"
 
 interface Message {
   id: string
@@ -12,6 +13,9 @@ interface Message {
   query?: string
   chunkNoteIds?: string[]
   rating?: 1 | -1
+  /** Selection the question was about — an <edit> answer can replace it. */
+  target?: CapturedSelection
+  applied?: boolean
 }
 
 interface Personality {
@@ -26,6 +30,20 @@ interface NotebookChatProps {
   accent: string
   userId?: string
   onClose: () => void
+  /** Text of the page the user has open. */
+  getPageText?: () => string
+  /** Current text selection on the page, if any. */
+  captureSelection?: () => CapturedSelection | null
+  /** Write text over a captured selection; false if it's no longer on the page. */
+  onReplaceSelection?: (sel: CapturedSelection, text: string) => boolean
+}
+
+// Answers that edit the selection carry the new text in <edit>…</edit>.
+const EDIT_RE = /<edit>([\s\S]*?)<\/edit>/i
+function splitEdit(content: string): { note: string; edit: string | null } {
+  const m = content.match(EDIT_RE)
+  if (!m) return { note: content, edit: null }
+  return { note: content.replace(EDIT_RE, "").trim(), edit: m[1].trim() }
 }
 
 const QUIZ_PROMPTS = [
@@ -59,7 +77,7 @@ function gatherNotebookText(note: NoteData): string {
   return [...pageTexts, ...boxTexts].join("\n\n")
 }
 
-export const NotebookChat = memo(function NotebookChat({ note, theme, accent, userId, onClose }: NotebookChatProps) {
+export const NotebookChat = memo(function NotebookChat({ note, theme, accent, userId, onClose, getPageText, captureSelection, onReplaceSelection }: NotebookChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -69,6 +87,16 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isDark = theme === "dark"
+
+  // Track the page selection (it survives focus moving into this panel).
+  const [selection, setSelection] = useState<CapturedSelection | null>(null)
+  useEffect(() => {
+    if (!captureSelection) return
+    const update = () => setSelection(captureSelection())
+    update()
+    document.addEventListener("selectionchange", update)
+    return () => document.removeEventListener("selectionchange", update)
+  }, [captureSelection])
 
   const [personalities, setPersonalities] = useState<Personality[]>(PRESET_PERSONALITIES)
   const [activePersonality, setActivePersonality] = useState<Personality>(PRESET_PERSONALITIES[0])
@@ -170,6 +198,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading || indexing) return
+    const target = selection ?? undefined
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: text.trim() }
     setMessages(prev => [...prev, userMsg])
     setInput("")
@@ -192,7 +221,9 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
       const notebookContent = notebookTextRef.current || gatherNotebookText(note)
       const history = [...messages, userMsg].slice(-10).map(m => `${m.role}: ${m.content}`).join("\n")
 
-      const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n[NOTEBOOK CONTENT]:\n${notebookContent}${ragContext}\n\n[CONVERSATION HISTORY]:\n${history}`
+      const pageText = getPageText?.() || ""
+      const pageBlock = pageText ? `[CURRENT PAGE — what the student has open right now]:\n${pageText}\n\n` : ""
+      const contextPayload = `[NOTEBOOK TITLE: ${note.subject}]\n\n${pageBlock}[NOTEBOOK CONTENT]:\n${notebookContent}${ragContext}\n\n[CONVERSATION HISTORY]:\n${history}`
 
       const response = await apiFetch("/api/chat", {
         method: "POST",
@@ -201,17 +232,23 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
           prompt: text.trim(),
           text: contextPayload.length > 12000 ? contextPayload.slice(0, contextPayload.lastIndexOf("\n", 12000) || 12000) + "\n[...truncated]" : contextPayload,
           personality: activePersonality.systemPrompt || undefined,
+          selection: target?.text,
         })
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Request failed")
       const result = data.result || "I couldn't generate a response."
-      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: result, query: text.trim(), chunkNoteIds }])
+      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: result, query: text.trim(), chunkNoteIds, target }])
     } catch (err) {
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: "assistant", content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}` }])
     }
     setLoading(false)
-  }, [loading, messages, note, activePersonality, indexing])
+  }, [loading, messages, note, activePersonality, indexing, selection, getPageText])
+
+  const applyEdit = useCallback((msg: Message, edit: string) => {
+    if (!msg.target || !onReplaceSelection) return
+    if (onReplaceSelection(msg.target, edit)) setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, applied: true } : m))
+  }, [onReplaceSelection])
 
   const rateMessage = useCallback((msgId: string, rating: 1 | -1) => {
     setMessages(prev => {
@@ -455,7 +492,25 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
               color: msg.role === "user" ? "#fff" : (isDark ? "#d4d4d8" : "#27272a"),
               fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>
-              {msg.content}
+              {(() => {
+                const { note: said, edit } = msg.role === "assistant" ? splitEdit(msg.content) : { note: msg.content, edit: null }
+                if (edit === null) return msg.content
+                return (<>
+                  {said && <div style={{ marginBottom: 6 }}>{said}</div>}
+                  <div style={{ borderLeft: `2px solid ${accent}`, paddingLeft: 8, color: isDark ? "#fafafa" : "#18181b" }}>{edit}</div>
+                  {msg.target && onReplaceSelection && (
+                    <button
+                      onClick={() => applyEdit(msg, edit)}
+                      disabled={msg.applied}
+                      style={{
+                        marginTop: 8, padding: "4px 10px", borderRadius: 6, fontSize: 12, fontFamily: 'Crimson Pro, serif',
+                        border: `1px solid ${accent}`, background: msg.applied ? "transparent" : accent,
+                        color: msg.applied ? accent : "#fff", cursor: msg.applied ? "default" : "pointer",
+                      }}
+                    >{msg.applied ? "Replaced ✓" : "Replace selection"}</button>
+                  )}
+                </>)
+              })()}
             </div>
             {msg.role === "assistant" && !msg.content.startsWith("Error:") && (
               <div className="opacity-0 group-hover/msg:opacity-100 transition-opacity" style={{ display: "flex", gap: 2, marginTop: 3 }}>
@@ -507,6 +562,14 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
         )}
       </div>
 
+      {/* Selection the next question is about */}
+      {selection && (
+        <div style={{ margin: "0 16px", padding: "6px 10px", borderTop: `1px solid ${borderColor}`, display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: mutedText }}>
+          <span style={{ textTransform: "uppercase", letterSpacing: "0.08em", fontSize: 9, color: accent, flexShrink: 0 }}>Selected</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", borderLeft: `2px solid ${accent}`, paddingLeft: 6 }}>{selection.text}</span>
+        </div>
+      )}
+
       {/* Input */}
       <div style={{ padding: "10px 16px 14px", borderTop: `1px solid ${borderColor}`, display: "flex", gap: 8, alignItems: "flex-end" }}>
         {messages.filter(m => m.role === "assistant").length > 0 && (
@@ -536,7 +599,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
-          placeholder={activePersonality.id !== "default" ? `Ask (${activePersonality.name})...` : "Ask about your notes..."}
+          placeholder={selection ? "Ask about or change the selection..." : activePersonality.id !== "default" ? `Ask (${activePersonality.name})...` : "Ask about your notes..."}
           disabled={loading}
           rows={1}
           style={{
