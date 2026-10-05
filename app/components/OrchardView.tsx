@@ -2815,17 +2815,22 @@ export const OrchardView = memo(function OrchardView({
   const filteredTreesRef = useRef(filteredTrees)
   filteredTreesRef.current = filteredTrees
 
+  // Trees refill from the last collect, even while the grove is closed (full after SAP_FILL_DURATION).
+  const SAP_COLLECTED_KEY = 'pulp-sap-collected-at'
   const sapStartTimeRef = useRef<number>(Date.now())
   const [sapFillProgress, setSapFillProgress] = useState(0)
 
   useEffect(() => {
     if (!isOpen) return
-    sapStartTimeRef.current = Date.now()
-    setSapFillProgress(0)
+    let last = NaN
+    try { last = Number(localStorage.getItem(SAP_COLLECTED_KEY)) } catch {}
+    // Never collected: start full so a new grove has something to collect.
+    sapStartTimeRef.current = Number.isFinite(last) && last > 0 ? last : Date.now() - SAP_FILL_DURATION
     const tick = () => {
       const elapsed = Date.now() - sapStartTimeRef.current
       setSapFillProgress(Math.min(1, elapsed / SAP_FILL_DURATION))
     }
+    tick()
     const interval = setInterval(tick, SAP_TICK_INTERVAL)
     return () => clearInterval(interval)
   }, [isOpen])
@@ -2909,6 +2914,7 @@ export const OrchardView = memo(function OrchardView({
     }
 
     sapStartTimeRef.current = Date.now()
+    try { localStorage.setItem(SAP_COLLECTED_KEY, String(sapStartTimeRef.current)) } catch {}
     setSapFillProgress(0)
 
     setTimeout(() => {
@@ -3370,6 +3376,16 @@ export const OrchardView = memo(function OrchardView({
                     </>
                   )}
                 </div>
+                {/* Collect sap — trees refill over SAP_FILL_DURATION */}
+                {(() => {
+                  const available = getAvailableSap()
+                  return (
+                    <button onClick={() => { collectAllSap(); setEditMode(false); setActiveTool('none') }} disabled={available <= 0} className="flex items-center gap-1.5 rounded-md px-2.5 transition-all" style={{ height: 30, backgroundColor: available > 0 ? 'rgba(217,119,6,0.32)' : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: available > 0 ? '#fde68a' : 'rgba(255,255,255,0.5)', cursor: available > 0 ? 'pointer' : 'default', fontSize: 12, fontVariantNumeric: 'tabular-nums' }} title={available > 0 ? `Collect ${available} sap` : 'Trees are refilling — nothing to collect yet'}>
+                      <PulpIcon size={14} />
+                      {available > 0 ? `+${available}` : 'Collect'}
+                    </button>
+                  )
+                })()}
                 {/* Chop */}
                 <button onClick={() => { setActiveTool(t => t === 'axe' ? 'none' : 'axe'); setChopTarget(null); setEditMode(false) }} className="flex items-center justify-center rounded-md transition-all" style={{ width: 30, height: 30, backgroundColor: activeTool === 'axe' ? 'rgba(239,68,68,0.28)' : (isDark ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.22)'), backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: activeTool === 'axe' ? '#fca5a5' : 'rgba(255,255,255,0.82)' }} title="Chop">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M11 6v16c0 0-.5-1-1.5-1.5" /><rect x="9.5" y="1" width="3" height="1.5" rx="0.3" /><path d="M9.5 2.5L9.5 8.5L20 8.5L18 2.5Z" /></svg>
