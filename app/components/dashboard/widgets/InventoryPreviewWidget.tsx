@@ -21,7 +21,7 @@ const InventoryPreviewWidget = memo(function InventoryPreviewWidget({ isDark, in
   if (seeds.length === 0) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-        <span style={{ fontSize: 10, color: textMuted, fontStyle: 'italic' }}>Satchel empty</span>
+        <span style={{ fontSize: 10, color: textMuted, fontStyle: 'italic' }}>No seeds</span>
       </div>
     )
   }
@@ -29,7 +29,7 @@ const InventoryPreviewWidget = memo(function InventoryPreviewWidget({ isDark, in
   return (
     <div style={{ padding: 14, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <span style={{ fontSize: 10, fontWeight: 400, color: isDark ? '#5a5650' : '#a8a4a0', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font, marginBottom: 8 }}>
-        Satchel
+        Seeds
       </span>
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 6, alignContent: 'start' }}>
         {seeds.map(({ type, count, name }) => (
@@ -50,7 +50,7 @@ const InventoryPreviewWidget = memo(function InventoryPreviewWidget({ isDark, in
 
 registerWidget({
   id: 'inventory-preview',
-  name: 'Satchel',
+  name: 'Seeds',
   description: 'Seeds you own',
   category: 'grove',
   defaultSize: [2, 1],

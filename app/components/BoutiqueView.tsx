@@ -613,6 +613,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
   const [activeTab, setActiveTab] = useState<TabId>('shop')
   const [satchelFullPopup, setSatchelFullPopup] = useState(false)
+  const [seedQuery, setSeedQuery] = useState('')
   const [shopMode, setShopMode] = useState<'current' | 'seasonal'>('current')
   const [isRenderingCatalog, setIsRenderingCatalog] = useState(false)
   const [dailySeeds, setDailySeeds] = useState<string[]>([])
@@ -792,7 +793,7 @@ export const BoutiqueView = memo(function BoutiqueView({
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'shop', label: 'Shop' },
-    { id: 'satchel', label: 'Satchel' },
+    { id: 'satchel', label: 'Seeds' },
     { id: 'catalog', label: 'Catalog' },
   ]
 
@@ -1594,7 +1595,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                     style={{ ...chipButton(palette) }}
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l2 4H6l2-4z"/><path d="M6 6v12a2 2 0 002 2h8a2 2 0 002-2V6"/><path d="M9 6v2a3 3 0 006 0V6"/></svg>
-                    Satchel
+                    Seeds
                   </button>
                   <button
                     onClick={() => { setActiveTab('catalog'); setIsRenderingCatalog(true); setSelectedPlant(null); setTimeout(() => setIsRenderingCatalog(false), 20) }}
@@ -2302,10 +2303,24 @@ export const BoutiqueView = memo(function BoutiqueView({
             </div>
           )})()}
 
-          {/* SATCHEL */}
-          {activeTab === 'satchel' && (
+          {/* SEEDS — owned seeds, stacked by type, searchable */}
+          {activeTab === 'satchel' && (() => {
+            const q = seedQuery.trim().toLowerCase()
+            const rank = (r: string) => { const i = RARITY_ORDER.indexOf(r); return i < 0 ? RARITY_ORDER.length : i }
+            const stacks: { type: string; count: number; lastIdx: number }[] = []
+            const byType: Record<string, { type: string; count: number; lastIdx: number }> = {}
+            inventory.forEach((type, idx) => {
+              if (!TREE_TYPES[type]) return
+              const st = byType[type] ?? (byType[type] = stacks[stacks.push({ type, count: 0, lastIdx: idx }) - 1])
+              st.count++; st.lastIdx = idx
+            })
+            const shown = stacks
+              .filter(({ type }) => { const t = TREE_TYPES[type]; return !q || t.name.toLowerCase().includes(q) || (RARITY_LABEL[t.rarity] || t.rarity).toLowerCase().includes(q) })
+              .sort((a, b) => rank(TREE_TYPES[b.type].rarity) - rank(TREE_TYPES[a.type].rarity) || TREE_TYPES[a.type].name.localeCompare(TREE_TYPES[b.type].name))
+            const softBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'
+            return (
             <div className="px-6 py-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <button
                   onClick={() => setActiveTab('shop')}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: textSecondary, fontFamily: font, fontSize: 12, fontWeight: 400, display: 'flex', alignItems: 'center', gap: 4 }}
@@ -2313,7 +2328,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                   Back
                 </button>
-                <span className={`text-[10px] font-normal uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Satchel</span>
+                <span className={`text-[10px] font-normal uppercase tracking-[0.12em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Seeds</span>
                 <span className={`text-[11px] font-normal ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>{inventory.length}/{MAX_SEEDS}</span>
               </div>
               {inventory.length === 0 ? (
@@ -2322,44 +2337,57 @@ export const BoutiqueView = memo(function BoutiqueView({
                   <div className="text-[14px] font-normal">No seeds yet</div>
                   <div className="text-[12px] mt-1 opacity-70">Buy seeds from the market to grow your orchard.</div>
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                  {inventory.map((type, idx) => {
+              ) : (<>
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: textMuted, pointerEvents: 'none' }}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                  <input
+                    value={seedQuery}
+                    onChange={e => setSeedQuery(e.target.value)}
+                    placeholder="Search seeds"
+                    aria-label="Search seeds"
+                    style={{ width: '100%', padding: '7px 28px 7px 28px', borderRadius: 8, fontSize: 12, fontFamily: font, color: textPrimary, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${softBorder}`, outline: 'none' }}
+                  />
+                  {seedQuery && (
+                    <button onClick={() => setSeedQuery('')} aria-label="Clear search" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: textMuted, display: 'flex' }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                  )}
+                </div>
+                {shown.length === 0 ? (
+                  <div className={`text-center py-10 text-[12px] ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>No seeds match “{seedQuery.trim()}”</div>
+                ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: 6 }}>
+                  {shown.map(({ type, count, lastIdx }) => {
                     const t = TREE_TYPES[type]
-                    if (!t) return null
                     const rc = RARITY_COLOR[t.rarity]
+                    const plain = t.rarity === 'common' || t.rarity === 'uncommon'
+                    const bg = plain ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : (isDark ? `${rc}10` : `${rc}08`)
+                    const border = plain ? softBorder : `${rc}30`
                     return (
-                      <div
-                        key={`${type}-${idx}`}
-                        className="relative group"
-                      >
+                      <div key={type} className="relative group">
                         <button
                           onClick={() => { setSelectedPlant(type); setPreviewStage(0) }}
+                          title={`${t.name} · ${RARITY_LABEL[t.rarity]}`}
                           style={{
-                            width: '100%', aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
-                            padding: '10px 8px', borderRadius: 12, cursor: 'pointer',
-                            border: `1px solid ${t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') : `${rc}30`}`,
-                            backgroundColor: t.rarity === 'common' || t.rarity === 'uncommon' ? (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : (isDark ? `${rc}10` : `${rc}08`),
+                            width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                            padding: '8px 4px 6px', borderRadius: 10, cursor: 'pointer',
+                            border: `1px solid ${border}`, backgroundColor: bg,
                             transition: 'all 0.15s', fontFamily: font, textAlign: 'center',
-                            boxShadow: t.rarity === 'common' || t.rarity === 'uncommon' ? `inset 0 0 0 1px ${rc}10` : `inset 0 0 0 1px ${rc}15, 0 0 12px ${rc}08`,
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = `${rc}40` }}
-                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)' }}
+                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = `${rc}50` }}
+                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = bg; e.currentTarget.style.borderColor = border }}
                         >
-                          <div style={{
-                            width: 52, height: 52, borderRadius: 12, flexShrink: 0,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: `${rc}15`,
-                          }}>
-                            <PlantIcon type={type} size={38} isSeed />
-                          </div>
-                          <div style={{ minWidth: 0, width: '100%' }}>
-                            <div style={{ fontSize: 11, fontWeight: 400, color: textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
-                            <div style={{ fontSize: 8, fontWeight: 400, color: rc, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 1 }}>{RARITY_LABEL[t.rarity]}</div>
-                          </div>
+                          <PlantIcon type={type} size={30} isSeed />
+                          <div style={{ fontSize: 10.5, fontWeight: 400, color: textPrimary, width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</div>
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: rc }} />
                         </button>
+                        {count > 1 && (
+                          <span style={{ position: 'absolute', top: 4, left: 5, fontSize: 9, fontFamily: font, color: textSecondary, pointerEvents: 'none' }}>×{count}</span>
+                        )}
                         <button
-                          onClick={(e) => { e.stopPropagation(); discardSeed(idx) }}
+                          onClick={(e) => { e.stopPropagation(); discardSeed(lastIdx) }}
+                          aria-label={`Discard one ${t.name} seed`}
+                          title="Discard one"
                           className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border-none cursor-pointer ${
                             isDark ? 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'
                           }`}
@@ -2371,9 +2399,11 @@ export const BoutiqueView = memo(function BoutiqueView({
                     )
                   })}
                 </div>
-              )}
+                )}
+              </>)}
             </div>
-          )}
+            )
+          })()}
 
           {/* CATALOG */}
           {activeTab === 'catalog' && (
@@ -2537,7 +2567,7 @@ export const BoutiqueView = memo(function BoutiqueView({
           </button>
         )}
 
-        {/* Satchel full popup */}
+        {/* Seeds full popup */}
         {satchelFullPopup && (
           <div
             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -2548,7 +2578,7 @@ export const BoutiqueView = memo(function BoutiqueView({
               className={`rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'}`}
               style={{ fontFamily: font }}
             >
-              <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, marginBottom: 6 }}>Satchel Full</div>
+              <div style={{ fontSize: 15, fontWeight: 400, color: textPrimary, marginBottom: 6 }}>Seeds Full</div>
               <div style={{ fontSize: 12, color: textSecondary, lineHeight: 1.5 }}>
                 You have {MAX_SEEDS}/{MAX_SEEDS} seeds. Plant or discard some before buying more.
               </div>
@@ -2558,7 +2588,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                   className="px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all"
                   style={{ background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer' }}
                 >
-                  Open Satchel
+                  Open Seeds
                 </button>
                 <button
                   onClick={() => setSatchelFullPopup(false)}
