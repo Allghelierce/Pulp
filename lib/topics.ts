@@ -22,6 +22,10 @@ export function recallNeededFor(type: string): number {
   return RECALL_BY_RARITY[rarity] ?? 5
 }
 
+// Stage the focus timer grows a topic tree to, from the session's share of its
+// grow time: sprout at 40%, sapling at 100%. Recall takes it the rest of the way.
+export const timerStage = (ratio: number): number => (ratio >= 1 ? SAPLING_STAGE : ratio >= 0.4 ? 1 : 0)
+
 export const isTopicTree = (t: Tree): boolean => t.recallNeeded != null
 
 // Only full topic trees produce sap. Legacy trees (pre-topics) keep producing

@@ -9,6 +9,11 @@ import { MiniRings } from './StatsView'
 import { isFullyGrown } from "@/lib/topics"
 import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
 
+// Growth stages along the focus bar (ratio of the tree's grow time). Matches timerStage in lib/topics.
+const FOCUS_STAGES = [
+  { name: 'Seed', at: 0 }, { name: 'Sprout', at: 0.4 }, { name: 'Sapling', at: 1 },
+]
+
 interface TimerSidebarPanelProps {
   isOpen: boolean
   onClose: () => void
@@ -83,7 +88,8 @@ function TreeVisualization({ progress, type, idle, isDark, priorRatio = 0 }: { p
   const shape = typeInfo.shape || 'oak'
 
   const idleStage = priorRatio >= 0.85 ? 3 : priorRatio >= 0.6 ? 2 : priorRatio >= 0.3 ? 1 : priorRatio >= 0.1 ? 0 : -1
-  const stage = idle ? idleStage : p < 0.1 ? 0 : p < 0.3 ? 1 : p < 0.6 ? 2 : p < 0.85 ? 3 : 4
+  // Running: the timer grows seed -> sprout -> sapling over the full grow time (recall does the rest).
+  const stage = idle ? idleStage : p < 0.15 ? 0 : p < 0.4 ? 1 : p < 1 ? 2 : 3
   const plantSize = (idle && idleStage === -1) ? 60 : stage === 0 ? 50 : 70 + Math.max(0, stage) * 12
 
   // Each stage change replays the plant's entrance and fires a themed burst.
@@ -357,6 +363,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const liveSap = sapPerMinute * Math.floor(elapsed / 60)
 
   const focusMode = running && !done && !treeDead
+  // Stage the plant reaches by this point in the session (same thresholds as claimReward's computeStage).
+  const focusStage = (() => {
+    let k = 0
+    for (let n = 1; n < FOCUS_STAGES.length; n++) if (cumulativeRatio >= FOCUS_STAGES[n].at) k = n
+    return { name: FOCUS_STAGES[k].name, next: FOCUS_STAGES[k + 1]?.name }
+  })()
   // In focus mode the panel shrinks to fit the gap beside the page (the hill scales with it).
   const panelW = focusMode && pageLeft != null ? Math.max(150, Math.min(250, pageLeft - sidebarRight - 16)) : 250
   const onFocusGiveUp = () => {
@@ -654,45 +666,55 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             })() : (
             <motion.div key="timer-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col items-center flex-1">
               {focusMode ? (
-                // Focus mode: just the plot + seed, with the timer beneath. Give up lives on hover.
+                // Focus mode: growth bar above the plot (hover it for time left), give up below.
                 <div className="flex flex-col items-center justify-end flex-1 w-full">
                   {waterUrgent && waterWidget}
-                  {treeVisual}
                   <div
-                    className="text-center w-full"
-                    style={{ marginTop: 14, cursor: 'default' }}
+                    className="w-full text-center"
+                    style={{ marginBottom: 30, cursor: 'default' }}
                     onMouseEnter={() => setTimerHover(true)}
-                    onMouseLeave={() => { setTimerHover(false); if (giveUpStage < 2) setGiveUpStage(0) }}
+                    onMouseLeave={() => setTimerHover(false)}
                     onClick={() => setTimerHover(h => !h)}
+                    title="Hover to see time left"
                   >
-                    <div className="tabular-nums" style={{ fontFamily: serifFont, fontWeight: 300, fontSize: 44, lineHeight: 1, color: textColor }}>
-                      {String(minutes).padStart(2, "0")}<span>:{String(seconds).padStart(2, "0")}</span>
-                    </div>
-                    <div style={{ height: 40, marginTop: 10 }}>
-                      <AnimatePresence>
-                        {(timerHover || giveUpStage > 0) && (
-                          <motion.button
-                            key="giveup"
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.15 }}
-                            onClick={e => { e.stopPropagation(); onFocusGiveUp() }}
-                            className="w-full py-2 rounded-[6px] text-[11px] font-normal"
-                            style={{
-                              fontFamily: serifFont, letterSpacing: '0.01em',
-                              backgroundColor: elapsed < 60 ? (isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5") : "rgba(239,68,68,0.1)",
-                              color: elapsed < 60 ? dimColor : "#ef4444",
-                              border: `1px solid ${elapsed < 60 ? borderColor : "rgba(239,68,68,0.25)"}`,
-                              textDecoration: giveUpStage === 2 ? "underline" : "none",
-                            }}
-                          >
-                            {elapsed < 60 ? `Cancel (${60 - elapsed}s)` : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? "You will lose your seed" : "Give Up"}
-                          </motion.button>
+                    <div style={{ height: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 10 }}>
+                      <AnimatePresence mode="wait" initial={false}>
+                        {timerHover ? (
+                          <motion.span key="time" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.15 }}
+                            className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 20, color: textColor, lineHeight: 1 }}>
+                            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")} <span style={{ fontSize: 12, color: subtleColor }}>left</span>
+                          </motion.span>
+                        ) : (
+                          <motion.span key="stage" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.15 }}
+                            style={{ fontFamily: serifFont, fontSize: 14, color: textColor, lineHeight: 1, letterSpacing: '0.02em' }}>
+                            {focusStage.name}{focusStage.next && <span style={{ fontSize: 11.5, color: subtleColor }}> · next {focusStage.next.toLowerCase()}</span>}
+                          </motion.span>
                         )}
                       </AnimatePresence>
                     </div>
+                    <div className="relative mx-auto" style={{ width: '82%', height: 12 }}>
+                      <div style={{ position: 'absolute', top: 4, left: 0, right: 0, height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+                      <div style={{ position: 'absolute', top: 4, left: 0, width: `${Math.min(100, cumulativeRatio * 100)}%`, height: 4, borderRadius: 2, background: mainColor, boxShadow: `0 0 8px ${mainColor}66`, transition: 'width 0.6s ease' }} />
+                      {FOCUS_STAGES.slice(1).map(st => (
+                        <div key={st.at} style={{ position: 'absolute', left: `${st.at * 100}%`, top: 2, width: 8, height: 8, borderRadius: '50%', transform: 'translateX(-4px)', background: cumulativeRatio >= st.at ? mainColor : (isDark ? '#27272a' : '#e4e4e7'), boxShadow: `0 0 0 2px ${isDark ? '#0a0a0b' : '#fdfcf9'}`, transition: 'background 0.3s' }} />
+                      ))}
+                    </div>
                   </div>
+                  {treeVisual}
+                  <button
+                    onClick={onFocusGiveUp}
+                    onMouseLeave={() => { if (giveUpStage < 2) setGiveUpStage(0) }}
+                    className="w-full py-2 rounded-[6px] text-[11px] font-normal"
+                    style={{
+                      marginTop: 22, fontFamily: serifFont, letterSpacing: '0.01em',
+                      backgroundColor: elapsed < 60 ? (isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5") : "rgba(239,68,68,0.08)",
+                      color: elapsed < 60 ? dimColor : "#ef4444",
+                      border: `1px solid ${elapsed < 60 ? borderColor : "rgba(239,68,68,0.22)"}`,
+                      textDecoration: giveUpStage === 2 ? "underline" : "none",
+                    }}
+                  >
+                    {elapsed < 60 ? `Cancel (${60 - elapsed}s)` : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? "You will lose your seed" : "Give Up"}
+                  </button>
                 </div>
               ) : (<>
               {/* Timer display */}

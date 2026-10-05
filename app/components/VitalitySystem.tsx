@@ -7,7 +7,7 @@ import { logFocusSession, logCharsWritten } from "@/app/lib/dailyStats"
 import { apiFetch } from "@/lib/apiFetch"
 import { recordFocus } from "@/lib/party"
 import { extractTextFromHTML } from "@/lib/sanitize"
-import { SAPLING_STAGE, FULL_STAGE, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
+import { SAPLING_STAGE, FULL_STAGE, timerStage, recallNeededFor, isTopicTree, isFullyGrown, takeBanked } from "@/lib/topics"
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
 import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
 
@@ -567,7 +567,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       const newTree: Tree = {
         id: Date.now(), type: treeType,
         // Timer grows topic trees only to sapling; recall finishes them.
-        stage: Math.min(SAPLING_STAGE, computeStage(ratio)), progress: ratio * 100,
+        stage: timerStage(ratio), progress: ratio * 100,
         plantedAt: Date.now(), notebookId: selectedNotebookId ?? undefined,
         focusMinutes: sessionMinutes, growthTarget,
         recallNeeded: recallNeededFor(treeType), recallDone: 0,
