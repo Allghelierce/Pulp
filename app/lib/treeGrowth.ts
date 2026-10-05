@@ -57,7 +57,8 @@ const oldest = (trees: Tree[]): Tree | undefined =>
 // Recall growth (topics as trees, docs/timer-recall-design.txt).
 // - topic: grow that topic's unfinished sapling; none waiting -> bank nutrients.
 // - no topic (legacy cards / nothing written): oldest topic-less sapling in the
-//   notebook, else oldest sapling in the notebook, else no growth.
+//   notebook, else oldest sapling in the notebook, else oldest topic-less sapling
+//   anywhere, else no growth.
 // Full trees and legacy trees are never touched by the topic paths.
 // NOTE: banking writes localStorage — call outside React state updaters.
 export function applyRecall(grove: Tree[], topic: string | undefined, weight: number, notebookId?: string): Tree[] {
@@ -71,7 +72,8 @@ export function applyRecall(grove: Tree[], topic: string | undefined, weight: nu
     return grove
   }
   const inNotebook = waiting.filter(t => (t.notebookId ?? undefined) === (notebookId ?? undefined))
-  const target = oldest(inNotebook.filter(t => !t.topic)) ?? oldest(inNotebook)
+  // Fallback: a topic-less sapling anywhere (paper sessions, no notebook) so none get stuck.
+  const target = oldest(inNotebook.filter(t => !t.topic)) ?? oldest(inNotebook) ?? oldest(waiting.filter(t => !t.topic))
   if (target) return feedTopicTree(grove, target.id, weight)
   // Nothing waiting: only the timer plants trees, so recall just pays its sap.
   return grove

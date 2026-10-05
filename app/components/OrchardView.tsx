@@ -7,7 +7,7 @@ import { CachedPlantIcon } from "./CachedPlantIcon"
 import { SummerTerrain } from "./SummerTerrain"
 import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
-import type { NoteData } from "@/app/types"
+import type { NoteData, Tree } from "@/app/types"
 import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
@@ -40,6 +40,8 @@ interface OrchardViewProps {
   reduceMotion?: boolean
   grade?: string | null
   onReviewTopic?: (topic: string, notebookId?: string) => void
+  /** Open with this topic's newest tree selected (from the review summary). */
+  focusTopic?: string
 }
 
 type RGB = [number, number, number]
@@ -205,7 +207,7 @@ function getRarityPlantClass(type: string): string {
 const PLOT_COST = [0, 5, 12]
 
 function getSapYield(tree: any): number {
-  // Only full trees produce sap (unfinished topic saplings / young legacy trees yield nothing).
+  // Only full trees produce sap (unfinished topic saplings yield nothing; legacy trees always count).
   if (!isFullyGrown(tree)) return 0
   const info = TREE_TYPES[tree.type]
   if (!info) return 1
@@ -2659,7 +2661,7 @@ export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
   onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false, grade,
-  onReviewTopic,
+  onReviewTopic, focusTopic,
 }: OrchardViewProps) {
   const groveHeader = groveTitle(grade)
 
@@ -2682,6 +2684,16 @@ export const OrchardView = memo(function OrchardView({
   const [editMode, setEditMode] = useState(false)
   const [orchardMode, setOrchardMode] = useState<'xp' | 'seasonal'>('xp')
   const [focusedTree, setFocusedTree] = useState<{ tree: any; x: number; y: number } | null>(null)
+  // Review summary -> "show in orchard": select that topic's newest tree.
+  useEffect(() => {
+    if (!isOpen || !focusTopic) return
+    const k = normalizeTopic(focusTopic)
+    const match = grove
+      .filter(t => t?.topic && normalizeTopic(t.topic) === k)
+      .reduce<Tree | undefined>((a, t) => (!a || t.plantedAt > a.plantedAt ? t : a), undefined)
+    if (match) setFocusedTree({ tree: match, x: 50, y: 50 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per open/topic, not on grove ticks
+  }, [isOpen, focusTopic])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
   const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })

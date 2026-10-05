@@ -1240,6 +1240,7 @@ export default function NoteApp() {
   const inventory = useGroveStore(s => s.inventory)
   const setInventory = useGroveStore(s => s.setInventory)
   const [orchardOpen, setOrchardOpen] = useState(false)
+  const [orchardFocusTopic, setOrchardFocusTopic] = useState<string | undefined>(undefined)
   const [orchardMounted, setOrchardMounted] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
@@ -1252,7 +1253,7 @@ export default function NoteApp() {
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setShowSettings(false); setCommunityOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setShowSettings(false); setCommunityOpen(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -4404,7 +4405,8 @@ export default function NoteApp() {
           {orchardMounted && <Suspense fallback={<PulpLoader variant="panel" />}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
-              onClose={() => setOrchardOpen(false)}
+              onClose={() => { setOrchardOpen(false); setOrchardFocusTopic(undefined) }}
+              focusTopic={orchardFocusTopic}
               theme={theme}
               accent={accent}
               sap={sap}
@@ -4493,6 +4495,7 @@ export default function NoteApp() {
                     theme={theme}
                     accent={accentSolid}
                     onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
+                    onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
                     onCorrect={(weight, topic) => {
                       // Topics as trees: recall finishes that topic's sapling, or banks
                       // nutrients if none is waiting. Read the store directly (not an

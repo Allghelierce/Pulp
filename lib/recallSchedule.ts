@@ -16,7 +16,7 @@ export interface ScheduledCard {
   lapses: number      // times forgotten
   due: number         // epoch ms when next due
   last?: number       // epoch ms of last review
-  topic?: string      // topic tag (lib/topics normalizeTopic) from session-end tagging
+  topic?: string      // topic display name from session-end tagging; compare via normalizeTopic
 }
 
 export interface Deck {

@@ -464,7 +464,11 @@ export const VitalitySystem = memo(function VitalitySystem({
           }
         }
         if (treeId == null) return
-        const banked = takeBanked(topic, recallNeeded)
+        // Take only what the tree still needs, and nothing if it's gone — excess stays banked.
+        const tree = groveRef.current.find(t => t.id === treeId)
+        if (!tree) return
+        const need = Math.max(0, (tree.recallNeeded ?? recallNeeded) - (tree.recallDone || 0))
+        const banked = takeBanked(topic, need)
         setGrove(g => g.map(t => {
           if (t.id !== treeId) return t
           const recallDone = (t.recallDone || 0) + banked

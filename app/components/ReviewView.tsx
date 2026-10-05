@@ -31,6 +31,8 @@ interface ReviewViewProps {
   onCorrect?: (weight: number, topic?: string) => void
   /** Limit the session to cards tagged with this topic ("Review <topic>" from the orchard). */
   topic?: string
+  /** Summary "show in orchard" for a topic whose tree grew this session. */
+  onShowTopic?: (topic: string) => void
 }
 
 function gatherNotebookText(note: NoteData): string {
@@ -71,7 +73,7 @@ const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: "easy", label: "Easy", key: "4" },
 ]
 
-export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic }: ReviewViewProps) {
+export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic, onShowTopic }: ReviewViewProps) {
   const isDark = theme === "dark"
   const font = "'Crimson Pro', serif"
 
@@ -93,6 +95,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const [revealed, setRevealed] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const [log, setLog] = useState<Grade[]>([])
+  // Topics whose trees this session fed, so mixed review keeps the card -> tree link.
+  const [grown, setGrown] = useState<Record<string, number>>({})
+  const [flash, setFlash] = useState<{ topic: string; id: number } | null>(null)
   // Produce-then-grade: the student types an answer, AI judges it.
   const [answer, setAnswer] = useState("")
   const [grading, setGrading] = useState(false)
@@ -100,6 +105,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const [gradeFailed, setGradeFailed] = useState(false)
   const answerRef = useRef<HTMLTextAreaElement>(null)
   const studied = useRef<Set<string>>(new Set())
+  // "Review ahead" re-studies cards early — practice only, no growth.
+  const reviewingAhead = useRef(false)
   const driftDismissed = useRef(false)
 
   const bg = isDark ? "#09090b" : "#fafaf9"
@@ -122,7 +129,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const startSession = useCallback((d: Deck) => {
     const session = buildSession(scoped(d), Date.now())
     studied.current = new Set()
+    reviewingAhead.current = false
     setLog([])
+    setGrown({})
     resetAttempt()
     if (!session.length) { setPhase("caughtup"); return }
     setQueue(session)
@@ -184,12 +193,21 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     if (!current || !deck) return
     const gnow = Date.now()
     const updated = applyGrade(current, g, gnow)
+    const firstAttempt = !studied.current.has(current.id)
     studied.current.add(current.id)
     setLog(prev => [...prev, g])
     // Growth comes from the AI verdict (actual retrieval), not the clicked grade.
-    // Fallback when grading was unavailable: self-grade, any non-"again" counts.
-    const weight = result ? VERDICT_WEIGHT[result.verdict] : (g !== "again" ? 1 : 0)
-    if (weight > 0) onCorrect?.(weight, current.topic)
+    // Ungraded (AI unavailable) answers grow nothing. Only a card's first attempt
+    // per session counts ("again" requeues can't be farmed), and never when reviewing ahead.
+    const weight = result ? VERDICT_WEIGHT[result.verdict] : 0
+    if (weight > 0 && firstAttempt && !reviewingAhead.current) {
+      onCorrect?.(weight, current.topic)
+      const t = current.topic
+      if (t) {
+        setGrown(prev => ({ ...prev, [t]: (prev[t] || 0) + weight }))
+        setFlash({ topic: t, id: gnow })
+      }
+    }
 
     const nextDeck: Deck = { ...deck, cards: deck.cards.map(c => (c.id === updated.id ? updated : c)) }
     saveDeck(nextDeck)
@@ -346,7 +364,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
               {deck && deck.cards.some(c => inScope(c) && c.reps > 0) && (
                 <button onClick={() => {
                   const ahead = deck.cards.filter(c => inScope(c) && c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
-                  if (ahead.length) { studied.current = new Set(); setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
+                  if (ahead.length) { studied.current = new Set(); reviewingAhead.current = true; setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
                 }} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
               )}
               <button onClick={() => generate(deck)} style={{ background: "transparent", color: subtle, border: `1px solid ${border}`, borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Add more cards</button>
@@ -360,7 +378,14 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
               {studied.current.size + 1} of {studied.current.size + queue.length}
               {current.reps === 0 && <span style={{ color: accent, marginLeft: 8 }}>new</span>}
               {current.reps > 0 && current.lapses > 0 && <span style={{ color: isDark ? "#f87171" : "#dc2626", marginLeft: 8 }}>lapsed</span>}
+              {current.topic && !topicKey && <span style={{ color: subtle, marginLeft: 8 }}>· {current.topic}</span>}
             </div>
+            <div style={{ height: 18, marginTop: -6, marginBottom: 6, textAlign: "center" }}>
+              {flash && (
+                <span key={flash.id} style={{ fontSize: 12.5, color: accent, animation: "pulpGrowFlash 1.8s ease forwards" }}>+ {flash.topic} 🌱</span>
+              )}
+            </div>
+            <style>{`@keyframes pulpGrowFlash { 0% { opacity: 0; transform: translateY(4px) } 15% { opacity: 1; transform: none } 75% { opacity: 1 } 100% { opacity: 0 } }`}</style>
 
             <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: 16, padding: "32px 28px", boxShadow: isDark ? "none" : "0 4px 24px rgba(0,0,0,0.05)" }}>
               <div style={{ fontSize: 20, lineHeight: 1.45, color: fg, fontWeight: 500 }}>{current.q}</div>
@@ -464,6 +489,19 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                 return <div key={g} style={{ fontSize: 13, color: gradeColor(g) }}><b>{n}</b> {g}</div>
               })}
             </div>
+            {Object.keys(grown).length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: muted, marginBottom: 8 }}>Trees that grew</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                  {Object.entries(grown).map(([t, w]) => (
+                    <button key={t} onClick={() => onShowTopic?.(t)} disabled={!onShowTopic} title={onShowTopic ? "Show in orchard" : undefined} style={{
+                      background: `${accent}14`, color: accent, border: `1px solid ${accent}40`, borderRadius: 999,
+                      padding: "5px 12px", fontSize: 13, fontFamily: font, cursor: onShowTopic ? "pointer" : "default",
+                    }}>🌱 {t} <span style={{ opacity: 0.7 }}>+{Math.round(w * 10) / 10}</span></button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div style={{ fontSize: 12.5, color: muted, marginTop: 18, lineHeight: 1.55 }}>
               {stats.dueNow > 0 ? `${stats.dueNow} still due.` : "Nothing left due."}
               {stats.nextDue ? ` Next card returns in ${relDue(stats.nextDue, now)}.` : ""}
