@@ -752,10 +752,14 @@ export const BoutiqueView = memo(function BoutiqueView({
     return `${minutes}m`
   }
 
+  // Price after today's market discount — what the card shows is what you pay.
+  const priceOf = (type: string): number =>
+    Math.round((TREE_TYPES[type]?.cost || 0) * (1 - (shopDiscounts[type] || 0) / 100))
+
   const buySeed = (type: string) => {
     if ((shopStock[type] || 0) <= 0) return
     if (inventory.length >= MAX_SEEDS) { setSatchelFullPopup(true); return }
-    const seedCost = TREE_TYPES[type]?.cost || 0
+    const seedCost = priceOf(type)
     if (seedCost > sap) return
     if (seedCost > 0) setSap((s: number) => s - seedCost)
     const nextStock = { ...shopStock, [type]: shopStock[type] - 1 }
@@ -2007,7 +2011,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, marginTop: 0 }}>
                             {discount > 0 ? (<>
                               <span style={{ fontSize: 9, fontWeight: 400, color: isDark ? '#8a7a60' : '#8a7a60', fontFamily: font, textDecoration: 'line-through', opacity: 0.7 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}</span>
-                              <span style={{ fontSize: 13, fontWeight: 400, color: '#dc2626', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{Math.round((TREE_TYPES[type]?.cost || 0) * (1 - discount / 100)).toLocaleString()}<PulpIcon size={11} /></span>
+                              <span style={{ fontSize: 13, fontWeight: 400, color: '#dc2626', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{priceOf(type).toLocaleString()}<PulpIcon size={11} /></span>
                             </>) : (
                               <span style={{ fontSize: 13, fontWeight: 400, color: isDark ? '#d4c4a0' : '#4a3a20', fontFamily: font, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{(TREE_TYPES[type]?.cost || 0).toLocaleString()}<PulpIcon size={11} /></span>
                             )}
@@ -2171,7 +2175,7 @@ export const BoutiqueView = memo(function BoutiqueView({
             const stock = shopStock[selectedPlant!] || 0
             const rarityCol = SHOP_RARITY_COLOR[previewInfo.rarity] || '#8a7a6a'
             const desc = PLANT_DESCRIPTIONS[selectedPlant!] || `A ${RARITY_LABEL[previewInfo.rarity].toLowerCase()} specimen. Produces ${previewInfo.sapYield || 2} sap when mature.`
-            const seedCost = TREE_TYPES[selectedPlant!]?.cost || 0
+            const seedCost = priceOf(selectedPlant!)
             const canAfford = seedCost <= sap
 
             return (

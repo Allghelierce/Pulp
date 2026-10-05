@@ -205,7 +205,10 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [selectedSeed, setSelectedSeed] = useState<string | null>(() => _backupExpired ? null : (_saved.current?.selectedSeed ?? null))
 
   // Tab-close grace period expired — tree dies (unless was in cancel window)
+  const backupHandledRef = useRef(false)
   useEffect(() => {
+    if (backupHandledRef.current) return // StrictMode re-run: don't refund twice
+    backupHandledRef.current = true
     if (_isBackup && _backupExpired) {
       if (!_wasInCancelWindow) {
         setDeathReason("You were away too long")

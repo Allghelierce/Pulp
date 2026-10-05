@@ -38,7 +38,8 @@ export async function POST(req: Request) {
       case 'checkout.session.completed':
       case 'checkout.session.async_payment_succeeded': {
         const s = event.data.object as any
-        // Delayed methods (ACH, SEPA) complete "unpaid"; grant on async_payment_succeeded instead.
+        // Delayed methods (ACH, SEPA) complete "unpaid"; grant on async_payment_succeeded instead
+        // (a failed one never granted anything, so it needs no handler).
         if (s.payment_status === 'unpaid') break
         const userId = s.metadata?.user_id || s.client_reference_id
         if (s.mode === 'payment') {
@@ -47,13 +48,6 @@ export async function POST(req: Request) {
         } else {
           // Subscription — expiry set by the subscription.* events below; grant now too.
           await setPro({ customerId: s.customer, userId, active: true, expiresAt: null })
-        }
-        break
-      }
-      case 'checkout.session.async_payment_failed': {
-        const s = event.data.object as any
-        if (s.mode === 'payment') {
-          await setPro({ customerId: s.customer, userId: s.metadata?.user_id || s.client_reference_id, active: false, expiresAt: null })
         }
         break
       }

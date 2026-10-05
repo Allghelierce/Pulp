@@ -93,6 +93,12 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 
 const noop = () => { }
 
+// Supabase query builders are lazy: they only send when awaited or `.then`-ed.
+// Fire-and-forget writes go through here so they actually run (and log failures).
+function cloudWrite(q: PromiseLike<{ error: { message: string } | null }>, label: string) {
+  q.then(({ error }) => { if (error) console.error(`Cloud ${label} failed:`, error.message) }, err => console.error(`Cloud ${label} failed:`, err))
+}
+
 // Cards to recall in a notebook right now (new ones included once their first due comes).
 function countRecallDue(noteId: string | undefined): number {
   const deck = noteId ? loadDeck(noteId) : null
@@ -1297,7 +1303,8 @@ export default function NoteApp() {
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [allRecallDue, setAllRecallDue] = useState(0)
   // Notebooks in use (not trashed/archived) — recall badges ignore other decks.
-  const liveNoteIds = useMemo(() => new Set(notes.filter(n => !n.archived && !n.deletedAt).map(n => n.id)), [notes])
+  const liveNotes = useMemo(() => notes.filter(n => !n.archived && !n.deletedAt), [notes])
+  const liveNoteIds = useMemo(() => new Set(liveNotes.map(n => n.id)), [liveNotes])
   const liveNoteIdsRef = useRef(liveNoteIds)
   liveNoteIdsRef.current = liveNoteIds
   const liveNoteIdsKey = liveNoteIds.size
@@ -3141,7 +3148,7 @@ export default function NoteApp() {
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
-      if (user) supabase.from("notes").insert({ id, subject: finalName, pages: [""], boxes, folder_id: folderId, user_id: user.id })
+      if (user) cloudWrite(supabase.from("notes").insert({ id, subject: finalName, pages: [""], boxes, folder_id: folderId, user_id: user.id }), "note insert")
     }, "📓")
 
   const addFirstNotebook = () => {
@@ -3153,7 +3160,7 @@ export default function NoteApp() {
     setSidebarOpen(true)
     setSidebarWidth(240)
     checkAchievement('first_note')
-    if (user) supabase.from("notes").insert({ id, subject: "My First Notebook", pages: [""], boxes, folder_id: null, user_id: user.id })
+    if (user) cloudWrite(supabase.from("notes").insert({ id, subject: "My First Notebook", pages: [""], boxes, folder_id: null, user_id: user.id }), "note insert")
   }
 
   const addTypedNote = (folderId: number | null = null, noteType?: NoteData["noteType"]) => {
@@ -3181,7 +3188,7 @@ export default function NoteApp() {
       setNotes(prev => [...prev, newNote])
       setActiveTabId(id); setCurrentPageIdx(0)
       checkAchievement('first_note')
-      if (user) supabase.from("notes").insert({ id, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: folderId, note_type: noteType ?? null, user_id: user.id })
+      if (user) cloudWrite(supabase.from("notes").insert({ id, subject: name.trim(), pages: [""], boxes: defaultBoxes(), folder_id: folderId, note_type: noteType ?? null, user_id: user.id }), "note insert")
     }
 
     openPrompt(title, "", promptTitle, "Create", name => {
@@ -3295,7 +3302,7 @@ export default function NoteApp() {
 
   const setNoteParent = useCallback((id: string, parentId: string | undefined) => {
     setNotes(prev => prev.map(n => n.id === id ? { ...n, parentId } : n))
-    if (user) supabase.from("notes").update({ parent_id: parentId ?? null }).eq("id", id)
+    if (user) cloudWrite(supabase.from("notes").update({ parent_id: parentId ?? null }).eq("id", id), "note update")
   }, [user])
 
   const changeNoteIcon = useCallback((id: string, icon: string) => {
@@ -3317,7 +3324,7 @@ export default function NoteApp() {
     setTrashNotes(ts => [...ts, { ...note, deletedAt: new Date().toISOString() }])
     if (activeTabId === id) setActiveTabId(null)
     if (user) {
-      supabase.from("notes").delete().eq("id", id)
+      cloudWrite(supabase.from("notes").delete().eq("id", id), "note delete")
       db.addToTrash(user.id, id)
     } else {
       const pending = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
@@ -3326,14 +3333,17 @@ export default function NoteApp() {
     }
   }
 
+  // Ref, not a dep: the callback must see notes trashed after it was created.
+  const trashNotesRef = useRef(trashNotes)
+  trashNotesRef.current = trashNotes
   const restoreNote = useCallback((id: string) => {
-    const note = trashNotes.find(n => n.id === id)
+    const note = trashNotesRef.current.find(n => n.id === id)
     if (!note) return
     setTrashNotes(ts => ts.filter(n => n.id !== id))
     setNotes(ns => ns.some(n => n.id === id) ? ns : [...ns, { ...note, deletedAt: undefined }])
     if (user) {
       db.removeFromTrash(user.id, id)
-      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+      cloudWrite(supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id }), "note upsert")
     }
     const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
     localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
@@ -4580,7 +4590,7 @@ export default function NoteApp() {
                   theme={theme}
                   accent={accentSolid}
                   grove={grove}
-                  notes={notes.filter(n => !n.archived && !n.deletedAt)}
+                  notes={liveNotes}
                   onClose={() => setTopicsOpen(false)}
                   onRecall={(topic, notebookId) => { startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) }) }}
                   onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}

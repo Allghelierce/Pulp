@@ -2977,15 +2977,15 @@ export const OrchardView = memo(function OrchardView({
     setChopTarget(null)
   }, [chopTarget, setSap, setGrove, userId])
 
-  // Auto-convert overflow trees to sap: oldest first, never a sapling still
-  // waiting on recall, and only while the orchard is actually open.
+  // Auto-convert overflow trees to sap: cheapest first (newest breaks ties), never
+  // a sapling still waiting on recall, and only while the orchard is actually open.
   useEffect(() => {
     if (!isOpen || isAllView) return // unified view shows everything; culling is per-notebook only
     const maxCapacity = nbUnlocked * TREES_PER_PLOT
     if (filteredTrees.length <= maxCapacity) return
     const overflow = filteredTrees
       .filter(t => !(isTopicTree(t) && !isFullyGrown(t)))
-      .sort((a, b) => (a.plantedAt || 0) - (b.plantedAt || 0))
+      .sort((a, b) => (getSapYield(a) - getSapYield(b)) || ((b.plantedAt || 0) - (a.plantedAt || 0)))
       .slice(0, filteredTrees.length - maxCapacity)
     let totalSap = 0
     const overflowIds = new Set(overflow.map((t: any) => { totalSap += getSapYield(t); return t.id }))

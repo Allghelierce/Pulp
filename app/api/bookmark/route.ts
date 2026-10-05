@@ -111,6 +111,7 @@ export async function GET(req: NextRequest) {
       })
       const loc = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null
       if (!loc) break
+      res.body?.cancel().catch(() => {})
       target = new URL(loc, target).toString()
       res = null
     }

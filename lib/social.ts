@@ -21,7 +21,8 @@ export function generateInviteCode(): string {
 }
 
 // Escape LIKE wildcards so `a_b` only matches "a_b" in case-insensitive lookups.
-export const escapeLike = (v: string): string => v.replace(/[\\%_]/g, c => `\\${c}`)
+// (PostgREST also reads `*` as `%`.)
+export const escapeLike = (v: string): string => v.replace(/[\\%_*]/g, c => `\\${c}`)
 
 export type UsernameResult =
   | { ok: true; value: string }
