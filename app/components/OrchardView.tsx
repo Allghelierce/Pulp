@@ -2929,13 +2929,22 @@ export const OrchardView = memo(function OrchardView({
     try { return JSON.parse(localStorage.getItem('pulp-unlocked-plots') || '{}') } catch { return {} }
   })
 
+  // Overflow culling waits for this: until the server's unlocks are known, a
+  // notebook could look like it has 1 plot and lose its extra trees.
+  const [plotsReady, setPlotsReady] = useState(!userId)
   useEffect(() => {
-    if (!userId) return
+    if (!userId) { setPlotsReady(true); return }
+    setPlotsReady(false)
     db.getUnlockedPlots(userId).then(plots => {
-      const mapped: Record<string, number> = {}
-      for (const [nbId, indices] of Object.entries(plots)) mapped[nbId] = Math.max(...indices, 1)
-      if (Object.keys(mapped).length) setUnlockedPlots(mapped)
-    })
+      // Merge (max per notebook) so a local unlock whose save failed isn't lost.
+      setUnlockedPlots(prev => {
+        const merged = { ...prev }
+        for (const [nbId, indices] of Object.entries(plots)) merged[nbId] = Math.max(merged[nbId] || 1, ...indices, 1)
+        try { localStorage.setItem('pulp-unlocked-plots', JSON.stringify(merged)) } catch { }
+        return merged
+      })
+      setPlotsReady(true)
+    }).catch(() => { /* unknown server state: never cull */ })
   }, [userId])
 
   const isAllView = selectedNotebook === '_all'
@@ -2980,7 +2989,7 @@ export const OrchardView = memo(function OrchardView({
   // Auto-convert overflow trees to sap: cheapest first (newest breaks ties), never
   // a sapling still waiting on recall, and only while the orchard is actually open.
   useEffect(() => {
-    if (!isOpen || isAllView) return // unified view shows everything; culling is per-notebook only
+    if (!isOpen || isAllView || !plotsReady) return // unified view shows everything; culling is per-notebook only
     const maxCapacity = nbUnlocked * TREES_PER_PLOT
     if (filteredTrees.length <= maxCapacity) return
     const overflow = filteredTrees
@@ -2993,7 +3002,7 @@ export const OrchardView = memo(function OrchardView({
     setSap((j: number) => j + totalSap)
     setGrove((g: any[]) => g.filter(t => !overflowIds.has(t.id)))
     if (userId) db.deleteTrees(userId, [...overflowIds]).catch(() => {})
-  }, [filteredTrees.length, nbUnlocked, selectedNotebook, isOpen])
+  }, [filteredTrees.length, nbUnlocked, selectedNotebook, isOpen, plotsReady])
 
   const currentPlotTrees = useMemo(() => {
     const start = plotPage * TREES_PER_PLOT

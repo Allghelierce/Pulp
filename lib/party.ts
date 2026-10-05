@@ -1,6 +1,7 @@
 // Party play — frontend-first MOCK data layer.
 // Persists to localStorage so create / join / leave feel real across reloads.
 // Swap these functions for real Supabase calls later (study_groups tables already fit).
+import { localDayKey } from "@/lib/day"
 import { generateInviteCode } from "./social"
 
 export const PARTY_CAP = 5
@@ -38,7 +39,8 @@ function mondayISO(d = new Date()): string {
   const x = new Date(d)
   const day = (x.getDay() + 6) % 7 // 0 = Monday
   x.setDate(x.getDate() - day)
-  return x.toISOString().slice(0, 10)
+  // Local date: toISOString() is UTC and flips the key mid-day west of Greenwich.
+  return localDayKey(x)
 }
 
 // ── seeded friends so standings never feel empty / impersonal ─────

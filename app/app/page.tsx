@@ -2993,7 +2993,7 @@ export default function NoteApp() {
       }
     }, 500)
     return () => clearTimeout(groveSaveTimer.current)
-  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, hibernation, hibernationScheduled, user])
+  }, [sap, essence, grove, inventory, achievements, lastCharCount, unlockedCosmetics, goalStreak, goalStreakLastDate, dailyGoalMinutes, quotaTier, quotaLockedUntil, hibernation, hibernationScheduled, user])
 
   // Cloud autosave (debounced off notes array). Every note whose object changed
   // since the last run is queued — not just the active one — so edits made right
@@ -4578,6 +4578,8 @@ export default function NoteApp() {
               xp={xp}
               grove={grove}
               inventory={inventory}
+              gems={essence}
+              setGems={setEssence}
               setSap={setSap}
               setInventory={setInventory}
               setGrove={setGrove}

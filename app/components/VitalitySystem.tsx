@@ -309,10 +309,13 @@ export const VitalitySystem = memo(function VitalitySystem({
   const timerElapsedRef = useRef(timerElapsed)
   useEffect(() => { timerElapsedRef.current = timerElapsed }, [timerElapsed])
 
-  // Timer tick
+  // Timer tick. Elapsed comes from the wall clock, not the tick count: hidden
+  // tabs throttle setInterval (down to ~1/min), which would stretch the session.
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
+      const startWall = Date.now() - timerElapsedRef.current * 1000
+      let paidMinutes = Math.floor(timerElapsedRef.current / 60)
       interval = setInterval(() => {
         const wd = waterDeadlineRef.current
         if (wd && Date.now() > wd) {
@@ -330,10 +333,12 @@ export const VitalitySystem = memo(function VitalitySystem({
           setTimerElapsed(timerTotal)
           return
         }
-        const next = prev + 1
+        const next = Math.min(timerTotal, Math.max(prev + 1, Math.floor((Date.now() - startWall) / 1000)))
         timerElapsedRef.current = next
         setTimerElapsed(next)
-        if (next % 60 === 0) {
+        // One payout per whole minute, including minutes a throttled tab skipped over.
+        while (paidMinutes < Math.floor(next / 60)) {
+          paidMinutes++
           const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000)
           checkAchievementRef.current?.('marathon', () => ({ progress: Math.min(7200, elapsed) }))
           if (!isHibernatingRef.current) {
@@ -676,7 +681,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       waterDeadline={waterDeadline}
       treeDead={treeDead}
       deathReason={deathReason}
-      onSetTotal={setTimerTotal}
+      onSetTotal={v => { if (!timerDone && !timerRunning) setTimerTotal(v) }}
       onSetPreset={setTimerPreset}
       onStart={startSession}
       onGiveUp={giveUp}

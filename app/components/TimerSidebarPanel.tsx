@@ -821,8 +821,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
-              {/* Duration slider (hidden while running) */}
-              {!running && (
+              {/* Duration slider (hidden while running, and once done — claim credits the set length) */}
+              {!running && !done && !treeDead && (
                 <div className="w-full">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     {/* Dev-only 30s preset for quick testing */}

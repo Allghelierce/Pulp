@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   const { data: trees } = await supabaseAdmin.from('group_trees').select('user_id').eq('group_id', id)
   const treeCount: Record<string, number> = {}; for (const t of trees ?? []) treeCount[t.user_id] = (treeCount[t.user_id] || 0) + 1
 
-  const byName = (a: any, b: any, key: string) => (b[key] - a[key]) || uname[a.user_id].localeCompare(uname[b.user_id])
+  const byName = (a: any, b: any, key: string) => (b[key] - a[key]) || (uname[a.user_id] ?? '').localeCompare(uname[b.user_id] ?? '')
   const weekly = (members ?? []).map(m => ({ user_id: m.user_id, username: uname[m.user_id], focus_minutes: weekMap[m.user_id] || 0 }))
     .sort((a, b) => byName(a, b, 'focus_minutes'))
   const allTime = (members ?? []).map(m => ({ user_id: m.user_id, username: uname[m.user_id], focus_minutes_total: m.focus_minutes_total, trees: treeCount[m.user_id] || 0 }))
