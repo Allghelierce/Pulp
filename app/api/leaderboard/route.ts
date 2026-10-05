@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
   const { data: existing } = await supabaseAdmin
     .from('pulp_weekly')
-    .select('id, pulp_start')
+    .select('id, pulp_start, pulp_current')
     .eq('user_id', user.id)
     .eq('week_start', weekStart)
     .single()
@@ -82,7 +82,10 @@ export async function POST(req: Request) {
   if (typeof trees_grown === 'number') fields.trees_grown = trees_grown
 
   if (existing) {
-    // Keep the week's starting baseline; never let it rise above current.
+    // Score is current - start. Spending sap lowers the baseline by the same amount,
+    // so buying a seed doesn't erase the week's earnings.
+    const spent = Math.max(0, (existing.pulp_current ?? pulpValue) - pulpValue)
+    if (spent > 0) fields.pulp_start = (existing.pulp_start ?? 0) - spent
     await supabaseAdmin.from('pulp_weekly').update(fields).eq('id', existing.id)
   } else {
     await supabaseAdmin.from('pulp_weekly').insert({

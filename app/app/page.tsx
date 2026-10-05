@@ -1523,7 +1523,10 @@ export default function NoteApp() {
         setAchievements(prev => prev.map(a => {
           const row = achievementRows.find(r => r.achievement_id === a.id)
           if (!row) return a
-          return { ...a, progress: row.progress, completed: row.completed, claimed: row.completed }
+          // The cloud has no `claimed` flag: trust this device if it already knows the
+          // achievement is completed (so an unclaimed reward survives a reload); otherwise
+          // assume a completed one was claimed elsewhere.
+          return { ...a, progress: row.progress, completed: row.completed, claimed: row.completed && (a.claimed || !a.completed) }
         }))
       }
 
