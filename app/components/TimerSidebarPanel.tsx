@@ -206,6 +206,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
   const [justWatered, setJustWatered] = useState(false)
+  // Focus mode: hovering the timer reveals Cancel / Give Up.
+  const [timerHover, setTimerHover] = useState(false)
   // Quiet "N cards queued · Topic" note after a session; fades on its own.
   const [queued, setQueued] = useState<{ count: number; topic: string; key: number } | null>(null)
   useEffect(() => {
@@ -324,6 +326,15 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const waterColor = "#0ea5e9"
   // Sap accrued so far this session — ramps toward the projected payout as time passes.
   const liveSap = sapPerMinute * Math.floor(elapsed / 60)
+
+  const focusMode = running && !done && !treeDead
+  // In focus mode the panel shrinks to fit the gap beside the page (the hill scales with it).
+  const panelW = focusMode && pageLeft != null ? Math.max(150, Math.min(250, pageLeft - sidebarRight - 16)) : 250
+  const onFocusGiveUp = () => {
+    if (elapsed < 60) { onCancel(); return }
+    if (giveUpStage === 2) { onGiveUp(); setGiveUpStage(0) }
+    else setGiveUpStage(s => s + 1)
+  }
 
   // Tree + watering can as reusable blocks so they can swap places while running.
   const treeVisual = (
@@ -455,11 +466,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="fixed z-40 flex flex-col select-none"
           style={{
-            left: panelLeftFor(250),
+            left: panelLeftFor(panelW),
             bottom: 12,
             transition: "left 160ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 420ms ease, min-height 420ms cubic-bezier(0.16, 1, 0.3, 1)",
             display: hidden ? 'none' : undefined,
-            width: 250,
+            width: panelW,
             height: "auto",
             // When running, the panel settles into the page — squish only slightly.
             minHeight: running ? 540 : 560,
@@ -613,6 +624,48 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )
             })() : (
             <motion.div key="timer-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col items-center flex-1">
+              {focusMode ? (
+                // Focus mode: just the plot + seed, with the timer beneath. Give up lives on hover.
+                <div className="flex flex-col items-center justify-end flex-1 w-full">
+                  {waterUrgent && waterWidget}
+                  {treeVisual}
+                  <div
+                    className="text-center w-full"
+                    style={{ marginTop: 14, cursor: 'default' }}
+                    onMouseEnter={() => setTimerHover(true)}
+                    onMouseLeave={() => { setTimerHover(false); if (giveUpStage < 2) setGiveUpStage(0) }}
+                    onClick={() => setTimerHover(h => !h)}
+                  >
+                    <div className="tabular-nums" style={{ fontFamily: serifFont, fontWeight: 300, fontSize: 44, lineHeight: 1, color: textColor }}>
+                      {String(minutes).padStart(2, "0")}<span>:{String(seconds).padStart(2, "0")}</span>
+                    </div>
+                    <div style={{ height: 40, marginTop: 10 }}>
+                      <AnimatePresence>
+                        {(timerHover || giveUpStage > 0) && (
+                          <motion.button
+                            key="giveup"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={e => { e.stopPropagation(); onFocusGiveUp() }}
+                            className="w-full py-2 rounded-[6px] text-[11px] font-normal"
+                            style={{
+                              fontFamily: serifFont, letterSpacing: '0.01em',
+                              backgroundColor: elapsed < 60 ? (isDark ? "rgba(255,255,255,0.04)" : "#f4f4f5") : "rgba(239,68,68,0.1)",
+                              color: elapsed < 60 ? dimColor : "#ef4444",
+                              border: `1px solid ${elapsed < 60 ? borderColor : "rgba(239,68,68,0.25)"}`,
+                              textDecoration: giveUpStage === 2 ? "underline" : "none",
+                            }}
+                          >
+                            {elapsed < 60 ? `Cancel (${60 - elapsed}s)` : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? "You will lose your seed" : "Give Up"}
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+              ) : (<>
               {/* Timer display */}
               <div className="text-center mb-5">
                 <div
@@ -724,6 +777,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   </p>
                 </motion.div>
               )}
+              </>)}
 
 
 
@@ -734,7 +788,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             {/* Bottom controls — pushed down */}
             <div className="flex flex-col items-center mt-auto">
               {/* Tree drops here while running (swapped with the watering can above) */}
-              {running && showWaterWidget && !treeDead && treeVisual}
+              {running && showWaterWidget && !treeDead && !focusMode && treeVisual}
               <style>{`@keyframes pulp-water-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes pulp-timer-shimmer { 0% { background-position: 100% 0; } 50% { background-position: 0% 0; } 100% { background-position: 100% 0; } }`}</style>
 
@@ -815,8 +869,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               )}
             </div>
 
-            {/* Main button */}
-            <div className="pt-5 mt-auto w-full">
+            {/* Main button (in focus mode it lives under the timer, on hover) */}
+            {!focusMode && <div className="pt-5 mt-auto w-full">
               <button
                 onClick={() => {
                   if (running && !done && !treeDead) {
@@ -851,7 +905,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
               >
                 {treeDead ? "Try Again" : done ? "Claim Reward" : giveUpStage === 2 ? "Are you sure?" : giveUpStage === 1 ? <span className="inline-flex items-center gap-1" style={{ fontWeight: 400 }}>You will lose your seed</span> : running && elapsed < 60 ? `Cancel (${60 - elapsed}s)` : running ? "Give Up" : "Start Session"}
               </button>
-            </div>
+            </div>}
           </div>
         </motion.div>
       )}
