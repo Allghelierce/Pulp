@@ -78,6 +78,8 @@ export function mergeCards(deck: Deck, cards: Card[], noteText: string, now: num
     if (existing) merged.push({ ...existing, a: c.a, hint: c.hint })
     else merged.push(freshCard(c, now))
   }
+  // Topic-tagged cards come from session-end tagging, not this batch — keep them.
+  for (const c of deck.cards) if (c.topic && !seen.has(c.id)) merged.push(c)
   return { ...deck, cards: merged, generatedAt: now, noteHash: hashNotes(noteText) }
 }
 
@@ -183,4 +185,30 @@ export function saveDeck(deck: Deck): void {
 
 export function deckStorageKey(noteId: string): string {
   return STORAGE_PREFIX + noteId
+}
+
+// ── topic cards (session-end tagging) ───────────────────────────────
+// Append topic-tagged cards to a notebook's deck without touching existing
+// cards' scheduling. Existing cards with the same id just gain the topic tag
+// if they had none. Creates the deck if missing. Returns how many were added.
+// `noteHash` (optional) overrides the deck's fingerprint, e.g. to mark the
+// deck as in sync with the notes the cards came from.
+export function addTopicCards(noteId: string, cards: Card[], topic: string, now: number, noteHash?: string): number {
+  const deck: Deck = loadDeck(noteId) ?? { noteId, cards: [], generatedAt: now, noteHash: noteHash ?? "" }
+  const byId = new Map(deck.cards.map((c, i) => [c.id, i]))
+  const next = [...deck.cards]
+  let added = 0
+  for (const c of cards) {
+    const sc = freshCard(c, now)
+    const i = byId.get(sc.id)
+    if (i !== undefined) {
+      if (!next[i].topic) next[i] = { ...next[i], topic }
+      continue
+    }
+    byId.set(sc.id, next.length)
+    next.push({ ...sc, topic })
+    added++
+  }
+  saveDeck({ ...deck, cards: next, noteHash: noteHash ?? deck.noteHash })
+  return added
 }

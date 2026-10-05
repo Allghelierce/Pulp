@@ -11,6 +11,7 @@ import type { NoteData } from "@/app/types"
 import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
+import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 
 interface OrchardViewProps {
   isOpen: boolean
@@ -38,6 +39,7 @@ interface OrchardViewProps {
   quotaTier?: 'monthly' | 'weekly' | 'daily'
   reduceMotion?: boolean
   grade?: string | null
+  onReviewTopic?: (topic: string, notebookId?: string) => void
 }
 
 type RGB = [number, number, number]
@@ -203,6 +205,8 @@ function getRarityPlantClass(type: string): string {
 const PLOT_COST = [0, 5, 12]
 
 function getSapYield(tree: any): number {
+  // Only full trees produce sap (unfinished topic saplings / young legacy trees yield nothing).
+  if (!isFullyGrown(tree)) return 0
   const info = TREE_TYPES[tree.type]
   if (!info) return 1
   const base = info.sapYield || Math.max(1, Math.floor(info.cost * 0.3))
@@ -2655,6 +2659,7 @@ export const OrchardView = memo(function OrchardView({
   isOpen, onClose, theme,
   sap, gems, xp, grove, inventory, notes, setGems, setSap, setGrove, userId, activeTabId, orchardTimeMode,
   onOpenLeaderboard, onOpenShop, onOpenSatchel, goalStreak = 0, quotaTier = 'monthly', reduceMotion = false, grade,
+  onReviewTopic,
 }: OrchardViewProps) {
   const groveHeader = groveTitle(grade)
 
@@ -2732,6 +2737,7 @@ export const OrchardView = memo(function OrchardView({
   const SAP_TICK_INTERVAL = 10 * 1000
 
   const getTreeSapMax = (tree: any) => {
+    if (!isFullyGrown(tree)) return 0
     const info = TREE_TYPES[tree.type]
     if (!info) return 1
     const base = info.sapYield || Math.max(1, Math.floor((info.cost || 5) * 0.3))
@@ -2780,6 +2786,20 @@ export const OrchardView = memo(function OrchardView({
     return all.filter(t => t.notebookId === selectedNotebook)
   }, [grove, selectedNotebook])
 
+  // Freshness per topic (reads localStorage) — computed once per open/grove change, never per frame.
+  const topicFreshnessMap = useMemo(() => {
+    const m: Record<string, number> = {}
+    if (!isOpen || typeof window === 'undefined') return m
+    const now = Date.now()
+    for (const t of filteredTrees) {
+      if (!t?.topic) continue
+      const k = normalizeTopic(t.topic)
+      if (!(k in m)) m[k] = topicFreshness(t.topic, now)
+    }
+    return m
+  }, [filteredTrees, isOpen])
+  const freshnessOf = (t: any): number => (t?.topic ? topicFreshnessMap[normalizeTopic(t.topic)] ?? 1 : 1)
+
   const filteredTreesRef = useRef(filteredTrees)
   filteredTreesRef.current = filteredTrees
 
@@ -2819,7 +2839,7 @@ export const OrchardView = memo(function OrchardView({
   }, [grove])
 
   const getAvailableGems = useCallback(() => {
-    const gemTrees = grove.filter(t => t && TREE_TYPES[t.type]?.gemYield)
+    const gemTrees = grove.filter(t => t && TREE_TYPES[t.type]?.gemYield && isFullyGrown(t))
     return gemTrees.reduce((sum: number, t: any) => {
       const info = TREE_TYPES[t.type]
       const stageBonus = t.stage >= 4 ? 1 : t.stage >= 3 ? 0.5 : 0
@@ -3581,7 +3601,8 @@ export const OrchardView = memo(function OrchardView({
                             animation: reduceMotion ? undefined : `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
                           }}>
                             <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
-                              filter: dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : undefined,
+                              filter: [dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : '', tree.topic ? freshnessFilter(freshnessOf(tree)) : ''].filter(Boolean).join(' ') || undefined,
+                              transition: tree.topic ? 'filter 0.8s ease' : undefined,
                               position: 'relative',
                             }}>
                               <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} disableSway={reduceMotion || placed.length > 30} />
@@ -3634,6 +3655,14 @@ export const OrchardView = memo(function OrchardView({
                                     {typeInfo?.name || tree.type}
                                   </span>
                                 </div>
+                                {tree.topic && (
+                                  <div className="mt-1 text-[10px] whitespace-nowrap" style={{ color: isDark ? '#e8e4dc' : '#2a2620', fontFamily: 'EB Garamond, serif' }}>
+                                    {tree.topic}
+                                    {isTopicTree(tree) && !isFullyGrown(tree) && (
+                                      <span style={{ color: '#d97706' }}> · {Math.min(tree.recallDone || 0, tree.recallNeeded || 0)}/{tree.recallNeeded} recalled</span>
+                                    )}
+                                  </div>
+                                )}
                                 {plantedStr && (
                                   <div className="mt-1.5 flex flex-col gap-0.5">
                                     <span className="text-[8px] whitespace-nowrap" style={{ color: textSecondary }}>
@@ -3756,6 +3785,8 @@ export const OrchardView = memo(function OrchardView({
               const ageStr = ageDays > 0 ? `${ageDays} day${ageDays > 1 ? 's' : ''} old` : ageHrs > 0 ? `${ageHrs} hour${ageHrs > 1 ? 's' : ''} old` : `${ageMins} min old`
               const stageNames = ['Seed', 'Sprout', 'Sapling', 'Young', 'Mature']
               const sapPerTick = getTreeSapMax(ft)
+              const ftFull = isFullyGrown(ft)
+              const ftFaded = !!ft.topic && freshnessOf(ft) < 0.999
               const notebook = ft.notebookId ? notes.find(n => n.id === ft.notebookId) : null
 
               return (
@@ -3814,9 +3845,21 @@ export const OrchardView = memo(function OrchardView({
                             <span>Age</span>
                             <span style={{ color: isDark ? '#b0aca4' : '#5a5650' }}>{ageStr}</span>
                           </div>
+                          {ft.topic && (
+                            <div className="flex justify-between gap-3">
+                              <span>Topic</span>
+                              <span className="truncate max-w-[150px]" style={{ color: isDark ? '#e8e4dc' : '#2a2620' }}>{ft.topic}</span>
+                            </div>
+                          )}
+                          {isTopicTree(ft) && !ftFull && (
+                            <div className="flex justify-between">
+                              <span>Recalled</span>
+                              <span style={{ color: '#d97706', fontWeight: 400 }}>{Math.min(ft.recallDone || 0, ft.recallNeeded || 0)}/{ft.recallNeeded}</span>
+                            </div>
+                          )}
                           <div className="flex justify-between">
                             <span>Sap rate</span>
-                            <span style={{ color: '#d97706', fontWeight: 400 }}>{sapPerTick}/cycle</span>
+                            <span style={{ color: ftFull ? '#d97706' : (isDark ? '#6a6860' : '#9a9690'), fontWeight: 400 }}>{ftFull ? `${sapPerTick}/cycle` : 'None until fully grown'}</span>
                           </div>
                           {notebook && (
                             <div className="flex justify-between">
@@ -3826,6 +3869,19 @@ export const OrchardView = memo(function OrchardView({
                           )}
                         </div>
                         <div className="w-full flex flex-col gap-2 mt-1">
+                          {ft.topic && onReviewTopic && (!ftFull || ftFaded) && (
+                            <button
+                              onClick={() => { setFocusedTree(null); onReviewTopic(ft.topic, ft.notebookId) }}
+                              className="w-full py-1.5 rounded-lg text-[12px] font-normal tracking-wide truncate"
+                              style={{
+                                backgroundColor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(217,119,6,0.12)',
+                                color: '#d97706',
+                                fontFamily: 'EB Garamond, serif',
+                              }}
+                            >
+                              Review {ft.topic}
+                            </button>
+                          )}
                           <button
                             onClick={() => { setFocusedTree(null) }}
                             className="w-full py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"

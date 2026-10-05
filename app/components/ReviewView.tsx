@@ -9,6 +9,7 @@ import {
   previewIntervals, deckStats, hashNotes,
 } from "@/lib/recallSchedule"
 import type { GradeResult, Verdict } from "@/lib/recallPrompt"
+import { normalizeTopic } from "@/lib/topics"
 
 // Growth weight per AI verdict — growth comes from actual retrieval, not the clicked grade.
 const VERDICT_WEIGHT: Record<Verdict, number> = { correct: 1, partial: 0.5, wrong: 0 }
@@ -25,8 +26,11 @@ interface ReviewViewProps {
   accent: string
   onClose: () => void
   onComplete?: (result: { noteId: string; reviewed: number; again: number }) => void
-  /** Fired after a graded answer with a 0..1 growth weight (correct = 1, partial = 0.5). */
-  onCorrect?: (weight: number) => void
+  /** Fired after a graded answer with a 0..1 growth weight (correct = 1, partial = 0.5)
+   *  and the answered card's topic tag (undefined for untagged cards). */
+  onCorrect?: (weight: number, topic?: string) => void
+  /** Limit the session to cards tagged with this topic ("Review <topic>" from the orchard). */
+  topic?: string
 }
 
 function gatherNotebookText(note: NoteData): string {
@@ -67,12 +71,20 @@ const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: "easy", label: "Easy", key: "4" },
 ]
 
-export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect }: ReviewViewProps) {
+export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect, topic }: ReviewViewProps) {
   const isDark = theme === "dark"
   const font = "'Crimson Pro', serif"
 
   const noteText = useMemo(() => gatherNotebookText(note), [note])
   const noteHash = useMemo(() => hashNotes(noteText), [noteText])
+
+  // Topic mode: only cards tagged with `topic` are studied/counted.
+  const topicKey = topic?.trim() ? normalizeTopic(topic) : null
+  const inScope = useCallback(
+    (c: ScheduledCard) => !topicKey || (!!c.topic && normalizeTopic(c.topic) === topicKey),
+    [topicKey],
+  )
+  const scoped = useCallback((d: Deck): Deck => (topicKey ? { ...d, cards: d.cards.filter(inScope) } : d), [topicKey, inScope])
 
   const [phase, setPhase] = useState<Phase>("loading")
   const [error, setError] = useState("")
@@ -108,14 +120,14 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   }, [])
 
   const startSession = useCallback((d: Deck) => {
-    const session = buildSession(d, Date.now())
+    const session = buildSession(scoped(d), Date.now())
     studied.current = new Set()
     setLog([])
     resetAttempt()
     if (!session.length) { setPhase("caughtup"); return }
     setQueue(session)
     setPhase("card")
-  }, [resetAttempt])
+  }, [resetAttempt, scoped])
 
   const generate = useCallback(async (existing: Deck | null) => {
     setPhase("generating")
@@ -145,7 +157,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   // initial load
   useEffect(() => {
     const existing = loadDeck(note.id)
-    if (!existing || existing.cards.length === 0) {
+    if (!existing || !existing.cards.some(inScope)) {
       setDeck(existing)
       setPhase("empty")
     } else {
@@ -153,7 +165,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       startSession(existing)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note.id])
+  }, [note.id, topicKey])
 
   const current = queue[0]
   const now = Date.now()
@@ -177,7 +189,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     // Growth comes from the AI verdict (actual retrieval), not the clicked grade.
     // Fallback when grading was unavailable: self-grade, any non-"again" counts.
     const weight = result ? VERDICT_WEIGHT[result.verdict] : (g !== "again" ? 1 : 0)
-    if (weight > 0) onCorrect?.(weight)
+    if (weight > 0) onCorrect?.(weight, current.topic)
 
     const nextDeck: Deck = { ...deck, cards: deck.cards.map(c => (c.id === updated.id ? updated : c)) }
     saveDeck(nextDeck)
@@ -240,7 +252,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     return () => window.removeEventListener("keydown", onKey)
   }, [phase, revealed, grade, suggestedGrade, allowedGrades])
 
-  const stats = deck ? deckStats(deck, now) : null
+  const stats = deck ? deckStats(scoped(deck), now) : null
   const gradeColor = (g: Grade): string =>
     g === "again" ? (isDark ? "#f87171" : "#dc2626")
       : g === "hard" ? (isDark ? "#fbbf24" : "#d97706")
@@ -252,7 +264,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       {/* Header */}
       <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${border}` }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: accent, fontWeight: 500 }}>Recall Review</div>
+          <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: accent, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topic?.trim() ? `Review ${topic.trim()}` : "Recall Review"}</div>
           <div style={{ fontSize: 15, color: fg, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{note.subject}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -298,7 +310,15 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
           </div>
         )}
 
-        {phase === "empty" && (
+        {phase === "empty" && topicKey && (
+          <div style={{ textAlign: "center", maxWidth: 360 }}>
+            <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>No cards for {topic!.trim()} yet</div>
+            <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>Cards for this topic are made when a focus session on it ends. Reviewing this notebook&apos;s untagged cards can still grow it.</div>
+            <button onClick={onClose} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "11px 26px", fontSize: 15, cursor: "pointer", fontFamily: font, fontWeight: 500 }}>Close</button>
+          </div>
+        )}
+
+        {phase === "empty" && !topicKey && (
           <div style={{ textAlign: "center", maxWidth: 360 }}>
             <div style={{ fontSize: 17, color: fg, marginBottom: 6 }}>No review deck yet</div>
             <div style={{ fontSize: 13.5, color: muted, lineHeight: 1.55, marginBottom: 20 }}>Pulp will read this notebook and build active-recall cards, then schedule them so easy ones return less often.</div>
@@ -323,9 +343,9 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             </div>
             <div style={{ fontSize: 12.5, color: muted, marginTop: 6 }}>{stats.mature} mature · {stats.learning} learning · {stats.newCount} new</div>
             <div style={{ marginTop: 22, display: "flex", gap: 10, justifyContent: "center" }}>
-              {deck && deck.cards.some(c => c.reps > 0) && (
+              {deck && deck.cards.some(c => inScope(c) && c.reps > 0) && (
                 <button onClick={() => {
-                  const ahead = [...deck.cards].filter(c => c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
+                  const ahead = deck.cards.filter(c => inScope(c) && c.reps > 0).sort((a, b) => a.due - b.due).slice(0, 25)
                   if (ahead.length) { studied.current = new Set(); setLog([]); resetAttempt(); setQueue(ahead); setPhase("card") }
                 }} style={{ background: accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", fontFamily: font }}>Review ahead</button>
               )}
