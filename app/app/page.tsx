@@ -11,7 +11,6 @@ import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
-import { loadDeck } from "@/lib/recallSchedule"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -93,14 +92,6 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 }
 
 const noop = () => { }
-
-// Cards to recall in a notebook: due now (new cards carry their first-due date).
-function countRecallDue(noteId: string | undefined): number {
-  const deck = noteId ? loadDeck(noteId) : null
-  if (!deck) return 0
-  const now = Date.now()
-  return deck.cards.filter(c => c.due <= now).length
-}
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
@@ -1699,15 +1690,6 @@ export default function NoteApp() {
     [notes, activeTabId]
   )
 
-  // Toolbar "recall · N" — refreshes when cards are queued and when recall closes.
-  const [recallTick, setRecallTick] = useState(0)
-  useEffect(() => {
-    const refresh = () => setRecallTick(t => t + 1)
-    window.addEventListener('pulp-cards-queued', refresh)
-    return () => window.removeEventListener('pulp-cards-queued', refresh)
-  }, [])
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- recallTick/reviewOpen are refresh triggers
-  const recallDue = useMemo(() => countRecallDue(activeNote?.id), [activeNote?.id, recallTick, reviewOpen])
 
   const wordCount = useMemo(() => {
     if (!activeNote) return 0
@@ -3866,8 +3848,6 @@ export default function NoteApp() {
                   isTextActive={isTextActive}
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
-                  recallDue={recallDue}
-                  onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) } : undefined}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
                   lineWidth={lineWidth}

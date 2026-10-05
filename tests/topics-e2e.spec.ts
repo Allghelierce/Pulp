@@ -84,7 +84,7 @@ test.describe("topics as trees (e2e)", () => {
     await page.getByRole("button", { name: "Dismiss" }).click().catch(() => {})
     await expect(page.getByText(/5 cards ready tomorrow/)).toBeHidden() // not due yet
     await makeCardsDueNow(page)
-    await page.getByRole("button", { name: /^recall · \d+$/ }).click()
+    await page.getByRole("button", { name: "Recall now" }).click() // due card on the notebook
 
     const box = page.getByPlaceholder("Type your answer from memory…")
     const done = page.getByRole("button", { name: "Done", exact: true })
