@@ -30,7 +30,6 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { VinesOverlay } from "@/app/components/VinesOverlay"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -1217,7 +1216,7 @@ export default function NoteApp() {
   })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
-  // Growth vines: drive the fill via a CSS var on the overlay (no re-render per tick).
+  // Timer progress hook (vines removed for now; kept for the bottom-of-screen tree).
   const vinesRef = useRef<HTMLDivElement>(null)
   const handleTimerProgress = useCallback((p: number) => {
     vinesRef.current?.style.setProperty('--vine-p', p.toFixed(4))
@@ -3447,7 +3446,6 @@ export default function NoteApp() {
 
         <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
-          <VinesOverlay ref={vinesRef} visible={timerRunning} />
           {goalStreak >= 3 && goalStreakLastDate !== new Date().toISOString().split('T')[0] && !streakNudgeDismissed && !timerOpen && (
             <div style={{
               position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
