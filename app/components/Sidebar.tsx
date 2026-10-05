@@ -629,7 +629,7 @@ export const Sidebar = memo(function Sidebar({
                 </button>
               )}
               {onOpenLeaderboard && (
-                <button onClick={onOpenLeaderboard} title="Leaderboard" className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05] text-zinc-500 hover:text-zinc-300">
+                <button onClick={onOpenLeaderboard} title="Party" className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05] text-zinc-500 hover:text-zinc-300">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                 </button>
               )}
@@ -783,7 +783,7 @@ export const Sidebar = memo(function Sidebar({
           {onOpenLeaderboard && (
             <button onClick={onOpenLeaderboard} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-              <span className="text-[12px] font-normal text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>leaderboard</span>
+              <span className="text-[12px] font-normal text-zinc-400 group-hover:text-zinc-200" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>party</span>
             </button>
           )}
           <button onClick={onOpenSettings} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
