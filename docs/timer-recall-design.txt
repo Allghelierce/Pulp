@@ -1,0 +1,163 @@
+PULP — TIMER + RECALL DESIGN
+Topics as trees: focus plants them, remembering grows them
+============================================================
+
+
+THE CORE IDEA
+-------------
+Every tree in the orchard is a TOPIC you studied.
+
+  - The FOCUS TIMER plants the tree and grows it to a SAPLING.
+  - RECALL (answering questions about that topic) grows it the rest of
+    the way into a FULL TREE.
+  - Only full trees produce sap.
+
+The orchard becomes a map of what you know: full trees are topics you've
+mastered, saplings are topics you still owe a review. It works like a
+memory palace — tying an idea to a place and an object you can see makes
+it much easier to remember.
+
+
+WHY KEEP THE TIMER AT ALL
+-------------------------
+Recall only measures one kind of studying: remembering what you've
+already written. Most study time is something else:
+
+  - Learning new material (reading, lectures, first-pass notes) — nothing
+    to quiz yet.
+  - Work outside Pulp (problem sets on paper, essays, coding, practice
+    exams).
+  - Brand-new users with an empty notebook.
+
+Timer = learning (time in). Recall = remembering (proof it stuck).
+Together they cover both halves of studying.
+
+
+GROWTH STAGES (no new art needed)
+---------------------------------
+The sprites have 4 visual stages. The split maps onto them directly:
+
+  Stage 0-1   Seed -> sprout     grown by the timer
+  Stage 2     Sapling            grown by the timer (the timer's ceiling)
+  Stage 3     Full tree          grown by RECALL
+
+How much recall a tree needs scales with rarity, the same way the timer
+already takes longer for rare trees (e.g. a tangerine ~5 correct answers,
+a rare tree ~15).
+
+
+HOW IT FEELS IN CLASS (no interruptions)
+----------------------------------------
+1. During a focus session: the timer runs and nothing else happens.
+   No popups, no questions.
+2. Session ends: one tap. The AI reads what you wrote during the session,
+   names the topic (e.g. "Photosynthesis"), plants a sapling with that
+   name, and quietly turns the new notes into recall cards tagged to that
+   topic. The only sign is a small "5 cards queued" line — never a quiz.
+3. Later, whenever the student chooses: they recall, and the topic's
+   sapling grows into a full tree.
+
+Why waiting isn't a compromise: recalling material hours or days later
+produces stronger memory than quizzing right away (the spacing effect).
+Deferring recall is better for learning, not just for the classroom.
+
+
+TOPICS AND TREES
+----------------
+- Each tree = one topic. The AI picks the main topic of a session; one
+  topic per tree keeps it simple.
+- Cards belong to topics. Recalling photosynthesis cards grows the
+  Photosynthesis tree, not some random one.
+- Tap a tree to review it. Tapping a sapling in the orchard offers
+  "Review Photosynthesis". Going back to the tree to remember the idea is
+  where the memory-palace effect comes from.
+- Studying the same topic again plants a NEW tree next to the first one.
+  The orchard already groups trees into clusters, so a topic becomes a
+  small grove — a bigger grove means you've studied it more.
+- Topic names show on hover only, so the orchard doesn't get cluttered.
+
+
+SHOWING HOW FRESH A TOPIC IS
+----------------------------
+A tree's color shows how fresh that topic is in your memory right now.
+
+  - Freshly reviewed: full, vivid color.
+  - As the topic's cards come due for review (spaced repetition), the tree
+    slowly fades: color drains gradually the longer reviews sit overdue.
+  - Reviewing the topic brings the color back, with a short animation.
+
+Rules:
+  - Visual only. Fading never reduces sap, growth, or size. It informs,
+    it doesn't punish.
+  - There's a floor: a fully faded tree is muted but still clearly
+    visible, never grey or dead-looking.
+  - A faded tree is a natural nudge: tap it -> "Review <topic>".
+  - Freshness comes from the topic's cards: if none are due, the tree is
+    full color; the more overdue they are, the more it fades.
+
+How it's built: a CSS color filter on the existing sprite (saturation and
+brightness), so no new art.
+
+Considered and skipped for now: bigger trees for mastery, a glow for
+fully mastered topics, flowers at the base, and varying fruit count (the
+last one would mean redrawing every species).
+
+
+WHAT HAPPENS IN THE EDGE CASES
+------------------------------
+Notes written WITHOUT the timer:
+  The notes still become recall cards and get a topic. You can review
+  them. But the topic has no tree until a focus session plants one.
+
+Recall when no sapling is waiting for that topic:
+  Correct answers are BANKED as nutrients for that topic. When a focus
+  session plants that topic's sapling, it absorbs the banked growth and
+  can jump straight to full. Recall is never wasted, and it gives students
+  a reason to start the timer. (Recall also still pays a little sap.)
+
+A focus session where nothing was written in Pulp (studying on paper):
+  That sapling has no cards of its own, so it would be stuck. Fix: let
+  due cards from that notebook (or any notebook) finish it.
+
+Trees students already have:
+  Trees already grown fully on the timer stay fully grown. Only new trees
+  follow the new rules.
+
+
+REMINDERS, NOT INTERRUPTIONS
+----------------------------
+- A small due count on the focus button.
+- Spaced repetition brings cards back on later days; later reviews pay
+  bonus sap.
+- Nothing is ever taken away. Trees never wilt or shrink for skipping
+  recall — saplings just don't produce sap until they're grown.
+- Optional quiet mode for class hours: hides the due count and reminders
+  entirely.
+- Optional "quick check now?" at the end of a session, off by default,
+  for people studying at home.
+
+
+ALREADY BUILT (feature/recall-mode branch)
+------------------------------------------
+- Typed answers + AI grading: students type the answer from memory; the
+  AI marks it correct / partly right / not quite, with one line of
+  feedback and the expected answer shown.
+- Growth comes from the AI's verdict, not the button clicked, so wrong
+  answers can't be farmed.
+- Correct answers grow trees (this will be reworked to finish saplings
+  under the new design).
+
+
+BUILD ORDER
+-----------
+1. Topic tagging: at session end, the AI names the session's topic from
+   the notes written during it, and its cards are tagged to that topic.
+2. Growth split: the timer caps at sapling; recall on a topic's cards
+   grows that topic's sapling to a full tree.
+3. Banked nutrients: recall with no sapling waiting banks growth for the
+   topic; a new sapling absorbs it.
+4. Orchard: topic names on hover, tap a sapling -> "Review <topic>".
+5. Only full trees produce sap; existing trees keep their growth.
+6. Freshness: trees fade as their topic's reviews come due, and regain
+   color when reviewed.
+7. Due count on the focus button, quiet mode, optional quick check.
