@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion"
 
 function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }) {
   const [b, setB] = useState(0)
@@ -67,6 +67,104 @@ function NormalFace({ faceIndex, faceScale }: { faceIndex: number; faceScale: im
   )
 }
 
+const HINT_DISMISSED_KEY = "pulp-ai-hint-dismissed"
+
+// Occasional "press \ for AI" bubble beside the orange. Shows ~40s in, then
+// every 4-7 min for ~8s. Never while hidden or with AI open; the × hides it for good.
+function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }) {
+  // Bubble starts hidden either way, so reading storage here can't cause a hydration mismatch.
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return true
+    try { return localStorage.getItem(HINT_DISMISSED_KEY) === "1" } catch { return false }
+  })
+  const [visible, setVisible] = useState(false)
+  const suppressedRef = useRef(suppressed)
+  const usedAiRef = useRef(false)
+  useEffect(() => { suppressedRef.current = suppressed }, [suppressed])
+  // Once they've opened the AI this session, they know the shortcut.
+  useEffect(() => { if (aiMode) usedAiRef.current = true }, [aiMode])
+
+  useEffect(() => {
+    if (dismissed) return
+    let showTimer: ReturnType<typeof setTimeout>
+    let hideTimer: ReturnType<typeof setTimeout>
+    const schedule = (delay: number) => {
+      showTimer = setTimeout(() => {
+        if (!suppressedRef.current && !usedAiRef.current) {
+          setVisible(true)
+          hideTimer = setTimeout(() => setVisible(false), 8000)
+        }
+        schedule(240_000 + Math.random() * 180_000)
+      }, delay)
+    }
+    schedule(40_000)
+    return () => { clearTimeout(showTimer); clearTimeout(hideTimer) }
+  }, [dismissed])
+
+  const dismissForever = () => {
+    setVisible(false)
+    setDismissed(true)
+    try { localStorage.setItem(HINT_DISMISSED_KEY, "1") } catch {}
+  }
+
+  return (
+    <AnimatePresence>
+      {visible && !dismissed && !suppressed && !aiMode && (
+        <motion.div
+          className="fixed z-[9999]"
+          initial={{ opacity: 0, x: 6, scale: 0.96 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 6, scale: 0.96 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          style={{ top: 120, right: 66, transformOrigin: "right center" }}
+          role="status"
+        >
+          <div
+            onClick={() => setVisible(false)}
+            style={{
+              position: "relative", display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 8px 6px 12px", borderRadius: 12,
+              background: "rgba(24,24,27,0.92)", border: "1px solid rgba(217,119,6,0.35)",
+              boxShadow: "0 6px 20px rgba(0,0,0,0.25)", backdropFilter: "blur(6px)",
+              fontFamily: "Crimson Pro, serif", fontSize: 13, color: "#e4e4e7",
+              whiteSpace: "nowrap", cursor: "default",
+            }}
+          >
+            <span>
+              press{" "}
+              <kbd style={{
+                fontFamily: "ui-monospace, monospace", fontSize: 11, color: "#d97706",
+                padding: "1px 5px", borderRadius: 4, border: "1px solid rgba(217,119,6,0.4)",
+                background: "rgba(217,119,6,0.08)",
+              }}>{"\\"}</kbd>{" "}
+              for AI
+            </span>
+            <button
+              onClick={e => { e.stopPropagation(); dismissForever() }}
+              aria-label="Don't show this again"
+              title="Don't show again"
+              style={{
+                width: 18, height: 18, borderRadius: 9, border: "none", padding: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "transparent", color: "#a1a1aa", cursor: "pointer", fontSize: 13, lineHeight: 1,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#d97706" }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#a1a1aa" }}
+            >×</button>
+            {/* Tail pointing at the orange */}
+            <span style={{
+              position: "absolute", right: -5, top: "50%", width: 8, height: 8,
+              transform: "translateY(-50%) rotate(45deg)",
+              background: "rgba(24,24,27,0.92)",
+              borderTop: "1px solid rgba(217,119,6,0.35)", borderRight: "1px solid rgba(217,119,6,0.35)",
+            }} />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export const HangingOrange = memo(function HangingOrange({ onClick, onHover, retracted, aiMode }: { onClick: () => void; onHover?: () => void; retracted?: boolean; aiMode?: boolean }) {
   const angle = useMotionValue(0)
   const [faceIndex, setFaceIndex] = useState(0)
@@ -110,7 +208,8 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover, ret
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [angle])
 
-  return (
+  return (<>
+    <AiHint suppressed={timerRunning || !!retracted} aiMode={!!aiMode} />
     <motion.div
       className="fixed z-[9999]"
       style={{
@@ -193,5 +292,5 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover, ret
         </div>
       </div>
     </motion.div>
-  )
+  </>)
 })

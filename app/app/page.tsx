@@ -4709,7 +4709,7 @@ export default function NoteApp() {
             accent={accent}
             noteText={aiNotebookContext}
             noteName={activeNote?.subject}
-            userId={user?.id}
+            userId={user?.id ?? (process.env.NEXT_PUBLIC_DEV_SKIP_AUTH === '1' ? 'dev' : undefined)}
             onClose={() => setAiHubOpen(false)}
             onInsertText={text => { editor.insertHTML(plainToHtml(text)); editor.syncContent() }}
             onReplaceSelection={text => { editor.insertHTML(plainToHtml(text)); editor.syncContent() }}
