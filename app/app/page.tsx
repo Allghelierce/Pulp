@@ -2812,7 +2812,15 @@ export default function NoteApp() {
         })
         if (settingsRow.sidebar_width) setSidebarWidth(settingsRow.sidebar_width)
       }
-      if (foldersData.length) setFolders(foldersData)
+      // Merge, don't replace: folders made locally (not yet in the cloud) would
+      // otherwise vanish along with every note filed in them.
+      if (foldersData.length) setFolders(prev => {
+        const cloudIds = new Set(foldersData.map(f => f.id))
+        return [
+          ...foldersData.map(f => ({ ...f, open: prev.find(p => p.id === f.id)?.open ?? f.open })),
+          ...prev.filter(p => !cloudIds.has(p.id)),
+        ]
+      })
       // trashIds are tracked in Supabase for cross-device sync but trashNotes state holds full NoteData objects (loaded from localStorage)
     }
     loadSettings()
@@ -3486,6 +3494,7 @@ export default function NoteApp() {
     openConfirm("Delete folder?", "Notes inside will be moved to root.", () => {
       setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: null } : n))
       setFolders(prev => prev.filter(f => f.id !== id))
+      if (user) db.deleteFolder(user.id, id).then(r => { if (r?.error) console.error("Cloud folder delete failed:", r.error.message) })
     })
 
   const handleDropNote = (e: React.DragEvent, targetFolderId: number | null, targetNoteId?: string) => {
