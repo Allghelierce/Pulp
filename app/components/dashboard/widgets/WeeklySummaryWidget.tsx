@@ -1,6 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { localDayKey } from "@/lib/day"
 
 const font = 'Crimson Pro, serif'
 
@@ -24,12 +25,12 @@ const WeeklySummaryWidget = memo(function WeeklySummaryWidget({ isDark, dailySta
 
     for (let i = 0; i < 7; i++) {
       const d1 = new Date(weekStart); d1.setDate(d1.getDate() + i)
-      const k1 = d1.toISOString().split("T")[0]
+      const k1 = localDayKey(d1)
       const e1 = map.get(k1)
       if (e1) { tw.focus += e1.focusMinutes ?? 0; tw.chars += e1.charsWritten ?? 0; tw.sessions += e1.sessionsCompleted ?? 0 }
 
       const d2 = new Date(lastWeekStart); d2.setDate(d2.getDate() + i)
-      const k2 = d2.toISOString().split("T")[0]
+      const k2 = localDayKey(d2)
       const e2 = map.get(k2)
       if (e2) { lw.focus += e2.focusMinutes ?? 0; lw.chars += e2.charsWritten ?? 0; lw.sessions += e2.sessionsCompleted ?? 0 }
     }

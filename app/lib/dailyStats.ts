@@ -1,5 +1,6 @@
 import * as db from "@/lib/db"
 import { supabase } from "@/lib/supabase"
+import { localDayKey } from "@/lib/day"
 
 export interface DailyEntry {
   date: string // YYYY-MM-DD
@@ -22,7 +23,7 @@ function saveDailyStats(entries: DailyEntry[]) {
 }
 
 function today(): string {
-  return new Date().toISOString().split("T")[0]
+  return localDayKey()
 }
 
 function getOrCreateToday(entries: DailyEntry[]): [DailyEntry[], DailyEntry] {

@@ -5,6 +5,7 @@ import { getLevel } from "@/app/constants"
 import { getPalette, getType, ACCENT } from "@/app/theme/palette"
 import type { Tree } from "@/app/types"
 import { loadDailyStats, type DailyEntry } from "@/app/lib/dailyStats"
+import { localDayKey } from "@/lib/day"
 
 const DEFAULT_GOALS = { focus: 60, writing: 2000, sessions: 3 }
 
@@ -21,7 +22,7 @@ const RING_GOALS = loadGoals()
 
 function getTodayEntry(): DailyEntry | null {
   if (typeof window === 'undefined') return null
-  const key = new Date().toISOString().split("T")[0]
+  const key = localDayKey()
   return loadDailyStats().find(e => e.date === key) ?? null
 }
 
@@ -270,7 +271,7 @@ function getMonthGrid(entries: DailyEntry[], monthOffset = 0): { date: string; l
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i - baseOffset)
-    const key = d.toISOString().split("T")[0]
+    const key = localDayKey(d)
     const entry = map.get(key)
     const minutes = entry?.focusMinutes ?? 0
     const chars = entry?.charsWritten ?? 0
@@ -294,7 +295,7 @@ function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i - baseOffset)
-    const key = d.toISOString().split("T")[0]
+    const key = localDayKey(d)
     if (map.has(key)) return true
   }
   return false
@@ -400,9 +401,9 @@ export const StatsView = memo(function StatsView({
     return best
   }, [dailyStats])
 
-  const todayKey = new Date().toISOString().split("T")[0]
+  const todayKey = localDayKey()
   const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-  const yesterdayKey = yesterdayDate.toISOString().split("T")[0]
+  const yesterdayKey = localDayKey(yesterdayDate)
   const todayEntry = dailyStats.find(e => e.date === todayKey)
   const yesterdayEntry = dailyStats.find(e => e.date === yesterdayKey)
   const todayFocus = todayEntry?.focusMinutes ?? 0
@@ -621,7 +622,7 @@ export const StatsView = memo(function StatsView({
                   while (d <= adjustedEnd) {
                     const week: (typeof monthGrid[0] | null)[] = []
                     for (let dow = 0; dow < 7; dow++) {
-                      const key = d.toISOString().split('T')[0]
+                      const key = localDayKey(d)
                       const entry = weekMap.get(key) ?? null
                       week.push(entry)
                       if (entry) dateOrder.push({ col, row: dow, cell: entry })

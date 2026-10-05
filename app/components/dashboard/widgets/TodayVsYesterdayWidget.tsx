@@ -1,6 +1,7 @@
 "use client"
 import { memo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { localDayKey } from "@/lib/day"
 
 const font = 'Crimson Pro, serif'
 
@@ -8,9 +9,9 @@ const TodayVsYesterdayWidget = memo(function TodayVsYesterdayWidget({ isDark, da
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const textMuted = isDark ? '#5a5650' : '#a8a4a0'
 
-  const todayKey = new Date().toISOString().split("T")[0]
+  const todayKey = localDayKey()
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayKey = yesterday.toISOString().split("T")[0]
+  const yesterdayKey = localDayKey(yesterday)
 
   const todayFocus = dailyStats.find(e => e.date === todayKey)?.focusMinutes ?? 0
   const yesterdayFocus = dailyStats.find(e => e.date === yesterdayKey)?.focusMinutes ?? 0

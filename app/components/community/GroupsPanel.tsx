@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
+import { localDayKey } from "@/lib/day"
 
 const accent = '#d97706'
 interface Group { id: number; name: string; invite_code: string; term_end: string; status: string }
@@ -15,7 +16,7 @@ export const GroupsPanel = memo(function GroupsPanel({ theme, onOpenGroup }: { t
   const text = isDark ? '#fafafa' : '#0f0f10'
   const [groups, setGroups] = useState<Group[]>([])
   const [name, setName] = useState("")
-  const [start, setStart] = useState(new Date().toISOString().slice(0, 10))
+  const [start, setStart] = useState(localDayKey())
   const [end, setEnd] = useState(plusMonthsISO(3))
   const [code, setCode] = useState("")
   const [msg, setMsg] = useState<string | null>(null)

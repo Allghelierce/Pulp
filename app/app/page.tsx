@@ -72,6 +72,7 @@ const ShelfView = lazy(() => _preloadShelf().then(m => ({ default: m.ShelfView }
 const CoverModal = lazy(() => _preloadCover().then(m => ({ default: m.CoverModal })))
 import { AnimatedCounter } from "@/components/ui/animated-counter"
 import { AnimatedCreateButton } from "@/app/components/AnimatedCreateButton"
+import { localDayKey } from "@/lib/day"
 
 function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
   currentPageIdx: number; totalPages: number; theme?: "light" | "dark"; onOpenGrid: () => void
@@ -1427,7 +1428,7 @@ export default function NoteApp() {
 
   // Hibernation: activate scheduled hibernation, expire active hibernation
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = localDayKey()
     if (hibernationScheduled && today >= hibernationScheduled.startDate && !hibernation) {
       setHibernation({ startDate: hibernationScheduled.startDate, endDate: hibernationScheduled.endDate, streakFrozen: goalStreak })
       setHibernationScheduled(null)
@@ -1445,7 +1446,8 @@ export default function NoteApp() {
       }
       setHibernation(null)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // Re-runs once the saved schedule loads (first render only sees store defaults).
+  }, [hibernation, hibernationScheduled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isHibernating = !!hibernation
   const hibernationCooldownEnd = (() => {
@@ -1473,7 +1475,7 @@ export default function NoteApp() {
     if (days < 4 || days > 90) return
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    if (start < new Date(tomorrow.toISOString().split('T')[0])) return
+    if (start < new Date(localDayKey(tomorrow))) return
     if (hibernationCooldownEnd && startDate < hibernationCooldownEnd) return
     setHibernationScheduled({ startDate, endDate })
   }, [hibernationCooldownEnd])
@@ -3544,7 +3546,7 @@ export default function NoteApp() {
           <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
             startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
           }} />
-          {goalStreak >= 3 && goalStreakLastDate !== new Date().toISOString().split('T')[0] && !streakNudgeDismissed && !timerOpen && (
+          {goalStreak >= 3 && goalStreakLastDate !== localDayKey() && !streakNudgeDismissed && !timerOpen && (
             <div style={{
               position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
               display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px',
@@ -3591,7 +3593,7 @@ export default function NoteApp() {
                   const lockDate = new Date()
                   lockDate.setDate(lockDate.getDate() + lockDays)
                   setQuotaTier(tier)
-                  setQuotaLockedUntil(lockDate.toISOString().split('T')[0])
+                  setQuotaLockedUntil(localDayKey(lockDate))
                 }}
               />
             </div>

@@ -2,6 +2,7 @@
 import { memo, useMemo, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 import type { DailyEntry } from "@/app/lib/dailyStats"
+import { localDayKey } from "@/lib/day"
 
 const font = 'Crimson Pro, serif'
 const RING_GOALS = { focus: 60, writing: 2000, sessions: 3 }
@@ -15,7 +16,7 @@ function getMonthGrid(entries: DailyEntry[], monthOffset = 0) {
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i - baseOffset)
-    const key = d.toISOString().split("T")[0]
+    const key = localDayKey(d)
     const entry = map.get(key)
     const minutes = entry?.focusMinutes ?? 0
     const chars = entry?.charsWritten ?? 0
@@ -39,7 +40,7 @@ function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i - baseOffset)
-    const key = d.toISOString().split("T")[0]
+    const key = localDayKey(d)
     if (map.has(key)) return true
   }
   return false
@@ -103,7 +104,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
   while (cursor <= endDate) {
     const week: (typeof monthGrid[0] | null)[] = []
     for (let dow = 0; dow < 7; dow++) {
-      const key = cursor.toISOString().split("T")[0]
+      const key = localDayKey(cursor)
       const c = weekMap.get(key) ?? null
       week.push(c)
       if (c) dateOrder.push({ cell: c, col, row: dow })

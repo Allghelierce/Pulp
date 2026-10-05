@@ -12,6 +12,7 @@ import { SAPLING_STAGE, FULL_STAGE, recallNeededFor, isTopicTree, isFullyGrown, 
 import { MIN_TOPIC_TEXT, type Card } from "@/lib/recallPrompt"
 import { addTopicCards, firstRecallDue, hashNotes, loadDeck } from "@/lib/recallSchedule"
 import { computeStage } from "@/app/lib/treeGrowth"
+import { localDayKey } from "@/lib/day"
 
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
@@ -263,8 +264,8 @@ export const VitalitySystem = memo(function VitalitySystem({
   useEffect(() => {
     if (streakCheckedRef.current || !goalStreakLastDate || isHibernating) return
     streakCheckedRef.current = true
-    const today = new Date().toISOString().split('T')[0]
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    const today = localDayKey()
+    const yesterday = localDayKey(new Date(Date.now() - 86400000))
     if (goalStreakLastDate !== today && goalStreakLastDate !== yesterday && goalStreak > 0) {
       setSap(prev => Math.floor(prev * 0.75))
       setGoalStreak(0)
@@ -446,7 +447,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [quotaTier, goalStreak])
 
   const updateGoalStreak = useCallback((sessionMinutes: number) => {
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = localDayKey()
     if (goalStreakLastDate === todayStr) return
 
     const stats = JSON.parse(localStorage.getItem('pulp-daily-stats') || '[]')
@@ -454,7 +455,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     const totalToday = (todayStats?.focusMinutes || 0) + sessionMinutes
 
     if (totalToday >= dailyGoalMinutes) {
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+      const yesterday = localDayKey(new Date(Date.now() - 86400000))
       const isConsecutive = goalStreakLastDate === yesterday || goalStreakLastDate === ''
       if (!isConsecutive && goalStreak > 0) {
         const penalty = quotaTier === 'daily' ? 0.75 : quotaTier === 'weekly' ? 0.80 : 0.90

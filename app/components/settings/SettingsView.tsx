@@ -16,6 +16,7 @@ import { SCHOOLS } from "@/lib/schools"
 import { GRADES } from "@/lib/term"
 import { signGrove } from "@/app/lib/groveIntegrity"
 import type { Achievement, NoteData } from "@/app/types"
+import { localDayKey } from "@/lib/day"
 
 // ── Settings tabs config ───────────────────────────────────────────────────
 
@@ -143,8 +144,8 @@ function HibernationScheduler({ isDark, onSchedule, cooldownEnd, openConfirm }: 
 }) {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const today = new Date().toISOString().split('T')[0]
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  const today = localDayKey()
+  const tomorrow = localDayKey(new Date(Date.now() + 86400000))
   const maxEnd = (() => {
     if (!startDate) return ''
     const d = new Date(startDate)
@@ -759,7 +760,7 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   </p>
                   {(['monthly', 'weekly', 'daily'] as const).map(tier => {
                     const isActive = quotaTier === tier
-                    const isLocked = !!quotaLockedUntil && new Date().toISOString().split('T')[0] < quotaLockedUntil && !isActive
+                    const isLocked = !!quotaLockedUntil && localDayKey() < quotaLockedUntil && !isActive
                     const labels = { monthly: { name: 'Monthly', bonus: 'No bonus', penalty: '10% sap', desc: 'Low bar, safety net' }, weekly: { name: 'Weekly', bonus: '+1x sap', penalty: '20% sap', desc: 'Medium commitment' }, daily: { name: 'Daily', bonus: '+2x sap', penalty: '25% sap', desc: 'High risk, high reward' } }
                     const l = labels[tier]
                     return (

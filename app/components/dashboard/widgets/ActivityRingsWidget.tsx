@@ -1,11 +1,12 @@
 "use client"
 import { memo, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { localDayKey } from "@/lib/day"
 
 const font = 'Crimson Pro, serif'
 
 const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailyStats, goalStreak = 0, dailyGoalMinutes = 30, quotaTier = 'monthly' }: WidgetProps) {
-  const todayKey = new Date().toISOString().split("T")[0]
+  const todayKey = localDayKey()
   const todayEntry = dailyStats.find(e => e.date === todayKey)
   const focus = todayEntry?.focusMinutes ?? 0
 
@@ -25,7 +26,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
     let sum = 0
     for (let i = 0; i < periodDays; i++) {
       const d = new Date(now); d.setDate(d.getDate() - i)
-      sum += map.get(d.toISOString().split("T")[0]) ?? 0
+      sum += map.get(localDayKey(d)) ?? 0
     }
     return sum
   })()
@@ -65,7 +66,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           const lockDate = new Date()
           lockDate.setDate(lockDate.getDate() + lockDays)
           data.quotaTier = draftTier
-          data.quotaLockedUntil = lockDate.toISOString().split('T')[0]
+          data.quotaLockedUntil = localDayKey(lockDate)
         }
         localStorage.setItem('pulp-grove', JSON.stringify(data))
       }
@@ -160,7 +161,7 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           <div style={{ display: 'flex', gap: 4 }}>
             {(['monthly', 'weekly', 'daily'] as const).map(t => {
               const active = draftTier === t
-              const locked = !!(() => { try { const d = JSON.parse(localStorage.getItem('pulp-grove') || '{}'); return d.quotaLockedUntil && new Date().toISOString().split('T')[0] < d.quotaLockedUntil && t !== quotaTier } catch { return false } })()
+              const locked = !!(() => { try { const d = JSON.parse(localStorage.getItem('pulp-grove') || '{}'); return d.quotaLockedUntil && localDayKey() < d.quotaLockedUntil && t !== quotaTier } catch { return false } })()
               const labels = { monthly: '0x', weekly: '+1x', daily: '+2x' }
               return (
                 <button key={t} disabled={locked}

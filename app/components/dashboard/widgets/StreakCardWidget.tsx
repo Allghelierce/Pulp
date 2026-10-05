@@ -2,6 +2,7 @@
 import { memo, useMemo } from "react"
 import { motion } from "framer-motion"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { localDayKey } from "@/lib/day"
 
 const font = 'Crimson Pro, serif'
 
@@ -57,11 +58,11 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, go
     }
 
     let currentStreak = 0
-    const today = new Date().toISOString().split("T")[0]
+    const today = localDayKey()
     const dateSet = new Set(sorted)
     const cursor = new Date()
     if (!dateSet.has(today)) cursor.setDate(cursor.getDate() - 1)
-    while (dateSet.has(cursor.toISOString().split("T")[0])) {
+    while (dateSet.has(localDayKey(cursor))) {
       currentStreak++
       cursor.setDate(cursor.getDate() - 1)
     }
