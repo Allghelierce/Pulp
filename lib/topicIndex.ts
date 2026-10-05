@@ -22,20 +22,22 @@ export interface TopicRow {
   nextDue: number        // soonest future due among cards not due yet, 0 if none
 }
 
-function readDecks(): Deck[] {
+// `live` (optional): ids of notebooks still in use — decks of trashed or
+// archived notebooks are skipped so they don't inflate badges or open blank reviews.
+function readDecks(live?: ReadonlySet<string>): Deck[] {
   const out: Deck[] = []
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
       if (!k?.startsWith(RECALL_PREFIX)) continue
       const d = JSON.parse(localStorage.getItem(k) || "null")
-      if (d?.cards) out.push(d)
+      if (d?.cards && (!live || live.has(d.noteId))) out.push(d)
     }
   } catch {}
   return out
 }
 
-export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
+export function buildTopicIndex(grove: Tree[], now = Date.now(), live?: ReadonlySet<string>): TopicRow[] {
   const rows = new Map<string, TopicRow>()
   const row = (name: string): TopicRow => {
     const key = normalizeTopic(name)
@@ -48,7 +50,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
   }
   const addNotebook = (r: TopicRow, id?: string) => { if (id && !r.notebookIds.includes(id)) r.notebookIds.push(id) }
 
-  for (const deck of readDecks()) {
+  for (const deck of readDecks(live)) {
     for (const c of deck.cards) {
       if (!c.topic) continue
       const r = row(c.topic)
@@ -85,8 +87,8 @@ export function bestNotebookFor(r: TopicRow): string | undefined {
 }
 
 // Cards due now across every notebook (tagged or not) — sidebar badge.
-export function totalDueAll(now = Date.now()): number {
+export function totalDueAll(now = Date.now(), live?: ReadonlySet<string>): number {
   let n = 0
-  for (const deck of readDecks()) for (const c of deck.cards) if (isDue(c, now)) n++
+  for (const deck of readDecks(live)) for (const c of deck.cards) if (isDue(c, now)) n++
   return n
 }

@@ -11,7 +11,7 @@ import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
 import { isFullyGrown } from "@/lib/topics"
-import { isDue, loadDeck } from "@/lib/recallSchedule"
+import { deckStorageKey, isDue, loadDeck } from "@/lib/recallSchedule"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -1296,17 +1296,28 @@ export default function NoteApp() {
   // Recall hub (Topics list) + cross-notebook due badge for the sidebar.
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [allRecallDue, setAllRecallDue] = useState(0)
+  // Notebooks in use (not trashed/archived) — recall badges ignore other decks.
+  const liveNoteIds = useMemo(() => new Set(notes.filter(n => !n.archived && !n.deletedAt).map(n => n.id)), [notes])
+  const liveNoteIdsRef = useRef(liveNoteIds)
+  liveNoteIdsRef.current = liveNoteIds
+  const liveNoteIdsKey = liveNoteIds.size
   useEffect(() => {
-    const refresh = () => setAllRecallDue(totalDueAll())
+    const refresh = () => setAllRecallDue(totalDueAll(Date.now(), liveNoteIdsRef.current))
     const id = setTimeout(refresh, 0)
     const iv = setInterval(refresh, 60_000)
     window.addEventListener('pulp-cards-queued', refresh)
     window.addEventListener('focus', refresh)
     return () => { clearTimeout(id); clearInterval(iv); window.removeEventListener('pulp-cards-queued', refresh); window.removeEventListener('focus', refresh) }
-  }, [reviewOpen])
+  }, [reviewOpen, liveNoteIdsKey])
   // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
   const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
+  // Review needs a notebook; if it's gone (deleted, no tab open), close instead of rendering blank.
+  useEffect(() => {
+    if (reviewOpen && !notes.some(n => n.id === (reviewNoteId ?? activeTabId))) {
+      setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined)
+    }
+  }, [reviewOpen, reviewNoteId, activeTabId, notes])
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
 
@@ -1701,9 +1712,12 @@ export default function NoteApp() {
   // Toolbar "recall · N" — refreshes when cards are queued and when recall closes.
   const [recallTick, setRecallTick] = useState(0)
   useEffect(() => {
+    // Cards come due over time ("ready tomorrow"), so also tick each minute and on focus.
     const refresh = () => setRecallTick(t => t + 1)
+    const iv = setInterval(refresh, 60_000)
     window.addEventListener('pulp-cards-queued', refresh)
-    return () => window.removeEventListener('pulp-cards-queued', refresh)
+    window.addEventListener('focus', refresh)
+    return () => { clearInterval(iv); window.removeEventListener('pulp-cards-queued', refresh); window.removeEventListener('focus', refresh) }
   }, [])
   // eslint-disable-next-line react-hooks/exhaustive-deps -- recallTick/reviewOpen are refresh triggers
   const recallDue = useMemo(() => countRecallDue(activeNote?.id), [activeNote?.id, recallTick, reviewOpen])
@@ -3328,6 +3342,7 @@ export default function NoteApp() {
 
   const permanentlyDeleteNote = useCallback((id: string) => {
     setTrashNotes(ts => ts.filter(n => n.id !== id))
+    try { localStorage.removeItem(deckStorageKey(id)) } catch { }
     if (user) db.removeFromTrash(user.id, id)
   }, [user])
 
@@ -3851,7 +3866,7 @@ export default function NoteApp() {
                   onOpenChat={() => setAiHubOpen(v => !v)}
                   chatOpen={aiHubOpen}
                   recallDue={recallDue}
-                  onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) } : undefined}
+                  onOpenReview={activeNote ? () => { startTransition(() => { closeAllPanels(); setReviewNoteId(activeNote.id); setReviewOpen(true) }) } : undefined}
                   strokeColor={strokeColor}
                   onStrokeColorChange={setStrokeColor}
                   lineWidth={lineWidth}

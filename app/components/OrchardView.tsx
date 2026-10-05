@@ -13,6 +13,12 @@ import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
 import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 
+// Growth bar: topic saplings fill by recall (the timer only takes them to sapling).
+const growthPct = (t: Tree): number =>
+  isTopicTree(t) && !isFullyGrown(t)
+    ? Math.min(100, ((t.recallDone || 0) / (t.recallNeeded || 1)) * 100)
+    : Math.min(100, t.progress || 0)
+
 interface OrchardViewProps {
   isOpen: boolean
   onClose: () => void
@@ -2971,19 +2977,23 @@ export const OrchardView = memo(function OrchardView({
     setChopTarget(null)
   }, [chopTarget, setSap, setGrove, userId])
 
-  // Auto-convert overflow trees to sap
+  // Auto-convert overflow trees to sap: oldest first, never a sapling still
+  // waiting on recall, and only while the orchard is actually open.
   useEffect(() => {
-    if (isAllView) return // unified view shows everything; culling is per-notebook only
+    if (!isOpen || isAllView) return // unified view shows everything; culling is per-notebook only
     const maxCapacity = nbUnlocked * TREES_PER_PLOT
     if (filteredTrees.length <= maxCapacity) return
-    const overflow = filteredTrees.slice(maxCapacity)
+    const overflow = filteredTrees
+      .filter(t => !(isTopicTree(t) && !isFullyGrown(t)))
+      .sort((a, b) => (a.plantedAt || 0) - (b.plantedAt || 0))
+      .slice(0, filteredTrees.length - maxCapacity)
     let totalSap = 0
     const overflowIds = new Set(overflow.map((t: any) => { totalSap += getSapYield(t); return t.id }))
     if (overflowIds.size === 0) return
     setSap((j: number) => j + totalSap)
     setGrove((g: any[]) => g.filter(t => !overflowIds.has(t.id)))
-    if (userId) overflow.forEach((t: any) => db.deleteTree(userId, t.id).catch(() => {}))
-  }, [filteredTrees.length, nbUnlocked, selectedNotebook])
+    if (userId) db.deleteTrees(userId, [...overflowIds]).catch(() => {})
+  }, [filteredTrees.length, nbUnlocked, selectedNotebook, isOpen])
 
   const currentPlotTrees = useMemo(() => {
     const start = plotPage * TREES_PER_PLOT
@@ -3671,7 +3681,7 @@ export const OrchardView = memo(function OrchardView({
                                   <div className="mt-1 text-[10px] whitespace-nowrap" style={{ color: isDark ? '#e8e4dc' : '#2a2620', fontFamily: 'EB Garamond, serif' }}>
                                     {tree.topic}
                                     {isTopicTree(tree) && !isFullyGrown(tree) && (
-                                      <span style={{ color: '#d97706' }}> · {Math.min(tree.recallDone || 0, tree.recallNeeded || 0)}/{tree.recallNeeded} recalled</span>
+                                      <span style={{ color: '#d97706' }}> · {Math.floor(Math.min(tree.recallDone || 0, tree.recallNeeded || 0))}/{tree.recallNeeded} recalled</span>
                                     )}
                                   </div>
                                 )}
@@ -3687,7 +3697,7 @@ export const OrchardView = memo(function OrchardView({
                                 )}
                                 {tree.stage < 4 && (
                                   <div className="w-full h-[2px] rounded-full mt-1.5 overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
-                                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, tree.progress)}%`, background: meta.color }} />
+                                    <div className="h-full rounded-full" style={{ width: `${growthPct(tree)}%`, background: meta.color }} />
                                   </div>
                                 )}
                               </div>
@@ -3844,7 +3854,7 @@ export const OrchardView = memo(function OrchardView({
                           </div>
                           {ft.stage < 4 && (
                             <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
-                              <div className="h-full rounded-full" style={{ width: `${Math.min(100, ft.progress)}%`, background: meta.color }} />
+                              <div className="h-full rounded-full" style={{ width: `${growthPct(ft)}%`, background: meta.color }} />
                             </div>
                           )}
                           {plantedStr && (
@@ -3866,7 +3876,7 @@ export const OrchardView = memo(function OrchardView({
                           {isTopicTree(ft) && !ftFull && (
                             <div className="flex justify-between">
                               <span>Recalled</span>
-                              <span style={{ color: '#d97706', fontWeight: 400 }}>{Math.min(ft.recallDone || 0, ft.recallNeeded || 0)}/{ft.recallNeeded}</span>
+                              <span style={{ color: '#d97706', fontWeight: 400 }}>{Math.floor(Math.min(ft.recallDone || 0, ft.recallNeeded || 0))}/{ft.recallNeeded}</span>
                             </div>
                           )}
                           <div className="flex justify-between">

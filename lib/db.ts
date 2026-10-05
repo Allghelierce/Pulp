@@ -51,6 +51,13 @@ export async function deleteTree(userId: string, treeId: string | number) {
   return upsertGrove(userId, existing.filter(t => String(t.id) !== String(treeId)))
 }
 
+// One read-modify-write for several trees (parallel deleteTree calls clobber each other).
+export async function deleteTrees(userId: string, treeIds: (string | number)[]) {
+  const ids = new Set(treeIds.map(String))
+  const existing = await getGrove(userId)
+  return upsertGrove(userId, existing.filter(t => !ids.has(String(t.id))))
+}
+
 // ─── Inventory (stored as JSONB on player_profiles) ───
 
 export interface InventoryItem {

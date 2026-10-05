@@ -59,7 +59,7 @@ export const TopicsView = memo(function TopicsView({ theme, accent, grove, notes
 
   const now = Date.now()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is a refresh trigger
-  const rows = useMemo(() => buildTopicIndex(grove), [grove, tick])
+  const rows = useMemo(() => buildTopicIndex(grove, Date.now(), new Set(notes.map(n => n.id))), [grove, notes, tick])
   const newestTree = useMemo(() => {
     const m = new Map<string, Tree>()
     for (const t of grove) {
