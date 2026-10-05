@@ -31,6 +31,7 @@ const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PlantedToast } from "@/app/components/PlantedToast"
+import { DueCard } from "@/app/components/DueCard"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -3798,6 +3799,13 @@ export default function NoteApp() {
                   unlockedCosmetics={unlockedCosmetics}
                   goalStreak={goalStreak}
                   quotaTier={quotaTier}
+                />
+                <DueCard
+                  noteId={activeNote ? activeNote.id : null}
+                  theme={theme}
+                  accent={accentSolid}
+                  hidden={reviewOpen || timerRunning}
+                  onReview={() => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
                 />
               </div>
             )}
