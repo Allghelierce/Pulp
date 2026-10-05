@@ -4700,7 +4700,11 @@ export default function NoteApp() {
                       // updater) since banking writes localStorage.
                       const current = useGroveStore.getState().grove
                       const next = applyRecall(current, topic, weight, reviewNote.id, treeId)
-                      if (next !== current) setGrove(next)
+                      if (next === current) return topic ? "banked" : "none"
+                      setGrove(next)
+                      // Name the tree that grew (an untagged card may grow a topic's sapling).
+                      const grew = next.find((t, i) => t !== current[i])
+                      return { grew: grew?.topic || topic || "sapling" }
                     }}
                     onComplete={({ reviewed, again, practice }) => {
                       if (practice) return // reviewing ahead earns nothing

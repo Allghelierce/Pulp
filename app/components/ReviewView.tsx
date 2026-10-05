@@ -29,7 +29,7 @@ interface ReviewViewProps {
   onComplete?: (result: { noteId: string; reviewed: number; again: number; practice: boolean }) => void
   /** Fired after a graded answer with a 0..1 growth weight (correct = 1, partial = 0.5)
    *  the answered card's topic tag (undefined for untagged cards), and the tree its session planted. */
-  onCorrect?: (weight: number, topic?: string, treeId?: number) => void
+  onCorrect?: (weight: number, topic?: string, treeId?: number) => { grew: string } | "banked" | "none" | void
   /** Limit the session to cards tagged with this topic ("Review <topic>" from the orchard). */
   topic?: string
   /** Summary "show in orchard" for a topic whose tree grew this session. */
@@ -82,7 +82,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const [log, setLog] = useState<Grade[]>([])
   // Topics whose trees this session fed, so mixed review keeps the card -> tree link.
   const [grown, setGrown] = useState<Record<string, number>>({})
-  const [flash, setFlash] = useState<{ topic: string; id: number } | null>(null)
+  const [flash, setFlash] = useState<{ topic: string; id: number; banked?: boolean } | null>(null)
   // Produce-then-grade: the student types an answer, AI judges it.
   const [answer, setAnswer] = useState("")
   const [grading, setGrading] = useState(false)
@@ -190,8 +190,10 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     // per session counts ("again" requeues can't be farmed), and never when reviewing ahead.
     const weight = result ? VERDICT_WEIGHT[result.verdict] : 0
     if (weight > 0 && firstAttempt && !reviewingAhead.current) {
-      onCorrect?.(weight, current.topic, current.treeId)
-      const t = current.topic
+      const outcome = onCorrect?.(weight, current.topic, current.treeId)
+      // Show what actually happened: the tree that grew, or nutrients banked for later.
+      if (outcome === "banked" && current.topic) setFlash({ topic: current.topic, id: gnow, banked: true })
+      const t = outcome && typeof outcome === "object" ? outcome.grew : outcome === undefined ? current.topic : undefined
       if (t) {
         // Keyed by normalized topic so "Photosynthesis"/"photosynthesis" share a chip.
         setGrown(prev => {
@@ -396,7 +398,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
             </div>
             <div style={{ height: 18, marginTop: -6, marginBottom: 6, textAlign: "center" }}>
               {flash && (
-                <span key={flash.id} style={{ fontSize: 12.5, color: accent, animation: "pulpGrowFlash 1.8s ease forwards" }}>+ {flash.topic} 🌱</span>
+                <span key={flash.id} style={{ fontSize: 12.5, color: accent, animation: "pulpGrowFlash 1.8s ease forwards" }}>{flash.banked ? `${flash.topic} · saved for its next tree` : `+ ${flash.topic} 🌱`}</span>
               )}
             </div>
             <style>{`@keyframes pulpGrowFlash { 0% { opacity: 0; transform: translateY(4px) } 15% { opacity: 1; transform: none } 75% { opacity: 1 } 100% { opacity: 0 } }`}</style>
