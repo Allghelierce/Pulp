@@ -629,8 +629,16 @@ export const VitalitySystem = memo(function VitalitySystem({
     window.postMessage({ type: "pulp-timer-state", timerRunning }, "*")
   }, [timerRunning])
 
-  // Char count tracking & Collection Growth
+  // Char count tracking & Collection Growth.
+  // totalChars is the active note's size, so switching notes re-bases the count
+  // instead of crediting (or hiding) the size difference between notebooks.
+  const charTabRef = useRef<string | null | undefined>(undefined)
   useEffect(() => {
+    if (charTabRef.current !== activeTabId) {
+      charTabRef.current = activeTabId
+      if (totalChars !== lastCharCount) setLastCharCount(totalChars)
+      return
+    }
     if (totalChars > lastCharCount) {
       const diff = totalChars - lastCharCount
       if (diff >= 100) {
@@ -645,13 +653,14 @@ export const VitalitySystem = memo(function VitalitySystem({
         }))
         setLastCharCount(totalChars)
         logCharsWritten(diff)
-        const typedDiff = Math.min(diff, 30)
+        // Effect fires about every 100 typed chars; the cap only trims big pastes.
+        const typedDiff = Math.min(diff, 100)
         checkAchievement('dedicated_writer', a => ({ progress: Math.min(50000, (a.progress || 0) + typedDiff) }))
         checkAchievement('wordsmith', a => ({ progress: Math.min(200000, (a.progress || 0) + typedDiff) }))
       }
 
     }
-  }, [totalChars, lastCharCount, checkAchievement, setGrove, setLastCharCount])
+  }, [totalChars, lastCharCount, activeTabId, checkAchievement, setGrove, setLastCharCount])
 
   return (
     <TimerSidebarPanel
