@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
+    const overQuota = await consumeAiQuota(user.id, { metered: false })
     if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
