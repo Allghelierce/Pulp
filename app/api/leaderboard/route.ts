@@ -77,9 +77,9 @@ export async function POST(req: Request) {
     updated_at: new Date().toISOString(),
   }
   if (typeof display_name === 'string' && display_name.trim()) fields.display_name = display_name.trim().slice(0, 40)
-  if (typeof avatar_color === 'string') fields.avatar_color = avatar_color
-  if (typeof level === 'number') fields.level = level
-  if (typeof trees_grown === 'number') fields.trees_grown = trees_grown
+  if (typeof avatar_color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(avatar_color)) fields.avatar_color = avatar_color
+  if (typeof level === 'number' && Number.isFinite(level)) fields.level = Math.max(0, Math.min(1000, Math.floor(level)))
+  if (typeof trees_grown === 'number' && Number.isFinite(trees_grown)) fields.trees_grown = Math.max(0, Math.min(100000, Math.floor(trees_grown)))
 
   if (existing) {
     // Keep the week's starting baseline. (Spending lowers the score; lowering the
