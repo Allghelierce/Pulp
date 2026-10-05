@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   try {
     // Rate limiting
     const key = getRateLimitKey(req)
-    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 15 })) {
+    if (!checkRateLimit(`rewrite:${key}`, { windowMs: 60000, maxRequests: 15 })) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }
@@ -19,10 +19,10 @@ export async function POST(req: Request) {
 
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
-    const { text } = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    const { text } = body
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'No text provided' }, { status: 400 })
@@ -36,6 +36,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Rewrite service not configured" }, { status: 503 })
     }
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },

@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const { focus_minutes, display_name, avatar_color, level } = body
+  const { display_name, avatar_color, level } = body
 
   const weekStart = getWeekStart()
   const { data: standing } = await supabaseAdmin
@@ -88,10 +88,10 @@ export async function POST(req: Request) {
   }
 
   const update: Record<string, any> = {}
-  if (typeof focus_minutes === 'number') update.focus_minutes = focus_minutes
-  if (display_name) update.display_name = display_name
-  if (avatar_color) update.avatar_color = avatar_color
-  if (typeof level === 'number') update.level = level
+  // focus_minutes is only ever added server-side (grove completion) — never client-set.
+  if (typeof display_name === 'string' && display_name.trim()) update.display_name = display_name.trim().slice(0, 40)
+  if (typeof avatar_color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(avatar_color)) update.avatar_color = avatar_color
+  if (typeof level === 'number' && Number.isFinite(level)) update.level = Math.max(0, Math.min(1000, Math.floor(level)))
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 })

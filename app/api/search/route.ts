@@ -10,20 +10,20 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 30 })) {
+    if (!checkRateLimit(`search:${key}`, { windowMs: 60000, maxRequests: 30 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
     }
 
-    const { query, notes } = await request.json()
+    const body = await request.json().catch(() => null)
+    if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    const { query, notes } = body
 
     if (!query || typeof query !== "string" || query.length > 200) {
       return NextResponse.json({ error: "Invalid query" }, { status: 400 })
@@ -33,6 +33,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ results: [] })
     }
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     const noteSummaries = notes.map((n: { id: string; name: string; pages: string[] }, i: number) => {
       const pages = n.pages.map((p: string, pi: number) => `  Page ${pi + 1}: ${p}`).join("\n")
       return `[${i}] "${n.name}"\n${pages}`

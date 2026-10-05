@@ -7,7 +7,7 @@ import { chunkText, getEmbeddings, extractPageText } from "@/lib/embeddings"
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 10000, maxRequests: 5 })) {
+    if (!checkRateLimit(`embed:${key}`, { windowMs: 10000, maxRequests: 5 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 

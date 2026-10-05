@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
+import { escapeLike } from "@/lib/social"
 
 // Hydrate a set of user_ids into public profile cards.
 async function profiles(ids: string[]) {
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
       target = data
     } else if (typeof body.username === 'string') {
       const { data } = await supabaseAdmin.from('player_profiles')
-        .select('user_id').ilike('username', body.username.trim()).maybeSingle()
+        .select('user_id').ilike('username', escapeLike(body.username.trim().replace(/^@/, ''))).maybeSingle()
       target = data
     }
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 })

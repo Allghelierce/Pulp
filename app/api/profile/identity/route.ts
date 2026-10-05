@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { validateUsername } from "@/lib/social"
+import { validateUsername, escapeLike } from "@/lib/social"
 import { GRADES } from "@/lib/term"
 
 const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000 // one week
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 })
     value = v.value
     const { data: existing } = await supabaseAdmin
-      .from('player_profiles').select('user_id').ilike('username', value).maybeSingle()
+      .from('player_profiles').select('user_id').ilike('username', escapeLike(value)).maybeSingle()
     if (existing && existing.user_id !== user.id) {
       return NextResponse.json({ error: "Username taken" }, { status: 409 })
     }

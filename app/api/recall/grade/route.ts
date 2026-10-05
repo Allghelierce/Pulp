@@ -18,8 +18,6 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
@@ -34,6 +32,9 @@ export async function POST(request: Request) {
     // Blank answers never need a model call.
     if (!answer) return NextResponse.json({ verdict: "wrong", feedback: "No answer given — give it a try next time." })
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     const res = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },

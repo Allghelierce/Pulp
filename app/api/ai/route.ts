@@ -104,7 +104,7 @@ export async function POST(request: Request) {
   try {
     // Rate limiting
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 20 })) {
+    if (!checkRateLimit(`ai:${key}`, { windowMs: 60000, maxRequests: 20 })) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }
@@ -113,10 +113,10 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
-    const { prompt, text, stream: wantStream } = await request.json()
+    const body = await request.json().catch(() => null)
+    if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    const { prompt, text, stream: wantStream } = body
 
     const validation = validateInput(prompt, text)
     if (!validation.valid) {
@@ -127,6 +127,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
     }
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     if (wantStream) {
       const systemPrompt = `You are a writing assistant inside Pulp, a study notebook app. You transform text exactly as requested.
 

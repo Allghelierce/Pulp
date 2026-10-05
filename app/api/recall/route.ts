@@ -10,20 +10,18 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 10 })) {
+    if (!checkRateLimit(`recall:${key}`, { windowMs: 60000, maxRequests: 10 })) {
       return NextResponse.json({ error: "Too many requests. Try again in a moment." }, { status: 429 })
     }
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
     }
 
-    const body = await request.json()
+    const body = await request.json().catch(() => null)
     const text: string = typeof body?.text === "string" ? body.text : ""
     const count = clampCount(body?.count)
     const title: string = typeof body?.title === "string" ? body.title.slice(0, 200) : ""
@@ -32,6 +30,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not enough notes to review yet — write more first." }, { status: 400 })
     }
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     const res = await fetch(GROQ_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },

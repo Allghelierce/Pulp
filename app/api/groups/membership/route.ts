@@ -20,6 +20,11 @@ export async function POST(req: Request) {
     if (!group) return NextResponse.json({ error: "Invalid code" }, { status: 404 })
     if (group.status !== 'active') return NextResponse.json({ error: "Group archived" }, { status: 400 })
 
+    // Already in (or waiting on) this group: don't reset the row — that would demote an owner.
+    const { data: existing } = await supabaseAdmin.from('group_members')
+      .select('status').eq('group_id', group.id).eq('user_id', user.id).maybeSingle()
+    if (existing) return NextResponse.json({ ok: true, groupId: group.id, status: existing.status })
+
     const { count } = await supabaseAdmin.from('group_members')
       .select('id', { count: 'exact', head: true }).eq('group_id', group.id).eq('status', 'active')
     if ((count ?? 0) >= group.max_members) return NextResponse.json({ error: "Group full" }, { status: 400 })

@@ -20,6 +20,9 @@ export function generateInviteCode(): string {
   return randomCode(8)
 }
 
+// Escape LIKE wildcards so `a_b` only matches "a_b" in case-insensitive lookups.
+export const escapeLike = (v: string): string => v.replace(/[\\%_]/g, c => `\\${c}`)
+
 export type UsernameResult =
   | { ok: true; value: string }
   | { ok: false; error: string }

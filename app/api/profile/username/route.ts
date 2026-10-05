@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { validateUsername, generateFriendCode } from "@/lib/social"
+import { validateUsername, generateFriendCode, escapeLike } from "@/lib/social"
 
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const { data: existing } = await supabaseAdmin
     .from('player_profiles')
     .select('user_id')
-    .ilike('username', v.value)
+    .ilike('username', escapeLike(v.value))
     .maybeSingle()
   if (existing && existing.user_id !== user.id) {
     return NextResponse.json({ error: "Username taken" }, { status: 409 })

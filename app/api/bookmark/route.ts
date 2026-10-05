@@ -1,5 +1,47 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
+import { lookup } from "node:dns/promises"
+import { isIP } from "node:net"
+
+const MAX_BYTES = 512 * 1024
+const MAX_REDIRECTS = 3
+
+// True for loopback, private, link-local, CGNAT, and unspecified addresses (v4 + v6).
+function isPrivateIP(ip: string): boolean {
+  let v = ip.toLowerCase()
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v)
+  if (mapped) v = mapped[1]
+  if (isIP(v) === 4) {
+    const [a, b] = v.split(".").map(Number)
+    return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224
+  }
+  return v === "::" || v === "::1" || /^f[cd]/.test(v) || /^fe[89ab]/.test(v) || v.startsWith("::ffff:")
+}
+
+// Resolve the host and refuse anything that lands on an internal address.
+async function resolvesPublic(url: URL): Promise<boolean> {
+  const host = url.hostname.replace(/^\[|\]$/g, "")
+  if (isIP(host)) return !isPrivateIP(host)
+  try {
+    const addrs = await lookup(host, { all: true })
+    return addrs.length > 0 && addrs.every(a => !isPrivateIP(a.address))
+  } catch { return false }
+}
+
+async function readCapped(res: Response): Promise<string> {
+  if (!res.body) return ""
+  const reader = res.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  while (size < MAX_BYTES) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(value); size += value.byteLength
+  }
+  reader.cancel().catch(() => {})
+  return new TextDecoder().decode(Buffer.concat(chunks).subarray(0, MAX_BYTES))
+}
 
 // Validate URL to prevent SSRF attacks
 function isValidURL(urlString: string): boolean {
@@ -10,7 +52,7 @@ function isValidURL(urlString: string): boolean {
       return false
     }
     // Block private/internal IPs
-    const hostname = url.hostname.toLowerCase()
+    const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, "")
     const privateIPPatterns = [
       /^localhost$/,
       /^127\./,
@@ -43,7 +85,7 @@ function isValidURL(urlString: string): boolean {
 
 export async function GET(req: NextRequest) {
   const key = getRateLimitKey(req)
-  if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 30 })) {
+  if (!checkRateLimit(`bookmark:${key}`, { windowMs: 60000, maxRequests: 30 })) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 
@@ -55,11 +97,25 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)" },
-      signal: AbortSignal.timeout(8000),
-    })
-    const html = await res.text()
+    // Follow redirects by hand so every hop is re-checked against internal addresses.
+    let target = url
+    let res: Response | null = null
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      if (!isValidURL(target) || !(await resolvesPublic(new URL(target)))) {
+        return NextResponse.json({ error: "Invalid URL" }, { status: 400 })
+      }
+      res = await fetch(target, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)" },
+        signal: AbortSignal.timeout(8000),
+        redirect: "manual",
+      })
+      const loc = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null
+      if (!loc) break
+      target = new URL(loc, target).toString()
+      res = null
+    }
+    if (!res) return NextResponse.json({ error: "Too many redirects" }, { status: 400 })
+    const html = await readCapped(res)
 
     const get = (pattern: RegExp) => pattern.exec(html)?.[1]?.trim() ?? ""
 

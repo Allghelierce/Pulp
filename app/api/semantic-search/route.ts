@@ -7,7 +7,7 @@ import { getEmbeddings } from "@/lib/embeddings"
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 5000, maxRequests: 10 })) {
+    if (!checkRateLimit(`semsearch:${key}`, { windowMs: 5000, maxRequests: 10 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 

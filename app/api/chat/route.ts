@@ -65,20 +65,20 @@ function groqErrorMessage(status: number): string {
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request)
-    if (!checkRateLimit(key, { windowMs: 60000, maxRequests: 20 })) {
+    if (!checkRateLimit(`chat:${key}`, { windowMs: 60000, maxRequests: 20 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const overQuota = await consumeAiQuota(user.id)
-    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
     }
 
-    const { prompt, text, personality, history, stream: wantStream } = await request.json()
+    const body = await request.json().catch(() => null)
+    if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    const { prompt, text, personality, history, stream: wantStream } = body
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json({ error: "Invalid prompt" }, { status: 400 })
     }
@@ -87,6 +87,9 @@ export async function POST(request: Request) {
     }
     const notes = typeof text === "string" ? text.slice(0, MAX_NOTES) : ""
 
+    // Charge the daily AI quota only for requests that will reach the model.
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
     // Notes live in the system message so follow-up turns keep the same context.
     let systemPrompt = DEFAULT_SYSTEM
     if (typeof personality === "string" && personality) systemPrompt += `\n\nADDITIONAL PERSONALITY INSTRUCTIONS (from user):\n${personality.slice(0, 2000)}`
