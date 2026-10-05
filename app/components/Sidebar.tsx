@@ -99,6 +99,8 @@ interface SidebarProps {
   onOpenShop?: () => void
   onOpenLeaderboard?: () => void
   onOpenStats?: () => void
+  onOpenRecall?: () => void
+  recallDue?: number
   onGoHome?: () => void
   sap?: number
   gems?: number
@@ -126,7 +128,7 @@ export const Sidebar = memo(function Sidebar({
   onAddNote, onAddTypedNote, onAddFolder, onSelectNote, onRenameNote, onDeleteNote,
   onToggleFolder, onRenameFolder, onDeleteFolder, onSetRenamingFolder,
   onSetDraggedNoteId, onDropNote, onSetNoteParent, onChangeNoteIcon, onOpenSettings, onOpenTimer, timerOpen, timerRunning, onUnlockDev, onGoToShelf,
-  onOpenShop, onOpenLeaderboard, onOpenStats, onGoHome,
+  onOpenShop, onOpenLeaderboard, onOpenStats, onOpenRecall, recallDue = 0, onGoHome,
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini,
@@ -618,6 +620,12 @@ export const Sidebar = memo(function Sidebar({
           <div className="relative flex flex-col items-center h-full z-10 pt-5 pb-4">
             <span onClick={onGoHome} className="mb-6 shrink-0 cursor-pointer" style={{ fontFamily: '"EB Garamond", serif', fontSize: 17, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
             <div className="flex flex-col items-center gap-0.5 px-1 w-full">
+              {onOpenRecall && (
+                <button onClick={onOpenRecall} title={recallDue > 0 ? `Recall · ${recallDue} due` : "Recall"} className="relative w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05]" style={{ color: '#d97706' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                  {recallDue > 0 && <span style={{ position: 'absolute', top: 3, right: 3, width: 6, height: 6, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 6px #d97706' }} />}
+                </button>
+              )}
               {onOpenShop && (
                 <button onClick={onOpenShop} title="Market" className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05] text-zinc-500 hover:text-zinc-300">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
@@ -767,6 +775,13 @@ export const Sidebar = memo(function Sidebar({
 
         {/* Nav buttons — top */}
         <div className="px-2 pt-2 pb-1 flex flex-col gap-px z-10 shrink-0" style={{ opacity: sidebarWidth > 40 ? 1 : 0, transition: "opacity 100ms ease", minWidth: 256 }}>
+          {onOpenRecall && (
+            <button onClick={onOpenRecall} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+              <span className="text-[12px] font-normal" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em', color: '#d97706' }}>recall</span>
+              {recallDue > 0 && <span className="ml-auto tabular-nums text-[10.5px]" style={{ fontFamily: 'Crimson Pro, serif', color: '#d97706', background: 'rgba(217,119,6,0.12)', borderRadius: 999, padding: '0 7px' }}>{recallDue} due</span>}
+            </button>
+          )}
           {onOpenShop && (
             <button onClick={onOpenShop} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/[0.05] focus:outline-none group w-full text-left">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 group-hover:text-zinc-300 shrink-0"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>
