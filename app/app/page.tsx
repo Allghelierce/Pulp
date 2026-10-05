@@ -4934,7 +4934,7 @@ export default function NoteApp() {
               versions={versionHistory.getVersions(activeNote.id)}
               noteSubject={activeNote.subject}
               currentPages={activeNote.pages}
-              onRestore={v => versionHistory.restoreVersion(activeNote.id, v, setNotes)}
+              onRestore={v => { versionHistory.restoreVersion(activeNote.id, v, setNotes); lastSyncKey.current = "" /* repaint editor with restored page */ }}
               onDelete={ts => versionHistory.deleteVersion(activeNote.id, ts)}
               onSaveSnapshot={() => versionHistory.takeSnapshot()}
               onClose={() => setShowVersionHistory(false)}

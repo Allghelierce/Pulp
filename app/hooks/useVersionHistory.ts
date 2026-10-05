@@ -44,14 +44,15 @@ function saveVersions(noteId: string, versions: NoteVersion[]) {
   } catch { /* localStorage full — silently skip */ }
 }
 
-function snapshotNote(note: NoteData, lastHashMap: Map<string, string>): NoteVersion[] {
+// `force` skips the min-gap throttle (used before a restore, so recent edits are kept).
+function snapshotNote(note: NoteData, lastHashMap: Map<string, string>, force = false): NoteVersion[] {
   const hash = contentHash(note)
   const prev = lastHashMap.get(note.id)
   if (hash === prev) return loadVersions(note.id)
 
   const versions = loadVersions(note.id)
   const last = versions[versions.length - 1]
-  if (last && Date.now() - last.timestamp < MIN_SNAPSHOT_GAP) return versions
+  if (!force && last && Date.now() - last.timestamp < MIN_SNAPSHOT_GAP) return versions
 
   lastHashMap.set(note.id, hash)
   versions.push(extractVersion(note))
@@ -114,7 +115,7 @@ export function useVersionHistory(
 
   const restoreVersion = useCallback((noteId: string, version: NoteVersion, setNotes: (updater: NoteData[] | ((prev: NoteData[]) => NoteData[])) => void) => {
     const current = notesRef.current.find(n => n.id === noteId)
-    if (current) snapshotNote(current, hashMapRef.current)
+    if (current) snapshotNote(current, hashMapRef.current, true)
 
     setNotes(prev => prev.map(n => {
       if (n.id !== noteId) return n
