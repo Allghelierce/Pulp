@@ -12,6 +12,20 @@ import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
 import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
+import { isDue, loadDeck } from "@/lib/recallSchedule"
+
+// "" when cards for this topic (or notebook) are due now; otherwise when the next one is.
+function recallWhen(notebookId: string | undefined, topic: string | undefined): string {
+  const deck = notebookId ? loadDeck(notebookId) : null
+  if (!deck) return ''
+  const now = Date.now()
+  const k = topic ? normalizeTopic(topic) : null
+  const mine = deck.cards.filter(c => !k || (c.topic && normalizeTopic(c.topic) === k))
+  if (!mine.length || mine.some(c => isDue(c, now))) return ''
+  const next = Math.min(...mine.map(c => c.due))
+  const days = Math.round((new Date(next).setHours(0, 0, 0, 0) - new Date(now).setHours(0, 0, 0, 0)) / 86_400_000)
+  return days <= 0 ? 'later today' : days === 1 ? 'tomorrow' : `in ${days} days`
+}
 
 // Growth bar: topic saplings fill by recall (the timer only takes them to sapling).
 const growthPct = (t: Tree): number =>
@@ -3900,19 +3914,25 @@ export const OrchardView = memo(function OrchardView({
                           )}
                         </div>
                         <div className="w-full flex flex-col gap-2 mt-1">
-                          {ft.topic && onReviewTopic && (!ftFull || ftFaded) && (
-                            <button
-                              onClick={() => { setFocusedTree(null); onReviewTopic(ft.topic, ft.notebookId) }}
-                              className="w-full py-1.5 rounded-lg text-[12px] font-normal tracking-wide truncate"
-                              style={{
-                                backgroundColor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(217,119,6,0.12)',
-                                color: '#d97706',
-                                fontFamily: 'EB Garamond, serif',
-                              }}
-                            >
-                              Recall {ft.topic}
-                            </button>
-                          )}
+                          {onReviewTopic && isTopicTree(ft) && (!ftFull || ftFaded) && (ft.topic || ft.notebookId) && (() => {
+                            // Topic-less sapling (tagging failed): its notebook's recall grows it.
+                            const label = ft.topic || notebook?.subject || 'notebook'
+                            const when = recallWhen(ft.notebookId, ft.topic)
+                            return (
+                              <button
+                                onClick={() => { setFocusedTree(null); onReviewTopic(ft.topic || '', ft.notebookId) }}
+                                className="w-full py-1.5 rounded-lg text-[12px] font-normal tracking-wide truncate"
+                                style={{
+                                  backgroundColor: isDark ? 'rgba(217,119,6,0.18)' : 'rgba(217,119,6,0.12)',
+                                  color: '#d97706',
+                                  fontFamily: 'EB Garamond, serif',
+                                  opacity: when ? 0.7 : 1,
+                                }}
+                              >
+                                Recall {label}{when ? ` · ready ${when}` : ''}
+                              </button>
+                            )
+                          })()}
                           <button
                             onClick={() => { setFocusedTree(null) }}
                             className="w-full py-1.5 rounded-lg text-[11px] font-normal uppercase tracking-wider"
