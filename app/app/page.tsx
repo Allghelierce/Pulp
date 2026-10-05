@@ -161,6 +161,42 @@ function htmlToPlain(html: string): string {
   return html.replace(/<br\s*\/?>\n/gi, "\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
 }
 
+// Whole-notebook context for the AI: every page (body + text boxes) labeled,
+// with the current page marked. Pages nearest the current one go in full while
+// they fit the budget; the rest get a one-line preview so the AI still knows
+// what every page covers. Budget is small because Groq's free tier allows
+// ~8k tokens/min per model (~4 chars per token).
+function notebookContext(note: NoteData, currentIdx: number, budget = 12000): string {
+  const toText = (html: string) => htmlToPlain(
+    html.replace(/<\/(div|p|li|h[1-6]|blockquote)>/gi, "\n")
+  ).replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n").trim()
+  const pages = note.pages.map((html, i) => {
+    const boxes = (note.boxes?.[i] || []).map(b => toText(b.content || "")).filter(Boolean)
+    return [toText(html || ""), ...boxes].filter(Boolean).join("\n")
+  })
+  const cur = Math.min(Math.max(0, currentIdx), pages.length - 1)
+  const order = pages.map((_, i) => i).sort((a, b) => Math.abs(a - cur) - Math.abs(b - cur) || a - b)
+  const kept = new Map<number, string>()
+  let used = 0
+  for (const i of order) {
+    const text = pages[i] || "(blank)"
+    if (i === cur) { kept.set(i, text.slice(0, budget)); used += Math.min(text.length, budget); continue }
+    if (used + text.length > budget) continue
+    kept.set(i, text); used += text.length
+  }
+  const head = `Notebook: "${note.subject || "Untitled"}" — ${pages.length} page${pages.length === 1 ? "" : "s"}. The student is looking at page ${cur + 1}.`
+  // Keep previews to ~4k chars total, however many pages were cut.
+  const omitted = pages.length - kept.size
+  const previewLen = omitted ? Math.max(40, Math.min(160, Math.floor(4000 / omitted))) : 0
+  const body = pages.map((_, i) => {
+    const label = `=== Page ${i + 1}${i === cur ? " (current page)" : ""} ===`
+    if (kept.has(i)) return `${label}\n${kept.get(i)}`
+    const preview = pages[i].replace(/\s+/g, " ").slice(0, previewLen)
+    return `${label}\n[preview only] ${preview}${pages[i].length > previewLen ? "…" : ""}`
+  }).join("\n\n")
+  return `${head}\n\n${body}`
+}
 
 function plainToHtml(text: string): string {
   return text
@@ -1712,6 +1748,11 @@ export default function NoteApp() {
   const [showAiCommandBar, setShowAiCommandBar] = useState(false)
   const [showNotebookChat, setShowNotebookChat] = useState(false)
   const [aiHubOpen, setAiHubOpen] = useState(false)
+  // Built only while the AI hub is open; rebuilt when the note or page changes.
+  const aiNotebookContext = useMemo(
+    () => (activeNote && aiHubOpen ? notebookContext(activeNote, currentPageIdx) : undefined),
+    [activeNote, aiHubOpen, currentPageIdx]
+  )
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [aiExpression, setAiExpression] = useState<"normal" | "wink" | "sleepy" | "heart" | "surprised">("normal")
   const [isTextActive, setIsTextActive] = useState(false)
@@ -4660,7 +4701,7 @@ export default function NoteApp() {
             open={aiHubOpen}
             theme={theme}
             accent={accent}
-            noteText={activeNote ? htmlToPlain(activeNote.pages.join("\n")) : undefined}
+            noteText={aiNotebookContext}
             noteName={activeNote?.subject}
             userId={user?.id}
             onClose={() => setAiHubOpen(false)}

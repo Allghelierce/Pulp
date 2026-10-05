@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
+import { consumeAiQuota } from "@/lib/aiQuota"
 
 const MAX_TEXT_LENGTH = 5000
 
@@ -17,6 +18,8 @@ export async function POST(req: Request) {
 
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
 
     const { text } = await req.json()
 

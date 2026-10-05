@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
+import { consumeAiQuota } from "@/lib/aiQuota"
+import { GROQ_MODEL, REASONING_EFFORT } from "@/lib/aiModels"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -8,8 +10,8 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 // Input validation constraints
 const CONSTRAINTS = {
   maxPromptLength: 2000,
-  maxContextLength: 10000,
-  maxTotalLength: 12000,
+  maxContextLength: 25000,
+  maxTotalLength: 27000,
 }
 
 function validateInput(prompt: string, context?: string): { valid: boolean; error?: string } {
@@ -63,8 +65,9 @@ RULES:
       "Authorization": `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 512,
+      model: GROQ_MODEL,
+      max_tokens: 1536,
+      reasoning_effort: REASONING_EFFORT,
       temperature: 0.3,
       messages: [
         {
@@ -110,6 +113,8 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
 
     const { prompt, text, stream: wantStream } = await request.json()
 
@@ -143,8 +148,9 @@ RULES:
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          max_tokens: 512,
+          model: GROQ_MODEL,
+          max_tokens: 1536,
+          reasoning_effort: REASONING_EFFORT,
           temperature: 0.3,
           stream: true,
           messages: [
@@ -162,20 +168,31 @@ RULES:
       const encoder = new TextEncoder()
       const decoder = new TextDecoder()
 
+      // Keep reading until a chunk yields answer text: gpt-oss sends reasoning-only
+      // chunks first, and a pull() that enqueues nothing is never called again.
+      // Buffer partial lines, since SSE lines can span network chunks.
+      let buffer = ""
       const readable = new ReadableStream({
         async pull(controller) {
-          const { done, value } = await reader.read()
-          if (done) { controller.close(); return }
-          const chunk = decoder.decode(value)
-          for (const line of chunk.split("\n")) {
-            if (!line.startsWith("data: ") || line === "data: [DONE]") continue
-            try {
-              const json = JSON.parse(line.slice(6))
-              const token = json.choices?.[0]?.delta?.content
-              if (token) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`))
-            } catch {}
+          for (;;) {
+            const { done, value } = await reader.read()
+            if (done) { controller.close(); return }
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split("\n")
+            buffer = lines.pop() ?? ""
+            let sent = false
+            for (const line of lines) {
+              if (!line.startsWith("data: ") || line === "data: [DONE]") continue
+              try {
+                const json = JSON.parse(line.slice(6))
+                const token = json.choices?.[0]?.delta?.content
+                if (token) { controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`)); sent = true }
+              } catch {}
+            }
+            if (sent) return
           }
         },
+        cancel() { reader.cancel().catch(() => {}) },
       })
 
       return new Response(readable, {

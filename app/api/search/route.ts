@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
+import { consumeAiQuota } from "@/lib/aiQuota"
+import { GROQ_MODEL, REASONING_EFFORT } from "@/lib/aiModels"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -14,6 +16,8 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })
@@ -44,8 +48,9 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 300,
+        model: GROQ_MODEL,
+        max_tokens: 1024,
+        reasoning_effort: REASONING_EFFORT,
         temperature: 0,
         messages: [
           {

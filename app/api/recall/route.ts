@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
+import { consumeAiQuota } from "@/lib/aiQuota"
 import { SYSTEM_PROMPT, MODEL, MIN_TEXT, clampCount, buildUserMessage, parseCards } from "@/lib/recallPrompt"
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
 
     const user = await getAuthUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const overQuota = await consumeAiQuota(user.id)
+    if (overQuota) return overQuota
 
     if (!GROQ_API_KEY) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 503 })

@@ -18,6 +18,44 @@ interface OrangeAIHubProps {
   onReplaceSelection?: (text: string) => void
 }
 
+// Minimal markdown for chat replies: **bold**, *italic*, `code`, headings, lists.
+// Builds React nodes (no innerHTML), so model output can't inject markup.
+function renderInline(text: string, keyBase: string): React.ReactNode[] {
+  const out: React.ReactNode[] = []
+  const re = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g
+  let last = 0, m: RegExpExecArray | null, i = 0
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index))
+    const t = m[0]
+    const k = `${keyBase}-${i++}`
+    if (t.startsWith("**")) out.push(<strong key={k} style={{ fontWeight: 600 }}>{t.slice(2, -2)}</strong>)
+    else if (t.startsWith("`")) out.push(<code key={k} style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.92em", opacity: 0.85 }}>{t.slice(1, -1)}</code>)
+    else out.push(<em key={k}>{t.slice(1, -1)}</em>)
+    last = m.index + t.length
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out
+}
+
+function renderMarkdown(text: string): React.ReactNode {
+  return text.split("\n").map((line, i) => {
+    const heading = line.match(/^#{1,6}\s+(.*)$/)
+    if (heading) return <div key={i} style={{ fontWeight: 600, marginTop: i ? 6 : 0 }}>{renderInline(heading[1], `h${i}`)}</div>
+    const bullet = line.match(/^(\s*)([-*•]|\d+[.)])\s+(.*)$/)
+    if (bullet) {
+      const marker = /\d/.test(bullet[2]) ? bullet[2] : "•"
+      return (
+        <div key={i} style={{ display: "flex", gap: 6, paddingLeft: Math.min(24, bullet[1].length * 6) }}>
+          <span style={{ opacity: 0.6, flexShrink: 0 }}>{marker}</span>
+          <span>{renderInline(bullet[3], `b${i}`)}</span>
+        </div>
+      )
+    }
+    if (!line.trim()) return <div key={i} style={{ height: 6 }} />
+    return <div key={i}>{renderInline(line, `p${i}`)}</div>
+  })
+}
+
 export const OrangeAIHub = memo(function OrangeAIHub({
   open, theme, accent, noteText, noteName, userId, onClose, onInsertText, onReplaceSelection,
 }: OrangeAIHubProps) {
@@ -61,7 +99,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
   }, [messages, streamText, pendingEdit?.streamedEdit])
 
-  const streamFromAPI = useCallback(async (prompt: string, context?: string) => {
+  const streamFromAPI = useCallback(async (prompt: string, context?: string, history?: { role: "user" | "assistant"; content: string }[]) => {
     setStatus("thinking")
     setStreaming(true)
     setStreamText("")
@@ -72,6 +110,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
     try {
       const body: Record<string, unknown> = { prompt, stream: true }
       if (context) body.text = context
+      if (history?.length) body.history = history
 
       const res = await apiFetch("/api/chat", {
         method: "POST",
@@ -90,12 +129,16 @@ export const OrangeAIHub = memo(function OrangeAIHub({
 
       const decoder = new TextDecoder()
       let full = ""
+      let buffer = ""
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const chunk = decoder.decode(value)
-        for (const line of chunk.split("\n")) {
+        // Buffer partial lines: an SSE line can be split across network chunks.
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() ?? ""
+        for (const line of lines) {
           if (!line.startsWith("data: ")) continue
           try {
             const json = JSON.parse(line.slice(6))
@@ -129,8 +172,9 @@ export const OrangeAIHub = memo(function OrangeAIHub({
     const context = selectedContext || noteText || ""
     setMessages(prev => [...prev, { role: "user", content: msg }])
 
-    if (aiMode === "edit" && (selectedContext || noteText)) {
-      const original = selectedContext || (noteText?.slice(0, 200) || "")
+    // Edit rewrites a selection; with nothing selected, answer in chat with notebook context.
+    if (aiMode === "edit" && selectedContext) {
+      const original = selectedContext
       setPendingEdit({ original, edited: "", streamedEdit: "" })
 
       try {
@@ -183,7 +227,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
       }
     } else {
       try {
-        const result = await streamFromAPI(msg, context)
+        const result = await streamFromAPI(msg, context, messages.slice(-10))
         if (result !== null) {
           setMessages(prev => [...prev, { role: "assistant", content: result }])
           setStreamText("")
@@ -197,7 +241,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
         setMessages(prev => [...prev, { role: "assistant", content: err instanceof Error ? err.message : "Something went wrong." }])
       }
     }
-  }, [input, streaming, aiMode, selectedContext, noteText, streamFromAPI, userId])
+  }, [input, streaming, aiMode, selectedContext, noteText, streamFromAPI, userId, messages])
 
   const acceptEdit = useCallback(() => {
     if (!pendingEdit?.edited) return
@@ -329,14 +373,14 @@ export const OrangeAIHub = memo(function OrangeAIHub({
                     {msg.role === "user" ? (
                       <div style={{ fontSize: 12, color: accent, marginBottom: 2, fontStyle: "italic" }}>{msg.content}</div>
                     ) : (
-                      <div style={{ fontSize: 13, lineHeight: 1.65, color: textColor, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{msg.content}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.65, color: textColor, wordBreak: "break-word" }}>{renderMarkdown(msg.content)}</div>
                     )}
                   </motion.div>
                 ))}
 
                 {streaming && streamText && (
-                  <div style={{ fontSize: 13, lineHeight: 1.65, color: textColor, whiteSpace: "pre-wrap" }}>
-                    {streamText}<motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.5, repeat: Infinity }} style={{ color: accent }}>▍</motion.span>
+                  <div style={{ fontSize: 13, lineHeight: 1.65, color: textColor, wordBreak: "break-word" }}>
+                    {renderMarkdown(streamText)}<motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.5, repeat: Infinity }} style={{ color: accent }}>▍</motion.span>
                   </div>
                 )}
 
