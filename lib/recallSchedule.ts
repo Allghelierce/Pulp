@@ -1,9 +1,12 @@
-// SM-2 spaced-repetition scheduler for recall decks.
-// Each notebook owns a persistent deck of cards with their own scheduling state,
-// so "easy" cards return less often and the review load reflects real retention.
+// Spaced-repetition scheduler for recall decks — a copy of Anki's default
+// scheduler (v3, SM-2 based) with Anki's default deck options:
+//   learning steps 1m 10m · graduating 1d · easy 4d · starting ease 250%
+//   relearning step 10m · lapse new interval 0% (min 1d) · hard 1.2x · easy bonus 1.3
+// Each notebook owns a persistent deck of cards with their own scheduling state.
 import type { Card } from "@/lib/recallPrompt"
 
 export type Grade = "again" | "hard" | "good" | "easy"
+export type CardState = "new" | "learning" | "review" | "relearning"
 
 export interface ScheduledCard {
   id: string
@@ -11,9 +14,11 @@ export interface ScheduledCard {
   a: string
   hint?: string
   ease: number        // SM-2 ease factor, >= 1.3
-  intervalDays: number // current interval in days
-  reps: number        // consecutive successful reps
+  intervalDays: number // current interval in days (review cards)
+  reps: number        // times graded (0 = new, never seen)
   lapses: number      // times forgotten
+  state?: CardState   // Anki queue; missing on old cards -> derived from reps
+  step?: number       // index into the learning/relearning steps
   due: number         // epoch ms when next due
   last?: number       // epoch ms of last review
   topic?: string      // topic display name from session-end tagging; compare via normalizeTopic
@@ -32,6 +37,18 @@ const STORAGE_PREFIX = "pulp-recall-"
 const NEW_PER_SESSION = 6
 const SESSION_CAP = 25
 const MIN_EASE = 1.3
+const MIN = 60_000
+// Anki defaults (Deck options).
+const LEARN_STEPS = [1, 10]       // minutes
+const RELEARN_STEPS = [10]        // minutes
+const GRADUATING_IVL = 1          // days
+const EASY_IVL = 4                // days
+const HARD_MULT = 1.2
+const EASY_BONUS = 1.3
+const LAPSE_MULT = 0              // "new interval" after a lapse
+const MIN_IVL = 1
+const MAX_IVL = 36_500
+const LEARN_AHEAD_MS = 20 * MIN   // Anki shows learning cards up to 20m early
 
 // ── identity & drift ────────────────────────────────────────────────
 // Cheap stable fingerprint of note text, used to spot major edits.
@@ -84,42 +101,85 @@ export function mergeCards(deck: Deck, cards: Card[], noteText: string, now: num
   return { ...deck, cards: merged, generatedAt: now, noteHash: hashNotes(noteText) }
 }
 
-// ── SM-2 update ─────────────────────────────────────────────────────
-// Returns a NEW card with updated schedule after a grade.
+// ── Anki v3 scheduling ──────────────────────────────────────────────
+export const stateOf = (c: ScheduledCard): CardState => c.state ?? (c.reps === 0 ? "new" : "review")
+export const isNew = (c: ScheduledCard) => stateOf(c) === "new"
+// Ready now (new cards too — session cards carry a future first-due).
+export const isDue = (c: ScheduledCard, now: number) => c.due <= now
+// Short-term card that should come back within this sitting.
+export const isLearning = (c: ScheduledCard) => { const st = stateOf(c); return st === "learning" || st === "relearning" }
+
+// Anki's interval fuzz, deterministic per card so previews match the result.
+function fuzz(ivl: number, seed: string): number {
+  if (ivl < 2.5) return Math.round(ivl)
+  const range = ivl < 7 ? Math.max(1, ivl * 0.15) : ivl < 20 ? ivl * 0.1 : ivl * 0.05
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0
+  const r = ((h >>> 0) % 1000) / 1000 // 0..1
+  return Math.round(ivl - range + r * 2 * range)
+}
+const clampIvl = (d: number) => Math.min(MAX_IVL, Math.max(MIN_IVL, d))
+
+// Returns a NEW card with its schedule updated after a grade.
 export function applyGrade(card: ScheduledCard, grade: Grade, now: number): ScheduledCard {
-  let { ease, reps, intervalDays, lapses } = card
+  const st = stateOf(card)
+  const base = { ...card, reps: card.reps + 1, last: now }
+  const inMinutes = (m: number, state: CardState, step: number): ScheduledCard =>
+    ({ ...base, state, step, due: now + m * MIN })
+  const toReview = (ivlDays: number, ease = card.ease): ScheduledCard => {
+    const ivl = clampIvl(ivlDays)
+    return { ...base, state: "review", step: 0, ease, intervalDays: ivl, due: now + ivl * DAY }
+  }
 
+  // New / learning: walk the learning steps, then graduate.
+  if (st === "new" || st === "learning") {
+    const step = st === "new" ? 0 : Math.min(card.step ?? 0, LEARN_STEPS.length - 1)
+    if (grade === "again") return inMinutes(LEARN_STEPS[0], "learning", 0)
+    if (grade === "hard") {
+      // First step: halfway to the next step (Anki: avg of 1m and 10m).
+      const m = step === 0 && LEARN_STEPS.length > 1 ? (LEARN_STEPS[0] + LEARN_STEPS[1]) / 2 : LEARN_STEPS[step]
+      return inMinutes(m, "learning", step)
+    }
+    if (grade === "easy") return toReview(EASY_IVL)
+    const next = step + 1
+    if (next >= LEARN_STEPS.length) return toReview(GRADUATING_IVL)
+    return inMinutes(LEARN_STEPS[next], "learning", next)
+  }
+
+  // Relearning after a lapse: the step, then back to review at the lapse interval.
+  if (st === "relearning") {
+    const step = Math.min(card.step ?? 0, RELEARN_STEPS.length - 1)
+    if (grade === "again") return inMinutes(RELEARN_STEPS[0], "relearning", 0)
+    if (grade === "hard") return inMinutes(RELEARN_STEPS[step], "relearning", step)
+    if (grade === "easy") return toReview(card.intervalDays + 1)
+    if (step + 1 < RELEARN_STEPS.length) return inMinutes(RELEARN_STEPS[step + 1], "relearning", step + 1)
+    return toReview(card.intervalDays)
+  }
+
+  // Review card.
+  const ivl = Math.max(MIN_IVL, card.intervalDays)
   if (grade === "again") {
-    reps = 0
-    lapses += 1
-    ease = Math.max(MIN_EASE, ease - 0.2)
-    intervalDays = 0
-    // due again in ~10 min (same session relearn)
-    return { ...card, ease, reps, lapses, intervalDays, due: now + 10 * 60_000, last: now }
+    const ease = Math.max(MIN_EASE, card.ease - 0.2)
+    const lapseIvl = clampIvl(Math.round(ivl * LAPSE_MULT))
+    return { ...base, state: "relearning", step: 0, ease, lapses: card.lapses + 1, intervalDays: lapseIvl, due: now + RELEARN_STEPS[0] * MIN }
   }
-
-  if (grade === "hard") {
-    ease = Math.max(MIN_EASE, ease - 0.15)
-    intervalDays = reps === 0 ? 1 : Math.max(1, intervalDays * 1.2)
-    reps += 1
-  } else if (grade === "good") {
-    intervalDays = reps === 0 ? 1 : reps === 1 ? 6 : Math.round(intervalDays * ease)
-    reps += 1
-  } else { // easy
-    ease = ease + 0.15
-    intervalDays = reps === 0 ? 3 : reps === 1 ? 8 : Math.round(intervalDays * ease * 1.3)
-    reps += 1
-  }
-
-  intervalDays = Math.max(1, intervalDays)
-  return { ...card, ease, reps, lapses, intervalDays, due: now + intervalDays * DAY, last: now }
+  // Anki v3 credits a late review with the extra days it survived.
+  const daysLate = card.last ? Math.max(0, (now - card.due) / DAY) : 0
+  const hardIvl = clampIvl(fuzz(Math.max(ivl * HARD_MULT, ivl + 1), card.id + "h" + card.reps))
+  if (grade === "hard") return toReview(hardIvl, Math.max(MIN_EASE, card.ease - 0.15))
+  const goodIvl = clampIvl(Math.max(fuzz((ivl + daysLate / 2) * card.ease, card.id + "g" + card.reps), hardIvl + 1))
+  if (grade === "good") return toReview(goodIvl)
+  const easyIvl = clampIvl(Math.max(fuzz((ivl + daysLate) * card.ease * EASY_BONUS, card.id + "e" + card.reps), goodIvl + 1))
+  return toReview(easyIvl, card.ease + 0.15)
 }
 
 // Preview of the next interval for each grade (for button labels).
 export function previewIntervals(card: ScheduledCard, now: number): Record<Grade, string> {
   const fmt = (c: ScheduledCard): string => {
-    if (c.due - now < DAY) return "<1d"
-    const d = Math.round((c.due - now) / DAY)
+    const ms = c.due - now
+    if (ms < 60 * MIN) return `${Math.max(1, Math.round(ms / MIN))}m`
+    if (ms < DAY) return `${Math.round(ms / (60 * MIN))}h`
+    const d = Math.round(ms / DAY)
     if (d < 30) return `${d}d`
     if (d < 365) return `${Math.round(d / 30)}mo`
     return `${(d / 365).toFixed(1)}y`
@@ -132,11 +192,16 @@ export function previewIntervals(card: ScheduledCard, now: number): Record<Grade
   }
 }
 
+// Learning cards due soon come back in the same sitting (Anki's learn-ahead).
+export const comesBackThisSession = (c: ScheduledCard, now: number) => isLearning(c) && c.due - now <= LEARN_AHEAD_MS
+
 // ── session selection ───────────────────────────────────────────────
 export function buildSession(deck: Deck, now: number): ScheduledCard[] {
-  const due = deck.cards.filter(c => c.reps > 0 && c.due <= now).sort((a, b) => a.due - b.due)
-  const fresh = deck.cards.filter(c => c.reps === 0).slice(0, NEW_PER_SESSION)
-  return [...due, ...fresh].slice(0, SESSION_CAP)
+  // Anki order: learning cards first, then reviews, then a few new cards.
+  const learning = deck.cards.filter(c => isLearning(c) && c.due <= now + LEARN_AHEAD_MS).sort((a, b) => a.due - b.due)
+  const due = deck.cards.filter(c => stateOf(c) === "review" && c.due <= now).sort((a, b) => a.due - b.due)
+  const fresh = deck.cards.filter(c => isNew(c) && c.due <= now).slice(0, NEW_PER_SESSION)
+  return [...learning, ...due, ...fresh].slice(0, SESSION_CAP)
 }
 
 export interface DeckStats {
@@ -151,7 +216,12 @@ export interface DeckStats {
 export function deckStats(deck: Deck, now: number): DeckStats {
   let dueNow = 0, newCount = 0, learning = 0, mature = 0, nextDue: number | undefined
   for (const c of deck.cards) {
-    if (c.reps === 0) { newCount++; dueNow++; continue }
+    if (isNew(c)) {
+      newCount++
+      if (c.due <= now) dueNow++
+      else if (nextDue === undefined || c.due < nextDue) nextDue = c.due
+      continue
+    }
     if (c.due <= now) dueNow++
     else if (nextDue === undefined || c.due < nextDue) nextDue = c.due
     if (c.intervalDays >= 7) mature++; else learning++

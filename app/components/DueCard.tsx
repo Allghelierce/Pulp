@@ -14,7 +14,7 @@ function readDue(noteId: string): Due {
   const byTopic = new Map<string, { name: string; n: number }>()
   let count = 0
   for (const c of deck.cards) {
-    if (c.reps > 0 && c.due > now) continue
+    if (c.due > now) continue
     count++
     if (!c.topic) continue
     const k = normalizeTopic(c.topic)

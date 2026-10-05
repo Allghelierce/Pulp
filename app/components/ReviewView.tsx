@@ -7,6 +7,7 @@ import {
   type Deck, type ScheduledCard, type Grade,
   loadDeck, saveDeck, buildDeck, mergeCards, buildSession, applyGrade,
   previewIntervals, deckStats, hashNotes,
+  comesBackThisSession,
 } from "@/lib/recallSchedule"
 import type { GradeResult, Verdict } from "@/lib/recallPrompt"
 import { normalizeTopic } from "@/lib/topics"
@@ -214,7 +215,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     setDeck(nextDeck)
 
     const rest = queue.slice(1)
-    const nextQueue = g === "again" ? [...rest, updated] : rest
+    // Learning steps (1m/10m) come back later in this sitting, like Anki.
+    const nextQueue = comesBackThisSession(updated, gnow) ? [...rest, updated] : rest
     resetAttempt()
     if (nextQueue.length === 0) {
       setPhase("done")

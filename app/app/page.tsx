@@ -93,12 +93,12 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 
 const noop = () => { }
 
-// Cards to recall in a notebook: new (never seen) or due now.
+// Cards to recall in a notebook: due now (new cards carry their first-due date).
 function countRecallDue(noteId: string | undefined): number {
   const deck = noteId ? loadDeck(noteId) : null
   if (!deck) return 0
   const now = Date.now()
-  return deck.cards.filter(c => c.reps === 0 || c.due <= now).length
+  return deck.cards.filter(c => c.due <= now).length
 }
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render

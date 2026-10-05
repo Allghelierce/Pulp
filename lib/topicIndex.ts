@@ -53,7 +53,7 @@ export function buildTopicIndex(grove: Tree[], now = Date.now()): TopicRow[] {
       const r = row(c.topic)
       r.cards++
       addNotebook(r, deck.noteId)
-      if (c.reps === 0 || c.due <= now) {
+      if (c.due <= now) {
         r.due++
         r.dueByNotebook[deck.noteId] = (r.dueByNotebook[deck.noteId] || 0) + 1
       }
@@ -86,6 +86,6 @@ export function bestNotebookFor(r: TopicRow): string | undefined {
 // Cards due now across every notebook (tagged or not) — sidebar badge.
 export function totalDueAll(now = Date.now()): number {
   let n = 0
-  for (const deck of readDecks()) for (const c of deck.cards) if (c.reps === 0 || c.due <= now) n++
+  for (const deck of readDecks()) for (const c of deck.cards) if (c.due <= now) n++
   return n
 }

@@ -243,22 +243,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [justWatered, setJustWatered] = useState(false)
   // Focus mode: hovering the timer reveals Cancel / Give Up.
   const [timerHover, setTimerHover] = useState(false)
-  // Quiet "N cards queued · Topic" note after a session; fades on its own.
-  const [queued, setQueued] = useState<{ count: number; topic: string; key: number } | null>(null)
-  useEffect(() => {
-    const onQueued = (e: Event) => {
-      const d = (e as CustomEvent<{ noteId?: string; topic?: string; count?: number }>).detail
-      if (!d?.count) return
-      setQueued({ count: d.count, topic: d.topic || '', key: Date.now() })
-    }
-    window.addEventListener('pulp-cards-queued', onQueued)
-    return () => window.removeEventListener('pulp-cards-queued', onQueued)
-  }, [])
-  useEffect(() => {
-    if (!queued) return
-    const t = setTimeout(() => setQueued(null), 6000)
-    return () => clearTimeout(t)
-  }, [queued])
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
   const [pageLeft, setPageLeft] = useState<number | null>(null)
   useEffect(() => {
@@ -370,7 +354,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
     return { name: FOCUS_STAGES[k].name, next: FOCUS_STAGES[k + 1]?.name }
   })()
   // In focus mode the panel shrinks to fit the gap beside the page (the hill scales with it).
-  const panelW = focusMode && pageLeft != null ? Math.max(150, Math.min(250, pageLeft - sidebarRight - 16)) : 250
+  const panelW = focusMode && pageLeft != null ? Math.max(100, Math.min(250, pageLeft - sidebarRight - 16)) : 250
   const onFocusGiveUp = () => {
     if (elapsed < 60) { onCancel(); return }
     if (giveUpStage === 2) { onGiveUp(); setGiveUpStage(0) }
@@ -788,19 +772,6 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 )
               })()}
 
-              {/* Cards queued from the last session — quiet, fades out */}
-              <AnimatePresence>
-                {queued && (
-                  <motion.div
-                    key={queued.key}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}
-                    className="text-center"
-                    style={{ marginTop: 4, fontFamily: serifFont, fontSize: 11, color: subtleColor }}
-                  >
-                    <span style={{ color: mainColor }}>{queued.count}</span> card{queued.count === 1 ? '' : 's'} queued{queued.topic ? ` · ${queued.topic}` : ''}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Growth timeline */}
               {(running || done) && !treeDead && (
