@@ -1,9 +1,11 @@
 "use client"
-import { memo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
+import type { Tree } from "@/app/types"
 
 import { PlantIcon } from "./PlantIcon"
+import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
 import { PulpIcon, GemIcon } from '@/app/components/CurrencyIcons'
 
 interface BinderViewProps {
@@ -13,12 +15,12 @@ interface BinderViewProps {
   accent: string
   sap: number
   gems: number
-  grove: any[]
+  grove: Tree[]
   inventory: string[]
   setSap: (v: number | ((p: number) => number)) => void
   setGems: (v: number | ((p: number) => number)) => void
   setInventory: (v: string[] | ((p: string[]) => string[])) => void
-  setGrove: (v: any[] | ((p: any[]) => any[])) => void
+  setGrove: (v: Tree[] | ((p: Tree[]) => Tree[])) => void
 }
 
 const RARITY_CARD_STYLES: Record<string, string> = {
@@ -28,7 +30,15 @@ const RARITY_CARD_STYLES: Record<string, string> = {
   sacred: "card-premium",
 }
 
-const Card = ({ card, idx, sellCard, theme }: any) => {
+interface CardProps {
+  card?: Tree
+  idx: number
+  sellCard: (idx: number) => void
+  theme: "light" | "dark"
+  freshness?: number
+}
+
+const Card = ({ card, idx, sellCard, theme, freshness = 1 }: CardProps) => {
   if (!card) return (
     <div className={`group relative rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all duration-500 hover:border-emerald-500/30 ${
       theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/20' : 'border-zinc-200 bg-zinc-50/50'
@@ -43,6 +53,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
   const typeInfo = TREE_TYPES[card.type]
   if (!typeInfo) return null
   const styleClass = RARITY_CARD_STYLES[typeInfo.rarity] || "bg-white"
+  const recalling = isTopicTree(card) && !isFullyGrown(card)
 
   return (
     <motion.div
@@ -66,14 +77,18 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center gap-0.5 w-full pt-2">
-        <div className="plant-icon-wrapper relative">
+        <div className="plant-icon-wrapper relative" style={card.topic ? { filter: freshnessFilter(freshness), transition: 'filter 0.8s ease' } : undefined}>
           <PlantIcon type={card.type} size={70} stage={card.stage} />
           {/* Subtle Glow beneath icon */}
           <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-50 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         </div>
         <div className="text-center z-10 transition-transform group-hover:scale-105 duration-500">
           <h4 className="font-normal text-xs uppercase tracking-tight leading-none mb-0.5">{typeInfo.name}</h4>
-          <p className="text-[9px] font-normal opacity-40 uppercase tracking-widest italic">Estate Collection</p>
+          {card.topic ? (
+            <p className="text-[9px] font-normal opacity-50 italic truncate max-w-[120px]" title={card.topic}>{card.topic}</p>
+          ) : (
+            <p className="text-[9px] font-normal opacity-40 uppercase tracking-widest italic">Estate Collection</p>
+          )}
         </div>
       </div>
 
@@ -81,14 +96,14 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
       <div className="w-full mt-2 space-y-1.5 z-10">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[8px] font-normal uppercase tracking-widest opacity-40">
-            <span>Growth Progress</span>
-            <span>{Math.floor(card.progress)}%</span>
+            <span>{recalling ? 'Recall Progress' : 'Growth Progress'}</span>
+            <span>{recalling ? `${Math.floor(card.recallDone || 0)}/${card.recallNeeded} recalled` : `${Math.floor(card.progress)}%`}</span>
           </div>
           <div className="h-1 w-full bg-black/5 rounded-full overflow-hidden border border-black/5">
             <motion.div 
               className="h-full bg-emerald-500 progress-bar shadow-[0_0_8px_rgba(16,185,129,0.3)]"
               initial={{ width: 0 }}
-              animate={{ width: `${card.progress}%` }}
+              animate={{ width: `${recalling ? Math.min(100, ((card.recallDone || 0) / (card.recallNeeded || 1)) * 100) : card.progress}%` }}
               transition={{ duration: 1.5, ease: "circOut" }}
             />
           </div>
@@ -128,7 +143,7 @@ const Card = ({ card, idx, sellCard, theme }: any) => {
 }
 
 export const BinderView = memo(function BinderView({
-  isOpen, onClose, theme, accent,
+  isOpen, onClose, theme,
   sap, gems, grove, inventory, setSap, setGems, setInventory, setGrove
 }: BinderViewProps) {
 
@@ -136,6 +151,19 @@ export const BinderView = memo(function BinderView({
   const cardsPerPage = 8
   const totalPages = Math.max(1, Math.ceil(grove.length / cardsPerPage))
   const [plantingPlot, setPlantingPlot] = useState<number | null>(null)
+
+  // Freshness per topic (reads localStorage) — once per open/grove change.
+  const freshnessByTopic = useMemo(() => {
+    const m: Record<string, number> = {}
+    if (!isOpen) return m
+    for (const t of grove) {
+      if (!t?.topic) continue
+      const k = normalizeTopic(t.topic)
+      if (!(k in m)) m[k] = topicFreshness(t.topic)
+    }
+    return m
+  }, [grove, isOpen])
+  const freshnessOf = (t?: { topic?: string }): number => (t?.topic ? freshnessByTopic[normalizeTopic(t.topic)] ?? 1 : 1)
 
   const sellCard = (idx: number) => {
     const tree = grove[idx]
@@ -280,7 +308,7 @@ export const BinderView = memo(function BinderView({
                    {[...Array(4)].map((_, i) => {
                       const globalIdx = page * cardsPerPage + i
                       const card = grove[globalIdx]
-                      return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} />
+                      return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} freshness={freshnessOf(card)} />
                    })}
                 </div>
              </div>
@@ -304,7 +332,7 @@ export const BinderView = memo(function BinderView({
                    {[...Array(4)].map((_, i) => {
                       const globalIdx = page * cardsPerPage + 4 + i
                       const card = grove[globalIdx]
-                      return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} />
+                      return <Card key={i} card={card} idx={globalIdx} sellCard={sellCard} theme={theme} freshness={freshnessOf(card)} />
                    })}
                 </div>
              </div>

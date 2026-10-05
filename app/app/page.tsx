@@ -9,6 +9,8 @@ import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
+import { applyRecall } from "@/app/lib/treeGrowth"
+import { isFullyGrown } from "@/lib/topics"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -28,7 +30,8 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
-import { VinesOverlay } from "@/app/components/VinesOverlay"
+import { PlantedToast } from "@/app/components/PlantedToast"
+import { DueCard } from "@/app/components/DueCard"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -1210,7 +1213,7 @@ export default function NoteApp() {
   })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
-  // Growth vines: drive the fill via a CSS var on the overlay (no re-render per tick).
+  // Timer progress hook (vines removed for now; kept for the bottom-of-screen tree).
   const vinesRef = useRef<HTMLDivElement>(null)
   const handleTimerProgress = useCallback((p: number) => {
     vinesRef.current?.style.setProperty('--vine-p', p.toFixed(4))
@@ -1233,6 +1236,7 @@ export default function NoteApp() {
   const inventory = useGroveStore(s => s.inventory)
   const setInventory = useGroveStore(s => s.setInventory)
   const [orchardOpen, setOrchardOpen] = useState(false)
+  const [orchardFocusTopic, setOrchardFocusTopic] = useState<string | undefined>(undefined)
   const [orchardMounted, setOrchardMounted] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
@@ -1241,8 +1245,11 @@ export default function NoteApp() {
   const [statsOpen, setStatsOpen] = useState(false)
   const statsOpenedBeforeRef = useRef(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  // Orchard "Review <topic>": topic filter + notebook override (cleared by closeAllPanels).
+  const [reviewTopic, setReviewTopic] = useState<string | undefined>(undefined)
+  const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen
-  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
+  const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setShowSettings(false); setCommunityOpen(false) }, [])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -3435,7 +3442,9 @@ export default function NoteApp() {
 
         <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
-          <VinesOverlay ref={vinesRef} visible={timerRunning} />
+          <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
+            startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
+          }} />
           {goalStreak >= 3 && goalStreakLastDate !== new Date().toISOString().split('T')[0] && !streakNudgeDismissed && !timerOpen && (
             <div style={{
               position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
@@ -3507,7 +3516,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
-                mini={orchardOpen || statsOpen || shopOpen}
+                mini={orchardOpen || statsOpen || shopOpen || reviewOpen}
                 noteSort={defaultSort}
                 onChangeNoteSort={(s) => updateSettings({ defaultSort: s })}
                 onCloseAllPanels={closeAllPanels}
@@ -3781,6 +3790,13 @@ export default function NoteApp() {
                   unlockedCosmetics={unlockedCosmetics}
                   goalStreak={goalStreak}
                   quotaTier={quotaTier}
+                />
+                <DueCard
+                  noteId={activeNote ? activeNote.id : null}
+                  theme={theme}
+                  accent={accentSolid}
+                  hidden={reviewOpen || timerRunning}
+                  onReview={() => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
                 />
               </div>
             )}
@@ -4389,7 +4405,8 @@ export default function NoteApp() {
           {orchardMounted && <Suspense fallback={<PulpLoader variant="panel" />}><div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: sidebarWidth > 40 ? 58 : 0, zIndex: 50 }}>
             <OrchardView
               isOpen={orchardOpen}
-              onClose={() => setOrchardOpen(false)}
+              onClose={() => { setOrchardOpen(false); setOrchardFocusTopic(undefined) }}
+              focusTopic={orchardFocusTopic}
               theme={theme}
               accent={accent}
               sap={sap}
@@ -4411,6 +4428,14 @@ export default function NoteApp() {
               quotaTier={quotaTier}
               reduceMotion={reduceMotion}
               grade={grade}
+              onReviewTopic={(topic: string, notebookId?: string) => {
+                startTransition(() => {
+                  closeAllPanels()
+                  setReviewTopic(topic)
+                  setReviewNoteId(notebookId)
+                  setReviewOpen(true)
+                })
+              }}
             />
           </div></Suspense>}
 
@@ -4450,7 +4475,10 @@ export default function NoteApp() {
               </m.div>
               )
             })()}
-            {reviewOpen && notes.find(n => n.id === activeTabId) && (
+            {reviewOpen && (() => {
+              const reviewNote = notes.find(n => n.id === (reviewNoteId ?? activeTabId))
+              if (!reviewNote) return null
+              return (
               <m.div
                 key="review-view"
                 initial={{ opacity: 0 }}
@@ -4461,20 +4489,32 @@ export default function NoteApp() {
               >
                 <Suspense fallback={<PulpLoader variant="panel" />}>
                   <ReviewView
-                    note={notes.find(n => n.id === activeTabId)!}
+                    key={`${reviewNote.id}:${reviewTopic ?? ''}`}
+                    note={reviewNote}
+                    topic={reviewTopic}
                     theme={theme}
                     accent={accentSolid}
-                    onClose={() => setReviewOpen(false)}
+                    onClose={() => { setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined) }}
+                    onShowTopic={(t) => { startTransition(() => { closeAllPanels(); setOrchardFocusTopic(t); setOrchardOpen(true) }) }}
+                    onCorrect={(weight, topic) => {
+                      // Topics as trees: recall finishes that topic's sapling, or banks
+                      // nutrients if none is waiting. Read the store directly (not an
+                      // updater) since banking writes localStorage.
+                      const current = useGroveStore.getState().grove
+                      const next = applyRecall(current, topic, weight, reviewNote.id)
+                      if (next !== current) setGrove(next)
+                    }}
                     onComplete={({ reviewed, again }) => {
-                      // Sap from recall — rate scaled by the quality of the orchard.
-                      const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (TREE_TYPES[t.type]?.sapYield || 0), 0) / 25))
+                      // Sap from recall — rate scaled by the quality of the orchard (full trees only).
+                      const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (isFullyGrown(t) ? (TREE_TYPES[t.type]?.sapYield || 0) : 0), 0) / 25))
                       const earned = Math.round(Math.max(0, reviewed - again * 0.5) * 2 * orchardMult)
                       if (earned > 0) setSap(sap + earned)
                     }}
                   />
                 </Suspense>
               </m.div>
-            )}
+              )
+            })()}
           </AnimatePresence>
 
           <AnimatePresence>
@@ -4719,17 +4759,6 @@ export default function NoteApp() {
                 }
               }}
             />
-          )}
-
-          {reviewOpen && activeNote && (
-            <Suspense fallback={<PulpLoader variant="panel" />}>
-              <ReviewView
-                note={activeNote}
-                theme={theme}
-                accent={accent}
-                onClose={() => setReviewOpen(false)}
-              />
-            </Suspense>
           )}
 
           {showNotebookChat && activeNote && (
