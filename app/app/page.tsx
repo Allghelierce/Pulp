@@ -9,6 +9,7 @@ import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
+import { growTree } from "@/app/lib/treeGrowth"
 import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
@@ -4475,6 +4476,11 @@ export default function NoteApp() {
                     theme={theme}
                     accent={accentSolid}
                     onClose={() => setReviewOpen(false)}
+                    onCorrect={() => {
+                      // Recall mode: each correct answer grows the notebook's tree
+                      // (~2.5 min each, so a ~10-card session ≈ one grown tree).
+                      setGrove(prev => growTree(prev, 'tangerine', 2.5, activeTabId ?? undefined))
+                    }}
                     onComplete={({ reviewed, again }) => {
                       // Sap from recall — rate scaled by the quality of the orchard.
                       const orchardMult = Math.max(1, Math.min(4, 1 + grove.reduce((s, t) => s + (TREE_TYPES[t.type]?.sapYield || 0), 0) / 25))
