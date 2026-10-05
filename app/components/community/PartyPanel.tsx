@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
-import { getParty, createParty, joinParty, leaveParty, standings, PARTY_CAP, type Party } from "@/lib/party"
+import { getParty, createParty, joinParty, leaveParty, standings, hasJoinedBefore, PARTY_CAP, type Party } from "@/lib/party"
 import { getFriends, addFriend, removeFriend, getMyCode, isOnline, type Friend } from "@/lib/friends"
 
 const accent = '#d97706'
@@ -103,10 +103,31 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
 
   // ── PARTY TAB: empty state ────────────────────────────────────────
   if (!party) {
+    const firstTime = !hasJoinedBefore()
     return (
       <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
-        <h2 style={{ color: text, fontSize: 20, margin: '0 0 4px' }}>Start a party</h2>
+
+        {firstTime && (
+          <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 14, textAlign: 'center',
+            background: isDark ? 'rgba(217,119,6,0.10)' : 'rgba(217,119,6,0.08)',
+            border: `1px solid ${isDark ? 'rgba(217,119,6,0.22)' : 'rgba(217,119,6,0.18)'}` }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 4, marginBottom: 10 }}>
+              {['🌱', '🌿', '🌳'].map((e, i) => (
+                <span key={i} style={{ fontSize: 18 + i * 8, lineHeight: 1,
+                  animation: `partySprout 2s ease-in-out ${i * 0.25}s infinite` }}>{e}</span>
+              ))}
+            </div>
+            <h2 style={{ color: text, fontSize: 19, margin: '0 0 6px' }}>Grow together 🌳</h2>
+            <p style={{ color: sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+              A party is you + up to {PARTY_CAP} friends racing on <b style={{ color: accent }}>focus minutes</b> each week.
+              Study more, climb the list, bragging rights reset every Monday.
+            </p>
+            <style>{`@keyframes partySprout { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }`}</style>
+          </div>
+        )}
+
+        <h2 style={{ color: text, fontSize: 20, margin: '0 0 4px' }}>{firstTime ? 'Make your first party' : 'Start a party'}</h2>
         <p style={{ color: sub, fontSize: 14, margin: '0 0 20px' }}>Race friends on focus minutes this week. Up to {PARTY_CAP} players.</p>
 
         <h3 style={{ color: text, fontSize: 14, margin: '0 0 8px' }}>Create</h3>

@@ -15,6 +15,7 @@ interface ReviewViewProps {
   accent: string
   onClose: () => void
   onComplete?: (result: { noteId: string; reviewed: number; again: number }) => void
+  onCorrect?: () => void
 }
 
 function gatherNotebookText(note: NoteData): string {
@@ -55,7 +56,7 @@ const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: "easy", label: "Easy", key: "4" },
 ]
 
-export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete }: ReviewViewProps) {
+export const ReviewView = memo(function ReviewView({ note, theme, accent, onClose, onComplete, onCorrect }: ReviewViewProps) {
   const isDark = theme === "dark"
   const font = "'Crimson Pro', serif"
 
@@ -139,6 +140,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     const updated = applyGrade(current, g, gnow)
     studied.current.add(current.id)
     setLog(prev => [...prev, g])
+    // A non-"again" grade is a "correct" recall — grows the tree in Recall mode.
+    if (g !== "again") onCorrect?.()
 
     const nextDeck: Deck = { ...deck, cards: deck.cards.map(c => (c.id === updated.id ? updated : c)) }
     saveDeck(nextDeck)
@@ -154,7 +157,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
     } else {
       setQueue(nextQueue)
     }
-  }, [current, deck, queue, log, note.id, onComplete])
+  }, [current, deck, queue, log, note.id, onComplete, onCorrect])
 
   // keyboard
   useEffect(() => {

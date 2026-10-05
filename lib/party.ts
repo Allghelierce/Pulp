@@ -5,6 +5,17 @@ import { generateInviteCode } from "./social"
 
 export const PARTY_CAP = 5
 const KEY = "pulp-party"
+const EVER_KEY = "pulp-party-ever"
+
+// True once the user has ever created or joined a party (hides the intro afterward).
+export function hasJoinedBefore(): boolean {
+  if (typeof window === "undefined") return true
+  try { return localStorage.getItem(EVER_KEY) === "1" } catch { return true }
+}
+function markJoined() {
+  if (typeof window === "undefined") return
+  try { localStorage.setItem(EVER_KEY, "1") } catch {}
+}
 
 export interface PartyMember {
   id: string
@@ -92,6 +103,7 @@ export function createParty(name: string): Party {
     weekStart: mondayISO(),
     members: [you({ isOwner: true })],
   }
+  markJoined()
   save(p)
   return p
 }
@@ -105,6 +117,7 @@ export function joinParty(code: string): Party {
     weekStart: mondayISO(),
     members: [...friends, you()],
   }
+  markJoined()
   save(p)
   return p
 }
