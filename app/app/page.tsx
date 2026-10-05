@@ -1491,7 +1491,8 @@ export default function NoteApp() {
 
       if (profile) {
         setSap(profile.juice)
-        setLastCharCount(profile.last_char_count)
+        // last_char_count is not applied: it is a per-note, per-device writing baseline
+        // (VitalitySystem re-bases it), and a foreign value would count as typed text.
         if (profile.grove?.length) {
           setGrove([...profile.grove])
         }
@@ -2813,14 +2814,19 @@ export default function NoteApp() {
         if (settingsRow.sidebar_width) setSidebarWidth(settingsRow.sidebar_width)
       }
       // Merge, don't replace: folders made locally (not yet in the cloud) would
-      // otherwise vanish along with every note filed in them.
-      if (foldersData.length) setFolders(prev => {
+      // otherwise vanish along with every note filed in them. A local folder this
+      // device has seen in the cloud before but is gone now was deleted elsewhere.
+      if (foldersData.length) {
+        let seen: number[] = []
+        try { seen = JSON.parse(localStorage.getItem("pulp-cloud-folder-ids") || "[]") } catch { }
+        const seenIds = new Set(seen)
         const cloudIds = new Set(foldersData.map(f => f.id))
-        return [
+        setFolders(prev => [
           ...foldersData.map(f => ({ ...f, open: prev.find(p => p.id === f.id)?.open ?? f.open })),
-          ...prev.filter(p => !cloudIds.has(p.id)),
-        ]
-      })
+          ...prev.filter(p => !cloudIds.has(p.id) && !seenIds.has(p.id)),
+        ])
+        try { localStorage.setItem("pulp-cloud-folder-ids", JSON.stringify([...cloudIds])) } catch { }
+      }
       // trashIds are tracked in Supabase for cross-device sync but trashNotes state holds full NoteData objects (loaded from localStorage)
     }
     loadSettings()
@@ -2882,15 +2888,15 @@ export default function NoteApp() {
         }).catch(() => {})
       }
       // Cloud note queue is tracked separately from the local-save flag (which clears first).
+      // The queue is left intact: if the page survives (tab hidden), the debounced save
+      // still runs. keepalive bodies cap at 64KB, so send per note and skip oversize ones.
       const noteIds = new Set(cloudPending.current)
       if (dNote && activeTabIdRef.current) noteIds.add(activeTabIdRef.current)
-      const cloudNotes = notesRef.current.filter(n => noteIds.has(n.id) && !n.deletedAt)
-      if (cloudNotes.length) {
-        cloudPending.current.clear()
-        fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, {
-          method: 'POST', headers, keepalive: true,
-          body: JSON.stringify(cloudNotes.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })))
-        }).catch(() => {})
+      for (const note of notesRef.current) {
+        if (!noteIds.has(note.id) || note.deletedAt) continue
+        const body = JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
+        if (body.length > 60_000) continue
+        fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, { method: 'POST', headers, keepalive: true, body }).catch(() => {})
       }
       if (dSettings && s) {
         fetch(`${supabaseUrl}/rest/v1/settings?on_conflict=user_id`, {
@@ -2996,13 +3002,20 @@ export default function NoteApp() {
   const cloudAbort = useRef<AbortController | undefined>(undefined)
   const cloudPending = useRef<Set<string>>(new Set())
   const cloudPrevNotes = useRef<NoteData[] | null>(null)
+  const [cloudRetry, setCloudRetry] = useState(0)
+  const cloudFailures = useRef(0)
   useEffect(() => {
     if (!autoSave || isLoading || !user) { cloudPrevNotes.current = null; return }
     const prev = cloudPrevNotes.current
     cloudPrevNotes.current = notes
     if (!prev) return // first run after load: nothing edited yet
     const before = new Map(prev.map(n => [n.id, n]))
-    for (const n of notes) if (before.get(n.id) !== n) cloudPending.current.add(n.id)
+    // Changed notes are queued. New ids are mostly cloud pulls (already there) or
+    // notes inserted explicitly on create — queue only the active one, as before.
+    for (const n of notes) {
+      const old = before.get(n.id)
+      if (old ? old !== n : n.id === activeTabIdRef.current) cloudPending.current.add(n.id)
+    }
     if (cloudPending.current.size === 0) return
     flushRefs.current.dirty.note = true
     clearTimeout(cloudSaveTimer.current)
@@ -3019,17 +3032,23 @@ export default function NoteApp() {
       if (ac.signal.aborted || error) {
         // Superseded or failed: requeue so the next save carries these notes too.
         for (const id of ids) cloudPending.current.add(id)
-        if (error && !ac.signal.aborted) { flushRefs.current.dirty.note = true; console.error("Save failed:", error.message) }
+        if (error && !ac.signal.aborted) {
+          flushRefs.current.dirty.note = true
+          console.error("Save failed:", error.message)
+          cloudFailures.current++
+          setCloudRetry(r => r + 1) // re-run this effect to schedule a retry (backed off)
+        }
         return
       }
+      cloudFailures.current = 0
       for (const note of batch) {
         apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }), signal: ac.signal }).catch(() => { })
       }
-    }, 800)
+    }, 800 * 2 ** Math.min(cloudFailures.current, 6))
     // Only the timer is cleared here; an in-flight save is aborted (and requeued)
     // only when a newer save is actually scheduled above.
     return () => clearTimeout(cloudSaveTimer.current)
-  }, [notes, user, autoSave, isLoading])
+  }, [notes, user, autoSave, isLoading, cloudRetry])
 
   // Sync editor DOM with active note/page
   const lastSyncKey = useRef<string>("")

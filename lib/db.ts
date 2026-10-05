@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { Tree, Achievement, FolderData } from '@/app/types'
+import { localDayKey } from './day'
 
 // ─── Player Profile ───
 
@@ -171,13 +172,13 @@ export interface DailyStatRow {
 }
 
 export async function getDailyStats(userId: string, days = 30): Promise<DailyStatRow[]> {
-  const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10)
+  const since = localDayKey(new Date(Date.now() - days * 86400000))
   const { data } = await supabase.from('daily_stats').select('*').eq('user_id', userId).gte('stat_date', since).order('stat_date', { ascending: false })
   return data || []
 }
 
 export async function incrementDailyStat(userId: string, field: 'minutes_focused' | 'words_written' | 'trees_grown' | 'sessions_completed', amount: number) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDayKey()
   const { data } = await supabase.from('daily_stats').select('*').eq('user_id', userId).eq('stat_date', today).single()
   if (data) {
     return supabase.from('daily_stats').update({ [field]: (data[field] || 0) + amount }).eq('user_id', userId).eq('stat_date', today)
