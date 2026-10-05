@@ -12,6 +12,7 @@ import { groveTitle } from "@/lib/term"
 import * as db from "@/lib/db"
 import { toPng } from "html-to-image"
 import { isTopicTree, isFullyGrown, topicFreshness, freshnessFilter, normalizeTopic } from "@/lib/topics"
+import { buildTopicIndex, bestNotebookFor, untaggedDueByNotebook } from "@/lib/topicIndex"
 
 interface OrchardViewProps {
   isOpen: boolean
@@ -2812,6 +2813,30 @@ export const OrchardView = memo(function OrchardView({
   }, [filteredTrees, isOpen])
   const freshnessOf = (t: any): number => (t?.topic ? topicFreshnessMap[normalizeTopic(t.topic)] ?? 1 : 1)
 
+  // What's ready to recall — read when the orchard opens, so it can point the way.
+  const recallDue = useMemo(() => {
+    const topics: { key: string; name: string; due: number; notebookId?: string }[] = []
+    const byKey: Record<string, number> = {}
+    let untagged: { notebookId: string; due: number }[] = []
+    if (!isOpen || typeof window === 'undefined') return { topics, byKey, untagged }
+    for (const r of buildTopicIndex(grove)) {
+      if (r.due <= 0) continue
+      topics.push({ key: r.key, name: r.name, due: r.due, notebookId: bestNotebookFor(r) })
+      byKey[r.key] = r.due
+    }
+    untagged = Object.entries(untaggedDueByNotebook()).map(([notebookId, due]) => ({ notebookId, due }))
+    return { topics, byKey, untagged }
+  }, [isOpen, grove])
+  const dueOf = (t: any): number => (t?.topic ? recallDue.byKey[normalizeTopic(t.topic)] ?? 0 : 0)
+  // Strip chip: jump to the topic's newest tree (its card has Recall), or recall directly if it has none here.
+  const goToTopic = (key: string, name: string, notebookId?: string) => {
+    const tree = filteredTrees
+      .filter((t: any) => t?.topic && normalizeTopic(t.topic) === key)
+      .reduce((a: any, t: any) => (!a || t.plantedAt > a.plantedAt ? t : a), null)
+    if (tree) setFocusedTree({ tree, x: 50, y: 50 })
+    else onReviewTopic?.(name, notebookId)
+  }
+
   const filteredTreesRef = useRef(filteredTrees)
   filteredTreesRef.current = filteredTrees
 
@@ -3328,6 +3353,33 @@ export const OrchardView = memo(function OrchardView({
             perspective: '800px',
           }}>
 
+            {/* Ready to recall — directs the student to what needs remembering */}
+            {(recallDue.topics.length > 0 || recallDue.untagged.length > 0) && !focusedTree && (
+              <div data-orchard-ui className="absolute left-0 right-0 z-30 flex justify-center pointer-events-none" style={{ bottom: 22, padding: '0 16px' }}>
+                <style>{`@keyframes recall-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }`}</style>
+                <div className="pointer-events-auto flex items-center gap-2 flex-wrap justify-center" style={{
+                  maxWidth: 720, padding: '8px 10px 8px 14px', borderRadius: 14,
+                  background: 'rgba(12,12,14,0.78)', border: '1px solid rgba(217,119,6,0.4)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)', fontFamily: 'Crimson Pro, serif',
+                }}>
+                  <span style={{ fontSize: 13, color: '#fbbf24', letterSpacing: '0.04em', marginRight: 2 }}>Ready to recall</span>
+                  {recallDue.topics.slice(0, 6).map(t => (
+                    <button key={t.key} onClick={() => goToTopic(t.key, t.name, t.notebookId)}
+                      style={{ fontSize: 13.5, color: '#fff', background: 'rgba(217,119,6,0.22)', border: '1px solid rgba(217,119,6,0.45)', borderRadius: 999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {t.name} <span style={{ color: '#fbbf24' }}>· {t.due}</span>
+                    </button>
+                  ))}
+                  {recallDue.topics.length > 6 && <span style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.6)' }}>+{recallDue.topics.length - 6} more</span>}
+                  {recallDue.untagged.map(u => (
+                    <button key={u.notebookId} onClick={() => onReviewTopic?.('', u.notebookId)}
+                      style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {notes.find(n => n.id === u.notebookId)?.subject || 'Notebook'} <span style={{ color: 'rgba(255,255,255,0.6)' }}>· {u.due}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Grove header — market style with divider, plus action buttons */}
             <div data-orchard-ui className="absolute top-4 left-0 right-0 z-30 flex flex-col items-center pointer-events-none">
               <span style={{ fontFamily: 'Crimson Pro, serif', fontSize: 13, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 5px rgba(0,0,0,0.5)' }}>
@@ -3619,6 +3671,12 @@ export const OrchardView = memo(function OrchardView({
                             }}>
                               <CachedPlantIcon type={tree.type} size={treeSize} stage={tree.stage} hideGround dirtSeed={(renderIdx + 1) * 983 + Math.round(x * 17) + Math.round(y * 29)} dirtDark={isDark} dirtDepth={depthT} dirtTilt={skewX * 3} disableSway={reduceMotion || placed.length > 30} />
                             </div>
+                            {/* Ready to recall: a bobbing amber marker over the tree */}
+                            {dueOf(tree) > 0 && (
+                              <div style={{ position: 'absolute', left: '50%', top: -14, transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 2 }}>
+                                <div style={{ width: 11, height: 11, borderRadius: '50%', background: '#d97706', boxShadow: '0 0 10px 2px rgba(217,119,6,0.75)', border: '1.5px solid #fff7ed', animation: reduceMotion ? undefined : 'recall-bob 1.4s ease-in-out infinite' }} />
+                              </div>
+                            )}
                             {/* Dirt mound */}
                             <svg style={{ position: 'absolute', left: '50%', bottom: -2, transform: 'translateX(-50%)', width: treeSize * 0.7, height: treeSize * 0.18, zIndex: -1, pointerEvents: 'none', overflow: 'visible' }} viewBox="0 0 40 10">
                               <ellipse cx="20" cy="8" rx="18" ry="4" fill={isDark ? '#1e1a10' : '#7a6a4a'} opacity={(0.35 + depthT * 0.15) * (isDark ? 0.35 : 1)} />
@@ -3881,7 +3939,7 @@ export const OrchardView = memo(function OrchardView({
                           )}
                         </div>
                         <div className="w-full flex flex-col gap-2 mt-1">
-                          {ft.topic && onReviewTopic && (!ftFull || ftFaded) && (
+                          {ft.topic && onReviewTopic && (!ftFull || ftFaded || dueOf(ft) > 0) && (
                             <button
                               onClick={() => { setFocusedTree(null); onReviewTopic(ft.topic, ft.notebookId) }}
                               className="w-full py-1.5 rounded-lg text-[12px] font-normal tracking-wide truncate"
@@ -3891,7 +3949,7 @@ export const OrchardView = memo(function OrchardView({
                                 fontFamily: 'EB Garamond, serif',
                               }}
                             >
-                              Recall {ft.topic}
+                              Recall {ft.topic}{dueOf(ft) > 0 ? ` · ${dueOf(ft)} due` : ''}
                             </button>
                           )}
                           <button

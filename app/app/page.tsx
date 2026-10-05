@@ -32,9 +32,8 @@ const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
 import { PlantedToast } from "@/app/components/PlantedToast"
-import { DueCard } from "@/app/components/DueCard"
 import { TopicsView } from "@/app/components/TopicsView"
-import { totalDueAll } from "@/lib/topicIndex"
+import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
@@ -1288,8 +1287,12 @@ export default function NoteApp() {
   // Recall hub (Topics list) + cross-notebook due badge for the sidebar.
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [allRecallDue, setAllRecallDue] = useState(0)
+  const [recallTopTopic, setRecallTopTopic] = useState<string | undefined>(undefined)
   useEffect(() => {
-    const refresh = () => setAllRecallDue(totalDueAll())
+    const refresh = () => {
+      setAllRecallDue(totalDueAll())
+      setRecallTopTopic(buildTopicIndex(useGroveStore.getState().grove).find(r => r.due > 0)?.name)
+    }
     const id = setTimeout(refresh, 0)
     const iv = setInterval(refresh, 60_000)
     window.addEventListener('pulp-cards-queued', refresh)
@@ -3864,13 +3867,6 @@ export default function NoteApp() {
                   goalStreak={goalStreak}
                   quotaTier={quotaTier}
                 />
-                <DueCard
-                  noteId={activeNote ? activeNote.id : null}
-                  theme={theme}
-                  accent={accentSolid}
-                  hidden={reviewOpen || timerRunning}
-                  onReview={() => { startTransition(() => { closeAllPanels(); setReviewOpen(true) }) }}
-                />
               </div>
             )}
 
@@ -4680,7 +4676,7 @@ export default function NoteApp() {
           </AnimatePresence>
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
-            <HangingOrange retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
+            <HangingOrange recallDue={orchardOpen ? 0 : allRecallDue} recallTopic={recallTopTopic} retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
           <OrangeAIHub

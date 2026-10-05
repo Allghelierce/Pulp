@@ -165,7 +165,61 @@ function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }
   )
 }
 
-export const HangingOrange = memo(function HangingOrange({ onClick, onHover, retracted, aiMode }: { onClick: () => void; onHover?: () => void; retracted?: boolean; aiMode?: boolean }) {
+// The orange speaks up when cards are ready to recall. Click -> orchard, which
+// points at what's due. × hides it until the count changes.
+function RecallBubble({ due, topic, suppressed, onOpen }: { due: number; topic?: string; suppressed: boolean; onOpen: () => void }) {
+  const [hiddenAt, setHiddenAt] = useState<number | null>(null)
+  const show = due > 0 && !suppressed && hiddenAt !== due
+  const lines = ["Time to remember!", "Ready to recall?", "Your trees are thirsty!", "Quick memory check?"]
+  const line = lines[due % lines.length]
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          className="fixed z-[9999]"
+          initial={{ opacity: 0, x: 8, scale: 0.9 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 8, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 380, damping: 26, delay: 0.6 }}
+          style={{ top: 112, right: 66, transformOrigin: "right center" }}
+          role="status"
+        >
+          <div
+            onClick={onOpen}
+            title="Open the orchard"
+            style={{
+              position: "relative", display: "flex", alignItems: "center", gap: 8,
+              padding: "7px 8px 7px 13px", borderRadius: 14,
+              background: "rgba(24,24,27,0.94)", border: "1px solid rgba(217,119,6,0.55)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.3), 0 0 0 3px rgba(217,119,6,0.08)", backdropFilter: "blur(6px)",
+              fontFamily: "Crimson Pro, serif", color: "#e4e4e7", cursor: "pointer", maxWidth: 260,
+            }}
+          >
+            <span style={{ lineHeight: 1.25 }}>
+              <span style={{ fontSize: 13.5, color: "#fbbf24" }}>{line}</span><br />
+              <span style={{ fontSize: 12.5, color: "#d4d4d8" }}>
+                {due} card{due === 1 ? "" : "s"} to recall{topic ? <> · <span style={{ color: "#fff" }}>{topic}</span></> : null}
+              </span>
+            </span>
+            <button
+              onClick={e => { e.stopPropagation(); setHiddenAt(due) }}
+              aria-label="Hide for now"
+              title="Hide for now"
+              style={{ width: 18, height: 18, borderRadius: 9, border: "none", padding: 0, alignSelf: "flex-start", background: "transparent", color: "#a1a1aa", cursor: "pointer", fontSize: 13, lineHeight: 1 }}
+            >×</button>
+            <span style={{
+              position: "absolute", right: -5, top: 22, width: 8, height: 8, transform: "rotate(45deg)",
+              background: "rgba(24,24,27,0.94)",
+              borderTop: "1px solid rgba(217,119,6,0.55)", borderRight: "1px solid rgba(217,119,6,0.55)",
+            }} />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+export const HangingOrange = memo(function HangingOrange({ onClick, onHover, retracted, aiMode, recallDue = 0, recallTopic }: { onClick: () => void; onHover?: () => void; retracted?: boolean; aiMode?: boolean; recallDue?: number; recallTopic?: string }) {
   const angle = useMotionValue(0)
   const [faceIndex, setFaceIndex] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
@@ -209,7 +263,8 @@ export const HangingOrange = memo(function HangingOrange({ onClick, onHover, ret
   }, [angle])
 
   return (<>
-    <AiHint suppressed={timerRunning || !!retracted} aiMode={!!aiMode} />
+    <RecallBubble due={recallDue} topic={recallTopic} suppressed={timerRunning || !!retracted || !!aiMode} onOpen={onClick} />
+    <AiHint suppressed={timerRunning || !!retracted || recallDue > 0} aiMode={!!aiMode} />
     <motion.div
       className="fixed z-[9999]"
       style={{
