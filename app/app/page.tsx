@@ -3514,7 +3514,7 @@ export default function NoteApp() {
                 accent={accent}
                 draggedNoteId={draggedNoteId}
                 renamingFolder={renamingFolder}
-                mini={orchardOpen || statsOpen || shopOpen}
+                mini={orchardOpen || statsOpen || shopOpen || reviewOpen}
                 noteSort={defaultSort}
                 onChangeNoteSort={(s) => updateSettings({ defaultSort: s })}
                 onCloseAllPanels={closeAllPanels}
@@ -4476,10 +4476,11 @@ export default function NoteApp() {
                     theme={theme}
                     accent={accentSolid}
                     onClose={() => setReviewOpen(false)}
-                    onCorrect={() => {
-                      // Recall mode: each correct answer grows the notebook's tree
-                      // (~2.5 min each, so a ~10-card session ≈ one grown tree).
-                      setGrove(prev => growTree(prev, 'tangerine', 2.5, activeTabId ?? undefined))
+                    onCorrect={(weight) => {
+                      // Recall mode: each AI-graded answer grows the notebook's tree —
+                      // ~2.5 growth-min for correct, half for partial, so a ~10-card
+                      // session ≈ one grown tree.
+                      setGrove(prev => growTree(prev, 'tangerine', 2.5 * weight, activeTabId ?? undefined))
                     }}
                     onComplete={({ reviewed, again }) => {
                       // Sap from recall — rate scaled by the quality of the orchard.
@@ -4735,17 +4736,6 @@ export default function NoteApp() {
                 }
               }}
             />
-          )}
-
-          {reviewOpen && activeNote && (
-            <Suspense fallback={<PulpLoader variant="panel" />}>
-              <ReviewView
-                note={activeNote}
-                theme={theme}
-                accent={accent}
-                onClose={() => setReviewOpen(false)}
-              />
-            </Suspense>
           )}
 
           {showNotebookChat && activeNote && (

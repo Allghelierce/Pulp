@@ -1,0 +1,73 @@
+PULP — ACTIVE RECALL ENGINE PLAN
+================================
+
+Where we are
+------------
+Recall mode already has the skeleton: AI card generation (Groq, api/recall),
+SM-2 spaced-repetition scheduling, self-grading (Again/Hard/Good/Easy), and
+correct answers grow the notebook's tree (slice 1, feature/recall-mode).
+
+What makes it an *engine*: shifting from RECOGNITION (flip card, rate yourself)
+to PRODUCTION + JUDGMENT (you generate the answer, the system grades it and
+models what you know).
+
+
+The keystone upgrade: produce-then-grade
+----------------------------------------
+Today you flip and self-rate — that's recognition, and it's gameable (you can
+just click "Good" to farm growth). Instead: the user TYPES (or speaks) the
+answer, then AI grades it semantically against the expected answer:
+correct / partial / wrong + one line of feedback. This single change turns
+flashcards into real active recall, and makes tree growth honest — you grow
+from actual retrieval, not clicks.
+
+
+The engine, in layers
+---------------------
+1. Concept extraction — AI parses a notebook into atomic concepts plus the
+   source span each came from (so answers can cite the note). Mastery is
+   tracked per CONCEPT, not per card.
+
+2. Question generator — per concept, multiple forms at tiered difficulty:
+   free recall, cloze (fill-in-the-blank), "explain in your own words," and
+   application/transfer questions. Bloom's ladder: recall -> understand -> apply.
+
+3. Grader — semantic AI grading of free-text answers, structured feedback,
+   and a hint-first retry when wrong.
+
+4. Mastery model — per-concept strength / next-due (SM-2 today, or upgrade to
+   FSRS). Persisted per user, CROSS-NOTEBOOK.
+
+5. Scheduler — picks the next item to maximize learning: due reviews + weak
+   concepts + interleaving (mix topics, don't mass). Surfaces a "today's
+   recall" queue across all notebooks, not just per-notebook.
+
+6. Reward tie-in — MASTERY GAINS (a due item recalled correctly) drive tree
+   growth and sap, not raw correct count.
+
+
+Build order
+-----------
+Slice 2 — Typed answer + AI grading (the keystone; biggest leverage)
+  - ReviewView: "type your answer" input; grade after submit instead of pure
+    self-rate.
+  - New /api/recall/grade endpoint: AI compares the user's answer to the
+    expected answer -> correct / partial / wrong + one-line feedback.
+  - Growth scales with the grade (full for correct, partial for partial, none
+    for wrong) — replaces the clickable self-grade so it can't be farmed.
+
+Slice 3 — Concept + mastery model, cross-notebook "due today."
+
+Slice 4 — Question variety + adaptive difficulty (cloze, application,
+          harder-when-mastered).
+
+Slice 5 — Feedback, hints, source citations, confidence calibration.
+
+
+Model choices
+-------------
+- Groq (Llama 3.3 70B) for latency-sensitive paths (card gen, grading).
+- Gemini Flash / Claude Haiku 4.5 as options where quality / structured output
+  matters more than speed.
+- Estimated AI cost: ~$0.12 per active paying user per month — pricing does
+  not need to change; add per-user AI caps and gate heavy AI to paid.
