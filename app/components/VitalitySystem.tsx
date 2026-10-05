@@ -14,6 +14,16 @@ import { addTopicCards, hashNotes, loadDeck } from "@/lib/recallSchedule"
 // ─── Session topic tagging helpers ───
 const SNAPSHOT_KEY = 'pulp-timer-snapshot'
 
+// Claim feedback events, consumed by PlantedToast.
+export interface PlantedDetail { treeId: number; type: string; stage: number; notebookId?: string; recallNeeded: number; tagging: boolean; grew?: boolean }
+export interface TaggedDetail { treeId: number | null; topic: string; cards: number; recallDone: number; recallNeeded: number }
+function emitPlanted(d: PlantedDetail) {
+  try { window.dispatchEvent(new CustomEvent('pulp-tree-planted', { detail: d })) } catch { }
+}
+function emitTagged(treeId: number | null, d: Omit<TaggedDetail, 'treeId'> | null) {
+  try { window.dispatchEvent(new CustomEvent('pulp-tree-tagged', { detail: d ? { treeId, ...d } : { treeId, topic: '', cards: 0, recallDone: 0, recallNeeded: 0 } })) } catch { }
+}
+
 function readNote(noteId: string | null): NoteData | null {
   if (!noteId || typeof window === "undefined") return null
   try {
@@ -434,14 +444,14 @@ export const VitalitySystem = memo(function VitalitySystem({
   // Session-end topic tagging: diff notes vs the start snapshot, make ONE AI
   // call that names the topic + writes cards. Patches the planted tree (if any)
   // and queues the cards in that notebook's deck. Fails silently.
-  const tagSessionTopic = useCallback((treeId: number | null, recallNeeded: number, noteId: string | null) => {
+  const tagSessionTopic = useCallback((treeId: number | null, recallNeeded: number, noteId: string | null): boolean => {
     let snap: { noteId: string | null; lines: string; review: string } | null = null
     try { snap = JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null') } catch { }
     try { sessionStorage.removeItem(SNAPSHOT_KEY) } catch { }
-    if (!noteId || !snap || snap.noteId !== noteId) return
+    if (!noteId || !snap || snap.noteId !== noteId) return false
     const note = readNote(noteId)
     const written = newText(snap.lines || "", noteLines(note))
-    if (written.length < MIN_TOPIC_TEXT) return
+    if (written.length < MIN_TOPIC_TEXT) return false
     const endReview = reviewText(note)
     void (async () => {
       try {
@@ -449,24 +459,25 @@ export const VitalitySystem = memo(function VitalitySystem({
           method: 'POST',
           body: JSON.stringify({ text: written, title: note?.subject || '' }),
         })
-        if (!res.ok) return
+        if (!res.ok) { emitTagged(treeId, null); return }
         const data = await res.json() as { topic?: string; cards?: Card[] }
         const topic = typeof data?.topic === 'string' ? data.topic.trim() : ''
-        if (!topic) return
+        if (!topic) { emitTagged(treeId, null); return }
         const cards = Array.isArray(data.cards) ? data.cards : []
+        let added = 0
         if (cards.length) {
           // If the deck was in sync with the notes at session start, it now covers the new text too.
           const deck = loadDeck(noteId)
           const inSync = !deck || deck.noteHash === hashNotes(snap!.review || "")
-          const added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined)
+          added = addTopicCards(noteId, cards, topic, Date.now(), inSync ? hashNotes(endReview) : undefined)
           if (added > 0) {
             try { window.dispatchEvent(new CustomEvent('pulp-cards-queued', { detail: { noteId, topic, count: added } })) } catch { }
           }
         }
-        if (treeId == null) return
+        if (treeId == null) { emitTagged(treeId, { topic, cards: added, recallDone: 0, recallNeeded: 0 }); return }
         // Take only what the tree still needs, and nothing if it's gone — excess stays banked.
         const tree = groveRef.current.find(t => t.id === treeId)
-        if (!tree) return
+        if (!tree) { emitTagged(treeId, null); return }
         const need = Math.max(0, (tree.recallNeeded ?? recallNeeded) - (tree.recallDone || 0))
         const banked = takeBanked(topic, need)
         setGrove(g => g.map(t => {
@@ -475,8 +486,11 @@ export const VitalitySystem = memo(function VitalitySystem({
           const full = recallDone >= (t.recallNeeded ?? recallNeeded)
           return { ...t, topic, recallDone, ...(full ? { stage: FULL_STAGE, progress: 100 } : {}) }
         }))
-      } catch { }
+        const done = Math.min((tree.recallDone || 0) + banked, tree.recallNeeded ?? recallNeeded)
+        emitTagged(treeId, { topic, cards: added, recallDone: done, recallNeeded: tree.recallNeeded ?? recallNeeded })
+      } catch { emitTagged(treeId, null) }
     })()
+    return true
   }, [setGrove])
 
   const claimReward = useCallback(async () => {
@@ -516,6 +530,7 @@ export const VitalitySystem = memo(function VitalitySystem({
         : t)
       setGrove(next)
       checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
+      emitPlanted({ treeId: existingPartial.id, type: treeType, stage: computeStage(ratio), notebookId: existingPartial.notebookId, recallNeeded: 0, tagging: false, grew: true })
     } else {
       const ratio = Math.min(1, sessionMinutes / growthTarget)
       const newTree: Tree = {
@@ -526,7 +541,8 @@ export const VitalitySystem = memo(function VitalitySystem({
         focusMinutes: sessionMinutes, growthTarget,
         recallNeeded: recallNeededFor(treeType), recallDone: 0,
       }
-      tagSessionTopic(newTree.id, newTree.recallNeeded!, selectedNotebookId)
+      const tagging = tagSessionTopic(newTree.id, newTree.recallNeeded!, selectedNotebookId)
+      emitPlanted({ treeId: newTree.id, type: treeType, stage: newTree.stage, notebookId: newTree.notebookId, recallNeeded: newTree.recallNeeded!, tagging })
       const next = [...grove, newTree]
       setGrove(next)
       checkAchievement('full_grove', () => ({ progress: next.filter(t => t.type !== 'spoiled').length }))
