@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
+import { getCacheKey, getPlantAlphaAt } from "@/app/hooks/usePlantBitmapCache"
 import { SummerTerrain } from "./SummerTerrain"
 import { useTerrainCache } from "@/app/hooks/useTerrainCache"
 import { PulpIcon, GemIcon, LeafIcon } from '@/app/components/CurrencyIcons'
@@ -2701,6 +2702,7 @@ export const OrchardView = memo(function OrchardView({
   }, [isOpen, focusTopic])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
+  const groveLayerRef = useRef<HTMLDivElement | null>(null)
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
 
@@ -3046,6 +3048,74 @@ export const OrchardView = memo(function OrchardView({
   const selectedNotebookRef = useRef(selectedNotebook)
   selectedNotebookRef.current = selectedNotebook
 
+  // ── Grove hover / click: which tree is actually drawn under the pointer ──
+  // Trees sit in boxes ~1.3× their height, mostly transparent and overlapping
+  // neighbours, so box hover picked the wrong tree. Live SVG trees are tested
+  // by the browser against their painted shapes (CSS above); trees shown as a
+  // cached bitmap are tested against its opacity mask, front-most first.
+  const groveHitTest = useCallback((clientX: number, clientY: number): HTMLElement | null => {
+    const layer = groveLayerRef.current
+    if (!layer) return null
+    const painted = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-grove-tree]')
+    if (painted && layer.contains(painted)) return painted
+    const trees = layer.querySelectorAll<HTMLElement>('[data-grove-tree]')
+    for (let i = trees.length - 1; i >= 0; i--) { // placed is sorted back→front
+      const el = trees[i]
+      const art = el.querySelector<HTMLElement>('[data-mask-key]')
+      const img = art?.querySelector('img')
+      if (!art || !img) continue
+      const r = img.getBoundingClientRect()
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) continue
+      const a = getPlantAlphaAt(art.dataset.maskKey || '', (clientX - r.left) / r.width, (clientY - r.top) / r.height, 2)
+      if (a !== null && a > 40) return el
+    }
+    return null
+  }, [])
+
+  const setGroveHover = useCallback((el: HTMLElement | null) => {
+    const prev = hoveredElRef.current
+    if (prev === el) return
+    if (prev) { prev.classList.remove('is-hovered'); prev.style.zIndex = hoveredZRef.current }
+    hoveredElRef.current = el
+    if (el) { hoveredZRef.current = el.style.zIndex; el.style.zIndex = '998'; el.classList.add('is-hovered') }
+    if (groveLayerRef.current) groveLayerRef.current.style.cursor = el ? 'pointer' : ''
+  }, [])
+
+  const hoverRaf = useRef(0)
+  const onGrovePointerMove = useCallback((e: React.PointerEvent) => {
+    if (dragRef.current?.active || e.pointerType === 'touch') return
+    const { clientX, clientY } = e
+    if (hoverRaf.current) return
+    hoverRaf.current = requestAnimationFrame(() => {
+      hoverRaf.current = 0
+      setGroveHover(groveHitTest(clientX, clientY))
+    })
+  }, [groveHitTest, setGroveHover])
+
+  const onGrovePointerDownRef = useRef<(e: React.PointerEvent) => void>(() => {})
+  const onGrovePointerDown = useCallback((e: React.PointerEvent) => onGrovePointerDownRef.current(e), [])
+  // Click / drag / chop use the same hit test as hover (kept current every render;
+  // it reads state declared further down, so it's assigned after render).
+  useEffect(() => {
+    onGrovePointerDownRef.current = (e: React.PointerEvent) => {
+      if (e.button !== 0) return
+      const el = groveHitTest(e.clientX, e.clientY)
+      if (!el) return
+      const hit = placedRef.current.find(p => String(p.tree.id) === el.dataset.groveTree)
+      if (!hit) return
+      const { tree, slotIndex, x, y } = hit
+      if (editMode) {
+        e.preventDefault()
+        setGroveHover(null)
+        dragElRef.current = el
+        handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
+        return
+      }
+      if (activeTool === 'axe') { setChopTarget({ tree, sap: getSapYield(tree) }); return }
+      setFocusedTree({ tree, x, y })
+    }
+  })
+
   const handleDragStart = useCallback((treeId: string, slotIdx: number, clientX: number, clientY: number) => {
     if (activeTool !== 'none') return
     dragRef.current = { treeId, startX: clientX, startY: clientY, currentX: clientX, currentY: clientY, slotIdx, active: false }
@@ -3260,6 +3330,16 @@ export const OrchardView = memo(function OrchardView({
     >
       <style>{`
         @keyframes tree-pop { 0% { transform: scale(0.7); opacity:0 } 70% { transform: scale(1.03); opacity:1 } 100% { transform: scale(1); opacity:1 } }
+        /* Grove hover: the hit-tester marks the tree whose drawn pixels are under the cursor. The card fades and
+           rises in; it lingers briefly on the way out so moving between trees doesn't flicker. */
+        .grove-tree-card { opacity: 0; transform: translate(-50%, 4px); transition: opacity .16s ease .08s, transform .2s ease .08s; }
+        .grove-tree.is-hovered .grove-tree-card { opacity: 1; transform: translate(-50%, 0); transition-delay: 0s; }
+        .grove-tree-art { transition: transform .22s cubic-bezier(.2,.8,.2,1), filter .22s ease; transform-origin: center bottom; }
+        .grove-tree.is-hovered .grove-tree-art { transform: translateY(-2px) scale(1.035); filter: brightness(1.08); }
+        /* Only the painted parts of a tree's drawing respond to the pointer (not its box) */
+        .grove-tree-art svg { pointer-events: none; }
+        .grove-tree-art svg * { pointer-events: visiblePainted; }
+        @media (prefers-reduced-motion: reduce) { .grove-tree-card, .grove-tree-art { transition: none; } .grove-tree.is-hovered .grove-tree-art { transform: none; } }
         @keyframes sap-collect { 0% { transform: translateY(0); opacity:1 } 100% { transform: translateY(-30px); opacity:0 } }
         @keyframes sap-drop-burst { 0% { opacity:0; transform: scale(0) translateY(0) } 15% { opacity:1; transform: scale(1.3) translateY(-5px) } 40% { opacity:0.9; transform: scale(1) translateY(-15px) } 100% { opacity:0; transform: scale(0.5) translateY(-40px) } }
         @keyframes sap-funnel { 0% { opacity:0; transform: scale(0.3) translate(0,0) } 20% { opacity:1; transform: scale(1.2) translate(0,0) } 100% { opacity:0; transform: scale(0.4) translate(var(--funnel-tx), var(--funnel-ty)) } }
@@ -3451,12 +3531,16 @@ export const OrchardView = memo(function OrchardView({
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedNotebook ?? 'all'}
+                ref={groveLayerRef}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
                 className="absolute inset-0"
                 style={{ paddingLeft: 0 }}
+                onPointerMove={onGrovePointerMove}
+                onPointerLeave={() => setGroveHover(null)}
+                onPointerDown={onGrovePointerDown}
               >
                 {(() => { return (
                   <>
@@ -3604,32 +3688,7 @@ export const OrchardView = memo(function OrchardView({
                         <div
                           key={`${tree.id ?? 'tree'}-${renderIdx}`}
                           data-grove-tree={tree.id}
-                          className="absolute flex flex-col items-center group"
-                          onMouseEnter={(e) => {
-                            if (hoveredElRef.current) hoveredElRef.current.style.zIndex = hoveredZRef.current
-                            hoveredElRef.current = e.currentTarget
-                            hoveredZRef.current = e.currentTarget.style.zIndex
-                            e.currentTarget.style.zIndex = '998'
-                          }}
-                          onMouseLeave={(e) => {
-                            if (hoveredElRef.current === e.currentTarget) {
-                              e.currentTarget.style.zIndex = hoveredZRef.current
-                              hoveredElRef.current = null
-                            }
-                          }}
-                          onPointerDown={(e) => {
-                            if (editMode) {
-                              e.preventDefault()
-                              dragElRef.current = e.currentTarget as HTMLElement
-                              handleDragStart(tree.id, slotIndex, e.clientX, e.clientY)
-                              return
-                            }
-                            if (activeTool === 'axe') {
-                              setChopTarget({ tree, sap: getSapYield(tree) })
-                              return
-                            }
-                            setFocusedTree({ tree, x, y })
-                          }}
+                          className="absolute flex flex-col items-center grove-tree"
                           style={{
                             left: `${x}%`,
                             top: `${y}%`,
@@ -3638,6 +3697,9 @@ export const OrchardView = memo(function OrchardView({
                             zIndex: Math.round(y),
                             cursor: editMode ? 'grab' : activeTool === 'axe' ? 'crosshair' : undefined,
                             opacity: 1,
+                            // The image box is mostly transparent and overlaps neighbours; the grove
+                            // layer hit-tests drawn pixels instead (see groveHitTest).
+                            pointerEvents: 'none',
                           }}
                         >
                           <div style={{
@@ -3646,7 +3708,7 @@ export const OrchardView = memo(function OrchardView({
                             transformOrigin: 'center bottom',
                             animation: reduceMotion ? undefined : `tree-pop 0.3s ease-out ${renderIdx * 12}ms backwards`,
                           }}>
-                            <div className={tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''} style={{
+                            <div data-mask-key={getCacheKey(tree.type, treeSize, tree.stage, isDark)} className={`grove-tree-art ${tree.stage >= 3 ? getRarityPlantClass(tree.type) : ''}`} style={{
                               filter: [dimAmount > 0 ? `brightness(${100 - dimAmount}%)` : '', tree.topic ? freshnessFilter(freshnessOf(tree)) : ''].filter(Boolean).join(' ') || undefined,
                               transition: tree.topic ? 'filter 0.8s ease' : undefined,
                               position: 'relative',
@@ -3690,9 +3752,9 @@ export const OrchardView = memo(function OrchardView({
                             const ageHrs = Math.floor(ageMs / 3600000)
                             const ageStr = ageDays > 0 ? `${ageDays}d ago` : ageHrs > 0 ? `${ageHrs}h ago` : 'Just now'
                             return (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{
+                            <div className="grove-tree-card pointer-events-none" style={{
                               zIndex: 300, position: 'absolute',
-                              top: '100%', left: '50%', transform: 'translateX(-50%)',
+                              top: '100%', left: '50%',
                               marginTop: 4,
                             }}>
                               <div className="px-3 py-2 rounded-lg" style={{
