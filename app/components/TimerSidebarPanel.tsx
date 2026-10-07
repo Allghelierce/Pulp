@@ -246,6 +246,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [minimized, setMinimized] = useState(false)
   const isNarrow = useNarrow()
   const [justWatered, setJustWatered] = useState(false)
+  // "No other seeds yet" nudge when the plot is clicked with an empty inventory
+  const [noSeedsAt, setNoSeedsAt] = useState(0)
+  useEffect(() => {
+    if (!noSeedsAt) return
+    const t = setTimeout(() => setNoSeedsAt(0), 2600)
+    return () => clearTimeout(t)
+  }, [noSeedsAt])
   // Focus mode: hovering the timer reveals Cancel / Give Up.
   const [timerHover, setTimerHover] = useState(false)
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
@@ -403,18 +410,44 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   }
 
   // Tree + watering can as reusable blocks so they can swap places while running.
+  const idlePlot = !running && !done && !treeDead
   const treeVisual = (
     <div
+      data-plot
       className="relative w-full mx-auto"
       style={{
-        height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined,
+        height: 160, marginTop: running ? 24 : 8, cursor: idlePlot ? 'pointer' : undefined,
         // Wilting: the plant droops and loses color until it's watered.
         filter: wilting ? 'saturate(0.35) brightness(0.8)' : undefined,
         transform: wilting ? 'rotate(-4deg) translateY(4px)' : undefined, transformOrigin: 'bottom center',
         transition: 'filter 1.2s ease, transform 1.2s ease',
       }}
-      onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
+      onClick={() => {
+        if (!idlePlot) return
+        if (inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) }
+        else setNoSeedsAt(Date.now()) // nothing to pick: say so instead of doing nothing
+      }}
     >
+      {noSeedsAt > 0 && (
+        <div key={noSeedsAt} role="status" style={{
+          position: 'absolute', top: 4, left: '50%', zIndex: 5, whiteSpace: 'nowrap',
+          display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px 4px 10px', borderRadius: 999,
+          background: isDark ? 'rgba(24,24,27,0.95)' : 'rgba(255,255,255,0.97)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+          boxShadow: '0 6px 18px -6px rgba(0,0,0,0.35)',
+          fontFamily: serifFont, fontSize: 12, color: dimColor,
+          animation: 'pulpNoSeeds .45s cubic-bezier(.36,.07,.19,.97) both',
+        }}>
+          <style>{`@keyframes pulpNoSeeds { 0% { transform: translate(-50%, 4px); opacity: 0 } 15% { transform: translate(-50%, 0); opacity: 1 } 30% { transform: translate(calc(-50% - 5px), 0) } 45% { transform: translate(calc(-50% + 5px), 0) } 60% { transform: translate(calc(-50% - 3px), 0) } 75% { transform: translate(calc(-50% + 3px), 0) } 100% { transform: translate(-50%, 0); opacity: 1 } } @media (prefers-reduced-motion: reduce) { [role="status"] { animation: none !important; transform: translate(-50%, 0) !important } }`}</style>
+          No other seeds yet
+          {onOpenSatchel && (
+            <button onClick={e => { e.stopPropagation(); setNoSeedsAt(0); onOpenSatchel() }}
+              style={{ padding: '1px 8px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: serifFont, fontSize: 11.5, background: `${mainColor}22`, color: mainColor }}>
+              get some
+            </button>
+          )}
+        </div>
+      )}
       <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
         <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
       </div>
