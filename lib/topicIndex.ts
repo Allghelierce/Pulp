@@ -89,3 +89,13 @@ export function totalDueAll(now = Date.now()): number {
   for (const deck of readDecks()) for (const c of deck.cards) if (c.due <= now) n++
   return n
 }
+
+// Due cards with no topic (built from a whole notebook), per notebook.
+export function untaggedDueByNotebook(now = Date.now()): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const deck of readDecks()) {
+    const n = deck.cards.filter(c => !c.topic && c.due <= now).length
+    if (n) out[deck.noteId] = n
+  }
+  return out
+}

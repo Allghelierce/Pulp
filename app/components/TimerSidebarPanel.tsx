@@ -6,7 +6,7 @@ import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import { MiniRings } from './StatsView'
-import { isFullyGrown } from "@/lib/topics"
+import { isFullyGrown, isTopicTree } from "@/lib/topics"
 import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
 
 // Growth stages along the focus bar (ratio of the tree's grow time). Matches timerStage in lib/topics.
@@ -299,7 +299,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const quotaBonus = quotaTier === 'daily' ? 2 : quotaTier === 'weekly' ? 1 : 0
   const streakBonus = Math.min(1, goalStreak / 30)
   const multiplier = Math.min(5, 1 + (isEarlyBird ? 1 : 0) + quotaBonus + streakBonus)
-  const existingPartial = grove.find(t => t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
+  // Same rule as claimReward: only pre-topic (legacy) partial trees keep absorbing minutes;
+  // every new session starts a fresh tree, so the bar starts empty.
+  const existingPartial = grove.find(t => !isTopicTree(t) && t.type === treeType && t.growthTarget && (t.focusMinutes || 0) < t.growthTarget)
   const priorMinutes = existingPartial?.focusMinutes || 0
   const sessionMin = total > 0 ? Math.round(total / 60) : 0
   // Matches VitalitySystem's per-minute payout: only fully grown trees make sap.
@@ -338,7 +340,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const waterSecLeft = Math.ceil(waterMsLeft / 1000)
   const waterMin = Math.floor(waterSecLeft / 60)
   const waterSec = waterSecLeft % 60
-  const waterUrgent = waterMsLeft > 0 && waterMsLeft < 60_000
+  // The deadline includes a 90s grace, so this shows the can ~2 min before watering is due.
+  const waterUrgent = waterMsLeft > 0 && waterMsLeft < 210_000
   const showWaterWidget = running && waterDeadline !== null
   const waterWindowMs = Math.floor(total / 3) * 1000 + 90_000
   const waterFrac = waterWindowMs > 0 ? Math.max(0, Math.min(1, waterMsLeft / waterWindowMs)) : 0

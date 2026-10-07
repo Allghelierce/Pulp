@@ -36,6 +36,12 @@ const makeCardsDueNow = (page: Page) => page.evaluate(() => {
   }
   window.dispatchEvent(new Event("pulp-cards-queued"))
 })
+// Orange bubble -> orchard "Ready to recall" chip -> tree card -> Recall.
+async function openRecallViaOrange(page: Page) {
+  await page.getByText(/\d+ cards? to recall/).click({ timeout: 15_000 })
+  await page.getByRole("button", { name: /^Photosynthesis · \d+$/ }).click()
+  await page.getByRole("button", { name: /^Recall Photosynthesis/ }).click()
+}
 const topicTrees = async (page: Page) => (await readGrove(page)).filter(t => t.topic === "Photosynthesis")
 
 async function openApp(page: Page) {
@@ -84,7 +90,7 @@ test.describe("topics as trees (e2e)", () => {
     await page.getByRole("button", { name: "Dismiss" }).click().catch(() => {})
     await expect(page.getByText(/5 cards ready tomorrow/)).toBeHidden() // not due yet
     await makeCardsDueNow(page)
-    await page.getByRole("button", { name: /^recall · \d+$/ }).click()
+    await openRecallViaOrange(page)
 
     const box = page.getByPlaceholder("Type your answer from memory…")
     const done = page.getByRole("button", { name: "Done", exact: true })
@@ -104,23 +110,20 @@ test.describe("topics as trees (e2e)", () => {
     expect(t.stage).toBe(4)
   })
 
-  test("3. due card: shows count, opens recall, × hides it", async ({ page }) => {
+  test("3. orange says what's due; orchard points to the tree; × hides the bubble", async ({ page }) => {
     await plantTopicTree(page)
     await page.getByRole("button", { name: "Dismiss" }).click().catch(() => {})
-    const due = page.getByText(/\d+ cards? due/)
+    const bubble = page.getByText(/\d+ cards? to recall/)
     await expect.poll(async () => (await topicTrees(page)).length).toBe(1)
-    await expect(due).toBeHidden() // session cards wait until tomorrow
+    await expect(bubble).toBeHidden() // session cards wait until tomorrow
     await makeCardsDueNow(page)
-    await expect(due).toBeVisible({ timeout: 15_000 })
-    const card = due.locator("xpath=../..")
-    await card.getByRole("button", { name: "Recall now" }).click()
-    await expect(page.getByPlaceholder("Type your answer from memory…")).toBeVisible()
-    await page.getByText("Recall Review").locator("xpath=../../..").getByTitle("Close")
-      // The hanging mascot's string (z-9999) sits over this button, so a real click is blocked.
-      .dispatchEvent("click")
-    await expect(due).toBeVisible()
-    await card.getByRole("button", { name: "Hide" }).click()
-    await expect(due).toBeHidden()
+    await expect(bubble).toBeVisible({ timeout: 15_000 })
+    await expect(bubble).toContainText("Photosynthesis")
+    // × hides it until the count changes.
+    await page.getByRole("button", { name: "Hide for now" }).click()
+    await expect(bubble).toBeHidden()
+    await makeCardsDueNow(page) // same count -> stays hidden
+    await expect(bubble).toBeHidden()
   })
 
   test("4. focus mode: stage bar above the plot, hover shows time left, give up always shown", async ({ page }) => {

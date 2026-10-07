@@ -567,7 +567,7 @@ export const Sidebar = memo(function Sidebar({
         <div className="absolute inset-0 z-0" style={{ background: 'rgba(35,33,33,0.92)' }} />
         <div className="absolute inset-0 z-0 pointer-events-none rounded-r-sm" style={{ boxShadow: 'inset -1px 0 3px rgba(0,0,0,0.18), inset 0 0 40px rgba(255,255,255,0.01)' }} />
         {/* Bamboo stalks */}
-        <svg className="absolute inset-0 z-0 pointer-events-none" viewBox="0 0 220 1000" width="100%" height="100%" preserveAspectRatio="none">
+        <svg className="absolute inset-0 z-0 pointer-events-none" viewBox="0 0 220 1000" width="100%" height="100%" preserveAspectRatio={mini ? "xMinYMin slice" : "none"}>
           <defs><symbol id="bnode" viewBox="0 0 6 3"><ellipse cx="3" cy="1.5" rx="3" ry="1.5" /></symbol></defs>
           <line x1="28" y1="0" x2="28" y2="1000" stroke="rgba(140,120,80,0.035)" strokeWidth="1.8" />
           <use href="#bnode" x="25" y="80" width="6" height="3" fill="rgba(140,120,80,0.04)" />
@@ -618,7 +618,8 @@ export const Sidebar = memo(function Sidebar({
 
         {mini ? (
           <div className="relative flex flex-col items-center h-full z-10 pt-5 pb-4">
-            <span onClick={onGoHome} className="mb-6 shrink-0 cursor-pointer" style={{ fontFamily: '"EB Garamond", serif', fontSize: 17, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
+            <span onClick={onGoHome} className="mb-5 shrink-0 cursor-pointer" style={{ fontFamily: '"EB Garamond", serif', fontSize: 17, fontWeight: 400, letterSpacing: '-0.02em', color: '#d97706' }}>pulp</span>
+            <div className="w-7 h-px mb-4 shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }} />
             <div className="flex flex-col items-center gap-0.5 px-1 w-full">
               {onOpenRecall && (
                 <button onClick={onOpenRecall} title={recallDue > 0 ? `Recall · ${recallDue} due` : "Recall"} className="relative w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-white/[0.05]" style={{ color: '#d97706' }}>
