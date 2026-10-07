@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/apiFetch"
 import { supabase } from "@/lib/supabase"
 import type { CapturedSelection } from "@/lib/pageContext"
 import { useNarrow } from "@/app/hooks/useNarrow"
+import { readableOn } from "@/lib/accent"
 
 interface Message {
   id: string
@@ -268,6 +269,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
   }, [])
 
   const bg = isDark ? "#09090b" : "#ffffff"
+  const onAccent = readableOn(accent) // text on accent-filled buttons/bubbles
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
   const mutedText = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)"
   const subtleText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)"
@@ -356,7 +358,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                   style={{
                     flex: 1, padding: "5px 0", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 400,
                     background: editName.trim() && editPrompt.trim() ? accent : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                    color: editName.trim() && editPrompt.trim() ? "#fff" : mutedText, cursor: "pointer",
+                    color: editName.trim() && editPrompt.trim() ? onAccent : mutedText, cursor: "pointer",
                     fontFamily: 'Crimson Pro, serif',
                   }}
                 >
@@ -496,7 +498,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
               background: msg.role === "user"
                 ? accent
                 : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-              color: msg.role === "user" ? "#fff" : (isDark ? "#d4d4d8" : "#27272a"),
+              color: msg.role === "user" ? onAccent : (isDark ? "#d4d4d8" : "#27272a"),
               fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>
               {(() => {
@@ -512,7 +514,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
                       style={{
                         marginTop: 8, padding: "4px 10px", borderRadius: 6, fontSize: 12, fontFamily: 'Crimson Pro, serif',
                         border: `1px solid ${accent}`, background: msg.applied ? "transparent" : accent,
-                        color: msg.applied ? accent : "#fff", cursor: msg.applied ? "default" : "pointer",
+                        color: msg.applied ? accent : onAccent, cursor: msg.applied ? "default" : "pointer",
                       }}
                     >{msg.applied ? "Replaced ✓" : "Replace selection"}</button>
                   )}
@@ -623,7 +625,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
           style={{
             width: 32, height: 32, borderRadius: 8, border: "none", flexShrink: 0,
             background: input.trim() && !loading ? accent : (isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-            color: input.trim() && !loading ? "#fff" : mutedText,
+            color: input.trim() && !loading ? onAccent : mutedText,
             cursor: input.trim() && !loading ? "pointer" : "default",
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.15s",

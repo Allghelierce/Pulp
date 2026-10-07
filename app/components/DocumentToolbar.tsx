@@ -5,6 +5,7 @@ import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShoppingBag } from "lucide-react"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { ACCENT_COLORS } from '@/app/components/settings/SettingsView'
+import { ACCENT, ACCENT_CONTRAST, accentAlpha } from '@/lib/accent'
 
 interface DocumentToolbarProps {
   /** Narrow windows: the hanging bookmark ribbon folds into the toolbar as this button. */
@@ -165,8 +166,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return Math.min(4, 1 + earlyBird + quotaBonus)
   }, [quotaTier])
 
-  const NEON_ORANGE = "#d97706"
-  const neonStyle: React.CSSProperties = { color: NEON_ORANGE, textShadow: `0 0 6px rgba(217,119,6,0.3), 0 0 2px rgba(217,119,6,0.15)` }
+  const neonStyle: React.CSSProperties = { color: ACCENT, textShadow: `0 0 6px ${accentAlpha(0.3)}, 0 0 2px ${accentAlpha(0.15)}` }
   const btn = (active: boolean) => compact ? (active ? btnIconOnlyActive : btnIconOnly) : (active ? btnBaseActive : btnBaseInactive)
   const activeStyle = (active: boolean): React.CSSProperties => active ? neonStyle : {}
 
@@ -503,9 +503,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       {!hideCurrencies && <div className="relative" ref={sapInfoRef}>
         <div className="flex items-center gap-2.5 px-3.5 py-1.5 text-[12px] font-normal text-zinc-600 select-none tracking-tight rounded-full bg-black/[0.04] border border-black/[0.03] shadow-inner cursor-pointer hover:bg-black/[0.06] transition-colors" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
           {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
+            <img src={userAvatarUrl} alt="" className="w-5 h-5 rounded-full object-cover shrink-0 ml-1.5 cursor-pointer hover:ring-2 hover:ring-[rgb(var(--accent-rgb)/0.5)] transition-all" referrerPolicy="no-referrer" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }} />
           ) : userEmail ? (
-            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-normal text-zinc-600 uppercase ml-1.5 cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }}>
+            <div className="w-5 h-5 rounded-full bg-zinc-300 flex items-center justify-center shrink-0 text-[8px] font-normal text-zinc-600 uppercase ml-1.5 cursor-pointer hover:ring-2 hover:ring-[rgb(var(--accent-rgb)/0.5)] transition-all" onClick={(e) => { e.stopPropagation(); onOpenSettings?.() }}>
               {userEmail[0]}
             </div>
           ) : null}
@@ -562,7 +562,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                 onClick={() => { setShowSapInfo(false); onOpenGrove?.() }}
                 style={{
                   width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
-                  fontFamily: 'Crimson Pro, serif', color: '#fff', background: '#d97706', border: 'none', cursor: 'pointer',
+                  fontFamily: 'Crimson Pro, serif', color: ACCENT_CONTRAST, background: ACCENT, border: 'none', cursor: 'pointer',
                 }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                 onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}

@@ -8,6 +8,7 @@ import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { LiquidButton } from '@/components/ui/liquid-glass-button'
+import { ACCENT, ACCENT_CONTRAST } from '@/lib/accent'
 
 
 // How long a seed card cracks before its face shows, by rarity (ms).
@@ -1924,8 +1925,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                             {discount > 0 && false && (
                               <div style={{
                                 position: 'absolute', bottom: 36, right: 18,
-                                fontSize: 8, fontWeight: 400, color: '#fff',
-                                background: '#d97706', padding: '2px 5px', borderRadius: 3,
+                                fontSize: 8, fontWeight: 400, color: ACCENT_CONTRAST,
+                                background: ACCENT, padding: '2px 5px', borderRadius: 3,
                                 zIndex: 5,
                               }}>-{discount}%</div>
                             )}
@@ -2300,7 +2301,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                         style={{
                           fontFamily: font, cursor: canAfford ? 'pointer' : 'not-allowed', border: 'none',
                           display: 'inline-flex', alignItems: 'center', gap: 5,
-                          background: canAfford ? '#d97706' : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? '#fff' : (isDark ? '#71717a' : '#a1a1aa'),
+                          background: canAfford ? ACCENT : (isDark ? '#3f3f46' : '#d4d4d8'), color: canAfford ? ACCENT_CONTRAST : (isDark ? '#71717a' : '#a1a1aa'),
                           padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 400,
                           opacity: canAfford ? 1 : 0.7,
                         }}
@@ -2609,7 +2610,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 <button
                   onClick={() => { setSatchelFullPopup(false); setActiveTab('satchel') }}
                   className="px-4 py-1.5 rounded-lg text-[12px] font-normal transition-all"
-                  style={{ background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  style={{ background: ACCENT, color: ACCENT_CONTRAST, border: 'none', cursor: 'pointer' }}
                 >
                   Open Seeds
                 </button>

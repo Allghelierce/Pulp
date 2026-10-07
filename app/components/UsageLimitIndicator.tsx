@@ -1,6 +1,7 @@
 "use client"
 
 import { getRemainingLimits, type UserUsage } from "@/app/lib/tierLimits"
+import { ACCENT } from "@/lib/accent"
 
 interface UsageLimitIndicatorProps {
   usage: UserUsage
@@ -8,7 +9,7 @@ interface UsageLimitIndicatorProps {
   accent?: string
 }
 
-export function UsageLimitIndicator({ usage, isDark = false, accent = "#b85c20" }: UsageLimitIndicatorProps) {
+export function UsageLimitIndicator({ usage, isDark = false, accent = ACCENT }: UsageLimitIndicatorProps) {
   const limits = getRemainingLimits(usage)
 
   const getBarColor = (percentage: number) => {

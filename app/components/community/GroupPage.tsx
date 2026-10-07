@@ -3,8 +3,9 @@ import { useState, useEffect, useCallback, memo } from "react"
 import { apiFetch } from "@/lib/apiFetch"
 import { PlantIcon } from "@/app/components/PlantIcon"
 import { useGroupPresence } from "./useGroupPresence"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 
-const accent = '#d97706'
+const accent = ACCENT
 interface Member { user_id: string; role: string; status: string; focus_minutes_total: number; username?: string; level?: number }
 interface Group { id: number; name: string; owner_id: string; invite_code: string; term_end: string; status: string }
 interface GroupTree { type?: string; stage?: number }
@@ -77,7 +78,7 @@ export const GroupPage = memo(function GroupPage({
         <h2 style={{ color: text, margin: 0 }}>{group.name}</h2>
         <span style={{ color: '#8a857e', fontSize: 13 }}>{archived ? 'archived' : `${daysLeft}d left`}</span>
       </div>
-      {archived && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(217,119,6,0.1)', color: accent }}>This term is over — read-only.</div>}
+      {archived && <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: accentAlpha(0.1), color: accent }}>This term is over — read-only.</div>}
 
       {!archived && <div style={{ marginTop: 12, color: '#8a857e' }}>Invite:{' '}
         <button onClick={() => navigator.clipboard.writeText(group.invite_code)} style={{ color: accent, border: 'none', background: 'none', cursor: 'pointer' }}>{group.invite_code} ⧉</button>

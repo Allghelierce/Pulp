@@ -10,6 +10,7 @@ import { MiniRings } from './StatsView'
 import { isFullyGrown, isTopicTree } from "@/lib/topics"
 import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
 import { RARITY_COLOR, rarityTextColor } from "@/lib/rarity"
+import { ACCENT, ACCENT_CONTRAST, BRAND_ORANGE, accentAlpha } from "@/lib/accent"
 
 // Growth stages along the focus bar (ratio of the tree's grow time). Matches timerStage in lib/topics.
 const FOCUS_STAGES = [
@@ -347,7 +348,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const seconds = remainingTime % 60
   const progress = total > 0 ? elapsed / total : 0
 
-  const mainColor = "#d97706"
+  // Interactive chrome (progress, presets, slider, claim) follows the user accent; sap stays brand orange.
+  const mainColor = ACCENT
   const isDark = theme === "dark"
   const bgColor = isDark ? "rgba(4,4,5,0.85)" : "rgba(255,255,255,0.75)"
   const borderColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)"
@@ -764,7 +766,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     </div>
                     <div className="relative mx-auto" style={{ width: '82%', height: 12 }}>
                       <div style={{ position: 'absolute', top: 4, left: 0, right: 0, height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
-                      <div style={{ position: 'absolute', top: 4, left: 0, width: `${sessionRatio * 100}%`, height: 4, borderRadius: 2, background: mainColor, boxShadow: `0 0 8px ${mainColor}66`, transition: 'width 1s linear' }} />
+                      <div style={{ position: 'absolute', top: 4, left: 0, width: `${sessionRatio * 100}%`, height: 4, borderRadius: 2, background: mainColor, boxShadow: `0 0 8px ${accentAlpha(0.4)}`, transition: 'width 1s linear' }} />
                       {stageMarks.map(st => (
                         <div key={st.at} title={st.name} style={{ position: 'absolute', left: `${st.pos * 100}%`, top: 2, width: 8, height: 8, borderRadius: '50%', transform: 'translateX(-4px)', background: sessionRatio >= st.pos ? mainColor : (isDark ? '#27272a' : '#e4e4e7'), boxShadow: `0 0 0 2px ${isDark ? '#0a0a0b' : '#fdfcf9'}`, transition: 'background 0.3s' }} />
                       ))}
@@ -817,8 +819,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <MiniRings isDark={isDark} onClick={onOpenStats} quotaTier={quotaTier} goalStreak={goalStreak} dailyGoalMinutes={dailyGoalMinutes} sapDisplay={effectiveSap} />
                     {running && !done && (
                       <div className="flex items-center justify-center gap-1.5">
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: mainColor, display: "inline-block" }} />
-                        <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: mainColor, lineHeight: 1 }}>+{liveSap}</span>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: BRAND_ORANGE, display: "inline-block" }} />
+                        <span className="tabular-nums" style={{ fontFamily: serifFont, fontSize: 15, color: BRAND_ORANGE, lineHeight: 1 }}>+{liveSap}</span>
                         <span style={{ fontFamily: serifFont, fontSize: 11, color: subtleColor }}>sap</span>
                       </div>
                     )}
@@ -865,7 +867,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <div className="relative mx-auto" style={{ width: '70%', height: 12, marginTop: 4 }}>
                   <div style={{ position: 'absolute', top: 5, left: 0, right: 0, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
                   {priorRatio > 0 && (
-                    <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, priorRatio * 100)}%`, height: 2, borderRadius: 1, background: isDark ? 'rgba(217,119,6,0.3)' : 'rgba(217,119,6,0.25)' }} />
+                    <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, priorRatio * 100)}%`, height: 2, borderRadius: 1, background: accentAlpha(isDark ? 0.3 : 0.25) }} />
                   )}
                   <div style={{ position: 'absolute', top: 5, left: 0, width: `${Math.min(100, cumulativeRatio * 100)}%`, height: 2, borderRadius: 1, background: mainColor, transition: 'width 0.5s ease' }} />
                   {[0.1, 0.3, 0.6, 0.85].map(t => (
@@ -913,8 +915,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         style={{
                           fontFamily: 'Inter, system-ui, sans-serif',
                           color: total === 30 ? textColor : subtleColor,
-                          backgroundColor: total === 30 ? `${mainColor}20` : 'transparent',
-                          border: `1px solid ${total === 30 ? `${mainColor}40` : 'transparent'}`,
+                          backgroundColor: total === 30 ? accentAlpha(0.125) : 'transparent',
+                          border: `1px solid ${total === 30 ? accentAlpha(0.25) : 'transparent'}`,
                         }}
                       >
                         30s
@@ -928,8 +930,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         style={{
                           fontFamily: 'Inter, system-ui, sans-serif',
                           color: Math.floor(total / 60) === m ? textColor : subtleColor,
-                          backgroundColor: Math.floor(total / 60) === m ? `${mainColor}20` : 'transparent',
-                          border: `1px solid ${Math.floor(total / 60) === m ? `${mainColor}40` : 'transparent'}`,
+                          backgroundColor: Math.floor(total / 60) === m ? accentAlpha(0.125) : 'transparent',
+                          border: `1px solid ${Math.floor(total / 60) === m ? accentAlpha(0.25) : 'transparent'}`,
                         }}
                       >
                         {m}m
@@ -944,7 +946,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     <div
                       className="absolute top-0 left-0 h-full rounded-full"
                       style={{
-                        backgroundColor: `${mainColor}40`,
+                        backgroundColor: accentAlpha(0.25),
                         width: `${Math.max(0, (total / 60 - 5) / 175) * 100}%`,
                       }}
                     />
@@ -963,7 +965,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         marginLeft: -5.5,
                         backgroundColor: mainColor,
                         left: `${Math.max(0, (total / 60 - 5) / 175) * 100}%`,
-                        boxShadow: `0 0 0 2px ${bgColor}, 0 0 6px ${mainColor}55`,
+                        boxShadow: `0 0 0 2px ${bgColor}, 0 0 6px ${accentAlpha(0.33)}`,
                       }}
                     />
                   </div>
@@ -1000,7 +1002,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       : running && !done
                         ? "rgba(239,68,68,0.1)"
                         : done
-                          ? `${mainColor}1a`
+                          ? accentAlpha(0.1)
                           : isDark ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.1)",
                   color: treeDead ? "#ef4444"
                     : running && !done && elapsed < 60
@@ -1008,7 +1010,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       : running && !done
                         ? "#ef4444"
                         : done ? mainColor : isDark ? "#4ade80" : "#16a34a",
-                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? `${mainColor}40` : isDark ? "rgba(34,197,94,0.25)" : "rgba(34,197,94,0.2)"}`,
+                  border: `1px solid ${treeDead ? "rgba(239,68,68,0.25)" : running && !done && elapsed < 60 ? borderColor : running && !done ? "rgba(239,68,68,0.25)" : done ? accentAlpha(0.25) : isDark ? "rgba(34,197,94,0.25)" : "rgba(34,197,94,0.2)"}`,
                   textDecoration: giveUpStage === 2 ? "underline" : "none",
                 }}
               >
@@ -1078,7 +1080,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 onClick={() => setShowGuide(false)}
                 style={{
                   width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 400,
-                  fontFamily: serifFont, color: '#fff', background: mainColor, border: 'none', cursor: 'pointer',
+                  fontFamily: serifFont, color: ACCENT_CONTRAST, background: mainColor, border: 'none', cursor: 'pointer',
                 }}
                 onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.15)'}
                 onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}

@@ -3,6 +3,7 @@ import { memo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
 import { CountUp, fmtInt } from "../lively"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
+import { ACCENT } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 
@@ -18,7 +19,7 @@ const SapMetricWidget = memo(function SapMetricWidget({ isDark, sap = 0, goalStr
         <span style={{ fontSize: 28, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}><CountUp value={sap} format={fmtInt} /></span>
       </div>
       {goalStreak > 0 && (
-        <span style={{ fontSize: 9, color: goalStreak >= 7 ? '#d97706' : textMuted }}>
+        <span style={{ fontSize: 9, color: goalStreak >= 7 ? ACCENT : textMuted }}>
           {goalStreak >= 7 ? `${goalStreak}d streak` : `${goalStreak}/7 to streak`}
         </span>
       )}

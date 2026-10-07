@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion"
+import { ACCENT, accentAlpha, ACCENT_DARK_SURFACE } from "@/lib/accent"
 
 function FlexTwine({ bow }: { bow: import("framer-motion").MotionValue<number> }) {
   const [b, setB] = useState(0)
@@ -122,9 +123,10 @@ function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }
           <div
             onClick={() => setVisible(false)}
             style={{
+              ...ACCENT_DARK_SURFACE,
               position: "relative", display: "flex", alignItems: "center", gap: 8,
               padding: "6px 8px 6px 12px", borderRadius: 12,
-              background: "rgba(24,24,27,0.92)", border: "1px solid rgba(217,119,6,0.35)",
+              background: "rgba(24,24,27,0.92)", border: `1px solid ${accentAlpha(0.35)}`,
               boxShadow: "0 6px 20px rgba(0,0,0,0.25)", backdropFilter: "blur(6px)",
               fontFamily: "Crimson Pro, serif", fontSize: 13, color: "#e4e4e7",
               whiteSpace: "nowrap", cursor: "default",
@@ -133,9 +135,9 @@ function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }
             <span>
               press{" "}
               <kbd style={{
-                fontFamily: "ui-monospace, monospace", fontSize: 11, color: "#d97706",
-                padding: "1px 5px", borderRadius: 4, border: "1px solid rgba(217,119,6,0.4)",
-                background: "rgba(217,119,6,0.08)",
+                fontFamily: "ui-monospace, monospace", fontSize: 11, color: ACCENT,
+                padding: "1px 5px", borderRadius: 4, border: `1px solid ${accentAlpha(0.4)}`,
+                background: accentAlpha(0.08),
               }}>{"\\"}</kbd>{" "}
               for AI
             </span>
@@ -148,7 +150,7 @@ function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: "transparent", color: "#a1a1aa", cursor: "pointer", fontSize: 13, lineHeight: 1,
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#d97706" }}
+              onMouseEnter={e => { e.currentTarget.style.color = ACCENT }}
               onMouseLeave={e => { e.currentTarget.style.color = "#a1a1aa" }}
             >×</button>
             {/* Tail pointing at the orange */}
@@ -156,7 +158,7 @@ function AiHint({ suppressed, aiMode }: { suppressed: boolean; aiMode: boolean }
               position: "absolute", right: -5, top: "50%", width: 8, height: 8,
               transform: "translateY(-50%) rotate(45deg)",
               background: "rgba(24,24,27,0.92)",
-              borderTop: "1px solid rgba(217,119,6,0.35)", borderRight: "1px solid rgba(217,119,6,0.35)",
+              borderTop: `1px solid ${accentAlpha(0.35)}`, borderRight: `1px solid ${accentAlpha(0.35)}`,
             }} />
           </div>
         </motion.div>
@@ -188,15 +190,16 @@ function RecallBubble({ due, topic, suppressed, onOpen }: { due: number; topic?:
             onClick={onOpen}
             title="Open the orchard"
             style={{
+              ...ACCENT_DARK_SURFACE,
               position: "relative", display: "flex", alignItems: "center", gap: 8,
               padding: "7px 8px 7px 13px", borderRadius: 14,
-              background: "rgba(24,24,27,0.94)", border: "1px solid rgba(217,119,6,0.55)",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.3), 0 0 0 3px rgba(217,119,6,0.08)", backdropFilter: "blur(6px)",
+              background: "rgba(24,24,27,0.94)", border: `1px solid ${accentAlpha(0.55)}`,
+              boxShadow: `0 8px 24px rgba(0,0,0,0.3), 0 0 0 3px ${accentAlpha(0.08)}`, backdropFilter: "blur(6px)",
               fontFamily: "Crimson Pro, serif", color: "#e4e4e7", cursor: "pointer", maxWidth: 260,
             }}
           >
             <span style={{ lineHeight: 1.25 }}>
-              <span style={{ fontSize: 13.5, color: "#fbbf24" }}>{line}</span><br />
+              <span style={{ fontSize: 13.5, color: ACCENT }}>{line}</span><br />
               <span style={{ fontSize: 12.5, color: "#d4d4d8" }}>
                 {due} card{due === 1 ? "" : "s"} to recall{topic ? <> · <span style={{ color: "#fff" }}>{topic}</span></> : null}
               </span>
@@ -210,7 +213,7 @@ function RecallBubble({ due, topic, suppressed, onOpen }: { due: number; topic?:
             <span style={{
               position: "absolute", right: -5, top: 22, width: 8, height: 8, transform: "rotate(45deg)",
               background: "rgba(24,24,27,0.94)",
-              borderTop: "1px solid rgba(217,119,6,0.55)", borderRight: "1px solid rgba(217,119,6,0.55)",
+              borderTop: `1px solid ${accentAlpha(0.55)}`, borderRight: `1px solid ${accentAlpha(0.55)}`,
             }} />
           </div>
         </motion.div>

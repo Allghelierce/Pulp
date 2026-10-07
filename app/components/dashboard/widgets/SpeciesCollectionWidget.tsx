@@ -2,6 +2,7 @@
 import { memo, useEffect, useMemo, useState } from "react"
 import { apiFetch } from "@/lib/apiFetch"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { ACCENT, accentAlpha, BRAND_ORANGE } from "@/lib/accent"
 
 const font = '"EB Garamond", serif'
 
@@ -22,7 +23,6 @@ const StandingsWidget = memo(function StandingsWidget({ isDark, grove }: WidgetP
   const textPrimary = isDark ? '#c8c4c0' : '#3a3630'
   const cardBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'
   const border = isDark ? 'rgba(217,160,90,0.1)' : 'rgba(120,90,40,0.1)'
-  const accent = '#d97706'
 
   const [data, setData] = useState<Standing | null>(null)
   const [state, setState] = useState<'loading' | 'ok' | 'nojoin' | 'off'>('loading')
@@ -55,15 +55,15 @@ const StandingsWidget = memo(function StandingsWidget({ isDark, grove }: WidgetP
         <span style={{ fontSize: 10, fontWeight: 700, color: textMuted, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: font }}>
           Weekly Standings
         </span>
-        <span style={{ fontSize: 9, fontWeight: 600, color: accent, fontFamily: font, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span style={{ fontSize: 9, fontWeight: 600, color: ACCENT, fontFamily: font, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           {daysLeft === 0 ? 'last day' : `${daysLeft}d left`}
         </span>
       </div>
 
       {state === 'nojoin' || state === 'off' ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, textAlign: 'center' }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ACCENT, opacity: 0.6 }}>
             <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
           </svg>
           <div style={{ fontSize: 12, color: textPrimary, fontFamily: font }}>
@@ -78,11 +78,11 @@ const StandingsWidget = memo(function StandingsWidget({ isDark, grove }: WidgetP
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 40, height: 40, borderRadius: '50%',
-              background: `linear-gradient(135deg, ${accent}30 0%, ${accent}10 100%)`,
-              border: `2px solid ${accent}50`,
+              background: `linear-gradient(135deg, ${accentAlpha(0.19)} 0%, ${accentAlpha(0.06)} 100%)`,
+              border: `2px solid ${accentAlpha(0.31)}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ACCENT }}>
                 <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
               </svg>
             </div>
@@ -98,7 +98,7 @@ const StandingsWidget = memo(function StandingsWidget({ isDark, grove }: WidgetP
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flex: 1 }}>
             {[
-              { label: 'Pulp This Week', value: `+${data?.user_pulp ?? 0}`, color: accent },
+              { label: 'Pulp This Week', value: `+${data?.user_pulp ?? 0}`, color: BRAND_ORANGE },
               { label: 'Trees This Week', value: String(treesThisWeek), color: '#22c55e' },
               { label: 'Students', value: String(data?.members.length ?? 0), color: '#7cb3d4' },
               { label: 'Days Left', value: String(daysLeft), color: textPrimary },

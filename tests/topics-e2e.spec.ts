@@ -133,7 +133,7 @@ test.describe("topics as trees (e2e)", () => {
     await page.mouse.move(900, 400) // off the bar
 
     const bar = page.getByTitle("Hover to see time left")
-    await expect(bar).toContainText(/Seed|Sprout|Sapling/)
+    await expect(bar).toContainText(/Seed|Sprout|Sapling/i) // label renders "Tangerine seed"
     await expect(page.getByText(/^\d\d:\d\d left$/)).toBeHidden()
     // Setup controls are gone while running.
     for (const name of ["30s", "15m", "45m", "90m", "Start Session"]) {

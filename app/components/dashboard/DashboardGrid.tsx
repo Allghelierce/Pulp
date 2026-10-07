@@ -2,6 +2,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { GRID_COLS, ROW_HEIGHT, GRID_GAP, GRID_PAD, MAX_ROWS, getWidgetDef, type WidgetInstance, type WidgetProps } from "./widgetRegistry"
 import { WidgetWrapper } from "./WidgetWrapper"
+import { accentAlpha } from "@/lib/accent"
 
 interface DashboardGridProps {
   widgets: WidgetInstance[]
@@ -173,8 +174,8 @@ export const DashboardGrid = memo(function DashboardGrid({
             display: 'none',
             position: 'absolute',
             borderRadius: 20,
-            border: `2px dashed ${widgetProps.isDark ? 'rgba(217,119,6,0.5)' : 'rgba(217,119,6,0.4)'}`,
-            background: widgetProps.isDark ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)',
+            border: `2px dashed ${widgetProps.isDark ? accentAlpha(0.5) : accentAlpha(0.4)}`,
+            background: widgetProps.isDark ? accentAlpha(0.08) : accentAlpha(0.06),
             transition: 'left 150ms ease, top 150ms ease',
             pointerEvents: 'none',
             zIndex: 5,

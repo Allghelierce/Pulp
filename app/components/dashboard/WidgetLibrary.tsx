@@ -2,6 +2,7 @@
 import { memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { getWidgetRegistry, type WidgetInstance } from "./widgetRegistry"
+import { ACCENT, accentAlpha } from "@/lib/accent"
 
 const font = 'Crimson Pro, serif'
 
@@ -128,8 +129,8 @@ export const WidgetLibrary = memo(function WidgetLibrary({
                             style={{
                               flexShrink: 0, marginLeft: 8,
                               fontSize: 9, fontWeight: 400, fontFamily: font,
-                              color: gridFull ? (isDark ? '#5a5650' : '#a8a4a0') : '#d97706',
-                              background: gridFull ? 'transparent' : (isDark ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.1)'),
+                              color: gridFull ? (isDark ? '#5a5650' : '#a8a4a0') : ACCENT,
+                              background: gridFull ? 'transparent' : (isDark ? accentAlpha(0.12) : accentAlpha(0.1)),
                               border: 'none', cursor: gridFull ? 'not-allowed' : 'pointer',
                               padding: '4px 10px', borderRadius: 6,
                               opacity: gridFull ? 0.5 : 1,
