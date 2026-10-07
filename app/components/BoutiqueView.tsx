@@ -56,6 +56,12 @@ const SHOP_RARITY_COLOR: Record<string, string> = {
   sacred: '#c4b5fd',
 }
 
+// "#60a5fa" + alpha -> rgba(), for rarity tints
+const hexA = (hex: string, a: number) => {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
+}
+
 const RARITY_BG: Record<string, string> = {
   common: 'linear-gradient(180deg, #1a1e14 0%, #1e2616 50%, #22301a 100%)',
   uncommon: 'linear-gradient(180deg, #0e1a16 0%, #122820 50%, #163228 100%)',
@@ -1679,6 +1685,8 @@ export const BoutiqueView = memo(function BoutiqueView({
                   const isCracking = crackingCard === i
                   const soldOut = (shopStock[type] || 0) <= 0
                   const rarityCol = SHOP_RARITY_COLOR[t.rarity] || '#8a7a6a'
+                  // Unflipped cards wear their rarity colour; rare and up get a soft glow
+                  const fancy = t.rarity !== 'common' && t.rarity !== 'uncommon'
                   const discount = shopDiscounts[type] || 0
                   const growthMins = TREE_TYPES[type]?.growthMinutes || 25
                   if (i >= 4) return null
@@ -1711,28 +1719,32 @@ export const BoutiqueView = memo(function BoutiqueView({
                           ['--crack-dur' as string]: `${(CRACK_MS[t.rarity] ?? CRACK_MS.common) / 1000}s`,
                           boxShadow: isDailyDeal
                             ? (isDark ? '0 2px 16px rgba(220,38,38,0.25)' : '0 2px 16px rgba(220,38,38,0.15)')
-                            : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
+                            : !isRevealed && fancy
+                              ? `${isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'}, 0 0 22px ${hexA(rarityCol, isDark ? 0.22 : 0.28)}`
+                              : (isDark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)'),
                           border: isDailyDeal
                             ? `1.5px solid ${isDark ? 'rgba(220,38,38,0.4)' : 'rgba(220,38,38,0.35)'}`
-                            : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+                            : !isRevealed
+                              ? `1px solid ${hexA(rarityCol, t.rarity === 'common' ? (isDark ? 0.18 : 0.3) : (isDark ? 0.45 : 0.55))}`
+                              : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
                         }}
                       >
                         {!isRevealed ? (
-                          /* Unrevealed — neutral, no rarity hint */
+                          /* Unrevealed — tinted by rarity so you can see what's inside before flipping */
                           <div
                             onClick={() => revealCard(i)}
                             style={{
                               width: '100%', height: '100%', borderRadius: 'inherit',
                               background: isDark
-                                ? 'linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)'
-                                : 'linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)',
+                                ? `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.06 : 0.2)} 0%, transparent 70%), linear-gradient(180deg, #1a1816 0%, #14120f 50%, #100e0c 100%)`
+                                : `radial-gradient(120% 70% at 50% 0%, ${hexA(rarityCol, t.rarity === 'common' ? 0.1 : 0.28)} 0%, transparent 70%), linear-gradient(180deg, #e8e2d8 0%, #ddd6c8 50%, #d4ccbc 100%)`,
                               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                               position: 'relative',
                             }}
                           >
                             {/* Botanical filigree border */}
                             <svg viewBox="0 0 180 320" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                              {(() => { const fc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; return (<>
+                              {(() => { const fc = t.rarity === 'common' ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)') : hexA(rarityCol, isDark ? 0.35 : 0.5); return (<>
                                 <rect x="12" y="12" width="156" height="296" rx="8" fill="none" stroke={fc} strokeWidth="0.5" />
                                 <path d="M12 40 Q30 38 36 28 Q38 35 48 36" fill="none" stroke={fc} strokeWidth="0.5" />
                                 <path d="M168 40 Q150 38 144 28 Q142 35 132 36" fill="none" stroke={fc} strokeWidth="0.5" />

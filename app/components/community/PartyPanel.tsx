@@ -8,6 +8,7 @@ import { useGroveStore } from "@/app/store/useGroveStore"
 import { TREE_TYPES } from "@/app/constants"
 import { getWeekStart } from "@/lib/leagues"
 import { ACCENT, ACCENT_CONTRAST, accentAlpha } from "@/lib/accent"
+import { SCENE_CSS, GroveBackdrop } from "@/app/components/GroveScene"
 
 const accent = ACCENT
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -32,54 +33,8 @@ const centerOut = (n: number) => {
   return Array.from({ length: n }, (_, i) => mid + (i % 2 ? -(i + 1) / 2 : i / 2))
 }
 
-export const SCENE_CSS = `
-@keyframes groveFirefly { 0%,100% { transform: translate(0,0); opacity: 0 } 20% { opacity: .9 } 50% { transform: translate(var(--dx), var(--dy)); opacity: .6 } 80% { opacity: .9 } }
-@keyframes groveTwinkle { 0%,100% { opacity: .25 } 50% { opacity: .9 } }
-@keyframes groveMist { 0% { transform: translateX(-6%) } 100% { transform: translateX(6%) } }
-@keyframes groveRise { from { transform: translateY(10px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
-@keyframes groveGlow { 0%,100% { opacity: .55 } 50% { opacity: .9 } }
-@keyframes groveFocus { 0%,100% { transform: scale(.92); opacity: .45 } 50% { transform: scale(1.08); opacity: .95 } }
-@keyframes groveBurst { 0% { transform: translate(0,0) scale(.6); opacity: 1 } 100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0 } }
-@media (prefers-reduced-motion: reduce) { .grove-anim { animation: none !important } }
-`
-
-export function GroveBackdrop({ isDark, height }: { isDark: boolean; height: number }) {
-  const sky = isDark
-    ? 'linear-gradient(180deg, #0b1a1a 0%, #10241f 45%, #16301f 100%)'
-    : 'linear-gradient(180deg, #fde9c8 0%, #f3ecd2 40%, #dfe9cf 100%)'
-  const hills = isDark ? ['#183a2a', '#12301f', '#0c2416'] : ['#c5dbb0', '#a9cc92', '#8fbd78']
-  return (
-    <>
-      <div style={{ position: 'absolute', inset: 0, background: sky }} />
-      {/* Moon / sun */}
-      <div style={{ position: 'absolute', top: 16, right: 28, width: 26, height: 26, borderRadius: '50%',
-        background: isDark ? 'radial-gradient(circle at 35% 35%, #fff8e1, #f5deb3 70%)' : 'radial-gradient(circle, #fff4d6, #fbbf24 75%)',
-        boxShadow: isDark ? '0 0 24px 6px rgba(253,230,138,0.18)' : '0 0 36px 12px rgba(251,191,36,0.35)' }} />
-      {isDark && [[12, 18], [30, 10], [48, 24], [64, 12], [80, 30], [22, 34], [56, 6], [90, 16]].map(([x, y], i) => (
-        <span key={i} className="grove-anim" style={{ position: 'absolute', left: `${x}%`, top: y, width: 2, height: 2, borderRadius: 1,
-          background: '#fef3c7', animation: `groveTwinkle ${2.4 + (i % 3)}s ease-in-out ${i * 0.4}s infinite` }} />
-      ))}
-      <svg viewBox="0 0 400 120" preserveAspectRatio="none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, width: '100%', height: height * 0.62 }}>
-        <path d="M0 60 Q60 20 130 48 T260 40 T400 52 V120 H0Z" fill={hills[0]} />
-        {/* distant pines */}
-        {[18, 44, 70, 300, 332, 360, 384].map((x, i) => (
-          <path key={i} d={`M${x} ${46 - (i % 3) * 4} l-7 18 h14z`} fill={hills[1]} opacity={0.9} />
-        ))}
-        <path d="M0 78 Q90 52 190 74 T400 70 V120 H0Z" fill={hills[1]} />
-        <path d="M0 98 Q120 84 220 96 T400 92 V120 H0Z" fill={hills[2]} />
-      </svg>
-      <div className="grove-anim" style={{ position: 'absolute', left: '-10%', right: '-10%', bottom: height * 0.22, height: 34,
-        background: isDark ? 'linear-gradient(90deg, transparent, rgba(167,243,208,0.07), transparent)' : 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
-        filter: 'blur(6px)', animation: 'groveMist 9s ease-in-out infinite alternate' }} />
-      {isDark && Array.from({ length: 7 }, (_, i) => (
-        <span key={i} className="grove-anim" style={{ position: 'absolute', left: `${8 + i * 13}%`, bottom: 26 + (i * 17) % 60, width: 3, height: 3, borderRadius: '50%',
-          background: '#fde68a', boxShadow: '0 0 6px 2px rgba(253,230,138,0.6)',
-          ['--dx' as string]: `${(i % 2 ? 1 : -1) * (8 + i * 2)}px`, ['--dy' as string]: `${-10 - (i % 3) * 6}px`,
-          animation: `groveFirefly ${5 + (i % 3)}s ease-in-out ${i * 0.7}s infinite` } as React.CSSProperties} />
-      ))}
-    </>
-  )
-}
+// Scene pieces live in GroveScene so the Stats dashboard can share them.
+export { SCENE_CSS, GroveBackdrop }
 
 type GroveMember = { id: string; username: string; weeklyMinutes: number; rank: number; isYou?: boolean }
 // focusLeft: user id -> minutes left in their running focus session.
@@ -183,7 +138,7 @@ function PartyGoal({ partyId, total, members, isDark, text, sub }: { partyId: nu
           ) : (
             <>
               <span style={{ color: sub, fontSize: 13 }}>Everyone gets a rare seed.</span>
-              <button onClick={claim} style={{ marginLeft: 'auto', position: 'relative', padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              <button onClick={claim} style={{ marginLeft: 'auto', position: 'relative', padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
                 Claim seed
                 {[0, 1, 2, 3, 4, 5].map(i => (
@@ -265,19 +220,20 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
     finally { setBusy(false) }
   }
 
-  const field = { padding: '9px 12px', borderRadius: 10, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
+  const field = { padding: '8px 11px', borderRadius: 6, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: isDark ? '#0e0c09' : '#fff', color: text } as const
-  const btn = (enabled = true) => ({ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: enabled ? 'pointer' : 'default',
+  const btn = (enabled = true) => ({ padding: '8px 14px', borderRadius: 6, border: 'none', cursor: enabled ? 'pointer' : 'default',
     background: accent, color: ACCENT_CONTRAST, fontFamily: 'Crimson Pro, serif', fontSize: 14, opacity: enabled ? 1 : 0.5 } as const)
-  const ghostBtn = { padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
+  const ghostBtn = { padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: 'transparent', color: text } as const
 
   const Tabs = (
-    <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+    <div style={{ display: 'flex', gap: 20, marginBottom: 18, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
       {(['party', 'friends'] as const).map(t => (
         <button key={t} onClick={() => { setTab(t); setMsg(null) }}
-          style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14, textTransform: 'capitalize',
-            background: tab === t ? accent : 'transparent', color: tab === t ? ACCENT_CONTRAST : sub }}>{t}</button>
+          style={{ position: 'relative', padding: '4px 0 8px', marginBottom: -1, border: 'none', background: 'none', cursor: 'pointer',
+            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: tab === t ? text : sub, borderBottom: `2px solid ${tab === t ? accent : 'transparent'}`, transition: 'color .15s, border-color .15s' }}>{t}</button>
       ))}
     </div>
   )
@@ -392,7 +348,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
     const join = () => run(async () => { await joinParty(code); setCode(""); setMode('choose') })
     const choice = (label: string, hint: string, primary: boolean, onClick: () => void) => (
       <button onClick={onClick}
-        style={{ flex: 1, padding: '16px 14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
+        style={{ flex: 1, padding: '14px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
           border: primary ? 'none' : `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`,
           background: primary ? `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 82%, #000))` : 'transparent',
           color: primary ? ACCENT_CONTRAST : text, boxShadow: primary ? `0 8px 20px -10px ${accentAlpha(0.7)}` : 'none' }}>
@@ -479,7 +435,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
       <button onClick={copy} title="copy invite code"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 6, cursor: 'pointer',
           border: `1px dashed ${isDark ? '#3f3f46' : '#d8d2c4'}`, background: 'transparent', color: text }}>
         <span style={{ color: sub, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>invite</span>
         <span style={{ color: accent, fontSize: 15, letterSpacing: '0.15em', fontWeight: 600 }}>{p.code}</span>
@@ -487,7 +443,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       </button>
       {p.members.length < PARTY_CAP && (
         <button onClick={copyLink} title={inviteLink}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', border: 'none',
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, cursor: 'pointer', border: 'none',
             background: linkCopied ? 'rgba(52,211,153,0.15)' : accentAlpha(0.12), color: linkCopied ? '#34d399' : accent, fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
           {linkCopied ? '✓ link copied' : '🔗 copy invite link'}
         </button>

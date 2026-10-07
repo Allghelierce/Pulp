@@ -4773,7 +4773,7 @@ export default function NoteApp() {
           <PartyPresence onOpenParty={openParty} />
 
           {/* Status bar (Settings → Interface) */}
-          {wordCountVisible && !isNarrow && activeNote && !showSettings && (
+          {wordCountVisible && !isNarrow && activeNote && !showSettings && !(orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen) && (
             <div style={{
               // bottom-right, above the "sign in to sync" button when it's showing; the timer panel owns the bottom-left
               position: "fixed", bottom: user ? 12 : 66, right: 18, zIndex: 60, pointerEvents: "none",

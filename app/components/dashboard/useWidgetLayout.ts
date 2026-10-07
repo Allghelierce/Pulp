@@ -1,10 +1,21 @@
 import { useState, useCallback, useRef, useEffect } from "react"
-import { DEFAULT_LAYOUT, genInstanceId, GRID_COLS, MAX_ROWS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
+import { DEFAULT_LAYOUT, LAYOUT_REV, genInstanceId, GRID_COLS, MAX_ROWS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
 import { supabase } from "@/lib/supabase"
 import * as db from "@/lib/db"
 
 const STORAGE_KEY = "pulp-dashboard-layout"
 const SUPABASE_DEBOUNCE = 2000
+
+// rev 2: streak moved to the header, notebook card dropped, centerpiece grew.
+// An untouched old default becomes the new default; a customised layout keeps
+// its arrangement minus the two retired cards. Runs once per layout (rev).
+const OLD_DEFAULT_IDS = ['activity-rings', 'consistency-heatmap', 'league-standing', 'level-progress', 'notebook-stats', 'stats-summary', 'streak-card', 'today-vs-yesterday']
+function migrateLayout(layout: DashboardLayout): DashboardLayout {
+  if ((layout.rev ?? 1) >= LAYOUT_REV) return layout
+  const ids = layout.widgets.map(w => w.widgetId).filter(id => id !== 'week-forest').sort()
+  if (ids.join() === OLD_DEFAULT_IDS.join()) return { ...DEFAULT_LAYOUT, lastModified: Date.now() }
+  return { ...layout, rev: LAYOUT_REV, widgets: layout.widgets.filter(w => w.widgetId !== 'streak-card' && w.widgetId !== 'notebook-stats') }
+}
 
 function loadLayout(): DashboardLayout {
   if (typeof window === "undefined") return DEFAULT_LAYOUT
@@ -12,7 +23,11 @@ function loadLayout(): DashboardLayout {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as DashboardLayout
-      if (parsed.version === 1 && parsed.widgets?.length) return parsed
+      if (parsed.version === 1 && parsed.widgets?.length) {
+        const migrated = migrateLayout(parsed)
+        if (migrated !== parsed) saveLocal(migrated)
+        return migrated
+      }
     }
   } catch {}
   return DEFAULT_LAYOUT
@@ -20,6 +35,45 @@ function loadLayout(): DashboardLayout {
 
 function saveLocal(layout: DashboardLayout) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
+}
+
+// Widgets added after people already saved a layout get placed once, only into
+// free space (never moving anything). Removing them afterwards sticks.
+const SEEDED_KEY = "pulp-dashboard-seeded"
+const SEED_WIDGETS: { widgetId: string; sizes: [number, number][] }[] = [
+  { widgetId: 'week-forest', sizes: [[6, 1], [3, 1]] },
+]
+
+function freeSlot(size: [number, number], widgets: WidgetInstance[]): [number, number] | null {
+  for (let row = 0; row <= MAX_ROWS - size[1]; row++) {
+    for (let col = 0; col <= GRID_COLS - size[0]; col++) {
+      const test: WidgetInstance = { instanceId: '', widgetId: '', pinned: false, size, position: [col, row] }
+      if (!widgets.some(o => overlaps(test, o))) return [col, row]
+    }
+  }
+  return null
+}
+
+function seedNewWidgets(layout: DashboardLayout): DashboardLayout {
+  if (typeof window === "undefined") return layout
+  try {
+    const seeded: string[] = JSON.parse(localStorage.getItem(SEEDED_KEY) || '[]')
+    let widgets = layout.widgets
+    for (const { widgetId, sizes } of SEED_WIDGETS) {
+      if (seeded.includes(widgetId)) continue
+      seeded.push(widgetId)
+      if (widgets.some(w => w.widgetId === widgetId)) continue
+      for (const size of sizes) {
+        const pos = freeSlot(size, widgets)
+        if (pos) { widgets = [...widgets, { instanceId: genInstanceId(), widgetId, position: pos, size, pinned: false }]; break }
+      }
+    }
+    localStorage.setItem(SEEDED_KEY, JSON.stringify(seeded))
+    if (widgets === layout.widgets) return layout
+    const next = { ...layout, widgets, lastModified: Date.now() }
+    saveLocal(next)
+    return next
+  } catch { return layout }
 }
 
 function overlaps(a: WidgetInstance, b: WidgetInstance): boolean {
@@ -79,12 +133,12 @@ async function loadFromSupabase(): Promise<DashboardLayout | null> {
   const settings = await db.getSettings(uid)
   if (!settings?.dashboard_layout) return null
   const remote = settings.dashboard_layout as unknown as DashboardLayout
-  if (remote.version === 1 && remote.widgets?.length) return remote
+  if (remote.version === 1 && remote.widgets?.length) return migrateLayout(remote)
   return null
 }
 
 export function useWidgetLayout() {
-  const [layout, setLayout] = useState<DashboardLayout>(loadLayout)
+  const [layout, setLayout] = useState<DashboardLayout>(() => seedNewWidgets(loadLayout()))
   const [editMode, setEditMode] = useState(false)
   const [dragging, setDragging] = useState<{ instanceId: string; ghostPos: [number, number]; snapPos: [number, number] } | null>(null)
   const supabaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

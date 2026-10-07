@@ -461,7 +461,7 @@ export const OrangeAIHub = memo(function OrangeAIHub({
                     if (e.key === "Enter") { e.preventDefault(); handleSend() }
                     else if (e.key === "Tab") { e.preventDefault(); setAiMode(m => m === "plan" ? "edit" : "plan") }
                   }}
-                  placeholder={aiMode === "edit" ? "rewrite · tab to plan" : "ask anything · tab to edit"}
+                  placeholder={aiMode === "edit" ? "rewrite · tab to switch mode" : "ask anything · tab to switch mode"}
                   style={{
                     flex: 1, background: "none", border: "none", outline: "none",
                     fontSize: 13, color: isDark ? "#e4e4e7" : "#18181b",

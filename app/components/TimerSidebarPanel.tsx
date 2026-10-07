@@ -247,6 +247,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [minimized, setMinimized] = useState(false)
   const isNarrow = useNarrow()
   const [justWatered, setJustWatered] = useState(false)
+
   // Focus mode: hovering the timer reveals Cancel / Give Up.
   const [timerHover, setTimerHover] = useState(false)
   // Left edge of the centered notebook page, measured live so the panel can sit in the gap beside it.
@@ -405,17 +406,19 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   }
 
   // Tree + watering can as reusable blocks so they can swap places while running.
+  const idlePlot = !running && !done && !treeDead
   const treeVisual = (
     <div
+      data-plot
       className="relative w-full mx-auto"
       style={{
-        height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined,
+        height: 160, marginTop: running ? 24 : 8, cursor: idlePlot ? 'pointer' : undefined,
         // Wilting: the plant droops and loses color until it's watered.
         filter: wilting ? 'saturate(0.35) brightness(0.8)' : undefined,
         transform: wilting ? 'rotate(-4deg) translateY(4px)' : undefined, transformOrigin: 'bottom center',
         transition: 'filter 1.2s ease, transform 1.2s ease',
       }}
-      onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
+      onClick={() => { if (idlePlot) { setSeedPage(0); setSeedTrayOpen(true) } }}
     >
       <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
         <TreeVisualization progress={cumulativeRatio} type={selectedSeed} idle={!running && !done && !treeDead} isDark={isDark} priorRatio={priorRatio} />
@@ -591,7 +594,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
             {seedTrayOpen && !running && !done && !treeDead ? (() => {
               const counts = new Map<string, number>()
               inventory.forEach(t => counts.set(t, (counts.get(t) || 0) + 1))
-              const uniqueTypes = [...counts.keys()]
+              // Tangerine is the free default, so the picker always has something to choose
+              const uniqueTypes = ['tangerine', ...[...counts.keys()].filter(t => t !== 'tangerine')]
+              const noOtherSeeds = uniqueTypes.length === 1
               const perPage = 16
               const totalPages = Math.max(1, Math.ceil(uniqueTypes.length / perPage))
               const page = Math.min(seedPage, totalPages - 1)
@@ -632,7 +637,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       {pageSeeds.map((type) => {
                         const info = TREE_TYPES[type]
                         if (!info) return null
-                        const isSelected = selectedSeed === type
+                        const isFree = type === 'tangerine'
+                        const isSelected = isFree ? (!selectedSeed || selectedSeed === 'tangerine') : selectedSeed === type
                         const count = counts.get(type) || 1
                         const rarityColor = RARITY_COLOR[info.rarity] || RARITY_COLOR.common
                         return (
@@ -640,7 +646,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                             key={type}
                             whileHover={{ scale: 1.04 }}
                             whileTap={{ scale: 0.96 }}
-                            onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
+                            onClick={() => { onSelectSeed(isFree || isSelected ? null : type); setSeedTrayOpen(false) }}
                             title={`${info.name} · ${info.rarity}`}
                             className="relative flex flex-col items-center justify-end rounded-lg transition-all overflow-hidden"
                             style={{
@@ -658,7 +664,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                               <PlantIcon type={type} size={38} stage={3} />
                             </div>
                             <span style={{ position: 'absolute', left: 8, right: 8, bottom: 3, height: 2, borderRadius: 1, background: rarityColor, opacity: info.rarity === 'common' ? 0.25 : 0.7 }} />
-                            {count > 1 && (
+                            {isFree && (
+                              <span className="absolute bottom-1 right-1 text-[7px] rounded-full px-1 h-[12px] flex items-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b' }}>free</span>
+                            )}
+                            {!isFree && count > 1 && (
                               <span className="absolute bottom-1 right-1 text-[7px] font-normal rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
                                 {count}
                               </span>
@@ -682,6 +691,25 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         )
                       })}
                     </div>
+                    {noOtherSeeds && (
+                      <div role="status" style={{
+                        marginTop: 12, width: 'fit-content', marginLeft: 'auto', marginRight: 'auto', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+                        padding: '4px 6px 4px 10px', borderRadius: 999,
+                        background: isDark ? 'rgba(39,39,42,0.6)' : 'rgba(0,0,0,0.04)',
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                        fontFamily: serifFont, fontSize: 12, color: dimColor,
+                        animation: 'pulpNoSeeds .5s cubic-bezier(.36,.07,.19,.97) .15s both',
+                      }}>
+                        <style>{`@keyframes pulpNoSeeds { 0% { transform: translateY(4px); opacity: 0 } 15% { transform: none; opacity: 1 } 30% { transform: translateX(-5px) } 45% { transform: translateX(5px) } 60% { transform: translateX(-3px) } 75% { transform: translateX(3px) } 100% { transform: none; opacity: 1 } } @media (prefers-reduced-motion: reduce) { [role="status"] { animation: none !important } }`}</style>
+                        No other seeds yet
+                        {onOpenSatchel && (
+                          <button onClick={() => { setSeedTrayOpen(false); onOpenSatchel() }}
+                            style={{ padding: '1px 8px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: serifFont, fontSize: 11.5, background: `${mainColor}22`, color: mainColor }}>
+                            get some
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {totalPages > 1 && (

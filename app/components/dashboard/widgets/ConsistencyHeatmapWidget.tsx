@@ -7,10 +7,9 @@ import { accentAlpha } from "@/lib/accent"
 const font = 'Crimson Pro, serif'
 const RING_GOALS = { focus: 60, writing: 2000, sessions: 3 }
 
-function getMonthGrid(entries: DailyEntry[], monthOffset = 0) {
+function getMonthGrid(entries: DailyEntry[], monthOffset = 0, days = 180) {
   const map = new Map(entries.map(e => [e.date, e]))
   const today = new Date()
-  const days = 180
   const baseOffset = monthOffset * days
   const grid: { date: string; level: number; minutes: number; dayNum: number }[] = []
   for (let i = days - 1; i >= 0; i--) {
@@ -32,9 +31,8 @@ function getMonthGrid(entries: DailyEntry[], monthOffset = 0) {
   return grid
 }
 
-function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean {
+function hasActivityInRange(entries: DailyEntry[], monthOffset: number, days = 180): boolean {
   const today = new Date()
-  const days = 180
   const baseOffset = monthOffset * days
   const map = new Map(entries.map(e => [e.date, e]))
   for (let i = days - 1; i >= 0; i--) {
@@ -46,7 +44,11 @@ function hasActivityInRange(entries: DailyEntry[], monthOffset: number): boolean
   return false
 }
 
-const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark, dailyStats, hibernation, hibernationScheduled }: WidgetProps) {
+const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark, dailyStats, hibernation, hibernationScheduled, size }: WidgetProps) {
+  // A tall card shows fewer weeks with more room between rows so the dots fill it
+  // (the grid scales with width, so extra height alone just left empty space).
+  const tall = (size?.[1] ?? 2) >= 3
+  const span = tall ? 112 : 180
   const isHibernationDate = (date: string) => {
     if (hibernation && date >= hibernation.startDate && date <= hibernation.endDate) return true
     if (hibernationScheduled && date >= hibernationScheduled.startDate && date <= hibernationScheduled.endDate) return true
@@ -65,8 +67,8 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
     isDark ? accentAlpha(1) : accentAlpha(0.9),
   ], [isDark, emptyCell])
 
-  const monthGrid = useMemo(() => getMonthGrid(dailyStats, heatmapOffset), [dailyStats, heatmapOffset])
-  const canGoBack = useMemo(() => hasActivityInRange(dailyStats, heatmapOffset + 1), [dailyStats, heatmapOffset])
+  const monthGrid = useMemo(() => getMonthGrid(dailyStats, heatmapOffset, span), [dailyStats, heatmapOffset, span])
+  const canGoBack = useMemo(() => hasActivityInRange(dailyStats, heatmapOffset + 1, span), [dailyStats, heatmapOffset, span])
 
   let currentStreak = 0
   for (let i = monthGrid.length - 1; i >= 0; i--) {
@@ -88,11 +90,11 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
   for (const c of monthGrid) weekMap.set(c.date, c)
 
   const today = new Date()
-  const baseOffset = heatmapOffset * 180
+  const baseOffset = heatmapOffset * span
   const endDate = new Date(today)
   endDate.setDate(endDate.getDate() - baseOffset)
   const startDate = new Date(endDate)
-  startDate.setDate(startDate.getDate() - 179)
+  startDate.setDate(startDate.getDate() - (span - 1))
   const startDay = startDate.getDay()
   const adjustedStart = new Date(startDate)
   adjustedStart.setDate(adjustedStart.getDate() - startDay)
@@ -115,7 +117,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
   }
 
   const numCols = grid.length
-  const cellSize = 8, colGap = 4, rowGap = 2
+  const cellSize = 8, colGap = 4, rowGap = tall ? 7 : 2
   const colStep = cellSize + colGap, rowStep = cellSize + rowGap
   const labelW = 20
   const svgW = labelW + numCols * colStep - colGap, svgH = 7 * rowStep - rowGap
@@ -153,7 +155,7 @@ const ConsistencyHeatmapWidget = memo(function ConsistencyHeatmapWidget({ isDark
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
           )}
-          <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? 'Last 180 days' : `${heatmapOffset * 180 + 180}–${heatmapOffset * 180 + 1}d ago`}</span>
+          <span style={{ fontSize: 9, color: textMuted }}>{heatmapOffset === 0 ? `Last ${span} days` : `${heatmapOffset * span + span}–${heatmapOffset * span + 1}d ago`}</span>
           {heatmapOffset > 0 && (
             <button onClick={() => setHeatmapOffset(o => o - 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: textMuted, display: 'flex' }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>

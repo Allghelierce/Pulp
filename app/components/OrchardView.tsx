@@ -2705,7 +2705,6 @@ export const OrchardView = memo(function OrchardView({
   }, [isOpen, focusTopic])
   const hoveredElRef = useRef<HTMLElement | null>(null)
   const hoveredZRef = useRef<string>('')
-  const [collectAllAnim, setCollectAllAnim] = useState<{ total: number; current: number; active: boolean }>({ total: 0, current: 0, active: false })
   const collectBtnRef = useRef<HTMLButtonElement>(null)
   const sapCounterRef = useRef<HTMLDivElement>(null)
 
@@ -2870,6 +2869,13 @@ export const OrchardView = memo(function OrchardView({
 
   const [collectRun, setCollectRun] = useState<SapCollectRun | null>(null)
   const endCollectRun = useCallback(() => setCollectRun(null), [])
+  // Sap from a "collect all" lands in one update when the beads arrive (once per run).
+  const landedRunsRef = useRef<Set<number>>(new Set())
+  const landCollectRun = useCallback((run: SapCollectRun) => {
+    if (landedRunsRef.current.has(run.id)) return
+    landedRunsRef.current.add(run.id)
+    setSap((j: number) => j + run.sap)
+  }, [setSap])
 
   const sapMultiplier = useMemo(() => {
     const hour = new Date().getHours()
@@ -2905,7 +2911,8 @@ export const OrchardView = memo(function OrchardView({
     const gemAmount = getAvailableGems()
     if (gemAmount > 0) setGems?.((g: number) => g + gemAmount)
 
-    // Grand collect: sap flies in from every producing tree on screen to the grove's center.
+    // Grand collect: sap flies in from every producing tree on screen to the grove's center;
+    // SapCollectFX adds it to the balance when the beads land.
     const root = captureRef.current
     if (root) {
       const r = root.getBoundingClientRect()
@@ -2918,34 +2925,17 @@ export const OrchardView = memo(function OrchardView({
         if (b.bottom < r.top || b.top > r.bottom || b.right < r.left || b.left > r.right) return
         sources.push({ x: b.left + b.width / 2, y: b.top + b.height * 0.35 })
       })
-      setCollectRun({ id: Date.now(), sources, center: { x: r.left + r.width / 2, y: r.top + r.height * 0.45 }, sap: amount, gems: gemAmount })
-    }
-
-    setCollectAllAnim({ total: amount, current: 0, active: true })
-    const rampSteps = 20
-    const rampDuration = 900
-    let added = 0
-    for (let i = 1; i <= rampSteps; i++) {
-      setTimeout(() => {
-        const target = Math.round(amount * (i / rampSteps))
-        const delta = target - added
-        if (delta > 0) {
-          added = target
-          setSap((j: number) => j + delta)
-          setCollectAllAnim(prev => ({ ...prev, current: target }))
-        }
-      }, 450 + i * (rampDuration / rampSteps))
+      setCollectRun({ id: Date.now(), sources, center: { x: r.left + r.width / 2, y: r.top + r.height * 0.45 }, sap: amount, gems: gemAmount, startTotal: sap })
+    } else {
+      setSap((j: number) => j + amount)
     }
 
     sapStartTimeRef.current = Date.now()
     try { localStorage.setItem(SAP_COLLECTED_KEY, String(sapStartTimeRef.current)) } catch {}
     setSapFillProgress(0)
 
-    setTimeout(() => {
-      setCollectAllAnim({ total: 0, current: 0, active: false })
-    }, 450 + rampDuration + 600)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- getTreeSapMax is a plain helper over grove
-  }, [getAvailableSap, getAvailableGems, setSap, setGems, grove])
+  }, [getAvailableSap, getAvailableGems, setSap, setGems, grove, sap])
 
   const TREES_PER_PLOT = 40
   const MAX_PLOTS = 3
@@ -3317,7 +3307,7 @@ export const OrchardView = memo(function OrchardView({
           </span>
           {/* Sap drop animations */}
           <div data-orchard-ui className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none" style={{ fontFamily: 'Crimson Pro, serif' }}>
-              <SapCollectFX run={collectRun} reduceMotion={reduceMotion} onDone={endCollectRun} />
+              <SapCollectFX run={collectRun} reduceMotion={reduceMotion} onLanded={landCollectRun} onDone={endCollectRun} />
           </div>
           <canvas data-orchard-ui id="flyCanvas" className="fixed inset-0 pointer-events-none z-[9999]" />
           <div className="absolute inset-0 z-50 pointer-events-none" style={{ boxShadow: `inset 12px 0 20px -8px ${isDark ? 'rgba(9,9,11,0.25)' : 'rgba(60,50,40,0.1)'}` }} />

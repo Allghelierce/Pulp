@@ -7,6 +7,11 @@ import { DashboardGrid } from "./dashboard/DashboardGrid"
 import { WidgetLibrary } from "./dashboard/WidgetLibrary"
 import { useWidgetLayout } from "./dashboard/useWidgetLayout"
 import type { WidgetProps } from "./dashboard/widgetRegistry"
+import { LIVELY_CSS } from "./dashboard/lively"
+import { SCENE_CSS } from "./GroveScene"
+import { buildQuips, nextQuipIndex } from "./dashboard/quips"
+import { DriftingLeaves } from "./dashboard/DriftingLeaves"
+import { StreakBadge } from "./dashboard/widgets/StreakCardWidget"
 
 import "./dashboard/widgets/registerAll"
 
@@ -49,6 +54,12 @@ export const DashboardView = memo(function DashboardView({
   const [dailyStats, setDailyStats] = useState<DailyEntry[]>([])
   const [goals] = useState(loadGoals)
   const [libraryOpen, setLibraryOpen] = useState(false)
+  // One friendly comparison per visit, rotating through what the numbers support.
+  const [quipIndex] = useState(nextQuipIndex)
+  const quip = useMemo(() => {
+    const quips = buildQuips(dailyStats, grove.length)
+    return quips.length ? quips[quipIndex % quips.length] : null
+  }, [dailyStats, grove.length, quipIndex])
 
   const {
     layout, editMode, setEditMode,
@@ -94,8 +105,12 @@ export const DashboardView = memo(function DashboardView({
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden',
     }}>
+      <style>{LIVELY_CSS + SCENE_CSS}</style>
+      <DriftingLeaves isDark={isDark} />
       <DashboardToolbar
         isDark={isDark}
+        quip={quip}
+        titleAside={<StreakBadge isDark={isDark} dailyStats={dailyStats} dailyGoalMinutes={dailyGoalMinutes} />}
         editMode={editMode}
         onClose={onClose}
         onToggleEdit={() => setEditMode(!editMode)}

@@ -48,7 +48,11 @@ export interface DashboardLayout {
   version: 1
   widgets: WidgetInstance[]
   lastModified: number
+  /** Layout revision; older saved layouts are migrated once (see useWidgetLayout). */
+  rev?: number
 }
+
+export const LAYOUT_REV = 2
 
 export const GRID_COLS = 6
 export const ROW_HEIGHT = 140
@@ -75,17 +79,19 @@ export function genInstanceId(): string {
   return `w_${Date.now()}_${_nextId++}`
 }
 
+// Streak lives in the header (flame next to "Stats"); Consistency and Weekly
+// Standings are the 3-row centerpiece. Fills the 6×5 grid with no gaps.
 export const DEFAULT_LAYOUT: DashboardLayout = {
   version: 1,
+  rev: LAYOUT_REV,
   lastModified: Date.now(),
   widgets: [
     { instanceId: 'default_rings', widgetId: 'activity-rings', position: [0, 0], size: [2, 2], pinned: false },
     { instanceId: 'default_stats', widgetId: 'stats-summary', position: [2, 0], size: [2, 1], pinned: false },
     { instanceId: 'default_level', widgetId: 'level-progress', position: [4, 0], size: [2, 1], pinned: false },
     { instanceId: 'default_today', widgetId: 'today-vs-yesterday', position: [2, 1], size: [1, 1], pinned: false },
-    { instanceId: 'default_streak', widgetId: 'streak-card', position: [3, 1], size: [1, 1], pinned: false },
-    { instanceId: 'default_notebook', widgetId: 'notebook-stats', position: [4, 1], size: [2, 1], pinned: false },
-    { instanceId: 'default_heatmap', widgetId: 'consistency-heatmap', position: [0, 2], size: [3, 2], pinned: false },
-    { instanceId: 'default_league', widgetId: 'league-standing', position: [3, 2], size: [3, 2], pinned: false },
+    { instanceId: 'default_week_forest', widgetId: 'week-forest', position: [3, 1], size: [3, 1], pinned: false },
+    { instanceId: 'default_heatmap', widgetId: 'consistency-heatmap', position: [0, 2], size: [3, 3], pinned: false },
+    { instanceId: 'default_league', widgetId: 'league-standing', position: [3, 2], size: [3, 3], pinned: false },
   ],
 }
