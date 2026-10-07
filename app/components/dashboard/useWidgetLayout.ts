@@ -1,10 +1,21 @@
 import { useState, useCallback, useRef, useEffect } from "react"
-import { DEFAULT_LAYOUT, genInstanceId, GRID_COLS, MAX_ROWS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
+import { DEFAULT_LAYOUT, LAYOUT_REV, genInstanceId, GRID_COLS, MAX_ROWS, type DashboardLayout, type WidgetInstance } from "./widgetRegistry"
 import { supabase } from "@/lib/supabase"
 import * as db from "@/lib/db"
 
 const STORAGE_KEY = "pulp-dashboard-layout"
 const SUPABASE_DEBOUNCE = 2000
+
+// rev 2: streak moved to the header, notebook card dropped, centerpiece grew.
+// An untouched old default becomes the new default; a customised layout keeps
+// its arrangement minus the two retired cards. Runs once per layout (rev).
+const OLD_DEFAULT_IDS = ['activity-rings', 'consistency-heatmap', 'league-standing', 'level-progress', 'notebook-stats', 'stats-summary', 'streak-card', 'today-vs-yesterday']
+function migrateLayout(layout: DashboardLayout): DashboardLayout {
+  if ((layout.rev ?? 1) >= LAYOUT_REV) return layout
+  const ids = layout.widgets.map(w => w.widgetId).filter(id => id !== 'week-forest').sort()
+  if (ids.join() === OLD_DEFAULT_IDS.join()) return { ...DEFAULT_LAYOUT, lastModified: Date.now() }
+  return { ...layout, rev: LAYOUT_REV, widgets: layout.widgets.filter(w => w.widgetId !== 'streak-card' && w.widgetId !== 'notebook-stats') }
+}
 
 function loadLayout(): DashboardLayout {
   if (typeof window === "undefined") return DEFAULT_LAYOUT
@@ -12,7 +23,11 @@ function loadLayout(): DashboardLayout {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as DashboardLayout
-      if (parsed.version === 1 && parsed.widgets?.length) return parsed
+      if (parsed.version === 1 && parsed.widgets?.length) {
+        const migrated = migrateLayout(parsed)
+        if (migrated !== parsed) saveLocal(migrated)
+        return migrated
+      }
     }
   } catch {}
   return DEFAULT_LAYOUT
@@ -118,7 +133,7 @@ async function loadFromSupabase(): Promise<DashboardLayout | null> {
   const settings = await db.getSettings(uid)
   if (!settings?.dashboard_layout) return null
   const remote = settings.dashboard_layout as unknown as DashboardLayout
-  if (remote.version === 1 && remote.widgets?.length) return remote
+  if (remote.version === 1 && remote.widgets?.length) return migrateLayout(remote)
   return null
 }
 

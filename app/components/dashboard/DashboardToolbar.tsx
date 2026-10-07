@@ -8,6 +8,8 @@ interface DashboardToolbarProps {
   isDark: boolean
   /** A rotating real-world comparison shown under the title. */
   quip?: string | null
+  /** Shown beside the title (the streak flame). */
+  titleAside?: React.ReactNode
   editMode: boolean
   onClose: () => void
   onToggleEdit: () => void
@@ -16,7 +18,7 @@ interface DashboardToolbarProps {
 }
 
 export const DashboardToolbar = memo(function DashboardToolbar({
-  isDark, quip, editMode, onClose, onToggleEdit, onOpenLibrary, onResetLayout,
+  isDark, quip, titleAside, editMode, onClose, onToggleEdit, onOpenLibrary, onResetLayout,
 }: DashboardToolbarProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const dividerC = isDark ? '#dcd8d0' : '#2a2620'
@@ -27,9 +29,13 @@ export const DashboardToolbar = memo(function DashboardToolbar({
     <div style={{ position: 'relative', padding: '16px 24px 8px', flexShrink: 0 }}>
       {/* Centered title + ornamental divider — matches the market */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-        <span style={{ fontFamily: font, fontSize: 32, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
-          Stats
-        </span>
+        {/* Title stays centred; the streak sits just to its right */}
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <span style={{ fontFamily: font, fontSize: 32, fontWeight: 400, letterSpacing: '0.12em', textTransform: 'uppercase', color: textPrimary }}>
+            Stats
+          </span>
+          {titleAside && <div style={{ position: 'absolute', left: 'calc(100% + 22px)', top: '50%', transform: 'translateY(-50%)' }}>{titleAside}</div>}
+        </div>
         <svg width="220" height="12" viewBox="0 0 220 12" style={{ marginTop: 10, opacity: isDark ? 0.4 : 0.3 }}>
           <line x1="0" y1="6" x2="95" y2="6" stroke={dividerC} strokeWidth="0.5" />
           <polygon points="110,2 114,6 110,10 106,6" fill={isDark ? '#e8e4dc' : '#4a4640'} opacity="0.6" />

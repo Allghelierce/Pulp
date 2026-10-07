@@ -33,10 +33,9 @@ function Flame({ color, size, flicker, lit }: { color: string; size: number; fli
   )
 }
 
-const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, goalStreak = 0, dailyGoalMinutes = 30 }: WidgetProps) {
-  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
-
-  const { current, best } = useMemo(() => {
+// Current and best day-streaks (any focus or writing counts as a day).
+export function useStreak(dailyStats: WidgetProps['dailyStats']) {
+  return useMemo(() => {
     const sorted = [...dailyStats]
       .filter(d => (d.focusMinutes ?? 0) > 0 || (d.charsWritten ?? 0) > 0)
       .map(d => d.date).sort()
@@ -62,6 +61,42 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, go
 
     return { current: currentStreak, best: bestStreak }
   }, [dailyStats])
+}
+
+const streakColorFor = (n: number) => n >= 60 ? '#ffd700' : n >= 30 ? '#a855f7' : n >= 14 ? '#4d8cff' : n >= 7 ? '#60a5fa' : n >= 3 ? '#34d399' : n > 0 ? '#d97706' : '#a1a1aa'
+
+// Compact streak for the Stats header: animated flame + "N days", with a hint
+// to keep it lit while today's goal is still open.
+export const StreakBadge = memo(function StreakBadge({ isDark, dailyStats, dailyGoalMinutes = 30 }: Pick<WidgetProps, 'isDark' | 'dailyStats' | 'dailyGoalMinutes'>) {
+  const { current, best } = useStreak(dailyStats)
+  const todayKey = new Date().toISOString().split("T")[0]
+  const todayFocus = dailyStats.find(e => e.date === todayKey)?.focusMinutes ?? 0
+  const goalMet = todayFocus >= dailyGoalMinutes
+  const newBest = usePersonalBest('bestStreak', best, dailyStats.length > 0) && current === best && current > 0
+  const color = streakColorFor(current)
+  const muted = isDark ? '#7a7670' : '#8a8680'
+  const hint = current === 0 ? 'focus today to light it'
+    : newBest ? 'longest yet'
+    : !goalMet ? `${Math.max(0, Math.ceil(dailyGoalMinutes - todayFocus))}m to keep it lit`
+    : 'lit for today'
+  return (
+    <div title={`Streak: ${current} day${current === 1 ? '' : 's'} · best ${best}`} style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+      <Flame color={current > 0 ? color : '#a1a1aa'} size={Math.round(24 + Math.min(current, 30) * 0.4)} flicker={current > 0} lit={current > 0} />
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+        <span style={{ fontFamily: font, fontSize: 20, color: current > 0 ? (current < 3 ? (isDark ? '#dcd8d0' : '#2a2620') : color) : muted }}>
+          <CountUp value={current} format={fmtInt} /> <span style={{ fontSize: 11, color: muted }}>{current === 1 ? 'day' : 'days'}</span>
+        </span>
+        <span style={{ fontFamily: font, fontStyle: 'italic', fontSize: 10.5, color: newBest ? '#d97706' : muted, marginTop: 3, letterSpacing: 0 }}>{hint}</span>
+        {newBest && <Burst kind="spark" left="20%" top="40%" radius={26} count={10} delay={1} />}
+      </div>
+    </div>
+  )
+})
+
+const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, goalStreak = 0, dailyGoalMinutes = 30 }: WidgetProps) {
+  const textMuted = isDark ? '#5a5650' : '#a8a4a0'
+
+  const { current, best } = useStreak(dailyStats)
 
   const todayKey = new Date().toISOString().split("T")[0]
   const todayFocus = dailyStats.find(e => e.date === todayKey)?.focusMinutes ?? 0
@@ -72,7 +107,7 @@ const StreakCardWidget = memo(function StreakCardWidget({ isDark, dailyStats, go
   // whose current run is the record.
   const newBest = usePersonalBest('bestStreak', best, dailyStats.length > 0) && current === best
 
-  const streakColor = current >= 60 ? '#ffd700' : current >= 30 ? '#a855f7' : current >= 14 ? '#4d8cff' : current >= 7 ? '#60a5fa' : current >= 3 ? '#34d399' : current > 0 ? '#d97706' : '#a1a1aa'
+  const streakColor = streakColorFor(current)
   const numberColor = current > 0 && current < 3 ? (isDark ? '#dcd8d0' : '#2a2620') : streakColor
   const multiplier = goalStreak >= 7 ? (new Date().getHours() < 9 ? 3 : 2) : 1
   // 18px for a fresh streak, growing to ~44px around a month in.

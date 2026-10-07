@@ -11,6 +11,7 @@ import { LIVELY_CSS } from "./dashboard/lively"
 import { SCENE_CSS } from "./GroveScene"
 import { buildQuips, nextQuipIndex } from "./dashboard/quips"
 import { DriftingLeaves } from "./dashboard/DriftingLeaves"
+import { StreakBadge } from "./dashboard/widgets/StreakCardWidget"
 
 import "./dashboard/widgets/registerAll"
 
@@ -109,6 +110,7 @@ export const DashboardView = memo(function DashboardView({
       <DashboardToolbar
         isDark={isDark}
         quip={quip}
+        titleAside={<StreakBadge isDark={isDark} dailyStats={dailyStats} dailyGoalMinutes={dailyGoalMinutes} />}
         editMode={editMode}
         onClose={onClose}
         onToggleEdit={() => setEditMode(!editMode)}
