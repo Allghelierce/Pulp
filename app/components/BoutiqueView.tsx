@@ -2,6 +2,7 @@
 import { memo, useState, useEffect, useRef, useCallback } from "react"
 import { playSound } from "@/lib/sound"
 import { TREE_TYPES } from "@/app/constants"
+import { useWindowWidth } from "@/app/hooks/useNarrow"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
 import { CachedPlantIcon } from "./CachedPlantIcon"
@@ -628,6 +629,9 @@ export const BoutiqueView = memo(function BoutiqueView({
   const [previewStage, setPreviewStage] = useState(3)
   const [countdown, setCountdown] = useState('')
   const [revealedCards, setRevealedCards] = useState<Set<number>>(new Set())
+  // Split screen: the 4-card fan is ~860px wide, so shrink it to fit (rail + margins ≈ 100px).
+  const windowWidth = useWindowWidth()
+  const cardFanZoom = Math.min(1, Math.max(0.5, (windowWidth - 100) / 860))
   const [crackingCard, setCrackingCard] = useState<number | null>(null)
   const [revealEffect, setRevealEffect] = useState<{ index: number; rarity: string } | null>(null)
   const [marketEpoch, setMarketEpoch] = useState(getMarketEpoch)
@@ -1623,7 +1627,7 @@ export const BoutiqueView = memo(function BoutiqueView({
                 }, 0)
                 const hasDeal = (shopDiscounts[dailySeeds[dealIdx]] || 0) > 0
                 return (
-              <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 60, position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', gap: 72, justifyContent: 'center', flex: 1, alignItems: 'flex-start', paddingTop: 60, position: 'relative', zIndex: 2, zoom: cardFanZoom }}>
                 {/* Ambient particles */}
                 <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
                   {Array.from({ length: 8 }).map((_, pi) => {

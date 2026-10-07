@@ -5,6 +5,7 @@ import { extractTextFromHTML } from "@/lib/sanitize"
 import { apiFetch } from "@/lib/apiFetch"
 import { supabase } from "@/lib/supabase"
 import type { CapturedSelection } from "@/lib/pageContext"
+import { useNarrow } from "@/app/hooks/useNarrow"
 
 interface Message {
   id: string
@@ -87,6 +88,12 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isDark = theme === "dark"
+  const isNarrow = useNarrow()
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose])
 
   // Track the page selection (it survives focus moving into this panel).
   const [selection, setSelection] = useState<CapturedSelection | null>(null)
@@ -267,7 +274,7 @@ export const NotebookChat = memo(function NotebookChat({ note, theme, accent, us
 
   return (
     <div style={{
-      position: "fixed", top: 0, right: 0, bottom: 0, width: 380, zIndex: 9998,
+      position: "fixed", top: 0, right: 0, bottom: 0, width: isNarrow ? "100%" : 380, zIndex: 9998,
       background: bg, borderLeft: `1px solid ${borderColor}`,
       display: "flex", flexDirection: "column",
       fontFamily: 'Crimson Pro, serif',

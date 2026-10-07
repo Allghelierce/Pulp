@@ -127,8 +127,10 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     return () => { if (animFrameRef.current) clearTimeout(animFrameRef.current) }
   }, [sap])
   const compact = toolbarWidth < 820
-  const hideCurrencies = toolbarWidth < 680
-  const ultraCompact = toolbarWidth < 600
+  // The sap pill is the way into the grove — keep it until the toolbar is truly tiny.
+  const hideCurrencies = toolbarWidth < 400
+  // Icons-only from 820px; only drop buttons when there's truly no room (split screen keeps them).
+  const ultraCompact = toolbarWidth < 460
 
   useEffect(() => {
     const el = toolbarRef.current

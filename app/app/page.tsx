@@ -15,6 +15,7 @@ import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
+import { useNarrow } from "@/app/hooks/useNarrow"
 import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -1179,10 +1180,32 @@ export default function NoteApp() {
     return val > 0 && val < 240 ? 240 : val
   })
   const [isSidebarDragging, setIsSidebarDragging] = useState(false)
+
+  // Split screen: collapse the sidebar while the window is narrow, and bring it
+  // back when it widens — unless the user opened it themselves while narrow.
+  const isNarrow = useNarrow()
+  const sidebarAutoCollapsedRef = useRef(false)
+  const sidebarUserOpenedRef = useRef(false)
+  useEffect(() => {
+    if (isNarrow) {
+      if (sidebarWidth > 40 && !sidebarUserOpenedRef.current) {
+        sidebarAutoCollapsedRef.current = true
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSidebarWidth(0)
+      }
+    } else {
+      sidebarUserOpenedRef.current = false
+      if (sidebarAutoCollapsedRef.current) {
+        sidebarAutoCollapsedRef.current = false
+        setSidebarWidth(240)
+      }
+    }
+  }, [isNarrow, sidebarWidth])
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
   const fullscreenOpenRef = useRef(false)
   const startSidebarDrag = useCallback((startX: number) => {
+    if (isNarrow) sidebarUserOpenedRef.current = true
     const startWidth = sidebarWidth
     const fs = fullscreenOpenRef.current
     sidebarDragRef.current = { startX, startWidth }
@@ -1208,7 +1231,7 @@ export default function NoteApp() {
     }
     window.addEventListener("mousemove", onMove)
     window.addEventListener("mouseup", onUp)
-  }, [sidebarWidth])
+  }, [sidebarWidth, isNarrow])
   const [gridView, setGridView] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState(0)
   const [bindingCompact, setBindingCompact] = useState(false)
@@ -3532,7 +3555,7 @@ export default function NoteApp() {
     <LazyMotion features={domAnimation}>
       <>
 
-        <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
+        <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: isNarrow ? undefined : 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
           <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
             startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
@@ -3846,7 +3869,7 @@ export default function NoteApp() {
                   onOpenLeaderboard={() => { if (leaderboardOpen) { setLeaderboardOpen(false) } else { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) } }}
                   onOpenSettings={() => { if (showSettings) { setShowSettings(false) } else { startTransition(() => { closeAllPanels(); setShowSettings(true) }) } }}
                   sidebarOpen={sidebarWidth > 40}
-                  onSidebarToggle={() => setSidebarWidth(sidebarWidth > 40 ? 0 : 240)}
+                  onSidebarToggle={() => { if (isNarrow && sidebarWidth <= 40) sidebarUserOpenedRef.current = true; setSidebarWidth(sidebarWidth > 40 ? 0 : 240) }}
                   onTimerOpen={() => { if (timerOpen && timerRunning) return; setTimerOpen(!timerOpen) }}
                   onOpenShop={() => { if (shopOpen) { setShopOpen(false) } else { startTransition(() => { closeAllPanels(); setShopOpen(true) }) } }}
                   onOpenGrove={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
@@ -4001,7 +4024,7 @@ export default function NoteApp() {
               ) : gridView ? (
                 <GridView activeNote={activeNote} activeTabId={activeTabId} carouselIdx={carouselIdx} lineSpacing={lineSpacing} paperStyle={paperStyle} theme={theme} editorFont={editorFont} accent={accent} setCarouselIdx={setCarouselIdx} setGridView={setGridView} setCurrentPageIdx={setCurrentPageIdx} setNotes={setNotes} bookmarks={bookmarks} />
               ) : (
-                <main ref={scrollContainerRef} className="flex-1 shrink-0 overflow-y-scroll px-8 pt-6 pb-8 flex justify-center items-start relative" style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: 600 }}>
+                <main ref={scrollContainerRef} className={`flex-1 shrink-0 overflow-y-scroll ${isNarrow ? "px-3" : "px-8"} pt-6 pb-8 flex justify-center items-start relative`} style={{ backgroundColor: theme === "dark" ? "#09090b" : "#F5F5F5", scrollbarGutter: "stable", overflowX: "hidden", minWidth: isNarrow ? 0 : 600 }}>
                   <div id="pulp-page-surface" style={{ zoom: parseFloat(zoom), transformOrigin: "top center", margin: "0 auto", minWidth: 580, maxWidth: 960, paddingLeft: 0 }} className="w-full shrink-0">
                     {/* Scroll mode: preceding pages */}
                     {scrollMode && activeNote.pages.map((pageHtml, idx) => {
@@ -4480,7 +4503,7 @@ export default function NoteApp() {
                     })}
                   </div>
                   {/* Botanical margin engravings */}
-                  <MarginEngravings theme={theme} />
+                  {!isNarrow && <MarginEngravings theme={theme} />}
                 </main>
               )}
 
@@ -4694,7 +4717,7 @@ export default function NoteApp() {
 
           <PartyPresence onOpenParty={openParty} />
 
-          {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
+          {!showSettings && !isNarrow && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange recallDue={orchardOpen ? 0 : allRecallDue} recallTopic={recallTopTopic} retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
@@ -4971,7 +4994,7 @@ export default function NoteApp() {
             <span className={`text-[8px] font-normal tracking-wide transition-colors ${timerOpen ? "text-amber-500" : "text-amber-600/50"}`} style={{ fontFamily: 'Crimson Pro, serif' }}>focus</span>
           </button>
         )}
-        {notes.filter(n => !n.archived).length > 0 && (
+        {notes.filter(n => !n.archived).length > 0 && !isNarrow && (
           <button
             onClick={() => { if (communityOpen) { setCommunityOpen(false) } else { startTransition(() => { closeAllPanels(); setCommunityOpen(true) }) } }}
             title="Community"
@@ -4988,10 +5011,11 @@ export default function NoteApp() {
         {!user && (
           <button
             onClick={() => window.location.href = "/login"}
+            title="Sign in to sync"
             className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-[100]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-            <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>
+            {!isNarrow && <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>}
           </button>
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}

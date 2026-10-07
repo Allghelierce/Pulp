@@ -2,6 +2,7 @@
 import { useState, memo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES } from "@/app/constants"
+import { useNarrow } from "@/app/hooks/useNarrow"
 import type { Tree } from "@/app/types"
 import { PlantIcon } from "./PlantIcon"
 import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
@@ -240,6 +241,12 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const [seedPage, setSeedPage] = useState(0)
   const [showGuide, setShowGuide] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  // Split screen: a running session shrinks to the pill so it doesn't sit on the notes.
+  const isNarrow = useNarrow()
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (running && isNarrow) setMinimized(true)
+  }, [running, isNarrow])
   const [justWatered, setJustWatered] = useState(false)
   // Focus mode: hovering the timer reveals Cancel / Give Up.
   const [timerHover, setTimerHover] = useState(false)
