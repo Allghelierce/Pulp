@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react"
+import { requestUpgrade } from "@/lib/billing"
 import { playSound } from "@/lib/sound"
 import type { NoteData } from "@/app/types"
 import { extractTextFromHTML } from "@/lib/sanitize"
@@ -105,6 +106,8 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
   const [grading, setGrading] = useState(false)
   const [result, setResult] = useState<GradeResult | null>(null)
   const [gradeFailed, setGradeFailed] = useState(false)
+  // Free accounts out of today's AI grading: skip the call for the rest of the session.
+  const [gradeLimited, setGradeLimited] = useState(false)
   const answerRef = useRef<HTMLTextAreaElement>(null)
   const studied = useRef<Set<string>>(new Set())
   // "Review ahead" re-studies cards early — practice only, no growth.
@@ -236,6 +239,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       setRevealed(true)
       return
     }
+    if (gradeLimited) { setGradeFailed(true); setRevealed(true); return }
     setGrading(true)
     try {
       const res = await apiFetch("/api/recall/grade", {
@@ -247,6 +251,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
         setResult({ verdict: data.verdict, feedback: data.feedback || "" })
         playSound(data.verdict === "correct" ? "correct" : data.verdict === "partial" ? "partial" : "wrong")
       } else {
+        if (res.status === 402 && data?.code === "grade_limit") setGradeLimited(true)
         setGradeFailed(true)
       }
     } catch {
@@ -255,7 +260,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       setGrading(false)
       setRevealed(true)
     }
-  }, [current, grading, revealed, answer])
+  }, [current, grading, revealed, answer, gradeLimited])
 
   // Focus the answer box on each new card.
   useEffect(() => {
@@ -437,7 +442,12 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
                     </div>
                   )}
                   {gradeFailed && (
-                    <div style={{ fontSize: 12.5, color: muted, marginBottom: 12 }}>Couldn&apos;t auto-grade this one — rate yourself below.</div>
+                    <div style={{ fontSize: 12.5, color: muted, marginBottom: 12 }}>
+                      {gradeLimited ? (<>
+                        Today&apos;s free AI grading is used up — rate yourself below.{" "}
+                        <button onClick={() => requestUpgrade({ code: "grade_upsell" })} style={{ background: "none", border: "none", padding: 0, color: "#d97706", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Plus grades every answer</button>
+                      </>) : <>Couldn&apos;t auto-grade this one — rate yourself below.</>}
+                    </div>
                   )}
                   {answer.trim() && (
                     <div style={{ marginBottom: 14 }}>

@@ -1,6 +1,7 @@
 "use client"
 import { shortcutFromEvent, isModifierKey, formatShortcut } from "@/lib/shortcuts"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
+import { fetchPlan, startCheckout as startPlusCheckout, openBillingPortal as openPlusPortal, PLUS_PRICE, type PlanStatus, type PlusPlan } from "@/lib/billing"
 import { generateUsername } from "@/lib/usernames"
 import { getSoundPrefs, setSoundPrefs, playSound, type SoundPrefs } from "@/lib/sound"
 import { supabase } from "@/lib/supabase"
@@ -28,7 +29,7 @@ const TAB_DESCRIPTIONS: Record<string, string> = {
   editor: "Writing tools, layout, and focus mode",
   archive: "Archived notebooks and notes",
   data: "Sync, storage, and trash",
-  subscription: "Manage your plan and billing",
+  subscription: "Unlimited AI recall — your plan and billing",
   help: "Welcome guide, support, and bug reports",
 }
 
@@ -43,7 +44,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
 }
 
 export const SETTINGS_TABS = [
-  { id: "subscription", label: "Pro", group: "Premium" },
+  { id: "subscription", label: "Plus", group: "Premium" },
   { id: "general", label: "General", group: "App" },
   { id: "appearance", label: "Appearance", group: "App" },
   { id: "editor", label: "Editor", group: "Writing" },
@@ -264,24 +265,21 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
     finally { setIdBusy(false) }
   }
 
-  // ── Stripe checkout / billing portal ──
-  const startCheckout = useCallback(async (plan: string) => {
+  // ── Plus: plan status, checkout, billing portal ──
+  const [plan, setPlan] = useState<PlanStatus | null>(null)
+  useEffect(() => {
+    if (activeTab !== "subscription" || !user) return
+    let alive = true
+    fetchPlan().then(p => { if (alive) setPlan(p) })
+    return () => { alive = false }
+  }, [activeTab, user])
+  const startCheckout = useCallback((p: PlusPlan) => {
     if (!user) { window.location.href = '/login'; return }
-    try {
-      const res = await apiFetch('/api/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan }) })
-      const json = await res.json()
-      if (json.url) { window.location.href = json.url; return }
-      window.location.href = '/oops'
-    } catch { window.location.href = '/oops' }
+    startPlusCheckout(p)
   }, [user])
-
   const openBillingPortal = useCallback(async () => {
-    try {
-      const res = await apiFetch('/api/stripe/portal', { method: 'POST' })
-      const json = await res.json()
-      if (json.url) { window.location.href = json.url; return }
-      openConfirm?.('Billing', json.error || 'No subscription found.', () => {})
-    } catch { window.location.href = '/oops' }
+    const err = await openPlusPortal()
+    if (err) openConfirm?.('Billing', err, () => {})
   }, [openConfirm])
 
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1115,116 +1113,90 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <div className="pointer-events-none absolute inset-0" style={{
                     background: 'radial-gradient(ellipse at 80% 20%, rgba(217,119,6,0.2) 0%, transparent 60%)',
                   }} />
-                  <svg className="pointer-events-none absolute -right-4 -top-4" width="120" height="120" viewBox="0 0 120 120" fill="none" style={{ opacity: isDark ? 0.08 : 0.12 }}>
-                    <path d="M60 10 Q70 35 90 45 Q70 55 60 90 Q50 55 30 45 Q50 35 60 10Z" stroke="#d97706" strokeWidth="1.5" fill="none" />
-                    <path d="M60 25 Q66 42 78 48 Q66 54 60 75 Q54 54 42 48 Q54 42 60 25Z" stroke="#d97706" strokeWidth="1" fill="none" opacity="0.5" />
-                  </svg>
-                  <svg className="pointer-events-none absolute left-6 bottom-2" width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ opacity: isDark ? 0.1 : 0.15 }}>
-                    <path d="M20 5 L22 15 L32 12 L25 20 L35 25 L25 27 L28 37 L20 30 L12 37 L15 27 L5 25 L15 20 L8 12 L18 15Z" stroke="#d97706" strokeWidth="1" fill="none" />
-                  </svg>
                   <div className="relative z-10 px-6 py-6">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(217,119,6,0.15)' }}>
                         <Sparkles className="w-4.5 h-4.5" style={{ color: '#d97706' }} />
                       </div>
                       <span className="text-[9px] font-normal uppercase tracking-[0.15em] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: '#d97706' }}>
-                        Upgrade
+                        {plan?.plus ? "Active" : "Plus"}
                       </span>
                     </div>
                     <h3 className={`text-[18px] font-normal tracking-tight ${isDark ? "text-zinc-50" : "text-zinc-900"}`}>
-                      Grow your world
+                      {plan?.plus ? "You're on Plus" : "Notes that quiz you"}
                     </h3>
-                    <p className={`text-[12px] mt-1 max-w-[320px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                      Unlock AI writing, rare seeds, seasonal drops, and cloud sync — everything you need to make writing feel rewarding.
+                    <p className={`text-[12px] mt-1 max-w-[340px] leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                      {plan?.plus
+                        ? (plan.plusUntil ? `Renews or ends on ${new Date(plan.plusUntil).toLocaleDateString()}. Every AI feature is unlimited.` : "Every AI feature is unlimited.")
+                        : "Pulp's timer, trees, grove and recall practice are free. Plus makes the AI side unlimited: cards from every session, graded answers, imports and writing AI."}
                     </p>
                   </div>
                 </div>
 
-                {/* Perks row */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8c0-5-5-5-5-5s-5 0-5 5c0 3 2 5.5 5 8 3-2.5 5-5 5-8z"/><path d="M12 16v6"/></svg>, label: "Rare Seeds", sub: "Monthly drops" },
-                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>, label: "Unlimited AI", sub: "Write & rewrite" },
-                    { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>, label: "Cloud Sync", sub: "All devices" },
-                  ].map((perk, i) => (
-                    <div key={i} className={`flex flex-col items-center text-center gap-1.5 px-3 py-3 rounded-xl border ${isDark ? "bg-zinc-900/60 border-zinc-800/60" : "bg-white/80 border-zinc-200/60"}`}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-zinc-800 text-amber-500" : "bg-amber-50 text-amber-600"}`}>
-                        {perk.icon}
-                      </div>
-                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{perk.label}</span>
-                      <span className={`text-[9.5px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{perk.sub}</span>
+                {plan?.plus ? (
+                  <button
+                    onClick={openBillingPortal}
+                    className="w-full py-2.5 rounded-lg text-[12px] font-normal text-white transition-all hover:brightness-110"
+                    style={{ backgroundColor: '#d97706', border: 'none', cursor: 'pointer' }}
+                  >
+                    Manage billing
+                  </button>
+                ) : (<>
+                  {/* What's left of the free AI taste */}
+                  {plan?.free && (
+                    <div className={`grid grid-cols-2 gap-2`}>
+                      {[
+                        { label: "AI-carded sessions today", left: plan.free.cardSessionsLeftToday, of: plan.limits.cardSessionsPerDay },
+                        { label: "AI-graded answers today", left: plan.free.gradesLeftToday, of: plan.limits.gradesPerDay },
+                        { label: "Free AI requests", left: plan.free.writingAiLeft, of: plan.limits.writingAi },
+                        { label: "Free imported sections", left: plan.free.importsLeft, of: plan.limits.imports },
+                      ].map(u => (
+                        <div key={u.label} className={`px-3 py-2.5 rounded-xl border ${isDark ? "bg-zinc-900/60 border-zinc-800/60" : "bg-white/80 border-zinc-200/60"}`}>
+                          <div className={`text-[15px] tabular-nums ${isDark ? "text-zinc-100" : "text-zinc-800"}`}>{u.left ?? u.of}<span className={`text-[11px] ${isDark ? "text-zinc-500" : "text-zinc-400"}`}> / {u.of} left</span></div>
+                          <div className={`text-[10px] mt-0.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>{u.label}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )}
 
-                <PricingSection
-                  className="relative z-10"
-                  isDark={isDark}
-                  accentColor="#d97706"
-                  tiers={[
-                    {
-                      name: "Pro",
-                      price: { monthly: 8, yearly: 72 },
-                      description: "The full Pulp experience",
-                      buttonLabel: "Upgrade to Pro",
-                      highlight: true,
-                      badge: "Most Popular",
-                      icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: ({ isYearly, ...props }) => <button {...props} onClick={() => startCheckout(isYearly ? 'pro_yearly' : 'pro_monthly')} />,
-                      features: [
-                        { name: "Cloud Sync", description: "Access notes from any device", included: true },
-                        { name: "Unlimited AI", description: "Summaries, quizzes, and rewrites", included: true },
-                        { name: "Season Pass", description: "Exclusive seasonal seeds, cosmetics, and challenges", included: true },
-                        { name: "Rare Seed Drops", description: "Bonus rare & sacred seeds every month", included: true },
-                        { name: "Unlimited Storage", description: "No limits on notes, images, or media", included: true },
-                      ],
-                    },
-                    {
-                      name: "Lifetime",
-                      price: "$99",
-                      description: "Pay once, Pro forever",
-                      buttonLabel: "Get Lifetime",
-                      icon: <Zap className="w-5 h-5" style={{ color: '#d97706' }} />,
-                      ctaOverride: ({ isYearly: _i, ...props }) => <button {...props} onClick={() => startCheckout('lifetime')} />,
-                      features: [
-                        { name: "Everything in Pro", description: "All features, forever", included: true },
-                        { name: "One-time payment", description: "No subscription, no renewals", included: true },
-                        { name: "Future updates", description: "All new features included", included: true },
-                      ],
-                    },
-                  ]}
-                />
+                  <PricingSection
+                    className="relative z-10"
+                    isDark={isDark}
+                    accentColor="#d97706"
+                    tiers={[
+                      {
+                        name: "Plus",
+                        price: { monthly: PLUS_PRICE.monthly, yearly: PLUS_PRICE.yearly },
+                        description: "Unlimited AI recall",
+                        buttonLabel: "Upgrade to Plus",
+                        highlight: true,
+                        icon: <Sparkles className="w-5 h-5" style={{ color: '#d97706' }} />,
+                        ctaOverride: ({ isYearly, ...props }) => <button {...props} onClick={() => startCheckout(isYearly ? 'plus_yearly' : 'plus_monthly')} />,
+                        features: [
+                          { name: "AI cards from every session", description: "Free: 2 sessions a day", included: true },
+                          { name: "AI-graded answers", description: "Free: 15 a day, then grade yourself", included: true },
+                          { name: "Unlimited imports", description: "Docs, Word, Notion, Obsidian (free: 12 sections)", included: true },
+                          { name: "Unlimited writing AI", description: "Shortcut, chat and hub (free: 50 requests)", included: true },
+                        ],
+                      },
+                    ]}
+                  />
 
-                {/* Manage existing subscription */}
-                <button
-                  onClick={openBillingPortal}
-                  className={`mx-auto block text-[11.5px] font-normal transition-colors ${isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-500 hover:text-zinc-700"}`}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  Already subscribed? Manage billing →
-                </button>
+                  <button
+                    onClick={openBillingPortal}
+                    className={`mx-auto block text-[11.5px] font-normal transition-colors ${isDark ? "text-zinc-500 hover:text-zinc-300" : "text-zinc-500 hover:text-zinc-700"}`}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    Already subscribed? Manage billing →
+                  </button>
+                </>)}
 
-                {/* Guarantee + Enterprise */}
-                <div className="space-y-2">
-                  <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-green-50/50 border-green-200/40"}`}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isDark ? "bg-green-500/10" : "bg-green-500/10"}`}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    </div>
-                    <div>
-                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>7-day free trial</span>
-                      <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>· Cancel anytime, no questions asked</span>
-                    </div>
+                <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-zinc-50 border-zinc-200/60"}`}>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Schools & classes</span>
+                    <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Plus for a whole class</span>
                   </div>
-
-                  <div className={`px-4 py-3 rounded-xl border flex items-center gap-3 ${isDark ? "bg-zinc-900/30 border-zinc-800/50" : "bg-zinc-50 border-zinc-200/60"}`}>
-                    <div className="flex-1 min-w-0">
-                      <span className={`text-[11px] font-normal ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Enterprise & Education</span>
-                      <span className={`text-[10.5px] ml-1.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>· Volume licensing</span>
-                    </div>
-                    <button onClick={() => window.open("mailto:pulpsupport@gmail.com?subject=Pulp Enterprise %26 Education Inquiry", "_blank")} className={`px-3.5 py-1.5 rounded-lg ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300/80"} text-[10px] font-normal transition-all shrink-0`}>
-                      Contact Sales
-                    </button>
-                  </div>
+                  <span className={`text-[11px] ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>pulpsupport@gmail.com</span>
                 </div>
               </div>
             )}

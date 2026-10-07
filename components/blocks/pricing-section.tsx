@@ -37,6 +37,9 @@ function hexToRgb(hex: string) {
 
 function PricingSection({ tiers, isDark, accentColor = "#d97706", className }: PricingSectionProps) {
   const [isYearly, setIsYearly] = useState(false)
+  // Biggest yearly saving across the tiers, e.g. $7/mo vs $60/yr -> 29%.
+  const yearlySavePct = Math.max(0, ...tiers.map(t => typeof t.price === 'object' && t.price.monthly > 0
+    ? Math.round((1 - t.price.yearly / (t.price.monthly * 12)) * 100) : 0))
   const rgb = hexToRgb(accentColor)
 
   return (
@@ -63,7 +66,7 @@ function PricingSection({ tiers, isDark, accentColor = "#d97706", className }: P
                   {period}
                   {period === "Yearly" && (
                     <span className={cn("ml-1 text-[9px] font-bold", active ? "text-green-400" : "text-green-500")}>
-                      −25%
+                      −{yearlySavePct}%
                     </span>
                   )}
                 </button>

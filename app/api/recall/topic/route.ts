@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
 import { getAuthUser } from "@/lib/auth"
-import { consumeAiQuota } from "@/lib/aiQuota"
-import { TOPIC_SYSTEM_PROMPT, MIN_TOPIC_TEXT, buildTopicMessage } from "@/lib/recallPrompt"
+import { consumeAiQuota, spendDailyAllowance } from "@/lib/aiQuota"
+import { TOPIC_SYSTEM_PROMPT, TOPIC_ONLY_SYSTEM_PROMPT, MIN_TOPIC_TEXT, buildTopicMessage } from "@/lib/recallPrompt"
 import { generateTopicCards, cleanKnownTopics } from "@/lib/topicCards"
 
 // POST { text, title?, topics? } -> { topic, cards }. Called once at focus-session end
@@ -29,9 +29,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not enough new notes." }, { status: 400 })
     }
 
-    const result = await generateTopicCards(TOPIC_SYSTEM_PROMPT, buildTopicMessage(text, title, topics), "Recall topic")
+    // Free accounts: AI cards from a few sessions a day; after that, name the
+    // topic only so the tree still gets one (cardsLimited tells the UI why).
+    const cardsOk = await spendDailyAllowance(user.id, "cards")
+    const result = cardsOk
+      ? await generateTopicCards(TOPIC_SYSTEM_PROMPT, buildTopicMessage(text, title, topics), "Recall topic")
+      : await generateTopicCards(TOPIC_ONLY_SYSTEM_PROMPT, buildTopicMessage(text, title, topics), "Recall topic (name only)", { topicOnly: true })
     if ("error" in result) return result.error
-    return NextResponse.json(result)
+    return NextResponse.json(cardsOk ? result : { topic: result.topic, cards: [], cardsLimited: true })
   } catch (error) {
     console.error("Recall topic API error:", error)
     const message = error instanceof Error ? error.message : "Failed to tag topic"

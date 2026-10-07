@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, memo, useCallback, useMemo, lazy, Suspense, startTransition } from "react"
+import { playSound } from "@/lib/sound"
 import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-motion"
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
@@ -16,6 +17,8 @@ import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
 import { useNarrow, useWiderThan } from "@/app/hooks/useNarrow"
+import { UpgradeDialog } from "@/app/components/UpgradeDialog"
+import { UPGRADE_EVENT, fetchPlan, type UpgradeDetail } from "@/lib/billing"
 import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -2791,6 +2794,49 @@ export default function NoteApp() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Plus upgrade prompt: any free-plan limit (402) or upsell link opens it.
+  // grade_limit is handled inline in recall; the same reason won't re-open within 2 min.
+  const [upgradeReason, setUpgradeReason] = useState<string | null>(null)
+  const lastUpgradeRef = useRef<Record<string, number>>({})
+  useEffect(() => {
+    const onUpgrade = (e: Event) => {
+      const code = (e as CustomEvent<UpgradeDetail>).detail?.code || "generic"
+      if (code === "grade_limit") return
+      const now = Date.now()
+      if (now - (lastUpgradeRef.current[code] || 0) < 120_000) return
+      lastUpgradeRef.current[code] = now
+      setUpgradeReason(code)
+    }
+    window.addEventListener(UPGRADE_EVENT, onUpgrade)
+    return () => window.removeEventListener(UPGRADE_EVENT, onUpgrade)
+  }, [])
+
+  // Back from Stripe Checkout (?upgraded=1): wait for the webhook to switch Plus on.
+  useEffect(() => {
+    if (isLoading || !user) return
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('upgraded') && !params.has('upgrade_cancelled')) return
+    const upgraded = params.has('upgraded')
+    params.delete('upgraded'); params.delete('upgrade_cancelled')
+    const q = params.toString()
+    window.history.replaceState({}, '', '/app' + (q ? '?' + q : ''))
+    if (!upgraded) return
+    let cancelled = false
+    ;(async () => {
+      for (let i = 0; i < 8 && !cancelled; i++) {
+        const plan = await fetchPlan()
+        if (plan?.plus) {
+          playSound('achievement')
+          openAlert("Welcome to Plus 🌳", "AI cards from every session, AI-graded answers, unlimited imports and writing AI are on.")
+          return
+        }
+        await new Promise(r => setTimeout(r, 2000))
+      }
+      if (!cancelled) openAlert("Payment received", "Plus is switching on — refresh in a minute if it hasn't yet.")
+    })()
+    return () => { cancelled = true }
+  }, [isLoading, user, openAlert])
+
   // Deep-link checkout from the landing pricing buttons (?checkout=<plan>).
   // Intent persists in localStorage across the login round-trip.
   useEffect(() => {
@@ -5065,6 +5111,7 @@ export default function NoteApp() {
         {needsOnboarding && user && (
           <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
         )}
+        {upgradeReason && <UpgradeDialog theme={theme} reason={upgradeReason} onClose={() => setUpgradeReason(null)} />}
         {importOpen && (
           <ImportModal
             theme={theme}

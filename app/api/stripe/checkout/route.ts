@@ -2,8 +2,11 @@ import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase-server"
 import { getRateLimitKey, checkRateLimit } from "@/lib/rateLimit"
-import { stripe, priceForPlan, siteOrigin } from "@/lib/stripe"
+import { hasPro } from "@/lib/aiQuota"
+import { stripe, normalizePlan, priceIdForPlan, siteOrigin } from "@/lib/stripe"
 
+// POST { plan: "plus_monthly" | "plus_yearly" } -> { url } of a Stripe Checkout page.
+// Already on Plus -> { url } of the billing portal instead (no double subscriptions).
 export async function POST(req: Request) {
   const ip = getRateLimitKey(req)
   if (!checkRateLimit(`checkout:${ip}`, { maxRequests: 10, windowMs: 60000 })) {
@@ -16,11 +19,12 @@ export async function POST(req: Request) {
   const user = await getAuthUser(req)
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  let body: any
+  let body: { plan?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }) }
 
-  const plan = priceForPlan(String(body.plan ?? ''))
-  if (!plan) return NextResponse.json({ error: "Unknown or unconfigured plan" }, { status: 400 })
+  const plan = normalizePlan(String(body.plan ?? ''))
+  const priceId = plan ? await priceIdForPlan(plan) : null
+  if (!plan || !priceId) return NextResponse.json({ error: "Unknown or unconfigured plan" }, { status: 400 })
 
   // Reuse the saved Stripe customer or create one tied to this user.
   const { data: profile } = await supabaseAdmin
@@ -30,6 +34,13 @@ export async function POST(req: Request) {
     .single()
 
   let customerId = profile?.stripe_customer_id as string | null
+  const origin = siteOrigin(req)
+
+  if (customerId && await hasPro(user.id)) {
+    const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${origin}/app` })
+    return NextResponse.json({ url: portal.url, alreadyPlus: true })
+  }
+
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email,
@@ -40,18 +51,16 @@ export async function POST(req: Request) {
       .update({ stripe_customer_id: customerId }).eq('user_id', user.id)
   }
 
-  const origin = siteOrigin(req)
   const session = await stripe.checkout.sessions.create({
-    mode: plan.mode,
+    mode: 'subscription',
     customer: customerId,
     client_reference_id: user.id,
-    line_items: [{ price: plan.priceId, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     allow_promotion_codes: true,
     // Never set payment_method_types — let Stripe pick dynamically.
-    ...(plan.mode === 'subscription'
-      ? { subscription_data: { metadata: { user_id: user.id, plan: String(body.plan) } } }
-      : { payment_intent_data: { metadata: { user_id: user.id, plan: String(body.plan) } } }),
-    metadata: { user_id: user.id, plan: String(body.plan) },
+    subscription_data: { metadata: { user_id: user.id, plan } },
+    metadata: { user_id: user.id, plan },
+    integration_identifier: 'pulp_plus_checkout_qzmwkrtd',
     success_url: `${origin}/app?upgraded=1`,
     cancel_url: `${origin}/app?upgrade_cancelled=1`,
   })
