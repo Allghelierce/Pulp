@@ -6,6 +6,8 @@ const font = 'Crimson Pro, serif'
 
 interface DashboardToolbarProps {
   isDark: boolean
+  /** A rotating real-world comparison shown under the title. */
+  quip?: string | null
   editMode: boolean
   onClose: () => void
   onToggleEdit: () => void
@@ -14,7 +16,7 @@ interface DashboardToolbarProps {
 }
 
 export const DashboardToolbar = memo(function DashboardToolbar({
-  isDark, editMode, onClose, onToggleEdit, onOpenLibrary, onResetLayout,
+  isDark, quip, editMode, onClose, onToggleEdit, onOpenLibrary, onResetLayout,
 }: DashboardToolbarProps) {
   const textPrimary = isDark ? '#dcd8d0' : '#2a2620'
   const dividerC = isDark ? '#dcd8d0' : '#2a2620'
@@ -33,6 +35,15 @@ export const DashboardToolbar = memo(function DashboardToolbar({
           <polygon points="110,2 114,6 110,10 106,6" fill={isDark ? '#e8e4dc' : '#4a4640'} opacity="0.6" />
           <line x1="125" y1="6" x2="220" y2="6" stroke={dividerC} strokeWidth="0.5" />
         </svg>
+        {/* Height reserved so the grid doesn't jump when the line arrives. */}
+        <div style={{ minHeight: 20, marginTop: 6, maxWidth: 'min(560px, 100%)', textAlign: 'center' }}>
+          {quip && (
+            <span key={quip} className="lively-anim" style={{ display: 'inline-block', fontFamily: font, fontStyle: 'italic', fontSize: 14,
+              color: isDark ? '#8a8680' : '#7a7670', animation: 'livelyFadeUp .6s ease-out .3s both' }}>
+              {quip}
+            </span>
+          )}
+        </div>
       </div>
 
       <div style={{ position: 'absolute', top: 16, right: 24, display: 'flex', alignItems: 'center', gap: 8 }}>

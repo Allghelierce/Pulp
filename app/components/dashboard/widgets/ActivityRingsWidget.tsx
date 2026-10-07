@@ -1,8 +1,21 @@
 "use client"
-import { memo, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { Burst, useReducedMotion } from "../lively"
 
 const font = 'Crimson Pro, serif'
+
+// Each ring celebrates closing once per day: { date, rings: [labels] }.
+const CELEBRATED_KEY = 'pulp-rings-celebrated'
+function claimCelebrations(today: string, closed: string[]): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CELEBRATED_KEY) || 'null') as { date: string; rings: string[] } | null
+    const done = raw?.date === today ? raw.rings : []
+    const fresh = closed.filter(l => !done.includes(l))
+    if (fresh.length) localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ date: today, rings: [...done, ...fresh] }))
+    return fresh
+  } catch { return [] }
+}
 
 const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailyStats, goalStreak = 0, dailyGoalMinutes = 30, quotaTier = 'monthly' }: WidgetProps) {
   const todayKey = new Date().toISOString().split("T")[0]
@@ -52,6 +65,25 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
     { value: isEarlyBird ? earlyBirdProgress : 0, label: 'early bird', display: isEarlyBird ? `${Math.round(earlyBirdProgress * 100)}%` : 'off', color: '#60a5fa', radius: (size - strokeW) / 2 - (strokeW + gap) * 2 },
   ]
 
+  // Rings sweep in from empty when the page opens.
+  const reduce = useReducedMotion()
+  const [grown, setGrown] = useState(false)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setGrown(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  // Rings that closed and haven't had their little leaf burst today.
+  const [bursting, setBursting] = useState<string[]>([])
+  const closedKey = rings.filter(r => r.value >= 1).map(r => r.label).join('|')
+  useEffect(() => {
+    if (!closedKey) return
+    const fresh = claimCelebrations(todayKey, closedKey.split('|'))
+    // Not cancelled on cleanup: the claim above is already written, so a
+    // StrictMode re-run would otherwise swallow today's only celebration.
+    if (fresh.length) requestAnimationFrame(() => setBursting(b => [...b, ...fresh]))
+  }, [closedKey, todayKey])
+
   const saveQuota = () => {
     const val = parseInt(draft)
     if (!val || val < 1) { setEditing(false); return }
@@ -96,15 +128,16 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           </svg>
         </button>
       )}
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>
         {rings.map((ring, i) => {
           const circ = 2 * Math.PI * ring.radius
           const gapLen = circ * 0.04
           const trackLen = circ - gapLen
           const pct = Math.min(ring.value, 1)
-          const fillLen = trackLen * pct
+          const fillLen = trackLen * (grown ? pct : 0)
           const trackColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
-          const complete = pct >= 1
+          const complete = grown && pct >= 1
           const checkR = ring.radius
           const checkX = cx + Math.cos(-Math.PI / 2) * checkR
           const checkY = cy + Math.sin(-Math.PI / 2) * checkR
@@ -117,10 +150,11 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
                 stroke={ring.color} strokeWidth={strokeW} strokeLinecap="round"
                 strokeDasharray={`${fillLen} ${circ - fillLen}`}
                 transform={`rotate(${-90 + (gapLen / circ) * 180} ${cx} ${cy})`}
-                style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)` }}
+                style={{ filter: `drop-shadow(0 0 4px ${ring.color}66)`,
+                  transition: reduce ? 'none' : `stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1) ${i * 0.12}s` }}
               />
               {complete && (
-                <g>
+                <g className="lively-anim" style={{ animation: reduce ? 'none' : `livelyFadeUp .4s ease-out ${1 + i * 0.12}s both` }}>
                   <circle cx={checkX} cy={checkY} r={strokeW + 2.5} fill="none" stroke={ring.color} strokeWidth={0.5} opacity={0.35} />
                   <circle cx={checkX} cy={checkY} r={strokeW + 1} fill={ring.color} />
                   <path d={`M${checkX - 2.5} ${checkY + 0.5} l2 2 l3.5 -4`} fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -139,6 +173,11 @@ const ActivityRingsWidget = memo(function ActivityRingsWidget({ isDark, dailySta
           {quotaTier} · {goalStreak}d
         </text>
       </svg>
+      {rings.map((ring, i) => bursting.includes(ring.label) && (
+        <Burst key={ring.label} kind="leaf" left={cx} top={cy - ring.radius} radius={28} count={11} delay={1.1 + i * 0.12}
+          colors={['#65a30d', '#84cc16', ring.color, '#4d7c0f', '#a3e635']} />
+      ))}
+      </div>
       {/* Ring legend — hidden until hover, like the timer rings */}
       {!editing && (
         <div style={{

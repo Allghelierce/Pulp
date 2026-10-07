@@ -22,6 +22,45 @@ function saveLocal(layout: DashboardLayout) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layout))
 }
 
+// Widgets added after people already saved a layout get placed once, only into
+// free space (never moving anything). Removing them afterwards sticks.
+const SEEDED_KEY = "pulp-dashboard-seeded"
+const SEED_WIDGETS: { widgetId: string; sizes: [number, number][] }[] = [
+  { widgetId: 'week-forest', sizes: [[6, 1], [3, 1]] },
+]
+
+function freeSlot(size: [number, number], widgets: WidgetInstance[]): [number, number] | null {
+  for (let row = 0; row <= MAX_ROWS - size[1]; row++) {
+    for (let col = 0; col <= GRID_COLS - size[0]; col++) {
+      const test: WidgetInstance = { instanceId: '', widgetId: '', pinned: false, size, position: [col, row] }
+      if (!widgets.some(o => overlaps(test, o))) return [col, row]
+    }
+  }
+  return null
+}
+
+function seedNewWidgets(layout: DashboardLayout): DashboardLayout {
+  if (typeof window === "undefined") return layout
+  try {
+    const seeded: string[] = JSON.parse(localStorage.getItem(SEEDED_KEY) || '[]')
+    let widgets = layout.widgets
+    for (const { widgetId, sizes } of SEED_WIDGETS) {
+      if (seeded.includes(widgetId)) continue
+      seeded.push(widgetId)
+      if (widgets.some(w => w.widgetId === widgetId)) continue
+      for (const size of sizes) {
+        const pos = freeSlot(size, widgets)
+        if (pos) { widgets = [...widgets, { instanceId: genInstanceId(), widgetId, position: pos, size, pinned: false }]; break }
+      }
+    }
+    localStorage.setItem(SEEDED_KEY, JSON.stringify(seeded))
+    if (widgets === layout.widgets) return layout
+    const next = { ...layout, widgets, lastModified: Date.now() }
+    saveLocal(next)
+    return next
+  } catch { return layout }
+}
+
 function overlaps(a: WidgetInstance, b: WidgetInstance): boolean {
   return a.position[0] < b.position[0] + b.size[0] && a.position[0] + a.size[0] > b.position[0]
     && a.position[1] < b.position[1] + b.size[1] && a.position[1] + a.size[1] > b.position[1]
@@ -84,7 +123,7 @@ async function loadFromSupabase(): Promise<DashboardLayout | null> {
 }
 
 export function useWidgetLayout() {
-  const [layout, setLayout] = useState<DashboardLayout>(loadLayout)
+  const [layout, setLayout] = useState<DashboardLayout>(() => seedNewWidgets(loadLayout()))
   const [editMode, setEditMode] = useState(false)
   const [dragging, setDragging] = useState<{ instanceId: string; ghostPos: [number, number]; snapPos: [number, number] } | null>(null)
   const supabaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

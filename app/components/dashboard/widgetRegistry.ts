@@ -87,5 +87,6 @@ export const DEFAULT_LAYOUT: DashboardLayout = {
     { instanceId: 'default_notebook', widgetId: 'notebook-stats', position: [4, 1], size: [2, 1], pinned: false },
     { instanceId: 'default_heatmap', widgetId: 'consistency-heatmap', position: [0, 2], size: [3, 2], pinned: false },
     { instanceId: 'default_league', widgetId: 'league-standing', position: [3, 2], size: [3, 2], pinned: false },
+    { instanceId: 'default_week_forest', widgetId: 'week-forest', position: [0, 4], size: [6, 1], pinned: false },
   ],
 }

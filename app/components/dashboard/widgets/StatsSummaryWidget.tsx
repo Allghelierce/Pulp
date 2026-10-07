@@ -1,6 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { CountUp, Burst, usePersonalBest, fmtMinutes, fmtInt, fmtKilo, fmtDays } from "../lively"
 
 const font = 'Crimson Pro, serif'
 
@@ -26,21 +27,32 @@ const StatsSummaryWidget = memo(function StatsSummaryWidget({ isDark, dailyStats
     return best
   }, [dailyStats])
 
-  const stats = [
-    { label: 'Total Focus', value: totalMinutes >= 60 ? `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m` : `${totalMinutes}m` },
-    { label: 'Sessions', value: totalSessions.toLocaleString() },
-    { label: 'Chars Written', value: totalChars >= 1000 ? `${(totalChars / 1000).toFixed(1)}k` : totalChars.toLocaleString() },
-    { label: 'Trees Grown', value: grove.length.toLocaleString() },
-    { label: 'Best Streak', value: `${bestStreak}d` },
-    { label: 'Active Days', value: activeDays.toLocaleString() },
+  // Stats load a beat after the page opens; only judge bests once they're in.
+  const newBest = usePersonalBest('bestStreak', bestStreak, dailyStats.length > 0)
+
+  const stats: { label: string; value: number; format: (n: number) => string; best?: boolean }[] = [
+    { label: 'Total Focus', value: totalMinutes, format: fmtMinutes },
+    { label: 'Sessions', value: totalSessions, format: fmtInt },
+    { label: 'Chars Written', value: totalChars, format: fmtKilo },
+    { label: 'Trees Grown', value: grove.length, format: fmtInt },
+    { label: 'Best Streak', value: bestStreak, format: fmtDays, best: newBest },
+    { label: 'Active Days', value: activeDays, format: fmtInt },
   ]
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: 16, height: '100%', alignContent: 'center' }}>
-      {stats.map(({ label, value }) => (
+      {stats.map(({ label, value, format, best }) => (
         <div key={label}>
-          <span style={{ fontSize: 7, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block' }}>{label}</span>
-          <span style={{ fontSize: 15, fontWeight: 400, color: textPrimary, fontFamily: font }}>{value}</span>
+          <span style={{ fontSize: 7, fontWeight: 400, color: best ? '#d97706' : textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', transition: 'color .4s ease' }}>{label}</span>
+          <span style={{ position: 'relative', display: 'inline-block', fontSize: 15, fontWeight: 400, color: best ? '#d97706' : textPrimary, fontFamily: font,
+            textShadow: best ? '0 0 10px rgba(217,119,6,0.35)' : undefined, transition: 'color .4s ease' }}>
+            <CountUp value={value} format={format} />
+            {best && <Burst kind="spark" radius={24} delay={0.9} />}
+          </span>
+          {best && (
+            <span className="lively-anim" style={{ marginLeft: 5, fontSize: 8, color: '#d97706', fontStyle: 'italic', fontFamily: font,
+              animation: 'livelyFadeUp .5s ease-out 1s both' }}>new best</span>
+          )}
         </div>
       ))}
     </div>

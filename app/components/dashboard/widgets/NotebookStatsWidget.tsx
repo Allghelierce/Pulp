@@ -1,6 +1,7 @@
 "use client"
 import { memo, useMemo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { CountUp, fmtInt } from "../lively"
 
 const font = 'Crimson Pro, serif'
 
@@ -27,11 +28,11 @@ const NotebookStatsWidget = memo(function NotebookStatsWidget({ isDark, grove, a
       </span>
       <div style={{ display: 'flex', gap: 20, alignItems: 'baseline' }}>
         <div>
-          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{notebookTrees.length}</span>
+          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}><CountUp value={notebookTrees.length} format={fmtInt} /></span>
           <span style={{ fontSize: 10, color: textSecondary, marginLeft: 4 }}>trees</span>
         </div>
         <div>
-          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{species}</span>
+          <span style={{ fontSize: 24, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}><CountUp value={species} format={fmtInt} /></span>
           <span style={{ fontSize: 10, color: textSecondary, marginLeft: 4 }}>species</span>
         </div>
       </div>

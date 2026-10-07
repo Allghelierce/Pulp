@@ -1,6 +1,7 @@
 "use client"
 import { memo } from "react"
 import { registerWidget, type WidgetProps } from "../widgetRegistry"
+import { CountUp, fmtInt } from "../lively"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
 
 const font = 'Crimson Pro, serif'
@@ -14,7 +15,7 @@ const SapMetricWidget = memo(function SapMetricWidget({ isDark, sap = 0, goalStr
       <span style={{ fontSize: 8, fontWeight: 400, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Lifetime Sap</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <PulpIcon size={20} />
-        <span style={{ fontSize: 28, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}>{sap.toLocaleString()}</span>
+        <span style={{ fontSize: 28, fontWeight: 400, color: textPrimary, fontFamily: font, lineHeight: 1 }}><CountUp value={sap} format={fmtInt} /></span>
       </div>
       {goalStreak > 0 && (
         <span style={{ fontSize: 9, color: goalStreak >= 7 ? '#d97706' : textMuted }}>
