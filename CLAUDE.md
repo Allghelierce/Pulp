@@ -75,8 +75,8 @@ Trees are placed using cluster-based forest dispersal that avoids roads, lakes, 
 ## Important patterns
 
 - Trees get tagged with `notebookId` on timer completion via `activeTabId`
-- Timer sessions always produce a tree — tangerine if no seed selected
-- Water mechanic: sessions >= 10min require watering every 8min or tree dies
+- Timer sessions plant a topic tree (tangerine if no seed) only if notes were written (~a sentence per 10 min); the timer grows it to sapling, recall on its topic finishes it
+- Water mechanic: sessions >= 10min need watering every 15min; alerts 2min before due (chime, notification, tab blink); 3min overdue the tree wilts and the session pauses; 15min overdue it dies
 - Giving up a session costs 15% sap; recoverable with 15 gems
 - Sap is earned by collecting from grove trees (sapYield), not from focus sessions directly
 - Gem trees (abyss, starweaver, leviathan, prismatic) yield gems when grove sap is collected
