@@ -15,7 +15,7 @@ import { useGroveStore, selectGroveData } from "@/app/store/useGroveStore"
 import { uid } from "@/app/lib/uid"
 import { getPaperBg, getInkColor, isDarkPaper, type PaperStyle } from "@/app/lib/paperStyle"
 import { useEditor } from "@/app/hooks/useEditor"
-import { useNarrow } from "@/app/hooks/useNarrow"
+import { useNarrow, useWiderThan } from "@/app/hooks/useNarrow"
 import { getPageText, captureRange, isLive, type CapturedSelection } from "@/lib/pageContext"
 import { useBoxDrawing } from "@/app/hooks/useBoxDrawing"
 import { useDrawing } from "@/app/hooks/useDrawing"
@@ -1189,10 +1189,13 @@ export default function NoteApp() {
   const isNarrow = useNarrow()
   const sidebarAutoCollapsedRef = useRef(false)
   const sidebarUserOpenedRef = useRef(false)
+  // Width to bring back after a narrow spell, so a custom (dragged) width survives it.
+  const sidebarRestoreWidthRef = useRef(240)
   useEffect(() => {
     if (isNarrow) {
       if (sidebarWidth > 40 && !sidebarUserOpenedRef.current) {
         sidebarAutoCollapsedRef.current = true
+        sidebarRestoreWidthRef.current = sidebarWidth
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSidebarWidth(0)
       }
@@ -1200,10 +1203,18 @@ export default function NoteApp() {
       sidebarUserOpenedRef.current = false
       if (sidebarAutoCollapsedRef.current) {
         sidebarAutoCollapsedRef.current = false
-        setSidebarWidth(240)
+        setSidebarWidth(sidebarRestoreWidthRef.current)
       }
     }
   }, [isNarrow, sidebarWidth])
+  // The hanging orange sits ~60px in from the right edge; it needs the page (max 960 × zoom,
+  // centered beside the sidebar) to end before that, or it hangs over the paper.
+  const pageSpan = (sidebarWidth > 40 ? sidebarWidth : 0) + Math.ceil(960 * (parseFloat(zoom) || 1))
+  const orangeFits = useWiderThan(pageSpan + 128)
+  const hideOrange = isNarrow || !orangeFits
+  // The "Sign in to sync" label (~175px incl. its inset, bottom-right) needs that much clear past
+  // the page's right edge; otherwise it shrinks to its icon instead of sitting over the paper.
+  const signInLabelFits = useWiderThan(pageSpan + 350)
   const sidebarDragRef = useRef<{ startX: number; startWidth: number } | null>(null)
 
   const fullscreenOpenRef = useRef(false)
@@ -1347,13 +1358,16 @@ export default function NoteApp() {
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
-    const id = requestIdleCallback(() => {
+    // Safari has no requestIdleCallback; without this fallback the app crashed on load there.
+    const idle = typeof window.requestIdleCallback === 'function'
+    const preload = () => {
       _preloadBoutique(); _preloadLeaderboard()
       _preloadSettings()
       _preloadGrid()
       _preloadShelf(); _preloadImageUpload(); _preloadCover()
-    }, { timeout: 3000 })
-    return () => cancelIdleCallback(id)
+    }
+    const id = idle ? window.requestIdleCallback(preload, { timeout: 3000 }) : window.setTimeout(preload, 1200)
+    return () => { if (idle) window.cancelIdleCallback(id); else window.clearTimeout(id) }
   }, [])
 
   useEffect(() => {
@@ -2617,16 +2631,12 @@ export default function NoteApp() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
+  // Word count hides on narrow windows. Only when the breakpoint flips — updating settings on every
+  // resize event re-rendered the whole page per event and made slow window drags lag.
   useEffect(() => {
-    const checkViewport = () => {
-      const w = window.innerWidth
-      const isNarrow = w < 1000
-      updateSettings({ wordCountVisible: !isNarrow })
-    }
-    checkViewport()
-    window.addEventListener('resize', checkViewport)
-    return () => window.removeEventListener('resize', checkViewport)
-  }, [])
+    updateSettings({ wordCountVisible: !isNarrow })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNarrow])
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -2791,14 +2801,17 @@ export default function NoteApp() {
     }
   }, [user])
 
-  // Resize observer for binding layout
+  // Resize observer for binding layout. Re-attach when the paper mounts/changes (it isn't
+  // there on first visit, in grid view, etc.), otherwise bindingCompact never updates.
   useEffect(() => {
-    const check = () => { if (paperRef.current) setBindingCompact(paperRef.current.offsetWidth < 680) }
+    const paperEl = paperRef.current
+    if (!paperEl) return
+    const check = () => setBindingCompact(paperEl.offsetWidth < 680)
     check()
     const ro = new ResizeObserver(check)
-    if (paperRef.current) ro.observe(paperRef.current)
+    ro.observe(paperEl)
     return () => ro.disconnect()
-  }, [])
+  }, [activeTabId, currentView, gridView])
 
   // Backlink click handler
   useEffect(() => {
@@ -2977,9 +2990,12 @@ export default function NoteApp() {
   const sidebarWidthTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => {
     clearTimeout(sidebarWidthTimer.current)
+    // Don't persist widths chosen while narrow (the auto-collapse to 0), or a reload
+    // while narrow would keep the sidebar closed after the window widens again.
+    if (isNarrow) return
     sidebarWidthTimer.current = setTimeout(() => localStorage.setItem("pulp-sidebar-width", String(sidebarWidth)), 300)
     return () => { clearTimeout(sidebarWidthTimer.current) }
-  }, [sidebarWidth, isSidebarDragging])
+  }, [sidebarWidth, isSidebarDragging, isNarrow])
 
   useEffect(() => {
     window.postMessage({ type: "pulp-focus-config", blockedSites, focusMode }, "*")
@@ -3652,13 +3668,17 @@ export default function NoteApp() {
 
 
 
+          {/* Narrow windows: the sidebar slides over the page (tap outside to close) instead of squeezing it. */}
+          {isNarrow && !gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
+            <div onClick={() => setSidebarWidth(0)} aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 249, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(1px)' }} />
+          )}
           {!gridView && sidebarWidth > 40 && notes.filter(n => !n.archived).length > 0 && (
             <m.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
-              style={{ display: gridView ? 'none' : 'flex', position: 'relative', height: '100%', zIndex: 250 }}
+              style={{ display: gridView ? 'none' : 'flex', height: '100%', zIndex: 250, ...(isNarrow ? { position: 'fixed', top: 0, left: 0, bottom: 0, boxShadow: '8px 0 30px rgba(0,0,0,0.4)' } : { position: 'relative' }) }}
             >
               <Sidebar
                 notes={sortedNotes}
@@ -4766,8 +4786,8 @@ export default function NoteApp() {
             </button>
           )}
 
-          {/* Phones: the hanging orange is hidden, so its "cards to recall" bubble becomes a small pill. */}
-          {isNarrow && allRecallDue > 0 && !timerRunning && !orchardOpen && !reviewOpen && !topicsOpen && !statsOpen && !shopOpen && !leaderboardOpen && !communityOpen && !showSettings && (
+          {/* Phones / no room for the hanging orange: it's hidden, so its "cards to recall" bubble becomes a small pill. */}
+          {hideOrange && allRecallDue > 0 && !timerRunning && !orchardOpen && !reviewOpen && !topicsOpen && !statsOpen && !shopOpen && !leaderboardOpen && !communityOpen && !showSettings && (
             <button
               onClick={() => { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) }}
               title={recallTopTopic ? `${allRecallDue} to recall · ${recallTopTopic}` : `${allRecallDue} to recall`}
@@ -4783,7 +4803,7 @@ export default function NoteApp() {
             </button>
           )}
 
-          {!showSettings && !isNarrow && notes.filter(n => !n.archived).length > 0 && !gridView && (
+          {!showSettings && !hideOrange && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange recallDue={orchardOpen ? 0 : allRecallDue} recallTopic={recallTopTopic} retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />
           )}
 
@@ -5081,7 +5101,7 @@ export default function NoteApp() {
             className="fixed bottom-4 right-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all bg-[#d97706]/10 hover:bg-[#d97706]/20 border border-[#d97706]/20 text-[#d97706] shadow-lg hover:shadow-xl z-[100]"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-            {!isNarrow && <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>}
+            {!isNarrow && signInLabelFits && <span className="text-[11px] font-normal tracking-[0.05em] uppercase">Sign In to Sync</span>}
           </button>
         )}
         {isAdmin && <div style={{ position: 'fixed', bottom: 8, right: 12, zIndex: 9999, fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', color: '#ef4444', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none', fontFamily: 'system-ui, sans-serif' }}>DEV</div>}

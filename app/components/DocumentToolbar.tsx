@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react"
+import { useNarrow } from "@/app/hooks/useNarrow"
 import AnimatedDownloadButton from "@/components/ui/download-hover-button"
 import { ShoppingBag } from "lucide-react"
 import { PulpIcon } from '@/app/components/CurrencyIcons'
@@ -131,6 +132,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
     tick()
     return () => { if (animFrameRef.current) clearTimeout(animFrameRef.current) }
   }, [sap])
+  const isNarrow = useNarrow()
   const compact = toolbarWidth < 820
   // The sap pill is the way into the grove — keep it until the toolbar is truly tiny.
   const hideCurrencies = toolbarWidth < 400
@@ -226,7 +228,9 @@ export const DocumentToolbar = memo(function DocumentToolbar({
       ref={toolbarRef}
       id="document-toolbar"
       className="ls-toolbar h-12 bg-zinc-50 border-b border-zinc-200/80 flex items-center pl-3 pr-4 gap-2.5 z-[200] shrink-0 justify-between relative"
-      style={{ transform: "translateZ(0)", minWidth: 'max-content' }}
+      // Narrow windows: let the toolbar shrink so its own compact tiers (icons-only, fewer
+      // buttons, no sap pill) kick in — max-content kept it 521px wide on a phone.
+      style={{ transform: "translateZ(0)", minWidth: isNarrow ? 0 : 'max-content' }}
     >
 
       <div className="flex items-center gap-3 relative z-10 overflow-visible shrink-0" ref={leftToolsRef}>

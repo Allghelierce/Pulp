@@ -3,7 +3,9 @@ import { useSyncExternalStore } from "react"
 
 // Split-screen / narrow window. Below this, Pulp trims chrome: hides the
 // hanging orange, collapses the sidebar, floats panels over the page, etc.
-export const NARROW_PX = 900
+// 1024 (not 900): between ~900 and ~1100 the open sidebar squeezed the page and
+// the orange overlapped it, so a slow window drag lingered in a broken-looking band.
+export const NARROW_PX = 1024
 const QUERY = `(max-width: ${NARROW_PX - 1}px)`
 
 function subscribe(cb: () => void) {
@@ -24,4 +26,9 @@ function subscribeResize(cb: () => void) {
 // Live window width (for scaling wide scenes like the market card fan).
 export function useWindowWidth(): number {
   return useSyncExternalStore(subscribeResize, () => window.innerWidth, () => 1440)
+}
+
+// True while the window is at least `px` wide. Re-renders only when that flips, not per resize event.
+export function useWiderThan(px: number): boolean {
+  return useSyncExternalStore(subscribeResize, () => window.innerWidth >= px, () => true)
 }
