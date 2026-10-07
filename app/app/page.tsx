@@ -1733,6 +1733,17 @@ export default function NoteApp() {
     [notes, activeTabId]
   )
 
+  // Bookmark the current page (ribbon on wide windows, toolbar button on narrow ones).
+  const pageBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+  const togglePageBookmark = useCallback(() => {
+    if (!activeNote || !activeTabId) return
+    const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+    if (existing) { setBookmarks(prev => prev.filter(b => b.id !== existing.id)); return }
+    const titleBox = (activeNote.boxes[currentPageIdx] || []).find(b => b.isTitle)
+    const titleText = titleBox?.content?.replace(/<[^>]*>/g, '').trim()
+    setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId, pageIdx: currentPageIdx, noteTitle: activeNote.subject, label: titleText || undefined, icon: activeNote.icon }])
+  }, [activeNote, activeTabId, bookmarks, currentPageIdx, setBookmarks])
+
 
   const wordCount = useMemo(() => {
     if (!activeNote) return 0
@@ -3740,21 +3751,13 @@ export default function NoteApp() {
           <div className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden relative anim-fade-in" style={{ display: currentView === "shelf" ? "none" : undefined }}>
 
 
-            {/* ── Bookmark ribbon — placed next to the lightbulb ── */}
-            {notes.filter(n => !n.archived).length > 0 && activeNote && (() => {
-              const isBookmarked = (bookmarks || []).some(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
+            {/* ── Bookmark ribbon — placed next to the lightbulb (narrow windows: it's a toolbar button instead) ── */}
+            {notes.filter(n => !n.archived).length > 0 && activeNote && !isNarrow && (() => {
+              const isBookmarked = pageBookmarked
               const ribbonColor = isBookmarked ? "#E11D48" : (theme === "dark" ? "#3f3f46" : "#c4c4c8")
               return (
                 <m.div
-                  onClick={() => {
-                    const existing = (bookmarks || []).find(b => b.noteId === activeTabId && b.pageIdx === currentPageIdx)
-                    if (existing) setBookmarks(prev => prev.filter(b => b.id !== existing.id))
-                    else {
-                      const titleBox = (activeNote.boxes[currentPageIdx] || []).find(b => b.isTitle)
-                      const titleText = titleBox?.content?.replace(/<[^>]*>/g, '').trim()
-                      setBookmarks(prev => [...prev, { id: uid(), noteId: activeTabId!, pageIdx: currentPageIdx, noteTitle: activeNote.subject, label: titleText || undefined, icon: activeNote.icon }])
-                    }
-                  }}
+                  onClick={togglePageBookmark}
                   animate={{ scaleY: isBookmarked ? 1 : 0.6, opacity: isBookmarked ? 1 : 0.45 }}
                   whileHover={{ scaleY: 1, opacity: 1 }}
                   whileTap={{ scaleY: 0.9 }}
@@ -3790,6 +3793,8 @@ export default function NoteApp() {
             {!showSettings && notes.filter(n => !n.archived).length > 0 && (
               <div className="relative" style={{ pointerEvents: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'none' : undefined, opacity: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, height: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 0 : undefined, overflow: (orchardOpen || statsOpen || leaderboardOpen || shopOpen) ? 'hidden' : undefined }}>
                 <DocumentToolbar
+                  bookmarked={pageBookmarked}
+                  onToggleBookmark={isNarrow && activeNote ? togglePageBookmark : undefined}
                   activeTool={activeTool}
                   setActiveTool={setActiveTool}
                   stickyColor={stickyColor}
