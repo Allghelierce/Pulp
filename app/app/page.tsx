@@ -5,6 +5,7 @@ import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-mot
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
+import { accentForTheme, accentCssVars } from "@/lib/accent"
 import { sanitizeHTML, extractTextFromHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User, HLine } from "@/app/types"
@@ -1650,6 +1651,13 @@ export default function NoteApp() {
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme) }, [theme])
   const accentSolid = useMemo(() => accent.length > 7 ? accent.slice(0, 7) : accent, [accent])
+  // Accent adjusted to stay visible on this theme (lib/accent.ts) — pass this to components,
+  // and mirror it into CSS variables so hardcoded UI can use var(--accent).
+  const accentUi = useMemo(() => accentForTheme(accentSolid, theme), [accentSolid, theme])
+  useEffect(() => {
+    const vars = accentCssVars(accentSolid, theme)
+    for (const [k, v] of Object.entries(vars)) document.documentElement.style.setProperty(k, v)
+  }, [accentSolid, theme])
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(() => Array.isArray(_savedSettingsRef.current?.bookmarks) ? _savedSettingsRef.current.bookmarks : [])
   const [trashNotes, setTrashNotes] = useState<NoteData[]>(() => Array.isArray(_savedSettingsRef.current?.trashNotes) ? _savedSettingsRef.current.trashNotes : [])
   const [skipDeleteConfirmation, setSkipDeleteConfirmation] = useState(() => typeof _savedSettingsRef.current?.skipDeleteConfirmation === "boolean" ? _savedSettingsRef.current.skipDeleteConfirmation : false)
