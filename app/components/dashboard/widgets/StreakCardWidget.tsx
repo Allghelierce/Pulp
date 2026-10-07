@@ -87,7 +87,7 @@ export const StreakBadge = memo(function StreakBadge({ isDark, dailyStats, daily
         <span style={{ fontFamily: font, fontSize: 20, color: current > 0 ? (current < 3 ? (isDark ? '#dcd8d0' : '#2a2620') : color) : muted }}>
           <CountUp value={current} format={fmtInt} /> <span style={{ fontSize: 11, color: muted }}>{current === 1 ? 'day' : 'days'}</span>
         </span>
-        <span style={{ fontFamily: font, fontStyle: 'italic', fontSize: 10.5, color: newBest ? '#d97706' : muted, marginTop: 3, letterSpacing: 0 }}>{hint}</span>
+        <span style={{ fontFamily: font, fontStyle: 'italic', fontSize: 10.5, color: newBest ? ACCENT : muted, marginTop: 3, letterSpacing: 0 }}>{hint}</span>
         {newBest && <Burst kind="spark" left="20%" top="40%" radius={26} count={10} delay={1} />}
       </div>
     </div>
