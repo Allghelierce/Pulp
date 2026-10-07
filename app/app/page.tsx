@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
 import { sanitizeHTML, extractTextFromHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
-import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
+import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User, HLine } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
 import { signGrove, verifyGrove } from "@/app/lib/groveIntegrity"
 import { applyRecall } from "@/app/lib/treeGrowth"
@@ -42,6 +42,8 @@ import { saveDeck, hashNotes } from "@/lib/recallSchedule"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
 import { PartyPresence } from "@/app/components/community/PartyPresence"
+import { PageLines } from "@/app/components/PageLines"
+import { cloudLines, fromCloudLines, migrateLegacyLineBoxes } from "@/lib/noteLines"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PulpLoader } from "@/app/components/PulpLoader"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
@@ -96,6 +98,7 @@ function PageNumberInput({ currentPageIdx, totalPages, onOpenGrid }: {
 }
 
 const noop = () => { }
+const EMPTY_HLINES: HLine[] = []
 
 // ─── Memoized global styles — prevents font flickering on every NoteApp re-render
 const GlobalStyles = memo(function GlobalStyles({ reduceMotion, reduceVisuals, theme, handwrittenEffect }: { reduceMotion: boolean, reduceVisuals: boolean, theme: "light" | "dark", handwrittenEffect: boolean }) {
@@ -353,7 +356,10 @@ const BoxItem = memo(function BoxItem({
   }, [isSelected, pristine, mediaEditing])
   const rawImage = !box.content.startsWith("<") && (box.content.startsWith("http") || box.content.startsWith("data:image"))
   const htmlImgMatch = !rawImage ? /^<img\s[^>]*src="([^"]+)"/.exec(box.content.trim()) : null
-  const isImage = rawImage || !!htmlImgMatch
+  // Videos and YouTube/Vimeo embeds behave like images: drag by the body, controls work once selected.
+  const videoMatch = !rawImage && !htmlImgMatch ? /^<video\s[^>]*src="([^"]+)"/.exec(box.content.trim()) : null
+  const embedMatch = !rawImage && !htmlImgMatch && !videoMatch ? /<iframe\s[^>]*src="([^"]+)"/.exec(box.content) : null
+  const isImage = rawImage || !!htmlImgMatch || !!videoMatch || !!embedMatch
   const imageSrc = rawImage ? box.content : htmlImgMatch?.[1] || ''
   const isSticky = !!box.boxHighlightColor
   const isTitle = !!box.isTitle
@@ -585,7 +591,13 @@ const BoxItem = memo(function BoxItem({
         {loadingBoxId === box.id ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" }}>generating…</div>
         ) : isImage && !mediaEditing ? (
-          <img src={imageSrc} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} alt="media" draggable={false} />
+          videoMatch ? (
+            <video src={videoMatch[1]} controls style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 6, pointerEvents: isSelected ? "auto" : "none" }} />
+          ) : embedMatch ? (
+            <iframe src={embedMatch[1]} style={{ width: "100%", height: "100%", border: "none", borderRadius: 6, pointerEvents: isSelected ? "auto" : "none" }} allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen />
+          ) : (
+            <img src={imageSrc} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none" }} alt="media" draggable={false} />
+          )
         ) : (
           <BoxTextarea
             id={box.id}
@@ -1632,67 +1644,66 @@ export default function NoteApp() {
   const pendingImageBoxId = useRef<string | null>(null)
   const pendingTableBoxId = useRef<string | null>(null)
 
-  const placeHorizontalLine = useCallback((e: React.MouseEvent) => {
+  // Lines are real page rules (note.hlines), placed centred on the click.
+  const boxesApiRef = useRef<{ addHLine: (l: HLine) => void; pushUndo: () => void } | null>(null)
+  const addLineAt = useCallback((clientX: number, clientY: number, direction: 'horizontal' | 'vertical') => {
     if (!paperRef.current || !activeTabId) return
-    e.preventDefault()
     const r = paperRef.current.getBoundingClientRect()
     const scale = Number(zoom) || 1
-    const y = (e.clientY - r.top) / scale
-    const id = uid()
-    const hrBox: TextBoxType = { id, x: 40, y, w: paperRef.current.clientWidth / scale - 80, h: 8, content: '<hr style="border:none;border-top:2px solid rgba(0,0,0,0.15);margin:0">' }
-    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), hrBox] }
-    }))
+    const pageW = paperRef.current.clientWidth
+    const x = (clientX - r.left) / scale
+    const y = (clientY - r.top) / scale
+    const line: HLine = direction === 'horizontal'
+      ? (() => { const w = Math.min(320, pageW - 48); return { id: uid(), x: Math.round(Math.min(Math.max(24, x - w / 2), pageW - w - 24)), y: Math.round(y), width: Math.round(w), direction } })()
+      : { id: uid(), x: Math.round(x), y: Math.round(Math.max(16, y - 120)), width: 240, direction }
+    boxesApiRef.current?.addHLine(line)
     setActiveTool('select')
-  }, [activeTabId, currentPageIdx, setNotes, zoom])
+  }, [activeTabId, zoom])
 
-  const placeVerticalLine = useCallback((e: React.MouseEvent) => {
-    if (!paperRef.current || !activeTabId) return
-    e.preventDefault()
-    const r = paperRef.current.getBoundingClientRect()
-    const scale = Number(zoom) || 1
-    const x = (e.clientX - r.left) / scale
-    const y = (e.clientY - r.top) / scale
-    const id = uid()
-    const vrBox: TextBoxType = { id, x, y, w: 8, h: 300, sizeLocked: true, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
-    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
-    }))
-    setActiveTool('select')
-  }, [activeTabId, currentPageIdx, setNotes, zoom])
+  const placeHorizontalLine = useCallback((e: React.MouseEvent) => { e.preventDefault(); addLineAt(e.clientX, e.clientY, 'horizontal') }, [addLineAt])
+  const placeVerticalLine = useCallback((e: React.MouseEvent) => { e.preventDefault(); addLineAt(e.clientX, e.clientY, 'vertical') }, [addLineAt])
 
+  const pendingImagePos = useRef<{ x: number; y: number } | null>(null)
   const placeImageBox = useCallback((e: React.MouseEvent) => {
     if (!paperRef.current || !activeTabId) return
     e.preventDefault()
     const r = paperRef.current.getBoundingClientRect()
     const scale = Number(zoom) || 1
-    const x = (e.clientX - r.left) / scale
-    const y = (e.clientY - r.top) / scale
-    const id = uid()
-    const imgBox: TextBoxType = { id, x: x - 150, y, w: 300, h: 200, content: '' }
-    pendingImageBoxId.current = id
-    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), imgBox] }
-    }))
+    pendingImagePos.current = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale }
+    pendingImageBoxId.current = null
     setActiveTool('select')
     setShowImageModal(true)
-  }, [activeTabId, currentPageIdx, setNotes, zoom])
+  }, [activeTabId, zoom])
 
   const insertTableBox = useCallback((rows = 3, cols = 3) => {
     if (!paperRef.current || !activeTabId) return
     const scale = Number(zoom) || 1
-    const paperW = paperRef.current.clientWidth / scale
-    const scrollTop = paperRef.current.closest('.overflow-y-scroll')?.scrollTop ?? 0
+    const r = paperRef.current.getBoundingClientRect()
+    const paperW = paperRef.current.clientWidth
     const w = Math.min(cols * 130, paperW - 80)
-    const x = (paperW - w) / 2
-    const y = scrollTop / scale + 100
+    const x = Math.round((paperW - w) / 2)
+    // Centre of the part of the page that's on screen
+    const visTop = Math.max(r.top, 0), visBottom = Math.min(r.bottom, window.innerHeight)
+    const h = rows * 40 + 20
+    const y = Math.max(24, Math.round(((visTop + visBottom) / 2 - r.top) / scale - h / 2))
     const id = uid()
-    const mkRow = (cells: number, tag: string) => `<tr>${Array.from({ length: cells }, () => `<${tag} style="border:1.5px solid rgba(0,0,0,0.25);padding:6px 10px;font-size:13px;min-width:80px;outline:none;${tag === 'th' ? 'font-weight:600;' : ''}"><br></${tag}>`).join('')}</tr>`
+    const cell = (tag: string) => `<${tag} style="border:1.5px solid rgba(128,128,128,0.45);padding:6px 10px;font-size:13px;min-width:60px;outline:none;${tag === 'th' ? 'font-weight:600;' : ''}"><br></${tag}>`
+    const mkRow = (n: number, tag: string) => `<tr>${Array.from({ length: n }, () => cell(tag)).join('')}</tr>`
     const tableHtml = `<table style="border-collapse:collapse;width:100%">${mkRow(cols, 'th')}${Array.from({ length: rows - 1 }, () => mkRow(cols, 'td')).join('')}</table>`
-    const tableBox: TextBoxType = { id, x, y, w, h: rows * 40 + 20, content: tableHtml }
+    boxesApiRef.current?.pushUndo()
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), tableBox] }
+      ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), { id, x, y, w, h, content: tableHtml }] }
     }))
+    // Put the caret in the first cell so typing starts right away
+    setTimeout(() => {
+      const cellEl = document.querySelector(`#box-${id} th, #box-${id} td`) as HTMLElement | null
+      const editable = cellEl?.closest('[contenteditable="true"]') as HTMLElement | null
+      if (cellEl && editable) {
+        editable.focus()
+        const range = document.createRange(); range.selectNodeContents(cellEl); range.collapse(true)
+        const sel = window.getSelection(); sel?.removeAllRanges(); sel?.addRange(range)
+      }
+    }, 50)
   }, [activeTabId, currentPageIdx, setNotes, zoom])
 
   // ─── Sticky note placement — handled directly in page to avoid stale hook state ─
@@ -1715,6 +1726,7 @@ export default function NoteApp() {
       boxOutlineWidth: 0,
       boxRotation: rotation,
     }
+    boxesApiRef.current?.pushUndo()
     setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
       ...n,
       boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
@@ -1787,6 +1799,17 @@ export default function NoteApp() {
     drawingUndo: () => drawingRef.current.undo(), drawingRedo: () => drawingRef.current.redo(),
     drawingCanUndo: drawingRef.current.canUndo, drawingCanRedo: drawingRef.current.canRedo
   })
+  useEffect(() => { boxesApiRef.current = boxes }, [boxes])
+  // Old notes stored lines as text boxes; turn them into real lines when opened.
+  useEffect(() => {
+    if (!activeTabId) return
+    setNotes(prev => {
+      const i = prev.findIndex(n => n.id === activeTabId)
+      const migrated = i >= 0 ? migrateLegacyLineBoxes(prev[i]) : null
+      if (!migrated) return prev
+      const next = [...prev]; next[i] = migrated; return next
+    })
+  }, [activeTabId, setNotes])
   const drawing = useDrawing({ canvasRef, activeTool, accent, zoom, currentPageIdx, setNotes, activeTabId, notes, strokeColor, fillColor, lineWidth, opacity: drawOpacity, dash: drawDash })
   drawingRef.current = drawing
   const versionHistory = useVersionHistory(notes, activeTabId)
@@ -2904,7 +2927,7 @@ export default function NoteApp() {
         if (note) {
           fetch(`${supabaseUrl}/rest/v1/notes?on_conflict=id`, {
             method: 'POST', headers, keepalive: true,
-            body: JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: u.id })
+            body: JSON.stringify({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: cloudLines(note), drawings: note.drawings ?? null, user_id: u.id })
           }).catch(() => {})
         }
       }
@@ -3018,7 +3041,7 @@ export default function NoteApp() {
       if (!note) return
       const ac = new AbortController()
       cloudAbort.current = ac
-      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id }, { signal: ac.signal } as any)
+      const { error } = await supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: cloudLines(note), drawings: note.drawings ?? null, user_id: user.id }, { signal: ac.signal } as any)
       if (ac.signal.aborted) return
       if (error) console.error("Save failed:", error.message)
       else apiFetch("/api/embed", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ noteId: note.id, pages: note.pages.map((p: string, pi: number) => ({ boxes: [{ content: p }, ...(note.boxes[pi] || []).map((b: { content: string }) => ({ content: b.content }))] })), noteName: note.subject }), signal: ac.signal }).catch(() => { })
@@ -3152,7 +3175,7 @@ export default function NoteApp() {
         setUser(u)
         const { data, error } = await supabase.from("notes").select("*").eq("user_id", u.id)
         if (!error && data?.length) {
-          const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+          const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, ...fromCloudLines(n.lines), drawings: n.drawings ?? undefined }))
           setNotes(prev => {
             const localIds = new Set(prev.map(n => n.id))
             const missing = cloudNotes.filter(n => !localIds.has(n.id))
@@ -3396,7 +3419,7 @@ export default function NoteApp() {
     setNotes(ns => ns.some(n => n.id === id) ? ns : [...ns, { ...note, deletedAt: undefined }])
     if (user) {
       db.removeFromTrash(user.id, id)
-      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })
+      supabase.from("notes").upsert({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: cloudLines(note), drawings: note.drawings ?? null, user_id: user.id })
     }
     const pending: string[] = JSON.parse(localStorage.getItem("pulp-pending-deletes") || "[]")
     localStorage.setItem("pulp-pending-deletes", JSON.stringify(pending.filter(pid => pid !== id)))
@@ -3566,14 +3589,14 @@ export default function NoteApp() {
     try {
       const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id)
       if (error || !data) return null
-      const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, lines: n.lines ?? undefined, drawings: n.drawings ?? undefined }))
+      const cloudNotes = data.map(n => ({ id: n.id, subject: n.subject, pages: n.pages ?? [""], boxes: n.boxes ?? {}, folderId: n.folder_id ?? null, parentId: n.parent_id ?? undefined, icon: n.icon ?? undefined, noteType: n.note_type ?? undefined, cover: n.cover ?? undefined, ...fromCloudLines(n.lines), drawings: n.drawings ?? undefined }))
       const localNotes = notesRef.current
       const cloudIds = new Set(cloudNotes.map(n => n.id))
       const localIds = new Set(localNotes.map(n => n.id))
       const pulled = cloudNotes.filter(n => !localIds.has(n.id))
       const toPush = localNotes.filter(n => !cloudIds.has(n.id))
       if (pulled.length > 0) setNotes(prev => [...prev, ...pulled])
-      if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: note.lines ?? null, drawings: note.drawings ?? null, user_id: user.id })))
+      if (toPush.length > 0) await supabase.from("notes").upsert(toPush.map(note => ({ id: note.id, subject: note.subject, pages: note.pages, boxes: note.boxes, folder_id: note.folderId, parent_id: note.parentId ?? null, icon: note.icon ?? null, note_type: note.noteType ?? null, cover: note.cover ?? null, lines: cloudLines(note), drawings: note.drawings ?? null, user_id: user.id })))
       return { pushed: toPush.length, pulled: pulled.length }
     } catch { return null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3861,20 +3884,8 @@ export default function NoteApp() {
                   setRightSidebarOpen={setTimerOpen}
                   allCompacted={allCompacted}
                   onCompactAll={handleCompactAll}
-                  onInsertHR={() => {
-                    if (!activeTabId || !paperRef.current) return
-                    const hline = { id: uid(), x: 64, y: 200, width: paperRef.current.clientWidth - 128, direction: "horizontal" as const }
-                    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), hline] }
-                    }))
-                  }}
-                  onInsertVR={() => {
-                    if (!activeTabId || !paperRef.current) return
-                    const vline = { id: uid(), x: paperRef.current.clientWidth / 2, y: 64, width: 300, direction: "vertical" as const }
-                    setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                      ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: [...(n.hlines?.[currentPageIdx] || []), vline] }
-                    }))
-                  }}
+                  onInsertHR={() => { const r = paperRef.current?.getBoundingClientRect(); if (r) addLineAt(r.left + r.width / 2, r.top + Math.min(r.height, window.innerHeight) / 2, 'horizontal') }}
+                  onInsertVR={() => { const r = paperRef.current?.getBoundingClientRect(); if (r) addLineAt(r.left + r.width / 2, r.top + Math.min(r.height, window.innerHeight) / 2, 'vertical') }}
                   isVault={activeNote?.noteType === "vault"}
                   isUnlocked={activeNote ? unlockedVaults.current.has(activeNote.id) : false}
                   onLock={() => {
@@ -4196,98 +4207,16 @@ export default function NoteApp() {
                                 })
                               })()}
 
-                              {/* Render lines (horizontal and vertical) */}
-                              {(() => {
-                                boxes.hlineSelectionVersion
-                                return (activeNote.hlines?.[currentPageIdx] || []).map(hl => {
-                                  const isSelected = boxes.selectedHLineIdsRef.current.has(hl.id)
-                                  const isVertical = hl.direction === "vertical"
-                                  const lineColor = isSelected ? accent : getInkColor(paperStyle, theme === "dark")
-                                  const lineW = isSelected ? 2.5 : 1.8
-
-                                  if (isVertical) {
-                                    return (
-                                      <div key={hl.id} className="absolute z-20" style={{
-                                        left: hl.x - 4, top: hl.y, width: 8, height: hl.width,
-                                        cursor: isSelected ? 'grab' : 'pointer',
-                                      }}>
-                                        <svg width="8" height="100%" style={{ overflow: 'visible', filter: 'url(#hand-rule-v)' }}>
-                                          <line x1="4" y1="0" x2="4" y2="100%"
-                                            stroke={lineColor} strokeWidth={lineW} strokeLinecap="round"
-                                          />
-                                        </svg>
-                                        {isSelected && <>
-                                          <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
-                                          <div className="absolute left-1/2 -translate-x-1/2" style={{ top: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'n-resize', border: '2px solid white' }}
-                                            onMouseDown={e => {
-                                              e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
-                                              const onMove = (ev: MouseEvent) => {
-                                                let dy = (ev.clientY - startY) / scale; const dx = (ev.clientX - startX) / scale; const newY = origY + dy; const newW = origW - dy; if (newW < 20) return
-                                                const newX = ev.shiftKey ? origX : origX + dx
-                                                setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, y: newY, width: newW }) } }))
-                                              }
-                                              const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                                              window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp)
-                                            }}
-                                          />
-                                          <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 's-resize', border: '2px solid white' }}
-                                            onMouseDown={e => {
-                                              e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origW = hl.width; const scale = Number(zoom) || 1
-                                              const onMove = (ev: MouseEvent) => {
-                                                const dy = (ev.clientY - startY) / scale; const dx = (ev.clientX - startX) / scale; const newW = origW + dy; if (newW < 20) return
-                                                const newX = ev.shiftKey ? origX : origX + dx
-                                                setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, width: newW }) } }))
-                                              }
-                                              const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                                              window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp)
-                                            }}
-                                          />
-                                        </>}
-                                      </div>
-                                    )
-                                  }
-
-                                  return (
-                                    <div key={hl.id} className="absolute z-20" style={{
-                                      left: hl.x, top: hl.y - 4, width: hl.width, height: 8,
-                                      cursor: isSelected ? 'grab' : 'pointer',
-                                    }}>
-                                      <svg width="100%" height="8" style={{ overflow: 'visible', filter: 'url(#hand-rule)' }}>
-                                        <line x1="0" y1="4" x2="100%" y2="4"
-                                          stroke={lineColor} strokeWidth={lineW} strokeLinecap="round"
-                                        />
-                                      </svg>
-                                      {isSelected && <>
-                                        <div className="absolute inset-0 rounded" style={{ boxShadow: `0 0 8px ${accent}44`, border: `1px solid ${accent}55` }} />
-                                        <div className="absolute top-1/2 -translate-y-1/2" style={{ left: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'w-resize', border: '2px solid white' }}
-                                          onMouseDown={e => {
-                                            e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origX = hl.x; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
-                                            const onMove = (ev: MouseEvent) => {
-                                              const dx = (ev.clientX - startX) / scale; const dy = (ev.clientY - startY) / scale; const newX = origX + dx; const newW = origW - dx; if (newW < 20) return
-                                              const newY = ev.shiftKey ? origY : origY + dy
-                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, x: newX, y: newY, width: newW }) } }))
-                                            }
-                                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                                            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp)
-                                          }}
-                                        />
-                                        <div className="absolute top-1/2 -translate-y-1/2" style={{ right: -5, width: 10, height: 10, borderRadius: '50%', background: accent, cursor: 'e-resize', border: '2px solid white' }}
-                                          onMouseDown={e => {
-                                            e.stopPropagation(); const startX = e.clientX; const startY = e.clientY; const origY = hl.y; const origW = hl.width; const scale = Number(zoom) || 1
-                                            const onMove = (ev: MouseEvent) => {
-                                              const dx = (ev.clientX - startX) / scale; const dy = (ev.clientY - startY) / scale; const newW = origW + dx; if (newW < 20) return
-                                              const newY = ev.shiftKey ? origY : origY + dy
-                                              setNotes(prev => prev.map(n => n.id !== activeTabId ? n : { ...n, hlines: { ...(n.hlines || {}), [currentPageIdx]: (n.hlines?.[currentPageIdx] || []).map(h => h.id !== hl.id ? h : { ...h, y: newY, width: newW }) } }))
-                                            }
-                                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                                            window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp)
-                                          }}
-                                        />
-                                      </>}
-                                    </div>
-                                  )
-                                })
-                              })()}
+                              {/* Free-standing horizontal / vertical rules */}
+                              <PageLines
+                                lines={activeNote.hlines?.[currentPageIdx] || EMPTY_HLINES}
+                                selectedIds={boxes.selectedHLineIdsRef.current}
+                                onSelect={boxes.selectHLines}
+                                onCommit={boxes.commitHLines}
+                                zoom={Number(zoom) || 1}
+                                accent={accent}
+                                inkColor={getInkColor(paperStyle, theme === "dark")}
+                              />
 
                               {/* Cover display on first page */}
                               {activeNote.cover && currentPageIdx === 0 && (
@@ -4392,7 +4321,7 @@ export default function NoteApp() {
                                   position: "absolute",
                                   left: 0,
                                   top: 0,
-                                  pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hline', 'vr'].includes(activeTool) ? 'all' : 'none',
+                                  pointerEvents: showDrawToolbar && !['select', 'pan', 'text', 'sticky', 'hr', 'vr', 'image'].includes(activeTool) ? 'all' : 'none',
                                   cursor: drawing.getCursor(),
                                   zIndex: showDrawToolbar ? 200 : 5,
                                   touchAction: "none",
@@ -4813,25 +4742,8 @@ export default function NoteApp() {
               toggleScript={editor.toggleScript}
               insertBacklink={insertBacklink}
               onInsertImage={() => { dismissSlashMenu(true); setShowImageModal(true) }}
-              onInsertHLine={() => {
-                if (!activeTabId || !paperRef.current) return
-                const cursorY = slashMenu ? slashMenu.y : 200
-                const hrBox: TextBoxType = { id: uid(), x: 40, y: cursorY, w: paperRef.current.clientWidth - 80, h: 8, content: '<hr style="border:none;border-top:2px solid rgba(0,0,0,0.15);margin:0">' }
-                setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                  ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), hrBox] }
-                }))
-              }}
-              onInsertVLine={() => {
-                if (!activeTabId || !paperRef.current) return
-                const r = paperRef.current.getBoundingClientRect()
-                const scale = Number(zoom) || 1
-                const x = slashMenu ? (slashMenu.x - r.left) / scale : paperRef.current.clientWidth / (2 * scale)
-                const y = slashMenu ? (slashMenu.y - r.top) / scale : 200
-                const vrBox: TextBoxType = { id: uid(), x, y, w: 8, h: 300, content: '<div style="width:2px;height:100%;background:rgba(0,0,0,0.15);margin:0 auto"></div>' }
-                setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
-                  ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), vrBox] }
-                }))
-              }}
+              onInsertHLine={() => { if (slashMenu) addLineAt(slashMenu.x, slashMenu.y + 12, 'horizontal') }}
+              onInsertVLine={() => { if (slashMenu) addLineAt(slashMenu.x, slashMenu.y + 132, 'vertical') }}
               onInsertTitle={() => {
                 if (!activeTabId) return
                 const titleBox: TextBoxType = { id: uid(), x: 40, y: 24, w: 900, h: 50, content: '', boxHeadingStyle: 'h1', boxFontSize: 28, isTitle: true }
@@ -4856,8 +4768,18 @@ export default function NoteApp() {
           {showImageModal && (
             <ImageUploadModal
               onConfirm={(htmlOrUrl, isHtml) => {
+                const pos = pendingImagePos.current
                 const boxId = pendingImageBoxId.current
-                if (boxId) {
+                if (pos && activeTabId) {
+                  const mediaHtml = isHtml ? htmlOrUrl : `<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block" alt="Media" />`
+                  const w = 320
+                  const newBox: TextBoxType = { id: uid(), x: Math.max(16, Math.round(pos.x - w / 2)), y: Math.round(pos.y), w, h: 220, content: mediaHtml.replace(/<br\s*\/?>\s*$/, ''), sizeLocked: true }
+                  boxesApiRef.current?.pushUndo()
+                  setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
+                    ...n, boxes: { ...n.boxes, [currentPageIdx]: [...(n.boxes[currentPageIdx] || []), newBox] }
+                  }))
+                  pendingImagePos.current = null
+                } else if (boxId) {
                   const imgHtml = isHtml ? htmlOrUrl : `<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block" alt="Media" />`
                   setNotes(prev => prev.map(n => n.id !== activeTabId ? n : {
                     ...n, boxes: { ...n.boxes, [currentPageIdx]: (n.boxes[currentPageIdx] || []).map(b => b.id === boxId ? { ...b, content: imgHtml, sizeLocked: true } : b) }
@@ -4869,7 +4791,8 @@ export default function NoteApp() {
                   editor.insertHTML(`<img src="${htmlOrUrl}" style="max-width:100%;height:auto;border-radius:6px;display:block;margin:4px 0" alt="Media" /><br/>`)
                 }
               }}
-              onClose={() => { setShowImageModal(false); pendingImageBoxId.current = null }}
+              theme={theme}
+              onClose={() => { setShowImageModal(false); pendingImageBoxId.current = null; pendingImagePos.current = null }}
             />
           )}
 

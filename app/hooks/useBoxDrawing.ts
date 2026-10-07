@@ -39,11 +39,11 @@ export function useBoxDrawing({
   const [lineSelectionVersion, setLineSelectionVersion] = useState(0)
   const selectedHLineIdsRef = useRef<Set<string>>(new Set())
   const [hlineSelectionVersion, setHlineSelectionVersion] = useState(0)
-  const hlineDragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null)
-  const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
+    const [loadingBoxId, setLoadingBoxId] = useState<string | null>(null)
   const aligningRef = useRef(false)
-  const undoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
-  const redoStackRef = useRef<{ tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[] }[]>([])
+  type Snapshot = { tabId: string; pageIdx: number; boxes: TextBox[]; drawings?: unknown[]; hlines?: HLine[] }
+  const undoStackRef = useRef<Snapshot[]>([])
+  const redoStackRef = useRef<Snapshot[]>([])
   const drawingUndoRef = useRef(drawingUndo)
   const drawingRedoRef = useRef(drawingRedo)
   const drawingCanUndoRef = useRef(drawingCanUndo)
@@ -59,6 +59,7 @@ export function useBoxDrawing({
   // Page attaches its selection rect div to this ref for zero-React-state drag updates
   const selectionRectRef = useRef<HTMLDivElement | null>(null)
   const rafId = useRef<number>(0)
+  const pushUndoRef = useRef<() => void>(() => {})
 
   // Update ref + bump version counter (cheap number, not a new Set object in state)
   const setSelectedBoxIds = useCallback((v: Set<string> | ((prev: Set<string>) => Set<string>)) => {
@@ -84,6 +85,7 @@ export function useBoxDrawing({
 
   useEffect(() => {
     currentPageIdxRef.current = currentPageIdx
+    selectedHLineIdsRef.current = new Set()
     setSelectedBoxIds(new Set())
     selectedDrawingIdsRef.current = new Set()
   }, [currentPageIdx, setSelectedBoxIds])
@@ -121,12 +123,14 @@ export function useBoxDrawing({
               tabId: snap.tabId, pageIdx: snap.pageIdx,
               boxes: [...(note.boxes[snap.pageIdx] || [])],
               drawings: note.drawings?.[snap.pageIdx] ? [...note.drawings[snap.pageIdx]] : undefined,
+              hlines: [...(note.hlines?.[snap.pageIdx] || [])],
             })
           }
           setNotes(prev => prev.map(n => {
             if (n.id !== snap.tabId) return n
             const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
             if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
+            if (snap.hlines) restored.hlines = { ...(n.hlines || {}), [snap.pageIdx]: snap.hlines }
             return { ...n, ...restored }
           }))
         } else if (drawingCanUndoRef.current) {
@@ -147,12 +151,14 @@ export function useBoxDrawing({
               tabId: snap.tabId, pageIdx: snap.pageIdx,
               boxes: [...(note.boxes[snap.pageIdx] || [])],
               drawings: note.drawings?.[snap.pageIdx] ? [...note.drawings[snap.pageIdx]] : undefined,
+              hlines: [...(note.hlines?.[snap.pageIdx] || [])],
             })
           }
           setNotes(prev => prev.map(n => {
             if (n.id !== snap.tabId) return n
             const restored: Partial<NoteData> = { boxes: { ...n.boxes, [snap.pageIdx]: snap.boxes } }
             if (snap.drawings) restored.drawings = { ...(n.drawings || {}), [snap.pageIdx]: snap.drawings } as NoteData['drawings']
+            if (snap.hlines) restored.hlines = { ...(n.hlines || {}), [snap.pageIdx]: snap.hlines }
             return { ...n, ...restored }
           }))
         } else if (drawingCanRedoRef.current) {
@@ -164,6 +170,21 @@ export function useBoxDrawing({
       // Arrow keys — nudge selected boxes; Option+Arrow — snap to page edge
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         const ids = selectedBoxIdsRef.current
+        const hids = selectedHLineIdsRef.current
+        if (ids.size === 0 && hids.size > 0) {
+          // Nudge selected lines: 1px, or 10px with Shift
+          e.preventDefault()
+          const step = e.shiftKey ? 10 : 1
+          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+          const tid = activeTabIdRef.current
+          const pidx = currentPageIdxRef.current
+          if (!e.repeat) pushUndoRef.current()
+          setNotes(prev => prev.map(n => n.id !== tid ? n : {
+            ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).map(h => hids.has(h.id) ? { ...h, x: h.x + dx, y: h.y + dy } : h) }
+          }))
+          return
+        }
         if (ids.size === 0) return
         e.preventDefault()
         const tid = activeTabIdRef.current
@@ -214,6 +235,7 @@ export function useBoxDrawing({
       // Delete selected hlines
       if (selectedHLineIdsRef.current.size > 0) {
         e.preventDefault()
+        pushUndoRef.current()
         const tid = activeTabIdRef.current
         const pidx = currentPageIdxRef.current
         const hids = selectedHLineIdsRef.current
@@ -636,47 +658,6 @@ export function useBoxDrawing({
       }
     }
 
-    // Check if clicking near a line (horizontal or vertical)
-    const hlines = currentTab?.hlines?.[pidx] || []
-    for (const hl of hlines) {
-      const isVert = hl.direction === "vertical"
-      const hit = isVert
-        ? (Math.abs(x - hl.x) < 8 && y >= hl.y && y <= hl.y + hl.width)
-        : (x >= hl.x && x <= hl.x + hl.width && Math.abs(y - hl.y) < 8)
-      if (hit) {
-        if (e.metaKey || e.ctrlKey || e.shiftKey) {
-          const next = new Set(selectedHLineIdsRef.current)
-          if (next.has(hl.id)) next.delete(hl.id); else next.add(hl.id)
-          selectedHLineIdsRef.current = next
-        } else {
-          selectedHLineIdsRef.current = new Set([hl.id])
-        }
-        selectedLineRef.current = null
-        setHlineSelectionVersion(c => c + 1)
-        setLineSelectionVersion(c => c + 1)
-        hlineDragRef.current = { id: hl.id, startX: e.clientX, startY: e.clientY, origX: hl.x, origY: hl.y }
-        const onMove = (ev: MouseEvent) => {
-          if (!hlineDragRef.current) return
-          let dx = (ev.clientX - hlineDragRef.current.startX) / zoomVal
-          let dy = (ev.clientY - hlineDragRef.current.startY) / zoomVal
-          if (ev.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0 }
-          const newX = hlineDragRef.current.origX + dx
-          const newY = hlineDragRef.current.origY + dy
-          setNotes(prev => prev.map(n => n.id !== tid ? n : {
-            ...n, hlines: { ...(n.hlines || {}), [pidx]: (n.hlines?.[pidx] || []).map(h => h.id !== hlineDragRef.current!.id ? h : { ...h, x: newX, y: newY }) }
-          }))
-        }
-        const onUp = () => {
-          hlineDragRef.current = null
-          window.removeEventListener('mousemove', onMove)
-          window.removeEventListener('mouseup', onUp)
-        }
-        window.addEventListener('mousemove', onMove)
-        window.addEventListener('mouseup', onUp)
-        return
-      }
-    }
-
     // No line clicked, clear line selection and start box selection
     selectedLineRef.current = null
     selectedHLineIdsRef.current = new Set()
@@ -698,10 +679,39 @@ export function useBoxDrawing({
         pageIdx: pidx,
         boxes: [...(note.boxes[pidx] || [])],
         drawings: note.drawings?.[pidx] ? [...note.drawings[pidx]] : undefined,
+        hlines: [...(note.hlines?.[pidx] || [])],
       })
       if (undoStackRef.current.length > 50) undoStackRef.current.shift()
+      redoStackRef.current = []
     }
   }, [])
+  useEffect(() => { pushUndoRef.current = pushUndo }, [pushUndo])
+
+  const selectHLines = useCallback((next: Set<string>) => {
+    selectedHLineIdsRef.current = next
+    selectedLineRef.current = null
+    if (next.size) setSelectedBoxIds(new Set())
+    setHlineSelectionVersion(c => c + 1)
+  }, [setSelectedBoxIds])
+
+  // Replace the current page's lines (one undo step) — used after drag/resize.
+  const commitHLines = useCallback((next: HLine[]) => {
+    pushUndo()
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+    setNotes(prev => prev.map(n => n.id !== tid ? n : { ...n, hlines: { ...(n.hlines || {}), [pidx]: next } }))
+  }, [pushUndo, setNotes])
+
+  // Add a line to the current page and select it (one undo step).
+  const addHLine = useCallback((line: HLine) => {
+    pushUndo()
+    const tid = activeTabIdRef.current
+    const pidx = currentPageIdxRef.current
+    setNotes(prev => prev.map(n => n.id !== tid ? n : { ...n, hlines: { ...(n.hlines || {}), [pidx]: [...(n.hlines?.[pidx] || []), line] } }))
+    setSelectedBoxIds(new Set())
+    selectedHLineIdsRef.current = new Set([line.id])
+    setHlineSelectionVersion(c => c + 1)
+  }, [pushUndo, setNotes, setSelectedBoxIds])
 
   const deleteBox = useCallback((id: string) => {
     pushUndo()
@@ -960,8 +970,8 @@ export function useBoxDrawing({
   return useMemo(() => ({
     selectionVersion, selectedBoxIdsRef, selectedDrawingIdsRef, setSelectedBoxIds, selectBox, selectionRectRef, loadingBoxId,
     lineSelectionVersion, selectedLineRef,
-    hlineSelectionVersion, selectedHLineIdsRef,
+    hlineSelectionVersion, selectedHLineIdsRef, selectHLines, commitHLines, addHLine, pushUndo,
     onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes,
     autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox
-  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox])
+  }), [selectionVersion, setSelectedBoxIds, selectBox, loadingBoxId, lineSelectionVersion, hlineSelectionVersion, selectHLines, commitHLines, addHLine, pushUndo, onPaperMouseDown, startDrag, startResize, deleteBox, updateBoxContent, updateBox, updateBoxes, autoAlign, verticalAlign, centerStack, twoColumnGrid, distributeEvenly, setBoxAlignment, rewriteBox])
 }
