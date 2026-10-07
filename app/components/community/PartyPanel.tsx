@@ -137,7 +137,7 @@ function PartyGoal({ partyId, total, members, isDark, text, sub }: { partyId: nu
           ) : (
             <>
               <span style={{ color: sub, fontSize: 13 }}>Everyone gets a rare seed.</span>
-              <button onClick={claim} style={{ marginLeft: 'auto', position: 'relative', padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              <button onClick={claim} style={{ marginLeft: 'auto', position: 'relative', padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
                 Claim seed
                 {[0, 1, 2, 3, 4, 5].map(i => (
@@ -219,19 +219,20 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
     finally { setBusy(false) }
   }
 
-  const field = { padding: '9px 12px', borderRadius: 10, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
+  const field = { padding: '8px 11px', borderRadius: 6, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: isDark ? '#0e0c09' : '#fff', color: text } as const
-  const btn = (enabled = true) => ({ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: enabled ? 'pointer' : 'default',
+  const btn = (enabled = true) => ({ padding: '8px 14px', borderRadius: 6, border: 'none', cursor: enabled ? 'pointer' : 'default',
     background: accent, color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14, opacity: enabled ? 1 : 0.5 } as const)
-  const ghostBtn = { padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
+  const ghostBtn = { padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: 'transparent', color: text } as const
 
   const Tabs = (
-    <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+    <div style={{ display: 'flex', gap: 20, marginBottom: 18, borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}` }}>
       {(['party', 'friends'] as const).map(t => (
         <button key={t} onClick={() => { setTab(t); setMsg(null) }}
-          style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14, textTransform: 'capitalize',
-            background: tab === t ? accent : 'transparent', color: tab === t ? '#fff' : sub }}>{t}</button>
+          style={{ position: 'relative', padding: '4px 0 8px', marginBottom: -1, border: 'none', background: 'none', cursor: 'pointer',
+            fontFamily: 'Inter, system-ui, sans-serif', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: tab === t ? text : sub, borderBottom: `2px solid ${tab === t ? accent : 'transparent'}`, transition: 'color .15s, border-color .15s' }}>{t}</button>
       ))}
     </div>
   )
@@ -346,7 +347,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
     const join = () => run(async () => { await joinParty(code); setCode(""); setMode('choose') })
     const choice = (label: string, hint: string, primary: boolean, onClick: () => void) => (
       <button onClick={onClick}
-        style={{ flex: 1, padding: '16px 14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
+        style={{ flex: 1, padding: '14px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
           border: primary ? 'none' : `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`,
           background: primary ? `linear-gradient(135deg, ${accent}, #b45309)` : 'transparent',
           color: primary ? '#fff' : text, boxShadow: primary ? '0 8px 20px -10px rgba(217,119,6,0.7)' : 'none' }}>
@@ -433,7 +434,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
       <button onClick={copy} title="copy invite code"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 6, cursor: 'pointer',
           border: `1px dashed ${isDark ? '#3f3f46' : '#d8d2c4'}`, background: 'transparent', color: text }}>
         <span style={{ color: sub, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>invite</span>
         <span style={{ color: accent, fontSize: 15, letterSpacing: '0.15em', fontWeight: 600 }}>{p.code}</span>
@@ -441,7 +442,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       </button>
       {p.members.length < PARTY_CAP && (
         <button onClick={copyLink} title={inviteLink}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', border: 'none',
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, cursor: 'pointer', border: 'none',
             background: linkCopied ? 'rgba(52,211,153,0.15)' : 'rgba(217,119,6,0.12)', color: linkCopied ? '#34d399' : accent, fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
           {linkCopied ? '✓ link copied' : '🔗 copy invite link'}
         </button>
