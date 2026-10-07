@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react"
+import { playSound } from "@/lib/sound"
 import type { NoteData } from "@/app/types"
 import { extractTextFromHTML } from "@/lib/sanitize"
 import { apiFetch } from "@/lib/apiFetch"
@@ -244,6 +245,7 @@ export const ReviewView = memo(function ReviewView({ note, theme, accent, onClos
       const data = await res.json().catch(() => null)
       if (res.ok && data?.verdict) {
         setResult({ verdict: data.verdict, feedback: data.feedback || "" })
+        playSound(data.verdict === "correct" ? "correct" : data.verdict === "partial" ? "partial" : "wrong")
       } else {
         setGradeFailed(true)
       }

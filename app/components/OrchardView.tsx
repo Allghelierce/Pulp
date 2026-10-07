@@ -1,5 +1,6 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { playSound } from "@/lib/sound"
 import { motion, AnimatePresence } from "framer-motion"
 import { TREE_TYPES, getLevel } from "@/app/constants"
 import { PlantIcon } from "./PlantIcon"
@@ -2867,6 +2868,7 @@ export const OrchardView = memo(function OrchardView({
   const collectAllSap = useCallback(() => {
     const amount = getAvailableSap()
     if (amount <= 0) return
+    playSound('collect')
 
     const gemAmount = getAvailableGems()
     if (gemAmount > 0) setGems?.((g: number) => g + gemAmount)

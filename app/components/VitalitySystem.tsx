@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, memo, useCallback } from "react"
+import { playSound } from "@/lib/sound"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, NoteData, TextBox, Tree } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
@@ -325,6 +326,7 @@ export const VitalitySystem = memo(function VitalitySystem({
           setTimerRunning(false)
           setTimerDone(true)
           setTimerElapsed(timerTotal)
+          playSound('timerDone')
           return
         }
         const next = prev + 1
@@ -350,6 +352,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [timerRunning, timerDone, timerTotal])
 
   const startSession = useCallback(() => {
+    playSound('timerStart')
     if (selectedSeed && selectedSeed !== 'tangerine') {
       const idx = inventory.indexOf(selectedSeed)
       if (idx === -1) {
@@ -379,6 +382,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const [waterCount, setWaterCount] = useState(0)
 
   const giveUp = useCallback(() => {
+    playSound('giveUp')
     setTimerRunning(false)
     setTreeDead(true)
     setDeathReason("You gave up on your session")
@@ -512,6 +516,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
   const claimReward = useCallback(async () => {
     if (!timerDone || treeDead) return
+    playSound('plant')
     const sessionMinutes = timerTotal / 60
     const treeType = selectedSeed || 'tangerine'
     const treeInfo = TREE_TYPES[treeType]
@@ -601,6 +606,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const claimAchievement = useCallback((id: string) => {
     const target = achievements.find(x => x.id === id)
     if (!target || !target.completed || target.claimed) return
+    playSound('achievement')
     setSap(s => s + target.reward)
     setAchievements(prev => prev.map(x => x.id === id && !x.claimed ? { ...x, claimed: true } : x))
   }, [achievements, setSap, setAchievements])

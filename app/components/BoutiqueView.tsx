@@ -1,5 +1,6 @@
 "use client"
 import { memo, useState, useEffect, useRef, useCallback } from "react"
+import { playSound } from "@/lib/sound"
 import { TREE_TYPES } from "@/app/constants"
 import { getPalette, getType, chipButton } from "@/app/theme/palette"
 import { PlantIcon } from "./PlantIcon"
@@ -724,6 +725,7 @@ export const BoutiqueView = memo(function BoutiqueView({
       localStorage.setItem('pulp_revealed_cards', JSON.stringify([...next]))
       setCrackingCard(null)
       setRevealEffect({ index, rarity })
+      playSound(rarity === 'common' || rarity === 'uncommon' ? 'reveal' : 'revealRare')
       const effectDur = rarity === 'sacred' ? 6000 : rarity === 'true rare' ? 4000 : rarity === 'rare' ? 1500 : rarity === 'uncommon' ? 1000 : 600
       setTimeout(() => setRevealEffect(null), effectDur)
     }, crackDur)
@@ -766,6 +768,7 @@ export const BoutiqueView = memo(function BoutiqueView({
     setShopStock(nextStock)
     localStorage.setItem('pulp_shop_stock', JSON.stringify(nextStock))
     setInventory(inv => [...inv, type])
+    playSound('buy')
   }
 
   const discardSeed = (index: number) => setInventory(inv => inv.filter((_, i) => i !== index))

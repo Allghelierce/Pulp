@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
+import { getSoundPrefs, setSoundPrefs, playSound, type SoundPrefs } from "@/lib/sound"
 import { supabase } from "@/lib/supabase"
 import { SettingToggle } from "./SettingToggle"
 import { SettingRow } from "./SettingRow"
@@ -641,6 +642,8 @@ export const SettingsView = memo(function SettingsView({ user, onClose, config, 
                   <ShortcutKey label="Next Page" id="nextPage" currentKey={shortcuts.nextPage || "alt+arrowright"} defaultKey="alt+arrowright" isDark={isDark} onUpdate={(id, k) => onUpdateConfig({ shortcuts: { ...shortcuts, [id]: k } })} />
                 </div>
               </SettingSection>
+
+              <SoundSection isDark={isDark} />
 
               <SettingSection title="Daily Goal" isDark={isDark}>
                 <SettingRow
@@ -1502,6 +1505,38 @@ function SyncSection({ isDark, onSyncNow }: { isDark: boolean; onSyncNow: () => 
           </p>
         )}
       </div>
+    </SettingSection>
+  )
+}
+
+function SoundSection({ isDark }: { isDark: boolean }) {
+  const [prefs, setPrefs] = useState(getSoundPrefs)
+  const update = (patch: Partial<SoundPrefs>) => { setSoundPrefs(patch); setPrefs(getSoundPrefs()) }
+  return (
+    <SettingSection title="Sound" isDark={isDark}>
+      <SettingRow
+        title="Sound effects"
+        isDark={isDark}
+        description="Chimes for the timer, trees, sap, the market, and recall"
+        control={<SettingToggle checked={prefs.enabled} onChange={v => { update({ enabled: v }); if (v) playSound("correct") }} isDark={isDark} />}
+      />
+      {prefs.enabled && (
+        <SettingRow
+          title="Volume"
+          isDark={isDark}
+          control={
+            <input
+              type="range" min={0} max={100} step={5}
+              value={Math.round(prefs.volume * 100)}
+              onChange={e => update({ volume: Number(e.target.value) / 100 })}
+              onPointerUp={() => playSound("correct")}
+              onKeyUp={() => playSound("correct")}
+              aria-label="Sound volume"
+              style={{ width: 120, accentColor: "#d97706" }}
+            />
+          }
+        />
+      )}
     </SettingSection>
   )
 }
