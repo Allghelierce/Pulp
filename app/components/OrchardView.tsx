@@ -3334,7 +3334,7 @@ export const OrchardView = memo(function OrchardView({
 
             {/* Ready to recall — directs the student to what needs remembering */}
             {(recallDue.topics.length > 0 || recallDue.untagged.length > 0) && !focusedTree && (
-              <div data-orchard-ui className="absolute left-0 right-0 z-30 flex justify-center pointer-events-none" style={{ bottom: 22, padding: '0 16px' }}>
+              <div data-orchard-ui className="absolute left-0 right-0 z-30 flex justify-center pointer-events-none" style={{ bottom: typeof window !== 'undefined' && window.innerWidth < 640 ? 64 : 22, padding: '0 16px' }}>
                 <style>{`@keyframes recall-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }`}</style>
                 <div className="pointer-events-auto flex items-center gap-2 flex-wrap justify-center" style={{
                   maxWidth: 720, padding: '8px 10px 8px 14px', borderRadius: 14,

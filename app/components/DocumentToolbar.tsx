@@ -5,6 +5,9 @@ import { PulpIcon } from '@/app/components/CurrencyIcons'
 import { ACCENT_COLORS } from '@/app/components/settings/SettingsView'
 
 interface DocumentToolbarProps {
+  /** Narrow windows: the hanging bookmark ribbon folds into the toolbar as this button. */
+  bookmarked?: boolean
+  onToggleBookmark?: () => void
   accent: string
   zoom: string
   theme: "light" | "dark"
@@ -97,7 +100,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
   strokeColor, onStrokeColorChange, lineWidth, onLineWidthChange, onUndo, onRedo, canUndo, canRedo, onClearDrawing,
   userAvatarUrl, userEmail, onOpenLeaderboard, onOpenSettings, onOpenVersionHistory, darkPaper, selectedBoxCount, unlockedCosmetics = [],
   goalStreak = 0,
-  quotaTier = 'monthly'
+  quotaTier = 'monthly',
+  bookmarked = false, onToggleBookmark,
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -554,6 +558,20 @@ export const DocumentToolbar = memo(function DocumentToolbar({
             </div>
           )}
         </div>
+
+        {/* Bookmark (narrow windows — replaces the hanging ribbon) */}
+        {onToggleBookmark && (
+          <button
+            onMouseDown={e => { e.preventDefault(); onToggleBookmark() }}
+            title={bookmarked ? "Remove bookmark" : "Bookmark this page"}
+            aria-pressed={bookmarked}
+            className={`${btn(bookmarked)} flex items-center gap-1.5 shrink-0`}
+            style={{ ...btnFont, ...(bookmarked ? { color: '#E11D48', borderColor: 'rgba(225,29,72,0.45)' } : {}) }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+            {!compact && <span>{bookmarked ? 'bookmarked' : 'bookmark'}</span>}
+          </button>
+        )}
 
         {isVault && (
           <button
