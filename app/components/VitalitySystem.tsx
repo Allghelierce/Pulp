@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, memo, useCallback } from "react"
-import { playSound } from "@/lib/sound"
+import { playSound, playAlert } from "@/lib/sound"
 import { TimerSidebarPanel } from "./TimerSidebarPanel"
 import type { Achievement, NoteData, TextBox, Tree } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
@@ -24,6 +24,21 @@ function sessionWrittenText(noteId: string | null): string | null {
   const snap = readSnapshot()
   if (!noteId || !snap || snap.noteId !== noteId) return null
   return newText(snap.lines || "", noteLines(readNote(noteId)))
+}
+
+// Watering (sessions of 10+ min): due every 15 min. Heads-up 2 min before due;
+// 3 min after due the tree wilts (growth pauses); 15 min after due it dies.
+const WATER_INTERVAL_MS = 15 * 60_000
+const WATER_ALERT_MS = 2 * 60_000
+const WILT_AFTER_MS = 3 * 60_000
+const DIE_AFTER_MS = 15 * 60_000
+type WaterState = 'ok' | 'due' | 'wilting' | 'dead'
+function waterState(dueAt: number | null | undefined, now: number): WaterState {
+  if (!dueAt) return 'ok'
+  if (now > dueAt + DIE_AFTER_MS) return 'dead'
+  if (now > dueAt + WILT_AFTER_MS) return 'wilting'
+  if (now > dueAt - WATER_ALERT_MS) return 'due'
+  return 'ok'
 }
 
 // Claim feedback events, consumed by PlantedToast.
@@ -179,7 +194,7 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (!t || !t.running || t.done || _backupExpired) return false
     const elapsed = (t.elapsed || 0) + Math.floor((Date.now() - (t.timestamp || Date.now())) / 1000)
     if (elapsed >= (t.total ?? 25 * 60)) return false
-    if (t.waterDeadline && Date.now() > t.waterDeadline) return false
+    if (waterState(t.waterDeadline, Date.now()) === 'dead') return false
     return true
   })
   const [timerDone, setTimerDone] = useState(() => {
@@ -200,13 +215,13 @@ export const VitalitySystem = memo(function VitalitySystem({
     if (!t) return false
     if (_wasInCancelWindow) return false
     if (_backupExpired) return true
-    return !!(t.running && !t.done && t.waterDeadline && Date.now() > t.waterDeadline)
+    return !!(t.running && !t.done && waterState(t.waterDeadline, Date.now()) === 'dead')
   })
   const [deathReason, setDeathReason] = useState<string | null>(() => {
     if (_wasInCancelWindow) return null
     if (_backupExpired) return "You were away too long"
     const t = _saved.current
-    if (t && t.running && !t.done && t.waterDeadline && Date.now() > t.waterDeadline) return "Your tree wasn't watered in time"
+    if (t && t.running && !t.done && waterState(t.waterDeadline, Date.now()) === 'dead') return "Your tree wasn't watered in time"
     return null
   })
   const [selectedSeed, setSelectedSeed] = useState<string | null>(() => _backupExpired ? null : (_saved.current?.selectedSeed ?? null))
@@ -230,8 +245,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [setGrove])
 
   const WATER_REQUIRED_THRESHOLD = 10 * 60
-  const WATER_INTERVAL_SEC = 15 * 60
-  const WATER_GRACE_SEC = 90
+  const [wilting, setWilting] = useState(false)
 
   // Timer state is now initialized from sessionStorage in useState initializers above
 
@@ -270,37 +284,51 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
   }, [goalStreakLastDate, goalStreak, setSap, setGoalStreak, isHibernating])
 
-  // Request notification permission when a session starts
+  // Ask for notification permission when a session that needs watering starts.
   useEffect(() => {
-    if (timerRunning && typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission()
+    if (timerRunning && waterDeadline && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {})
     }
-  }, [timerRunning])
+  }, [timerRunning, waterDeadline])
 
-  // Send water reminder notification when tab is hidden
-  const waterNotiSentRef = useRef(false)
+  // Watering alerts: chime + system notification (if Pulp isn't in front) + buzz (Android)
+  // when watering comes due, again when the tree starts wilting; tab title blinks meanwhile.
+  const waterAlertedRef = useRef<{ due?: number; wilt?: number }>({})
   useEffect(() => {
-    if (!timerRunning || !waterDeadline) { waterNotiSentRef.current = false; return }
-    const check = () => {
-      if (!document.hidden) { waterNotiSentRef.current = false; return }
-      const wd = waterDeadlineRef.current
-      if (!wd || waterNotiSentRef.current) return
-      const msLeft = wd - Date.now()
-      if (msLeft > 0 && msLeft < 90_000) {
-        waterNotiSentRef.current = true
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          const n = new Notification('Your tree needs water!', {
-            body: `${Math.ceil(msLeft / 1000)}s left — come back before it wilts.`,
-            icon: '/pulp_logo.svg',
-            tag: 'pulp-water',
-          })
-          n.onclick = () => { window.focus(); n.close() }
-        }
-      }
+    if (!timerRunning || !waterDeadline) return
+    const baseTitle = document.title
+    let blink = false
+    const notify = (title: string, body: string) => {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+      if (!document.hidden && document.hasFocus()) return
+      try {
+        const n = new Notification(title, { body, icon: '/pulp_logo.svg', tag: 'pulp-water' })
+        n.onclick = () => { window.focus(); n.close() }
+      } catch { }
     }
+    const check = () => {
+      const wd = waterDeadlineRef.current
+      const st = waterState(wd, Date.now())
+      if (!wd || st === 'ok' || st === 'dead') { document.title = baseTitle; return }
+      if (waterAlertedRef.current.due !== wd) {
+        waterAlertedRef.current.due = wd
+        playAlert('water')
+        try { navigator.vibrate?.([180, 90, 180]) } catch { }
+        notify('💧 Water your tree', 'Tap the watering can in Pulp to keep it growing.')
+      }
+      if (st === 'wilting' && waterAlertedRef.current.wilt !== wd) {
+        waterAlertedRef.current.wilt = wd
+        playAlert('water')
+        try { navigator.vibrate?.([300, 120, 300]) } catch { }
+        notify('🥀 Your tree is wilting', "It stopped growing — water it to keep your session going.")
+      }
+      blink = !blink
+      document.title = blink ? (st === 'wilting' ? '🥀 Your tree is wilting!' : '💧 Water your tree!') : baseTitle
+    }
+    check()
+    const iv = setInterval(check, 1000)
     document.addEventListener('visibilitychange', check)
-    const interval = setInterval(check, 10_000)
-    return () => { document.removeEventListener('visibilitychange', check); clearInterval(interval) }
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', check); document.title = baseTitle }
   }, [timerRunning, waterDeadline])
 
   // Latest elapsed seconds, readable from the interval without a state updater.
@@ -312,13 +340,16 @@ export const VitalitySystem = memo(function VitalitySystem({
     let interval: ReturnType<typeof setInterval>
     if (timerRunning && !timerDone) {
       interval = setInterval(() => {
-        const wd = waterDeadlineRef.current
-        if (wd && Date.now() > wd) {
+        const ws = waterState(waterDeadlineRef.current, Date.now())
+        if (ws === 'dead') {
           setTimerRunning(false)
           setTreeDead(true)
           setDeathReason("Your tree wasn't watered in time")
+          setWilting(false)
           return
         }
+        // Wilting: the session pauses (no growth) until the tree is watered.
+        if (ws === 'wilting') { setWilting(true); return }
         // Side effects stay out of the setState updater: updaters run during
         // render, and calling store setters there warns ("Cannot update a component…").
         const prev = timerElapsedRef.current
@@ -376,13 +407,15 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
     setWaterCount(0)
     // Presence check: sessions of 10+ min need a tap on the watering can every 15 min (+90s grace).
-    setWaterDeadline(timerTotal >= WATER_REQUIRED_THRESHOLD ? Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000 : null)
+    setWilting(false)
+    setWaterDeadline(timerTotal >= WATER_REQUIRED_THRESHOLD ? Date.now() + WATER_INTERVAL_MS : null)
   }, [timerTotal, activeTabId, selectedSeed, inventory, setInventory, activeGroupId])
 
   const [waterCount, setWaterCount] = useState(0)
 
   const giveUp = useCallback(() => {
     playSound('giveUp')
+    setWilting(false)
     setTimerRunning(false)
     setTreeDead(true)
     setDeathReason("You gave up on your session")
@@ -390,6 +423,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   }, [])
 
   const cancelSession = useCallback(() => {
+    setWilting(false)
     setTimerRunning(false)
     setTimerElapsed(0)
     setTimerDone(false)
@@ -414,9 +448,10 @@ export const VitalitySystem = memo(function VitalitySystem({
     }
 
     setWaterCount(c => c + 1)
+    setWilting(false)
     const remainingSec = timerTotal - timerElapsed
-    if (remainingSec > WATER_INTERVAL_SEC) {
-      setWaterDeadline(Date.now() + (WATER_INTERVAL_SEC + WATER_GRACE_SEC) * 1000)
+    if (remainingSec * 1000 > WATER_INTERVAL_MS) {
+      setWaterDeadline(Date.now() + WATER_INTERVAL_MS)
     } else {
       setWaterDeadline(null)
     }
@@ -598,6 +633,7 @@ export const VitalitySystem = memo(function VitalitySystem({
   const handleClose = useCallback(() => onSetTimerOpen(false), [onSetTimerOpen])
 
   const dismissDeadTree = useCallback(() => {
+    setWilting(false)
     setTimerElapsed(0)
     setTimerDone(false)
     setTreeDead(false)
@@ -664,6 +700,7 @@ export const VitalitySystem = memo(function VitalitySystem({
       theme={theme}
       sidebarWidth={sidebarWidth}
       waterDeadline={waterDeadline}
+      wilting={wilting}
       treeDead={treeDead}
       deathReason={deathReason}
       onSetTotal={setTimerTotal}

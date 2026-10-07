@@ -25,6 +25,8 @@ interface TimerSidebarPanelProps {
   theme: "light" | "dark"
   sidebarWidth: number
   waterDeadline: number | null
+  /** Watering is overdue: the tree droops and the session is paused until watered. */
+  wilting?: boolean
   treeDead: boolean
   deathReason: string | null
   onSetTotal: (v: number) => void
@@ -230,7 +232,7 @@ function WateringCan({ frac, urgent, stroke }: { frac: number; urgent: boolean; 
 
 export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   isOpen, onClose, elapsed, total, running, done, theme, sidebarWidth,
-  waterDeadline, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
+  waterDeadline, wilting = false, treeDead, deathReason, onSetTotal, onStart, onGiveUp, onCancel, onWater, onClaim, onDismissDead,
   inventory, selectedSeed, onSelectSeed, onOpenSatchel,
   grove = [], goalStreak = 0, quotaTier = 'monthly', dailyGoalMinutes = 30, isHibernating = false, hidden = false, onOpenStats,
 }: TimerSidebarPanelProps) {
@@ -341,7 +343,8 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const waterMin = Math.floor(waterSecLeft / 60)
   const waterSec = waterSecLeft % 60
   // The deadline includes a 90s grace, so this shows the can ~2 min before watering is due.
-  const waterUrgent = waterMsLeft > 0 && waterMsLeft < 210_000
+  // Show the can from 2 min before watering is due, and while it's overdue.
+  const waterUrgent = waterDeadline !== null && now > waterDeadline - 120_000
   const showWaterWidget = running && waterDeadline !== null
   const waterWindowMs = Math.floor(total / 3) * 1000 + 90_000
   const waterFrac = waterWindowMs > 0 ? Math.max(0, Math.min(1, waterMsLeft / waterWindowMs)) : 0
@@ -377,7 +380,13 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
   const treeVisual = (
     <div
       className="relative w-full mx-auto"
-      style={{ height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined }}
+      style={{
+        height: 160, marginTop: running ? 24 : 8, cursor: !running && !done && !treeDead && inventory.length > 0 ? 'pointer' : undefined,
+        // Wilting: the plant droops and loses color until it's watered.
+        filter: wilting ? 'saturate(0.35) brightness(0.8)' : undefined,
+        transform: wilting ? 'rotate(-4deg) translateY(4px)' : undefined, transformOrigin: 'bottom center',
+        transition: 'filter 1.2s ease, transform 1.2s ease',
+      }}
       onClick={() => { if (!running && !done && !treeDead && inventory.length > 0) { setSeedPage(0); setSeedTrayOpen(true) } }}
     >
       <div className="w-full h-full" style={{ filter: treeDead ? "grayscale(1) brightness(0.5)" : undefined, opacity: treeDead ? 0.55 : 1, transition: "filter 0.5s, opacity 0.5s" }}>
@@ -674,6 +683,10 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                     title="Hover to see time left"
                   >
                     <div style={{ height: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 10 }}>
+                      {wilting && !timerHover ? (
+                        // Shown directly (no swap animation) so it can't get stuck behind an exit.
+                        <span style={{ fontFamily: serifFont, fontSize: 14, color: '#f87171', lineHeight: 1 }}>Wilting — water it!</span>
+                      ) : (
                       <AnimatePresence mode="wait" initial={false}>
                         {timerHover ? (
                           <motion.span key="time" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.15 }}
@@ -687,6 +700,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                           </motion.span>
                         )}
                       </AnimatePresence>
+                      )}
                     </div>
                     <div className="relative mx-auto" style={{ width: '82%', height: 12 }}>
                       <div style={{ position: 'absolute', top: 4, left: 0, right: 0, height: 4, borderRadius: 2, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />

@@ -6,7 +6,7 @@
 export type SoundName =
   | "timerStart" | "timerDone" | "giveUp" | "plant"
   | "collect" | "reveal" | "revealRare" | "buy"
-  | "correct" | "partial" | "wrong" | "achievement" | "tap"
+  | "correct" | "partial" | "wrong" | "achievement" | "tap" | "water"
 
 const KEY = "pulp-sound"
 export const SOUND_CHANGE_EVENT = "pulp-sound-change"
@@ -82,7 +82,17 @@ const SOUNDS: Record<SoundName, Note[]> = {
   correct: [{ f: E5, dur: 0.14 }, { f: A5, at: 0.09, dur: 0.28 }],
   partial: [{ f: D5, dur: 0.2, gain: 0.18 }],
   wrong: [{ f: C4 * 1.5, slideTo: C4, dur: 0.3, type: "triangle", gain: 0.14 }],
+  // Two soft droplet "plinks", twice — the watering reminder.
+  water: [0, 0.55].flatMap(t => [{ f: 1250, slideTo: 620, at: t, dur: 0.14, gain: 0.16 }, { f: 940, slideTo: 470, at: t + 0.16, dur: 0.16, gain: 0.13 }]),
   achievement: [C5, E5, G5, C6, G5, C6].map((f, i) => ({ f, at: i * 0.09, dur: i === 5 ? 0.6 : 0.16, type: "triangle" as const, gain: 0.15 })),
+}
+
+// Reminders (like watering) must reach someone on another tab, so these play even
+// when the page is hidden. Still respects the sound on/off setting.
+export function playAlert(name: SoundName) {
+  const { enabled, volume } = getSoundPrefs()
+  if (!enabled || volume <= 0) return
+  try { play(SOUNDS[name], Math.min(1, volume) * 0.9) } catch {}
 }
 
 let lastPlayed = 0
