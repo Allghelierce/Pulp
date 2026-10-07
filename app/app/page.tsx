@@ -37,6 +37,7 @@ import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
+import { PartyPresence } from "@/app/components/community/PartyPresence"
 import { PulpLoadingScreen } from "@/app/components/PulpLoadingScreen"
 import { PulpLoader } from "@/app/components/PulpLoader"
 import { PlantImagePreloader } from "@/app/components/dashboard/widgets/CachedPlantImage"
@@ -1304,6 +1305,7 @@ export default function NoteApp() {
   const [reviewNoteId, setReviewNoteId] = useState<string | undefined>(undefined)
   fullscreenOpenRef.current = orchardOpen || shopOpen || statsOpen || leaderboardOpen || reviewOpen || communityOpen || topicsOpen
   const closeAllPanels = useCallback(() => { setOrchardOpen(false); setLeaderboardOpen(false); setShopOpen(false); setStatsOpen(false); setReviewOpen(false); setReviewTopic(undefined); setReviewNoteId(undefined); setOrchardFocusTopic(undefined); setTopicsOpen(false); setShowSettings(false); setCommunityOpen(false) }, [])
+  const openParty = useCallback(() => { startTransition(() => { closeAllPanels(); setLeaderboardOpen(true) }) }, [closeAllPanels])
 
   useEffect(() => {
     _preloadDashboard(); _preloadStats(); _preloadOrchard()
@@ -4674,6 +4676,8 @@ export default function NoteApp() {
               </m.div>
             )}
           </AnimatePresence>
+
+          <PartyPresence onOpenParty={openParty} />
 
           {!showSettings && notes.filter(n => !n.archived).length > 0 && !gridView && (
             <HangingOrange recallDue={orchardOpen ? 0 : allRecallDue} recallTopic={recallTopTopic} retracted={!!quizState || showVersionHistory || showNotebookChat || statsOpen || shopOpen || reviewOpen || topicsOpen} aiMode={aiHubOpen} onClick={() => { if (orchardOpen) { setOrchardOpen(false) } else { startTransition(() => { closeAllPanels(); setOrchardOpen(true) }) } }} />

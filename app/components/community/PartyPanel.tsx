@@ -1,9 +1,12 @@
 "use client"
-import { useState, useEffect, useCallback, memo } from "react"
+import { useState, useEffect, useCallback, useRef, memo } from "react"
 import { loadParty, createParty, joinParty, cancelJoin, answerRequest, leaveParty, standings, hasJoinedBefore, PARTY_CAP, type PartyState } from "@/lib/party"
 import { loadFriends, addFriend, answerFriend, removeFriend, type FriendsState, type Friend } from "@/lib/friends"
 import { PlantIcon } from "@/app/components/PlantIcon"
-import { useGroupPresence } from "./useGroupPresence"
+import { usePartyPresence } from "./PartyPresence"
+import { useGroveStore } from "@/app/store/useGroveStore"
+import { TREE_TYPES } from "@/app/constants"
+import { getWeekStart } from "@/lib/leagues"
 
 const accent = '#d97706'
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -28,16 +31,18 @@ const centerOut = (n: number) => {
   return Array.from({ length: n }, (_, i) => mid + (i % 2 ? -(i + 1) / 2 : i / 2))
 }
 
-const SCENE_CSS = `
+export const SCENE_CSS = `
 @keyframes groveFirefly { 0%,100% { transform: translate(0,0); opacity: 0 } 20% { opacity: .9 } 50% { transform: translate(var(--dx), var(--dy)); opacity: .6 } 80% { opacity: .9 } }
 @keyframes groveTwinkle { 0%,100% { opacity: .25 } 50% { opacity: .9 } }
 @keyframes groveMist { 0% { transform: translateX(-6%) } 100% { transform: translateX(6%) } }
 @keyframes groveRise { from { transform: translateY(10px) scale(.92); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes groveGlow { 0%,100% { opacity: .55 } 50% { opacity: .9 } }
+@keyframes groveFocus { 0%,100% { transform: scale(.92); opacity: .45 } 50% { transform: scale(1.08); opacity: .95 } }
+@keyframes groveBurst { 0% { transform: translate(0,0) scale(.6); opacity: 1 } 100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .grove-anim { animation: none !important } }
 `
 
-function GroveBackdrop({ isDark, height }: { isDark: boolean; height: number }) {
+export function GroveBackdrop({ isDark, height }: { isDark: boolean; height: number }) {
   const sky = isDark
     ? 'linear-gradient(180deg, #0b1a1a 0%, #10241f 45%, #16301f 100%)'
     : 'linear-gradient(180deg, #fde9c8 0%, #f3ecd2 40%, #dfe9cf 100%)'
@@ -76,7 +81,8 @@ function GroveBackdrop({ isDark, height }: { isDark: boolean; height: number }) 
 }
 
 type GroveMember = { id: string; username: string; weeklyMinutes: number; rank: number; isYou?: boolean }
-function PartyGrove({ members, cap, isDark }: { members: GroveMember[]; cap: number; isDark: boolean }) {
+// focusLeft: user id -> minutes left in their running focus session.
+function PartyGrove({ members, cap, isDark, focusLeft }: { members: GroveMember[]; cap: number; isDark: boolean; focusLeft: Record<string, number> }) {
   const H = 210
   const slots = centerOut(cap)
   const label = isDark ? '#e7e5e4' : '#3f3a33'
@@ -101,11 +107,16 @@ function PartyGrove({ members, cap, isDark }: { members: GroveMember[]; cap: num
         const stage = stageFor(m.weeklyMinutes)
         const size = 46 + stage * 13
         const lead = m.rank === 1 && m.weeklyMinutes > 0
+        const minsLeft = focusLeft[m.id]
+        const focusing = minsLeft != null
         return (
           <div key={m.id} className="grove-anim" title={`@${m.username} · ${m.weeklyMinutes} min this week`}
             style={{ position: 'absolute', left, bottom: 18, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center',
               animation: `groveRise .7s cubic-bezier(.2,.8,.2,1) ${i * 0.08}s both` }}>
             <div style={{ position: 'relative' }}>
+              {focusing && <div className="grove-anim" style={{ position: 'absolute', inset: -12, borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(52,211,153,0.40), rgba(52,211,153,0.10) 55%, transparent 70%)',
+                animation: 'groveFocus 2.4s ease-in-out infinite' }} />}
               {lead && <div className="grove-anim" style={{ position: 'absolute', inset: -10, borderRadius: '50%',
                 background: 'radial-gradient(circle, rgba(253,230,138,0.45), transparent 65%)', animation: 'groveGlow 3s ease-in-out infinite' }} />}
               <PlantIcon type={speciesFor(m.username)} size={size} stage={stage} hideGround />
@@ -115,9 +126,75 @@ function PartyGrove({ members, cap, isDark }: { members: GroveMember[]; cap: num
               textShadow: isDark ? '0 1px 2px rgba(0,0,0,0.6)' : '0 1px 0 rgba(255,255,255,0.6)' }}>
               {lead ? '👑 ' : ''}{m.isYou ? 'you' : `@${m.username}`}
             </div>
+            {focusing && (
+              <div style={{ fontSize: 10, color: '#34d399', whiteSpace: 'nowrap', marginTop: 1, letterSpacing: '0.02em' }}>
+                focusing{minsLeft > 0 ? ` · ${minsLeft}m` : ''}
+              </div>
+            )}
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Shared weekly goal ───────────────────────────────────────────
+// Everyone's minutes count toward one target; hitting it unlocks a rare seed
+// for each member (claimed once per party per week).
+const GOAL_PER_MEMBER = 90
+const RARE_SEEDS = Object.keys(TREE_TYPES).filter(k => TREE_TYPES[k].rarity === 'rare')
+const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`)
+
+function PartyGoal({ partyId, total, members, isDark, text, sub }: { partyId: number; total: number; members: number; isDark: boolean; text: string; sub: string }) {
+  const goal = GOAL_PER_MEMBER * Math.max(1, members)
+  const pct = Math.min(100, Math.round((total / goal) * 100))
+  const done = total >= goal
+  const claimKey = `pulp-party-reward:${partyId}:${getWeekStart()}`
+  const [claimed, setClaimed] = useState<string | null>(() => {
+    try { return typeof window === 'undefined' ? null : localStorage.getItem(claimKey) } catch { return null }
+  })
+  const claim = () => {
+    const seed = RARE_SEEDS[Math.floor(Math.random() * RARE_SEEDS.length)] || 'cypress'
+    useGroveStore.getState().setInventory(prev => [...prev, seed])
+    try { localStorage.setItem(claimKey, seed) } catch {}
+    setClaimed(seed)
+  }
+  return (
+    <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, position: 'relative', overflow: 'hidden',
+      background: done ? (isDark ? 'rgba(52,211,153,0.08)' : 'rgba(16,185,129,0.07)') : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+      border: `1px solid ${done ? 'rgba(52,211,153,0.30)' : 'transparent'}` }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ color: text, fontSize: 14 }}>{done ? 'Party goal reached 🎉' : 'Party goal'}</span>
+        <span style={{ color: sub, fontSize: 12 }}>{fmtMin(GOAL_PER_MEMBER)} each, together</span>
+        <span style={{ marginLeft: 'auto', color: done ? '#34d399' : accent, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{fmtMin(total)} / {fmtMin(goal)}</span>
+      </div>
+      <div style={{ marginTop: 8, height: 8, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 4, transition: 'width .8s cubic-bezier(.2,.8,.2,1)',
+          background: done ? 'linear-gradient(90deg, #059669, #34d399)' : 'linear-gradient(90deg, #4d7c0f, #65a30d 55%, #d97706)' }} />
+      </div>
+      {done && (
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+          {claimed ? (
+            <>
+              <PlantIcon type={claimed} size={28} stage={0} isSeed hideGround />
+              <span style={{ color: sub, fontSize: 13 }}>You got a <b style={{ color: text }}>{TREE_TYPES[claimed]?.name || claimed}</b> seed this week.</span>
+            </>
+          ) : (
+            <>
+              <span style={{ color: sub, fontSize: 13 }}>Everyone gets a rare seed.</span>
+              <button onClick={claim} style={{ marginLeft: 'auto', position: 'relative', padding: '7px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #059669, #10b981)', color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
+                Claim seed
+                {[0, 1, 2, 3, 4, 5].map(i => (
+                  <span key={i} className="grove-anim" style={{ position: 'absolute', left: '50%', top: '50%', width: 4, height: 4, borderRadius: 2, background: '#a7f3d0',
+                    ['--dx' as string]: `${Math.cos(i) * 26}px`, ['--dy' as string]: `${Math.sin(i) * 18}px`,
+                    animation: `groveBurst 1.6s ease-out ${i * 0.12}s infinite` } as React.CSSProperties} />
+                ))}
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -147,12 +224,18 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null)
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
+  // Loads can overlap (poll + action); only the newest one may set state.
+  const partySeq = useRef(0)
+  const friendsSeq = useRef(0)
   const refreshParty = useCallback(() => {
-    loadParty().then(setParty).catch(e => setMsg({ text: e.message }))
+    const seq = ++partySeq.current
+    loadParty().then(s => { if (seq === partySeq.current) setParty(s) }).catch(e => setMsg({ text: e.message }))
   }, [])
   const refreshFriends = useCallback(() => {
-    loadFriends().then(setFriends).catch(e => setMsg({ text: e.message }))
+    const seq = ++friendsSeq.current
+    loadFriends().then(s => { if (seq === friendsSeq.current) setFriends(s) }).catch(e => setMsg({ text: e.message }))
   }, [])
 
   useEffect(() => {
@@ -169,7 +252,8 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   }, [refreshParty, refreshFriends])
 
   const inParty = party?.kind === 'in' ? party : null
-  const { peers } = useGroupPresence(inParty?.party.id ?? null, { user_id: inParty?.me.id ?? '', username: inParty?.me.username ?? '' })
+  const presence = usePartyPresence()
+  const peers = presence.groupId === inParty?.party.id ? presence.peers : {}
   const online = (id: string) => !!peers[id] || id === inParty?.me.id
 
   // Run an action, show its error inline, keep buttons from double-firing.
@@ -293,7 +377,7 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
           You asked to join <b style={{ color: accent, letterSpacing: '0.1em' }}>{party.code}</b>. The party owner needs to accept you.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button disabled={busy} onClick={() => run(async () => { await loadParty().then(setParty) })} style={btn(!busy)}>Check again</button>
+          <button disabled={busy} onClick={() => run(async () => { refreshParty() })} style={btn(!busy)}>Check again</button>
           <button disabled={busy} onClick={() => run(cancelJoin)} style={ghostBtn}>Cancel request</button>
         </div>
         {Msg}
@@ -371,6 +455,16 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const p = party.party
   const rows = standings(p)
   const onlineCount = p.members.filter(m => online(m.id)).length
+  // Minutes left for anyone mid-session (0 once their timer runs out).
+  const focusLeft: Record<string, number> = {}
+  for (const m of p.members) {
+    const peer = peers[m.id]
+    if (peer?.status === 'focusing') focusLeft[m.id] = peer.timer_end ? Math.max(0, Math.ceil((peer.timer_end - Date.now()) / 60000)) : 0
+  }
+  const focusingCount = Object.keys(focusLeft).length
+  const weekTotal = p.members.reduce((sum, m) => sum + m.weeklyMinutes, 0)
+  const inviteLink = typeof window === 'undefined' ? '' : `${window.location.origin}/join/${p.code}`
+  const copyLink = () => { navigator.clipboard?.writeText(inviteLink); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 1500) }
   const maxMinutes = Math.max(0, ...rows.map(r => r.weeklyMinutes))
   const copy = () => { navigator.clipboard?.writeText(p.code); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
@@ -379,18 +473,29 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
       {Tabs}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <h2 style={{ color: text, fontSize: 20, margin: 0 }}>{p.name}</h2>
-        <span style={{ color: sub, fontSize: 13 }}>{p.members.length}/{PARTY_CAP} · {onlineCount} online</span>
+        <span style={{ color: sub, fontSize: 13 }}>{p.members.length}/{PARTY_CAP} · {onlineCount} online{focusingCount ? <> · <span style={{ color: '#34d399' }}>{focusingCount} focusing</span></> : null}</span>
       </div>
 
+      <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
       <button onClick={copy} title="copy invite code"
-        style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
           border: `1px dashed ${isDark ? '#3f3f46' : '#d8d2c4'}`, background: 'transparent', color: text }}>
         <span style={{ color: sub, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>invite</span>
         <span style={{ color: accent, fontSize: 15, letterSpacing: '0.15em', fontWeight: 600 }}>{p.code}</span>
         <span style={{ color: sub, fontSize: 12 }}>{copied ? '✓ copied' : '⧉'}</span>
       </button>
+      {p.members.length < PARTY_CAP && (
+        <button onClick={copyLink} title={inviteLink}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, cursor: 'pointer', border: 'none',
+            background: linkCopied ? 'rgba(52,211,153,0.15)' : 'rgba(217,119,6,0.12)', color: linkCopied ? '#34d399' : accent, fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
+          {linkCopied ? '✓ link copied' : '🔗 copy invite link'}
+        </button>
+      )}
+      </div>
 
-      <PartyGrove members={rows} cap={PARTY_CAP} isDark={isDark} />
+      <PartyGrove members={rows} cap={PARTY_CAP} isDark={isDark} focusLeft={focusLeft} />
+
+      <PartyGoal key={p.id} partyId={p.id} total={weekTotal} members={p.members.length} isDark={isDark} text={text} sub={sub} />
 
       {p.requests.length > 0 && (
         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -418,7 +523,10 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
               background: m.isYou ? 'rgba(217,119,6,0.12)' : rowBg,
               border: m.isYou ? `1px solid rgba(217,119,6,0.35)` : '1px solid transparent', color: text }}>
               <span style={{ width: 22, textAlign: 'center', fontSize: top ? 16 : 13, color: sub }}>{top ? MEDALS[m.rank - 1] : m.rank}</span>
-              <Dot on={online(m.id)} />
+              {focusLeft[m.id] != null
+                ? <span title="focusing" className="grove-anim" style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: '#34d399',
+                    boxShadow: '0 0 6px rgba(52,211,153,0.8)', animation: 'groveGlow 1.6s ease-in-out infinite' }} />
+                : <Dot on={online(m.id)} />}
               <Avatar name={m.username} color={m.color} />
               <span style={{ fontSize: 15 }}>@{m.username}{m.isYou ? ' (you)' : ''}{m.isOwner ? ' 👑' : ''}</span>
               <span style={{ marginLeft: 'auto', color: accent, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{m.weeklyMinutes} min</span>
