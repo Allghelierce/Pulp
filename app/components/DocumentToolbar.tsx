@@ -101,6 +101,7 @@ export const DocumentToolbar = memo(function DocumentToolbar({
 }: DocumentToolbarProps) {
 
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const customColorRef = useRef<HTMLInputElement>(null)
   const [toolbarWidth, setToolbarWidth] = useState(9999)
   const [displaySap, setDisplaySap] = useState(sap)
   const prevSapRef = useRef(sap)
@@ -488,7 +489,8 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                       boxShadow: strokeColor === (darkPaper ? '#ffffff' : '#000000') ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${darkPaper ? '#ffffff' : '#000000'}` : "none",
                     }}
                   />
-                  {ACCENT_COLORS.map(({ hex, cost, pro }) => {
+                  {/* Slate read as a second gray — its slot is a custom-color dropper instead. */}
+                  {ACCENT_COLORS.filter(c => c.hex !== '#64748b').map(({ hex, cost, pro }) => {
                     const cosmeticId = `accent_${hex}`
                     const isOwned = !cost && !pro ? true : unlockedCosmetics.includes(cosmeticId)
                     return (
@@ -506,6 +508,31 @@ export const DocumentToolbar = memo(function DocumentToolbar({
                     </button>
                     )
                   })}
+                  {(() => {
+                    const isCustom = strokeColor !== '#000000' && strokeColor !== '#ffffff' && !ACCENT_COLORS.some(c => c.hex.toLowerCase() === strokeColor.toLowerCase())
+                    return (
+                      <button
+                        onMouseDown={e => { e.preventDefault(); customColorRef.current?.click() }}
+                        className="w-[14px] h-[14px] rounded-full cursor-pointer hover:scale-125 transition-transform relative flex items-center justify-center"
+                        style={{
+                          background: isCustom ? strokeColor : 'conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)',
+                          boxShadow: isCustom ? `0 0 0 1.5px ${theme === "dark" ? "#27272a" : "#fff"}, 0 0 0 2.5px ${strokeColor}` : "none",
+                        }}
+                        title="Custom color"
+                      >
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8))' }}><path d="m2 22 1-1h3l9-9" /><path d="M3 21v-3l9-9" /><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z" /></svg>
+                        <input
+                          ref={customColorRef}
+                          type="color"
+                          value={/^#[0-9a-f]{6}$/i.test(strokeColor) ? strokeColor : '#000000'}
+                          onChange={e => onStrokeColorChange(e.target.value)}
+                          tabIndex={-1}
+                          aria-label="Custom color"
+                          style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                        />
+                      </button>
+                    )
+                  })()}
                   <div className={`h-px w-5 my-0.5 ${theme === "dark" ? "bg-zinc-800" : "bg-zinc-100"}`} />
                   <button onMouseDown={e => { e.preventDefault(); onUndo() }}
                     className={`h-6 w-7 flex items-center justify-center rounded-[4px] transition-colors cursor-pointer active:scale-[0.95] ${theme === "dark" ? "text-zinc-500 hover:bg-zinc-800" : "text-zinc-400 hover:bg-zinc-50"}`}
