@@ -1,8 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback, memo } from "react"
-import { getParty, createParty, joinParty, leaveParty, standings, hasJoinedBefore, PARTY_CAP, type Party } from "@/lib/party"
-import { getFriends, addFriend, removeFriend, isOnline, type Friend } from "@/lib/friends"
+import { loadParty, createParty, joinParty, cancelJoin, answerRequest, leaveParty, standings, hasJoinedBefore, PARTY_CAP, type PartyState } from "@/lib/party"
+import { loadFriends, addFriend, answerFriend, removeFriend, type FriendsState, type Friend } from "@/lib/friends"
 import { PlantIcon } from "@/app/components/PlantIcon"
+import { useGroupPresence } from "./useGroupPresence"
 
 const accent = '#d97706'
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -121,6 +122,15 @@ function PartyGrove({ members, cap, isDark }: { members: GroveMember[]; cap: num
   )
 }
 
+function Avatar({ name, color }: { name: string; color: string }) {
+  return (
+    <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: color,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>
+      {name[0]?.toUpperCase()}
+    </span>
+  )
+}
+
 export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" | "dark" }) {
   const isDark = theme === 'dark'
   const text = isDark ? '#fafafa' : '#0f0f10'
@@ -128,151 +138,276 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
   const rowBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
 
   const [tab, setTab] = useState<'party' | 'friends'>('party')
-  const [party, setParty] = useState<Party | null>(null)
-  const [friends, setFriends] = useState<Friend[]>([])
+  const [party, setParty] = useState<PartyState | null>(null)
+  const [friends, setFriends] = useState<FriendsState | null>(null)
+  const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
   const [friendInput, setFriendInput] = useState("")
-  const [msg, setMsg] = useState<string | null>(null)
+  const [msg, setMsg] = useState<{ text: string; ok?: boolean } | null>(null)
+  const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [, tick] = useState(0)
 
-  const refresh = useCallback(() => { setParty(getParty()); setFriends(getFriends()) }, [])
+  const refreshParty = useCallback(() => {
+    loadParty().then(setParty).catch(e => setMsg({ text: e.message }))
+  }, [])
+  const refreshFriends = useCallback(() => {
+    loadFriends().then(setFriends).catch(e => setMsg({ text: e.message }))
+  }, [])
+
   useEffect(() => {
-    refresh()
-    window.addEventListener('pulp-party-change', refresh)
-    window.addEventListener('pulp-friends-change', refresh)
-    // Re-render every 30s so online dots stay fresh.
-    const t = setInterval(() => tick(n => n + 1), 30000)
-    return () => { window.removeEventListener('pulp-party-change', refresh); window.removeEventListener('pulp-friends-change', refresh); clearInterval(t) }
-  }, [refresh])
+    const first = setTimeout(() => { refreshParty(); refreshFriends() }, 0)
+    window.addEventListener('pulp-party-change', refreshParty)
+    window.addEventListener('pulp-friends-change', refreshFriends)
+    // Pick up new minutes, approvals and friend requests while open.
+    const poll = setInterval(() => { refreshParty(); refreshFriends() }, 20000)
+    return () => {
+      clearTimeout(first); clearInterval(poll)
+      window.removeEventListener('pulp-party-change', refreshParty)
+      window.removeEventListener('pulp-friends-change', refreshFriends)
+    }
+  }, [refreshParty, refreshFriends])
+
+  const inParty = party?.kind === 'in' ? party : null
+  const { peers } = useGroupPresence(inParty?.party.id ?? null, { user_id: inParty?.me.id ?? '', username: inParty?.me.username ?? '' })
+  const online = (id: string) => !!peers[id] || id === inParty?.me.id
+
+  // Run an action, show its error inline, keep buttons from double-firing.
+  const run = async (fn: () => Promise<unknown>, success?: string) => {
+    setBusy(true); setMsg(null)
+    try { await fn(); if (success) setMsg({ text: success, ok: true }) }
+    catch (e) { setMsg({ text: e instanceof Error ? e.message : 'Something went wrong' }) }
+    finally { setBusy(false) }
+  }
 
   const field = { padding: '9px 12px', borderRadius: 10, outline: 'none', fontFamily: 'Crimson Pro, serif', fontSize: 14,
     border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: isDark ? '#0e0c09' : '#fff', color: text } as const
   const btn = (enabled = true) => ({ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: enabled ? 'pointer' : 'default',
     background: accent, color: '#fff', fontFamily: 'Crimson Pro, serif', fontSize: 14, opacity: enabled ? 1 : 0.5 } as const)
+  const ghostBtn = { padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 13,
+    border: `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`, background: 'transparent', color: text } as const
 
   const Tabs = (
     <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
       {(['party', 'friends'] as const).map(t => (
         <button key={t} onClick={() => { setTab(t); setMsg(null) }}
-          style={{ padding: '5px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', textTransform: 'capitalize', fontFamily: 'Crimson Pro, serif', fontSize: 14,
+          style={{ padding: '6px 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14, textTransform: 'capitalize',
             background: tab === t ? accent : 'transparent', color: tab === t ? '#fff' : sub }}>{t}</button>
       ))}
     </div>
   )
+  const Msg = msg && <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontSize: 13, margin: '10px 2px 0' }}>{msg.text}</p>
+
+  const SignIn = (what: string) => (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+        <style>{SCENE_CSS}</style>
+        <GroveBackdrop isDark={isDark} height={110} />
+      </div>
+      <p style={{ color: sub, fontSize: 15, margin: '0 0 14px' }}>Sign in to {what}.</p>
+      <button onClick={() => { window.location.href = '/login' }} style={btn()}>Sign in</button>
+    </div>
+  )
+  const Loading = <p style={{ color: sub, fontSize: 14 }}>Loading…</p>
 
   // ── FRIENDS TAB ───────────────────────────────────────────────────
   if (tab === 'friends') {
-    const add = () => { const r = addFriend(friendInput); setMsg(r.ok ? null : r.error); if (r.ok) setFriendInput("") }
-    const onlineCount = friends.filter(f => isOnline(f.username)).length
-
+    const add = () => run(async () => {
+      const r = await addFriend(friendInput)
+      setFriendInput("")
+      setMsg({ text: r === 'accepted' ? 'You are now friends.' : 'Request sent.', ok: true })
+    })
+    const FriendRow = ({ f, children }: { f: Friend; children: React.ReactNode }) => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: rowBg, color: text }}>
+        <Avatar name={f.username} color={f.color} />
+        <span style={{ fontSize: 15 }}>@{f.username}</span>
+        {f.level != null && <span style={{ fontSize: 12, color: sub }}>lv {f.level}</span>}
+        <span style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>{children}</span>
+      </div>
+    )
     return (
       <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h2 style={{ color: text, fontSize: 20, margin: 0 }}>Friends</h2>
-          <span style={{ color: sub, fontSize: 13 }}>{onlineCount} online</span>
-        </div>
+        {!friends ? Loading : friends.kind === 'signed-out' ? SignIn('add friends') : (
+          <>
+            <h2 style={{ color: text, fontSize: 20, margin: 0 }}>Friends</h2>
+            <p style={{ color: sub, fontSize: 13, margin: '4px 0 0' }}>
+              {friends.me ? <>Friends can add you as <b style={{ color: accent }}>@{friends.me}</b></> : 'Set a username in settings so friends can find you.'}
+            </p>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <input value={friendInput} onChange={e => setFriendInput(e.target.value)} placeholder="@username"
-            style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter') add() }} />
-          <button onClick={add} disabled={!friendInput.trim()} style={btn(!!friendInput.trim())}>Add</button>
-        </div>
-        {msg && <p style={{ color: '#ef4444', fontSize: 13, margin: '8px 2px 0' }}>{msg}</p>}
-
-        <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {friends.length === 0 && <p style={{ color: sub, fontSize: 14 }}>No friends yet — add someone by @username.</p>}
-          {friends.map(f => (
-            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: rowBg, color: text }}>
-              <Dot on={isOnline(f.username)} />
-              <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: f.color,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>
-                {f.username[0]?.toUpperCase()}
-              </span>
-              <span style={{ fontSize: 15 }}>@{f.username}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: isOnline(f.username) ? '#22c55e' : sub }}>{isOnline(f.username) ? 'online' : 'offline'}</span>
-              <button onClick={() => removeFriend(f.id)} title="remove" style={{ border: 'none', background: 'none', cursor: 'pointer', color: sub, fontSize: 16, lineHeight: 1 }}>×</button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <input value={friendInput} onChange={e => setFriendInput(e.target.value)} placeholder="@username"
+                style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter' && friendInput.trim() && !busy) add() }} />
+              <button onClick={add} disabled={!friendInput.trim() || busy} style={btn(!!friendInput.trim() && !busy)}>Add</button>
             </div>
-          ))}
-        </div>
+            {Msg}
+
+            {friends.incoming.length > 0 && (
+              <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <h3 style={{ color: text, fontSize: 14, margin: '0 0 2px' }}>Requests</h3>
+                {friends.incoming.map(f => (
+                  <FriendRow key={f.friendshipId} f={f}>
+                    <button disabled={busy} onClick={() => run(() => answerFriend(f.friendshipId, true))} style={{ ...btn(!busy), padding: '6px 12px', fontSize: 13 }}>Accept</button>
+                    <button disabled={busy} onClick={() => run(() => answerFriend(f.friendshipId, false))} style={ghostBtn}>Decline</button>
+                  </FriendRow>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {friends.friends.length === 0 && <p style={{ color: sub, fontSize: 14, margin: 0 }}>No friends yet — add someone by @username.</p>}
+              {friends.friends.map(f => (
+                <FriendRow key={f.friendshipId} f={f}>
+                  <button disabled={busy} onClick={() => { if (confirm(`Remove @${f.username}?`)) run(() => removeFriend(f.friendshipId)) }} title="remove"
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: sub, fontSize: 16, lineHeight: 1 }}>×</button>
+                </FriendRow>
+              ))}
+              {friends.outgoing.map(f => (
+                <FriendRow key={f.friendshipId} f={f}>
+                  <span style={{ fontSize: 12, color: sub }}>requested</span>
+                  <button disabled={busy} onClick={() => run(() => removeFriend(f.friendshipId))} title="cancel request"
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: sub, fontSize: 16, lineHeight: 1 }}>×</button>
+                </FriendRow>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     )
   }
 
-  // ── PARTY TAB: empty state ────────────────────────────────────────
-  if (!party) {
-    const firstTime = !hasJoinedBefore()
+  // ── PARTY TAB ─────────────────────────────────────────────────────
+  if (!party) return <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{Loading}</div>
+  if (party.kind === 'signed-out') return <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>{Tabs}{SignIn('start a party with friends')}</div>
+
+  if (party.kind === 'pending') {
     return (
       <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
         {Tabs}
+        <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+          <style>{SCENE_CSS}</style>
+          <GroveBackdrop isDark={isDark} height={110} />
+        </div>
+        <h2 style={{ color: text, fontSize: 20, margin: '0 0 6px' }}>Waiting to be let in</h2>
+        <p style={{ color: sub, fontSize: 14, margin: '0 0 16px' }}>
+          You asked to join <b style={{ color: accent, letterSpacing: '0.1em' }}>{party.code}</b>. The party owner needs to accept you.
+        </p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button disabled={busy} onClick={() => run(async () => { await loadParty().then(setParty) })} style={btn(!busy)}>Check again</button>
+          <button disabled={busy} onClick={() => run(cancelJoin)} style={ghostBtn}>Cancel request</button>
+        </div>
+        {Msg}
+      </div>
+    )
+  }
 
-        {firstTime && (
-          <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 14, textAlign: 'center',
-            background: isDark ? 'rgba(217,119,6,0.10)' : 'rgba(217,119,6,0.08)',
-            border: `1px solid ${isDark ? 'rgba(217,119,6,0.22)' : 'rgba(217,119,6,0.18)'}` }}>
-            <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
-              <style>{SCENE_CSS}</style>
-              <GroveBackdrop isDark={isDark} height={110} />
-              {[['sakura', 1, 30], ['oak', 3, 50], ['pine', 2, 70]].map(([type, stage, x], i) => (
-                <div key={i} className="grove-anim" style={{ position: 'absolute', left: `${x}%`, bottom: 8, transform: 'translateX(-50%)',
-                  animation: `groveRise .8s cubic-bezier(.2,.8,.2,1) ${i * 0.15}s both` }}>
-                  <PlantIcon type={type as string} size={40 + (stage as number) * 10} stage={stage as number} hideGround />
-                </div>
-              ))}
-            </div>
-            <h2 style={{ color: text, fontSize: 19, margin: '0 0 6px' }}>Grow together 🌳</h2>
-            <p style={{ color: sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
-              A party is you + up to {PARTY_CAP} friends racing on <b style={{ color: accent }}>focus minutes</b> each week.
-              Study more, climb the list, bragging rights reset every Monday.
-            </p>
+  if (party.kind === 'none') {
+    const firstTime = !hasJoinedBefore()
+    const create = () => run(async () => { await createParty(name); setName(""); setMode('choose') })
+    const join = () => run(async () => { await joinParty(code); setCode(""); setMode('choose') })
+    const choice = (label: string, hint: string, primary: boolean, onClick: () => void) => (
+      <button onClick={onClick}
+        style={{ flex: 1, padding: '16px 14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left', fontFamily: 'Crimson Pro, serif',
+          border: primary ? 'none' : `1px solid ${isDark ? '#3f3f46' : '#e0dacb'}`,
+          background: primary ? `linear-gradient(135deg, ${accent}, #b45309)` : 'transparent',
+          color: primary ? '#fff' : text, boxShadow: primary ? '0 8px 20px -10px rgba(217,119,6,0.7)' : 'none' }}>
+        <div style={{ fontSize: 16, fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: 12.5, opacity: 0.8, marginTop: 2 }}>{hint}</div>
+      </button>
+    )
+    return (
+      <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
+        {Tabs}
+        <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 14, textAlign: 'center',
+          background: isDark ? 'rgba(217,119,6,0.10)' : 'rgba(217,119,6,0.08)',
+          border: `1px solid ${isDark ? 'rgba(217,119,6,0.22)' : 'rgba(217,119,6,0.18)'}` }}>
+          <div style={{ position: 'relative', height: 110, borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+            <style>{SCENE_CSS}</style>
+            <GroveBackdrop isDark={isDark} height={110} />
+            {([['sakura', 1, 30], ['oak', 3, 50], ['pine', 2, 70]] as const).map(([type, stage, x], i) => (
+              <div key={i} className="grove-anim" style={{ position: 'absolute', left: `${x}%`, bottom: 8, transform: 'translateX(-50%)',
+                animation: `groveRise .8s cubic-bezier(.2,.8,.2,1) ${i * 0.15}s both` }}>
+                <PlantIcon type={type} size={40 + stage * 10} stage={stage} hideGround />
+              </div>
+            ))}
+          </div>
+          <h2 style={{ color: text, fontSize: 19, margin: '0 0 6px' }}>{firstTime ? 'Grow together 🌳' : 'Start a new party'}</h2>
+          <p style={{ color: sub, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+            Race up to {PARTY_CAP} players on <b style={{ color: accent }}>focus minutes</b> each week. Study more, climb the list — standings reset every Monday.
+          </p>
+        </div>
+
+        {mode === 'choose' && (
+          <div style={{ display: 'flex', gap: 10 }}>
+            {choice('Create a party', "You'll get an invite code", true, () => { setMode('create'); setMsg(null) })}
+            {choice('Join a party', 'Got a code from a friend?', false, () => { setMode('join'); setMsg(null) })}
           </div>
         )}
-
-        <h2 style={{ color: text, fontSize: 20, margin: '0 0 4px' }}>{firstTime ? 'Make your first party' : 'Start a party'}</h2>
-        <p style={{ color: sub, fontSize: 14, margin: '0 0 20px' }}>Race friends on focus minutes this week. Up to {PARTY_CAP} players.</p>
-
-        <h3 style={{ color: text, fontSize: 14, margin: '0 0 8px' }}>Create</h3>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="party name" maxLength={24}
-            style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter' && name.trim().length >= 2) createParty(name) }} />
-          <button onClick={() => createParty(name)} disabled={name.trim().length < 2} style={btn(name.trim().length >= 2)}>Create</button>
-        </div>
-
-        <h3 style={{ color: text, fontSize: 14, margin: '0 0 8px' }}>Join by code</h3>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input value={code} onChange={e => setCode(e.target.value)} placeholder="invite code" maxLength={8}
-            style={{ ...field, flex: 1, textTransform: 'uppercase' }} onKeyDown={e => { if (e.key === 'Enter' && code.trim()) joinParty(code) }} />
-          <button onClick={() => joinParty(code)} disabled={!code.trim()} style={btn(!!code.trim())}>Join</button>
-        </div>
+        {mode === 'create' && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="party name" maxLength={24}
+              style={{ ...field, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter' && name.trim().length >= 2 && !busy) create(); if (e.key === 'Escape') setMode('choose') }} />
+            <button onClick={create} disabled={name.trim().length < 2 || busy} style={btn(name.trim().length >= 2 && !busy)}>Create</button>
+          </div>
+        )}
+        {mode === 'join' && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input autoFocus value={code} onChange={e => setCode(e.target.value)} placeholder="invite code" maxLength={8}
+              style={{ ...field, flex: 1, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+              onKeyDown={e => { if (e.key === 'Enter' && code.trim() && !busy) join(); if (e.key === 'Escape') setMode('choose') }} />
+            <button onClick={join} disabled={!code.trim() || busy} style={btn(!!code.trim() && !busy)}>Join</button>
+          </div>
+        )}
+        {mode !== 'choose' && (
+          <button onClick={() => { setMode('choose'); setMsg(null) }}
+            style={{ marginTop: 10, border: 'none', background: 'none', cursor: 'pointer', color: sub, fontFamily: 'Crimson Pro, serif', fontSize: 13, padding: 0 }}>← back</button>
+        )}
+        {Msg}
       </div>
     )
   }
 
   // ── PARTY TAB: in a party ─────────────────────────────────────────
-  const rows = standings(party)
-  const onlineCount = party.members.filter(m => isOnline(m.username)).length
-  const copy = () => { navigator.clipboard?.writeText(party.code); setCopied(true); setTimeout(() => setCopied(false), 1500) }
+  const p = party.party
+  const rows = standings(p)
+  const onlineCount = p.members.filter(m => online(m.id)).length
   const maxMinutes = Math.max(0, ...rows.map(r => r.weeklyMinutes))
+  const copy = () => { navigator.clipboard?.writeText(p.code); setCopied(true); setTimeout(() => setCopied(false), 1500) }
 
   return (
     <div style={{ padding: 24, fontFamily: 'Crimson Pro, serif' }}>
       {Tabs}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-        <h2 style={{ color: text, fontSize: 20, margin: 0 }}>{party.name}</h2>
-        <span style={{ color: sub, fontSize: 13 }}>{party.members.length}/{PARTY_CAP} · {onlineCount} online</span>
+        <h2 style={{ color: text, fontSize: 20, margin: 0 }}>{p.name}</h2>
+        <span style={{ color: sub, fontSize: 13 }}>{p.members.length}/{PARTY_CAP} · {onlineCount} online</span>
       </div>
 
       <button onClick={copy} title="copy invite code"
         style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
           border: `1px dashed ${isDark ? '#3f3f46' : '#d8d2c4'}`, background: 'transparent', color: text }}>
         <span style={{ color: sub, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>invite</span>
-        <span style={{ color: accent, fontSize: 15, letterSpacing: '0.15em', fontWeight: 600 }}>{party.code}</span>
+        <span style={{ color: accent, fontSize: 15, letterSpacing: '0.15em', fontWeight: 600 }}>{p.code}</span>
         <span style={{ color: sub, fontSize: 12 }}>{copied ? '✓ copied' : '⧉'}</span>
       </button>
 
       <PartyGrove members={rows} cap={PARTY_CAP} isDark={isDark} />
+
+      {p.requests.length > 0 && (
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <h3 style={{ color: text, fontSize: 14, margin: '0 0 2px' }}>Wants to join</h3>
+          {p.requests.map(r => (
+            <div key={r.userId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12,
+              background: isDark ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.06)', color: text }}>
+              <span style={{ fontSize: 15 }}>@{r.username}</span>
+              <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                <button disabled={busy || p.members.length >= PARTY_CAP} onClick={() => run(() => answerRequest(p.id, r.userId, true))}
+                  style={{ ...btn(!busy && p.members.length < PARTY_CAP), padding: '6px 12px', fontSize: 13 }}>Let in</button>
+                <button disabled={busy} onClick={() => run(() => answerRequest(p.id, r.userId, false))} style={ghostBtn}>Decline</button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {rows.map(m => {
@@ -283,11 +418,8 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
               background: m.isYou ? 'rgba(217,119,6,0.12)' : rowBg,
               border: m.isYou ? `1px solid rgba(217,119,6,0.35)` : '1px solid transparent', color: text }}>
               <span style={{ width: 22, textAlign: 'center', fontSize: top ? 16 : 13, color: sub }}>{top ? MEDALS[m.rank - 1] : m.rank}</span>
-              <Dot on={isOnline(m.username)} />
-              <span style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: m.color,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700 }}>
-                {m.username[0]?.toUpperCase()}
-              </span>
+              <Dot on={online(m.id)} />
+              <Avatar name={m.username} color={m.color} />
               <span style={{ fontSize: 15 }}>@{m.username}{m.isYou ? ' (you)' : ''}{m.isOwner ? ' 👑' : ''}</span>
               <span style={{ marginLeft: 'auto', color: accent, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{m.weeklyMinutes} min</span>
               <span style={{ position: 'absolute', left: 14, right: 14, bottom: 5, height: 2, borderRadius: 1, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
@@ -298,10 +430,11 @@ export const PartyPanel = memo(function PartyPanel({ theme }: { theme: "light" |
           )
         })}
       </div>
+      {Msg}
 
-      <button onClick={() => { if (confirm('Leave this party?')) leaveParty() }}
+      <button disabled={busy} onClick={() => { if (confirm(p.isOwner ? 'End this party for everyone?' : 'Leave this party?')) run(() => leaveParty(p)) }}
         style={{ marginTop: 18, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'Crimson Pro, serif', fontSize: 14 }}>
-        Leave party
+        {p.isOwner ? 'End party' : 'Leave party'}
       </button>
     </div>
   )

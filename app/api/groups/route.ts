@@ -68,6 +68,7 @@ export async function POST(req: Request) {
       owner_id: user.id, name, school: body.school ?? null,
       invite_code: generateInviteCode(),
       term_start: body.term_start, term_end: body.term_end,
+      ...(Number.isInteger(body.max_members) ? { max_members: Math.min(30, Math.max(2, body.max_members)) } : {}),
     }).select().single()
     if (!error) group = data
   }

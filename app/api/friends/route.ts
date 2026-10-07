@@ -102,5 +102,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   }
 
+  if (body.action === 'remove') {
+    const { data: row } = await supabaseAdmin.from('friendships')
+      .select('*').eq('id', body.friendshipId).single()
+    if (!row || (row.requester_id !== user.id && row.addressee_id !== user.id)) {
+      return NextResponse.json({ error: "Not allowed" }, { status: 403 })
+    }
+    await supabaseAdmin.from('friendships').delete().eq('id', row.id)
+    return NextResponse.json({ ok: true })
+  }
+
   return NextResponse.json({ error: "Unknown action" }, { status: 400 })
 }

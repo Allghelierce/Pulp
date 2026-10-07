@@ -519,7 +519,7 @@ export const VitalitySystem = memo(function VitalitySystem({
 
     updateGoalStreak(sessionMinutes)
     logFocusSession(sessionMinutes, 0)
-    recordFocus(sessionMinutes)
+    recordFocus(sessionMinutes, activeGroupId)
 
     checkAchievement('iron_will', a => ({ progress: (a.progress || 0) + 1 }))
     if (timerTotal >= 50 * 60) checkAchievement('focus_champion')
