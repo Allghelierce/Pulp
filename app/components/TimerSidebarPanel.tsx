@@ -9,6 +9,7 @@ import { PulpIcon, LeafIcon } from '@/app/components/CurrencyIcons'
 import { MiniRings } from './StatsView'
 import { isFullyGrown, isTopicTree } from "@/lib/topics"
 import { StageBurst, useStageTransition, stageEntrance, stageExit, type VisualStage } from "./StageGrowth"
+import { RARITY_COLOR, rarityTextColor } from "@/lib/rarity"
 
 // Growth stages along the focus bar (ratio of the tree's grow time). Matches timerStage in lib/topics.
 const FOCUS_STAGES = [
@@ -459,6 +460,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
       <>
       <motion.div
         key="timer-mini"
+        data-vine-avoid
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
@@ -608,6 +610,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                   }}
                   tabIndex={0}
                   ref={el => el?.focus()}
+                  style={{ outline: 'none' }}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span style={{ fontSize: 10, fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: dimColor, fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -629,16 +632,17 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         if (!info) return null
                         const isSelected = selectedSeed === type
                         const count = counts.get(type) || 1
-                        const rarityColor = info.rarity === 'common' ? '#a1a1aa' : info.rarity === 'uncommon' ? '#34d399' : info.rarity === 'rare' ? '#60a5fa' : info.rarity === 'true rare' ? '#4d8cff' : info.rarity === 'sacred' ? '#c4a6ff' : '#a1a1aa'
+                        const rarityColor = RARITY_COLOR[info.rarity] || RARITY_COLOR.common
                         return (
                           <motion.button
                             key={type}
                             whileHover={{ scale: 1.04 }}
                             whileTap={{ scale: 0.96 }}
                             onClick={() => { onSelectSeed(isSelected ? null : type); setSeedTrayOpen(false) }}
-                            className="relative flex flex-col items-center justify-end rounded-lg p-1.5 pt-2 transition-all"
+                            title={`${info.name} · ${info.rarity}`}
+                            className="relative flex flex-col items-center justify-end rounded-lg transition-all overflow-hidden"
                             style={{
-                              aspectRatio: '1',
+                              height: 64, padding: '6px 4px 5px',
                               backgroundColor: isSelected
                                 ? (isDark ? `${info.color}18` : `${info.color}12`)
                                 : (isDark ? 'rgba(39,39,42,0.4)' : 'rgba(255,255,255,0.8)'),
@@ -647,9 +651,11 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                               cursor: 'pointer',
                             }}
                           >
-                            <div className="flex-1 flex items-center justify-center">
+                            {/* every plant gets the same art box so tall species can't stretch their card */}
+                            <div style={{ width: '100%', height: 46, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden' }}>
                               <PlantIcon type={type} size={38} stage={3} />
                             </div>
+                            <span style={{ position: 'absolute', left: 8, right: 8, bottom: 3, height: 2, borderRadius: 1, background: rarityColor, opacity: info.rarity === 'common' ? 0.25 : 0.7 }} />
                             {count > 1 && (
                               <span className="absolute bottom-1 right-1 text-[7px] font-normal rounded-full min-w-[14px] h-[14px] flex items-center justify-center" style={{ backgroundColor: isDark ? '#27272a' : '#e4e4e7', color: isDark ? '#a1a1aa' : '#52525b', border: `1px solid ${isDark ? 'rgba(63,63,70,0.5)' : 'rgba(228,228,231,0.7)'}` }}>
                                 {count}
@@ -700,6 +706,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                 <div className="flex flex-col items-center justify-end flex-1 w-full">
                   {waterUrgent && waterWidget}
                   <div
+                    data-vine-avoid
                     className="w-full text-center"
                     style={{ marginBottom: 30, cursor: 'default' }}
                     onMouseEnter={() => setTimerHover(true)}
@@ -721,7 +728,7 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                         ) : (
                           <motion.span key="stage" initial={{ opacity: 0, y: 3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.15 }}
                             style={{ fontFamily: serifFont, fontSize: 14, color: textColor, lineHeight: 1, letterSpacing: '0.02em' }}>
-                            {focusStage.name}{nextMark && <span style={{ fontSize: 11.5, color: subtleColor }}> · {nextMark.name.toLowerCase()} in {minsToNext}m</span>}
+                            <span style={{ whiteSpace: 'nowrap' }}><span title={`${treeInfo?.name || 'Tangerine'} · ${treeInfo?.rarity || 'common'}`} style={{ color: rarityTextColor(treeInfo?.rarity, isDark) }}>{treeInfo?.name || 'Tangerine'}</span>{' '}{focusStage.name.toLowerCase()}</span>{nextMark && <span style={{ fontSize: 11.5, color: subtleColor, whiteSpace: 'nowrap' }}> · {nextMark.name.toLowerCase()} in {minsToNext}m</span>}
                           </motion.span>
                         )}
                       </AnimatePresence>
@@ -735,8 +742,9 @@ export const TimerSidebarPanel = memo(function TimerSidebarPanel({
                       ))}
                     </div>
                   </div>
-                  {treeVisual}
+                  <div data-vine-avoid className="w-full">{treeVisual}</div>
                   <button
+                    data-vine-avoid
                     onClick={onFocusGiveUp}
                     onMouseLeave={() => { if (giveUpStage < 2) setGiveUpStage(0) }}
                     className="w-full py-2 rounded-[6px] text-[11px] font-normal"

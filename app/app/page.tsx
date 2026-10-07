@@ -32,6 +32,7 @@ const _preloadImageUpload = () => import("@/app/components/ImageUploadModal")
 const _preloadCover = () => import("@/app/components/CoverModal")
 import { SlashMenu } from "@/app/components/SlashMenu"
 import { VitalitySystem } from "@/app/components/VitalitySystem"
+import { VinesOverlay } from "@/app/components/VinesOverlay"
 import { PlantedToast } from "@/app/components/PlantedToast"
 import { TopicsView } from "@/app/components/TopicsView"
 import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
@@ -1309,7 +1310,7 @@ export default function NoteApp() {
   })
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRunningRef = useRef(false)
-  // Timer progress hook (vines removed for now; kept for the bottom-of-screen tree).
+  // Timer progress drives the growth vines via a CSS var (no re-render per tick).
   const vinesRef = useRef<HTMLDivElement>(null)
   const handleTimerProgress = useCallback((p: number) => {
     vinesRef.current?.style.setProperty('--vine-p', p.toFixed(4))
@@ -3647,6 +3648,8 @@ export default function NoteApp() {
 
         <div className="flex h-screen overflow-x-auto overflow-y-hidden font-sans relative select-none" style={{ minWidth: isNarrow ? undefined : 900, backgroundColor: theme === "dark" ? "#09090b" : "#F0ECEA", color: theme === "dark" ? "#FAFAFA" : "#1A1A1A", backgroundImage: bgEffect && !reduceVisuals ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='${theme === "dark" ? "0.035" : "0.045"}'/%3E%3C/svg%3E")` : undefined, backgroundRepeat: "repeat" }}>
           <PlantImagePreloader />
+          {/* Growth vines fill the margins while a focus session runs */}
+          <VinesOverlay ref={vinesRef} visible={timerRunning && !reduceVisuals && !isNarrow} theme={theme} reduceMotion={reduceMotion} leftInset={sidebarWidth > 40 ? sidebarWidth : 0} />
           <PlantedToast theme={theme} accent={accentSolid} onReview={(topic, notebookId) => {
             startTransition(() => { closeAllPanels(); setReviewTopic(topic); setReviewNoteId(notebookId); setReviewOpen(true) })
           }} />
@@ -4718,9 +4721,12 @@ export default function NoteApp() {
           {/* Status bar (Settings → Interface) */}
           {wordCountVisible && !isNarrow && activeNote && !showSettings && (
             <div style={{
-              position: "fixed", bottom: 12, left: (sidebarWidth > 40 ? sidebarWidth : 0) + 16, zIndex: 40, pointerEvents: "none",
+              // bottom-right, above the "sign in to sync" button when it's showing; the timer panel owns the bottom-left
+              position: "fixed", bottom: user ? 12 : 66, right: 18, zIndex: 60, pointerEvents: "none",
               fontFamily: "Crimson Pro, serif", fontSize: 12.5, letterSpacing: "0.02em",
-              color: theme === "dark" ? "rgba(228,228,231,0.45)" : "rgba(39,39,42,0.45)",
+              padding: "2px 9px", borderRadius: 999,
+              background: theme === "dark" ? "rgba(9,9,11,0.55)" : "rgba(240,236,234,0.7)",
+              color: theme === "dark" ? "rgba(228,228,231,0.55)" : "rgba(39,39,42,0.55)",
             }}>
               {wordCount.toLocaleString()} {wordCount === 1 ? "word" : "words"} · page {currentPageIdx + 1} of {activeNote.pages.length}
             </div>
