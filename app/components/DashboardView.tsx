@@ -10,6 +10,7 @@ import type { WidgetProps } from "./dashboard/widgetRegistry"
 import { LIVELY_CSS } from "./dashboard/lively"
 import { SCENE_CSS } from "./GroveScene"
 import { buildQuips, nextQuipIndex } from "./dashboard/quips"
+import { DriftingLeaves } from "./dashboard/DriftingLeaves"
 
 import "./dashboard/widgets/registerAll"
 
@@ -104,6 +105,7 @@ export const DashboardView = memo(function DashboardView({
       overflow: 'hidden',
     }}>
       <style>{LIVELY_CSS + SCENE_CSS}</style>
+      <DriftingLeaves isDark={isDark} />
       <DashboardToolbar
         isDark={isDark}
         quip={quip}
