@@ -4,7 +4,7 @@ import { LazyMotion, domAnimation, m, motion, AnimatePresence } from "framer-mot
 import { flushSync } from "react-dom"
 import { supabase } from "@/lib/supabase"
 import { apiFetch } from "@/lib/apiFetch"
-import { sanitizeHTML } from "@/lib/sanitize"
+import { sanitizeHTML, extractTextFromHTML } from "@/lib/sanitize"
 import * as db from "@/lib/db"
 import type { TextBox as TextBoxType, NoteData, FolderData, DialogConfig, Bookmark, Achievement, Tree, SlashMenuState, User } from "@/app/types"
 import { TREE_TYPES } from "@/app/constants"
@@ -36,6 +36,9 @@ import { PlantedToast } from "@/app/components/PlantedToast"
 import { TopicsView } from "@/app/components/TopicsView"
 import { totalDueAll, buildTopicIndex } from "@/lib/topicIndex"
 import { OnboardingModal } from "@/app/components/OnboardingModal"
+import { ImportModal } from "@/app/components/ImportModal"
+import { sectionToHtml, type ImportDoc } from "@/lib/importNotes"
+import { saveDeck, hashNotes } from "@/lib/recallSchedule"
 import { CommunityView } from "@/app/components/CommunityView"
 import { PartyPanel } from "@/app/components/community/PartyPanel"
 import { PartyPresence } from "@/app/components/community/PartyPresence"
@@ -1319,6 +1322,7 @@ export default function NoteApp() {
   const [statsOpen, setStatsOpen] = useState(false)
   const statsOpenedBeforeRef = useRef(false)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   // Recall hub (Topics list) + cross-notebook due badge for the sidebar.
   const [topicsOpen, setTopicsOpen] = useState(false)
   const [allRecallDue, setAllRecallDue] = useState(0)
@@ -3171,6 +3175,27 @@ export default function NoteApp() {
       if (user) supabase.from("notes").insert({ id, subject: finalName, pages: [""], boxes, folder_id: folderId, user_id: user.id })
     }, "📓")
 
+  // Import: one page per parsed section. Mirrors addNote() so imports sync the same way.
+  // Each section lives in that page's text box (like typed notes): the legacy
+  // page-HTML layer is a non-editable underlay with no ink color on paper.
+  const createImportedNotebook = (doc: ImportDoc): string => {
+    const id = uid()
+    const sections = doc.sections.length ? doc.sections : [{ text: "" }]
+    const pages = sections.map(() => "")
+    const boxes: NoteData["boxes"] = Object.fromEntries(sections.map((s, i) => [i, [{ id: uid(), x: 40, y: 40, w: 900, h: 32, content: s.text ? sectionToHtml(s) : "" }]]))
+    const subject = doc.title.trim() || "Imported notes"
+    const newNote: NoteData = { id, subject, pages, folderId: null, boxes }
+    // Stamp the deck with the notebook's real fingerprint (same text ReviewView
+    // hashes) so imported cards don't show as "notes changed" on first recall.
+    const reviewText = Object.entries(boxes).flatMap(([p, bs]) => bs.map(b => { const t = extractTextFromHTML(b.content); return t ? `[Page ${Number(p) + 1} - Text Box]\n${t}` : "" })).filter(Boolean).join("\n\n")
+    saveDeck({ noteId: id, cards: [], generatedAt: Date.now(), noteHash: hashNotes(reviewText) })
+    setNotes(prev => [...prev, newNote])
+    setActiveTabId(id); setCurrentPageIdx(0)
+    checkAchievement('first_note')
+    if (user) supabase.from("notes").insert({ id, subject, pages, boxes, folder_id: null, user_id: user.id }).then(({ error }) => { if (error) console.error("Import save failed:", error.message) })
+    return id
+  }
+
   const addFirstNotebook = () => {
     const id = uid()
     const boxes = defaultBoxes()
@@ -3635,6 +3660,7 @@ export default function NoteApp() {
                 noteSort={defaultSort}
                 onChangeNoteSort={(s) => updateSettings({ defaultSort: s })}
                 onCloseAllPanels={closeAllPanels}
+                onImport={() => setImportOpen(true)}
                 user={user}
                 sidebarWidth={sidebarWidth}
                 isDragging={isSidebarDragging}
@@ -5022,6 +5048,15 @@ export default function NoteApp() {
         <PlantImagePreloader />
         {needsOnboarding && user && (
           <OnboardingModal theme={theme} initialUsername={suggestedUsername} onDone={(r) => { setFriendCode(r.friend_code); if (r.grade) setGrade(r.grade); setNeedsOnboarding(false) }} />
+        )}
+        {importOpen && (
+          <ImportModal
+            theme={theme}
+            signedIn={!!user}
+            onClose={() => setImportOpen(false)}
+            onCreateNotebook={createImportedNotebook}
+            onStartRecall={(noteId: string) => { setImportOpen(false); startTransition(() => { closeAllPanels(); setReviewNoteId(noteId); setReviewOpen(true) }) }}
+          />
         )}
       </>
     </LazyMotion>

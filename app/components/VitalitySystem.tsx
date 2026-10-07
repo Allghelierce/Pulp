@@ -509,11 +509,13 @@ export const VitalitySystem = memo(function VitalitySystem({
     const written = newText(snap.lines || "", noteLines(note))
     if (written.length < MIN_TOPIC_TEXT) return false
     const endReview = reviewText(note)
+    // Known topic names (e.g. from an import) so the AI reuses them and banked growth reaches this tree.
+    const known = Array.from(new Set((loadDeck(noteId)?.cards ?? []).map(c => (c.topic || '').trim()).filter(Boolean))).slice(0, 30)
     void (async () => {
       try {
         const res = await apiFetch('/api/recall/topic', {
           method: 'POST',
-          body: JSON.stringify({ text: written, title: note?.subject || '' }),
+          body: JSON.stringify({ text: written, title: note?.subject || '', topics: known }),
         })
         if (!res.ok) { emitTagged(treeId, null); return }
         const data = await res.json() as { topic?: string; cards?: Card[] }

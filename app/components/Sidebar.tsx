@@ -121,6 +121,7 @@ interface SidebarProps {
   mini?: boolean
   noteSort?: string
   onChangeNoteSort?: (sort: string) => void
+  onImport?: () => void
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -132,7 +133,7 @@ export const Sidebar = memo(function Sidebar({
   sap = 0, gems = 0, xp = 0, totalNotes = 0, totalChars = 0,
   bookmarks, onJumpToBookmark, onReorderBookmarks, onDeleteBookmark, onRenameBookmark,
   archivedNotes = [], onArchiveNote, onUnarchiveNote, onSearchNavigate, onSetCover, mini,
-  noteSort = 'modified', onChangeNoteSort,
+  noteSort = 'modified', onChangeNoteSort, onImport,
 }: SidebarProps) {
   const [sortMenuOpen, setSortMenuOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -854,6 +855,9 @@ export const Sidebar = memo(function Sidebar({
                   </button>
                 </div>
                 <button onClick={onAddFolder} className="text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-normal ml-0.5" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>+ folder</button>
+                {onImport && (
+                  <button onClick={(e) => { e.stopPropagation(); onImport() }} title="Import notes (Google Docs, Word, Notion, Obsidian)" className="text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 px-2 py-1 rounded transition-colors leading-none font-normal ml-0.5" style={{ fontFamily: 'Crimson Pro, serif', letterSpacing: '0.01em' }}>import</button>
+                )}
               </div>
             </div>
 

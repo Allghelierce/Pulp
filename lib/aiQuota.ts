@@ -52,3 +52,50 @@ export async function consumeAiQuota(userId: string, { metered = true }: { meter
   }
   return null
 }
+
+// ── note import: lifetime pool of AI-carded sections for free accounts ──
+export const IMPORT_FREE_TOPICS = Number(process.env.IMPORT_FREE_TOPICS) || 12
+
+export interface ImportAllowance { remaining: number | null; limit: number; pro: boolean }
+
+function importUnavailable(rpc: string, error?: { code?: string; message: string }): NextResponse {
+  if (error) console.error(`Import quota (${rpc}) failed:`, error.code, error.message)
+  return NextResponse.json({ error: "Note import isn't available right now.", code: "import_unavailable" }, { status: 503 })
+}
+
+// Current import allowance. Fails CLOSED (503) when the migration is missing —
+// imports are bulk AI spend, so never treat a broken counter as unlimited.
+export async function importAllowance(userId: string): Promise<ImportAllowance | NextResponse> {
+  if (userId === DEV_USER_ID) return { remaining: null, limit: IMPORT_FREE_TOPICS, pro: true }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return importUnavailable("config")
+  if (await hasPro(userId)) return { remaining: null, limit: IMPORT_FREE_TOPICS, pro: true }
+  const { data, error } = await supabaseAdmin.from("player_profiles")
+    .select("import_topics_used").eq("user_id", userId).maybeSingle()
+  if (error) return importUnavailable("import_topics_used", error)
+  const used = Number((data as { import_topics_used?: number } | null)?.import_topics_used ?? 0)
+  return { remaining: Math.max(0, IMPORT_FREE_TOPICS - used), limit: IMPORT_FREE_TOPICS, pro: false }
+}
+
+// Spend one import credit BEFORE the AI call. Pro / dev skip the lifetime cap.
+// Returns the allowance after spending (charged=true means refund on failure), or an error response.
+export async function consumeImportTopic(userId: string): Promise<(ImportAllowance & { charged: boolean }) | NextResponse> {
+  if (userId === DEV_USER_ID) return { remaining: null, limit: IMPORT_FREE_TOPICS, pro: true, charged: false }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return importUnavailable("config")
+  if (await hasPro(userId)) return { remaining: null, limit: IMPORT_FREE_TOPICS, pro: true, charged: false }
+  const { data, error } = await supabaseAdmin.rpc("consume_import_topic", { p_user: userId, p_limit: IMPORT_FREE_TOPICS })
+  if (error) return importUnavailable("consume_import_topic", error)
+  if (data == null) {
+    return NextResponse.json(
+      { error: "You've used your free imports. Upgrade to Pro to import more.", code: "import_limit" },
+      { status: 402 }
+    )
+  }
+  return { remaining: Math.max(0, IMPORT_FREE_TOPICS - Number(data)), limit: IMPORT_FREE_TOPICS, pro: false, charged: true }
+}
+
+// Give back a credit spent on a failed/empty AI call. Best effort; logs on failure.
+export async function refundImportTopic(userId: string): Promise<void> {
+  if (userId === DEV_USER_ID || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
+  const { error } = await supabaseAdmin.rpc("refund_import_topic", { p_user: userId })
+  if (error) console.error("Import quota (refund_import_topic) failed:", error.code, error.message)
+}
